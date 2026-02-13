@@ -4,7 +4,6 @@ Auto-leave message on voicemail detection
 """
 
 from datetime import datetime
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -35,7 +34,7 @@ class VoicemailDropSystem:
         self.message_path = vmd_config.get("message_path", "/var/pbx/voicemail_drops")
 
         # Pre-recorded messages
-        self.messages: Dict[str, Dict] = {}
+        self.messages: dict[str, dict] = {}
 
         # Statistics
         self.total_detections = 0
@@ -48,7 +47,7 @@ class VoicemailDropSystem:
         self.logger.info(f"  Max detection time: {self.max_detection_time}s")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def detect_voicemail(self, call_id: str, audio_data: bytes) -> Dict:
+    def detect_voicemail(self, call_id: str, audio_data: bytes) -> dict:
         """
         Detect if call was answered by voicemail using audio analysis
 
@@ -63,7 +62,7 @@ class VoicemailDropSystem:
             audio_data: Initial audio after answer (first 5-10 seconds)
 
         Returns:
-            Dict: Detection result with confidence score
+            dict: Detection result with confidence score
         """
         import struct
 
@@ -207,7 +206,7 @@ class VoicemailDropSystem:
 
         return False
 
-    def drop_message(self, call_id: str, message_id: str) -> Dict:
+    def drop_message(self, call_id: str, message_id: str) -> dict:
         """
         Drop pre-recorded message into voicemail
 
@@ -221,7 +220,7 @@ class VoicemailDropSystem:
             message_id: Message to play
 
         Returns:
-            Dict: Drop result
+            dict: Drop result
         """
         if message_id not in self.messages:
             self.failed_drops += 1
@@ -262,7 +261,7 @@ class VoicemailDropSystem:
 
     def add_message(
         self, message_id: str, name: str, audio_path: str, duration: float = None
-    ) -> Dict:
+    ) -> dict:
         """
         Add pre-recorded message
 
@@ -273,7 +272,7 @@ class VoicemailDropSystem:
             duration: Message duration in seconds
 
         Returns:
-            Dict: Add result
+            dict: Add result
         """
         message = {
             "message_id": message_id,
@@ -298,12 +297,12 @@ class VoicemailDropSystem:
             return True
         return False
 
-    def get_message(self, message_id: str) -> Optional[Dict]:
+    def get_message(self, message_id: str) -> dict | None:
         """Get message information"""
         return self.messages.get(message_id)
 
     def list_messages(self) -> list:
-        """List all available messages"""
+        """list all available messages"""
         return [
             {
                 "message_id": msg["message_id"],
@@ -329,7 +328,7 @@ class VoicemailDropSystem:
             f"Updated detection parameters: threshold={threshold}, max_time={max_time}s"
         )
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get voicemail drop statistics"""
         success_rate = self.successful_drops / max(1, self.total_detections)
 

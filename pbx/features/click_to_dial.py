@@ -5,7 +5,6 @@ Web and application-based dialing with WebRTC integration
 
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -33,7 +32,7 @@ class ClickToDialEngine:
 
         self.logger.info("Click-to-Dial Framework initialized")
 
-    def get_config(self, extension: str) -> Optional[Dict]:
+    def get_config(self, extension: str) -> dict | None:
         """
         Get click-to-dial configuration for extension
 
@@ -68,7 +67,7 @@ class ClickToDialEngine:
             self.logger.error(f"Failed to get click-to-dial config: {e}")
             return None
 
-    def update_config(self, extension: str, config: Dict) -> bool:
+    def update_config(self, extension: str, config: dict) -> bool:
         """
         Update click-to-dial configuration
 
@@ -132,7 +131,7 @@ class ClickToDialEngine:
             self.logger.error(f"Failed to update click-to-dial config: {e}")
             return False
 
-    def initiate_call(self, extension: str, destination: str, source: str = "web") -> Optional[str]:
+    def initiate_call(self, extension: str, destination: str, source: str = "web") -> str | None:
         """
         Initiate click-to-dial call
         Integrates with PBX call handling to create actual SIP calls
@@ -201,7 +200,7 @@ class ClickToDialEngine:
             return None
 
     def update_call_status(
-        self, call_id: str, status: str, connected_at: Optional[datetime] = None
+        self, call_id: str, status: str, connected_at: datetime | None = None
     ) -> bool:
         """
         Update click-to-dial call status
@@ -248,7 +247,7 @@ class ClickToDialEngine:
             self.logger.error(f"Failed to update call status: {e}")
             return False
 
-    def get_call_history(self, extension: str, limit: int = 100) -> List[Dict]:
+    def get_call_history(self, extension: str, limit: int = 100) -> list[dict]:
         """
         Get click-to-dial call history for extension
 
@@ -257,7 +256,7 @@ class ClickToDialEngine:
             limit: Maximum number of records
 
         Returns:
-            List of call history dictionaries
+            list of call history dictionaries
         """
         try:
             result = self.db.execute(
@@ -292,12 +291,12 @@ class ClickToDialEngine:
             self.logger.error(f"Failed to get call history: {e}")
             return []
 
-    def get_all_configs(self) -> List[Dict]:
+    def get_all_configs(self) -> list[dict]:
         """
         Get all click-to-dial configurations
 
         Returns:
-            List of configuration dictionaries
+            list of configuration dictionaries
         """
         try:
             result = self.db.execute("SELECT * FROM click_to_dial_configs ORDER BY extension")

@@ -4,7 +4,6 @@ Provides calendar sync, contact sync, and presence integration
 """
 
 from datetime import datetime, timedelta, timezone
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -114,7 +113,7 @@ class OutlookIntegration:
 
     def get_calendar_events(
         self, user_email: str, start_time: str = None, end_time: str = None
-    ) -> List[Dict]:
+    ) -> list[dict]:
         """
         Get calendar events for a user
 
@@ -124,7 +123,7 @@ class OutlookIntegration:
             end_time: End time (ISO format, optional)
 
         Returns:
-            list: List of calendar events
+            list: list of calendar events
         """
         if not self.enabled or not REQUESTS_AVAILABLE:
             return []
@@ -146,7 +145,7 @@ class OutlookIntegration:
             url = f"{self.graph_endpoint}/users/{user_email}/calendar/calendarView"
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
             params = {
                 "startDateTime": start_time,
@@ -227,7 +226,7 @@ class OutlookIntegration:
 
         return "available"
 
-    def sync_contacts(self, user_email: str) -> List[Dict]:
+    def sync_contacts(self, user_email: str) -> list[dict]:
         """
         Synchronize Outlook contacts with PBX
 
@@ -235,7 +234,7 @@ class OutlookIntegration:
             user_email: User's email address
 
         Returns:
-            list: List of contacts
+            list: list of contacts
         """
         if not self.enabled or not REQUESTS_AVAILABLE:
             return []
@@ -249,7 +248,7 @@ class OutlookIntegration:
             url = f"{self.graph_endpoint}/users/{user_email}/contacts"
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
             params = {"$select": "displayName,emailAddresses,businessPhones,mobilePhone,homePhones"}
 
@@ -315,7 +314,7 @@ class OutlookIntegration:
 
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             # Extract call details
@@ -367,7 +366,7 @@ class OutlookIntegration:
             self.logger.error(f"Error logging call to calendar: {e}")
             return False
 
-    def get_out_of_office_status(self, user_email: str) -> Optional[Dict]:
+    def get_out_of_office_status(self, user_email: str) -> dict | None:
         """
         Get user's out-of-office status
 
@@ -387,7 +386,7 @@ class OutlookIntegration:
             url = f"{self.graph_endpoint}/users/{user_email}/mailboxSettings/automaticRepliesSetting"
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             response = requests.get(url, headers=headers, timeout=10)
@@ -457,7 +456,7 @@ class OutlookIntegration:
             url = f"{self.graph_endpoint}/users/{user_email}/calendar/events/{meeting_id}"
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             response = requests.get(url, headers=headers, timeout=10)

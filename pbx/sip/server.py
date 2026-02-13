@@ -62,7 +62,7 @@ class SIPServer:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-            # Set socket timeout to allow periodic checking of running flag
+            # set socket timeout to allow periodic checking of running flag
             self.socket.settimeout(1.0)
             self.socket.bind((self.host, self.port))
             self.running = True
@@ -248,7 +248,7 @@ class SIPServer:
             # Forward BYE to the other party in the call if present
             if call:
                 self.logger.info(
-                    f"  Call Type: {'Voicemail Access' if hasattr(call, 'voicemail_access') and call.voicemail_access else 'Regular Call'}"
+                    f"  Call type: {'Voicemail Access' if hasattr(call, 'voicemail_access') and call.voicemail_access else 'Regular Call'}"
                 )
                 self.logger.info(f"  Call State: {call.state}")
                 if hasattr(call, "voicemail_extension"):
@@ -354,7 +354,7 @@ class SIPServer:
         """
         Handle INFO request (typically used for DTMF signaling)
 
-        SIP INFO can carry DTMF digits in the message body with Content-Type:
+        SIP INFO can carry DTMF digits in the message body with Content-type:
         - application/dtmf-relay (RFC 2833 style)
         - application/dtmf (simple format)
         """
@@ -362,7 +362,7 @@ class SIPServer:
 
         # Get call context
         call_id = message.get_header("Call-ID")
-        content_type = message.get_header("Content-Type")
+        content_type = message.get_header("Content-type")
 
         # Extract DTMF digit from message body
         dtmf_digit = None
@@ -424,7 +424,7 @@ class SIPServer:
         # Get message details
         from_header = message.get_header("From")
         to_header = message.get_header("To")
-        content_type = message.get_header("Content-Type")
+        content_type = message.get_header("Content-type")
 
         if message.body:
             self.logger.info(f"MESSAGE from {from_header} to {to_header}: {message.body[:100]}")
@@ -477,7 +477,7 @@ class SIPServer:
         self.logger.info(f"UPDATE request from {addr}")
 
         call_id = message.get_header("Call-ID")
-        content_type = message.get_header("Content-Type")
+        content_type = message.get_header("Content-type")
 
         # Check if this is a session update with SDP
         if message.body and content_type and "sdp" in content_type.lower():
@@ -509,7 +509,7 @@ class SIPServer:
         event = message.get_header("Event")
         expires = message.get_header("Expires") or "3600"
         sip_if_match = message.get_header("SIP-If-Match")
-        content_type = message.get_header("Content-Type")
+        content_type = message.get_header("Content-type")
 
         if event:
             self.logger.info(f"PUBLISH for event: {event}, expires: {expires}")

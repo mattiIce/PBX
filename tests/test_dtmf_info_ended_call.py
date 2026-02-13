@@ -6,11 +6,6 @@ This test validates that DTMF INFO messages received for calls that have
 already ended are handled gracefully without producing warnings.
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import CallState
 from pbx.core.pbx import PBXCore
@@ -26,7 +21,6 @@ def test_dtmf_info_for_ended_call_no_warning() -> None:
     3. Phone sends buffered DTMF INFO messages
     4. System should handle gracefully (debug log, not warning)
     """
-    print("Testing DTMF INFO for ended call produces debug log (not warning)...")
 
     # Create minimal PBX instance for testing
     pbx = PBXCore("config.yml")
@@ -96,14 +90,11 @@ def test_dtmf_info_for_ended_call_no_warning() -> None:
     for line in dtmf_lines:
         assert "WARNING" not in line, f"Found WARNING in DTMF log line: {line}"
 
-    print("✓ DTMF INFO for ended call handled gracefully with debug log")
-
 
 def test_dtmf_info_race_condition() -> None:
     """
     Test race condition where DTMF INFO arrives during call teardown
     """
-    print("Testing DTMF INFO race condition during call teardown...")
 
     pbx = PBXCore("config.yml")
 
@@ -124,43 +115,3 @@ def test_dtmf_info_race_condition() -> None:
     pbx.handle_dtmf_info(call_id, "7")
 
     # Should handle gracefully without exceptions
-    print("✓ DTMF INFO race condition handled gracefully")
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running DTMF INFO Ended Call Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_dtmf_info_for_ended_call_no_warning,
-        test_dtmf_info_race_condition,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

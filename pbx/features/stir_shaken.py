@@ -12,7 +12,6 @@ import time
 import uuid
 from datetime import datetime, timedelta, timezone
 from enum import Enum
-from typing import Optional, Tuple
 
 try:
     from cryptography import x509
@@ -156,7 +155,7 @@ class STIRSHAKENManager:
         destination_tn: str,
         attestation: AttestationLevel = AttestationLevel.FULL,
         orig_id: str = None,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Create a PASSporT token (RFC 8225)
 
@@ -228,7 +227,7 @@ class STIRSHAKENManager:
             self.logger.error(f"Failed to sign PASSporT: {e}")
             return None
 
-    def verify_passport(self, passport: str) -> Tuple[bool, Optional[dict], str]:
+    def verify_passport(self, passport: str) -> tuple[bool, dict | None, str]:
         """
         Verify a PASSporT token
 
@@ -236,7 +235,7 @@ class STIRSHAKENManager:
             passport: JWT PASSporT token
 
         Returns:
-            Tuple of (valid: bool, payload: dict, reason: str)
+            tuple of (valid: bool, payload: dict, reason: str)
         """
         if not self.enabled or not self.enable_verification:
             return False, None, "Verification disabled"
@@ -303,7 +302,7 @@ class STIRSHAKENManager:
         destination_tn: str,
         attestation: AttestationLevel = AttestationLevel.FULL,
         orig_id: str = None,
-    ) -> Optional[str]:
+    ) -> str | None:
         """
         Create SIP Identity header with PASSporT (RFC 8588)
 
@@ -327,7 +326,7 @@ class STIRSHAKENManager:
 
         return identity
 
-    def parse_identity_header(self, identity_header: str) -> Optional[dict]:
+    def parse_identity_header(self, identity_header: str) -> dict | None:
         """
         Parse SIP Identity header
 
@@ -367,7 +366,7 @@ class STIRSHAKENManager:
 
     def verify_identity_header(
         self, identity_header: str
-    ) -> Tuple[VerificationStatus, Optional[dict]]:
+    ) -> tuple[VerificationStatus, dict | None]:
         """
         Verify a SIP Identity header
 
@@ -375,7 +374,7 @@ class STIRSHAKENManager:
             identity_header: Identity header value
 
         Returns:
-            Tuple of (status: VerificationStatus, payload: dict)
+            tuple of (status: VerificationStatus, payload: dict)
         """
         if not identity_header:
             return VerificationStatus.NO_SIGNATURE, None
@@ -496,7 +495,7 @@ class STIRSHAKENManager:
             data += "=" * padding
         return base64.urlsafe_b64decode(data)
 
-    def generate_test_certificate(self, output_dir: str = None) -> Tuple[str, str]:
+    def generate_test_certificate(self, output_dir: str = None) -> tuple[str, str]:
         """
         Generate self-signed certificate for testing
 
@@ -504,7 +503,7 @@ class STIRSHAKENManager:
             output_dir: Directory to save certificate files
 
         Returns:
-            Tuple of (cert_path, key_path)
+            tuple of (cert_path, key_path)
         """
         if not CRYPTO_AVAILABLE:
             raise RuntimeError("Cryptography library not available")
@@ -594,7 +593,7 @@ def add_stir_shaken_to_invite(
 
 def verify_stir_shaken_invite(
     sip_message, stir_shaken_manager: STIRSHAKENManager
-) -> Tuple[VerificationStatus, Optional[dict]]:
+) -> tuple[VerificationStatus, dict | None]:
     """
     Verify STIR/SHAKEN signature on incoming SIP INVITE
 
@@ -603,7 +602,7 @@ def verify_stir_shaken_invite(
         stir_shaken_manager: STIRSHAKENManager instance
 
     Returns:
-        Tuple of (status: VerificationStatus, payload: dict)
+        tuple of (status: VerificationStatus, payload: dict)
     """
     if not stir_shaken_manager or not stir_shaken_manager.enabled:
         return VerificationStatus.NOT_VERIFIED, None

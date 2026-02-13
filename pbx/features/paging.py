@@ -5,7 +5,6 @@ Provides support for overhead paging via digital-to-analog converters
 
 import uuid
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -87,7 +86,7 @@ class PagingSystem:
 
         return False
 
-    def get_zone_for_extension(self, extension: str) -> Optional[Dict]:
+    def get_zone_for_extension(self, extension: str) -> dict | None:
         """
         Get the paging zone for a given extension
 
@@ -106,7 +105,7 @@ class PagingSystem:
 
         return None
 
-    def initiate_page(self, from_extension: str, to_extension: str) -> Optional[str]:
+    def initiate_page(self, from_extension: str, to_extension: str) -> str | None:
         """
         Initiate a paging call
 
@@ -201,19 +200,19 @@ class PagingSystem:
 
         return True
 
-    def get_active_pages(self) -> List[Dict]:
+    def get_active_pages(self) -> list[dict]:
         """
         Get all active paging sessions
 
         Returns:
-            list: List of active page dictionaries
+            list: list of active page dictionaries
         """
         if not self.enabled:
             return []
 
         return list(self.active_pages.values())
 
-    def get_page_info(self, page_id: str) -> Optional[Dict]:
+    def get_page_info(self, page_id: str) -> dict | None:
         """
         Get information about a specific page
 
@@ -228,12 +227,12 @@ class PagingSystem:
 
         return self.active_pages.get(page_id)
 
-    def get_zones(self) -> List[Dict]:
+    def get_zones(self) -> list[dict]:
         """
         Get all configured paging zones
 
         Returns:
-            list: List of zone dictionaries
+            list: list of zone dictionaries
         """
         if not self.enabled:
             return []
@@ -315,7 +314,7 @@ class PagingSystem:
 
         Args:
             device_id: Device identifier
-            device_type: Type of device (e.g., 'cisco_vg', 'grandstream_ht')
+            device_type: type of device (e.g., 'cisco_vg', 'grandstream_ht')
             sip_uri: SIP URI for the device
             ip_address: IP address of the device
             port: SIP port (default 5060)
@@ -346,12 +345,12 @@ class PagingSystem:
 
         return True
 
-    def get_dac_devices(self) -> List[Dict]:
+    def get_dac_devices(self) -> list[dict]:
         """
         Get all configured DAC devices
 
         Returns:
-            list: List of DAC device dictionaries
+            list: list of DAC device dictionaries
         """
         if not self.enabled:
             return []

@@ -170,7 +170,7 @@ class EmailNotifier:
             to_email: Recipient email address
             extension_number: Extension number
             unread_count: Number of unread messages
-            messages: List of message dictionaries
+            messages: list of message dictionaries
 
         Returns:
             True if email sent successfully

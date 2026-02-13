@@ -218,7 +218,7 @@ def get_openapi_spec():
             "/api/extensions": {
                 "get": {
                     "tags": ["Extensions"],
-                    "summary": "List extensions",
+                    "summary": "list extensions",
                     "description": (
                         "Get all extensions. Admin users see all extensions; "
                         "non-admin users see only their own."
@@ -227,7 +227,7 @@ def get_openapi_spec():
                     "security": [{"BearerAuth": []}],
                     "responses": {
                         "200": {
-                            "description": "List of extensions",
+                            "description": "list of extensions",
                             "content": {
                                 "application/json": {
                                     "schema": {
@@ -403,13 +403,13 @@ def get_openapi_spec():
             "/api/calls": {
                 "get": {
                     "tags": ["Calls"],
-                    "summary": "List active calls",
+                    "summary": "list active calls",
                     "description": "Get all currently active calls.",
                     "operationId": "getActiveCalls",
                     "security": [{"BearerAuth": []}],
                     "responses": {
                         "200": {
-                            "description": "List of active calls",
+                            "description": "list of active calls",
                             "content": {
                                 "application/json": {
                                     "schema": {

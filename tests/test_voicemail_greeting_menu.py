@@ -8,11 +8,6 @@ This test validates:
 3. Proper state transitions during greeting management
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
@@ -23,7 +18,6 @@ TEST_AUDIO_DATA = b"test greeting audio data"
 
 def test_access_options_menu() -> None:
     """Test accessing the options menu from main menu"""
-    print("Testing access to options menu...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -43,12 +37,9 @@ def test_access_options_menu() -> None:
     assert result["action"] == "play_prompt", "Should play options menu prompt"
     assert result["prompt"] == "options_menu", "Should be options menu prompt"
 
-    print("✓ Successfully accessed options menu")
-
 
 def test_start_greeting_recording() -> None:
     """Test starting greeting recording from options menu"""
-    print("Testing start greeting recording...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -69,12 +60,9 @@ def test_start_greeting_recording() -> None:
     assert result["action"] == "start_recording", "Should start recording"
     assert result["recording_type"] == "greeting", "Recording type should be greeting"
 
-    print("✓ Successfully started greeting recording")
-
 
 def test_finish_greeting_recording() -> None:
     """Test finishing greeting recording with #"""
-    print("Testing finish greeting recording...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -93,12 +81,9 @@ def test_finish_greeting_recording() -> None:
     assert result["action"] == "stop_recording", "Should stop recording"
     assert result["save_as"] == "greeting", "Should save as greeting"
 
-    print("✓ Successfully finished greeting recording")
-
 
 def test_greeting_review_playback() -> None:
     """Test playing back recorded greeting for review"""
-    print("Testing greeting review playback...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -117,12 +102,9 @@ def test_greeting_review_playback() -> None:
     assert result["action"] == "play_greeting", "Should play greeting"
     assert ivr.state == VoicemailIVR.STATE_GREETING_REVIEW, "Should stay in review state"
 
-    print("✓ Successfully requested greeting playback")
-
 
 def test_greeting_review_rerecord() -> None:
     """Test re-recording greeting from review menu"""
-    print("Testing greeting re-record...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -142,12 +124,9 @@ def test_greeting_review_rerecord() -> None:
     assert result["action"] == "start_recording", "Should start recording again"
     assert ivr.recorded_greeting_data is None, "Previous recording should be cleared"
 
-    print("✓ Successfully started re-recording")
-
 
 def test_greeting_review_delete() -> None:
     """Test deleting custom greeting from review menu"""
-    print("Testing greeting deletion...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -170,12 +149,9 @@ def test_greeting_review_delete() -> None:
     assert ivr.recorded_greeting_data is None, "Recording should be cleared"
     assert not mailbox.has_custom_greeting(), "Custom greeting should be deleted"
 
-    print("✓ Successfully deleted greeting")
-
 
 def test_greeting_review_save() -> None:
     """Test saving recorded greeting from review menu"""
-    print("Testing greeting save...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -197,12 +173,9 @@ def test_greeting_review_save() -> None:
     assert ivr.recorded_greeting_data is None, "Recording should be cleared after saving"
     assert mailbox.has_custom_greeting(), "Custom greeting should be saved"
 
-    print("✓ Successfully saved greeting")
-
 
 def test_complete_greeting_workflow() -> None:
     """Test complete workflow: record -> review -> save"""
-    print("Testing complete greeting workflow...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -239,12 +212,9 @@ def test_complete_greeting_workflow() -> None:
     assert ivr.state == VoicemailIVR.STATE_MAIN_MENU
     assert mailbox.has_custom_greeting()
 
-    print("✓ Successfully completed greeting workflow")
-
 
 def test_return_to_main_menu_from_options() -> None:
     """Test returning to main menu from options menu"""
-    print("Testing return to main menu from options...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -259,51 +229,3 @@ def test_return_to_main_menu_from_options() -> None:
     assert ivr.state == VoicemailIVR.STATE_MAIN_MENU, "Should return to main menu"
     assert result["action"] == "play_prompt", "Should play prompt"
     assert result["prompt"] == "main_menu", "Should be main menu prompt"
-
-    print("✓ Successfully returned to main menu")
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail Greeting Menu Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_access_options_menu,
-        test_start_greeting_recording,
-        test_finish_greeting_recording,
-        test_greeting_review_playback,
-        test_greeting_review_rerecord,
-        test_greeting_review_delete,
-        test_greeting_review_save,
-        test_complete_greeting_workflow,
-        test_return_to_main_menu_from_options,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

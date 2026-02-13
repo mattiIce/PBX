@@ -8,7 +8,6 @@ G.722 uses sub-band ADPCM (SB-ADPCM) to encode 16kHz audio at 64 kbit/s.
 """
 
 import struct
-from typing import List, Optional, Tuple
 
 from pbx.utils.logger import get_logger
 
@@ -287,7 +286,7 @@ class G722Codec:
 
         self.logger.debug(f"G.722 codec initialized at {bitrate} bps (ITU-T compliant)")
 
-    def encode(self, pcm_data: bytes) -> Optional[bytes]:
+    def encode(self, pcm_data: bytes) -> bytes | None:
         """
         Encode PCM audio to G.722
 
@@ -325,7 +324,7 @@ class G722Codec:
             self.logger.error(f"G.722 encoding error: {e}")
             return None
 
-    def decode(self, g722_data: bytes) -> Optional[bytes]:
+    def decode(self, g722_data: bytes) -> bytes | None:
         """
         Decode G.722 to PCM audio
 
@@ -388,7 +387,7 @@ class G722Codec:
         # G.722 format: bits 0-5 = lower sub-band, bits 6-7 = higher sub-band
         return (higher_code << 6) | (lower_code & 0x3F)
 
-    def _decode_sample_pair(self, code: int) -> Tuple[int, int]:
+    def _decode_sample_pair(self, code: int) -> tuple[int, int]:
         """
         Decode one G.722 byte to a pair of 16kHz PCM samples
 
@@ -396,7 +395,7 @@ class G722Codec:
             code: One G.722 encoded byte
 
         Returns:
-            Tuple of two PCM samples (16-bit signed)
+            tuple of two PCM samples (16-bit signed)
         """
         state = self.decoder_state
 
@@ -415,7 +414,7 @@ class G722Codec:
 
         return sample1, sample2
 
-    def _qmf_rx_filter(self, x: List[int], phase: int) -> int:
+    def _qmf_rx_filter(self, x: list[int], phase: int) -> int:
         """
         QMF analysis filter (receive/encode side)
         Splits 16kHz signal into two 8kHz sub-bands
@@ -467,7 +466,7 @@ class G722Codec:
         result = acc >> 14
         return self._saturate(result, -16384, 16383)
 
-    def _qmf_tx_filter(self, rlow: int, rhigh: int, state: G722State) -> Tuple[int, int]:
+    def _qmf_tx_filter(self, rlow: int, rhigh: int, state: G722State) -> tuple[int, int]:
         """
         QMF synthesis filter (transmit/decode side)
         Combines two 8kHz sub-bands into 16kHz signal
@@ -478,7 +477,7 @@ class G722Codec:
             state: Decoder state
 
         Returns:
-            Tuple of two reconstructed 16kHz samples
+            tuple of two reconstructed 16kHz samples
         """
         # Simple QMF synthesis (simplified for this implementation)
         # In full ITU-T implementation, this uses interpolation filters
@@ -903,7 +902,7 @@ class G722CodecManager:
         else:
             self.logger.info("G.722 codec disabled in configuration")
 
-    def create_encoder(self, call_id: str, bitrate: int = None) -> Optional[G722Codec]:
+    def create_encoder(self, call_id: str, bitrate: int = None) -> G722Codec | None:
         """
         Create encoder for a call
 
@@ -925,7 +924,7 @@ class G722CodecManager:
 
         return encoder
 
-    def create_decoder(self, call_id: str, bitrate: int = None) -> Optional[G722Codec]:
+    def create_decoder(self, call_id: str, bitrate: int = None) -> G722Codec | None:
         """
         Create decoder for a call
 
@@ -962,11 +961,11 @@ class G722CodecManager:
 
         self.logger.debug(f"Released G.722 codecs for call {call_id}")
 
-    def get_encoder(self, call_id: str) -> Optional[G722Codec]:
+    def get_encoder(self, call_id: str) -> G722Codec | None:
         """Get encoder for a call"""
         return self.encoders.get(call_id)
 
-    def get_decoder(self, call_id: str) -> Optional[G722Codec]:
+    def get_decoder(self, call_id: str) -> G722Codec | None:
         """Get decoder for a call"""
         return self.decoders.get(call_id)
 
@@ -990,7 +989,7 @@ class G722CodecManager:
         Get SDP capabilities for SIP negotiation
 
         Returns:
-            List of SDP format lines
+            list of SDP format lines
         """
         if not self.enabled:
             return []

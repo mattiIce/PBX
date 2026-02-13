@@ -456,7 +456,7 @@ class StatisticsEngine:
         Export call records to CSV file
 
         Args:
-            records: List of call records
+            records: list of call records
             filename: Output filename
 
         Returns:
@@ -498,7 +498,7 @@ class StatisticsEngine:
         Generate custom report
 
         Args:
-            report_type: Type of report ('daily', 'weekly', 'monthly', 'custom')
+            report_type: type of report ('daily', 'weekly', 'monthly', 'custom')
             params: Report parameters (date range, filters, etc.)
 
         Returns:

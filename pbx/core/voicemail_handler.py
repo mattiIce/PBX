@@ -172,7 +172,7 @@ class VoicemailHandler:
         ok_response = SIPMessageBuilder.build_response(
             200, "OK", call.original_invite, body=voicemail_sdp
         )
-        ok_response.set_header("Content-Type", "application/sdp")
+        ok_response.set_header("Content-type", "application/sdp")
 
         # Build Contact header
         sip_port = pbx.config.get("server.sip_port", 5060)
@@ -232,7 +232,7 @@ class VoicemailHandler:
             call_id: Call identifier
             call: Call object
             mailbox: VoicemailBox object
-            messages: List of message dictionaries
+            messages: list of message dictionaries
         """
         from pbx.rtp.handler import RTPPlayer
 

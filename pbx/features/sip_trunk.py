@@ -8,7 +8,6 @@ import threading
 import time
 from datetime import datetime
 from enum import Enum
-from typing import List, Optional, Tuple
 
 from pbx.utils.e911_protection import E911Protection
 from pbx.utils.logger import get_logger
@@ -59,7 +58,7 @@ class SIPTrunk:
             username: SIP username
             password: SIP password
             port: SIP port (default 5060)
-            codec_preferences: List of preferred codecs
+            codec_preferences: list of preferred codecs
             priority: Trunk priority (lower is better, for failover)
             max_channels: Maximum concurrent channels
             health_check_interval: Seconds between health checks
@@ -461,7 +460,7 @@ class SIPTrunkSystem:
             number: Dialed number
 
         Returns:
-            Tuple of (trunk, transformed_number) or (None, None)
+            tuple of (trunk, transformed_number) or (None, None)
         """
         # Block E911 calls in test mode
         if self.e911_protection.block_if_e911(number, context="route_outbound"):
@@ -564,12 +563,12 @@ class SIPTrunkSystem:
         # 3. Monitor for recovery of failed trunk
         # 4. Automatically restore when recovered (if auto_recovery_enabled)
 
-    def _get_available_trunks_by_priority(self) -> List[SIPTrunk]:
+    def _get_available_trunks_by_priority(self) -> list[SIPTrunk]:
         """
         Get list of available trunks sorted by priority
 
         Returns:
-            List of available trunks
+            list of available trunks
         """
         available = [
             trunk
@@ -582,7 +581,7 @@ class SIPTrunkSystem:
         available.sort(key=lambda t: t.priority)
         return available
 
-    def route_outbound_with_failover(self, number: str) -> Tuple[Optional[SIPTrunk], Optional[str]]:
+    def route_outbound_with_failover(self, number: str) -> tuple[SIPTrunk | None, str | None]:
         """
         Route outbound call with automatic failover
 
@@ -590,7 +589,7 @@ class SIPTrunkSystem:
             number: Dialed number
 
         Returns:
-            Tuple of (trunk, transformed_number) or (None, None)
+            tuple of (trunk, transformed_number) or (None, None)
         """
         # Block E911 calls in test mode
         if self.e911_protection.block_if_e911(number, context="route_outbound_with_failover"):
@@ -625,7 +624,7 @@ class SIPTrunkSystem:
         self.logger.warning(f"No route found for outbound number {number}")
         return (None, None)
 
-    def _find_failover_trunk(self, primary_trunk: SIPTrunk) -> Optional[SIPTrunk]:
+    def _find_failover_trunk(self, primary_trunk: SIPTrunk) -> SIPTrunk | None:
         """
         Find suitable failover trunk
 

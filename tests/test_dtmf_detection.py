@@ -4,20 +4,16 @@ Tests that DTMF detector properly filters noise and only detects real tones
 """
 
 import math
-import os
-import sys
-import unittest
+import pytest
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.utils.dtmf import DTMF_FREQUENCIES, DTMFDetector, DTMFGenerator
 
 
-class TestDTMFDetection(unittest.TestCase):
+class TestDTMFDetection:
     """Test DTMF tone detection"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         self.detector = DTMFDetector(sample_rate=8000, samples_per_frame=205)
         self.generator = DTMFGenerator(sample_rate=8000)
@@ -29,25 +25,25 @@ class TestDTMFDetection(unittest.TestCase):
 
         # Detector should recognize it
         digit = self.detector.detect_tone(samples)
-        self.assertEqual(digit, "1")
+        assert digit == "1"
 
     def test_detect_valid_tone_5(self) -> None:
         """Test detection of valid DTMF tone '5'"""
         samples = self.generator.generate_tone("5", duration_ms=100)
         digit = self.detector.detect_tone(samples)
-        self.assertEqual(digit, "5")
+        assert digit == "5"
 
     def test_detect_valid_tone_star(self) -> None:
         """Test detection of valid DTMF tone '*'"""
         samples = self.generator.generate_tone("*", duration_ms=100)
         digit = self.detector.detect_tone(samples)
-        self.assertEqual(digit, "*")
+        assert digit == "*"
 
     def test_detect_valid_tone_pound(self) -> None:
         """Test detection of valid DTMF tone '#'"""
         samples = self.generator.generate_tone("#", duration_ms=100)
         digit = self.detector.detect_tone(samples)
-        self.assertEqual(digit, "#")
+        assert digit == "#"
 
     def test_no_detection_on_silence(self) -> None:
         """Test that silence does not trigger false DTMF detection"""
@@ -56,7 +52,7 @@ class TestDTMFDetection(unittest.TestCase):
 
         # Detector should NOT detect any tone
         digit = self.detector.detect_tone(samples)
-        self.assertIsNone(digit, "Silence should not be detected as DTMF tone")
+        assert digit, "Silence should not be detected as DTMF tone" is None
 
     def test_no_detection_on_white_noise(self) -> None:
         """Test that white noise does not trigger false DTMF detection"""
@@ -67,7 +63,7 @@ class TestDTMFDetection(unittest.TestCase):
 
         # Detector should NOT detect any tone
         digit = self.detector.detect_tone(samples)
-        self.assertIsNone(digit, "White noise should not be detected as DTMF tone")
+        assert digit, "White noise should not be detected as DTMF tone" is None
 
     def test_no_detection_on_single_frequency(self) -> None:
         """Test that a single frequency tone is not detected as DTMF"""
@@ -81,7 +77,7 @@ class TestDTMFDetection(unittest.TestCase):
 
         # Detector should NOT detect a tone (needs both low and high freq)
         digit = self.detector.detect_tone(samples)
-        self.assertIsNone(digit, "Single frequency should not be detected as DTMF tone")
+        assert digit, "Single frequency should not be detected as DTMF tone" is None
 
     def test_no_detection_on_weak_tone(self) -> None:
         """Test that very weak tones are not detected"""
@@ -101,7 +97,7 @@ class TestDTMFDetection(unittest.TestCase):
         # Detector should NOT detect such a weak tone (below 0.01 energy
         # threshold)
         digit = self.detector.detect_tone(samples)
-        self.assertIsNone(digit, "Very weak tones (below energy threshold) should not be detected")
+        assert digit, "Very weak tones (below energy threshold) should not be detected" is None
 
     def test_detect_sequence(self) -> None:
         """Test detection of a sequence of DTMF tones"""
@@ -112,7 +108,7 @@ class TestDTMFDetection(unittest.TestCase):
         sequence = self.detector.detect_sequence(samples)
 
         # Should detect the full sequence
-        self.assertEqual(sequence, "123")
+        assert sequence == "123"
 
     def test_threshold_parameter(self) -> None:
         """Test that threshold parameter works correctly"""
@@ -121,12 +117,10 @@ class TestDTMFDetection(unittest.TestCase):
 
         # With normal threshold (0.3), should detect
         digit = self.detector.detect_tone(samples, threshold=0.3)
-        self.assertEqual(digit, "5")
-
+        assert digit == "5"
         # With lower threshold (0.1), should still detect
         digit = self.detector.detect_tone(samples, threshold=0.1)
-        self.assertEqual(digit, "5")
-
+        assert digit == "5"
         # Note: Very high thresholds (>0.8) may not reject clean tones since
         # the Goertzel algorithm produces high magnitudes for matching
         # frequencies
@@ -150,13 +144,12 @@ class TestDTMFDetection(unittest.TestCase):
 
         # Detector should detect this (DTMF is dominant over noise)
         digit = self.detector.detect_tone(samples)
-        self.assertEqual(digit, "1", "DTMF tone should be detected when dominant over noise")
+        assert digit == "1", "DTMF tone should be detected when dominant over noise"
 
-
-class TestDTMFGenerator(unittest.TestCase):
+class TestDTMFGenerator:
     """Test DTMF tone generation"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         self.generator = DTMFGenerator(sample_rate=8000)
 
@@ -165,17 +158,16 @@ class TestDTMFGenerator(unittest.TestCase):
         samples = self.generator.generate_tone("1", duration_ms=100)
 
         # Should generate approximately 800 samples (100ms at 8000 Hz)
-        self.assertAlmostEqual(len(samples), 800, delta=10)
-
+        assert len(samples) == pytest.approx(800, abs=10)
         # Samples should be in valid range [-1, 1]
-        self.assertTrue(all(-1.0 <= s <= 1.0 for s in samples))
+        assert all(-1.0 <= s <= 1.0 for s in samples)
 
     def test_generate_invalid_digit(self) -> None:
         """Test generating tone for invalid digit"""
         samples = self.generator.generate_tone("X", duration_ms=100)
 
         # Should return empty list
-        self.assertEqual(samples, [])
+        assert samples == []
 
     def test_generate_sequence(self) -> None:
         """Test generating a sequence of tones"""
@@ -185,17 +177,4 @@ class TestDTMFGenerator(unittest.TestCase):
         # 3 * (100ms tone + 50ms gap) = 3 * 150ms = 450ms total
         # At 8000Hz: 450ms * 8 samples/ms = 3600 samples
         expected_samples = 3 * (800 + 400)  # 3 * (100ms tone + 50ms gap)
-        self.assertAlmostEqual(len(samples), expected_samples, delta=50)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(sys.modules[__name__])
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    return result.wasSuccessful()
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert len(samples) == pytest.approx(expected_samples, abs=50)

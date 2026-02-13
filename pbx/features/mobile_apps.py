@@ -5,7 +5,6 @@ iOS and Android mobile client support
 
 from datetime import datetime
 from enum import Enum
-from typing import Dict, List
 
 from pbx.utils.logger import get_logger
 
@@ -74,7 +73,7 @@ class MobileAppFramework:
         self.push_enabled = mobile_config.get("push_enabled", True)
 
         # Registered devices
-        self.devices: Dict[str, MobileDevice] = {}
+        self.devices: dict[str, MobileDevice] = {}
 
         # Statistics
         self.total_devices = 0
@@ -90,8 +89,8 @@ class MobileAppFramework:
         self.logger.info(f"  Enabled: {self.enabled}")
 
     def register_device(
-        self, device_id: str, platform: str, user_id: str, device_info: Dict = None
-    ) -> Dict:
+        self, device_id: str, platform: str, user_id: str, device_info: dict = None
+    ) -> dict:
         """
         Register a mobile device
 
@@ -102,7 +101,7 @@ class MobileAppFramework:
             device_info: Additional device information
 
         Returns:
-            Dict: Registration result
+            dict: Registration result
         """
         platform_enum = MobilePlatform(platform)
 
@@ -114,7 +113,7 @@ class MobileAppFramework:
 
         device = MobileDevice(device_id, platform_enum, user_id)
 
-        # Set device info
+        # set device info
         if device_info:
             device.app_version = device_info.get("app_version")
             device.os_version = device_info.get("os_version")
@@ -157,7 +156,7 @@ class MobileAppFramework:
 
         return True
 
-    def send_push_notification(self, device_id: str, notification: Dict) -> Dict:
+    def send_push_notification(self, device_id: str, notification: dict) -> dict:
         """
         Send push notification to device
 
@@ -166,7 +165,7 @@ class MobileAppFramework:
             notification: Notification data
 
         Returns:
-            Dict: Send result
+            dict: Send result
         """
         if device_id not in self.devices:
             return {"success": False, "error": "Device not found"}
@@ -292,7 +291,7 @@ class MobileAppFramework:
 
             self.logger.info("Push notification sent successfully")
             self.logger.info(f"  Platform: {device.platform.value}")
-            self.logger.info(f"  Type: {notification.get('type', 'unknown')}")
+            self.logger.info(f"  type: {notification.get('type', 'unknown')}")
             self.logger.info(f"  Notification ID: {notification_id}")
 
             return {
@@ -306,7 +305,7 @@ class MobileAppFramework:
             self.logger.error(f"Failed to send push notification: {str(e)}")
             return {"success": False, "error": str(e)}
 
-    def configure_sip_for_mobile(self, device_id: str, extension: str) -> Dict:
+    def configure_sip_for_mobile(self, device_id: str, extension: str) -> dict:
         """
         Configure SIP settings for mobile device
 
@@ -315,7 +314,7 @@ class MobileAppFramework:
             extension: User's extension
 
         Returns:
-            Dict: SIP configuration
+            dict: SIP configuration
         """
         # Mobile-optimized SIP settings
         sip_config = {
@@ -339,12 +338,12 @@ class MobileAppFramework:
 
         return sip_config
 
-    def _get_turn_servers(self) -> List[Dict]:
+    def _get_turn_servers(self) -> list[dict]:
         """
         Get configured TURN servers for NAT traversal
 
         Returns:
-            List[Dict]: TURN server configurations
+            list[dict]: TURN server configurations
         """
         mobile_config = self.config.get("features", {}).get("mobile_apps", {})
         turn_config = mobile_config.get("turn_servers", [])
@@ -369,7 +368,7 @@ class MobileAppFramework:
             },
         ]
 
-    def handle_incoming_call(self, device_id: str, call_info: Dict) -> Dict:
+    def handle_incoming_call(self, device_id: str, call_info: dict) -> dict:
         """
         Handle incoming call notification for mobile
 
@@ -378,7 +377,7 @@ class MobileAppFramework:
             call_info: Call information
 
         Returns:
-            Dict: Notification result
+            dict: Notification result
         """
         if device_id not in self.devices:
             return {"success": False, "error": "Device not found"}
@@ -423,7 +422,7 @@ class MobileAppFramework:
 
         return False
 
-    def get_user_devices(self, user_id: str) -> List[Dict]:
+    def get_user_devices(self, user_id: str) -> list[dict]:
         """Get all devices for a user"""
         user_devices = [
             {
@@ -439,7 +438,7 @@ class MobileAppFramework:
 
         return user_devices
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get mobile app statistics"""
         # Calculate active devices (active in last 24 hours)
         now = datetime.now()

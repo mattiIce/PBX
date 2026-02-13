@@ -2,11 +2,7 @@
 """
 Tests for registered phones database tracking
 """
-import os
-import sys
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
@@ -14,7 +10,6 @@ from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 def test_phone_registration() -> None:
     """Test phone registration in database"""
-    print("Testing phone registration...")
 
     # Create database backend (using SQLite for tests)
     config = Config("config.yml")
@@ -50,12 +45,9 @@ def test_phone_registration() -> None:
     assert phone is not None, "Failed to retrieve phone by IP"
     assert phone["extension_number"] == "1001", "Wrong extension number"
 
-    print("✓ Phone registration with MAC works")
-
 
 def test_phone_registration_without_mac() -> None:
     """Test phone registration without MAC address (IP-based fallback)"""
-    print("Testing phone registration without MAC (IP-based)...")
 
     # Create database backend (using SQLite for tests)
     config = Config("config.yml")
@@ -85,12 +77,9 @@ def test_phone_registration_without_mac() -> None:
     assert phone["ip_address"] == "192.168.1.101", "Wrong IP address"
     assert phone["mac_address"] is None, "MAC should be None"
 
-    print("✓ Phone registration without MAC (IP-based) works")
-
 
 def test_phone_update_registration() -> None:
     """Test updating phone registration"""
-    print("Testing phone registration update...")
 
     # Create database backend
     config = Config("config.yml")
@@ -123,12 +112,9 @@ def test_phone_update_registration() -> None:
     assert len(phones) == 1, f"Expected 1 phone, got {len(phones)}"
     assert phones[0]["user_agent"] == "Yealink SIP-T46S v2", "User agent not updated"
 
-    print("✓ Phone registration update works")
-
 
 def test_list_phones_by_extension() -> None:
     """Test listing all phones for an extension"""
-    print("Testing listing phones by extension...")
 
     # Create database backend
     config = Config("config.yml")
@@ -151,12 +137,9 @@ def test_list_phones_by_extension() -> None:
     assert len(phones) >= 1, "No phones found for extension"
     assert phones[0]["extension_number"] == "1004", "Wrong extension"
 
-    print("✓ Listing phones by extension works")
-
 
 def test_list_all_phones() -> None:
     """Test listing all registered phones"""
-    print("Testing listing all phones...")
 
     # Create database backend
     config = Config("config.yml")
@@ -179,8 +162,6 @@ def test_list_all_phones() -> None:
         len(all_phones) >= 3
     ), f"Expected at least 3 phones, got {len(all_phones)}"
 
-    print("✓ Listing all phones works")
-
 
 def test_mac_preservation_on_reregistration() -> None:
     """
@@ -189,7 +170,6 @@ def test_mac_preservation_on_reregistration() -> None:
     This addresses the issue where phones may not send MAC in every REGISTER.
     The system should preserve existing MAC/IP/extension instead of overwriting with None.
     """
-    print("Testing MAC preservation on re-registration...")
 
     # Create database backend
     config = Config("config.yml")
@@ -236,14 +216,11 @@ def test_mac_preservation_on_reregistration() -> None:
     phone = phones_db.get_by_ip("192.168.1.105", "1005")
     assert phone["mac_address"] == "001565999999", "MAC should be updated when new MAC provided"
 
-    print("✓ MAC preservation on re-registration works")
-
 
 def test_ip_preservation_on_reregistration() -> None:
     """
     Test that IP address is preserved when phone re-registers with MAC only
     """
-    print("Testing IP preservation on re-registration...")
 
     # Create database backend
     config = Config("config.yml")
@@ -268,8 +245,6 @@ def test_ip_preservation_on_reregistration() -> None:
     assert phone is not None, "Phone not found"
     assert phone["ip_address"] == "192.168.1.106", "IP not stored correctly"
 
-    print("✓ IP preservation on re-registration works")
-
 
 def test_update_phone_extension() -> None:
     """
@@ -279,7 +254,6 @@ def test_update_phone_extension() -> None:
     one extension to another. The system should update the extension number
     rather than creating duplicate entries.
     """
-    print("Testing phone extension update (reprovisioning)...")
 
     # Create database backend
     config = Config("config.yml")
@@ -333,14 +307,11 @@ def test_update_phone_extension() -> None:
     assert len(new_ext_phones) == 1, "New extension should have exactly 1 phone"
     assert new_ext_phones[0]["mac_address"] == "001565AABBCC", "Wrong phone on new extension"
 
-    print("✓ Phone extension update (reprovisioning) works")
-
 
 def test_update_phone_extension_without_mac() -> None:
     """
     Test that update_phone_extension requires a MAC address
     """
-    print("Testing phone extension update validation...")
 
     # Create database backend
     config = Config("config.yml")
@@ -359,41 +330,3 @@ def test_update_phone_extension_without_mac() -> None:
     # Try to update with empty MAC - should return False
     success = phones_db.update_phone_extension(mac_address="", new_extension_number="1003")
     assert not success, "Should fail when MAC address is empty"
-
-    print("✓ Phone extension update validation works")
-
-
-def run_all_tests() -> bool | None:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Registered Phones Tests")
-    print("=" * 60)
-
-    try:
-        test_phone_registration()
-        test_phone_registration_without_mac()
-        test_phone_update_registration()
-        test_list_phones_by_extension()
-        test_list_all_phones()
-        test_mac_preservation_on_reregistration()
-        test_ip_preservation_on_reregistration()
-        test_update_phone_extension()
-        test_update_phone_extension_without_mac()
-
-        print("=" * 60)
-        print("Results: 9 passed, 0 failed")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        return False
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

@@ -135,7 +135,7 @@ class AutoAttendantHandler:
 
         # Send 200 OK to answer the call
         ok_response = SIPMessageBuilder.build_response(200, "OK", call.original_invite, body=aa_sdp)
-        ok_response.set_header("Content-Type", "application/sdp")
+        ok_response.set_header("Content-type", "application/sdp")
 
         # Build Contact header
         sip_port = pbx.config.get("server.sip_port", 5060)

@@ -6,7 +6,6 @@ Continuously monitors and enforces security compliance during PBX operation
 import threading
 import time
 from datetime import datetime
-from typing import Dict
 
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 from pbx.utils.logger import get_logger
@@ -118,7 +117,7 @@ class SecurityMonitor:
                 self.logger.error(f"Security monitor error: {e}")
                 time.sleep(60)  # Shorter retry on error
 
-    def perform_security_check(self) -> Dict:
+    def perform_security_check(self) -> dict:
         """
         Perform comprehensive security compliance check
 
@@ -202,7 +201,7 @@ class SecurityMonitor:
 
         return results
 
-    def _send_security_alert(self, results: Dict, severity: str):
+    def _send_security_alert(self, results: dict, severity: str):
         """
         Send security alert via webhook
 
@@ -237,7 +236,7 @@ class SecurityMonitor:
         except Exception as e:
             self.logger.error(f"Failed to send security alert via webhook: {e}")
 
-    def _check_fips_compliance(self) -> Dict:
+    def _check_fips_compliance(self) -> dict:
         """Check FIPS 140-2 compliance status"""
         result = {
             "name": "FIPS 140-2 Compliance",
@@ -291,7 +290,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_password_policy(self) -> Dict:
+    def _check_password_policy(self) -> dict:
         """Check password policy enforcement"""
         result = {"name": "Password Policy", "status": "PASS", "severity": "HIGH", "details": {}}
 
@@ -325,7 +324,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_rate_limiting(self) -> Dict:
+    def _check_rate_limiting(self) -> dict:
         """Check rate limiting configuration"""
         result = {"name": "Rate Limiting", "status": "PASS", "severity": "HIGH", "details": {}}
 
@@ -348,7 +347,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_audit_logging(self) -> Dict:
+    def _check_audit_logging(self) -> dict:
         """Check security audit logging"""
         result = {
             "name": "Security Audit Logging",
@@ -371,7 +370,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_threat_detection(self) -> Dict:
+    def _check_threat_detection(self) -> dict:
         """Check threat detection system"""
         result = {"name": "Threat Detection", "status": "PASS", "severity": "MEDIUM", "details": {}}
 
@@ -389,7 +388,7 @@ class SecurityMonitor:
 
         return result
 
-    def get_compliance_status(self) -> Dict:
+    def get_compliance_status(self) -> dict:
         """
         Get current compliance status
 

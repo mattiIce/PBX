@@ -499,7 +499,7 @@ def handle_get_webrtc_session(subpath: str) -> Response:
 @webrtc_bp.route("/api/webrtc/phone-config", methods=["POST"])
 @require_auth
 def handle_set_webrtc_phone_config() -> Response:
-    """Set WebRTC phone extension configuration."""
+    """set WebRTC phone extension configuration."""
     pbx_core = get_pbx_core()
     try:
         data = get_request_body()

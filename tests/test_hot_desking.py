@@ -3,20 +3,15 @@
 Test hot-desking feature
 """
 
-import os
-import sys
 import time
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
 
 def test_hot_desk_session_creation() -> bool:
     """Test hot desk session creation"""
-    print("Testing hot desk session creation...")
 
     session = HotDeskSession("1001", "device-123", "192.168.1.100")
 
@@ -31,13 +26,11 @@ def test_hot_desk_session_creation() -> bool:
     assert "device_id" in data, "Should have device_id"
     assert "logged_in_at" in data, "Should have logged_in_at"
 
-    print("✓ Hot desk session creation works")
     return True
 
 
 def test_hot_desking_initialization() -> bool:
     """Test hot-desking system initialization"""
-    print("\nTesting hot-desking system initialization...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -59,13 +52,11 @@ def test_hot_desking_initialization() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Hot-desking system initialization works")
     return True
 
 
 def test_hot_desk_login_logout() -> bool:
     """Test hot-desk login and logout"""
-    print("\nTesting hot-desk login and logout...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -118,13 +109,11 @@ def test_hot_desk_login_logout() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Hot-desk login and logout works")
     return True
 
 
 def test_hot_desk_invalid_pin() -> bool:
     """Test hot-desk login with invalid PIN"""
-    print("\nTesting hot-desk login with invalid PIN...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -166,13 +155,11 @@ def test_hot_desk_invalid_pin() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Hot-desk login with invalid PIN works")
     return True
 
 
 def test_hot_desk_concurrent_logins() -> bool:
     """Test concurrent login behavior"""
-    print("\nTesting concurrent login behavior...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -220,13 +207,11 @@ def test_hot_desk_concurrent_logins() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Concurrent login behavior works")
     return True
 
 
 def test_hot_desk_allow_concurrent() -> bool:
     """Test allowing concurrent logins"""
-    print("\nTesting allowing concurrent logins...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -275,13 +260,11 @@ def test_hot_desk_allow_concurrent() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Allowing concurrent logins works")
     return True
 
 
 def test_hot_desk_extension_logout() -> bool:
     """Test logging out extension from all devices"""
-    print("\nTesting extension logout from all devices...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -328,13 +311,11 @@ def test_hot_desk_extension_logout() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Extension logout from all devices works")
     return True
 
 
 def test_hot_desk_session_activity() -> bool:
     """Test session activity tracking"""
-    print("\nTesting session activity tracking...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -381,13 +362,11 @@ def test_hot_desk_session_activity() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Session activity tracking works")
     return True
 
 
 def test_hot_desk_profile_retrieval() -> bool:
     """Test extension profile retrieval"""
-    print("\nTesting extension profile retrieval...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -428,36 +407,4 @@ def test_hot_desk_profile_retrieval() -> bool:
 
     hot_desk.stop()
 
-    print("✓ Extension profile retrieval works")
     return True
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Testing Hot-Desking Feature")
-    print("=" * 70)
-
-    results = []
-    results.append(test_hot_desk_session_creation())
-    results.append(test_hot_desking_initialization())
-    results.append(test_hot_desk_login_logout())
-    results.append(test_hot_desk_invalid_pin())
-    results.append(test_hot_desk_concurrent_logins())
-    results.append(test_hot_desk_allow_concurrent())
-    results.append(test_hot_desk_extension_logout())
-    results.append(test_hot_desk_session_activity())
-    results.append(test_hot_desk_profile_retrieval())
-
-    print("\n" + "=" * 70)
-    if all(results):
-        print(f"✅ All hot-desking tests passed! ({len(results)}/{len(results)})")
-        return True
-    else:
-        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

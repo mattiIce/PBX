@@ -6,20 +6,17 @@ Test webhook system for event-driven integrations
 import hashlib
 import hmac
 import json
-import os
-import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSystem
 
 
 # Mock webhook receiver server
+
 class MockWebhookReceiver(BaseHTTPRequestHandler):
     """Mock HTTP server to receive webhooks"""
 
@@ -63,7 +60,6 @@ def serve_with_timeout(server: HTTPServer) -> None:
 
 def test_webhook_event_creation() -> bool:
     """Test webhook event creation"""
-    print("Testing webhook event creation...")
 
     event = WebhookEvent(
         event_type=WebhookEvent.CALL_STARTED,
@@ -82,13 +78,11 @@ def test_webhook_event_creation() -> bool:
     assert "timestamp" in event_dict, "Should have timestamp"
     assert "data" in event_dict, "Should have data"
 
-    print("✓ Webhook event creation works")
     return True
 
 
 def test_webhook_subscription() -> bool:
     """Test webhook subscription"""
-    print("\nTesting webhook subscription...")
 
     subscription = WebhookSubscription(
         url="http://localhost:9999/webhook",
@@ -118,13 +112,11 @@ def test_webhook_subscription() -> bool:
         subscription.matches_event("call.started") is False
     ), "Disabled subscription should not match"
 
-    print("✓ Webhook subscription works")
     return True
 
 
 def test_webhook_system_initialization() -> bool:
     """Test webhook system initialization"""
-    print("\nTesting webhook system initialization...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -149,22 +141,16 @@ def test_webhook_system_initialization() -> bool:
 
     webhook_system.stop()
 
-    print("✓ Webhook system initialization works")
     return True
 
 
 def test_webhook_delivery() -> bool:
     """Test webhook delivery (skipped - requires HTTP server)"""
-    print("\nTesting webhook delivery...")
-    print("⊘ Webhook delivery test skipped (requires HTTP server infrastructure)")
-    print("  Note: Webhook delivery functionality is implemented and working")
-    print("  See manual testing or integration tests for full validation")
     return True
 
 
 def test_webhook_subscription_management() -> bool:
     """Test webhook subscription management"""
-    print("\nTesting webhook subscription management...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -211,13 +197,11 @@ def test_webhook_subscription_management() -> bool:
 
     webhook_system.stop()
 
-    print("✓ Webhook subscription management works")
     return True
 
 
 def test_webhook_disabled() -> bool:
     """Test webhook system when disabled"""
-    print("\nTesting webhook system when disabled...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -233,13 +217,11 @@ def test_webhook_disabled() -> bool:
     webhook_system.trigger_event(WebhookEvent.CALL_STARTED, {"call_id": "test-call-789"})
 
     # No error should occur
-    print("✓ Webhook disabled state works")
     return True
 
 
 def test_webhook_hmac_signature() -> bool:
     """Test HMAC signature generation"""
-    print("\nTesting HMAC signature generation...")
 
     # Create a webhook event
     event = WebhookEvent("call.started", {"call_id": "test-call", "from": "1001", "to": "1002"})
@@ -261,34 +243,4 @@ def test_webhook_hmac_signature() -> bool:
     assert subscription.secret == "test-secret-key", "Secret should match"
     assert len(expected_signature) == 64, "SHA256 signature should be 64 characters"
 
-    print("✓ HMAC signature generation works")
     return True
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Testing Webhook System")
-    print("=" * 70)
-
-    results = []
-    results.append(test_webhook_event_creation())
-    results.append(test_webhook_subscription())
-    results.append(test_webhook_system_initialization())
-    results.append(test_webhook_delivery())
-    results.append(test_webhook_subscription_management())
-    results.append(test_webhook_disabled())
-    results.append(test_webhook_hmac_signature())
-
-    print("\n" + "=" * 70)
-    if all(results):
-        print(f"✅ All webhook tests passed! ({len(results)}/{len(results)})")
-        return True
-    else:
-        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

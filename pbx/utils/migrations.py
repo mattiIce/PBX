@@ -3,7 +3,6 @@ Database migration system for PBX features
 Manages schema versioning and migrations
 """
 
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -108,7 +107,7 @@ class MigrationManager:
             self.logger.warning(f"Could not get current version: {e}")
             return 0
 
-    def apply_migrations(self, target_version: Optional[int] = None) -> bool:
+    def apply_migrations(self, target_version: int | None = None) -> bool:
         """
         Apply pending migrations
 
@@ -162,12 +161,12 @@ class MigrationManager:
             self.logger.error(f"Migration failed: {e}")
             return False
 
-    def get_migration_status(self) -> List[Dict]:
+    def get_migration_status(self) -> list[dict]:
         """
         Get status of all migrations
 
         Returns:
-            List of migration status dictionaries
+            list of migration status dictionaries
         """
         try:
             self.get_current_version()
@@ -600,13 +599,13 @@ def register_all_migrations(manager: MigrationManager):
     """),
     )
 
-    # Migration 1009: Compliance Framework (SOC 2 Type 2 only)
+    # Migration 1009: Compliance Framework (SOC 2 type 2 only)
     # Note: PCI DSS and GDPR tables commented out as not required
     manager.register_migration(
         1009,
         "Compliance Framework",
         manager._build_migration_sql("""
-        -- SOC 2 Type 2 enhanced
+        -- SOC 2 type 2 enhanced
         CREATE TABLE IF NOT EXISTS soc2_controls (
             id {SERIAL},
             control_id VARCHAR(50) NOT NULL,

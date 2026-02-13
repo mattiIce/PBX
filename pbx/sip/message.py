@@ -84,7 +84,7 @@ class SIPMessage:
         return self.headers.get(name)
 
     def set_header(self, name, value):
-        """Set header value"""
+        """set header value"""
         self.headers[name] = value
 
     def is_request(self):

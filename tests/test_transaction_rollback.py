@@ -6,11 +6,8 @@ Validates that failed transactions are properly rolled back to prevent
 """
 
 import os
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
@@ -18,7 +15,6 @@ from pbx.utils.database import DatabaseBackend
 
 def test_transaction_rollback_on_error() -> None:
     """Test that transactions are rolled back after errors"""
-    print("Testing transaction rollback after errors...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -53,7 +49,6 @@ def test_transaction_rollback_on_error() -> None:
         assert row["caller_id"] == "1234567890"
 
         db.disconnect()
-        print("✓ Transaction rollback on error works correctly")
 
     finally:
         # Cleanup
@@ -63,7 +58,6 @@ def test_transaction_rollback_on_error() -> None:
 
 def test_fetch_one_rollback_on_error() -> None:
     """Test that fetch_one rolls back transaction on error"""
-    print("Testing fetch_one transaction rollback...")
 
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
@@ -87,7 +81,6 @@ def test_fetch_one_rollback_on_error() -> None:
         assert result is True
 
         db.disconnect()
-        print("✓ fetch_one transaction rollback works correctly")
 
     finally:
         if os.path.exists(temp_db.name):
@@ -96,7 +89,6 @@ def test_fetch_one_rollback_on_error() -> None:
 
 def test_fetch_all_rollback_on_error() -> None:
     """Test that fetch_all rolls back transaction on error"""
-    print("Testing fetch_all transaction rollback...")
 
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
@@ -120,7 +112,6 @@ def test_fetch_all_rollback_on_error() -> None:
         assert result is True
 
         db.disconnect()
-        print("✓ fetch_all transaction rollback works correctly")
 
     finally:
         if os.path.exists(temp_db.name):
@@ -129,7 +120,6 @@ def test_fetch_all_rollback_on_error() -> None:
 
 def test_schema_migration_rollback() -> None:
     """Test that schema migration errors don't leave transactions open"""
-    print("Testing schema migration transaction rollback...")
 
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
@@ -154,7 +144,6 @@ def test_schema_migration_rollback() -> None:
         assert result is True
 
         db.disconnect()
-        print("✓ Schema migration transaction handling works correctly")
 
     finally:
         if os.path.exists(temp_db.name):
@@ -163,7 +152,6 @@ def test_schema_migration_rollback() -> None:
 
 def test_permission_error_rollback() -> None:
     """Test that permission errors properly rollback transactions"""
-    print("Testing permission error transaction rollback...")
 
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
@@ -190,50 +178,7 @@ def test_permission_error_rollback() -> None:
         assert result is True
 
         db.disconnect()
-        print("✓ Permission error transaction rollback works correctly")
 
     finally:
         if os.path.exists(temp_db.name):
             os.unlink(temp_db.name)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Running Transaction Rollback Tests")
-    print("=" * 70)
-    print()
-
-    tests = [
-        test_transaction_rollback_on_error,
-        test_fetch_one_rollback_on_error,
-        test_fetch_all_rollback_on_error,
-        test_schema_migration_rollback,
-        test_permission_error_rollback,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

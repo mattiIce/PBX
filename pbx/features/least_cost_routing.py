@@ -7,7 +7,6 @@ based on destination, time of day, and carrier rates
 import re
 import sqlite3
 from datetime import datetime, time
-from typing import Dict, List, Optional, Tuple
 
 from pbx.utils.logger import get_logger
 
@@ -96,7 +95,7 @@ class TimeBasedRate:
         name: str,
         start_time: time,
         end_time: time,
-        days_of_week: List[int],  # 0=Monday, 6=Sunday
+        days_of_week: list[int],  # 0=Monday, 6=Sunday
         rate_multiplier: float = 1.0,
     ):
         """
@@ -106,7 +105,7 @@ class TimeBasedRate:
             name: Name of time period (e.g., "Peak Hours", "Weekend")
             start_time: Start time
             end_time: End time
-            days_of_week: List of applicable days (0=Monday, 6=Sunday)
+            days_of_week: list of applicable days (0=Monday, 6=Sunday)
             rate_multiplier: Multiplier for rates during this period
         """
         self.name = name
@@ -157,8 +156,8 @@ class LeastCostRouting:
         self._init_database()
 
         # Rate database - load from DB
-        self.rate_entries: List[RateEntry] = []
-        self.time_based_rates: List[TimeBasedRate] = []
+        self.rate_entries: list[RateEntry] = []
+        self.time_based_rates: list[TimeBasedRate] = []
         self._load_from_database()
 
         # Configuration
@@ -322,7 +321,7 @@ class LeastCostRouting:
         start_minute: int,
         end_hour: int,
         end_minute: int,
-        days: List[int],
+        days: list[int],
         multiplier: float,
     ):
         """Save a time-based rate to database"""
@@ -431,7 +430,7 @@ class LeastCostRouting:
         start_minute: int,
         end_hour: int,
         end_minute: int,
-        days: List[int],
+        days: list[int],
         multiplier: float,
     ):
         """
@@ -472,7 +471,7 @@ class LeastCostRouting:
         self.logger.info(f"Added time-based rate: {name} ({multiplier}x)")
         return True
 
-    def get_applicable_rates(self, dialed_number: str) -> List[Tuple[str, float]]:
+    def get_applicable_rates(self, dialed_number: str) -> list[tuple[str, float]]:
         """
         Get applicable rates for a dialed number
 
@@ -480,7 +479,7 @@ class LeastCostRouting:
             dialed_number: Number being dialed
 
         Returns:
-            List of (trunk_id, estimated_cost) tuples sorted by cost
+            list of (trunk_id, estimated_cost) tuples sorted by cost
         """
         applicable_rates = []
 
@@ -502,13 +501,13 @@ class LeastCostRouting:
 
         return applicable_rates
 
-    def select_trunk(self, dialed_number: str, available_trunks: List[str]) -> Optional[str]:
+    def select_trunk(self, dialed_number: str, available_trunks: list[str]) -> str | None:
         """
         Select the best trunk for a call using LCR
 
         Args:
             dialed_number: Number being dialed
-            available_trunks: List of available trunk IDs
+            available_trunks: list of available trunk IDs
 
         Returns:
             Selected trunk ID or None
@@ -560,12 +559,12 @@ class LeastCostRouting:
 
         return selected_trunk
 
-    def _select_with_quality(self, available_rates: List[Tuple[str, float]]) -> str:
+    def _select_with_quality(self, available_rates: list[tuple[str, float]]) -> str:
         """
         Select trunk considering both cost and quality
 
         Args:
-            available_rates: List of (trunk_id, cost) tuples
+            available_rates: list of (trunk_id, cost) tuples
 
         Returns:
             Selected trunk ID
@@ -598,7 +597,7 @@ class LeastCostRouting:
 
         return trunk_scores[0][0]
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get LCR statistics"""
         return {
             "enabled": self.enabled,

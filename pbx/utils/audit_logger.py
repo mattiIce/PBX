@@ -7,13 +7,13 @@ import json
 import logging
 import os
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any
 
 
 class AuditLogger:
     """Audit logger for administrative actions."""
 
-    def __init__(self, log_file: Optional[str] = None):
+    def __init__(self, log_file: str | None = None):
         """Initialize audit logger.
 
         Args:
@@ -41,7 +41,7 @@ class AuditLogger:
             handler = logging.FileHandler(log_file)
             handler.setLevel(logging.INFO)
 
-            # Set restrictive permissions on the log file (owner read/write only)
+            # set restrictive permissions on the log file (owner read/write only)
             # This prevents unauthorized access to sensitive audit data
             if log_path.exists():
                 os.chmod(log_file, 0o600)
@@ -53,7 +53,7 @@ class AuditLogger:
             handler.setFormatter(formatter)
             self.logger.addHandler(handler)
 
-            # Set permissions after handler is created (in case it creates the file)
+            # set permissions after handler is created (in case it creates the file)
             if log_path.exists():
                 os.chmod(log_file, 0o600)
 
@@ -62,11 +62,11 @@ class AuditLogger:
         action: str,
         user: str,
         resource: str,
-        resource_id: Optional[str] = None,
-        details: Optional[Dict[str, Any]] = None,
+        resource_id: str | None = None,
+        details: dict[str, Any] | None = None,
         success: bool = True,
-        ip_address: Optional[str] = None,
-        user_agent: Optional[str] = None,
+        ip_address: str | None = None,
+        user_agent: str | None = None,
     ):
         """Log an administrative action.
 
@@ -109,7 +109,7 @@ class AuditLogger:
         else:
             self.logger.warning(message)
 
-    def _sanitize_details(self, details: Dict[str, Any]) -> Dict[str, Any]:
+    def _sanitize_details(self, details: dict[str, Any]) -> dict[str, Any]:
         """Remove sensitive information from details.
 
         Args:
@@ -153,7 +153,7 @@ class AuditLogger:
         self.log_action(action="logout", user=user, resource="auth", ip_address=ip_address)
 
     def log_extension_create(
-        self, user: str, extension_number: str, details: Dict, ip_address: str
+        self, user: str, extension_number: str, details: dict, ip_address: str
     ):
         """Log extension creation."""
         self.log_action(
@@ -166,7 +166,7 @@ class AuditLogger:
         )
 
     def log_extension_update(
-        self, user: str, extension_number: str, details: Dict, ip_address: str
+        self, user: str, extension_number: str, details: dict, ip_address: str
     ):
         """Log extension update."""
         self.log_action(
@@ -188,7 +188,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_config_change(self, user: str, config_key: str, details: Dict, ip_address: str):
+    def log_config_change(self, user: str, config_key: str, details: dict, ip_address: str):
         """Log configuration change."""
         self.log_action(
             action="update",
@@ -209,7 +209,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_permission_change(self, user: str, target_user: str, details: Dict, ip_address: str):
+    def log_permission_change(self, user: str, target_user: str, details: dict, ip_address: str):
         """Log permission change."""
         self.log_action(
             action="permission_change",
@@ -220,7 +220,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_security_event(self, event_type: str, user: str, details: Dict, ip_address: str):
+    def log_security_event(self, event_type: str, user: str, details: dict, ip_address: str):
         """Log security event."""
         self.log_action(
             action=event_type,
@@ -231,7 +231,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_data_export(self, user: str, export_type: str, details: Dict, ip_address: str):
+    def log_data_export(self, user: str, export_type: str, details: dict, ip_address: str):
         """Log data export."""
         self.log_action(
             action="export",
@@ -242,7 +242,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_backup_operation(self, user: str, operation: str, details: Dict):
+    def log_backup_operation(self, user: str, operation: str, details: dict):
         """Log backup operation."""
         self.log_action(
             action=operation,

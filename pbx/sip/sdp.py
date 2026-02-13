@@ -13,7 +13,7 @@ class SDPSession:
         self.origin = {}  # username, session_id, version, network_type, address_type, address
         self.session_name = "-"
         self.connection = {}  # network_type, address_type, address
-        self.media = []  # List of media descriptions
+        self.media = []  # list of media descriptions
 
     def parse(self, sdp_body):
         """
@@ -174,7 +174,7 @@ class SDPBuilder:
             local_ip: Local IP address for RTP
             local_port: Local RTP port
             session_id: Session ID (can be timestamp)
-            codecs: List of codec payload types to offer (default: ['0', '8', '9', '18', '2', '101'])
+            codecs: list of codec payload types to offer (default: ['0', '8', '9', '18', '2', '101'])
                    When negotiating with a caller, pass their offered codecs to maintain compatibility
                    Standard payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32
             dtmf_payload_type: Payload type for RFC2833 telephone-event (default: 101)

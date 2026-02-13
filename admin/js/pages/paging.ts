@@ -3,9 +3,9 @@
  * Handles paging zones, devices, and active pages.
  */
 
-import { getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
-import { escapeHtml } from '../utils/html.js';
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
+import { escapeHtml } from '../utils/html.ts';
 
 interface PagingZone {
     id: string;
@@ -133,8 +133,8 @@ export async function deletePagingZone(zoneId: string): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadPagingData = loadPagingData;
-(window as any).loadPagingZones = loadPagingZones;
-(window as any).loadPagingDevices = loadPagingDevices;
-(window as any).loadActivePages = loadActivePages;
-(window as any).deletePagingZone = deletePagingZone;
+window.loadPagingData = loadPagingData;
+window.loadPagingZones = loadPagingZones;
+window.loadPagingDevices = loadPagingDevices;
+window.loadActivePages = loadActivePages;
+window.deletePagingZone = deletePagingZone;

@@ -99,7 +99,7 @@ class FIPSEncryption:
             salt: Optional salt (generated if not provided)
 
         Returns:
-            Tuple of (hashed_password, salt)
+            tuple of (hashed_password, salt)
         """
         if not salt:
             # Generate cryptographically secure random salt
@@ -164,7 +164,7 @@ class FIPSEncryption:
             key: Encryption key (must be exactly 32 bytes for AES-256)
 
         Returns:
-            Tuple of (encrypted_data, nonce, tag) as base64 strings
+            tuple of (encrypted_data, nonce, tag) as base64 strings
 
         Raises:
             ValueError: If key length is not 32 bytes
@@ -273,7 +273,7 @@ class FIPSEncryption:
             key_length: Desired key length in bytes (default 32 for AES-256)
 
         Returns:
-            Tuple of (derived_key, salt) as bytes
+            tuple of (derived_key, salt) as bytes
         """
         if not salt:
             salt = secrets.token_bytes(32)

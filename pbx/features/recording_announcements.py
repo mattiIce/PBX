@@ -5,7 +5,6 @@ Auto-play recording disclosure before recording starts
 
 import os
 from datetime import datetime
-from typing import Dict, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -45,7 +44,7 @@ class RecordingAnnouncements:
 
         if self.enabled:
             self.logger.info("Recording announcements initialized")
-            self.logger.info(f"  Type: {self.announcement_type}")
+            self.logger.info(f"  type: {self.announcement_type}")
             self.logger.info(f"  Require consent: {self.require_consent}")
             self._check_audio_file()
 
@@ -106,7 +105,7 @@ class RecordingAnnouncements:
         party: str,
         announcement_played: bool,
         consent_required: bool,
-        consent_given: Optional[bool],
+        consent_given: bool | None,
         consent_timeout: bool,
     ):
         """Log announcement to database"""
@@ -190,7 +189,7 @@ class RecordingAnnouncements:
 
         return False
 
-    def play_announcement(self, call_id: str, party: str = "both") -> Dict:
+    def play_announcement(self, call_id: str, party: str = "both") -> dict:
         """
         Play recording announcement for a call
 
@@ -223,7 +222,7 @@ class RecordingAnnouncements:
 
         return result
 
-    def request_consent(self, call_id: str) -> Dict:
+    def request_consent(self, call_id: str) -> dict:
         """
         Request recording consent from caller
 
@@ -277,7 +276,7 @@ class RecordingAnnouncements:
 
         return True
 
-    def get_announcement_config(self) -> Dict:
+    def get_announcement_config(self) -> dict:
         """Get current announcement configuration"""
         return {
             "enabled": self.enabled,
@@ -295,16 +294,16 @@ class RecordingAnnouncements:
         return True
 
     def set_audio_file(self, path: str) -> bool:
-        """Set custom audio file for announcement"""
+        """set custom audio file for announcement"""
         if not os.path.exists(path):
             self.logger.error(f"Audio file not found: {path}")
             return False
 
         self.audio_path = path
-        self.logger.info(f"Set announcement audio file: {path}")
+        self.logger.info(f"set announcement audio file: {path}")
         return True
 
-    def get_state_requirements(self, state: str) -> Dict:
+    def get_state_requirements(self, state: str) -> dict:
         """
         Get recording consent requirements for a US state
 
@@ -385,7 +384,7 @@ class RecordingAnnouncements:
                 "notification_required": True,  # Be safe
             }
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get recording announcement statistics"""
         total_consent_requests = self.consent_accepted + self.consent_declined
         acceptance_rate = (

@@ -43,7 +43,7 @@ class UserPresence:
 
     def set_status(self, status, custom_message=""):
         """
-        Set presence status
+        set presence status
 
         Args:
             status: PresenceStatus enum value
@@ -144,7 +144,7 @@ class PresenceSystem:
 
     def set_status(self, extension, status, custom_message=""):
         """
-        Set user status
+        set user status
 
         Args:
             extension: Extension number
@@ -158,7 +158,7 @@ class PresenceSystem:
         if user:
             user.set_status(status, custom_message)
             self._notify_subscribers(extension)
-            self.logger.debug(f"Set status for {extension}: {status.value}")
+            self.logger.debug(f"set status for {extension}: {status.value}")
             return True
         return False
 
@@ -278,7 +278,7 @@ class PresenceSystem:
         Get status of all users
 
         Returns:
-            List of presence dictionaries
+            list of presence dictionaries
         """
         return [user.to_dict() for user in self.users.values()]
 
@@ -287,6 +287,6 @@ class PresenceSystem:
         Get list of available users
 
         Returns:
-            List of UserPresence objects
+            list of UserPresence objects
         """
         return [u for u in self.users.values() if u.status == PresenceStatus.AVAILABLE]

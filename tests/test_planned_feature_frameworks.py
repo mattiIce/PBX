@@ -3,11 +3,6 @@
 Test framework implementations for planned features
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.bi_integration import BIIntegration
 from pbx.features.call_blending import CallBlending
@@ -31,7 +26,6 @@ from pbx.features.voice_biometrics import VoiceBiometrics
 
 def test_conversational_ai() -> bool:
     """Test Conversational AI framework"""
-    print("Testing Conversational AI...")
 
     ai = ConversationalAI()
     assert ai is not None, "AI should initialize"
@@ -54,13 +48,11 @@ def test_conversational_ai() -> bool:
     # End conversation
     ai.end_conversation("call-123")
 
-    print("✓ Conversational AI framework works")
     return True
 
 
 def test_predictive_dialing() -> bool:
     """Test Predictive Dialing framework"""
-    print("\nTesting Predictive Dialing...")
 
     dialer = PredictiveDialer()
     assert dialer is not None, "Dialer should initialize"
@@ -81,13 +73,11 @@ def test_predictive_dialing() -> bool:
     stats = dialer.get_statistics()
     assert stats["total_campaigns"] == 1, "Should track campaigns"
 
-    print("✓ Predictive Dialing framework works")
     return True
 
 
 def test_voice_biometrics() -> bool:
     """Test Voice Biometrics framework"""
-    print("\nTesting Voice Biometrics...")
 
     biometrics = VoiceBiometrics()
     assert biometrics is not None, "Biometrics should initialize"
@@ -104,13 +94,11 @@ def test_voice_biometrics() -> bool:
     stats = biometrics.get_statistics()
     assert stats["total_profiles"] == 1, "Should track profiles"
 
-    print("✓ Voice Biometrics framework works")
     return True
 
 
 def test_call_quality_prediction() -> bool:
     """Test Call Quality Prediction framework"""
-    print("\nTesting Call Quality Prediction...")
 
     from pbx.features.call_quality_prediction import NetworkMetrics
 
@@ -129,13 +117,11 @@ def test_call_quality_prediction() -> bool:
     stats = prediction.get_statistics()
     assert stats["endpoints_monitored"] >= 0, "Should track endpoints"
 
-    print("✓ Call Quality Prediction framework works")
     return True
 
 
 def test_video_codec() -> bool:
     """Test Video Codec framework"""
-    print("\nTesting Video Codec...")
 
     from pbx.features.video_codec import VideoCodec, VideoProfile, VideoResolution
 
@@ -152,13 +138,11 @@ def test_video_codec() -> bool:
     stats = manager.get_statistics()
     assert "available_codecs" in stats, "Should have codec info"
 
-    print("✓ Video Codec framework works")
     return True
 
 
 def test_bi_integration() -> bool:
     """Test Business Intelligence Integration framework"""
-    print("\nTesting BI Integration...")
 
     import tempfile
 
@@ -183,13 +167,11 @@ def test_bi_integration() -> bool:
         stats = bi.get_statistics()
         assert stats["total_exports"] == 1, "Should track exports"
 
-    print("✓ BI Integration framework works")
     return True
 
 
 def test_call_tagging() -> bool:
     """Test Call Tagging framework"""
-    print("\nTesting Call Tagging...")
 
     from pbx.features.call_tagging import TagSource
 
@@ -209,13 +191,11 @@ def test_call_tagging() -> bool:
     stats = tagging.get_statistics()
     assert stats["total_tags_created"] == 1, "Should track tags"
 
-    print("✓ Call Tagging framework works")
     return True
 
 
 def test_mobile_apps() -> bool:
     """Test Mobile Apps framework"""
-    print("\nTesting Mobile Apps...")
 
     mobile = MobileAppFramework()
     assert mobile is not None, "Mobile framework should initialize"
@@ -229,13 +209,11 @@ def test_mobile_apps() -> bool:
     assert stats["total_devices"] == 1, "Should track devices"
     assert stats["ios_devices"] == 1, "Should track iOS devices"
 
-    print("✓ Mobile Apps framework works")
     return True
 
 
 def test_mobile_number_portability() -> bool:
     """Test Mobile Number Portability framework"""
-    print("\nTesting Mobile Number Portability...")
 
     mnp = MobileNumberPortability()
     assert mnp is not None, "MNP should initialize"
@@ -252,13 +230,11 @@ def test_mobile_number_portability() -> bool:
     stats = mnp.get_statistics()
     assert stats["total_mappings"] == 1, "Should track mappings"
 
-    print("✓ Mobile Number Portability framework works")
     return True
 
 
 def test_call_recording_analytics() -> bool:
     """Test Call Recording Analytics framework"""
-    print("\nTesting Call Recording Analytics...")
 
     analytics = RecordingAnalytics()
     assert analytics is not None, "Analytics should initialize"
@@ -267,13 +243,11 @@ def test_call_recording_analytics() -> bool:
     stats = analytics.get_statistics()
     assert "total_analyses" in stats, "Should have stats"
 
-    print("✓ Call Recording Analytics framework works")
     return True
 
 
 def test_call_blending() -> bool:
     """Test Call Blending framework"""
-    print("\nTesting Call Blending...")
 
     blending = CallBlending()
     assert blending is not None, "Blending should initialize"
@@ -290,13 +264,11 @@ def test_call_blending() -> bool:
     stats = blending.get_statistics()
     assert stats["total_agents"] == 1, "Should track agents"
 
-    print("✓ Call Blending framework works")
     return True
 
 
 def test_predictive_voicemail_drop() -> bool:
     """Test Predictive Voicemail Drop framework"""
-    print("\nTesting Voicemail Drop...")
 
     vmd = VoicemailDropSystem()
     assert vmd is not None, "VMD should initialize"
@@ -309,13 +281,11 @@ def test_predictive_voicemail_drop() -> bool:
     stats = vmd.get_statistics()
     assert stats["total_messages"] == 1, "Should track messages"
 
-    print("✓ Voicemail Drop framework works")
     return True
 
 
 def test_geographic_redundancy() -> bool:
     """Test Geographic Redundancy framework"""
-    print("\nTesting Geographic Redundancy...")
 
     geo = GeographicRedundancy()
     assert geo is not None, "Geo redundancy should initialize"
@@ -328,13 +298,11 @@ def test_geographic_redundancy() -> bool:
     stats = geo.get_statistics()
     assert stats["total_regions"] == 1, "Should track regions"
 
-    print("✓ Geographic Redundancy framework works")
     return True
 
 
 def test_dns_srv_failover() -> bool:
     """Test DNS SRV Failover framework"""
-    print("\nTesting DNS SRV Failover...")
 
     srv = DNSSRVFailover()
     assert srv is not None, "SRV failover should initialize"
@@ -343,13 +311,11 @@ def test_dns_srv_failover() -> bool:
     stats = srv.get_statistics()
     assert "total_lookups" in stats, "Should have stats"
 
-    print("✓ DNS SRV Failover framework works")
     return True
 
 
 def test_session_border_controller() -> bool:
     """Test Session Border Controller framework"""
-    print("\nTesting Session Border Controller...")
 
     sbc = SessionBorderController()
     assert sbc is not None, "SBC should initialize"
@@ -362,13 +328,11 @@ def test_session_border_controller() -> bool:
     stats = sbc.get_statistics()
     assert "total_sessions" in stats, "Should have stats"
 
-    print("✓ Session Border Controller framework works")
     return True
 
 
 def test_data_residency_controls() -> bool:
     """Test Data Residency Controls framework"""
-    print("\nTesting Data Residency Controls...")
 
     residency = DataResidencyControls()
     assert residency is not None, "Residency should initialize"
@@ -386,53 +350,4 @@ def test_data_residency_controls() -> bool:
     stats = residency.get_statistics()
     assert "configured_regions" in stats, "Should have stats"
 
-    print("✓ Data Residency Controls framework works")
     return True
-
-
-def run_all_tests() -> bool:
-    """Run all framework tests"""
-    print("=" * 60)
-    print("Testing Framework Implementations for Planned Features")
-    print("=" * 60)
-
-    tests = [
-        test_conversational_ai,
-        test_predictive_dialing,
-        test_voice_biometrics,
-        test_call_quality_prediction,
-        test_video_codec,
-        test_bi_integration,
-        test_call_tagging,
-        test_mobile_apps,
-        test_mobile_number_portability,
-        test_call_recording_analytics,
-        test_call_blending,
-        test_predictive_voicemail_drop,
-        test_geographic_redundancy,
-        test_dns_srv_failover,
-        test_session_border_controller,
-        test_data_residency_controls,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test_func in tests:
-        try:
-            if test_func():
-                passed += 1
-        except Exception as e:
-            print(f"✗ {test_func.__name__} failed: {e}")
-            failed += 1
-
-    print("\n" + "=" * 60)
-    print(f"Test Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

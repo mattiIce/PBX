@@ -7,7 +7,6 @@ import threading
 import time
 from collections import deque
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -205,7 +204,7 @@ class QoSMetrics:
             # Ensure MOS score is calculated at call end
             self._calculate_mos()
 
-    def get_summary(self) -> Dict:
+    def get_summary(self) -> dict:
         """
         Get a summary of QoS metrics
 
@@ -277,14 +276,14 @@ class QoSMonitor:
         self.pbx = pbx
         self.logger = get_logger()
         self.active_calls = {}  # call_id -> QoSMetrics
-        self.historical_data = []  # List of completed call metrics
+        self.historical_data = []  # list of completed call metrics
         self.alert_thresholds = {
             "mos_min": 3.5,  # Alert if MOS drops below this
             "packet_loss_max": 2.0,  # Alert if packet loss exceeds this percentage
             "jitter_max": 50.0,  # Alert if jitter exceeds this (ms)
             "latency_max": 300.0,  # Alert if latency exceeds this (ms)
         }
-        self.alerts = []  # List of quality alerts
+        self.alerts = []  # list of quality alerts
         self.max_historical_records = 10000  # Keep last 10k calls
         self.lock = threading.Lock()
 
@@ -310,7 +309,7 @@ class QoSMonitor:
             self.logger.info(f"Started QoS monitoring for call {call_id}")
             return metrics
 
-    def stop_monitoring(self, call_id: str) -> Optional[Dict]:
+    def stop_monitoring(self, call_id: str) -> dict | None:
         """
         Stop monitoring QoS for a call and return final metrics
 
@@ -349,7 +348,7 @@ class QoSMonitor:
 
             return summary
 
-    def get_metrics(self, call_id: str) -> Optional[Dict]:
+    def get_metrics(self, call_id: str) -> dict | None:
         """
         Get current QoS metrics for an active call
 
@@ -365,19 +364,19 @@ class QoSMonitor:
 
             return self.active_calls[call_id].get_summary()
 
-    def get_all_active_metrics(self) -> List[Dict]:
+    def get_all_active_metrics(self) -> list[dict]:
         """
         Get QoS metrics for all active calls
 
         Returns:
-            List of dictionaries containing metrics for each active call
+            list of dictionaries containing metrics for each active call
         """
         with self.lock:
             return [metrics.get_summary() for metrics in self.active_calls.values()]
 
     def get_historical_metrics(
-        self, limit: int = 100, min_mos: Optional[float] = None
-    ) -> List[Dict]:
+        self, limit: int = 100, min_mos: float | None = None
+    ) -> list[dict]:
         """
         Get historical QoS metrics
 
@@ -386,7 +385,7 @@ class QoSMonitor:
             min_mos: Optional filter for minimum MOS score
 
         Returns:
-            List of historical QoS metric dictionaries
+            list of historical QoS metric dictionaries
         """
         with self.lock:
             data = self.historical_data[-limit:]
@@ -396,7 +395,7 @@ class QoSMonitor:
 
             return data
 
-    def get_alerts(self, limit: int = 50) -> List[Dict]:
+    def get_alerts(self, limit: int = 50) -> list[dict]:
         """
         Get recent quality alerts
 
@@ -404,7 +403,7 @@ class QoSMonitor:
             limit: Maximum number of alerts to return
 
         Returns:
-            List of alert dictionaries
+            list of alert dictionaries
         """
         with self.lock:
             return self.alerts[-limit:]
@@ -422,7 +421,7 @@ class QoSMonitor:
             self.logger.info(f"Cleared {count} QoS alerts")
             return count
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """
         Get overall QoS statistics
 
@@ -454,7 +453,7 @@ class QoSMonitor:
                 "active_calls": len(self.active_calls),
             }
 
-    def _check_quality_alerts(self, summary: Dict) -> None:
+    def _check_quality_alerts(self, summary: dict) -> None:
         """
         Check if metrics trigger any quality alerts
 
@@ -520,7 +519,7 @@ class QoSMonitor:
         if len(self.alerts) > 1000:
             self.alerts = self.alerts[-1000:]
 
-    def _store_metrics(self, summary: Dict) -> None:
+    def _store_metrics(self, summary: dict) -> None:
         """
         Store QoS metrics in database if available
 
@@ -563,7 +562,7 @@ class QoSMonitor:
         except Exception as e:
             self.logger.error(f"Failed to store QoS metrics in database: {e}")
 
-    def update_alert_thresholds(self, thresholds: Dict) -> None:
+    def update_alert_thresholds(self, thresholds: dict) -> None:
         """
         Update quality alert thresholds
 

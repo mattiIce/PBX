@@ -4,12 +4,9 @@ Tests for stub feature implementations
 """
 
 import os
-import sys
 import tempfile
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.operator_console import OperatorConsole
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
@@ -73,7 +70,6 @@ class MockParkingSystem:
 
 def test_vip_caller_database() -> None:
     """Test VIP caller database functionality"""
-    print("Testing VIP caller database...")
 
     # Create temporary directory for VIP database
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -115,12 +111,9 @@ def test_vip_caller_database() -> None:
         console2 = OperatorConsole(config, pbx_core)
         assert not console2.is_vip_caller("555-1234")
 
-    print("✓ VIP caller database works")
-
 
 def test_dtmf_detection() -> None:
     """Test DTMF tone detection"""
-    print("Testing DTMF detection...")
 
     detector = DTMFDetector(sample_rate=8000, samples_per_frame=205)
     generator = DTMFGenerator(sample_rate=8000)
@@ -131,7 +124,6 @@ def test_dtmf_detection() -> None:
         detected = detector.detect_tone(samples)
         assert detected == digit, f"Expected {digit}, got {detected}"
 
-    print("✓ DTMF single digit detection works")
 
     # Test sequence detection
     test_sequence = "12345"
@@ -139,12 +131,9 @@ def test_dtmf_detection() -> None:
     detected_sequence = detector.detect_sequence(sequence_samples)
     assert test_sequence in detected_sequence, f"Expected {test_sequence} in {detected_sequence}"
 
-    print("✓ DTMF sequence detection works")
-
 
 def test_voicemail_ivr() -> None:
     """Test voicemail IVR state machine"""
-    print("Testing voicemail IVR...")
 
     # Create temporary voicemail system
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -184,12 +173,9 @@ def test_voicemail_ivr() -> None:
         assert result["action"] == "hangup"
         assert ivr.state == VoicemailIVR.STATE_GOODBYE
 
-    print("✓ Voicemail IVR works")
-
 
 def test_operator_console_features() -> None:
     """Test operator console features"""
-    print("Testing operator console features...")
 
     with tempfile.TemporaryDirectory() as tmpdir:
         vip_db_path = os.path.join(tmpdir, "vip_test.json")
@@ -226,12 +212,9 @@ def test_operator_console_features() -> None:
         slot = console.park_and_page("test-call-123", "John Smith on line 1", page_method="log")
         assert slot == "70"
 
-    print("✓ Operator console features work")
-
 
 def test_integration_stubs() -> None:
     """Test that integration stubs are properly structured"""
-    print("Testing integration stubs...")
 
     from pbx.integrations.active_directory import ActiveDirectoryIntegration
     from pbx.integrations.outlook import OutlookIntegration
@@ -270,12 +253,9 @@ def test_integration_stubs() -> None:
     teams = TeamsIntegration(teams_config)
     assert hasattr(teams, "authenticate")
 
-    print("✓ Integration stubs properly structured")
-
 
 def test_new_integration_implementations() -> None:
     """Test newly implemented integration features"""
-    print("Testing newly implemented integration features...")
 
     from pbx.integrations.active_directory import ActiveDirectoryIntegration
     from pbx.integrations.outlook import OutlookIntegration
@@ -350,12 +330,9 @@ def test_new_integration_implementations() -> None:
     sync_result = ad.sync_users()
     assert sync_result == 0, "Should return 0 when integration is disabled or auto_provision is of"
 
-    print("✓ New integration implementations work correctly")
-
 
 def test_database_backend() -> None:
     """Test database backend with SQLite"""
-    print("Testing database backend...")
 
     from pbx.utils.database import DatabaseBackend, VIPCallerDB
 
@@ -407,12 +384,9 @@ def test_database_backend() -> None:
         db.disconnect()
         assert not db.enabled
 
-    print("✓ Database backend works")
-
 
 def test_ad_group_permissions_mapping() -> None:
     """Test Active Directory group-based permissions mapping"""
-    print("Testing AD group permissions mapping...")
 
     from pbx.integrations.active_directory import ActiveDirectoryIntegration
 
@@ -482,55 +456,3 @@ def test_ad_group_permissions_mapping() -> None:
     user_groups = ["CN=Sales,OU=Groups,DC=test,DC=local"]
     permissions = ad_no_perms._map_groups_to_permissions(user_groups)
     assert len(permissions) == 0, "No permissions when group_permissions not configured"
-
-    print("✓ AD group permissions mapping works correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all tests"""
-    print("=" * 60)
-    print("Running Stub Implementation Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_vip_caller_database,
-        test_dtmf_detection,
-        test_voicemail_ivr,
-        test_operator_console_features,
-        test_integration_stubs,
-        test_new_integration_implementations,
-        test_database_backend,
-        test_ad_group_permissions_mapping,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ Test failed: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ Test error: {test.__name__}")
-            print(f"  Error: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-        print()
-
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

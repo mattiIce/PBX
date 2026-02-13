@@ -7,7 +7,6 @@ import re
 import secrets
 import time
 from datetime import datetime
-from typing import Dict, Optional, Tuple
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
@@ -72,7 +71,7 @@ class PasswordPolicy:
             "security.password.require_special", self.REQUIRE_SPECIAL
         )
 
-    def validate(self, password: str) -> Tuple[bool, Optional[str]]:
+    def validate(self, password: str) -> tuple[bool, str | None]:
         """
         Validate password against policy
 
@@ -80,7 +79,7 @@ class PasswordPolicy:
             password: Password to validate
 
         Returns:
-            Tuple of (is_valid, error_message)
+            tuple of (is_valid, error_message)
         """
         if not password:
             return False, "Password cannot be empty"
@@ -224,7 +223,7 @@ class RateLimiter:
         self.attempts = {}
         self.lockouts = {}
 
-    def is_rate_limited(self, identifier: str) -> Tuple[bool, Optional[int]]:
+    def is_rate_limited(self, identifier: str) -> tuple[bool, int | None]:
         """
         Check if identifier is rate limited
 
@@ -232,7 +231,7 @@ class RateLimiter:
             identifier: User identifier (username, IP, etc.)
 
         Returns:
-            Tuple of (is_limited, seconds_until_unlock)
+            tuple of (is_limited, seconds_until_unlock)
         """
         now = time.time()
 
@@ -333,7 +332,7 @@ class SecurityAuditor:
         Log a security event
 
         Args:
-            event_type: Type of security event
+            event_type: type of security event
             identifier: User/extension identifier
             details: Additional event details
             success: Whether action was successful
@@ -424,7 +423,7 @@ class SecurePasswordManager:
         self.encryption = get_encryption(fips_mode, enforce_fips)
         self.policy = PasswordPolicy(config)
 
-    def hash_password(self, password: str) -> Tuple[str, str]:
+    def hash_password(self, password: str) -> tuple[str, str]:
         """
         Hash password for secure storage
 
@@ -432,7 +431,7 @@ class SecurePasswordManager:
             password: Plain text password
 
         Returns:
-            Tuple of (hashed_password, salt) as base64 strings
+            tuple of (hashed_password, salt) as base64 strings
         """
         return self.encryption.hash_password(password)
 
@@ -450,7 +449,7 @@ class SecurePasswordManager:
         """
         return self.encryption.verify_password(password, hashed_password, salt)
 
-    def validate_new_password(self, password: str) -> Tuple[bool, Optional[str]]:
+    def validate_new_password(self, password: str) -> tuple[bool, str | None]:
         """
         Validate new password against policy
 
@@ -458,7 +457,7 @@ class SecurePasswordManager:
             password: Password to validate
 
         Returns:
-            Tuple of (is_valid, error_message)
+            tuple of (is_valid, error_message)
         """
         return self.policy.validate(password)
 
@@ -670,7 +669,7 @@ class ThreatDetector:
         except Exception as e:
             self.logger.error(f"Failed to load blocked IPs from database: {e}")
 
-    def is_ip_blocked(self, ip_address: str) -> Tuple[bool, Optional[str]]:
+    def is_ip_blocked(self, ip_address: str) -> tuple[bool, str | None]:
         """
         Check if IP address is blocked
 
@@ -678,7 +677,7 @@ class ThreatDetector:
             ip_address: IP address to check
 
         Returns:
-            Tuple of (is_blocked, reason)
+            tuple of (is_blocked, reason)
         """
         if not self.enabled:
             return False, None
@@ -886,7 +885,7 @@ class ThreatDetector:
 
         return False
 
-    def analyze_request_pattern(self, ip_address: str, user_agent: str = None) -> Dict[str, any]:
+    def analyze_request_pattern(self, ip_address: str, user_agent: str = None) -> dict[str, any]:
         """
         Analyze request patterns for anomalies
 
@@ -967,7 +966,7 @@ class ThreatDetector:
         except Exception as e:
             self.logger.error(f"Failed to log threat event: {e}")
 
-    def get_threat_summary(self, hours: int = 24) -> Dict:
+    def get_threat_summary(self, hours: int = 24) -> dict:
         """
         Get summary of recent threats
 

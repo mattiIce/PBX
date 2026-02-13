@@ -140,14 +140,14 @@ class CallRouter:
                 call.caller_rtp = caller_sdp
                 call.caller_addr = from_addr
 
-                # Set caller's endpoint immediately to enable early RTP packet learning
+                # set caller's endpoint immediately to enable early RTP packet learning
                 # This prevents dropping packets that arrive before the 200 OK
                 # response
                 caller_endpoint = (caller_sdp["address"], caller_sdp["port"])
                 relay_info = pbx.rtp_relay.active_relays.get(call_id)
                 if relay_info:
                     handler = relay_info["handler"]
-                    # Set only endpoint A for now; endpoint B will be set after
+                    # set only endpoint A for now; endpoint B will be set after
                     # 200 OK
                     handler.set_endpoints(caller_endpoint, None)
                     pbx.logger.info(
@@ -254,7 +254,7 @@ class CallRouter:
                 "Contact",
                 f"<sip:{from_ext}@{server_ip}:{pbx.config.get('server.sip_port', 5060)}>",
             )
-            invite_to_callee.set_header("Content-Type", "application/sdp")
+            invite_to_callee.set_header("Content-type", "application/sdp")
 
             # Add caller ID headers (P-Asserted-Identity and Remote-Party-ID) if configured
             if pbx.config.get("sip.caller_id.send_p_asserted_identity", True) or pbx.config.get(
@@ -438,7 +438,7 @@ class CallRouter:
         ok_response = SIPMessageBuilder.build_response(
             200, "OK", call.original_invite, body=voicemail_sdp
         )
-        ok_response.set_header("Content-Type", "application/sdp")
+        ok_response.set_header("Content-type", "application/sdp")
 
         # Build Contact header
         sip_port = pbx.config.get("server.sip_port", 5060)
@@ -567,7 +567,7 @@ class CallRouter:
                 # Store recorder in call object for later retrieval
                 call.voicemail_recorder = recorder
 
-                # Set recording timeout (max voicemail duration)
+                # set recording timeout (max voicemail duration)
                 max_duration = pbx.config.get("voicemail.max_message_duration", 180)
 
                 # Schedule voicemail completion after max duration

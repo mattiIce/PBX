@@ -5,7 +5,6 @@ Automatic server failover using DNS SRV records
 
 import random
 import socket
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -49,7 +48,7 @@ class DNSSRVFailover:
         self.max_failures = srv_config.get("max_failures", 3)
 
         # SRV records cache
-        self.srv_cache: Dict[str, List[SRVRecord]] = {}
+        self.srv_cache: dict[str, list[SRVRecord]] = {}
 
         # Statistics
         self.total_lookups = 0
@@ -61,7 +60,7 @@ class DNSSRVFailover:
         self.logger.info(f"  Max failures: {self.max_failures}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def lookup_srv(self, service: str, protocol: str = "tcp", domain: str = None) -> List[Dict]:
+    def lookup_srv(self, service: str, protocol: str = "tcp", domain: str = None) -> list[dict]:
         """
         Lookup DNS SRV records
 
@@ -71,7 +70,7 @@ class DNSSRVFailover:
             domain: Domain name
 
         Returns:
-            List[Dict]: SRV records
+            list[dict]: SRV records
         """
         # Construct SRV query
         srv_name = f"_{service}._{protocol}.{domain}"
@@ -92,7 +91,7 @@ class DNSSRVFailover:
 
         return self._format_srv_records(records)
 
-    def _perform_srv_lookup(self, srv_name: str) -> List[SRVRecord]:
+    def _perform_srv_lookup(self, srv_name: str) -> list[SRVRecord]:
         """
         Perform actual DNS SRV lookup
 
@@ -100,7 +99,7 @@ class DNSSRVFailover:
             srv_name: SRV record name to lookup
 
         Returns:
-            List[SRVRecord]: Found SRV records
+            list[SRVRecord]: Found SRV records
         """
         records = []
 
@@ -152,7 +151,7 @@ class DNSSRVFailover:
 
         return records
 
-    def _format_srv_records(self, records: List[SRVRecord]) -> List[Dict]:
+    def _format_srv_records(self, records: list[SRVRecord]) -> list[dict]:
         """Format SRV records for output"""
         return [
             {
@@ -167,7 +166,7 @@ class DNSSRVFailover:
 
     def select_server(
         self, service: str, protocol: str = "tcp", domain: str = None
-    ) -> Optional[Dict]:
+    ) -> dict | None:
         """
         Select best available server from SRV records
 
@@ -177,7 +176,7 @@ class DNSSRVFailover:
             domain: Domain
 
         Returns:
-            Optional[Dict]: Selected server or None
+            dict | None: Selected server or None
         """
         srv_name = f"_{service}._{protocol}.{domain}"
 
@@ -214,7 +213,7 @@ class DNSSRVFailover:
             "weight": selected.weight,
         }
 
-    def _weighted_selection(self, records: List[SRVRecord]) -> SRVRecord:
+    def _weighted_selection(self, records: list[SRVRecord]) -> SRVRecord:
         """
         Select server using weighted random selection
 
@@ -350,7 +349,7 @@ class DNSSRVFailover:
             self.srv_cache.clear()
             self.logger.info("Cleared entire SRV cache")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get DNS SRV failover statistics"""
         cache_hit_rate = self.cache_hits / max(1, self.total_lookups)
 

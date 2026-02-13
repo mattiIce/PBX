@@ -8,7 +8,6 @@ import hashlib
 import json
 import secrets
 import time
-from typing import Dict, Optional, Tuple
 
 from pbx.utils.logger import get_logger
 
@@ -113,7 +112,7 @@ class SessionToken:
         self.logger.info(f"Generated session token for extension {extension} (admin: {is_admin})")
         return token
 
-    def verify_token(self, token: str) -> Tuple[bool, Optional[Dict]]:
+    def verify_token(self, token: str) -> tuple[bool, dict | None]:
         """
         Verify and decode token
 
@@ -121,7 +120,7 @@ class SessionToken:
             token: Token string to verify
 
         Returns:
-            Tuple of (is_valid, payload_dict)
+            tuple of (is_valid, payload_dict)
             - is_valid: True if token is valid
             - payload_dict: Decoded payload if valid, None otherwise
         """
@@ -158,7 +157,7 @@ class SessionToken:
             self.logger.warning(f"Token verification error: {e}")
             return False, None
 
-    def extract_extension(self, token: str) -> Optional[str]:
+    def extract_extension(self, token: str) -> str | None:
         """
         Extract extension number from token without full verification
 

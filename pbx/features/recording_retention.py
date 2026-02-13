@@ -5,7 +5,6 @@ Automated management of call recording retention and cleanup
 
 from datetime import datetime
 from pathlib import Path
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -54,7 +53,7 @@ class RecordingRetentionManager:
         for policy in policies:
             self.add_policy(policy)
 
-    def add_policy(self, policy: Dict) -> str:
+    def add_policy(self, policy: dict) -> str:
         """
         Add a retention policy
 
@@ -75,13 +74,13 @@ class RecordingRetentionManager:
         self.logger.info(f"Added retention policy: {policy_id} ({policy['retention_days']} days)")
         return policy_id
 
-    def tag_recording(self, recording_id: str, tags: List[str]) -> bool:
+    def tag_recording(self, recording_id: str, tags: list[str]) -> bool:
         """
         Tag a recording for special handling
 
         Args:
             recording_id: Recording identifier
-            tags: List of tags (e.g., 'critical', 'compliance', 'training')
+            tags: list of tags (e.g., 'critical', 'compliance', 'training')
 
         Returns:
             True if successful
@@ -100,8 +99,8 @@ class RecordingRetentionManager:
         self,
         recording_id: str,
         recording_date: datetime,
-        extension: Optional[str] = None,
-        queue: Optional[str] = None,
+        extension: str | None = None,
+        queue: str | None = None,
     ) -> int:
         """
         Get retention period for a recording
@@ -143,7 +142,7 @@ class RecordingRetentionManager:
 
         return self.default_retention
 
-    def scan_recordings(self) -> Dict:
+    def scan_recordings(self) -> dict:
         """
         Scan recording directory and categorize files
 
@@ -185,7 +184,7 @@ class RecordingRetentionManager:
 
         return summary
 
-    def cleanup_old_recordings(self, dry_run: bool = True) -> Dict:
+    def cleanup_old_recordings(self, dry_run: bool = True) -> dict:
         """
         Delete recordings past their retention period
 
@@ -253,7 +252,7 @@ class RecordingRetentionManager:
             "files": deleted_files[:100],  # Limit to first 100
         }
 
-    def archive_recordings(self, archive_path: str, age_days: int = 60) -> Dict:
+    def archive_recordings(self, archive_path: str, age_days: int = 60) -> dict:
         """
         Archive recordings older than specified age
 
@@ -306,7 +305,7 @@ class RecordingRetentionManager:
             "archive_path": str(archive_dir),
         }
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get retention manager statistics"""
         scan_result = self.scan_recordings()
 

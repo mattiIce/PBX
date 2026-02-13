@@ -12,12 +12,6 @@ These are not secret credentials but system defaults that can be verified
 through the triple-layer encryption system (SHA256, PBKDF2, HMAC).
 """
 
-import os
-import sys
-import unittest
-
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.utils.license_admin import (
     is_license_admin_extension,
@@ -25,56 +19,50 @@ from pbx.utils.license_admin import (
 )
 
 
-class TestLicenseAdminLogin(unittest.TestCase):
+class TestLicenseAdminLogin:
     """Test license admin authentication."""
 
     def test_is_license_admin_extension(self) -> None:
         """Test identifying the license admin extension."""
-        self.assertTrue(is_license_admin_extension("9322"))
-        self.assertFalse(is_license_admin_extension("1001"))
-        self.assertFalse(is_license_admin_extension(""))
+        assert is_license_admin_extension("9322")
+        assert not is_license_admin_extension("1001")
+        assert not is_license_admin_extension("")
 
     def test_license_admin_credentials_valid(self) -> None:
         """Test license admin login with valid credentials."""
         # Valid credentials
         result = verify_license_admin_credentials(extension="9322", username="ICE", pin="26697647")
-        self.assertTrue(result, "License admin login should succeed with correct credentials")
+        assert result, "License admin login should succeed with correct credentials"
 
     def test_license_admin_credentials_case_insensitive_username(self) -> None:
         """Test that username is case insensitive."""
         # Test lowercase
         result = verify_license_admin_credentials(extension="9322", username="ice", pin="26697647")
-        self.assertTrue(result, "License admin login should succeed with lowercase username")
-
+        assert result, "License admin login should succeed with lowercase username"
         # Test mixed case
         result = verify_license_admin_credentials(extension="9322", username="Ice", pin="26697647")
-        self.assertTrue(result, "License admin login should succeed with mixed case username")
+        assert result, "License admin login should succeed with mixed case username"
 
     def test_license_admin_credentials_wrong_extension(self) -> None:
         """Test license admin login with wrong extension."""
         result = verify_license_admin_credentials(extension="1001", username="ICE", pin="26697647")
-        self.assertFalse(result, "License admin login should fail with wrong extension")
+        assert not result, "License admin login should fail with wrong extension"
 
     def test_license_admin_credentials_wrong_username(self) -> None:
         """Test license admin login with wrong username."""
         result = verify_license_admin_credentials(
             extension="9322", username="ADMIN", pin="26697647"
         )
-        self.assertFalse(result, "License admin login should fail with wrong username")
+        assert not result, "License admin login should fail with wrong username"
 
     def test_license_admin_credentials_wrong_pin(self) -> None:
         """Test license admin login with wrong PIN."""
         result = verify_license_admin_credentials(extension="9322", username="ICE", pin="00000000")
-        self.assertFalse(result, "License admin login should fail with wrong PIN")
+        assert not result, "License admin login should fail with wrong PIN"
 
     def test_license_admin_credentials_empty_fields(self) -> None:
         """Test license admin login with empty fields."""
         result = verify_license_admin_credentials(extension="", username="ICE", pin="26697647")
-        self.assertFalse(result, "License admin login should fail with empty extension")
-
+        assert not result, "License admin login should fail with empty extension"
         result = verify_license_admin_credentials(extension="9322", username="", pin="26697647")
-        self.assertFalse(result, "License admin login should fail with empty username")
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert not result, "License admin login should fail with empty username"

@@ -10,7 +10,6 @@ The codec encodes 16kHz wideband audio at 64 kbit/s using sub-band ADPCM (SB-ADP
 """
 
 import struct
-from typing import List, Optional, Tuple
 
 from pbx.utils.logger import get_logger
 
@@ -251,7 +250,7 @@ class G722CodecITU:
         self.decoder_state = G722State()
         self.logger.debug(f"G.722 ITU-T codec initialized at {bitrate} bps")
 
-    def encode(self, pcm_data: bytes) -> Optional[bytes]:
+    def encode(self, pcm_data: bytes) -> bytes | None:
         """
         Encode 16-bit PCM to G.722
 
@@ -302,7 +301,7 @@ class G722CodecITU:
             self.logger.error(f"G.722 encoding error: {e}")
             return None
 
-    def decode(self, g722_data: bytes) -> Optional[bytes]:
+    def decode(self, g722_data: bytes) -> bytes | None:
         """
         Decode G.722 to 16-bit PCM
 
@@ -344,7 +343,7 @@ class G722CodecITU:
             self.logger.error(f"G.722 decoding error: {e}")
             return None
 
-    def _qmf_analysis(self, x: List[int], phase: int) -> int:
+    def _qmf_analysis(self, x: list[int], phase: int) -> int:
         """QMF analysis filter - splits 16kHz into two 8kHz sub-bands"""
         acc = 0
         for i in range(24):
@@ -356,7 +355,7 @@ class G722CodecITU:
         result = acc >> 14
         return self._saturate(result, -16384, 16383)
 
-    def _qmf_synthesis(self, rl: int, rh: int, state: G722State) -> Tuple[int, int]:
+    def _qmf_synthesis(self, rl: int, rh: int, state: G722State) -> tuple[int, int]:
         """QMF synthesis filter - combines two 8kHz sub-bands into 16kHz"""
         # Simple synthesis - combine sub-bands
         xout1 = self._saturate(rl + rh, -16384, 16383)

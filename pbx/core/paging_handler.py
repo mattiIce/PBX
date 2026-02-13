@@ -152,7 +152,7 @@ class PagingHandler:
         ok_response = SIPMessageBuilder.build_response(
             200, "OK", call.original_invite, body=paging_sdp
         )
-        ok_response.set_header("Content-Type", "application/sdp")
+        ok_response.set_header("Content-type", "application/sdp")
 
         # Build Contact header
         sip_port = pbx.config.get("server.sip_port", 5060)
@@ -216,7 +216,7 @@ class PagingHandler:
             # Note: Full DAC integration requires hardware
             # When implemented, this will:
             # 1. Establish SIP connection to the DAC gateway device
-            # 2. Set up RTP relay to forward audio from caller to DAC
+            # 2. set up RTP relay to forward audio from caller to DAC
             # 3. Handle zone selection (if multi-zone gateway)
             # 4. Monitor the call and end when caller hangs up
             # See GitHub issue #XX for hardware integration tracking

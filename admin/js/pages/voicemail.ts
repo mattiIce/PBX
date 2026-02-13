@@ -3,8 +3,8 @@
  * Handles voicemail listing, playback, download, and management.
  */
 
-import { getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
 
 interface VoicemailExtension {
     number: string;
@@ -175,9 +175,9 @@ export async function deleteVoicemail(extension: string, messageId: string): Pro
 }
 
 // Backward compatibility
-(window as any).loadVoicemailTab = loadVoicemailTab;
-(window as any).loadVoicemailForExtension = loadVoicemailForExtension;
-(window as any).playVoicemail = playVoicemail;
-(window as any).downloadVoicemail = downloadVoicemail;
-(window as any).deleteVoicemail = deleteVoicemail;
-(window as any).markVoicemailRead = markVoicemailRead;
+window.loadVoicemailTab = loadVoicemailTab;
+window.loadVoicemailForExtension = loadVoicemailForExtension;
+window.playVoicemail = playVoicemail;
+window.downloadVoicemail = downloadVoicemail;
+window.deleteVoicemail = deleteVoicemail;
+window.markVoicemailRead = markVoicemailRead;

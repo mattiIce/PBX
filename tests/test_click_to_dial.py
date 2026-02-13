@@ -3,13 +3,9 @@
 Test Click-to-Dial functionality
 """
 
-import os
 import sqlite3
-import sys
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.click_to_dial import ClickToDialEngine
 
@@ -69,7 +65,6 @@ class MockDB:
 
 def test_click_to_dial_init() -> None:
     """Test click-to-dial engine initialization"""
-    print("Testing click-to-dial initialization...")
 
     config = {"click_to_dial.enabled": True}
     db = MockDB()
@@ -78,7 +73,6 @@ def test_click_to_dial_init() -> None:
     engine = ClickToDialEngine(db, config)
     assert engine.enabled is True
     assert engine.pbx_core is None
-    print("  ✓ Engine initialized successfully")
 
     # Initialize with mock PBX core
     class MockPBXCore:
@@ -88,14 +82,12 @@ def test_click_to_dial_init() -> None:
     mock_pbx = MockPBXCore()
     engine_with_pbx = ClickToDialEngine(db, config, mock_pbx)
     assert engine_with_pbx.pbx_core is mock_pbx
-    print("  ✓ Engine initialized with PBX core")
 
     db.close()
 
 
 def test_click_to_dial_config() -> None:
     """Test click-to-dial configuration management"""
-    print("\nTesting click-to-dial configuration...")
 
     config = {"click_to_dial.enabled": True}
     db = MockDB()
@@ -112,7 +104,6 @@ def test_click_to_dial_config() -> None:
 
     result = engine.update_config("1001", test_config)
     assert result is True
-    print("  ✓ Configuration updated")
 
     # Get configuration
     retrieved_config = engine.get_config("1001")
@@ -120,14 +111,12 @@ def test_click_to_dial_config() -> None:
     assert retrieved_config["extension"] == "1001"
     assert retrieved_config["enabled"] is True
     assert retrieved_config["auto_answer"] is True
-    print("  ✓ Configuration retrieved")
 
     db.close()
 
 
 def test_click_to_dial_call_initiation() -> None:
     """Test click-to-dial call initiation (framework mode)"""
-    print("\nTesting click-to-dial call initiation...")
 
     config = {"click_to_dial.enabled": True}
     db = MockDB()
@@ -138,14 +127,12 @@ def test_click_to_dial_call_initiation() -> None:
     call_id = engine.initiate_call("1001", "5551234", "web")
     assert call_id is not None
     assert call_id.startswith("c2d-1001-")
-    print(f"  ✓ Call initiated (framework mode): {call_id}")
 
     # Get call history
     history = engine.get_call_history("1001")
     assert len(history) == 1
     assert history[0]["destination"] == "5551234"
     assert history[0]["status"] == "initiated"
-    print("  ✓ Call history retrieved")
 
     # Update call status
     result = engine.update_call_status(call_id, "connected")
@@ -153,14 +140,12 @@ def test_click_to_dial_call_initiation() -> None:
 
     history = engine.get_call_history("1001")
     assert history[0]["status"] == "connected"
-    print("  ✓ Call status updated")
 
     db.close()
 
 
 def test_click_to_dial_with_mock_pbx() -> None:
     """Test click-to-dial with mock PBX core"""
-    print("\nTesting click-to-dial with mock PBX core...")
 
     config = {"click_to_dial.enabled": True}
     db = MockDB()
@@ -189,20 +174,17 @@ def test_click_to_dial_with_mock_pbx() -> None:
     # Initiate call with PBX integration
     call_id = engine.initiate_call("1001", "5551234", "web")
     assert call_id is not None
-    print(f"  ✓ Call initiated with PBX integration: {call_id}")
 
     # Verify call history shows ringing status
     history = engine.get_call_history("1001")
     assert len(history) == 1
     assert history[0]["status"] == "ringing"
-    print("  ✓ Call status set to 'ringing' via PBX integration")
 
     db.close()
 
 
 def test_click_to_dial_all_configs() -> None:
     """Test getting all click-to-dial configurations"""
-    print("\nTesting get all configurations...")
 
     config = {"click_to_dial.enabled": True}
     db = MockDB()
@@ -217,33 +199,5 @@ def test_click_to_dial_all_configs() -> None:
     all_configs = engine.get_all_configs()
     assert len(all_configs) == 3
     assert all([c["extension"] in ["1001", "1002", "1003"] for c in all_configs])
-    print(f"  ✓ Retrieved {len(all_configs)} configurations")
 
     db.close()
-
-
-if __name__ == "__main__":
-    print("=" * 60)
-    print("Click-to-Dial Feature Tests")
-    print("=" * 60)
-
-    try:
-        test_click_to_dial_init()
-        test_click_to_dial_config()
-        test_click_to_dial_call_initiation()
-        test_click_to_dial_with_mock_pbx()
-        test_click_to_dial_all_configs()
-
-        print("\n" + "=" * 60)
-        print("✅ All Click-to-Dial Tests Passed!")
-        print("=" * 60)
-
-    except AssertionError as e:
-        print(f"\n❌ Test failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n❌ Error during testing: {e}")
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(1)

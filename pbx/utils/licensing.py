@@ -18,7 +18,6 @@ import os
 import secrets
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +50,7 @@ class LicenseManager:
     Supports multiple license types and feature gating.
     """
 
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize license manager.
 
@@ -122,7 +121,7 @@ class LicenseManager:
         # Default: disabled (open-source friendly)
         return False
 
-    def _initialize_features(self) -> Dict[str, List[str]]:
+    def _initialize_features(self) -> dict[str, list[str]]:
         """
         Initialize feature sets for each license tier.
 
@@ -230,7 +229,7 @@ class LicenseManager:
             logger.error(f"Error loading license: {e}")
             self.current_license = None
 
-    def _validate_license(self, license_data: Dict) -> Optional[Dict]:
+    def _validate_license(self, license_data: dict) -> dict | None:
         """
         Validate license data.
 
@@ -255,7 +254,7 @@ class LicenseManager:
 
         return license_data
 
-    def _verify_signature(self, license_data: Dict) -> bool:
+    def _verify_signature(self, license_data: dict) -> bool:
         """
         Verify license signature.
 
@@ -280,7 +279,7 @@ class LicenseManager:
         if not secret_key or secret_key == "default_secret_key":
             logger.warning(
                 "Using default license secret key! "
-                "Set 'licensing.license_secret_key' in config.yml for production."
+                "set 'licensing.license_secret_key' in config.yml for production."
             )
             secret_key = "default_secret_key"
 
@@ -292,16 +291,16 @@ class LicenseManager:
         self,
         license_type: LicenseType,
         issued_to: str,
-        max_extensions: Optional[int] = None,
-        max_concurrent_calls: Optional[int] = None,
-        expiration_days: Optional[int] = None,
-        custom_features: Optional[List[str]] = None,
-    ) -> Dict:
+        max_extensions: int | None = None,
+        max_concurrent_calls: int | None = None,
+        expiration_days: int | None = None,
+        custom_features: list[str] | None = None,
+    ) -> dict:
         """
         Generate a new license key.
 
         Args:
-            license_type: Type of license
+            license_type: type of license
             issued_to: Organization/person name
             max_extensions: Maximum extensions (None for unlimited)
             max_concurrent_calls: Maximum concurrent calls (None for unlimited)
@@ -366,7 +365,7 @@ class LicenseManager:
         parts = [key_hash[i : i + 4].upper() for i in range(0, 16, 4)]
         return "-".join(parts)
 
-    def save_license(self, license_data: Dict, enforce_licensing: bool = False) -> bool:
+    def save_license(self, license_data: dict, enforce_licensing: bool = False) -> bool:
         """
         Save license to file.
 
@@ -397,7 +396,7 @@ class LicenseManager:
             logger.error(f"Error saving license: {e}")
             return False
 
-    def _create_license_lock(self, license_data: Dict) -> None:
+    def _create_license_lock(self, license_data: dict) -> None:
         """
         Create a license lock file to enforce licensing.
 
@@ -456,12 +455,12 @@ class LicenseManager:
             logger.error(f"Error removing license lock file: {e}")
             return False
 
-    def get_license_status(self) -> Tuple[LicenseStatus, Optional[str]]:
+    def get_license_status(self) -> tuple[LicenseStatus, str | None]:
         """
         Get current license status.
 
         Returns:
-            Tuple of (status, message)
+            tuple of (status, message)
         """
         # If licensing is disabled, return disabled status
         if not self.enabled:
@@ -500,12 +499,12 @@ class LicenseManager:
         else:
             return LicenseStatus.ACTIVE, "License active (perpetual)"
 
-    def _check_trial_eligibility(self) -> Tuple[LicenseStatus, Optional[str]]:
+    def _check_trial_eligibility(self) -> tuple[LicenseStatus, str | None]:
         """
         Check if system is eligible for trial mode.
 
         Returns:
-            Tuple of (status, message)
+            tuple of (status, message)
         """
         trial_marker = os.path.join(os.path.dirname(self.license_path), ".trial_start")
 
@@ -576,7 +575,7 @@ class LicenseManager:
         allowed_features = self.features.get(license_type, [])
         return feature_name in allowed_features
 
-    def get_limit(self, limit_name: str) -> Optional[int]:
+    def get_limit(self, limit_name: str) -> int | None:
         """
         Get a numeric limit for current license.
 
@@ -630,7 +629,7 @@ class LicenseManager:
 
         return current_value <= limit
 
-    def get_license_info(self) -> Dict:
+    def get_license_info(self) -> dict:
         """
         Get comprehensive license information.
 
@@ -692,7 +691,7 @@ class LicenseManager:
 _license_manager = None
 
 
-def initialize_license_manager(config: Optional[Dict] = None) -> LicenseManager:
+def initialize_license_manager(config: dict | None = None) -> LicenseManager:
     """
     Initialize the global license manager.
 
@@ -747,7 +746,7 @@ def check_limit(limit_name: str, current_value: int) -> bool:
     return get_license_manager().check_limit(limit_name, current_value)
 
 
-def get_license_info() -> Dict:
+def get_license_info() -> dict:
     """
     Get current license information.
 

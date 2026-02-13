@@ -4,7 +4,7 @@ Provides support for Opus audio codec (RFC 6716, 7587)
 Opus is a modern, high-quality, low-latency audio codec
 """
 
-from typing import Any, Dict, Optional
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -38,7 +38,7 @@ class OpusCodec:
     # Complexity levels (0-10, where 10 is highest quality)
     DEFAULT_COMPLEXITY = 5  # Balance between quality and CPU
 
-    def __init__(self, config: Optional[Dict[str, Any]] = None):
+    def __init__(self, config: dict[str, Any] | None = None):
         """
         Initialize Opus codec handler
 
@@ -124,7 +124,7 @@ class OpusCodec:
         """
         return self.opus_available
 
-    def get_sdp_parameters(self) -> Dict[str, Any]:
+    def get_sdp_parameters(self) -> dict[str, Any]:
         """
         Get SDP parameters for Opus codec
 
@@ -222,7 +222,7 @@ class OpusCodec:
             self.logger.error(f"Failed to create Opus decoder: {e}")
             return None
 
-    def encode(self, pcm_data: bytes) -> Optional[bytes]:
+    def encode(self, pcm_data: bytes) -> bytes | None:
         """
         Encode PCM audio data to Opus
 
@@ -256,7 +256,7 @@ class OpusCodec:
             self.logger.error(f"Opus encoding error: {e}")
             return None
 
-    def decode(self, opus_data: bytes, frame_size: Optional[int] = None) -> Optional[bytes]:
+    def decode(self, opus_data: bytes, frame_size: int | None = None) -> bytes | None:
         """
         Decode Opus data to PCM audio
 
@@ -285,7 +285,7 @@ class OpusCodec:
             self.logger.error(f"Opus decoding error: {e}")
             return None
 
-    def handle_packet_loss(self, frame_size: Optional[int] = None) -> Optional[bytes]:
+    def handle_packet_loss(self, frame_size: int | None = None) -> bytes | None:
         """
         Generate concealment audio for lost packet (Packet Loss Concealment)
 
@@ -312,8 +312,8 @@ class OpusCodec:
             return None
 
     def decode_with_fec(
-        self, opus_data: bytes, frame_size: Optional[int] = None
-    ) -> Optional[bytes]:
+        self, opus_data: bytes, frame_size: int | None = None
+    ) -> bytes | None:
         """
         Decode Opus data with Forward Error Correction
 
@@ -357,7 +357,7 @@ class OpusCodec:
             except Exception as e:
                 self.logger.error(f"Failed to reset decoder: {e}")
 
-    def get_info(self) -> Dict[str, Any]:
+    def get_info(self) -> dict[str, Any]:
         """
         Get codec information and current configuration
 
@@ -414,7 +414,7 @@ class OpusCodecManager:
 
         self.logger.info("Opus codec manager initialized")
 
-    def create_codec(self, call_id: str, config: Optional[Dict[str, Any]] = None) -> OpusCodec:
+    def create_codec(self, call_id: str, config: dict[str, Any] | None = None) -> OpusCodec:
         """
         Create Opus codec for a call
 
@@ -434,7 +434,7 @@ class OpusCodecManager:
         self.logger.info(f"Created Opus codec for call {call_id}")
         return codec
 
-    def get_codec(self, call_id: str) -> Optional[OpusCodec]:
+    def get_codec(self, call_id: str) -> OpusCodec | None:
         """
         Get Opus codec for a call
 
@@ -457,7 +457,7 @@ class OpusCodecManager:
             del self.codecs[call_id]
             self.logger.info(f"Removed Opus codec for call {call_id}")
 
-    def get_all_codecs(self) -> Dict[str, OpusCodec]:
+    def get_all_codecs(self) -> dict[str, OpusCodec]:
         """
         Get all active codecs
 

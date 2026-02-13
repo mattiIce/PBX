@@ -3,73 +3,66 @@ Tests for G.729 and G.726 codec support
 Validates codec initialization, SDP generation, and framework functionality
 """
 
-import os
-import sys
-import unittest
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+import pytest
 
 from pbx.features.g726_codec import G726Codec, G726CodecManager
 from pbx.features.g729_codec import G729Codec, G729CodecManager
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
-class TestG729Codec(unittest.TestCase):
+class TestG729Codec:
     """Test G.729 codec functionality"""
 
     def test_g729_initialization(self) -> None:
         """Test G.729 codec initialization"""
         codec = G729Codec(variant="G729AB")
-        self.assertEqual(codec.variant, "G729AB")
-        self.assertEqual(codec.SAMPLE_RATE, 8000)
-        self.assertEqual(codec.PAYLOAD_TYPE, 18)
-        self.assertEqual(codec.BITRATE, 8000)
+        assert codec.variant == "G729AB"
+        assert codec.SAMPLE_RATE == 8000
+        assert codec.PAYLOAD_TYPE == 18
+        assert codec.BITRATE == 8000
 
     def test_g729_info(self) -> None:
         """Test G.729 codec info retrieval"""
         codec = G729Codec(variant="G729A")
         info = codec.get_info()
 
-        self.assertEqual(info["name"], "G.729")
-        self.assertEqual(info["variant"], "G729A")
-        self.assertEqual(info["sample_rate"], 8000)
-        self.assertEqual(info["bitrate"], 8000)
-        self.assertEqual(info["payload_type"], 18)
-        self.assertTrue(info["license_required"])
+        assert info["name"] == "G.729"
+        assert info["variant"] == "G729A"
+        assert info["sample_rate"] == 8000
+        assert info["bitrate"] == 8000
+        assert info["payload_type"] == 18
+        assert info["license_required"]
 
     def test_g729_sdp_description(self) -> None:
         """Test G.729 SDP format string"""
         codec = G729Codec()
         sdp_desc = codec.get_sdp_description()
 
-        self.assertIn("rtpmap:18", sdp_desc)
-        self.assertIn("G729/8000", sdp_desc)
+        assert "rtpmap:18" in sdp_desc
+        assert "G729/8000" in sdp_desc
 
     def test_g729_fmtp_params(self) -> None:
         """Test G.729 FMTP parameters"""
         # Base variant should disable Annex B
         codec_base = G729Codec(variant="G729")
         fmtp = codec_base.get_fmtp_params()
-        self.assertIsNotNone(fmtp)
-        self.assertIn("annexb=no", fmtp)
-
+        assert fmtp is not None
+        assert "annexb=no" in fmtp
         # AB variant should not have fmtp
         codec_ab = G729Codec(variant="G729AB")
         fmtp_ab = codec_ab.get_fmtp_params()
-        self.assertIsNone(fmtp_ab)
+        assert fmtp_ab is None
 
     def test_g729_capabilities(self) -> None:
         """Test G.729 capabilities"""
         caps = G729Codec.get_capabilities()
 
-        self.assertIn("G729AB", caps["variants"])
-        self.assertEqual(caps["sample_rate"], 8000)
-        self.assertEqual(caps["bitrate"], 8000)
-        self.assertEqual(caps["channels"], 1)
+        assert "G729AB" in caps["variants"]
+        assert caps["sample_rate"] == 8000
+        assert caps["bitrate"] == 8000
+        assert caps["channels"] == 1
 
-
-class TestG729CodecManager(unittest.TestCase):
+class TestG729CodecManager:
     """Test G.729 codec manager"""
 
     def test_manager_initialization(self) -> None:
@@ -77,8 +70,8 @@ class TestG729CodecManager(unittest.TestCase):
         config = {"codecs.g729.enabled": True, "codecs.g729.variant": "G729A"}
         manager = G729CodecManager(config)
 
-        self.assertTrue(manager.enabled)
-        self.assertEqual(manager.variant, "G729A")
+        assert manager.enabled
+        assert manager.variant == "G729A"
 
     def test_manager_create_encoder(self) -> None:
         """Test creating encoder"""
@@ -86,12 +79,11 @@ class TestG729CodecManager(unittest.TestCase):
         manager = G729CodecManager(config)
 
         encoder = manager.create_encoder("call123")
-        self.assertIsNotNone(encoder)
-        self.assertIsInstance(encoder, G729Codec)
-
+        assert encoder is not None
+        assert isinstance(encoder, G729Codec)
         # Should be retrievable
         retrieved = manager.get_encoder("call123")
-        self.assertEqual(encoder, retrieved)
+        assert encoder == retrieved
 
     def test_manager_disabled(self) -> None:
         """Test manager when disabled"""
@@ -99,7 +91,7 @@ class TestG729CodecManager(unittest.TestCase):
         manager = G729CodecManager(config)
 
         encoder = manager.create_encoder("call123")
-        self.assertIsNone(encoder)
+        assert encoder is None
 
     def test_manager_release_codec(self) -> None:
         """Test releasing codec resources"""
@@ -111,8 +103,8 @@ class TestG729CodecManager(unittest.TestCase):
 
         manager.release_codec("call123")
 
-        self.assertIsNone(manager.get_encoder("call123"))
-        self.assertIsNone(manager.get_decoder("call123"))
+        assert manager.get_encoder("call123") is None
+        assert manager.get_decoder("call123") is None
 
     def test_manager_sdp_capabilities(self) -> None:
         """Test SDP capabilities"""
@@ -120,32 +112,31 @@ class TestG729CodecManager(unittest.TestCase):
         manager = G729CodecManager(config)
 
         caps = manager.get_sdp_capabilities()
-        self.assertTrue(len(caps) > 0)
-        self.assertTrue(any("rtpmap:18" in cap for cap in caps))
+        assert len(caps) > 0
+        assert any("rtpmap:18" in cap for cap in caps)
 
-
-class TestG726Codec(unittest.TestCase):
+class TestG726Codec:
     """Test G.726 codec functionality"""
 
     def test_g726_initialization_32k(self) -> None:
         """Test G.726-32 initialization"""
         codec = G726Codec(bitrate=32000)
-        self.assertEqual(codec.bitrate, 32000)
-        self.assertEqual(codec.bitrate_kbps, 32)
-        self.assertEqual(codec.bits_per_sample, 4)
-        self.assertEqual(codec.payload_type, 2)  # Static type for G.726-32
+        assert codec.bitrate == 32000
+        assert codec.bitrate_kbps == 32
+        assert codec.bits_per_sample == 4
+        assert codec.payload_type == 2  # Static type for G.726-32
 
     def test_g726_initialization_40k(self) -> None:
         """Test G.726-40 initialization"""
         codec = G726Codec(bitrate=40000)
-        self.assertEqual(codec.bitrate, 40000)
-        self.assertEqual(codec.bitrate_kbps, 40)
-        self.assertEqual(codec.bits_per_sample, 5)
-        self.assertEqual(codec.payload_type, 114)  # Dynamic type
+        assert codec.bitrate == 40000
+        assert codec.bitrate_kbps == 40
+        assert codec.bits_per_sample == 5
+        assert codec.payload_type == 114  # Dynamic type
 
     def test_g726_invalid_bitrate(self) -> None:
         """Test invalid bitrate raises error"""
-        with self.assertRaises(ValueError):
+        with pytest.raises(ValueError):
             G726Codec(bitrate=48000)
 
     def test_g726_info(self) -> None:
@@ -153,32 +144,31 @@ class TestG726Codec(unittest.TestCase):
         codec = G726Codec(bitrate=32000)
         info = codec.get_info()
 
-        self.assertEqual(info["name"], "G.726-32")
-        self.assertEqual(info["sample_rate"], 8000)
-        self.assertEqual(info["bitrate"], 32000)
-        self.assertEqual(info["bits_per_sample"], 4)
-        self.assertEqual(info["payload_type"], 2)
+        assert info["name"] == "G.726-32"
+        assert info["sample_rate"] == 8000
+        assert info["bitrate"] == 32000
+        assert info["bits_per_sample"] == 4
+        assert info["payload_type"] == 2
 
     def test_g726_sdp_description(self) -> None:
         """Test G.726 SDP format strings"""
         codec_32 = G726Codec(bitrate=32000)
         sdp_32 = codec_32.get_sdp_description()
-        self.assertIn("rtpmap:2", sdp_32)
-        self.assertIn("G726-32/8000", sdp_32)
-
+        assert "rtpmap:2" in sdp_32
+        assert "G726-32/8000" in sdp_32
         codec_24 = G726Codec(bitrate=24000)
         sdp_24 = codec_24.get_sdp_description()
-        self.assertIn("G726-24/8000", sdp_24)
+        assert "G726-24/8000" in sdp_24
 
     def test_g726_capabilities(self) -> None:
         """Test G.726 capabilities"""
         caps = G726Codec.get_capabilities()
 
-        self.assertIn(32000, caps["bitrates"])
-        self.assertIn(24000, caps["bitrates"])
-        self.assertIn(16000, caps["bitrates"])
-        self.assertIn(40000, caps["bitrates"])
-        self.assertEqual(caps["sample_rate"], 8000)
+        assert 32000 in caps["bitrates"]
+        assert 24000 in caps["bitrates"]
+        assert 16000 in caps["bitrates"]
+        assert 40000 in caps["bitrates"]
+        assert caps["sample_rate"] == 8000
 
     def test_g726_is_supported(self) -> None:
         """Test G.726 support detection"""
@@ -187,10 +177,9 @@ class TestG726Codec(unittest.TestCase):
         supported_32 = G726Codec.is_supported(32000)
         # We can't guarantee audioop is available in all environments
         # but we can check the method works
-        self.assertIsInstance(supported_32, bool)
+        assert isinstance(supported_32, bool)
 
-
-class TestG726CodecManager(unittest.TestCase):
+class TestG726CodecManager:
     """Test G.726 codec manager"""
 
     def test_manager_initialization(self) -> None:
@@ -198,8 +187,8 @@ class TestG726CodecManager(unittest.TestCase):
         config = {"codecs.g726.enabled": True, "codecs.g726.bitrate": 32000}
         manager = G726CodecManager(config)
 
-        self.assertTrue(manager.enabled)
-        self.assertEqual(manager.default_bitrate, 32000)
+        assert manager.enabled
+        assert manager.default_bitrate == 32000
 
     def test_manager_invalid_bitrate(self) -> None:
         """Test manager handles invalid bitrate"""
@@ -207,7 +196,7 @@ class TestG726CodecManager(unittest.TestCase):
         manager = G726CodecManager(config)
 
         # Should default to 32000
-        self.assertEqual(manager.default_bitrate, 32000)
+        assert manager.default_bitrate == 32000
 
     def test_manager_create_encoder(self) -> None:
         """Test creating encoder"""
@@ -215,9 +204,9 @@ class TestG726CodecManager(unittest.TestCase):
         manager = G726CodecManager(config)
 
         encoder = manager.create_encoder("call456", bitrate=24000)
-        self.assertIsNotNone(encoder)
-        self.assertIsInstance(encoder, G726Codec)
-        self.assertEqual(encoder.bitrate, 24000)
+        assert encoder is not None
+        assert isinstance(encoder, G726Codec)
+        assert encoder.bitrate == 24000
 
     def test_manager_statistics(self) -> None:
         """Test manager statistics"""
@@ -228,13 +217,12 @@ class TestG726CodecManager(unittest.TestCase):
         manager.create_decoder("call2")
 
         stats = manager.get_statistics()
-        self.assertTrue(stats["enabled"])
-        self.assertEqual(stats["default_bitrate"], 32000)
-        self.assertEqual(stats["active_encoders"], 1)
-        self.assertEqual(stats["active_decoders"], 1)
+        assert stats["enabled"]
+        assert stats["default_bitrate"] == 32000
+        assert stats["active_encoders"] == 1
+        assert stats["active_decoders"] == 1
 
-
-class TestSDPWithNewCodecs(unittest.TestCase):
+class TestSDPWithNewCodecs:
     """Test SDP generation with G.729 and G.726"""
 
     def test_sdp_with_g729(self) -> None:
@@ -245,11 +233,11 @@ class TestSDPWithNewCodecs(unittest.TestCase):
             codecs=["0", "18", "101"],  # PCMU, G.729, telephone-event
         )
 
-        self.assertIn("m=audio 10000", sdp)
-        self.assertIn("0 18 101", sdp)  # Payload types in m= line
-        self.assertIn("a=rtpmap:0 PCMU/8000", sdp)
-        self.assertIn("a=rtpmap:18 G729/8000", sdp)
-        self.assertIn("a=rtpmap:101 telephone-event/8000", sdp)
+        assert "m=audio 10000" in sdp
+        assert "0 18 101" in sdp  # Payload types in m= line
+        assert "a=rtpmap:0 PCMU/8000" in sdp
+        assert "a=rtpmap:18 G729/8000" in sdp
+        assert "a=rtpmap:101 telephone-event/8000" in sdp
 
     def test_sdp_with_g726_32(self) -> None:
         """Test SDP includes G.726-32"""
@@ -259,8 +247,8 @@ class TestSDPWithNewCodecs(unittest.TestCase):
             codecs=["0", "2", "101"],  # PCMU, G.726-32, telephone-event
         )
 
-        self.assertIn("0 2 101", sdp)
-        self.assertIn("a=rtpmap:2 G726-32/8000", sdp)
+        assert "0 2 101" in sdp
+        assert "a=rtpmap:2 G726-32/8000" in sdp
 
     def test_sdp_with_g726_variants(self) -> None:
         """Test SDP includes G.726 variants"""
@@ -270,9 +258,9 @@ class TestSDPWithNewCodecs(unittest.TestCase):
             codecs=["0", "112", "113", "114", "101"],  # PCMU, G.726 variants, DTMF
         )
 
-        self.assertIn("a=rtpmap:112 G726-16/8000", sdp)
-        self.assertIn("a=rtpmap:113 G726-24/8000", sdp)
-        self.assertIn("a=rtpmap:114 G726-40/8000", sdp)
+        assert "a=rtpmap:112 G726-16/8000" in sdp
+        assert "a=rtpmap:113 G726-24/8000" in sdp
+        assert "a=rtpmap:114 G726-40/8000" in sdp
 
     def test_sdp_default_includes_new_codecs(self) -> None:
         """Test default SDP includes G.729 and G.726-32"""
@@ -283,12 +271,12 @@ class TestSDPWithNewCodecs(unittest.TestCase):
         )
 
         # Default should now include: 0, 8, 9, 18, 2, 101
-        self.assertIn("a=rtpmap:0 PCMU/8000", sdp)
-        self.assertIn("a=rtpmap:8 PCMA/8000", sdp)
-        self.assertIn("a=rtpmap:9 G722/8000", sdp)
-        self.assertIn("a=rtpmap:18 G729/8000", sdp)
-        self.assertIn("a=rtpmap:2 G726-32/8000", sdp)
-        self.assertIn("a=rtpmap:101 telephone-event/8000", sdp)
+        assert "a=rtpmap:0 PCMU/8000" in sdp
+        assert "a=rtpmap:8 PCMA/8000" in sdp
+        assert "a=rtpmap:9 G722/8000" in sdp
+        assert "a=rtpmap:18 G729/8000" in sdp
+        assert "a=rtpmap:2 G726-32/8000" in sdp
+        assert "a=rtpmap:101 telephone-event/8000" in sdp
 
     def test_sdp_parsing_preserves_new_codecs(self) -> None:
         """Test SDP parser handles new codecs"""
@@ -310,12 +298,8 @@ a=sendrecv
         session.parse(sdp_text)
 
         audio_info = session.get_audio_info()
-        self.assertIsNotNone(audio_info)
-        self.assertEqual(audio_info["port"], 10000)
-        self.assertIn("0", audio_info["formats"])
-        self.assertIn("18", audio_info["formats"])
-        self.assertIn("2", audio_info["formats"])
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert audio_info is not None
+        assert audio_info["port"] == 10000
+        assert "0" in audio_info["formats"]
+        assert "18" in audio_info["formats"]
+        assert "2" in audio_info["formats"]

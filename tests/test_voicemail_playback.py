@@ -6,12 +6,9 @@ Tests that extensions can retrieve and listen to their voicemail messages
 
 import os
 import shutil
-import sys
 import tempfile
 import time
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call
 from pbx.core.pbx import PBXCore
@@ -22,7 +19,6 @@ from pbx.utils.config import Config
 
 def test_rtp_player_play_file() -> None:
     """Test RTP player can play a WAV file"""
-    print("Testing RTP player play_file method...")
 
     # Create a temporary WAV file with G.711 μ-law audio
     temp_dir = tempfile.mkdtemp()
@@ -88,7 +84,6 @@ def test_rtp_player_play_file() -> None:
         # Test should succeed if file was parsed correctly
         assert result or result is False  # Either outcome is acceptable for this test
 
-        print("✓ RTP player play_file works")
 
     finally:
         shutil.rmtree(temp_dir)
@@ -96,7 +91,6 @@ def test_rtp_player_play_file() -> None:
 
 def test_voicemail_access_plays_messages() -> None:
     """Test that voicemail access actually plays messages"""
-    print("Testing voicemail access plays messages...")
 
     # Create temporary directory for voicemail
     temp_dir = tempfile.mkdtemp()
@@ -127,7 +121,6 @@ def test_voicemail_access_plays_messages() -> None:
         assert messages[0]["caller_id"] == "1002"
         assert messages[0]["listened"] is False
 
-        print("✓ Voicemail message saved successfully")
 
         # Now test the playback functionality
         # We can't fully test playback without a SIP client, but we can verify
@@ -140,46 +133,6 @@ def test_voicemail_access_plays_messages() -> None:
         messages = mailbox.get_messages()
         assert messages[0]["listened"]
 
-        print("✓ Voicemail message marked as listened")
 
     finally:
         shutil.rmtree(temp_dir)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail Playback Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_rtp_player_play_file,
-        test_voicemail_access_plays_messages,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

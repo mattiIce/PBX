@@ -980,7 +980,7 @@ def add_lcr_time_rate() -> tuple[Response, int]:
                 start_minute=int(data["start_minute"]),
                 end_hour=int(data["end_hour"]),
                 end_minute=int(data["end_minute"]),
-                days=data["days"],  # List of day indices
+                days=data["days"],  # list of day indices
                 multiplier=float(data["multiplier"]),
             )
 
@@ -1100,7 +1100,7 @@ def get_fmfm_statistics() -> tuple[Response, int]:
 @features_bp.route("/api/fmfm/config", methods=["POST"])
 @require_auth
 def set_fmfm_config() -> tuple[Response, int]:
-    """Set FMFM configuration for an extension."""
+    """set FMFM configuration for an extension."""
     logger.info("Received FMFM config save request")
 
     pbx_core = get_pbx_core()

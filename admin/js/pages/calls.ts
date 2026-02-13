@@ -3,9 +3,9 @@
  * Handles active calls display, codec status, and DTMF configuration.
  */
 
-import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
-import { escapeHtml } from '../utils/html.js';
+import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
+import { escapeHtml } from '../utils/html.ts';
 
 interface Codec {
     name: string;
@@ -112,7 +112,7 @@ export async function saveDTMFConfig(): Promise<void> {
 }
 
 // Backward compatibility
-(window as any).loadCalls = loadCalls;
-(window as any).loadCodecStatus = loadCodecStatus;
-(window as any).loadDTMFConfig = loadDTMFConfig;
-(window as any).saveDTMFConfig = saveDTMFConfig;
+window.loadCalls = loadCalls;
+window.loadCodecStatus = loadCodecStatus;
+window.loadDTMFConfig = loadDTMFConfig;
+window.saveDTMFConfig = saveDTMFConfig;

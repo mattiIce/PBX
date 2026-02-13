@@ -3,8 +3,8 @@
  * Handles license status, features, generation, and installation.
  */
 
-import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
+import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
 
 interface License {
     type?: string;
@@ -119,7 +119,7 @@ export function initLicenseManagement(): void {
 }
 
 // Backward compatibility
-(window as any).loadLicenseStatus = loadLicenseStatus;
-(window as any).loadLicenseFeatures = loadLicenseFeatures;
-(window as any).installLicense = installLicense;
-(window as any).initLicenseManagement = initLicenseManagement;
+window.loadLicenseStatus = loadLicenseStatus;
+window.loadLicenseFeatures = loadLicenseFeatures;
+window.installLicense = installLicense;
+window.initLicenseManagement = initLicenseManagement;

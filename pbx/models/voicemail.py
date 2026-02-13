@@ -3,7 +3,6 @@ Voicemail ORM model for voicemail messages.
 """
 
 from datetime import datetime
-from typing import Optional
 
 from sqlalchemy import Boolean, DateTime, Float, Index, Integer, String, Text, func
 from sqlalchemy.orm import Mapped, mapped_column
@@ -18,15 +17,15 @@ class Voicemail(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     extension: Mapped[str] = mapped_column(String(20), nullable=False)
-    caller_id: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    caller_id: Mapped[str | None] = mapped_column(String(50), nullable=True)
     timestamp: Mapped[datetime] = mapped_column(
         DateTime, default=func.now(), server_default=func.now(), nullable=False
     )
-    duration: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    duration: Mapped[int | None] = mapped_column(Integer, nullable=True)
     listened: Mapped[bool] = mapped_column(Boolean, default=False, server_default="0")
-    audio_path: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
-    transcription_text: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    transcription_confidence: Mapped[Optional[float]] = mapped_column(Float, nullable=True)
+    audio_path: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    transcription_text: Mapped[str | None] = mapped_column(Text, nullable=True)
+    transcription_confidence: Mapped[float | None] = mapped_column(Float, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime,
         default=func.now(),

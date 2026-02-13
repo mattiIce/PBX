@@ -4,11 +4,6 @@ Tests for Active Directory search API endpoint
 Tests that the /api/integrations/ad/search endpoint properly searches for users by telephoneNumber
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
@@ -16,7 +11,6 @@ from pbx.utils.config import Config
 
 def test_ad_search_users_method() -> None:
     """Test that the AD search_users method includes telephoneNumber in the search"""
-    print("Testing AD search_users method includes telephoneNumber...")
 
     config = Config("test_config.yml")
     ad_integration = ActiveDirectoryIntegration(config)
@@ -32,8 +26,6 @@ def test_ad_search_users_method() -> None:
     assert "query" in params, "search_users should accept 'query' parameter"
     assert "max_results" in params, "search_users should accept 'max_results' parameter"
 
-    print("✓ AD search_users method exists with correct signature")
-    print("  Parameters: query, max_results")
 
     # Note: We can't test actual LDAP connection without a real AD server
     # But we can verify the method structure is correct
@@ -45,12 +37,9 @@ def test_ad_search_users_method() -> None:
         "phone" in docstring.lower() or "telephone" in docstring.lower()
     ), "Documentation should mention phone/telephone search capability"
 
-    print("✓ Method documentation mentions phone/telephone search")
-
 
 def test_search_filter_includes_telephone_number() -> None:
     """Verify that the search filter includes telephoneNumber attribute"""
-    print("Testing that search filter includes telephoneNumber...")
 
     # Read the source code to verify the search filter
     import inspect
@@ -71,13 +60,9 @@ def test_search_filter_includes_telephone_number() -> None:
         and "telephoneNumber" in source
     ), "search_users should retrieve telephoneNumber attribute"
 
-    print("✓ Search filter includes telephoneNumber attribute")
-    print("✓ Result attributes include telephoneNumber")
-
 
 def test_api_endpoint_structure() -> None:
     """Test that the REST API has the AD search endpoint defined"""
-    print("Testing REST API AD search endpoint structure...")
 
     # Import the REST API module
     import inspect
@@ -101,14 +86,9 @@ def test_api_endpoint_structure() -> None:
     # Verify it handles query parameter
     assert "'q'" in source or '"q"' in source, "_handle_ad_search should handle 'q' query parameter"
 
-    print("✓ REST API handler _handle_ad_search exists")
-    print("✓ Handler calls search_users method")
-    print("✓ Handler processes query parameter")
-
 
 def test_api_routing() -> None:
     """Test that the API routing includes the AD search endpoint"""
-    print("Testing API routing for AD search endpoint...")
 
     import inspect
 
@@ -125,36 +105,3 @@ def test_api_routing() -> None:
     assert (
         "_handle_ad_search" in source
     ), "API routing should call _handle_ad_search for the search endpoint"
-
-    print("✓ API routing includes /api/integrations/ad/search")
-    print("✓ Routing calls _handle_ad_search handler")
-
-
-if __name__ == "__main__":
-    try:
-        test_ad_search_users_method()
-        print()
-        test_search_filter_includes_telephone_number()
-        print()
-        test_api_endpoint_structure()
-        print()
-        test_api_routing()
-        print()
-        print("=" * 60)
-        print("All AD search API tests passed!")
-        print("=" * 60)
-        print()
-        print("The AD search API endpoint is properly configured to:")
-        print("  - Search users by telephoneNumber attribute")
-        print("  - Return phone numbers in search results")
-        print("  - Handle query parameters via REST API")
-        print()
-    except AssertionError as e:
-        print(f"\n❌ Test failed: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        sys.exit(1)

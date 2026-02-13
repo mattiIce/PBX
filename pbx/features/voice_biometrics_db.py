@@ -5,7 +5,6 @@ Provides persistence for voice profiles, enrollments, and verifications
 
 import json
 from datetime import datetime
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -151,7 +150,7 @@ class VoiceBiometricsDatabase:
             self.logger.error(f"Error creating voice biometrics tables: {e}")
             return False
 
-    def save_profile(self, user_id: str, extension: str, status: str) -> Optional[int]:
+    def save_profile(self, user_id: str, extension: str, status: str) -> int | None:
         """Save a new voice profile"""
         try:
             cursor = self.db.connection.cursor()
@@ -185,7 +184,7 @@ class VoiceBiometricsDatabase:
             self.logger.error(f"Error saving voice profile: {e}")
             return None
 
-    def get_profile(self, user_id: str) -> Optional[Dict]:
+    def get_profile(self, user_id: str) -> dict | None:
         """Get voice profile by user ID"""
         try:
             cursor = self.db.connection.cursor()
@@ -286,7 +285,7 @@ class VoiceBiometricsDatabase:
         caller_id: str,
         fraud_detected: bool,
         risk_score: float,
-        indicators: List[str],
+        indicators: list[str],
     ):
         """Save fraud detection result"""
         try:
@@ -325,7 +324,7 @@ class VoiceBiometricsDatabase:
         except Exception as e:
             self.logger.error(f"Error saving fraud detection: {e}")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get voice biometrics statistics"""
         try:
             cursor = self.db.connection.cursor()

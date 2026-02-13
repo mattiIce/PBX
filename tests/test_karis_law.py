@@ -8,13 +8,9 @@ Kari's Law requires multi-line telephone systems (MLTS) to:
 3. Notify designated contacts automatically
 """
 
-import os
-import sys
 from typing import Any
 from unittest.mock import MagicMock
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.karis_law import KarisLawCompliance
 
@@ -70,7 +66,6 @@ def create_mock_pbx() -> MagicMock:
 
 def test_emergency_number_detection() -> None:
     """Test that emergency numbers are correctly detected"""
-    print("Testing emergency number detection...")
 
     pbx = create_mock_pbx()
     karis_law = KarisLawCompliance(pbx)
@@ -91,12 +86,9 @@ def test_emergency_number_detection() -> None:
     assert not karis_law.is_emergency_number("811"), "Should not detect 811"
     assert not karis_law.is_emergency_number("9111"), "Should not detect 9111"
 
-    print("✓ Emergency number detection works correctly")
-
 
 def test_emergency_number_normalization() -> None:
     """Test normalization of emergency numbers"""
-    print("Testing emergency number normalization...")
 
     pbx = create_mock_pbx()
     karis_law = KarisLawCompliance(pbx)
@@ -111,12 +103,9 @@ def test_emergency_number_normalization() -> None:
         karis_law.normalize_emergency_number("1001") == "1001"
     ), "Regular number should not change"
 
-    print("✓ Emergency number normalization works correctly")
-
 
 def test_direct_911_dialing() -> None:
     """Test direct 911 dialing (Kari's Law requirement)"""
-    print("Testing direct 911 dialing...")
 
     pbx = create_mock_pbx()
     config = {
@@ -148,12 +137,9 @@ def test_direct_911_dialing() -> None:
         pbx.emergency_notification.on_911_call.called
     ), "Emergency notification should be triggered"
 
-    print("✓ Direct 911 dialing works correctly")
-
 
 def test_legacy_prefix_support() -> None:
     """Test that legacy prefixes (9911, 9-911) still work but are normalized"""
-    print("Testing legacy prefix support...")
 
     pbx = create_mock_pbx()
     config = {"features": {"karis_law": {"enabled": True, "auto_notify": True}}}
@@ -181,12 +167,9 @@ def test_legacy_prefix_support() -> None:
     assert success, "9-911 call should succeed"
     assert routing_info["destination"] == "911", "Should normalize to 911"
 
-    print("✓ Legacy prefix support works correctly")
-
 
 def test_automatic_notification() -> None:
     """Test automatic notification to designated contacts"""
-    print("Testing automatic notification...")
 
     pbx = create_mock_pbx()
     config = {"features": {"karis_law": {"enabled": True, "auto_notify": True}}}
@@ -211,12 +194,9 @@ def test_automatic_notification() -> None:
     assert call_args[1]["caller_name"] == "Test User", "Should include caller name"
     assert "location" in call_args[1], "Should include location"
 
-    print("✓ Automatic notification works correctly")
-
 
 def test_location_information() -> None:
     """Test location information provision (Ray Baum's Act)"""
-    print("Testing location information provision...")
 
     pbx = create_mock_pbx()
     config = {"features": {"karis_law": {"enabled": True, "require_location": True}}}
@@ -229,12 +209,9 @@ def test_location_information() -> None:
     assert "building" in location, "Should include building"
     assert "dispatchable_location" in location, "Should include dispatchable location"
 
-    print("✓ Location information provision works correctly")
-
 
 def test_emergency_call_history() -> None:
     """Test emergency call history tracking"""
-    print("Testing emergency call history...")
 
     pbx = create_mock_pbx()
     karis_law = KarisLawCompliance(pbx)
@@ -257,12 +234,9 @@ def test_emergency_call_history() -> None:
     history_filtered = karis_law.get_emergency_call_history(extension="1001")
     assert len(history_filtered) == 1, "Should have 1 call from extension 1001"
 
-    print("✓ Emergency call history tracking works correctly")
-
 
 def test_compliance_validation() -> None:
     """Test compliance validation"""
-    print("Testing compliance validation...")
 
     pbx = create_mock_pbx()
     config = {"features": {"karis_law": {"enabled": True, "emergency_trunk_id": "emergency_trunk"}}}
@@ -274,12 +248,9 @@ def test_compliance_validation() -> None:
     assert results["compliant"], "Should be compliant"
     assert len(results["errors"]) == 0, "Should have no errors"
 
-    print("✓ Compliance validation works correctly")
-
 
 def test_disabled_compliance() -> None:
     """Test behavior when compliance is disabled"""
-    print("Testing disabled compliance...")
 
     pbx = create_mock_pbx()
     config = {"features": {"karis_law": {"enabled": False}}}
@@ -301,12 +272,9 @@ def test_disabled_compliance() -> None:
     assert not results["compliant"], "Should not be compliant"
     assert "disabled" in results["errors"][0].lower(), "Error should mention disabled"
 
-    print("✓ Disabled compliance behavior works correctly")
-
 
 def test_no_trunk_available() -> None:
     """Test behavior when no trunk is available"""
-    print("Testing no trunk available scenario...")
 
     pbx = create_mock_pbx()
     pbx.trunk_system.route_outbound = MagicMock(return_value=(None, None))
@@ -327,12 +295,9 @@ def test_no_trunk_available() -> None:
     assert not routing_info["success"], "Routing should fail"
     assert "error" in routing_info, "Should have error message"
 
-    print("✓ No trunk available scenario works correctly")
-
 
 def test_statistics() -> None:
     """Test statistics reporting"""
-    print("Testing statistics...")
 
     pbx = create_mock_pbx()
     config = {
@@ -360,12 +325,9 @@ def test_statistics() -> None:
     assert stats["require_location"], "Location should be required"
     assert stats["emergency_trunk_configured"], "Emergency trunk should be configured"
 
-    print("✓ Statistics reporting works correctly")
-
 
 def test_multi_site_e911_routing() -> None:
     """Test multi-site E911 routing with site-specific trunks"""
-    print("Testing multi-site E911 routing...")
 
     pbx = create_mock_pbx()
 
@@ -464,59 +426,3 @@ def test_multi_site_e911_routing() -> None:
     assert routing_info.get("site_specific"), "Should be marked as site-specific routing"
     assert routing_info.get("psap_number") == "911", "Should include PSAP number"
     assert routing_info.get("elin") == "+13135551234", "Should include ELIN"
-
-    print("✓ Multi-site E911 routing works correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all Kari's Law tests"""
-    print("=" * 70)
-    print("Kari's Law Compliance Tests")
-    print("=" * 70)
-    print()
-
-    tests = [
-        test_emergency_number_detection,
-        test_emergency_number_normalization,
-        test_direct_911_dialing,
-        test_legacy_prefix_support,
-        test_automatic_notification,
-        test_location_information,
-        test_emergency_call_history,
-        test_compliance_validation,
-        test_disabled_compliance,
-        test_no_trunk_available,
-        test_statistics,
-        test_multi_site_e911_routing,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ Test failed: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ Test error: {test.__name__}")
-            print(f"  Error: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-        print()
-
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

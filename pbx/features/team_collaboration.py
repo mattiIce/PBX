@@ -3,7 +3,6 @@ Team Messaging Framework
 Built-in chat platform for team collaboration
 """
 
-from typing import Dict, List, Optional
 
 from pbx.utils.logger import get_logger
 
@@ -29,7 +28,7 @@ class TeamMessagingEngine:
 
         self.logger.info("Team Messaging Framework initialized")
 
-    def create_channel(self, channel_data: Dict) -> Optional[int]:
+    def create_channel(self, channel_data: dict) -> int | None:
         """
         Create messaging channel
 
@@ -117,7 +116,7 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to add member to channel: {e}")
             return False
 
-    def send_message(self, message_data: Dict) -> Optional[int]:
+    def send_message(self, message_data: dict) -> int | None:
         """
         Send message to channel
 
@@ -169,7 +168,7 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to send message: {e}")
             return None
 
-    def get_channel_messages(self, channel_id: int, limit: int = 100) -> List[Dict]:
+    def get_channel_messages(self, channel_id: int, limit: int = 100) -> list[dict]:
         """
         Get messages from channel
 
@@ -178,7 +177,7 @@ class TeamMessagingEngine:
             limit: Maximum number of messages
 
         Returns:
-            List of message dictionaries
+            list of message dictionaries
         """
         try:
             result = self.db.execute(
@@ -212,7 +211,7 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to get channel messages: {e}")
             return []
 
-    def get_user_channels(self, extension: str) -> List[Dict]:
+    def get_user_channels(self, extension: str) -> list[dict]:
         """
         Get channels for user
 
@@ -220,7 +219,7 @@ class TeamMessagingEngine:
             extension: Extension number
 
         Returns:
-            List of channel dictionaries
+            list of channel dictionaries
         """
         try:
             result = self.db.execute(
@@ -257,12 +256,12 @@ class TeamMessagingEngine:
             self.logger.error(f"Failed to get user channels: {e}")
             return []
 
-    def get_all_channels(self) -> List[Dict]:
+    def get_all_channels(self) -> list[dict]:
         """
         Get all public channels
 
         Returns:
-            List of channel dictionaries
+            list of channel dictionaries
         """
         try:
             result = self.db.execute(
@@ -316,7 +315,7 @@ class FileShareEngine:
 
         self.logger.info("File Sharing Framework initialized")
 
-    def upload_file(self, file_data: Dict) -> Optional[int]:
+    def upload_file(self, file_data: dict) -> int | None:
         """
         Upload and share file
         Framework method - handles file storage
@@ -374,7 +373,7 @@ class FileShareEngine:
             self.logger.error(f"Failed to upload file: {e}")
             return None
 
-    def get_shared_files(self, extension: str) -> List[Dict]:
+    def get_shared_files(self, extension: str) -> list[dict]:
         """
         Get files shared with user
 
@@ -382,7 +381,7 @@ class FileShareEngine:
             extension: Extension number
 
         Returns:
-            List of file dictionaries
+            list of file dictionaries
         """
         try:
             # Files uploaded by user or shared with them

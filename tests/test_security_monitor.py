@@ -4,12 +4,8 @@ Tests for security runtime monitor
 Verifies continuous security compliance monitoring
 """
 
-import os
-import sys
 import time
 
-# Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from pbx.utils.config import Config
 from pbx.utils.security_monitor import SecurityMonitor, get_security_monitor
@@ -17,7 +13,6 @@ from pbx.utils.security_monitor import SecurityMonitor, get_security_monitor
 
 def test_security_monitor_initialization() -> None:
     """Test security monitor initialization"""
-    print("\nTesting security monitor initialization...")
 
     # Create monitor with FIPS enabled
     config = {
@@ -42,12 +37,9 @@ def test_security_monitor_initialization() -> None:
     assert monitor.fips_mode is True, "FIPS mode should be enabled"
     assert monitor.enforce_fips is True, "FIPS enforcement should be enabled"
 
-    print("  ✓ Security monitor initialization works")
-
 
 def test_fips_compliance_check() -> None:
     """Test FIPS compliance checking"""
-    print("\nTesting FIPS compliance check...")
 
     config = {"security": {"fips_mode": True, "enforce_fips": True}}
 
@@ -64,15 +56,12 @@ def test_fips_compliance_check() -> None:
 
     if CRYPTO_AVAILABLE:
         assert result["status"] == "PASS", "FIPS check should pass with crypto library"
-        print("  ✓ FIPS compliance check works (cryptography available)")
     else:
         assert result["status"] == "FAIL", "FIPS check should fail without crypto library"
-        print("  ✓ FIPS compliance check works (cryptography unavailable)")
 
 
 def test_password_policy_check() -> None:
     """Test password policy checking"""
-    print("\nTesting password policy check...")
 
     # Test with proper policy
     config = {
@@ -92,7 +81,6 @@ def test_password_policy_check() -> None:
 
     assert result["status"] == "PASS", "Password policy check should pass"
     assert result["details"]["min_length"] == 12, "Min length should be 12"
-    print("  ✓ Password policy check works (proper policy)")
 
     # Test with weak policy
     weak_config = {"security": {"password": {"min_length": 6, "require_uppercase": False}}}
@@ -101,12 +89,10 @@ def test_password_policy_check() -> None:
     weak_result = weak_monitor._check_password_policy()
 
     assert weak_result["status"] == "FAIL", "Weak password policy should fail"
-    print("  ✓ Password policy check works (weak policy detected)")
 
 
 def test_rate_limiting_check() -> None:
     """Test rate limiting check"""
-    print("\nTesting rate limiting check...")
 
     config = {
         "security": {
@@ -119,12 +105,10 @@ def test_rate_limiting_check() -> None:
 
     assert result["status"] == "PASS", "Rate limiting check should pass"
     assert result["details"]["max_attempts"] == 5, "Max attempts should be 5"
-    print("  ✓ Rate limiting check works")
 
 
 def test_audit_logging_check() -> None:
     """Test audit logging check"""
-    print("\nTesting audit logging check...")
 
     config = {"security": {"audit": {"enabled": True, "log_to_database": True}}}
 
@@ -133,12 +117,10 @@ def test_audit_logging_check() -> None:
 
     assert result["status"] == "PASS", "Audit logging check should pass"
     assert result["details"]["enabled"] is True, "Audit logging should be enabled"
-    print("  ✓ Audit logging check works")
 
 
 def test_threat_detection_check() -> None:
     """Test threat detection check"""
-    print("\nTesting threat detection check...")
 
     config = {"security": {"threat_detection": {"enabled": True}}}
 
@@ -146,12 +128,10 @@ def test_threat_detection_check() -> None:
     result = monitor._check_threat_detection()
 
     assert result["status"] == "PASS", "Threat detection check should pass"
-    print("  ✓ Threat detection check works")
 
 
 def test_comprehensive_security_check() -> None:
     """Test comprehensive security check"""
-    print("\nTesting comprehensive security check...")
 
     # Load actual config
     config = Config("config.yml")
@@ -177,14 +157,10 @@ def test_comprehensive_security_check() -> None:
         assert check in results["checks"], f"Check '{check}' should be present"
 
     # Only log summary status, never the full results which may contain sensitive data.
-    print(f"  ✓ Comprehensive check works (status: {results['overall_status']})")
-    print(f"    Checks performed: {len(results['checks'])}")
-    print(f"    Violations found: {len(results['violations'])}")
 
 
 def test_compliance_status() -> None:
     """Test compliance status tracking"""
-    print("\nTesting compliance status tracking...")
 
     config = Config("config.yml")
     monitor = SecurityMonitor(config)
@@ -212,15 +188,9 @@ def test_compliance_status() -> None:
     for field in status_fields:
         assert field in status["status"], f"Status should have '{field}' field"
 
-    print("  ✓ Compliance status tracking works")
-    print(f"    FIPS compliant: {status['status']['fips_compliant']}")
-    print(f"    Crypto available: {status['status']['crypto_available']}")
-    print(f"    Password policy active: {status['status']['password_policy_active']}")
-
 
 def test_security_enforcement() -> None:
     """Test security enforcement"""
-    print("\nTesting security enforcement...")
 
     config = Config("config.yml")
     monitor = SecurityMonitor(config)
@@ -231,15 +201,12 @@ def test_security_enforcement() -> None:
     # Should return True unless critical FIPS failure with enforcement
     assert isinstance(can_continue, bool), "Enforcement should return boolean"
 
-    if can_continue:
-        print("  ✓ Security enforcement allows system to continue")
-    else:
-        print("  ✓ Security enforcement blocks system (critical violations)")
+    if not can_continue:
+        pass
 
 
 def test_monitor_lifecycle() -> None:
     """Test monitor start/stop lifecycle"""
-    print("\nTesting monitor lifecycle...")
 
     config = Config("config.yml")
     monitor = SecurityMonitor(config)
@@ -248,7 +215,6 @@ def test_monitor_lifecycle() -> None:
     monitor.start()
     assert monitor.running, "Monitor should be running"
     assert monitor.monitor_thread is not None, "Monitor thread should exist"
-    print("  ✓ Monitor starts successfully")
 
     # Let it run briefly (2 seconds to ensure thread is active)
     time.sleep(2)
@@ -256,65 +222,13 @@ def test_monitor_lifecycle() -> None:
     # Stop monitor
     monitor.stop()
     assert not monitor.running, "Monitor should be stopped"
-    print("  ✓ Monitor stops successfully")
 
 
 def test_get_security_monitor() -> None:
     """Test factory function"""
-    print("\nTesting security monitor factory function...")
 
     config = Config("config.yml")
     monitor = get_security_monitor(config)
 
     assert monitor is not None, "Factory should return monitor"
     assert isinstance(monitor, SecurityMonitor), "Should return SecurityMonitor instance"
-
-    print("  ✓ Factory function works")
-
-
-def run_all_tests() -> tuple[int, int]:
-    """Run all security monitor tests"""
-    print("=" * 60)
-    print("Running Security Monitor Tests")
-    print("=" * 60)
-
-    tests = [
-        test_security_monitor_initialization,
-        test_fips_compliance_check,
-        test_password_policy_check,
-        test_rate_limiting_check,
-        test_audit_logging_check,
-        test_threat_detection_check,
-        test_comprehensive_security_check,
-        test_compliance_status,
-        test_security_enforcement,
-        test_monitor_lifecycle,
-        test_get_security_monitor,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"  ✗ {test.__name__} failed: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"  ✗ {test.__name__} error: {e}")
-            failed += 1
-
-    print("\n" + "=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    if failed == 0:
-        print("✅ All security monitor tests passed!")
-    print("=" * 60)
-
-    return passed, failed
-
-
-if __name__ == "__main__":
-    passed, failed = run_all_tests()
-    sys.exit(0 if failed == 0 else 1)

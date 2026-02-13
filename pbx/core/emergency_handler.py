@@ -91,7 +91,7 @@ class EmergencyHandler:
         if rtp_ports:
             call.rtp_ports = rtp_ports
 
-            # Set caller's endpoint if we have RTP info
+            # set caller's endpoint if we have RTP info
             if caller_sdp:
                 caller_endpoint = (caller_sdp["address"], caller_sdp["port"])
                 relay_info = pbx.rtp_relay.active_relays.get(call_id)

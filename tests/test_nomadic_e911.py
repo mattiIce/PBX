@@ -2,21 +2,17 @@
 Tests for Nomadic E911 Framework
 """
 
-import os
-import sys
-import unittest
 from typing import Any
+import pytest
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.features.nomadic_e911 import NomadicE911Engine
 
 
-class TestNomadicE911(unittest.TestCase):
+class TestNomadicE911:
     """Test Nomadic E911 functionality"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test database"""
         # Create a minimal mock database backend
         import sqlite3
@@ -97,14 +93,14 @@ class TestNomadicE911(unittest.TestCase):
         self.config = {"nomadic_e911.enabled": True}
         self.engine = NomadicE911Engine(self.db, self.config)
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test database"""
         self.db.disconnect()
 
     def test_initialization(self) -> None:
         """Test engine initialization"""
-        self.assertIsNotNone(self.engine)
-        self.assertTrue(self.engine.enabled)
+        assert self.engine is not None
+        assert self.engine.enabled
 
     def test_update_location(self) -> None:
         """Test updating extension location"""
@@ -121,7 +117,7 @@ class TestNomadicE911(unittest.TestCase):
         }
 
         result = self.engine.update_location("1001", location_data)
-        self.assertTrue(result)
+        assert result
 
     def test_get_location(self) -> None:
         """Test retrieving extension location"""
@@ -139,9 +135,9 @@ class TestNomadicE911(unittest.TestCase):
 
         # Now retrieve it
         location = self.engine.get_location("1001")
-        self.assertIsNotNone(location)
-        self.assertEqual(location["extension"], "1001")
-        self.assertEqual(location["city"], "Detroit")
+        assert location is not None
+        assert location["extension"] == "1001"
+        assert location["city"] == "Detroit"
 
     def test_create_site_config(self) -> None:
         """Test creating multi-site E911 configuration"""
@@ -160,7 +156,7 @@ class TestNomadicE911(unittest.TestCase):
         }
 
         result = self.engine.create_site_config(site_data)
-        self.assertTrue(result)
+        assert result
 
     def test_get_all_sites(self) -> None:
         """Test retrieving all site configurations"""
@@ -178,28 +174,26 @@ class TestNomadicE911(unittest.TestCase):
 
         # Get all sites
         sites = self.engine.get_all_sites()
-        self.assertGreater(len(sites), 0)
-        self.assertEqual(sites[0]["site_name"], "Main Office")
+        assert len(sites) > 0
+        assert sites[0]["site_name"] == "Main Office"
 
     def test_ip_in_range(self) -> None:
         """Test IP range checking"""
         # Test IP in range
         result = self.engine._ip_in_range("192.168.1.50", "192.168.1.0", "192.168.1.255")
-        self.assertTrue(result)
-
+        assert result
         # Test IP not in range
         result = self.engine._ip_in_range("192.168.2.50", "192.168.1.0", "192.168.1.255")
-        self.assertFalse(result)
+        assert not result
 
     def test_is_private_ip(self) -> None:
         """Test private IP detection"""
         # Test private IPs
-        self.assertTrue(self.engine._is_private_ip("192.168.1.1"))
-        self.assertTrue(self.engine._is_private_ip("10.0.0.1"))
-        self.assertTrue(self.engine._is_private_ip("172.16.0.1"))
-
+        assert self.engine._is_private_ip("192.168.1.1")
+        assert self.engine._is_private_ip("10.0.0.1")
+        assert self.engine._is_private_ip("172.16.0.1")
         # Test public IP
-        self.assertFalse(self.engine._is_private_ip("8.8.8.8"))
+        assert not self.engine._is_private_ip("8.8.8.8")
 
     def test_find_site_by_ip(self) -> None:
         """Test finding site by IP address"""
@@ -217,8 +211,8 @@ class TestNomadicE911(unittest.TestCase):
 
         # Find site
         site = self.engine._find_site_by_ip("192.168.1.100")
-        self.assertIsNotNone(site)
-        self.assertEqual(site["site_name"], "Office A")
+        assert site is not None
+        assert site["site_name"] == "Office A"
 
     def test_detect_location_by_ip(self) -> None:
         """Test automatic location detection by IP"""
@@ -239,22 +233,22 @@ class TestNomadicE911(unittest.TestCase):
 
         # Detect location
         location = self.engine.detect_location_by_ip("1002", "192.168.10.50")
-        self.assertIsNotNone(location)
-        self.assertEqual(location["location_name"], "Manufacturing Plant")
-        self.assertEqual(location["city"], "Detroit")
-        self.assertTrue(location["auto_detected"])
+        assert location is not None
+        assert location["location_name"] == "Manufacturing Plant"
+        assert location["city"] == "Detroit"
+        assert location["auto_detected"]
 
     def test_detect_location_private_ip_no_match(self) -> None:
         """Test detecting private IP with no site match"""
         location = self.engine.detect_location_by_ip("1003", "192.168.99.1")
-        self.assertIsNotNone(location)
-        self.assertEqual(location["location_name"], "Unknown Internal Location")
-        self.assertTrue(location.get("needs_configuration", False))
+        assert location is not None
+        assert location["location_name"] == "Unknown Internal Location"
+        assert location.get("needs_configuration", False)
 
     def test_detect_location_public_ip(self) -> None:
         """Test detecting public IP (no match)"""
         location = self.engine.detect_location_by_ip("1004", "8.8.8.8")
-        self.assertIsNone(location)
+        assert location is None
 
     def test_location_history(self) -> None:
         """Test location update history"""
@@ -268,7 +262,7 @@ class TestNomadicE911(unittest.TestCase):
 
         # Get history
         history = self.engine.get_location_history("1005")
-        self.assertGreater(len(history), 0)
+        assert len(history) > 0
 
     def test_multiple_sites(self) -> None:
         """Test multiple site configurations"""
@@ -293,7 +287,7 @@ class TestNomadicE911(unittest.TestCase):
 
         # Verify both sites
         all_sites = self.engine.get_all_sites()
-        self.assertEqual(len(all_sites), 2)
+        assert len(all_sites) == 2
 
     def test_location_with_coordinates(self) -> None:
         """Test location with latitude/longitude"""
@@ -308,10 +302,6 @@ class TestNomadicE911(unittest.TestCase):
         self.engine.update_location("1006", location_data)
 
         location = self.engine.get_location("1006")
-        self.assertIsNotNone(location)
-        self.assertAlmostEqual(location["latitude"], 42.3314, places=4)
-        self.assertAlmostEqual(location["longitude"], -83.0458, places=4)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert location is not None
+        assert location["latitude"] == pytest.approx(42.3314, abs=10**(-4))
+        assert location["longitude"] == pytest.approx(-83.0458, abs=10**(-4))

@@ -3,19 +3,14 @@
 Test paging system integration with PBX core
 """
 
-import os
-import sys
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.paging import PagingSystem
 
 
 def test_paging_system_initialization() -> bool:
     """Test paging system initialization"""
-    print("Testing paging system initialization...")
 
     # Create a mock config object with proper structure
     class MockConfig:
@@ -60,13 +55,11 @@ def test_paging_system_initialization() -> bool:
     assert len(paging.zones) == 2, "Should have 2 zones"
     assert len(paging.dac_devices) == 1, "Should have 1 DAC device"
 
-    print("✓ Paging system initialization works")
     return True
 
 
 def test_paging_extension_detection() -> bool:
     """Test paging extension detection"""
-    print("\nTesting paging extension detection...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -92,13 +85,11 @@ def test_paging_extension_detection() -> bool:
     assert paging.is_paging_extension("1001") is False, "1001 should not be paging extension"
     assert paging.is_paging_extension("8001") is False, "8001 should not be paging extension"
 
-    print("✓ Paging extension detection works")
     return True
 
 
 def test_zone_management() -> bool:
     """Test zone management"""
-    print("\nTesting zone management...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -143,13 +134,11 @@ def test_zone_management() -> bool:
     success = paging.remove_zone("999")
     assert success is False, "Should not remove non-existent zone"
 
-    print("✓ Zone management works")
     return True
 
 
 def test_page_initiation() -> bool:
     """Test page initiation"""
-    print("\nTesting page initiation...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -189,13 +178,11 @@ def test_page_initiation() -> bool:
     assert success, "Should successfully end page"
     assert len(paging.get_active_pages()) == 0, "Should have 0 active pages"
 
-    print("✓ Page initiation works")
     return True
 
 
 def test_all_call_paging() -> bool:
     """Test all-call paging"""
-    print("\nTesting all-call paging...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -229,13 +216,11 @@ def test_all_call_paging() -> bool:
     # End the page
     paging.end_page(page_id)
 
-    print("✓ All-call paging works")
     return True
 
 
 def test_dac_device_configuration() -> bool:
     """Test DAC device configuration"""
-    print("\nTesting DAC device configuration...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -275,13 +260,11 @@ def test_dac_device_configuration() -> bool:
     )
     assert success is False, "Should not add duplicate device"
 
-    print("✓ DAC device configuration works")
     return True
 
 
 def test_paging_disabled() -> bool:
     """Test paging system when disabled"""
-    print("\nTesting paging system when disabled...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -296,34 +279,4 @@ def test_paging_disabled() -> bool:
     assert paging.initiate_page("1001", "700") is None, "Should not initiate page"
     assert len(paging.get_zones()) == 0, "Should return empty zones"
 
-    print("✓ Paging disabled state works")
     return True
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Testing Paging System Integration")
-    print("=" * 70)
-
-    results = []
-    results.append(test_paging_system_initialization())
-    results.append(test_paging_extension_detection())
-    results.append(test_zone_management())
-    results.append(test_page_initiation())
-    results.append(test_all_call_paging())
-    results.append(test_dac_device_configuration())
-    results.append(test_paging_disabled())
-
-    print("\n" + "=" * 70)
-    if all(results):
-        print(f"✅ All paging tests passed! ({len(results)}/{len(results)})")
-        return True
-    else:
-        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

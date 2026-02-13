@@ -3,11 +3,6 @@
 Tests for Phone Book and Paging features
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.paging import PagingSystem
 from pbx.features.phone_book import PhoneBook
@@ -15,7 +10,6 @@ from pbx.features.phone_book import PhoneBook
 
 def test_phone_book_basic() -> None:
     """Test basic phone book operations"""
-    print("Testing phone book basic operations...")
 
     # Create a phone book with minimal config
     config = {"features.phone_book.enabled": True, "features.phone_book.auto_sync_from_ad": False}
@@ -50,12 +44,9 @@ def test_phone_book_basic() -> None:
     entry = phone_book.get_entry("1001")
     assert entry is None, "Entry should be removed"
 
-    print("✓ Phone book basic operations passed")
-
 
 def test_phone_book_export() -> None:
     """Test phone book export formats"""
-    print("Testing phone book export formats...")
 
     config = {"features.phone_book.enabled": True, "features.phone_book.auto_sync_from_ad": False}
 
@@ -87,12 +78,9 @@ def test_phone_book_export() -> None:
         '"name": "Alice Smith"' in json_output or '"name":"Alice Smith"' in json_output
     ), "Name not in JSON"
 
-    print("✓ Phone book export formats passed")
-
 
 def test_paging_system_basic() -> None:
     """Test basic paging system operations"""
-    print("Testing paging system basic operations...")
 
     config = {
         "features.paging.enabled": True,
@@ -130,12 +118,9 @@ def test_paging_system_basic() -> None:
     zones = paging_system.get_zones()
     assert len(zones) == 0, "Should have no zones"
 
-    print("✓ Paging system basic operations passed")
-
 
 def test_paging_system_devices() -> None:
     """Test paging system DAC device configuration"""
-    print("Testing paging system DAC device configuration...")
 
     config = {
         "features.paging.enabled": True,
@@ -163,12 +148,9 @@ def test_paging_system_devices() -> None:
     assert devices[0]["device_id"] == "paging-gateway-1", "Device ID mismatch"
     assert devices[0]["device_type"] == "cisco_vg224", "Device type mismatch"
 
-    print("✓ Paging system DAC device configuration passed")
-
 
 def test_phone_book_disabled() -> None:
     """Test phone book when disabled"""
-    print("Testing phone book when disabled...")
 
     config = {"features.phone_book.enabled": False}
 
@@ -179,12 +161,9 @@ def test_phone_book_disabled() -> None:
     assert phone_book.get_entry("1001") is None, "Should return None when disabled"
     assert phone_book.get_all_entries() == [], "Should return empty list when disabled"
 
-    print("✓ Phone book disabled test passed")
-
 
 def test_paging_system_disabled() -> None:
     """Test paging system when disabled"""
-    print("Testing paging system when disabled...")
 
     config = {"features.paging.enabled": False}
 
@@ -194,37 +173,3 @@ def test_paging_system_disabled() -> None:
     assert not paging_system.is_paging_extension("700"), "Should return False when disabled"
     assert not paging_system.add_zone("701", "Test"), "Should fail when disabled"
     assert paging_system.get_zones() == [], "Should return empty list when disabled"
-
-    print("✓ Paging system disabled test passed")
-
-
-def run_all_tests() -> bool | None:
-    """Run all tests in this module"""
-    print("\nRunning Phone Book and Paging Tests")
-    print("=" * 60)
-
-    try:
-        test_phone_book_basic()
-        test_phone_book_export()
-        test_paging_system_basic()
-        test_paging_system_devices()
-        test_phone_book_disabled()
-        test_paging_system_disabled()
-
-        print("\n" + "=" * 60)
-        print("All tests passed! ✓")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        return False
-    except Exception as e:
-        print(f"\n✗ Error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)
