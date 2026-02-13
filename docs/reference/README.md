@@ -44,4 +44,3 @@ Reference documents are kept separate from the main guide because they:
 ---
 
 **Primary Documentation**: [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md)
-**Documentation Index**: [DOCUMENTATION_INDEX.md](../DOCUMENTATION_INDEX.md)

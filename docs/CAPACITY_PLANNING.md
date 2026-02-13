@@ -488,8 +488,8 @@ python3 scripts/benchmark_performance.py
 ### Related Documentation
 
 - [OPERATIONS_RUNBOOK.md](OPERATIONS_RUNBOOK.md) - Operational procedures
-- [PRODUCTION_DEPLOYMENT_GUIDE.md](PRODUCTION_DEPLOYMENT_GUIDE.md) - Deployment guide
 - [HA_DEPLOYMENT_GUIDE.md](HA_DEPLOYMENT_GUIDE.md) - High availability setup
+- [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Comprehensive documentation
 
 ---
 

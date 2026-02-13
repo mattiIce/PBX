@@ -470,7 +470,7 @@ Quick comparison:
 - **Perpetual**: One-time purchase, never expires
 - **Custom**: Tailored feature sets for special requirements
 
-See `LICENSING_GUIDE.md` for complete feature lists and pricing.
+See [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) for complete feature documentation.
 
 ---
 

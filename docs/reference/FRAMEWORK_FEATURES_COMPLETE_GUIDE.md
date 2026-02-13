@@ -249,7 +249,7 @@ These features have basic informational admin panels and complete backend framew
   - **PowerDNS** - High-performance DNS server
   - **Unbound** - Validating recursive DNS resolver
 - **Paid Options (optional):** Managed DNS services
-- **Guide:** DNS_SRV_FAILOVER_GUIDE.md (planned)
+- **Guide:** See [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md) for DNS configuration
 
 #### Session Border Controller
 - **Purpose:** Enhanced security and NAT traversal
@@ -560,6 +560,5 @@ For specific feature implementation details, refer to the individual feature gui
 
 ## See Also
 
-- [EXECUTIVE_SUMMARY.md](../EXECUTIVE_SUMMARY.md)
-- [TODO.md](../../TODO.md) - Implementation tracking
+- [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md) - Comprehensive documentation
 - [README.md](../../README.md) - Getting started guide

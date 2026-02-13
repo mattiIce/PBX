@@ -59,7 +59,7 @@ greetings/
 
 ## Usage
 
-See [MERLIN_IMPORT_GUIDE.md](../../MERLIN_IMPORT_GUIDE.md) for complete documentation.
+See [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md) for complete documentation.
 
 ### Quick Start
 

@@ -397,7 +397,7 @@ For issues not covered in this guide:
 
 1. Check PBX logs: `tail -f logs/pbx.log`
 2. Check ATA web interface system status
-3. Review [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+3. Review [TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
 4. Search existing issues on GitHub
 5. Open a new issue with:
    - ATA make/model

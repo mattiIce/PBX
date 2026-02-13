@@ -2428,12 +2428,6 @@ npm test         # Run Jest tests
 
 ### 9.6 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- Code style guidelines
-- Commit message format
-- Pull request process
-- Testing requirements
-
 **Quick Checklist:**
 - [ ] Code follows PEP 8 style (enforced by `make format`)
 - [ ] Type hints added to all functions
@@ -2546,9 +2540,7 @@ integrations:
 
 **Documentation:**
 - README.md - Project overview
-- CHANGELOG.md - Version history
-- docs/TODO.md - Planned features
-- docs/EXECUTIVE_SUMMARY.md - Business overview
+- TROUBLESHOOTING.md - Troubleshooting guide
 
 **External Resources:**
 - SIP Protocol: RFC 3261

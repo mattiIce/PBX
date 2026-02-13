@@ -299,7 +299,7 @@ For issues or questions:
 1. Check PBX system logs
 2. Review Prometheus targets status
 3. Check Grafana data source configuration
-4. Consult PRODUCTION_RUNBOOK.md for troubleshooting
+4. Consult [OPERATIONS_RUNBOOK.md](../../docs/OPERATIONS_RUNBOOK.md) for troubleshooting
 
 ---
 

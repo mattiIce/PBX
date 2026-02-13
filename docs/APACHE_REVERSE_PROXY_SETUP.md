@@ -50,7 +50,7 @@ The script will:
 ### What You'll Need to Provide
 
 The script will ask for:
-- **Domain name** (e.g., `pbx.yourcompany.com` or `abps.albl.com`)
+- **Domain name** (e.g., `pbx.yourcompany.com`)
 - **Email address** (for SSL certificate notifications)
 - **Backend port** (default: 8080, or 9000 if using the alternative port)
 

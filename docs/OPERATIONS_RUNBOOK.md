@@ -715,9 +715,8 @@ ls -lh /path/to/backups/
 ### Related Documentation
 
 - [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Comprehensive troubleshooting guide
-- [PRODUCTION_DEPLOYMENT_GUIDE.md](../docs/PRODUCTION_DEPLOYMENT_GUIDE.md) - Deployment procedures
 - [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Full system documentation
-- [INCIDENT_RESPONSE_PLAYBOOK.md](../INCIDENT_RESPONSE_PLAYBOOK.md) - Detailed incident procedures
+- [INCIDENT_RESPONSE_PLAYBOOK.md](INCIDENT_RESPONSE_PLAYBOOK.md) - Detailed incident procedures
 
 ---
 
