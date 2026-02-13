@@ -43,6 +43,7 @@ pyttsx3==2.99
 # Database Backend
 sqlalchemy==2.0.46
 psycopg2-binary==2.9.11
+alembic==1.15.0
 
 # Enterprise Integrations
 requests==2.32.5

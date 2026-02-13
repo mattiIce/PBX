@@ -320,7 +320,7 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
         try:
             with open(audio_path, "rb") as f:
                 audio_data = f.read()
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except (FileNotFoundError, PermissionError, OSError) as e:
             print(f"  ✗ Error reading audio file: {e}")
             errors += 1
             continue
@@ -349,7 +349,7 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
 
             print(f"  ✓ Imported successfully (ID: {saved_id})")
             imported += 1
-        except (IOError, OSError, ValueError, RuntimeError) as e:
+        except (OSError, ValueError, RuntimeError) as e:
             print(f"  ✗ Import failed: {e}")
             logger.error(f"Error importing voicemail: {e}", exc_info=True)
             errors += 1
@@ -447,7 +447,7 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
         try:
             with open(greeting_file, "rb") as f:
                 audio_data = f.read()
-        except (FileNotFoundError, PermissionError, IOError, OSError) as e:
+        except (FileNotFoundError, PermissionError, OSError) as e:
             print(f"  ✗ Error reading greeting file: {e}")
             errors += 1
             continue
@@ -463,7 +463,7 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
             else:
                 print("  ✗ Failed to save greeting")
                 errors += 1
-        except (IOError, OSError, ValueError, RuntimeError) as e:
+        except (OSError, ValueError, RuntimeError) as e:
             print(f"  ✗ Import failed: {e}")
             logger.error(f"Error importing greeting: {e}", exc_info=True)
             errors += 1
