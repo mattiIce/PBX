@@ -25,6 +25,7 @@ Requirements:
 
 import argparse
 import datetime
+from datetime import timezone
 import json
 import os
 import socket
@@ -52,7 +53,7 @@ class HealthMonitor:
         self.verify_ssl = verify_ssl
         self.base_dir = Path(__file__).parent.parent
         self.health_data = {
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": datetime.datetime.now(timezone.utc).isoformat(),
             "hostname": socket.gethostname(),
             "checks": {},
             "alerts": [],
@@ -316,7 +317,7 @@ class HealthMonitor:
                     # Parse expiration date
                     expiry_str = result.stdout.strip().split("=")[1]
                     expiry_date = datetime.datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
-                    days_until_expiry = (expiry_date - datetime.datetime.now()).days
+                    days_until_expiry = (expiry_date - datetime.datetime.now(timezone.utc)).days
 
                     if days_until_expiry < 7:
                         status = "critical"

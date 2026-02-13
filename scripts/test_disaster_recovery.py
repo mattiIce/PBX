@@ -20,7 +20,7 @@ import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
@@ -101,7 +101,7 @@ class DisasterRecoveryTester:
             # Backup filename with timestamp
             backup_file = os.path.join(
                 self.config.backup_dir,
-                f"pbx_db_backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}.sql",
+                f"pbx_db_backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.sql",
             )
 
             # Run pg_dump
@@ -513,7 +513,7 @@ class DisasterRecoveryTester:
         # Compile results
         results = DRTestResults(
             test_type=self.config.test_type,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             duration=duration,
             overall_success=overall_success,
             backup_results=self.results["backup"],

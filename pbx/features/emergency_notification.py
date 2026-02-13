@@ -6,7 +6,7 @@ Provides emergency contact notifications and 911 call alerts
 import json
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from email.utils import formatdate
 
 from pbx.utils.logger import get_logger
@@ -354,7 +354,7 @@ class EmergencyNotificationSystem:
             return False
 
         with self.lock:
-            notification_id = f"emergency_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+            notification_id = f"emergency_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
 
             self.logger.warning(f"🚨 EMERGENCY NOTIFICATION TRIGGERED: {trigger_type}")
             self.logger.warning(f"Details: {details}")
@@ -362,7 +362,7 @@ class EmergencyNotificationSystem:
             # Record notification
             notification_record = {
                 "id": notification_id,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "trigger_type": trigger_type,
                 "details": details,
                 "contacts_notified": [],
@@ -459,7 +459,7 @@ class EmergencyNotificationSystem:
                             "contact": contact,
                             "trigger_type": trigger_type,
                             "details": details,
-                            "timestamp": datetime.now(),
+                            "timestamp": datetime.now(timezone.utc),
                             "call_id": call_id,
                         }
                     )
@@ -498,7 +498,7 @@ class EmergencyNotificationSystem:
                 body = """EMERGENCY NOTIFICATION
 
 type: {trigger_type}
-Time: {details.get('timestamp', datetime.now())}
+Time: {details.get('timestamp', datetime.now(timezone.utc))}
 Contact: {contact.name}
 Priority: {contact.priority}
 
@@ -618,7 +618,7 @@ PBX Emergency Notification System
 
             # Build SMS message
             message_body = f"🚨 EMERGENCY: {trigger_type}\n"
-            message_body += f"Time: {details.get('timestamp', datetime.now())}\n"
+            message_body += f"Time: {details.get('timestamp', datetime.now(timezone.utc))}\n"
             message_body += f"Contact: {contact.name}\n"
             message_body += "Respond immediately."
 
@@ -649,7 +649,7 @@ PBX Emergency Notification System
 
             # Build SMS message
             message_body = f"🚨 EMERGENCY: {trigger_type}\n"
-            message_body += f"Time: {details.get('timestamp', datetime.now())}\n"
+            message_body += f"Time: {details.get('timestamp', datetime.now(timezone.utc))}\n"
             message_body += f"Contact: {contact.name}\n"
             message_body += "Respond immediately."
 
@@ -734,7 +734,7 @@ PBX Emergency Notification System
             "caller_extension": caller_extension,
             "caller_name": caller_name,
             "location": location or "Unknown",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Trigger emergency notifications
@@ -751,7 +751,7 @@ PBX Emergency Notification System
 
         details = {
             "test": True,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "message": "This is a test of the emergency notification system",
         }
 

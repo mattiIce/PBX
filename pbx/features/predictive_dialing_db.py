@@ -4,7 +4,7 @@ Provides persistence for campaigns, contacts, and call results
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -280,7 +280,7 @@ class PredictiveDialingDatabase:
                 contact_id,
                 attempt_data.get("call_id"),
                 attempt_data.get("attempt_number"),
-                attempt_data.get("timestamp", datetime.now().isoformat()),
+                attempt_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
                 attempt_data.get("result"),
                 attempt_data.get("duration"),
                 attempt_data.get("agent_id"),
@@ -309,7 +309,7 @@ class PredictiveDialingDatabase:
                 """
 
             update_params = (
-                attempt_data.get("timestamp", datetime.now().isoformat()),
+                attempt_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
                 attempt_data.get("status", "attempted"),
                 attempt_data.get("result"),
                 campaign_id,

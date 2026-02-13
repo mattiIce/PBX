@@ -6,7 +6,7 @@ import os
 import smtplib
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from email.mime.audio import MIMEAudio
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -296,7 +296,7 @@ class EmailNotifier:
             while self.reminders_enabled:
                 try:
                     # Check if it's time to send reminders
-                    now = datetime.now()
+                    now = datetime.now(timezone.utc)
                     reminder_hour, reminder_min = map(int, self.reminder_time.split(":"))
 
                     if now.hour == reminder_hour and now.minute == reminder_min:

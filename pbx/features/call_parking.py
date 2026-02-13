@@ -3,7 +3,7 @@ Call Parking System
 Allows calls to be parked and retrieved from any extension
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -25,12 +25,12 @@ class ParkedCall:
         self.park_number = park_number
         self.from_extension = from_extension
         self.original_destination = original_destination
-        self.park_time = datetime.now()
+        self.park_time = datetime.now(timezone.utc)
         self.parker = from_extension
 
     def get_park_duration(self):
         """Get time parked in seconds"""
-        return (datetime.now() - self.park_time).total_seconds()
+        return (datetime.now(timezone.utc) - self.park_time).total_seconds()
 
     def to_dict(self):
         """Convert to dictionary"""

@@ -5,7 +5,7 @@ Continuously monitors and enforces security compliance during PBX operation
 
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 from pbx.utils.logger import get_logger
@@ -124,7 +124,7 @@ class SecurityMonitor:
         Returns:
             Dictionary with check results
         """
-        self.last_check_time = datetime.now()
+        self.last_check_time = datetime.now(timezone.utc)
         results = {
             "timestamp": self.last_check_time.isoformat(),
             "checks": {},

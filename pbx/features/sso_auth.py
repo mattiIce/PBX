@@ -4,7 +4,7 @@ SAML/OAuth enterprise authentication using free libraries
 """
 
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -178,9 +178,9 @@ class SSOAuthService:
 
         self.active_sessions[session_id] = {
             "user_info": user_info,
-            "created_at": datetime.now(),
-            "expires_at": datetime.now() + timedelta(seconds=self.session_timeout),
-            "last_activity": datetime.now(),
+            "created_at": datetime.now(timezone.utc),
+            "expires_at": datetime.now(timezone.utc) + timedelta(seconds=self.session_timeout),
+            "last_activity": datetime.now(timezone.utc),
         }
 
         self.logger.info(f"Created SSO session for {user_info.get('user_id')}")
@@ -195,12 +195,12 @@ class SSOAuthService:
         session = self.active_sessions[session_id]
 
         # Check if session expired
-        if datetime.now() > session["expires_at"]:
+        if datetime.now(timezone.utc) > session["expires_at"]:
             del self.active_sessions[session_id]
             return None
 
         # Update last activity
-        session["last_activity"] = datetime.now()
+        session["last_activity"] = datetime.now(timezone.utc)
 
         return session["user_info"]
 
@@ -215,7 +215,7 @@ class SSOAuthService:
 
     def cleanup_expired_sessions(self):
         """Clean up expired sessions"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         expired = [
             sid for sid, session in self.active_sessions.items() if now > session["expires_at"]
         ]

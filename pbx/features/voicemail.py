@@ -3,7 +3,7 @@ Voicemail system
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
 
@@ -138,7 +138,7 @@ class VoicemailBox:
         Returns:
             Message ID
         """
-        timestamp = datetime.now()
+        timestamp = datetime.now(timezone.utc)
         timestamp_str = timestamp.strftime("%Y%m%d_%H%M%S")
         message_id = f"{caller_id}_{timestamp_str}"
 
@@ -481,12 +481,12 @@ class VoicemailBox:
                                     self.logger.warning(
                                         f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time"
                                     )
-                                    timestamp = datetime.now()
+                                    timestamp = datetime.now(timezone.utc)
                         except ValueError:
                             self.logger.warning(
                                 f"Invalid timestamp format for voicemail {row['message_id']}, using current time"
                             )
-                            timestamp = datetime.now()
+                            timestamp = datetime.now(timezone.utc)
 
                     message = {
                         "id": row["message_id"],

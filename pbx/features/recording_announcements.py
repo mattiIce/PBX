@@ -4,7 +4,7 @@ Auto-play recording disclosure before recording starts
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -128,7 +128,7 @@ class RecordingAnnouncements:
                         consent_required,
                         consent_given,
                         consent_timeout,
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                     ),
                 )
             else:
@@ -144,7 +144,7 @@ class RecordingAnnouncements:
                         1 if consent_required else 0,
                         1 if consent_given else (0 if consent_given is False else None),
                         1 if consent_timeout else 0,
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                     ),
                 )
 
@@ -212,7 +212,7 @@ class RecordingAnnouncements:
             "audio_file": self.audio_path if os.path.exists(self.audio_path) else None,
             "text": self.announcement_text,
             "party": party,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         self.announcements_played += 1
@@ -248,7 +248,7 @@ class RecordingAnnouncements:
             "announcement": announcement,
             "timeout_seconds": self.consent_timeout,
             "instructions": "Press 1 to accept recording, 2 to decline",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return result

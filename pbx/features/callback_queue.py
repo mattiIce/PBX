@@ -3,7 +3,7 @@ Callback Queuing System
 Avoid hold time with scheduled callbacks
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -237,7 +237,7 @@ class CallbackQueue:
                         callback.get("failed_at"),
                         callback.get("cancelled_at"),
                         callback.get("notes"),
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                     ),
                 )
             else:
@@ -266,7 +266,7 @@ class CallbackQueue:
                         callback.get("failed_at"),
                         callback.get("cancelled_at"),
                         callback.get("notes"),
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                     ),
                 )
 
@@ -300,7 +300,7 @@ class CallbackQueue:
             return {"error": "Callback queue not enabled"}
 
         # Generate callback ID
-        callback_id = f"cb_{datetime.now().strftime('%Y%m%d%H%M%S')}_{len(self.callbacks)}"
+        callback_id = f"cb_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{len(self.callbacks)}"
 
         # Calculate estimated callback time
         if preferred_time:
@@ -308,7 +308,7 @@ class CallbackQueue:
         else:
             # ASAP - estimate based on queue length
             queue_length = len(self.queue_callbacks.get(queue_id, []))
-            callback_time = datetime.now() + timedelta(
+            callback_time = datetime.now(timezone.utc) + timedelta(
                 minutes=queue_length * 5
             )  # 5 min per call estimate
 
@@ -317,7 +317,7 @@ class CallbackQueue:
             "queue_id": queue_id,
             "caller_number": caller_number,
             "caller_name": caller_name,
-            "requested_at": datetime.now(),
+            "requested_at": datetime.now(timezone.utc),
             "callback_time": callback_time,
             "status": CallbackStatus.SCHEDULED,
             "attempts": 0,
@@ -353,7 +353,7 @@ class CallbackQueue:
         if queue_id not in self.queue_callbacks or not self.queue_callbacks[queue_id]:
             return None
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         # Find next callback that's ready
         for callback_id in self.queue_callbacks[queue_id]:
@@ -375,7 +375,7 @@ class CallbackQueue:
         callback = self.callbacks[callback_id]
         callback["status"] = CallbackStatus.IN_PROGRESS
         callback["agent_id"] = agent_id
-        callback["started_at"] = datetime.now()
+        callback["started_at"] = datetime.now(timezone.utc)
         callback["attempts"] += 1
 
         # Save to database
@@ -401,7 +401,7 @@ class CallbackQueue:
 
         if success:
             callback["status"] = CallbackStatus.COMPLETED
-            callback["completed_at"] = datetime.now()
+            callback["completed_at"] = datetime.now(timezone.utc)
             callback["notes"] = notes
 
             # Save to database
@@ -417,7 +417,7 @@ class CallbackQueue:
             # Check if we should retry
             if callback["attempts"] < callback["max_attempts"]:
                 callback["status"] = CallbackStatus.SCHEDULED
-                callback["callback_time"] = datetime.now() + timedelta(minutes=self.retry_interval)
+                callback["callback_time"] = datetime.now(timezone.utc) + timedelta(minutes=self.retry_interval)
 
                 # Save to database
                 self._save_callback_to_database(callback_id)
@@ -427,7 +427,7 @@ class CallbackQueue:
                 )
             else:
                 callback["status"] = CallbackStatus.FAILED
-                callback["failed_at"] = datetime.now()
+                callback["failed_at"] = datetime.now(timezone.utc)
                 callback["notes"] = notes
 
                 # Save to database
@@ -451,7 +451,7 @@ class CallbackQueue:
 
         callback = self.callbacks[callback_id]
         callback["status"] = CallbackStatus.CANCELLED
-        callback["cancelled_at"] = datetime.now()
+        callback["cancelled_at"] = datetime.now(timezone.utc)
 
         # Save to database
         self._save_callback_to_database(callback_id)
@@ -521,7 +521,7 @@ class CallbackQueue:
 
     def cleanup_old_callbacks(self, days: int = 30):
         """Clean up old completed/failed callbacks"""
-        cutoff = datetime.now() - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
         to_remove = []
         for callback_id, callback in self.callbacks.items():

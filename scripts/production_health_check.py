@@ -26,7 +26,7 @@ import json
 import os
 import socket
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 try:
@@ -54,7 +54,7 @@ class HealthCheck:
         self.json_output = json_output
         self.critical_only = critical_only
         self.results = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "checks": [],
             "summary": {"passed": 0, "failed": 0, "warnings": 0},
         }

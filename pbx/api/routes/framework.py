@@ -8,7 +8,7 @@ Recording Analytics, Voicemail Drop, DNS SRV, SBC, and Data Residency.
 """
 
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, Response, jsonify, request, current_app
 
@@ -752,7 +752,7 @@ def clear_integration_activity() -> tuple[Response, int]:
     if pbx_core and pbx_core.database.enabled:
         try:
             # Delete entries older than 30 days
-            cutoff_date = datetime.now() - timedelta(days=30)
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
             delete_query = (
                 """DELETE FROM integration_activity_log
                    WHERE created_at < ?"""

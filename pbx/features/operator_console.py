@@ -5,7 +5,7 @@ Provides advanced call handling for receptionists and front desk staff
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.core.call import CallState
 from pbx.utils.logger import get_logger
@@ -150,7 +150,7 @@ class OperatorConsole:
             {
                 "call_id": call_id,
                 "operator": operator_extension,
-                "started_at": datetime.now(),
+                "started_at": datetime.now(timezone.utc),
                 "original_destination": call.to_extension,
             }
         )
@@ -218,7 +218,7 @@ class OperatorConsole:
         call.transfer_info["announcement"] = announcement
         call.transfer_info["target_extension"] = target_extension
         call.transfer_info["transfer_type"] = "announced"
-        call.transfer_info["initiated_at"] = datetime.now().isoformat()
+        call.transfer_info["initiated_at"] = datetime.now(timezone.utc).isoformat()
 
         # Use the existing transfer mechanism
         # In a production system, this would wait for target acknowledgment
@@ -323,7 +323,7 @@ class OperatorConsole:
             {
                 "message": full_message,
                 "method": method,
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
                 "park_slot": park_slot,
             }
         )
@@ -415,8 +415,8 @@ class OperatorConsole:
             "priority_level": priority_level,
             "name": name,
             "notes": notes,
-            "created_at": datetime.now().isoformat(),
-            "updated_at": datetime.now().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
+            "updated_at": datetime.now(timezone.utc).isoformat(),
         }
 
         self.vip_callers[caller_id] = vip_entry

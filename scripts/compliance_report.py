@@ -12,7 +12,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 
@@ -22,7 +22,7 @@ class ComplianceReporter:
     def __init__(self):
         self.base_dir = Path(__file__).parent.parent
         self.report_data = {
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "version": self._get_version(),
             "compliance_status": {},
             "audit_summary": {},
@@ -419,7 +419,7 @@ class ComplianceReporter:
 
         # Generate output
         if output_file is None:
-            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
             output_file = f"compliance_report_{timestamp}.{output_format}"
 
         if output_format == "html":

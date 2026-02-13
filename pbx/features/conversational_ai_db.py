@@ -3,7 +3,7 @@ Database layer for Conversational AI Assistant
 Provides persistence for conversations, intents, and statistics
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -277,7 +277,7 @@ class ConversationalAIDatabase:
                 WHERE call_id = ?
                 """
 
-            params = (datetime.now().isoformat(), final_intent, message_count, call_id)
+            params = (datetime.now(timezone.utc).isoformat(), final_intent, message_count, call_id)
             cursor.execute(sql, params)
             self.db.connection.commit()
 

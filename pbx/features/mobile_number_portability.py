@@ -3,7 +3,7 @@ Mobile Number Portability
 Use business number on mobile device
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -74,7 +74,7 @@ class MobileNumberPortability:
             "simultaneous_ring": settings.get("simultaneous_ring", self.sim_ring_enabled),
             "mobile_first": settings.get("mobile_first", self.mobile_first),
             "business_hours_only": settings.get("business_hours_only", False),
-            "created_at": datetime.now(),
+            "created_at": datetime.now(timezone.utc),
             "active": True,
         }
 
@@ -138,7 +138,7 @@ class MobileNumberPortability:
     def _is_business_hours(self) -> bool:
         """Check if current time is within business hours"""
         # Check against configured business hours
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         hour = now.hour
         minute = now.minute
         weekday = now.weekday()  # 0 = Monday, 6 = Sunday

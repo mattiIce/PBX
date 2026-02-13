@@ -5,7 +5,7 @@ Voicemail transcription service using speech-to-text
 import json
 import os
 import wave
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -119,7 +119,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": None,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "error": "Transcription service is disabled",
             }
 
@@ -131,7 +131,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": self.provider,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "error": f"Audio file not found: {audio_file_path}",
             }
 
@@ -153,7 +153,7 @@ class VoicemailTranscriptionService:
                     "confidence": 0.0,
                     "language": language,
                     "provider": self.provider,
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                     "error": error_msg,
                 }
         except Exception as e:
@@ -164,7 +164,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": self.provider,
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "error": str(e),
             }
 
@@ -186,7 +186,7 @@ class VoicemailTranscriptionService:
             "confidence": 0.0,
             "language": language,
             "provider": provider or self.provider,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
             "error": error_msg,
         }
 
@@ -263,7 +263,7 @@ class VoicemailTranscriptionService:
                     "confidence": VOSK_DEFAULT_CONFIDENCE,  # Vosk doesn't provide confidence
                     "language": language,
                     "provider": "vosk",
-                    "timestamp": datetime.now(),
+                    "timestamp": datetime.now(timezone.utc),
                     "error": None,
                 }
             else:
@@ -296,7 +296,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": "google",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "error": error_msg,
             }
 
@@ -343,7 +343,7 @@ class VoicemailTranscriptionService:
                             "confidence": confidence,
                             "language": language,
                             "provider": "google",
-                            "timestamp": datetime.now(),
+                            "timestamp": datetime.now(timezone.utc),
                             "error": None,
                         }
 
@@ -355,7 +355,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": "google",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "error": "Transcription returned no results",
             }
 
@@ -367,6 +367,6 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": "google",
-                "timestamp": datetime.now(),
+                "timestamp": datetime.now(timezone.utc),
                 "error": str(e),
             }

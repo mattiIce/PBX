@@ -4,7 +4,7 @@ Provides persistence for quality metrics, predictions, and alerts
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -187,7 +187,7 @@ class CallQualityPredictionDatabase:
 
             params = (
                 call_id,
-                metrics.get("timestamp", datetime.now().isoformat()),
+                metrics.get("timestamp", datetime.now(timezone.utc).isoformat()),
                 metrics.get("latency"),
                 metrics.get("jitter"),
                 metrics.get("packet_loss"),
@@ -224,7 +224,7 @@ class CallQualityPredictionDatabase:
                     prediction.get("alert", False),
                     json.dumps(prediction.get("alert_reasons", [])),
                     json.dumps(prediction.get("recommendations", [])),
-                    prediction.get("timestamp", datetime.now()),
+                    prediction.get("timestamp", datetime.now(timezone.utc)),
                 )
             else:
                 sql = """
@@ -244,7 +244,7 @@ class CallQualityPredictionDatabase:
                     1 if prediction.get("alert", False) else 0,
                     json.dumps(prediction.get("alert_reasons", [])),
                     json.dumps(prediction.get("recommendations", [])),
-                    prediction.get("timestamp", datetime.now().isoformat()),
+                    prediction.get("timestamp", datetime.now(timezone.utc).isoformat()),
                 )
 
             cursor.execute(sql, params)
@@ -286,7 +286,7 @@ class CallQualityPredictionDatabase:
                 message,
                 metric_value,
                 threshold_value,
-                datetime.now().isoformat(),
+                datetime.now(timezone.utc).isoformat(),
             )
             cursor.execute(sql, params)
             self.db.connection.commit()
@@ -368,7 +368,7 @@ class CallQualityPredictionDatabase:
         """Update daily trend statistics"""
         try:
             cursor = self.db.connection.cursor()
-            today = datetime.now().date().isoformat()
+            today = datetime.now(timezone.utc).date().isoformat()
 
             if self.db.db_type == "postgresql":
                 sql = """

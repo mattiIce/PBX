@@ -54,7 +54,7 @@ class TestFMFMSaveFailure:
         assert not success, "set_config should return False when database save fails"
         # Config should not be in memory if database save failed
         loaded_config = fmfm.get_config("1000")
-        assert loaded_config, "Config should not be saved to memory if database save fails" is None
+        assert loaded_config is None, "Config should not be saved to memory if database save fails"
 
     def test_set_config_without_database(self) -> None:
         """Test that set_config works without a database"""
@@ -76,7 +76,7 @@ class TestFMFMSaveFailure:
         assert success, "set_config should work without a database"
         # Config should be in memory
         loaded_config = fmfm.get_config("1000")
-        assert loaded_config, "Config should be saved to memory" is not None
+        assert loaded_config is not None, "Config should be saved to memory"
         assert loaded_config["mode"] == "sequential"
 
     def test_set_config_with_working_database(self) -> None:
@@ -97,12 +97,12 @@ class TestFMFMSaveFailure:
         assert success, "set_config should succeed with working database"
         # Config should be in memory and database
         loaded_config = fmfm.get_config("1000")
-        assert loaded_config, "Config should be saved" is not None
+        assert loaded_config is not None, "Config should be saved"
         assert loaded_config["mode"] == "simultaneous"
         # Verify it persists by creating a new instance
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
         loaded_config2 = fmfm2.get_config("1000")
-        assert loaded_config2, "Config should persist to database" is not None
+        assert loaded_config2 is not None, "Config should persist to database"
         assert loaded_config2["mode"] == "simultaneous"
 
     def test_set_config_with_fmfm_disabled_globally(self) -> None:
@@ -128,4 +128,4 @@ class TestFMFMSaveFailure:
         assert not success, "set_config should return False when FMFM is disabled globally"
         # Config should not be saved
         loaded_config = fmfm.get_config("8001")
-        assert loaded_config, "Config should not be saved when FMFM is disabled globally" is None
+        assert loaded_config is None, "Config should not be saved when FMFM is disabled globally"

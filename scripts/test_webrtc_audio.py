@@ -16,7 +16,7 @@ Usage:
 import argparse
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -428,7 +428,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
         try:
             with open(guide_path, "w") as f:
                 f.write("# WebRTC Audio Troubleshooting Guide\n\n")
-                f.write(f"Generated: {datetime.now().isoformat()}\n\n")
+                f.write(f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n")
                 f.write(guide)
                 f.write("\n\n## Test Results\n\n")
                 f.write(f"- Passed: {self.test_results['passed']}\n")

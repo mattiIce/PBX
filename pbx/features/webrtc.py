@@ -7,7 +7,7 @@ import os
 import threading
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from collections.abc import Callable
 
 from pbx.utils.logger import get_logger
@@ -28,8 +28,8 @@ class WebRTCSession:
         self.session_id = session_id
         self.extension = extension
         self.peer_connection_id = peer_connection_id or str(uuid.uuid4())
-        self.created_at = datetime.now()
-        self.last_activity = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(timezone.utc)
         self.state = "new"  # new, connecting, connected, disconnected
         self.local_sdp = None
         self.remote_sdp = None
@@ -39,7 +39,7 @@ class WebRTCSession:
 
     def update_activity(self):
         """Update last activity timestamp"""
-        self.last_activity = datetime.now()
+        self.last_activity = datetime.now(timezone.utc)
 
     def to_dict(self) -> dict:
         """Convert session to dictionary"""
@@ -190,7 +190,7 @@ class WebRTCSignalingServer:
     def _cleanup_stale_sessions(self):
         """Remove stale sessions that have timed out"""
         with self.lock:
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             stale_sessions = []
 
             for session_id, session in self.sessions.items():

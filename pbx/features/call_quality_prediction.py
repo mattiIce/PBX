@@ -3,7 +3,7 @@ Call Quality Prediction
 Proactive network issue detection using ML
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -35,7 +35,7 @@ class NetworkMetrics:
 
     def __init__(self):
         """Initialize network metrics"""
-        self.timestamp = datetime.now()
+        self.timestamp = datetime.now(timezone.utc)
         self.latency = 0  # milliseconds
         self.jitter = 0  # milliseconds
         self.packet_loss = 0.0  # percentage
@@ -190,7 +190,7 @@ class CallQualityPrediction:
                     current.jitter,
                     current.packet_loss,
                     current.bandwidth,
-                    datetime.now().hour / 24.0,  # Normalized time of day
+                    datetime.now(timezone.utc).hour / 24.0,  # Normalized time of day
                     0.0,
                     0.0,
                     0.0,  # Codec features (would need to be passed in)
@@ -266,7 +266,7 @@ class CallQualityPrediction:
             "alert": alert,
             "alert_reasons": alert_reasons,
             "recommendations": self._generate_recommendations(predicted_mos, predicted_packet_loss),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         self.active_predictions[call_id] = prediction

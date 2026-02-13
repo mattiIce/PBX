@@ -9,7 +9,7 @@ import argparse
 import logging
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Set up logging
@@ -168,7 +168,7 @@ class CertificateManager:
         if not expiry:
             return False
 
-        days_remaining = (expiry - datetime.now()).days
+        days_remaining = (expiry - datetime.now(timezone.utc)).days
         logger.info(f"Certificate expires in {days_remaining} days")
 
         return days_remaining >= min_days

@@ -21,7 +21,7 @@ import sys
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -294,7 +294,7 @@ class SIPLoadTester:
 
         return LoadTestResults(
             test_type=self.config.test_type,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             duration=duration,
             total_attempts=total_attempts,
             successful=self.results["successful"],

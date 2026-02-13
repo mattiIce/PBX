@@ -16,7 +16,7 @@ References:
 """
 
 import re
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -184,7 +184,7 @@ class KarisLawCompliance:
         self.logger.critical(f"Dialed Number: {dialed_number}")
         self.logger.critical(f"Normalized: {normalized_number}")
         self.logger.critical(f"Call ID: {call_id}")
-        self.logger.critical(f"Time: {datetime.now().isoformat()}")
+        self.logger.critical(f"Time: {datetime.now(timezone.utc).isoformat()}")
 
         # Get location information (Ray Baum's Act)
         location_info = self._get_location_info(caller_extension)
@@ -231,7 +231,7 @@ class KarisLawCompliance:
             "dialed_number": dialed_number,
             "normalized_number": normalized_number,
             "location": location_info,
-            "timestamp": datetime.now(),
+            "timestamp": datetime.now(timezone.utc),
             "routing": routing_info,
         }
 
@@ -373,7 +373,7 @@ class KarisLawCompliance:
             "success": False,
             "trunk_id": None,
             "destination": normalized_number,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Get trunk system
@@ -545,7 +545,7 @@ class KarisLawCompliance:
             "caller_extension": caller_extension,
             "caller_name": caller_info.get("name", "Unknown"),
             "call_id": call_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "compliance": "Karis Law",
         }
 

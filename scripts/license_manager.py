@@ -16,7 +16,7 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add parent directory to path for imports
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -75,7 +75,7 @@ def cmd_generate(args):
     import re
 
     safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", args.org).lower()
-    output_file = args.output or f"license_{safe_org}_{datetime.now().strftime('%Y%m%d')}.json"
+    output_file = args.output or f"license_{safe_org}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
 
     with open(output_file, "w") as f:
         json.dump(license_data, f, indent=2)
@@ -425,7 +425,7 @@ def cmd_batch_generate(args):
             safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", issued_to).lower()
             output_file = os.path.join(
                 output_dir,
-                f"license_{safe_org}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{i}.json",
+                f"license_{safe_org}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{i}.json",
             )
 
             with open(output_file, "w") as f:

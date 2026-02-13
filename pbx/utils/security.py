@@ -6,7 +6,7 @@ Provides password management, rate limiting, and security validation
 import re
 import secrets
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
@@ -341,7 +341,7 @@ class SecurityAuditor:
         if not self.enabled:
             return
 
-        timestamp = datetime.now().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         log_entry = {
             "timestamp": timestamp,
             "event_type": event_type,

@@ -5,7 +5,7 @@ and can be pushed to IP phones
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -169,7 +169,7 @@ class PhoneBook:
             "mobile": mobile,
             "office_location": office_location,
             "ad_synced": ad_synced,
-            "updated_at": datetime.now(),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         # Update in-memory cache
@@ -208,7 +208,7 @@ class PhoneBook:
                     mobile,
                     office_location,
                     ad_synced,
-                    datetime.now(),
+                    datetime.now(timezone.utc),
                 )
                 success = self.database.execute(query, params)
 

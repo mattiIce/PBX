@@ -4,7 +4,7 @@ AI analysis of recorded calls using FREE open-source libraries
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -141,7 +141,7 @@ class RecordingAnalytics:
 
         results = {
             "recording_id": recording_id,
-            "analyzed_at": datetime.now().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
             "analyses": {},
         }
 

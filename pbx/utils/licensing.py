@@ -16,7 +16,7 @@ import json
 import logging
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 logger = logging.getLogger(__name__)
@@ -310,12 +310,12 @@ class LicenseManager:
         Returns:
             License data dictionary
         """
-        issued_date = datetime.now().isoformat()
+        issued_date = datetime.now(timezone.utc).isoformat()
 
         # Calculate expiration
         expiration = None
         if expiration_days:
-            expiration = (datetime.now() + timedelta(days=expiration_days)).isoformat()
+            expiration = (datetime.now(timezone.utc) + timedelta(days=expiration_days)).isoformat()
 
         # Generate unique license key
         license_key = self._generate_key_string(issued_to, issued_date)
@@ -410,7 +410,7 @@ class LicenseManager:
 
         try:
             lock_data = {
-                "created": datetime.now().isoformat(),
+                "created": datetime.now(timezone.utc).isoformat(),
                 "license_key": license_data.get("key", "")[:19] + "...",  # Partial key
                 "issued_to": license_data.get("issued_to", ""),
                 "type": license_data.get("type", ""),
@@ -474,7 +474,7 @@ class LicenseManager:
         expiration = self.current_license.get("expiration")
         if expiration:
             expiration_date = datetime.fromisoformat(expiration)
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             if now > expiration_date:
                 # Check grace period
@@ -491,7 +491,7 @@ class LicenseManager:
         # License is active
         if expiration:
             expiration_date = datetime.fromisoformat(expiration)
-            days_until_expiration = (expiration_date - datetime.now()).days
+            days_until_expiration = (expiration_date - datetime.now(timezone.utc)).days
             return (
                 LicenseStatus.ACTIVE,
                 f"License active. Expires in {days_until_expiration} days",
@@ -512,7 +512,7 @@ class LicenseManager:
             # Start trial
             try:
                 with open(trial_marker, "w") as f:
-                    f.write(datetime.now().isoformat())
+                    f.write(datetime.now(timezone.utc).isoformat())
 
                 return (
                     LicenseStatus.ACTIVE,
@@ -528,7 +528,7 @@ class LicenseManager:
                 trial_start = datetime.fromisoformat(f.read().strip())
 
             trial_end = trial_start + timedelta(days=self.trial_period_days)
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             if now <= trial_end:
                 days_left = (trial_end - now).days

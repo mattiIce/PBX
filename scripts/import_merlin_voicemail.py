@@ -33,7 +33,7 @@ import csv
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 # Add parent directory to path
@@ -86,9 +86,9 @@ def parse_csv_metadata(csv_path):
                         except ValueError:
                             continue
                     else:
-                        timestamp = datetime.now()
+                        timestamp = datetime.now(timezone.utc)
                 except (ValueError, TypeError):
-                    timestamp = datetime.now()
+                    timestamp = datetime.now(timezone.utc)
 
             # Parse listened status
             listened = row.get("listened", "false").lower() in ("true", "1", "yes", "y")
@@ -150,7 +150,7 @@ def parse_json_metadata(json_path):
         try:
             timestamp = datetime.fromisoformat(timestamp_str)
         except (ValueError, AttributeError, TypeError):
-            timestamp = datetime.now()
+            timestamp = datetime.now(timezone.utc)
 
         message = {
             "extension": msg["extension"],
@@ -211,7 +211,7 @@ def parse_filename_metadata(audio_dir):
                 try:
                     timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
                 except (ValueError, TypeError):
-                    timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime)
+                    timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime, tz=timezone.utc)
 
                 message = {
                     "extension": extension,

@@ -13,7 +13,7 @@ Manual reboot options if needed:
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
@@ -142,7 +142,7 @@ class ProvisioningDevice:
         else:
             self.device_type = device_type
         self.config_url = config_url
-        self.created_at = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
         self.last_provisioned = None
 
     def _detect_device_type(self, vendor: str, model: str) -> str:
@@ -164,7 +164,7 @@ class ProvisioningDevice:
 
     def mark_provisioned(self):
         """Mark device as provisioned"""
-        self.last_provisioned = datetime.now()
+        self.last_provisioned = datetime.now(timezone.utc)
 
     def to_dict(self):
         """Convert to dictionary"""
@@ -1344,7 +1344,7 @@ P2351 = 1
         """
         # Log the provisioning request for troubleshooting
         request_log = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "mac_address": mac_address,
             "normalized_mac": normalize_mac_address(mac_address),
             "ip_address": request_info.get("ip") if request_info else None,
@@ -1616,7 +1616,7 @@ P2351 = 1
                 uri=f"sip:{extension_number}@{extension.address[0]}:{extension.address[1]}",
                 from_addr=f"<sip:{server_ip}:{sip_port}>",
                 to_addr=f"<sip:{extension_number}@{server_ip}>",
-                call_id=f"notify-reboot-{extension_number}-{datetime.now().timestamp()}",
+                call_id=f"notify-reboot-{extension_number}-{datetime.now(timezone.utc).timestamp()}",
                 cseq=1,
             )
 

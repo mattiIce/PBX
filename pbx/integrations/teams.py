@@ -115,7 +115,7 @@ class TeamsIntegration:
                 self.logger.error(f"Authentication failed: {error} - {error_desc}")
                 return False
 
-        except Exception as e:
+        except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Error authenticating with Microsoft Teams: {e}")
             return False
 

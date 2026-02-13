@@ -6,7 +6,7 @@ Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 import json
 import os
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
@@ -861,7 +861,7 @@ class VIPCallerDB:
         """
         )
 
-        params = (caller_id, priority_level, name, notes, datetime.now())
+        params = (caller_id, priority_level, name, notes, datetime.now(timezone.utc))
         return self.db.execute(query, params)
 
     def remove_vip(self, caller_id: str) -> bool:
@@ -1015,7 +1015,7 @@ class RegisteredPhonesDB:
                 updated_ip,
                 updated_user_agent,
                 updated_contact_uri,
-                datetime.now(),
+                datetime.now(timezone.utc),
                 existing["id"],
             )
             success = self.db.execute(query, params)
@@ -1037,7 +1037,7 @@ class RegisteredPhonesDB:
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             )
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             params = (mac_address, extension_number, ip_address, user_agent, contact_uri, now, now)
             success = self.db.execute(query, params)
             return (success, mac_address)
@@ -1207,7 +1207,7 @@ class RegisteredPhonesDB:
         """
         )
 
-        params = (new_extension_number, datetime.now(), mac_address)
+        params = (new_extension_number, datetime.now(timezone.utc), mac_address)
         success = self.db.execute(query, params)
 
         if success:
@@ -1675,7 +1675,7 @@ class ExtensionDB:
             WHERE config_key = ?
             """
             )
-            return self.db.execute(query, (str_value, config_type, datetime.now(), updated_by, key))
+            return self.db.execute(query, (str_value, config_type, datetime.now(timezone.utc), updated_by, key))
         else:
             # Insert new
             query = (
@@ -1689,7 +1689,7 @@ class ExtensionDB:
             VALUES (?, ?, ?, ?, ?)
             """
             )
-            return self.db.execute(query, (key, str_value, config_type, datetime.now(), updated_by))
+            return self.db.execute(query, (key, str_value, config_type, datetime.now(timezone.utc), updated_by))
 
 
 class ProvisionedDevicesDB:
@@ -1761,7 +1761,7 @@ class ProvisionedDevicesDB:
                 device_type,
                 static_ip,
                 config_url,
-                datetime.now(),
+                datetime.now(timezone.utc),
                 mac_address,
             )
         else:
@@ -1781,7 +1781,7 @@ class ProvisionedDevicesDB:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             )
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             params = (
                 mac_address,
                 extension_number,
@@ -1972,7 +1972,7 @@ class ProvisionedDevicesDB:
         WHERE mac_address = ?
         """
         )
-        return self.db.execute(query, (datetime.now(), mac_address))
+        return self.db.execute(query, (datetime.now(timezone.utc), mac_address))
 
     def set_static_ip(self, mac_address: str, static_ip: str) -> bool:
         """
@@ -1998,7 +1998,7 @@ class ProvisionedDevicesDB:
         WHERE mac_address = ?
         """
         )
-        return self.db.execute(query, (static_ip, datetime.now(), mac_address))
+        return self.db.execute(query, (static_ip, datetime.now(timezone.utc), mac_address))
 
 
 # Global instance

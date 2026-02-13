@@ -12,7 +12,7 @@ import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -356,7 +356,7 @@ class PerformanceBenchmark:
         )
 
         return BenchmarkResults(
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             system_info=system_info,
             api_performance=api_perf,
             database_performance=db_perf,

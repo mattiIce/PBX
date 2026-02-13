@@ -19,7 +19,7 @@ import argparse
 import os
 import shutil
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 import yaml
 
@@ -87,7 +87,7 @@ def main():
 
     # Create backup if requested
     if args.backup:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         backup_file = f"{config_file}.backup_{timestamp}"
         shutil.copy2(config_file, backup_file)
         print(f"✓ Created backup: {backup_file}")

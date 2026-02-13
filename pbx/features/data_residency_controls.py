@@ -3,7 +3,7 @@ Data Residency Controls
 Geographic data storage options for compliance
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -260,7 +260,7 @@ class DataResidencyControls:
             "from_region": from_region,
             "to_region": to_region,
             "justification": justification,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "status": "completed",
         }
 

@@ -4,7 +4,7 @@ SOC 2 type 2 compliance features
 Note: GDPR and PCI DSS engines are commented out as they are not required for US-based operations
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -62,7 +62,7 @@ from pbx.utils.logger import get_logger
 #                     consent_data['extension'],
 #                     consent_data['consent_type'],
 #                     consent_data['consent_given'],  # Explicit consent required
-#                     consent_data.get('consent_date', datetime.now()),
+#                     consent_data.get('consent_date', datetime.now(timezone.utc)),
 #                     consent_data.get('ip_address')
 #                 )
 #             )
@@ -96,7 +96,7 @@ from pbx.utils.logger import get_logger
 #                 else \"\"\"UPDATE gdpr_consent_records
 #                    SET consent_given = %s, withdrawn_date = %s
 #                    WHERE extension = %s AND consent_type = %s AND consent_given = %s\"\"\",
-#                 (False, datetime.now(), extension, consent_type, True)
+#                 (False, datetime.now(timezone.utc), extension, consent_type, True)
 #             )
 #
 #             self.logger.info(f"Withdrew consent for {extension}: {consent_type}")
@@ -214,7 +214,7 @@ from pbx.utils.logger import get_logger
 #                 else \"\"\"UPDATE gdpr_data_requests
 #                    SET status = %s, completed_at = %s
 #                    WHERE id = %s\"\"\",
-#                 ('completed', datetime.now(), request_id)
+#                 ('completed', datetime.now(timezone.utc), request_id)
 #             )
 #
 #             self.logger.info(f"Completed GDPR data request {request_id}")
@@ -491,7 +491,7 @@ class SOC2ComplianceEngine:
                    SET test_results = %s, last_tested = %s
                    WHERE control_id = %s"""
                 ),
-                (test_results, datetime.now(), control_id),
+                (test_results, datetime.now(timezone.utc), control_id),
             )
 
             self.logger.info(f"Updated test results for control {control_id}")

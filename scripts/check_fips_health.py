@@ -8,7 +8,7 @@ Can be run as a cron job or service health check
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add parent directory to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -80,7 +80,7 @@ def check_encryption_operations():
 
 def generate_health_report():
     """Generate health check report"""
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     # Perform all checks
     kernel_fips = check_kernel_fips()

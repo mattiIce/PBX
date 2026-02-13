@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from pbx.api.server import PBXFlaskServer
@@ -55,7 +55,7 @@ class PBXCore:
         self.quiet_startup = self.config.get("logging.quiet_startup", False)
 
         # Track system start time for uptime calculation
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
 
         # Initialize database backend
         self.database = DatabaseBackend(self.config)
@@ -444,7 +444,7 @@ class PBXCore:
                         "ip_address": addr[0],
                         "port": addr[1],
                         "user_agent": user_agent,
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     },
                 )
 

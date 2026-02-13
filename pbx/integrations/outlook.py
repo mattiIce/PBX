@@ -133,9 +133,9 @@ class OutlookIntegration:
 
         # Default to today's events if not specified
         if not start_time:
-            start_time = datetime.now().replace(hour=0, minute=0, second=0).isoformat() + "Z"
+            start_time = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0).isoformat() + "Z"
         if not end_time:
-            end_time = (datetime.now() + timedelta(days=1)).replace(
+            end_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
                 hour=0, minute=0, second=0
             ).isoformat() + "Z"
 

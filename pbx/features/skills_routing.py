@@ -3,7 +3,7 @@ Skills-Based Routing (SBR) System
 Routes calls to agents based on their skills and expertise
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -44,7 +44,7 @@ class AgentSkill:
         self.agent_extension = agent_extension
         self.skill_id = skill_id
         self.proficiency = max(1, min(10, proficiency))  # Clamp to 1-10
-        self.assigned_at = datetime.now()
+        self.assigned_at = datetime.now(timezone.utc)
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""

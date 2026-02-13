@@ -3,7 +3,7 @@ Call Queue and ACD (Automatic Call Distribution) system
 Manages incoming calls and distributes them to available agents
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -43,12 +43,12 @@ class QueuedCall:
         self.call_id = call_id
         self.caller_extension = caller_extension
         self.queue_number = queue_number
-        self.enqueue_time = datetime.now()
+        self.enqueue_time = datetime.now(timezone.utc)
         self.position = 0
 
     def get_wait_time(self):
         """Get time spent in queue (seconds)"""
-        return (datetime.now() - self.enqueue_time).total_seconds()
+        return (datetime.now(timezone.utc) - self.enqueue_time).total_seconds()
 
 
 class Agent:
@@ -89,7 +89,7 @@ class Agent:
     def complete_call(self):
         """Mark call as completed"""
         self.calls_taken += 1
-        self.last_call_time = datetime.now()
+        self.last_call_time = datetime.now(timezone.utc)
         self.current_call_id = None
         self.status = AgentStatus.AVAILABLE
 

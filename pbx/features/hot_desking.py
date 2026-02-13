@@ -4,7 +4,7 @@ Allows users to log in from any phone and retain their settings
 """
 
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -24,13 +24,13 @@ class HotDeskSession:
         self.extension = extension
         self.device_id = device_id
         self.ip_address = ip_address
-        self.logged_in_at = datetime.now()
-        self.last_activity = datetime.now()
+        self.logged_in_at = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(timezone.utc)
         self.auto_logout_enabled = True
 
     def update_activity(self):
         """Update last activity timestamp"""
-        self.last_activity = datetime.now()
+        self.last_activity = datetime.now(timezone.utc)
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
@@ -128,7 +128,7 @@ class HotDeskingSystem:
     def _auto_logout_inactive_sessions(self):
         """Automatically log out inactive sessions"""
         with self.lock:
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             sessions_to_logout = []
 
             for device_id, session in self.sessions.items():
@@ -281,7 +281,7 @@ class HotDeskingSystem:
                 {
                     "extension": extension,
                     "device_id": device_id,
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 },
             )
 

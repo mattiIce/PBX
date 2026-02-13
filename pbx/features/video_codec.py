@@ -4,7 +4,7 @@ Video codec support for video calling using FREE open-source FFmpeg
 """
 
 import subprocess
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -396,7 +396,7 @@ class VideoCodecManager:
             "bitrate": bitrate,
             "gop_size": framerate * 2,  # GOP size (keyframe interval)
             "b_frames": 2,  # B-frames for better compression
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Initialize actual encoder with FFmpeg or PyAV library
@@ -450,7 +450,7 @@ class VideoCodecManager:
         decoder_config = {
             "codec": codec.value,
             "threads": 4,  # Multi-threaded decoding
-            "created_at": datetime.now().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
         }
 
         # Initialize actual decoder with FFmpeg or PyAV library

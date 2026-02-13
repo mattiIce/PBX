@@ -4,7 +4,7 @@ Web and application-based dialing with WebRTC integration
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -144,7 +144,7 @@ class ClickToDialEngine:
         Returns:
             Call ID or None
         """
-        call_id = f"c2d-{extension}-{int(datetime.now().timestamp())}"
+        call_id = f"c2d-{extension}-{int(datetime.now(timezone.utc).timestamp())}"
 
         try:
             # Log call initiation in database

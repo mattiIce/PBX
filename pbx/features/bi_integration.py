@@ -6,7 +6,7 @@ Export to BI tools (Tableau, Power BI, etc.)
 import csv
 import json
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import TYPE_CHECKING
 
@@ -43,7 +43,7 @@ class DataSet:
         """Initialize dataset"""
         self.name = name
         self.query = query
-        self.created_at = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
         self.last_exported = None
         self.export_count = 0
 
@@ -179,7 +179,7 @@ class BIIntegration:
         # Ensure export directory exists
         os.makedirs(self.export_path, exist_ok=True)
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
 
         if format == ExportFormat.CSV:
             return self._export_csv(data, dataset_name, timestamp)
@@ -282,9 +282,9 @@ class BIIntegration:
 
         # Default date range
         if not start_date:
-            start_date = datetime.now() - timedelta(days=30)
+            start_date = datetime.now(timezone.utc) - timedelta(days=30)
         if not end_date:
-            end_date = datetime.now()
+            end_date = datetime.now(timezone.utc)
 
         self.logger.info(f"Exporting dataset '{dataset_name}' to {format.value}")
         self.logger.info(f"  Date range: {start_date} to {end_date}")
@@ -295,10 +295,10 @@ class BIIntegration:
         # Convert to requested format
         export_file = self._format_data(data, format, dataset_name)
 
-        dataset.last_exported = datetime.now()
+        dataset.last_exported = datetime.now(timezone.utc)
         dataset.export_count += 1
         self.total_exports += 1
-        self.last_export_time = datetime.now()
+        self.last_export_time = datetime.now(timezone.utc)
 
         return {
             "success": True,
@@ -306,7 +306,7 @@ class BIIntegration:
             "format": format.value,
             "file_path": export_file,
             "record_count": len(data),
-            "exported_at": datetime.now().isoformat(),
+            "exported_at": datetime.now(timezone.utc).isoformat(),
         }
 
     def create_tableau_extract(self, dataset_name: str) -> str | None:
@@ -339,7 +339,7 @@ class BIIntegration:
 
             # Execute query to get data
             data = self._execute_query(
-                dataset.query, datetime.now() - timedelta(days=30), datetime.now()
+                dataset.query, datetime.now(timezone.utc) - timedelta(days=30), datetime.now(timezone.utc)
             )
 
             if not data:
@@ -375,11 +375,11 @@ class BIIntegration:
             return self._export_csv(
                 self._execute_query(
                     self.datasets[dataset_name].query,
-                    datetime.now() - timedelta(days=30),
-                    datetime.now(),
+                    datetime.now(timezone.utc) - timedelta(days=30),
+                    datetime.now(timezone.utc),
                 ),
                 dataset_name,
-                datetime.now().strftime("%Y%m%d_%H%M%S"),
+                datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S"),
             )
         except Exception as e:
             self.logger.error(f"Failed to create Tableau extract: {e}")
@@ -440,7 +440,7 @@ class BIIntegration:
 
             dataset = self.datasets[dataset_name]
             sample_data = self._execute_query(
-                dataset.query, datetime.now() - timedelta(days=1), datetime.now()
+                dataset.query, datetime.now(timezone.utc) - timedelta(days=1), datetime.now(timezone.utc)
             )
 
             # Create Power BI dataset schema
@@ -597,7 +597,7 @@ class BIIntegration:
 
     def _calculate_next_run(self, schedule: str) -> datetime:
         """Calculate next scheduled run time"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         if schedule == "daily":
             # Next day at midnight

@@ -6,7 +6,7 @@ Speaker authentication and fraud detection using voice analysis
 import hashlib
 import random
 import struct
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -61,8 +61,8 @@ class VoiceProfile:
         self.user_id = user_id
         self.extension = extension
         self.status = BiometricStatus.NOT_ENROLLED
-        self.created_at = datetime.now()
-        self.last_updated = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
+        self.last_updated = datetime.now(timezone.utc)
         self.enrollment_samples = 0
         self.required_samples = 3
         self.voiceprint = None  # Actual voiceprint data (voice features)
@@ -228,7 +228,7 @@ class VoiceBiometrics:
             profile.enrollment_features.append(voice_features)
 
         profile.enrollment_samples += 1
-        profile.last_updated = datetime.now()
+        profile.last_updated = datetime.now(timezone.utc)
 
         enrollment_complete = profile.enrollment_samples >= profile.required_samples
 
@@ -295,14 +295,14 @@ class VoiceBiometrics:
 
         # Save to database
         if self.db:
-            call_id = f"call-{datetime.now().timestamp()}"
+            call_id = f"call-{datetime.now(timezone.utc).timestamp()}"
             self.db.save_verification(user_id, call_id, verified, confidence)
 
         return {
             "verified": verified,
             "confidence": confidence,
             "user_id": user_id,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def detect_fraud(self, audio_data: bytes, caller_info: dict) -> dict:
@@ -389,7 +389,7 @@ class VoiceBiometrics:
 
         # Save to database
         if self.db:
-            call_id = caller_info.get("call_id", f"call-{datetime.now().timestamp()}")
+            call_id = caller_info.get("call_id", f"call-{datetime.now(timezone.utc).timestamp()}")
             caller_id = caller_info.get("caller_id", "unknown")
             self.db.save_fraud_detection(
                 call_id, caller_id, fraud_detected, risk_score, fraud_indicators
@@ -400,12 +400,12 @@ class VoiceBiometrics:
             "risk_score": risk_score,
             "indicators": fraud_indicators,
             "caller_info": caller_info,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
     def _generate_session_id(self, user_id: str) -> str:
         """Generate enrollment session ID"""
-        data = f"{user_id}-{datetime.now().isoformat()}"
+        data = f"{user_id}-{datetime.now(timezone.utc).isoformat()}"
         return hashlib.sha256(data.encode()).hexdigest()[:16]
 
     def _create_voiceprint(self, user_id: str, audio_data: bytes) -> str:
@@ -423,7 +423,7 @@ class VoiceBiometrics:
         # This involves feature extraction and aggregation from all enrollment samples
 
         if user_id not in self.profiles:
-            return hashlib.sha256(f"{user_id}-{datetime.now()}".encode()).hexdigest()
+            return hashlib.sha256(f"{user_id}-{datetime.now(timezone.utc)}".encode()).hexdigest()
 
         profile = self.profiles[user_id]
 
@@ -483,7 +483,7 @@ class VoiceBiometrics:
             return voiceprint
 
         # Fallback if no features available
-        return hashlib.sha256(f"{user_id}-{datetime.now()}".encode()).hexdigest()
+        return hashlib.sha256(f"{user_id}-{datetime.now(timezone.utc)}".encode()).hexdigest()
 
     def _calculate_match_score(self, profile: VoiceProfile, voice_features: dict) -> float:
         """

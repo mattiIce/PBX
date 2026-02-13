@@ -3,7 +3,7 @@ Call Blending
 Mix inbound and outbound calls for agent efficiency
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -140,7 +140,7 @@ class CallBlending:
         # Always prioritize inbound if queue is building
         if self.inbound_priority and self.inbound_queue:
             oldest_inbound = self.inbound_queue[0]
-            wait_time = (datetime.now() - oldest_inbound["queued_at"]).total_seconds()
+            wait_time = (datetime.now(timezone.utc) - oldest_inbound["queued_at"]).total_seconds()
 
             if wait_time > self.max_inbound_wait:
                 return self._get_inbound_call()
@@ -203,7 +203,7 @@ class CallBlending:
             call: Call information
             direction: Call direction (inbound/outbound)
         """
-        call["queued_at"] = datetime.now()
+        call["queued_at"] = datetime.now(timezone.utc)
 
         if direction == "inbound":
             self.inbound_queue.append(call)

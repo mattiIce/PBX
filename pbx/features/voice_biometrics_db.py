@@ -4,7 +4,7 @@ Provides persistence for voice profiles, enrollments, and verifications
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -245,7 +245,7 @@ class VoiceBiometricsDatabase:
                 INSERT INTO voice_verifications (profile_id, call_id, verified, confidence, timestamp)
                 VALUES (%s, %s, %s, %s, %s)
                 """
-                params = (profile["id"], call_id, verified, confidence, datetime.now())
+                params = (profile["id"], call_id, verified, confidence, datetime.now(timezone.utc))
             else:
                 sql = """
                 INSERT INTO voice_verifications (profile_id, call_id, verified, confidence, timestamp)
@@ -256,7 +256,7 @@ class VoiceBiometricsDatabase:
                     call_id,
                     1 if verified else 0,
                     confidence,
-                    datetime.now().isoformat(),
+                    datetime.now(timezone.utc).isoformat(),
                 )
 
             cursor.execute(sql, params)
@@ -302,7 +302,7 @@ class VoiceBiometricsDatabase:
                     fraud_detected,
                     risk_score,
                     json.dumps(indicators),
-                    datetime.now(),
+                    datetime.now(timezone.utc),
                 )
             else:
                 sql = """
@@ -315,7 +315,7 @@ class VoiceBiometricsDatabase:
                     1 if fraud_detected else 0,
                     risk_score,
                     json.dumps(indicators),
-                    datetime.now().isoformat(),
+                    datetime.now(timezone.utc).isoformat(),
                 )
 
             cursor.execute(sql, params)

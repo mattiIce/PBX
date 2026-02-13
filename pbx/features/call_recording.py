@@ -5,7 +5,7 @@ Records audio from calls for compliance, quality assurance, and training
 
 import os
 import wave
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -45,12 +45,12 @@ class CallRecording:
         if self.recording:
             return None
 
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"{from_ext}_to_{to_ext}_{timestamp}.wav"
         self.file_path = os.path.join(self.recording_path, filename)
 
         self.recording = True
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
 
         self.logger.info(
             f"Started recording call {self.call_id} to {self.file_path}"
@@ -96,7 +96,7 @@ class CallRecording:
     def get_duration(self):
         """Get recording duration in seconds"""
         if self.start_time:
-            end_time = datetime.now()
+            end_time = datetime.now(timezone.utc)
             return (end_time - self.start_time).total_seconds()
         return 0
 

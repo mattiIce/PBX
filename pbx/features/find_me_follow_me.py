@@ -4,7 +4,7 @@ Ring multiple devices sequentially or simultaneously
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -122,7 +122,7 @@ class FindMeFollowMe:
         Save FMFM configuration to database
 
         Note: Uses SQL CURRENT_TIMESTAMP for updated_at field instead of
-        datetime.now() to ensure compatibility between PostgreSQL and SQLite,
+        datetime.now(timezone.utc) to ensure compatibility between PostgreSQL and SQLite,
         and to avoid timezone and datetime adapter issues.
         """
         if not self.database or not self.database.enabled:
@@ -235,7 +235,7 @@ class FindMeFollowMe:
 
         # Add timestamp only if no database (otherwise database generates it)
         if not (self.database and self.database.enabled):
-            self.user_configs[extension]["updated_at"] = datetime.now()
+            self.user_configs[extension]["updated_at"] = datetime.now(timezone.utc)
 
         # Save to database if one is configured
         if self.database and self.database.enabled:

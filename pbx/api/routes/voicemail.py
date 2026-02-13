@@ -8,7 +8,7 @@ import os
 import shutil
 import tempfile
 import zipfile
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, Response, jsonify, request, current_app
 
@@ -349,7 +349,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
 
         # Create temporary directory for ZIP creation
         temp_dir = tempfile.mkdtemp()
-        zip_filename = f"voicemail_{extension}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+        zip_filename = f"voicemail_{extension}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.zip"
         zip_path = os.path.join(temp_dir, zip_filename)
 
         try:
@@ -358,7 +358,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
                 manifest_lines = ["Voicemail Export Manifest\n"]
                 manifest_lines.append(f"Extension: {extension}\n")
                 manifest_lines.append(
-                    f"Export Date: {datetime.now().isoformat()}\n"
+                    f"Export Date: {datetime.now(timezone.utc).isoformat()}\n"
                 )
                 manifest_lines.append(
                     f"Total Messages: {len(messages)}\n\n"

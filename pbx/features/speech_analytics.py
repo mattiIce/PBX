@@ -3,7 +3,7 @@ Real-Time Speech Analytics Framework
 Provides live transcription, sentiment analysis, and call summarization
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -103,7 +103,7 @@ class SpeechAnalyticsEngine:
                         config.get("summarization_enabled", True),
                         config.get("keywords", ""),
                         config.get("alert_threshold", 0.7),
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                         extension,
                     ),
                 )
@@ -157,7 +157,7 @@ class SpeechAnalyticsEngine:
             "sentiment": "neutral",
             "sentiment_score": 0.0,
             "keywords_detected": [],
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Get configuration for this call

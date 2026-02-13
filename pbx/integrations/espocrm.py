@@ -3,7 +3,7 @@ EspoCRM Integration (Free, Open-Source Alternative to Salesforce/HubSpot)
 Enables contact management, deal tracking, and call logging
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -215,7 +215,7 @@ class EspoCRMIntegration:
                 "direction": direction,
                 "duration": duration,
                 "contactsIds": [contact_id],
-                "dateStart": datetime.now().isoformat(),
+                "dateStart": datetime.now(timezone.utc).isoformat(),
             }
 
             if description:
