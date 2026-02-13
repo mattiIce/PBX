@@ -15,6 +15,7 @@ from pbx.utils.audio import (
     WAV_FORMAT_ULAW,
 )
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class RTPHandler:
@@ -855,7 +856,7 @@ class RTPPlayer:
         import os
         import struct
 
-        if not os.path.exists(file_path):
+        if not Path(file_path).exists():
             self.logger.error(f"Audio file not found: {file_path}")
             return False
 

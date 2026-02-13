@@ -8,6 +8,7 @@ import wave
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class CallRecording:
@@ -47,7 +48,7 @@ class CallRecording:
 
         timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         filename = f"{from_ext}_to_{to_ext}_{timestamp}.wav"
-        self.file_path = os.path.join(self.recording_path, filename)
+        self.file_path = Path(self.recording_path) / filename
 
         self.recording = True
         self.start_time = datetime.now(timezone.utc)

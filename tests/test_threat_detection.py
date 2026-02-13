@@ -8,6 +8,7 @@ import time
 
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import ThreatDetector
+from pathlib import Path
 
 
 def test_threat_detector_initialization() -> bool:
@@ -211,7 +212,7 @@ def test_with_database() -> bool:
 
     except (KeyError, OSError, TypeError, ValueError) as e:
         # Clean up on error
-        if os.path.exists(db_path):
+        if Path(db_path).exists():
             try:
                 os.unlink(db_path)
             except BaseException:

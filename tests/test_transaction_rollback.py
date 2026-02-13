@@ -11,6 +11,7 @@ import tempfile
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_transaction_rollback_on_error() -> None:
@@ -52,7 +53,7 @@ def test_transaction_rollback_on_error() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -83,7 +84,7 @@ def test_fetch_one_rollback_on_error() -> None:
         db.disconnect()
 
     finally:
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -114,7 +115,7 @@ def test_fetch_all_rollback_on_error() -> None:
         db.disconnect()
 
     finally:
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -146,7 +147,7 @@ def test_schema_migration_rollback() -> None:
         db.disconnect()
 
     finally:
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -180,5 +181,5 @@ def test_permission_error_rollback() -> None:
         db.disconnect()
 
     finally:
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)

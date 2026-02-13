@@ -11,6 +11,7 @@ import math
 import os
 import struct
 import wave
+from pathlib import Path
 
 
 def generate_tone(frequency, duration, sample_rate=8000, amplitude=0.3):
@@ -346,19 +347,19 @@ def main():
 
     # Generate requested tracks
     if generate_all or args.melody:
-        generate_simple_melody(os.path.join(args.output_dir, "melody.wav"), args.duration)
+        generate_simple_melody(Path(args.output_dir) / "melody.wav", args.duration)
 
     if generate_all or args.ambient:
-        generate_ambient_tones(os.path.join(args.output_dir, "ambient.wav"), args.duration)
+        generate_ambient_tones(Path(args.output_dir) / "ambient.wav", args.duration)
 
     if generate_all or args.arpeggio:
-        generate_arpeggio(os.path.join(args.output_dir, "arpeggio.wav"), args.duration)
+        generate_arpeggio(Path(args.output_dir) / "arpeggio.wav", args.duration)
 
     if generate_all or args.pad:
-        generate_soft_pad(os.path.join(args.output_dir, "pad.wav"), args.duration)
+        generate_soft_pad(Path(args.output_dir) / "pad.wav", args.duration)
 
     if generate_all or args.chimes:
-        generate_gentle_chimes(os.path.join(args.output_dir, "chimes.wav"), args.duration)
+        generate_gentle_chimes(Path(args.output_dir) / "chimes.wav", args.duration)
 
     print()
     print("=" * 60)
@@ -368,8 +369,8 @@ def main():
     print("Generated files:")
     for filename in sorted(os.listdir(args.output_dir)):
         if filename.endswith(".wav"):
-            filepath = os.path.join(args.output_dir, filename)
-            size_kb = os.path.getsize(filepath) / 1024
+            filepath = Path(args.output_dir) / filename
+            size_kb = Path(filepath).stat().st_size / 1024
             print(f"  • {filename} ({size_kb:.1f} KB)")
     print()
     print("Usage:")

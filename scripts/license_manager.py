@@ -19,9 +19,10 @@ import sys
 from datetime import datetime, timezone
 
 # Add parent directory to path for imports
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.licensing import LicenseManager, LicenseType
+from pathlib import Path
 
 
 def setup_config():
@@ -30,8 +31,8 @@ def setup_config():
     try:
         import yaml
 
-        config_path = os.path.join(os.path.dirname(__file__), "..", "config.yml")
-        if os.path.exists(config_path):
+        config_path = str(Path(__file__).parent.parent / "config.yml")
+        if Path(config_path).exists():
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
                 return config.get("licensing", {})
@@ -97,7 +98,7 @@ def cmd_install(args):
     lm = LicenseManager(config)
 
     # Load license file
-    if not os.path.exists(args.license_file):
+    if not Path(args.license_file).exists():
         print(f"Error: License file not found: {args.license_file}")
         return 1
 
@@ -194,13 +195,13 @@ def cmd_revoke(args):
 def cmd_enable(args):
     """Enable licensing enforcement."""
     # Update environment file
-    env_file = os.path.join(os.path.dirname(__file__), "..", ".env")
+    env_file = str(Path(__file__).parent.parent / ".env")
 
     print("Enabling licensing enforcement...")
 
     # Read existing .env
     env_lines = []
-    if os.path.exists(env_file):
+    if Path(env_file).exists():
         with open(env_file, "r") as f:
             env_lines = f.readlines()
 
@@ -229,19 +230,19 @@ def cmd_enable(args):
 def cmd_disable(args):
     """Disable licensing enforcement."""
     # Update environment file
-    env_file = os.path.join(os.path.dirname(__file__), "..", ".env")
+    env_file = str(Path(__file__).parent.parent / ".env")
 
     print("Disabling licensing enforcement...")
 
     # Read existing .env
     env_lines = []
-    if os.path.exists(env_file):
+    if Path(env_file).exists():
         with open(env_file, "r") as f:
             env_lines = f.readlines()
 
     # Check for license lock file
-    lock_path = os.path.join(os.path.dirname(__file__), "..", ".license_lock")
-    if os.path.exists(lock_path):
+    lock_path = str(Path(__file__).parent.parent / ".license_lock")
+    if Path(lock_path).exists():
         print("✗ Cannot disable licensing - license lock file exists")
         print("\nTo disable licensing, first remove the lock file:")
         print(f"  python {__file__} remove-lock")
@@ -352,7 +353,7 @@ def cmd_batch_generate(args):
     lm = LicenseManager(config)
 
     # Load batch configuration
-    if not os.path.exists(args.batch_file):
+    if not Path(args.batch_file).exists():
         print(f"Error: Batch file not found: {args.batch_file}")
         return 1
 
@@ -423,9 +424,7 @@ def cmd_batch_generate(args):
             import re
 
             safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", issued_to).lower()
-            output_file = os.path.join(
-                output_dir,
-                f"license_{safe_org}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{i}.json",
+            output_file = Path(output_dir) / f"license_{safe_org}_{datetime.now(timezone.utc.strftime('%Y%m%d_%H%M%S')}_{i}.json",
             )
 
             with open(output_file, "w") as f:

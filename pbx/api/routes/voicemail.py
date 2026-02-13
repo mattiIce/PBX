@@ -22,6 +22,7 @@ from pbx.api.utils import (
     DateTimeEncoder,
 )
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 logger = get_logger()
 
@@ -97,7 +98,7 @@ def handle_get_voicemail(subpath: str) -> Response:
                 )
             else:
                 # Default: Serve audio file for playback in admin panel
-                if os.path.exists(message["file_path"]):
+                if Path(message["file_path"]).exists():
                     with open(message["file_path"], "rb") as f:
                         audio_data = f.read()
                     response = current_app.response_class(
@@ -305,7 +306,7 @@ def _handle_get_voicemail_greeting(subpath: str) -> Response:
         mailbox = vm_system.get_mailbox(extension)
         greeting_path = mailbox.get_greeting_path()
 
-        if not greeting_path or not os.path.exists(greeting_path):
+        if not greeting_path or not Path(greeting_path).exists():
             return send_json({"error": "No custom greeting found"}, 404)
 
         # Serve greeting file
@@ -350,7 +351,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
         # Create temporary directory for ZIP creation
         temp_dir = tempfile.mkdtemp()
         zip_filename = f"voicemail_{extension}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.zip"
-        zip_path = os.path.join(temp_dir, zip_filename)
+        zip_path = Path(temp_dir) / zip_filename
 
         try:
             with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -368,8 +369,8 @@ def handle_export_voicemail_box(subpath: str) -> Response:
 
                 for msg in messages:
                     # Add audio file to ZIP
-                    if os.path.exists(msg["file_path"]):
-                        arcname = os.path.basename(msg["file_path"])
+                    if Path(msg["file_path"]).exists():
+                        arcname = Path(msg["file_path"]).name
                         zipf.write(msg["file_path"], arcname)
 
                         # Add to manifest

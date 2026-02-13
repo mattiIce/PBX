@@ -12,10 +12,11 @@ import sys
 import requests
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 def print_header(text):

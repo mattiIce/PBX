@@ -7,6 +7,7 @@ in the 200 OK response uses the extension number without the asterisk prefix.
 """
 
 import os
+from pathlib import Path
 
 
 def test_voicemail_access_contact_header_code_review() -> None:
@@ -18,7 +19,7 @@ def test_voicemail_access_contact_header_code_review() -> None:
     """
 
     # Read the source code
-    pbx_file = os.path.join(os.path.dirname(__file__), "..", "pbx", "core", "pbx.py")
+    pbx_file = str(Path(__file__).parent.parent / "pbx" / "core" / "pbx.py")
 
     with open(pbx_file, "r") as f:
         content = f.read()
@@ -66,7 +67,7 @@ def test_contact_header_pattern_consistency() -> None:
     """
 
     # Read the source code
-    pbx_file = os.path.join(os.path.dirname(__file__), "..", "pbx", "core", "pbx.py")
+    pbx_file = str(Path(__file__).parent.parent / "pbx" / "core" / "pbx.py")
 
     with open(pbx_file, "r") as f:
         content = f.read()

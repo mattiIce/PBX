@@ -15,6 +15,7 @@ from pbx.core.pbx import PBXCore
 from pbx.features.email_notification import EmailNotifier
 from pbx.features.voicemail import VoicemailBox, VoicemailSystem
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 def test_api_serves_audio_by_default() -> None:
@@ -70,7 +71,7 @@ def test_api_serves_audio_by_default() -> None:
         # Verify message was saved with audio file
         messages = mailbox.get_messages()
         assert len(messages) == 1
-        assert os.path.exists(messages[0]["file_path"])
+        assert Path(messages[0]["file_path"]).exists()
 
         # Read the audio file to verify it was written correctly
         with open(messages[0]["file_path"], "rb") as f:

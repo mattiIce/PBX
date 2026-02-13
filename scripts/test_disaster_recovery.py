@@ -100,9 +100,7 @@ class DisasterRecoveryTester:
             os.makedirs(self.config.backup_dir, exist_ok=True)
 
             # Backup filename with timestamp
-            backup_file = os.path.join(
-                self.config.backup_dir,
-                f"pbx_db_backup_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.sql",
+            backup_file = Path(self.config.backup_dir) / f"pbx_db_backup_{datetime.now(timezone.utc.strftime('%Y%m%d_%H%M%S')}.sql",
             )
 
             # Run pg_dump
@@ -128,8 +126,8 @@ class DisasterRecoveryTester:
             if success or self.config.dry_run:
                 if not self.config.dry_run:
                     # Verify backup file exists and has content
-                    if os.path.exists(backup_file):
-                        file_size = os.path.getsize(backup_file)
+                    if Path(backup_file).exists():
+                        file_size = Path(backup_file).stat().st_size
                         self.results["backup"]["database"] = {
                             "success": True,
                             "file": backup_file,
@@ -159,7 +157,7 @@ class DisasterRecoveryTester:
         self.logger.info("Testing configuration backup...")
 
         try:
-            config_backup_dir = os.path.join(self.config.backup_dir, "config")
+            config_backup_dir = Path(self.config.backup_dir) / "config"
             os.makedirs(config_backup_dir, exist_ok=True)
 
             # Files to backup
@@ -179,14 +177,14 @@ class DisasterRecoveryTester:
 
                     files = glob.glob(pattern)
                     for file in files:
-                        if os.path.exists(file):
-                            dest = os.path.join(config_backup_dir, os.path.basename(file))
+                        if Path(file).exists():
+                            dest = Path(config_backup_dir) / Path(file).name
                             if not self.config.dry_run:
                                 shutil.copy2(file, dest)
                             backed_up_files.append(file)
                 else:
-                    if os.path.exists(pattern):
-                        dest = os.path.join(config_backup_dir, os.path.basename(pattern))
+                    if Path(pattern).exists():
+                        dest = Path(config_backup_dir) / Path(pattern).name
                         if not self.config.dry_run:
                             shutil.copy2(pattern, dest)
                         backed_up_files.append(pattern)
@@ -208,7 +206,7 @@ class DisasterRecoveryTester:
         self.logger.info("Testing voicemail/recordings backup...")
 
         try:
-            data_backup_dir = os.path.join(self.config.backup_dir, "data")
+            data_backup_dir = Path(self.config.backup_dir) / "data"
             os.makedirs(data_backup_dir, exist_ok=True)
 
             # Directories to backup
@@ -218,14 +216,14 @@ class DisasterRecoveryTester:
             backed_up_dirs = []
 
             for dir_name in data_dirs:
-                if os.path.exists(dir_name) and os.path.isdir(dir_name):
-                    dest = os.path.join(data_backup_dir, dir_name)
+                if Path(dir_name).exists() and Path(dir_name).is_dir():
+                    dest = Path(data_backup_dir) / dir_name
                     if not self.config.dry_run:
                         shutil.copytree(dir_name, dest, dirs_exist_ok=True)
 
                         # Calculate size
                         for root, dirs, files in os.walk(dest):
-                            total_size += sum(os.path.getsize(os.path.join(root, f)) for f in files)
+                            total_size += sum(Path(Path(root).stat().st_size / f) for f in files)
 
                     backed_up_dirs.append(dir_name)
 
@@ -371,21 +369,21 @@ class DisasterRecoveryTester:
         self.logger.info("Testing configuration restore...")
 
         try:
-            config_backup_dir = os.path.join(self.config.backup_dir, "config")
+            config_backup_dir = Path(self.config.backup_dir) / "config"
 
-            if not os.path.exists(config_backup_dir):
+            if not Path(config_backup_dir).exists():
                 self.results["errors"].append("Configuration backup directory not found")
                 return False
 
             # Create restore directory
-            restore_config_dir = os.path.join(self.config.restore_dir, "config")
+            restore_config_dir = Path(self.config.restore_dir) / "config"
             os.makedirs(restore_config_dir, exist_ok=True)
 
             # Restore files
             restored_files = []
             for file in os.listdir(config_backup_dir):
-                src = os.path.join(config_backup_dir, file)
-                dest = os.path.join(restore_config_dir, file)
+                src = Path(config_backup_dir) / file
+                dest = Path(restore_config_dir) / file
                 if not self.config.dry_run:
                     shutil.copy2(src, dest)
                 restored_files.append(file)
@@ -419,17 +417,17 @@ class DisasterRecoveryTester:
             if db_backups:
                 verification_results["database_backup_exists"] = True
                 # Check backup file is not empty
-                if os.path.getsize(str(db_backups[-1])) > 1000:  # At least 1KB
+                if Path(str(db_backups[-1]).stat().st_size) > 1000:  # At least 1KB
                     verification_results["database_backup_valid"] = True
 
             # Check config backup
-            config_dir = os.path.join(self.config.backup_dir, "config")
-            if os.path.exists(config_dir) and os.listdir(config_dir):
+            config_dir = Path(self.config.backup_dir) / "config"
+            if Path(config_dir).exists() and os.listdir(config_dir):
                 verification_results["config_backup_exists"] = True
 
             # Check data backup
-            data_dir = os.path.join(self.config.backup_dir, "data")
-            if os.path.exists(data_dir):
+            data_dir = Path(self.config.backup_dir) / "data"
+            if Path(data_dir).exists():
                 verification_results["data_backup_exists"] = True
 
             # Overall verification

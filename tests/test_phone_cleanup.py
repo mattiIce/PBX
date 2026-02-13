@@ -13,6 +13,7 @@ from unittest.mock import Mock
 from pbx.core.pbx import PBXCore
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
+from pathlib import Path
 
 # ============================================================================
 # Phone Clear Functionality Tests
@@ -115,7 +116,7 @@ def test_pbx_preserves_phones_on_boot() -> None:
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, "test.db")
+    db_path = Path(temp_dir) / "test.db"
 
     try:
         # Create a minimal test config
@@ -137,11 +138,11 @@ api:
 logging:
   level: INFO
   console: false
-  file: {os.path.join(temp_dir, 'test.log')}
+  file: {Path(temp_dir) / 'test.log'}
 
 extensions: []
 """
-        config_path = os.path.join(temp_dir, "test_config.yml")
+        config_path = Path(temp_dir) / "test_config.yml"
         with open(config_path, "w") as f:
             f.write(config_content)
 

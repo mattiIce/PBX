@@ -37,7 +37,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
@@ -297,21 +297,21 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
 
         # Find audio file
         audio_path = None
-        if os.path.isabs(audio_file):
+        if Path(audio_file).is_absolute():
             audio_path = audio_file
         elif audio_dir:
             # Try various locations
             candidates = [
-                os.path.join(audio_dir, audio_file),
-                os.path.join(audio_dir, extension, audio_file),
-                os.path.join(audio_dir, extension, os.path.basename(audio_file)),
+                Path(audio_dir) / audio_file,
+                Path(audio_dir) / extension / audio_file,
+                Path(audio_dir) / extension / Path(audio_file).name,
             ]
             for candidate in candidates:
-                if os.path.exists(candidate):
+                if Path(candidate).exists():
                     audio_path = candidate
                     break
 
-        if not audio_path or not os.path.exists(audio_path):
+        if not audio_path or not Path(audio_path).exists():
             print(f"  ✗ Audio file not found: {audio_file}")
             errors += 1
             continue

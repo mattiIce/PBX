@@ -9,6 +9,7 @@ import tempfile
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_index_creation_with_permission_error() -> None:
@@ -45,7 +46,7 @@ def test_index_creation_with_permission_error() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -71,7 +72,7 @@ def test_table_already_exists_handling() -> None:
         db.disconnect()
 
     finally:
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -106,5 +107,5 @@ def test_critical_vs_non_critical_errors() -> None:
         db.disconnect()
 
     finally:
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)

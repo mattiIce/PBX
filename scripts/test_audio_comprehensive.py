@@ -22,7 +22,7 @@ import wave
 from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.audio import pcm16_to_ulaw
 

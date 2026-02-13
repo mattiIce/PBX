@@ -9,6 +9,7 @@ import logging
 import os
 import re
 from typing import Any
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -142,9 +143,9 @@ class ConfigValidator:
             if not cert_file or not key_file:
                 self.errors.append("SSL enabled but cert_file or key_file not specified")
             elif not cert_file.startswith("${"):  # Not an env var
-                if not os.path.exists(cert_file):
+                if not Path(cert_file).exists():
                     self.errors.append(f"SSL certificate file not found: {cert_file}")
-                if not os.path.exists(key_file):
+                if not Path(key_file).exists():
                     self.errors.append(f"SSL key file not found: {key_file}")
         else:
             self.warnings.append("SSL/TLS is disabled. HTTPS is recommended for production.")

@@ -10,6 +10,7 @@ import time
 
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import (
+from pathlib import Path
     PasswordPolicy,
     RateLimiter,
     SecurityAuditor,
@@ -154,7 +155,7 @@ def test_security_auditor() -> None:
 
     # Test with database
     with tempfile.TemporaryDirectory() as tmpdir:
-        db_config = {"database.type": "sqlite", "database.path": os.path.join(tmpdir, "test.db")}
+        db_config = {"database.type": "sqlite", "database.path": Path(tmpdir) / "test.db"}
 
         db = DatabaseBackend(db_config)
         assert db.connect(), "Failed to connect to test database"

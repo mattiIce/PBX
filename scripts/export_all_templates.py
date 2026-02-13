@@ -44,7 +44,7 @@ Examples:
 
     # Load config
     config_path = args.config
-    if not os.path.exists(config_path):
+    if not Path(config_path).exists():
         print(f"❌ Config file not found: {config_path}")
         print("   Please specify a valid config file path")
         return 1

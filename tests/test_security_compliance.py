@@ -7,25 +7,22 @@ import json
 import os
 import subprocess
 import sys
+from pathlib import Path
 
 
 def test_compliance_checker_exists() -> None:
     """Test that compliance checker script exists and is executable"""
 
-    script_path = os.path.join(
-        os.path.dirname(__file__), "..", "scripts", "security_compliance_check.py"
-    )
+    script_path = str(Path(__file__).parent.parent / "scripts" / "security_compliance_check.py")
 
-    assert os.path.exists(script_path), "Compliance checker script not found"
+    assert Path(script_path).exists(), "Compliance checker script not found"
     assert os.access(script_path, os.X_OK), "Compliance checker script not executable"
 
 
 def test_compliance_checker_help() -> None:
     """Test that compliance checker shows help"""
 
-    script_path = os.path.join(
-        os.path.dirname(__file__), "..", "scripts", "security_compliance_check.py"
-    )
+    script_path = str(Path(__file__).parent.parent / "scripts" / "security_compliance_check.py")
 
     result = subprocess.run(
         [sys.executable, script_path, "--help"], capture_output=True, text=True, timeout=10
@@ -40,9 +37,7 @@ def test_compliance_checker_help() -> None:
 def test_compliance_checker_json_output() -> None:
     """Test that compliance checker produces valid JSON"""
 
-    script_path = os.path.join(
-        os.path.dirname(__file__), "..", "scripts", "security_compliance_check.py"
-    )
+    script_path = str(Path(__file__).parent.parent / "scripts" / "security_compliance_check.py")
 
     result = subprocess.run(
         [sys.executable, script_path, "--json"], capture_output=True, text=True, timeout=30
@@ -95,9 +90,7 @@ def test_compliance_checker_json_output() -> None:
 def test_fips_algorithm_checks() -> None:
     """Test that FIPS algorithms are validated"""
 
-    script_path = os.path.join(
-        os.path.dirname(__file__), "..", "scripts", "security_compliance_check.py"
-    )
+    script_path = str(Path(__file__).parent.parent / "scripts" / "security_compliance_check.py")
 
     result = subprocess.run(
         [sys.executable, script_path, "--json"], capture_output=True, text=True, timeout=30
@@ -130,27 +123,25 @@ def test_fips_algorithm_checks() -> None:
 def test_wrapper_script_exists() -> None:
     """Test that wrapper script exists"""
 
-    script_path = os.path.join(
-        os.path.dirname(__file__), "..", "scripts", "run_compliance_check.sh"
-    )
+    script_path = str(Path(__file__).parent.parent / "scripts" / "run_compliance_check.sh")
 
-    assert os.path.exists(script_path), "Wrapper script not found"
+    assert Path(script_path).exists(), "Wrapper script not found"
     assert os.access(script_path, os.X_OK), "Wrapper script not executable"
 
 
 def test_soc2_testing_script_exists() -> None:
     """Test that SOC 2 testing script exists and is executable"""
 
-    script_path = os.path.join(os.path.dirname(__file__), "..", "scripts", "test_soc2_controls.py")
+    script_path = str(Path(__file__).parent.parent / "scripts" / "test_soc2_controls.py")
 
-    assert os.path.exists(script_path), "SOC 2 testing script not found"
+    assert Path(script_path).exists(), "SOC 2 testing script not found"
     assert os.access(script_path, os.X_OK), "SOC 2 testing script not executable"
 
 
 def test_soc2_testing_script_help() -> None:
     """Test that SOC 2 testing script shows help"""
 
-    script_path = os.path.join(os.path.dirname(__file__), "..", "scripts", "test_soc2_controls.py")
+    script_path = str(Path(__file__).parent.parent / "scripts" / "test_soc2_controls.py")
 
     result = subprocess.run(
         [sys.executable, script_path, "--help"], capture_output=True, text=True, timeout=10

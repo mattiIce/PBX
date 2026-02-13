@@ -8,6 +8,7 @@ import subprocess
 import tempfile
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 # Try to import TTS dependencies
 try:
@@ -209,9 +210,9 @@ def text_to_wav_telephony(
         raise
     finally:
         # Clean up temp files
-        if temp_mp3_path and os.path.exists(temp_mp3_path):
+        if temp_mp3_path and Path(temp_mp3_path).exists():
             os.unlink(temp_mp3_path)
-        if temp_wav_path and os.path.exists(temp_wav_path):
+        if temp_wav_path and Path(temp_wav_path).exists():
             os.unlink(temp_wav_path)
 
 
@@ -235,7 +236,7 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
         )
 
     # Create output directory if needed
-    if not os.path.exists(output_dir):
+    if not Path(output_dir).exists():
         os.makedirs(output_dir)
         logger.info(f"Created directory: {output_dir}")
 
@@ -247,13 +248,12 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
         if company_name and "{company_name}" in text:
             text = text.replace("{company_name}", company_name)
 
-        output_file = os.path.join(
-            output_dir, filename if filename.endswith(".wav") else f"{filename}.wav"
+        output_file = Path(output_dir) / filename if filename.endswith(".wav" else f"{filename}.wav"
         )
 
         try:
             if text_to_wav_telephony(text, output_file, sample_rate=sample_rate):
-                file_size = os.path.getsize(output_file)
+                file_size = Path(output_file).stat().st_size
                 logger.info(f"Generated {filename}: {file_size:,} bytes")
                 success_count += 1
         except OSError as e:

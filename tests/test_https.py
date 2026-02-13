@@ -14,6 +14,7 @@ from typing import Any
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 class MockPBXCore:
@@ -42,10 +43,10 @@ def test_ssl_configuration() -> bool:
         key_file = ssl_config.get("key_file", "certs/server.key")
 
         # Check if files exist
-        if not os.path.exists(cert_file):
+        if not Path(cert_file).exists():
             pass
 
-        if not os.path.exists(key_file):
+        if not Path(key_file).exists():
             pass
 
     return True
@@ -82,10 +83,10 @@ def test_certificate_files() -> bool:
     cert_file = "certs/server.crt"
     key_file = "certs/server.key"
 
-    if not os.path.exists(cert_file):
+    if not Path(cert_file).exists():
         return True  # Not a failure, just skip
 
-    if not os.path.exists(key_file):
+    if not Path(key_file).exists():
         return True  # Not a failure, just skip
 
     # Try to load certificate with SSL
@@ -104,7 +105,7 @@ def test_api_server_with_ssl_enabled() -> bool:
     cert_file = "certs/server.crt"
     key_file = "certs/server.key"
 
-    if not os.path.exists(cert_file) or not os.path.exists(key_file):
+    if not Path(cert_file).exists() or not Path(key_file).exists():
         return True  # Not a failure, just skip
 
     # Create a config object and override SSL settings
@@ -153,7 +154,7 @@ def test_https_connection() -> bool:
     cert_file = "certs/server.crt"
     key_file = "certs/server.key"
 
-    if not os.path.exists(cert_file) or not os.path.exists(key_file):
+    if not Path(cert_file).exists() or not Path(key_file).exists():
         return True
 
     # Create config with SSL enabled

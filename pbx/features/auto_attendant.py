@@ -9,6 +9,7 @@ import time
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class AAState(Enum):
@@ -102,7 +103,7 @@ class AutoAttendant:
                     )
 
         # Create audio directory if it doesn't exist
-        if not os.path.exists(self.audio_path):
+        if not Path(self.audio_path).exists():
             os.makedirs(self.audio_path)
             self.logger.info(
                 f"Created auto attendant audio directory: {self.audio_path}"
@@ -1089,12 +1090,12 @@ class AutoAttendant:
             menu = self.get_menu(prompt_type)
             if menu and menu.get("audio_file"):
                 # Use custom audio file if specified
-                if os.path.exists(menu["audio_file"]):
+                if Path(menu["audio_file"]).exists():
                     return menu["audio_file"]
 
         # Try to find recorded audio file first
-        wav_file = os.path.join(self.audio_path, f"{prompt_type}.wav")
-        if os.path.exists(wav_file):
+        wav_file = Path(self.audio_path) / f"{prompt_type}.wav"
+        if Path(wav_file).exists():
             return wav_file
 
         # If no recorded file, we'll generate tone-based prompt
@@ -1146,7 +1147,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
     logger.warning("Continuing with tone generation...")
 
     # Create output directory
-    if not os.path.exists(output_dir):
+    if not Path(output_dir).exists():
         os.makedirs(output_dir)
         logger.info(f"Created directory: {output_dir}")
 
@@ -1160,7 +1161,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
     }
 
     for prompt_name, prompt_type in prompts.items():
-        output_file = os.path.join(output_dir, f"{prompt_name}.wav")
+        output_file = Path(output_dir) / f"{prompt_name}.wav"
 
         try:
             # Generate the prompt
@@ -1202,10 +1203,10 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
             logger = get_logger()
 
             # Create output directory if needed
-            if not os.path.exists(output_dir):
+            if not Path(output_dir).exists():
                 os.makedirs(output_dir)
 
-            output_file = os.path.join(output_dir, f"{menu_id}.wav")
+            output_file = Path(output_dir) / f"{menu_id}.wav"
 
             # Generate with gTTS
             tts = gTTS(text=prompt_text, lang="en", slow=False)
@@ -1237,7 +1238,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
                     capture_output=True,
                 )
                 # Clean up temp file
-                if tmp_mp3_path and os.path.exists(tmp_mp3_path):
+                if tmp_mp3_path and Path(tmp_mp3_path).exists():
                     os.unlink(tmp_mp3_path)
                 logger.info(f"Generated submenu prompt: {output_file}")
                 return output_file
@@ -1256,7 +1257,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
 
     except (OSError, subprocess.SubprocessError) as e:
         # Clean up temp file on error
-        if tmp_mp3_path and os.path.exists(tmp_mp3_path):
+        if tmp_mp3_path and Path(tmp_mp3_path).exists():
             try:
                 os.unlink(tmp_mp3_path)
             except OSError:

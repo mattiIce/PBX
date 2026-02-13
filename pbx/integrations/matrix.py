@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 try:
     import requests
@@ -339,7 +340,7 @@ class MatrixIntegration:
 
         try:
 
-            if not os.path.exists(file_path):
+            if not Path(file_path).exists():
                 self.logger.error(f"File not found: {file_path}")
                 return None
 
@@ -398,13 +399,13 @@ class MatrixIntegration:
             txn_id = f"pbx_{int(time.time() * 1000)}"
 
             if not filename:
-                filename = os.path.basename(file_path)
+                filename = Path(file_path).name
 
             data = {
                 "msgtype": "m.file",
                 "body": filename,
                 "url": mxc_uri,
-                "info": {"size": os.path.getsize(file_path), "mimetype": content_type},
+                "info": {"size": Path(file_path).stat().st_size, "mimetype": content_type},
             }
 
             result = self._make_request(

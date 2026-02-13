@@ -18,6 +18,7 @@ from pbx.features.stir_shaken import (
     verify_stir_shaken_invite,
 )
 from pbx.sip.message import SIPMessage
+from pathlib import Path
 
 
 def create_test_manager() -> STIRSHAKENManager | None:
@@ -324,8 +325,8 @@ def test_certificate_generation() -> bool:
     temp_dir = tempfile.mkdtemp()
     cert_path, key_path = manager.generate_test_certificate(temp_dir)
 
-    assert os.path.exists(cert_path), "Certificate file should exist"
-    assert os.path.exists(key_path), "Key file should exist"
+    assert Path(cert_path).exists(), "Certificate file should exist"
+    assert Path(key_path).exists(), "Key file should exist"
 
     # Verify certificate can be loaded
     with open(cert_path, "rb") as f:

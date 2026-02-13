@@ -8,6 +8,7 @@ import wave
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 # Constants for Vosk transcription
 VOSK_FRAME_SIZE = 4000  # Number of frames to read per chunk
@@ -67,7 +68,7 @@ class VoicemailTranscriptionService:
                     # Initialize Vosk model
                     if VOSK_AVAILABLE:
                         try:
-                            if os.path.exists(self.vosk_model_path):
+                            if Path(self.vosk_model_path).exists():
                                 self.vosk_model = Model(self.vosk_model_path)
                                 self.logger.info(
                                     "  Vosk model loaded successfully (offline transcription ready)"
@@ -123,7 +124,7 @@ class VoicemailTranscriptionService:
                 "error": "Transcription service is disabled",
             }
 
-        if not os.path.exists(audio_file_path):
+        if not Path(audio_file_path).exists():
             self.logger.error(f"Audio file not found: {audio_file_path}")
             return {
                 "success": False,

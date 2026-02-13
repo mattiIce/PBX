@@ -13,6 +13,7 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class EmailNotifier:
@@ -133,7 +134,7 @@ class EmailNotifier:
             msg.attach(MIMEText(body, "plain"))
 
             # Attach audio file if requested and available
-            if self.include_attachment and audio_file_path and os.path.exists(audio_file_path):
+            if self.include_attachment and audio_file_path and Path(audio_file_path).exists():
                 try:
                     with open(audio_file_path, "rb") as f:
                         audio_data = f.read()
@@ -142,7 +143,7 @@ class EmailNotifier:
                     audio.add_header(
                         "Content-Disposition",
                         "attachment",
-                        filename=os.path.basename(audio_file_path),
+                        filename=Path(audio_file_path).name,
                     )
                     msg.attach(audio)
                     self.logger.debug(f"Attached audio file: {audio_file_path}")

@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 try:
     import psycopg2
@@ -139,7 +140,7 @@ class DatabaseBackend:
             self._autocommit = False
             self.enabled = True
             self.logger.info("✓ Successfully connected to SQLite database")
-            self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
+            self.logger.info(f"  Database path: {str(Path(db_path).resolve())}")
             return True
         except (OSError, sqlite3.Error) as e:
             self.logger.error(f"✗ SQLite connection failed: {e}")

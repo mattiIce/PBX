@@ -7,6 +7,7 @@ import os
 import random
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class MusicOnHold:
@@ -32,14 +33,14 @@ class MusicOnHold:
     def _load_classes(self):
         """Load MOH classes and files"""
         # Create default class if it doesn't exist
-        default_path = os.path.join(self.moh_directory, self.default_class)
+        default_path = Path(self.moh_directory) / self.default_class
         os.makedirs(default_path, exist_ok=True)
 
         # Scan for MOH classes (subdirectories)
-        if os.path.exists(self.moh_directory):
+        if Path(self.moh_directory).exists():
             for item in os.listdir(self.moh_directory):
-                class_path = os.path.join(self.moh_directory, item)
-                if os.path.isdir(class_path):
+                class_path = Path(self.moh_directory) / item
+                if Path(class_path).is_dir():
                     audio_files = self._scan_audio_files(class_path)
                     if audio_files:
                         self.classes[item] = audio_files
@@ -62,7 +63,7 @@ class MusicOnHold:
 
         for filename in os.listdir(directory):
             if any(filename.lower().endswith(ext) for ext in audio_extensions):
-                audio_files.append(os.path.join(directory, filename))
+                audio_files.append(Path(directory) / filename)
 
         return sorted(audio_files)
 

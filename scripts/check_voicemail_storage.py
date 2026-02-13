@@ -9,11 +9,12 @@ voicemails are being saved to the database or file system only.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 import sqlite3
+from pathlib import Path
 
 
 def main():

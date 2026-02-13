@@ -13,6 +13,7 @@ import pytest
 
 from pbx.features.cdr import CallDisposition, CDRSystem
 from pbx.features.statistics import StatisticsEngine
+from pathlib import Path
 
 
 class MockPBXCore:
@@ -39,7 +40,7 @@ class TestStatisticsEngine:
 
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
-        if os.path.exists(self.temp_dir):
+        if Path(self.temp_dir).exists():
             shutil.rmtree(self.temp_dir)
 
     def _create_sample_cdr_data(self) -> None:
@@ -49,7 +50,7 @@ class TestStatisticsEngine:
         # Create CDR records for the last 3 days
         for day_offset in range(3):
             date = (today - timedelta(days=day_offset)).strftime("%Y-%m-%d")
-            filename = os.path.join(self.temp_dir, f"cdr_{date}.jsonl")
+            filename = Path(self.temp_dir) / f"cdr_{date}.jsonl"
 
             with open(filename, "w") as f:
                 # Create 10 sample records per day
@@ -205,7 +206,7 @@ class TestStatisticsEngine:
             assert stats["overview"]["total_calls"] == 0
             assert len(stats["daily_trends"]) == 7
         finally:
-            if os.path.exists(temp_dir):
+            if Path(temp_dir).exists():
                 shutil.rmtree(temp_dir)
 
 
@@ -219,7 +220,7 @@ class TestCDRSystem:
 
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
-        if os.path.exists(self.temp_dir):
+        if Path(self.temp_dir).exists():
             shutil.rmtree(self.temp_dir)
 
     def test_record_lifecycle(self) -> None:

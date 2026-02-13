@@ -15,6 +15,7 @@ from pbx.core.pbx import PBXCore
 from pbx.features.voicemail import VoicemailSystem
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 def test_rtp_player_play_file() -> None:
@@ -22,7 +23,7 @@ def test_rtp_player_play_file() -> None:
 
     # Create a temporary WAV file with G.711 μ-law audio
     temp_dir = tempfile.mkdtemp()
-    wav_file = os.path.join(temp_dir, "test.wav")
+    wav_file = Path(temp_dir) / "test.wav"
 
     try:
         # Create a minimal WAV file with G.711 μ-law format

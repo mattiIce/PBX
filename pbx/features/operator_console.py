@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 
 from pbx.core.call import CallState
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class OperatorConsole:
@@ -370,7 +371,7 @@ class OperatorConsole:
         Returns:
             dict: VIP caller database
         """
-        if os.path.exists(self.vip_db_path):
+        if Path(self.vip_db_path).exists():
             try:
                 with open(self.vip_db_path, "r") as f:
                     return json.load(f)

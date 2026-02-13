@@ -7,6 +7,7 @@ import math
 import os
 import struct
 import warnings
+from pathlib import Path
 
 # Audio generation constants
 MAX_16BIT_SIGNED = 32767  # Maximum value for 16-bit signed integer
@@ -557,10 +558,10 @@ def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
           If the file doesn't exist, the caller should fall back to generate_voice_prompt()
     """
     # Build path to prompt file
-    prompt_file = os.path.join(prompt_dir, f"{prompt_type}.wav")
+    prompt_file = Path(prompt_dir) / f"{prompt_type}.wav"
 
     # Check if file exists
-    if os.path.exists(prompt_file):
+    if Path(prompt_file).exists():
         try:
             with open(prompt_file, "rb") as f:
                 return f.read()

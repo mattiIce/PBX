@@ -19,13 +19,14 @@ import sys
 from datetime import datetime, timezone
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.features.compliance_framework import SOC2ComplianceEngine
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 from pbx.utils.migrations import MigrationManager, register_all_migrations
+from pathlib import Path
 
 
 class SOC2ControlTester:
@@ -289,9 +290,7 @@ class SOC2ControlTester:
         """
         # Check for availability monitoring configuration
         # The system has healthcheck.py which implies monitoring
-        healthcheck_exists = os.path.exists(
-            os.path.join(os.path.dirname(__file__), "..", "healthcheck.py")
-        )
+        healthcheck_exists = Path(__file__).parent.parent / "healthcheck.py"
 
         if healthcheck_exists:
             return True, "Health monitoring system available (healthcheck.py)"

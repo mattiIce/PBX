@@ -10,6 +10,7 @@ import struct
 import threading
 import time
 import traceback
+from pathlib import Path
 
 
 class VoicemailHandler:
@@ -620,7 +621,7 @@ class VoicemailHandler:
                             pbx.logger.info(
                                 f"[VM IVR] Playing voicemail message: {message_id} from {caller_id}"
                             )
-                            if file_path and os.path.exists(file_path):
+                            if file_path and Path(file_path).exists():
                                 player.play_file(file_path)
                                 mailbox.mark_listened(message_id)
                                 pbx.logger.info(

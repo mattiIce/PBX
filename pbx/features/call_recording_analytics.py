@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 # Import Vosk for FREE offline transcription (already integrated)
 try:
@@ -106,7 +107,7 @@ class RecordingAnalytics:
                     .get("transcription", {})
                     .get("vosk_model_path", "/opt/vosk-model-small-en-us-0.15")
                 )
-                if os.path.exists(model_path):
+                if Path(model_path).exists():
                     self.vosk_model = Model(model_path)
                     self.logger.info(f"Vosk model loaded from {model_path}")
                 else:
@@ -178,7 +179,7 @@ class RecordingAnalytics:
         model_path = "models/vosk-model-small-en-us-0.15"
 
         try:
-            if os.path.exists(model_path):
+            if Path(model_path).exists():
                 return Model(model_path)
             else:
                 self.logger.warning(f"Vosk model not found at {model_path}")

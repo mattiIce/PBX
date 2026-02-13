@@ -8,6 +8,7 @@ import re
 from typing import Any
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class EnvironmentLoader:
@@ -224,7 +225,7 @@ class EnvironmentLoader:
         """
         logger = get_logger()
 
-        if not os.path.exists(env_file):
+        if not Path(env_file).exists():
             logger.debug(f"Environment file {env_file} not found")
             return 0
 

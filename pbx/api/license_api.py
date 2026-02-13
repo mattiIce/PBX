@@ -12,6 +12,7 @@ from flask import Blueprint, jsonify, request
 
 from pbx.utils.license_admin import require_license_admin, verify_license_admin_session
 from pbx.utils.licensing import LicenseType, get_license_manager
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -313,17 +314,17 @@ def toggle_licensing():
 
         # Update .env file for persistence
         # NOTE: PBX restart required for change to take full effect
-        env_file = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+        env_file = str(Path(__file__).parent.parent / ".." / ".env")
 
         # Read existing .env
         env_lines = []
-        if os.path.exists(env_file):
+        if Path(env_file).exists():
             with open(env_file, "r") as f:
                 env_lines = f.readlines()
 
         # Check if license lock exists
-        lock_path = os.path.join(os.path.dirname(__file__), "..", "..", ".license_lock")
-        if os.path.exists(lock_path):
+        lock_path = str(Path(__file__).parent.parent / ".." / ".license_lock")
+        if Path(lock_path).exists():
             return (
                 jsonify(
                     {

@@ -380,8 +380,8 @@ def get_ssl_status() -> tuple[Response, int]:
         key_file = ssl_config.get("key_file", "certs/server.key")
 
         # Check if certificate files exist
-        cert_exists = os.path.exists(cert_file)
-        key_exists = os.path.exists(key_file)
+        cert_exists = Path(cert_file).exists()
+        key_exists = Path(key_file).exists()
 
         # Get certificate details if it exists
         cert_details = None

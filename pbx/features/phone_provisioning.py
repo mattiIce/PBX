@@ -17,6 +17,7 @@ from datetime import datetime, timezone
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class PhoneTemplate:
@@ -1043,11 +1044,11 @@ P2351 = 1
         """Load custom templates from configuration"""
         custom_templates_dir = self.config.get("provisioning.custom_templates_dir", None)
 
-        if custom_templates_dir and os.path.exists(custom_templates_dir):
+        if custom_templates_dir and Path(custom_templates_dir).exists():
             try:
                 for filename in os.listdir(custom_templates_dir):
                     if filename.endswith(".template"):
-                        filepath = os.path.join(custom_templates_dir, filename)
+                        filepath = Path(custom_templates_dir) / filename
                         # Parse filename: vendor_model.template
                         parts = filename.replace(".template", "").split("_")
                         if len(parts) >= 2:
@@ -1681,9 +1682,9 @@ P2351 = 1
                 "provisioning.custom_templates_dir", "provisioning_templates"
             )
             template_filename = f"{vendor}_{model}.template"
-            template_path = os.path.join(custom_dir, template_filename)
+            template_path = Path(custom_dir) / template_filename
 
-            if os.path.exists(template_path):
+            if Path(template_path).exists():
                 is_custom = True
 
             templates_list.append(
@@ -1745,7 +1746,7 @@ P2351 = 1
         custom_dir = self.config.get("provisioning.custom_templates_dir", "provisioning_templates")
 
         # Create directory if it doesn't exist
-        if not os.path.exists(custom_dir):
+        if not Path(custom_dir).exists():
             try:
                 os.makedirs(custom_dir)
                 self.logger.info(f"Created custom templates directory: {custom_dir}")
@@ -1754,7 +1755,7 @@ P2351 = 1
 
         # Write template to file
         template_filename = f"{vendor.lower()}_{model.lower()}.template"
-        template_path = os.path.join(custom_dir, template_filename)
+        template_path = Path(custom_dir) / template_filename
 
         try:
             with open(template_path, "w") as f:
@@ -1793,7 +1794,7 @@ P2351 = 1
         custom_dir = self.config.get("provisioning.custom_templates_dir", "provisioning_templates")
 
         # Create directory if it doesn't exist
-        if not os.path.exists(custom_dir):
+        if not Path(custom_dir).exists():
             try:
                 os.makedirs(custom_dir)
             except OSError as e:
@@ -1801,7 +1802,7 @@ P2351 = 1
 
         # Write template to file
         template_filename = f"{vendor.lower()}_{model.lower()}.template"
-        template_path = os.path.join(custom_dir, template_filename)
+        template_path = Path(custom_dir) / template_filename
 
         try:
             with open(template_path, "w") as f:

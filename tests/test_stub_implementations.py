@@ -12,6 +12,7 @@ from pbx.features.operator_console import OperatorConsole
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
 from pbx.utils.dtmf import DTMFDetector, DTMFGenerator
+from pathlib import Path
 
 
 class MockPBXCore:
@@ -73,7 +74,7 @@ def test_vip_caller_database() -> None:
 
     # Create temporary directory for VIP database
     with tempfile.TemporaryDirectory() as tmpdir:
-        vip_db_path = os.path.join(tmpdir, "vip_test.json")
+        vip_db_path = Path(tmpdir) / "vip_test.json"
 
         config = {
             "features.operator_console.enabled": True,
@@ -178,7 +179,7 @@ def test_operator_console_features() -> None:
     """Test operator console features"""
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        vip_db_path = os.path.join(tmpdir, "vip_test.json")
+        vip_db_path = Path(tmpdir) / "vip_test.json"
 
         config = {
             "features.operator_console.enabled": True,
@@ -337,7 +338,7 @@ def test_database_backend() -> None:
     from pbx.utils.database import DatabaseBackend, VIPCallerDB
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        db_path = os.path.join(tmpdir, "test.db")
+        db_path = Path(tmpdir) / "test.db"
 
         config = {"database.type": "sqlite", "database.path": db_path}
 

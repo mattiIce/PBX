@@ -13,6 +13,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 
 from pbx.features.voicemail_transcription import VoicemailTranscriptionService
+from pathlib import Path
 
 # Mock the optional dependencies before importing the module
 sys.modules["vosk"] = MagicMock()
@@ -29,13 +30,13 @@ class TestVoicemailTranscription:
         self.temp_dir = tempfile.mkdtemp()
 
         # Create test audio file (simple WAV)
-        self.test_audio_path = os.path.join(self.temp_dir, "test_voicemail.wav")
+        self.test_audio_path = Path(self.temp_dir) / "test_voicemail.wav"
         self._create_test_wav(self.test_audio_path)
 
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
         # Remove test files
-        if os.path.exists(self.test_audio_path):
+        if Path(self.test_audio_path).exists():
             os.remove(self.test_audio_path)
         os.rmdir(self.temp_dir)
 

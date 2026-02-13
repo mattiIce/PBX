@@ -29,11 +29,12 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.features.extensions import ExtensionRegistry
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 def main():

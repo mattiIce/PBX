@@ -13,6 +13,7 @@ import time
 import traceback
 
 from pbx.features.webhooks import WebhookEvent
+from pathlib import Path
 
 
 class CallRouter:
@@ -518,8 +519,8 @@ class CallRouter:
                             f"Using custom greeting for extension {call.to_extension}: {custom_greeting_path}"
                         )
                         # Verify file exists and is readable
-                        if os.path.exists(custom_greeting_path):
-                            file_size = os.path.getsize(custom_greeting_path)
+                        if Path(custom_greeting_path).exists():
+                            file_size = Path(custom_greeting_path).stat().st_size
                             pbx.logger.info(f"Custom greeting file exists ({file_size} bytes)")
                         else:
                             pbx.logger.warning(

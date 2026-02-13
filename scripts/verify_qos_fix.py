@@ -12,9 +12,10 @@ Usage:
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.features.qos_monitoring import QoSMetrics
+from pathlib import Path
 
 
 def verify_fix():

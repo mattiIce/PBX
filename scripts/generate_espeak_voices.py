@@ -14,9 +14,10 @@ Note: Requires internet connection to use Google TTS API (free, no API key neede
 
 import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 # Try to import dependencies with helpful error messages
 try:
@@ -55,7 +56,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
     logger = get_logger()
 
     # Create output directory
-    if not os.path.exists(output_dir):
+    if not Path(output_dir).exists():
         os.makedirs(output_dir)
         logger.info(f"Created directory: {output_dir}")
 
@@ -91,7 +92,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
     # Generate each prompt
     success_count = 0
     for filename, info in prompts.items():
-        output_file = os.path.join(output_dir, filename)
+        output_file = Path(output_dir) / filename
         text = info["text"]
 
         logger.info(f"Generating {filename}...")
@@ -99,7 +100,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
 
         try:
             if text_to_wav_telephony(text, output_file):
-                file_size = os.path.getsize(output_file)
+                file_size = Path(output_file).stat().st_size
                 logger.info(f"  ✓ SUCCESS - Generated ({file_size:,} bytes)")
                 success_count += 1
             else:
@@ -128,7 +129,7 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
     logger = get_logger()
 
     # Create output directory
-    if not os.path.exists(output_dir):
+    if not Path(output_dir).exists():
         os.makedirs(output_dir)
         logger.info(f"Created directory: {output_dir}")
 
@@ -193,7 +194,7 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
     # Generate each prompt
     success_count = 0
     for filename, info in prompts.items():
-        output_file = os.path.join(output_dir, filename)
+        output_file = Path(output_dir) / filename
         text = info["text"]
 
         logger.info(f"Generating {filename}...")
@@ -201,7 +202,7 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
 
         try:
             if text_to_wav_telephony(text, output_file):
-                file_size = os.path.getsize(output_file)
+                file_size = Path(output_file).stat().st_size
                 logger.info(f"  ✓ SUCCESS - Generated ({file_size:,} bytes)")
                 success_count += 1
             else:

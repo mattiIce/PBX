@@ -120,7 +120,7 @@ def test_ssl_enabled_with_valid_certificates() -> bool:
     key_file = "certs/server.key"
 
     # Check if certificates exist
-    if not os.path.exists(cert_file) or not os.path.exists(key_file):
+    if not Path(cert_file).exists() or not Path(key_file).exists():
         return True
 
     # Create a config object

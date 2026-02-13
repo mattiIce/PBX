@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
 import sqlite3
+from pathlib import Path
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -70,7 +71,7 @@ class VoicemailBox:
             transcription_service: VoicemailTranscriptionService object (optional)
         """
         self.extension_number = extension_number
-        self.storage_path = os.path.join(storage_path, extension_number)
+        self.storage_path = Path(storage_path) / extension_number
         self.messages = []
         self.logger = get_logger()
         self.config = config
@@ -80,9 +81,7 @@ class VoicemailBox:
         self.pin = None  # Voicemail PIN (plaintext, for config file PINs)
         self.pin_hash = None  # Voicemail PIN hash (for database PINs)
         self.pin_salt = None  # Voicemail PIN salt (for database PINs)
-        self.greeting_path = os.path.join(
-            self.storage_path, GREETING_FILENAME
-        )  # Custom greeting file
+        self.greeting_path = Path(self.storage_path) / GREETING_FILENAME  # Custom greeting file
 
         # Load PIN from database first (if available), then fall back to config
         pin_loaded = False
@@ -143,7 +142,7 @@ class VoicemailBox:
         timestamp_str = timestamp.strftime("%Y%m%d_%H%M%S")
         message_id = f"{caller_id}_{timestamp_str}"
 
-        file_path = os.path.join(self.storage_path, f"{message_id}.wav")
+        file_path = Path(self.storage_path) / f"{message_id}.wav"
 
         with open(file_path, "wb") as f:
             f.write(audio_data)
@@ -401,7 +400,7 @@ class VoicemailBox:
                 self.logger.info(f"Deleting voicemail {message_id}...")
 
                 # Delete file
-                if os.path.exists(msg["file_path"]):
+                if Path(msg["file_path"]).exists():
                     os.remove(msg["file_path"])
                     self.logger.info(
                         f"  ✓ Deleted audio file: {msg['file_path']}"
@@ -528,12 +527,12 @@ class VoicemailBox:
             self.logger.warning("Database not available - loading voicemails from file system only")
 
         # Load from disk if database is not available or failed
-        if not os.path.exists(self.storage_path):
+        if not Path(self.storage_path).exists():
             return
 
         for filename in os.listdir(self.storage_path):
             if filename.endswith(".wav"):
-                file_path = os.path.join(self.storage_path, filename)
+                file_path = Path(self.storage_path) / filename
                 # Parse message info from filename: {caller_id}_{timestamp}.wav
                 name_without_ext = filename[:-4]
                 parts = name_without_ext.split("_")
@@ -618,7 +617,7 @@ class VoicemailBox:
         Returns:
             True if custom greeting exists
         """
-        exists = os.path.exists(self.greeting_path)
+        exists = Path(self.greeting_path).exists()
         self.logger.debug(
             f"Checking custom greeting for extension {self.extension_number}: "
             f"{'exists' if exists else 'not found'} at {self.greeting_path}"
@@ -655,8 +654,8 @@ class VoicemailBox:
             )
 
             # Verify the file was written successfully
-            if os.path.exists(self.greeting_path):
-                file_size = os.path.getsize(self.greeting_path)
+            if Path(self.greeting_path).exists():
+                file_size = Path(self.greeting_path).stat().st_size
                 self.logger.info(f"Verified greeting file exists on disk ({file_size} bytes)")
                 return True
             else:
@@ -691,7 +690,7 @@ class VoicemailBox:
             True if greeting was deleted
         """
         try:
-            if os.path.exists(self.greeting_path):
+            if Path(self.greeting_path).exists():
                 os.remove(self.greeting_path)
                 self.logger.info(
                     f"Deleted custom greeting for extension {self.extension_number}"

@@ -17,9 +17,10 @@ from unittest import TestCase, mock
 from datetime import datetime, timezone
 
 # Add project root to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.api.errors import (
+from pathlib import Path
     APIError,
     NotFoundError,
     UnauthorizedError,
@@ -472,7 +473,7 @@ class TestExceptionSpecificity(TestCase):
                         if isinstance(node, ast.ExceptHandler):
                             if node.type is None:
                                 bare_except_files.append(
-                                    f"{os.path.basename(filepath)}:{node.lineno}"
+                                    f"{Path(filepath).name}:{node.lineno}"
                                 )
                 except SyntaxError:
                     pass  # Skip files with syntax errors

@@ -8,6 +8,7 @@ import tempfile
 
 from pbx.features.find_me_follow_me import FindMeFollowMe
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 class TestFMFMPersistence:
@@ -31,7 +32,7 @@ class TestFMFMPersistence:
         """Clean up test database"""
         if hasattr(self, "database") and self.database.connection:
             self.database.connection.close()
-        if os.path.exists(self.temp_db.name):
+        if Path(self.temp_db.name).exists():
             os.unlink(self.temp_db.name)
 
     def test_database_persistence(self) -> None:

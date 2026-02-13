@@ -16,6 +16,7 @@ from pbx.api.utils import (
     DateTimeEncoder,
 )
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 logger = get_logger()
 
@@ -308,21 +309,17 @@ def handle_license_toggle() -> tuple[Response, int]:
         license_manager = get_license_manager()
 
         # Update .env file for persistence
-        env_file = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".env"
-        )
+        env_file = str(Path(__file__).resolve().parent.parent.parent / ".env")
 
         # Read existing .env
         env_lines = []
-        if os.path.exists(env_file):
+        if Path(env_file).exists():
             with open(env_file, "r") as f:
                 env_lines = f.readlines()
 
         # Check if license lock exists
-        lock_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(__file__))), ".license_lock"
-        )
-        if os.path.exists(lock_path):
+        lock_path = str(Path(__file__).resolve().parent.parent.parent / ".license_lock")
+        if Path(lock_path).exists():
             return send_json(
                 {
                     "success": False,
@@ -346,7 +343,7 @@ def handle_license_toggle() -> tuple[Response, int]:
             )
 
         # Write back atomically to avoid corrupting .env on partial failures
-        env_dir = os.path.dirname(env_file)
+        env_dir = str(Path(env_file).parent)
         tmp_fd, tmp_path = tempfile.mkstemp(dir=env_dir, prefix=".env.", suffix=".tmp")
         try:
             with os.fdopen(tmp_fd, "w") as tmp_file:
@@ -356,7 +353,7 @@ def handle_license_toggle() -> tuple[Response, int]:
         except OSError as write_err:
             # Best-effort cleanup of temporary file
             try:
-                if os.path.exists(tmp_path):
+                if Path(tmp_path).exists():
                     os.remove(tmp_path)
             except OSError:
                 pass

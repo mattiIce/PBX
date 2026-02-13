@@ -10,6 +10,7 @@ import tempfile
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_database_configuration() -> None:
@@ -60,7 +61,7 @@ def test_database_backend_initialization() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -123,7 +124,7 @@ def test_voicemail_database_integration() -> None:
     finally:
         # Cleanup
         shutil.rmtree(temp_dir)
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 

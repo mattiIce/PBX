@@ -6,6 +6,7 @@ including session management, DTMF input handling, and menu navigation.
 """
 
 import time
+from pathlib import Path
 
 
 class AutoAttendantHandler:
@@ -226,7 +227,7 @@ class AutoAttendantHandler:
             pbx.logger.info(f"[Auto Attendant] Starting audio playback for call {call_id}")
             audio_played = False
 
-            if audio_file and os.path.exists(audio_file):
+            if audio_file and Path(audio_file).exists():
                 pbx.logger.info(f"[Auto Attendant] Playing welcome file: {audio_file}")
                 audio_played = player.play_file(audio_file)
                 if audio_played:
@@ -262,7 +263,7 @@ class AutoAttendantHandler:
             # Play main menu
             pbx.logger.info(f"[Auto Attendant] Playing main menu for call {call_id}")
             menu_audio = pbx.auto_attendant._get_audio_file("main_menu")
-            if menu_audio and os.path.exists(menu_audio):
+            if menu_audio and Path(menu_audio).exists():
                 pbx.logger.info(f"[Auto Attendant] Playing menu file: {menu_audio}")
                 audio_played = player.play_file(menu_audio)
                 if audio_played:
@@ -325,7 +326,7 @@ class AutoAttendantHandler:
 
                         # Play transfer message
                         transfer_audio = pbx.auto_attendant._get_audio_file("transferring")
-                        if transfer_audio and os.path.exists(transfer_audio):
+                        if transfer_audio and Path(transfer_audio).exists():
                             player.play_file(transfer_audio)
                         else:
                             # Try to load from auto_attendant/transferring.wav,
@@ -362,7 +363,7 @@ class AutoAttendantHandler:
                     elif action == "play":
                         # Play the requested audio
                         audio_file = result.get("file")
-                        if audio_file and os.path.exists(audio_file):
+                        if audio_file and Path(audio_file).exists():
                             player.play_file(audio_file)
 
                         # Reset timeout

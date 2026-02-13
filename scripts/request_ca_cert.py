@@ -111,7 +111,7 @@ def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="cert
     print(f"3. Submitting CSR to CA: {ca_server}{ca_endpoint}")
 
     try:
-        verify = ca_cert if ca_cert and os.path.exists(ca_cert) else True
+        verify = ca_cert if ca_cert and Path(ca_cert).exists() else True
 
         response = requests.post(
             f"{ca_server}{ca_endpoint}",
@@ -193,7 +193,7 @@ def load_ca_config_from_yml(config_file="config.yml"):
             "server_url": ca_config.get("server_url"),
             "endpoint": ca_config.get("request_endpoint", "/api/sign-cert"),
             "ca_cert": ca_config.get("ca_cert"),
-            "cert_dir": os.path.dirname(ssl_config.get("cert_file", "certs/server.crt")) or "certs",
+            "cert_dir": str(Path(ssl_config.get("cert_file", "certs/server.crt").parent)) or "certs",
         }
     except (KeyError, OSError, TypeError, ValueError) as e:
         print(f"Warning: Could not load CA config from {config_file}: {e}")

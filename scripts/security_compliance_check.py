@@ -16,9 +16,10 @@ import os
 import subprocess
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 class SecurityComplianceChecker:

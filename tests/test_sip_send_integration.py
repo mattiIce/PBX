@@ -5,6 +5,7 @@ Tests that headers are properly added during call routing
 
 
 from pbx.sip.message import SIPMessage
+from pathlib import Path
 
 
 class TestSIPSendLineIntegration:
@@ -53,7 +54,7 @@ logging:
         """Clean up test environment"""
         import os
 
-        if os.path.exists(self.temp_config_path):
+        if Path(self.temp_config_path).exists():
             os.remove(self.temp_config_path)
 
     def test_invite_includes_caller_id_headers(self) -> None:

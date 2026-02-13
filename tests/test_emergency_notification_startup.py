@@ -11,6 +11,7 @@ import tempfile
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_emergency_notification_system_initialization() -> None:
@@ -18,7 +19,7 @@ def test_emergency_notification_system_initialization() -> None:
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, "test.db")
+    db_path = Path(temp_dir) / "test.db"
 
     try:
         # Create a test config
@@ -63,7 +64,7 @@ def test_emergency_notification_system_initialization() -> None:
 
     finally:
         # Clean up
-        if os.path.exists(temp_dir):
+        if Path(temp_dir).exists():
             shutil.rmtree(temp_dir)
 
 
@@ -72,7 +73,7 @@ def test_emergency_notification_database_operations() -> None:
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, "test.db")
+    db_path = Path(temp_dir) / "test.db"
 
     try:
         # Create a test config
@@ -125,5 +126,5 @@ def test_emergency_notification_database_operations() -> None:
 
     finally:
         # Clean up
-        if os.path.exists(temp_dir):
+        if Path(temp_dir).exists():
             shutil.rmtree(temp_dir)

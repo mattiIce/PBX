@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class CallDisposition(Enum):
@@ -168,7 +169,7 @@ class CDRSystem:
         """
         # Save to daily file
         date_str = record.start_time.strftime("%Y-%m-%d")
-        filename = os.path.join(self.storage_path, f"cdr_{date_str}.jsonl")
+        filename = Path(self.storage_path) / f"cdr_{date_str}.jsonl"
 
         try:
             with open(filename, "a") as f:
@@ -191,9 +192,9 @@ class CDRSystem:
         if date is None:
             date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-        filename = os.path.join(self.storage_path, f"cdr_{date}.jsonl")
+        filename = Path(self.storage_path) / f"cdr_{date}.jsonl"
 
-        if not os.path.exists(filename):
+        if not Path(filename).exists():
             return []
 
         records = []

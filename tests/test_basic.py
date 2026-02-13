@@ -8,6 +8,7 @@ import os
 from pbx.core.call import CallManager, CallState
 from pbx.features.extensions import Extension
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
+from pathlib import Path
 
 
 def test_sip_message_parsing() -> None:
@@ -117,7 +118,7 @@ def test_config() -> None:
 
     from pbx.utils.config import Config
 
-    if not os.path.exists("config.yml"):
+    if not Path("config.yml").exists():
         return
 
     config = Config("config.yml")

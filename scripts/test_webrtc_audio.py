@@ -19,9 +19,10 @@ import sys
 from datetime import datetime, timezone
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.features.webrtc import WebRTCSignalingServer
+from pathlib import Path
 
 
 class WebRTCAudioTester:
@@ -421,9 +422,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
             print(guide)
 
         # Save guide to file
-        guide_path = os.path.join(
-            os.path.dirname(__file__), "..", "WEBRTC_AUDIO_TROUBLESHOOTING.md"
-        )
+        guide_path = str(Path(__file__).parent.parent / "WEBRTC_AUDIO_TROUBLESHOOTING.md")
 
         try:
             with open(guide_path, "w") as f:

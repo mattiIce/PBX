@@ -18,6 +18,7 @@ import os
 import secrets
 from datetime import datetime, timedelta, timezone
 from enum import Enum
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class LicenseManager:
 
         # License storage path
         self.license_path = self.config.get(
-            "license_file", os.path.join(os.path.dirname(__file__), "..", "..", ".license")
+            "license_file", str(Path(__file__).parent.parent / ".." / ".license")
         )
 
         # Grace period in days
@@ -102,8 +103,8 @@ class LicenseManager:
         # Check for license lock file (highest priority - enforces licensing)
         # This file is created when a commercial license is first installed
         # and prevents users from disabling licensing via config/env
-        license_lock_path = os.path.join(os.path.dirname(__file__), "..", "..", ".license_lock")
-        if os.path.exists(license_lock_path):
+        license_lock_path = str(Path(__file__).parent.parent / ".." / ".license_lock")
+        if Path(license_lock_path).exists():
             logger.info("License lock file detected - licensing enforcement is mandatory")
             return True
 
@@ -205,7 +206,7 @@ class LicenseManager:
 
     def _load_license(self) -> None:
         """Load license from file if it exists."""
-        if not os.path.exists(self.license_path):
+        if not Path(self.license_path).exists():
             logger.warning(f"No license file found at {self.license_path}")
             self.current_license = None
             return
@@ -406,7 +407,7 @@ class LicenseManager:
         Args:
             license_data: License data to include in lock file
         """
-        lock_path = os.path.join(os.path.dirname(self.license_path), ".license_lock")
+        lock_path = str(Path(self.license_path).parent / ".license_lock")
 
         try:
             lock_data = {
@@ -440,10 +441,10 @@ class LicenseManager:
         Returns:
             True if removed successfully, False otherwise
         """
-        lock_path = os.path.join(os.path.dirname(self.license_path), ".license_lock")
+        lock_path = str(Path(self.license_path).parent / ".license_lock")
 
         try:
-            if os.path.exists(lock_path):
+            if Path(lock_path).exists():
                 os.remove(lock_path)
                 logger.info("License lock file removed - licensing can now be disabled")
                 return True
@@ -506,9 +507,9 @@ class LicenseManager:
         Returns:
             tuple of (status, message)
         """
-        trial_marker = os.path.join(os.path.dirname(self.license_path), ".trial_start")
+        trial_marker = str(Path(self.license_path).parent / ".trial_start")
 
-        if not os.path.exists(trial_marker):
+        if not Path(trial_marker).exists():
             # Start trial
             try:
                 with open(trial_marker, "w") as f:
@@ -674,7 +675,7 @@ class LicenseManager:
             True if revoked successfully, False otherwise
         """
         try:
-            if os.path.exists(self.license_path):
+            if Path(self.license_path).exists():
                 os.remove(self.license_path)
                 logger.info("License revoked")
 

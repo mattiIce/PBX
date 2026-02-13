@@ -10,6 +10,7 @@ import tempfile
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_provisioning_persistence() -> None:
@@ -17,7 +18,7 @@ def test_provisioning_persistence() -> None:
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, "test.db")
+    db_path = Path(temp_dir) / "test.db"
 
     try:
         # Create minimal config
@@ -85,7 +86,7 @@ def test_static_ip_assignment() -> None:
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, "test.db")
+    db_path = Path(temp_dir) / "test.db"
 
     try:
         # Create minimal config
@@ -128,7 +129,7 @@ def test_device_unregister_removes_from_db() -> None:
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, "test.db")
+    db_path = Path(temp_dir) / "test.db"
 
     try:
         # Create minimal config

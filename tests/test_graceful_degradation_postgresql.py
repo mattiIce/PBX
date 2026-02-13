@@ -10,9 +10,10 @@ import sys
 from unittest import TestCase, mock
 from datetime import datetime, timezone
 
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.utils.database import DatabaseBackend, POSTGRES_AVAILABLE
+from pathlib import Path
 
 
 class TestPostgreSQLGracefulDegradation(TestCase):

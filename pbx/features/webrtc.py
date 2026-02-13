@@ -11,6 +11,7 @@ from datetime import datetime, timezone
 from collections.abc import Callable
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class WebRTCSession:
@@ -1010,7 +1011,7 @@ class WebRTCGateway:
                             # Start the RTP player
                             if player.start():
                                 # Play the audio file
-                                if audio_file and os.path.exists(audio_file):
+                                if audio_file and Path(audio_file).exists():
                                     player.play_file(audio_file)
                                     self.logger.info(
                                         f"Auto attendant playing welcome message for call {call_id}"

@@ -13,6 +13,7 @@ from pbx.features.mfa import (
     YubiKeyOTPVerifier,
 )
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_totp_generation() -> bool:
@@ -201,7 +202,7 @@ def test_mfa_with_database() -> bool:
 
     except OSError as e:
         # Clean up on error
-        if os.path.exists(db_path):
+        if Path(db_path).exists():
             try:
                 os.unlink(db_path)
             except BaseException:

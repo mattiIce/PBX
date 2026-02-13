@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 import sqlite3
+from pathlib import Path
 
 
 class RecordingAnnouncements:
@@ -156,7 +157,7 @@ class RecordingAnnouncements:
 
     def _check_audio_file(self):
         """Check if announcement audio file exists"""
-        if os.path.exists(self.audio_path):
+        if Path(self.audio_path).exists():
             self.logger.info(f"  Announcement audio: {self.audio_path}")
         else:
             self.logger.warning(f"  Announcement audio not found: {self.audio_path}")
@@ -210,7 +211,7 @@ class RecordingAnnouncements:
         result = {
             "call_id": call_id,
             "announcement_played": True,
-            "audio_file": self.audio_path if os.path.exists(self.audio_path) else None,
+            "audio_file": self.audio_path if Path(self.audio_path).exists() else None,
             "text": self.announcement_text,
             "party": party,
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -285,7 +286,7 @@ class RecordingAnnouncements:
             "require_consent": self.require_consent,
             "audio_file": self.audio_path,
             "text": self.announcement_text,
-            "audio_exists": os.path.exists(self.audio_path),
+            "audio_exists": Path(self.audio_path).exists(),
         }
 
     def update_announcement_text(self, text: str) -> bool:
@@ -296,7 +297,7 @@ class RecordingAnnouncements:
 
     def set_audio_file(self, path: str) -> bool:
         """set custom audio file for announcement"""
-        if not os.path.exists(path):
+        if not Path(path).exists():
             self.logger.error(f"Audio file not found: {path}")
             return False
 

@@ -23,6 +23,7 @@ from pbx.api.utils import (
     DateTimeEncoder,
 )
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 logger = get_logger()
 
@@ -687,13 +688,13 @@ def _regenerate_voice_prompts(pbx_core: Any, custom_prompts: dict[str, str] | No
 
         # Get output directory
         audio_path = aa_config.get("audio_path", "auto_attendant")
-        if not os.path.exists(audio_path):
+        if not Path(audio_path).exists():
             os.makedirs(audio_path)
 
         # Generate each prompt using shared TTS utility
         logger.info("Regenerating voice prompts using gTTS...")
         for filename, text in prompts.items():
-            output_file = os.path.join(audio_path, f"{filename}.wav")
+            output_file = Path(audio_path) / f"{filename}.wav"
 
             try:
                 # Use shared utility function for TTS generation with 8kHz

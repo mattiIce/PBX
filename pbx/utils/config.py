@@ -7,6 +7,7 @@ import re
 import yaml
 
 from pbx.utils.env_loader import get_env_loader, load_env_file
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class Config:
 
         # Load .env file if it exists
         if load_env:
-            env_file = os.path.join(os.path.dirname(config_file), ".env")
+            env_file = str(Path(config_file).parent / ".env")
             load_env_file(env_file)
             self.env_loader = get_env_loader()
 
@@ -55,7 +56,7 @@ class Config:
 
     def load(self):
         """Load configuration from YAML file and resolve environment variables"""
-        if os.path.exists(self.config_file):
+        if Path(self.config_file).exists():
             with open(self.config_file, "r") as f:
                 self.config = yaml.safe_load(f) or {}
 
