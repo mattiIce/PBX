@@ -121,12 +121,8 @@ def test_voicemail_access_checks_registry() -> None:
                 pattern_matches
             ), f"Voicemail pattern '{voicemail_pattern}' should match {voicemail_ext}"
         else:
-            print(
-                f"⚠ Extension {test_ext} is non-standard length, pattern check informational only"
-            )
+            # Extension is non-standard length, pattern check informational only
             pattern_matches = re.match(voicemail_pattern, voicemail_ext)
-            if pattern_matches:
-            else:
 
     except Exception as e:
 

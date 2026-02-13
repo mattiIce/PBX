@@ -202,9 +202,6 @@ def test_with_database() -> bool:
         # Test threat summary
         summary = detector.get_threat_summary(hours=24)
         assert summary["total_events"] >= 0, "Summary should return total events"
-        print(
-            f"  ✓ Threat summary retrieved: {summary['total_events']} events"
-        )
 
         # Clean up
         db.connection.close()

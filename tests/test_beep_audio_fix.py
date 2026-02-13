@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Test that beep audio is correctly encoded as PCMU (μ-law)
+Test that beep audio is correctly encoded as PCMU (u-law)
 This test verifies the fix for the bug where play_beep was sending
 raw PCM data with PCMU payload type, causing incorrect audio playback.
 """
@@ -19,20 +19,15 @@ def test_beep_generation() -> bool:
     # Each sample is 16-bit (2 bytes)
     # Total: 4000 * 2 = 8000 bytes
     expected_pcm_size = 8000
-    if len(beep_data) == expected_pcm_size:
-    else:
-        print(
-            f"   ✗ PCM beep size wrong: expected {expected_pcm_size}, got {len(beep_data)}"
-        )
+    if len(beep_data) != expected_pcm_size:
         return False
 
     ulaw_data = pcm16_to_ulaw(beep_data)
 
-    # μ-law is 8-bit per sample
+    # u-law is 8-bit per sample
     # 4000 samples = 4000 bytes
     expected_ulaw_size = 4000
-    if len(ulaw_data) == expected_ulaw_size:
-    else:
+    if len(ulaw_data) != expected_ulaw_size:
         return False
 
     player = RTPPlayer(
@@ -46,12 +41,11 @@ def test_beep_generation() -> bool:
     result = player.play_beep(frequency=1000, duration_ms=500)
     player.stop()
 
-    if result:
+    if not result:
         # After the fix, play_beep should:
         # 1. Generate 8000 bytes of PCM data
-        # 2. Convert to 4000 bytes of μ-law data
+        # 2. Convert to 4000 bytes of u-law data
         # 3. Send 25 packets (4000 bytes / 160 bytes per packet = 25)
-    else:
         return False
 
     # Verify the math
@@ -62,20 +56,17 @@ def test_beep_generation() -> bool:
     num_packets = (expected_ulaw_size + bytes_per_packet - 1) // bytes_per_packet
     expected_packets = 25  # ceiling(4000 / 160) = 25
 
-    if num_packets == expected_packets:
-    else:
+    if num_packets != expected_packets:
         return False
 
     # 25 packets * 160 samples/packet = 4000 samples
-    # 4000 samples / 8000 samples/sec = 0.5 seconds ✓
+    # 4000 samples / 8000 samples/sec = 0.5 seconds
     total_samples = num_packets * samples_per_packet
     duration_sec = total_samples / 8000
     expected_duration = 0.5
 
-    if abs(duration_sec - expected_duration) < 0.01:
-    else:
+    if abs(duration_sec - expected_duration) >= 0.01:
         return False
-
 
     return True
 
@@ -83,10 +74,9 @@ def test_beep_generation() -> bool:
 def test_bug_scenario() -> bool:
     """
     Test the specific bug scenario:
-    Before fix: play_beep sent 8000 bytes of PCM as if it were μ-law
-    After fix: play_beep sends 4000 bytes of properly encoded μ-law
+    Before fix: play_beep sent 8000 bytes of PCM as if it were u-law
+    After fix: play_beep sends 4000 bytes of properly encoded u-law
     """
-
 
     from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
 
@@ -100,7 +90,6 @@ def test_bug_scenario() -> bool:
 
     # Right way (after fix)
     right_packets = (len(ulaw_data) + samples_per_packet - 1) // samples_per_packet
-
 
     if right_packets == 25 and wrong_packets == 50:
         return True
