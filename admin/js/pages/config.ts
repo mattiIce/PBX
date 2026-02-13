@@ -3,8 +3,8 @@
  * Handles system configuration, feature toggles, and SSL management.
  */
 
-import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
+import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
 
 interface VoicemailConfig {
     max_duration?: number;

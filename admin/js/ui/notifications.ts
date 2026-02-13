@@ -1,4 +1,4 @@
-import { escapeHtml } from '../utils/html.js';
+import { escapeHtml } from '../utils/html.ts';
 
 type NotificationType = 'success' | 'error' | 'warning' | 'info';
 

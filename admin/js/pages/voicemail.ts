@@ -3,8 +3,8 @@
  * Handles voicemail listing, playback, download, and management.
  */
 
-import { getAuthHeaders, getApiBaseUrl } from '../api/client.js';
-import { showNotification } from '../ui/notifications.js';
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
+import { showNotification } from '../ui/notifications.ts';
 
 interface VoicemailExtension {
     number: string;

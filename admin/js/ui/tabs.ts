@@ -1,4 +1,4 @@
-import { store } from '../state/store.js';
+import { store } from '../state/store.ts';
 
 const AUTO_REFRESH_INTERVAL_MS = 10000; // 10 seconds
 

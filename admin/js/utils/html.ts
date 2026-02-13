@@ -1,3 +1,5 @@
+import { showNotification } from '../ui/notifications.js';
+
 /**
  * Escape a string for safe insertion into HTML (prevents XSS).
  */
@@ -8,23 +10,14 @@ export function escapeHtml(text: string): string {
 }
 
 /**
- * Copy the given text to the clipboard using the legacy execCommand approach.
+ * Copy the given text to the clipboard using the modern Clipboard API.
  */
-export function copyToClipboard(text: string): void {
-    const textarea = document.createElement('textarea');
-    textarea.value = text;
-    textarea.style.position = 'fixed';
-    textarea.style.opacity = '0';
-    document.body.appendChild(textarea);
-    textarea.select();
-
+export async function copyToClipboard(text: string): Promise<void> {
     try {
-        document.execCommand('copy');
-        alert('License data copied to clipboard!');
+        await navigator.clipboard.writeText(text);
+        showNotification('License data copied to clipboard!', 'success');
     } catch (error: unknown) {
         console.error('Error copying to clipboard:', error);
-        alert('Failed to copy to clipboard');
-    } finally {
-        document.body.removeChild(textarea);
+        showNotification('Failed to copy to clipboard', 'error');
     }
 }

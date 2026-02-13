@@ -1,9 +1,9 @@
 // Module imports
-import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl, DEFAULT_FETCH_TIMEOUT } from './api/client.js';
-import { store } from './state/store.js';
-import { showNotification, displayError, setSuppressErrorNotifications } from './ui/notifications.js';
-import { showTab, initializeTabs } from './ui/tabs.js';
-import { escapeHtml, copyToClipboard } from './utils/html.js';
+import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl, DEFAULT_FETCH_TIMEOUT } from './api/client.ts';
+import { store } from './state/store.ts';
+import { showNotification, displayError, setSuppressErrorNotifications } from './ui/notifications.ts';
+import { showTab, initializeTabs } from './ui/tabs.ts';
+import { escapeHtml, copyToClipboard } from './utils/html.ts';
 
 // Re-export to window for backward compatibility with non-modular code
 window.fetchWithTimeout = fetchWithTimeout;
