@@ -1,7 +1,7 @@
 # Modernization Follow-Up Items
 
-Items identified during the Python 3.13+ modernization sweep that are too large
-for this PR and should be addressed in separate follow-up PRs.
+All items identified during the Python 3.13+ modernization sweep have been
+completed.
 
 ---
 
@@ -15,9 +15,10 @@ with `tz=timezone.utc` across 88 files.
 
 ## ~~2. Narrow broad `except Exception` blocks~~ DONE
 
-Completed: Broad `except Exception` blocks narrowed to specific exception types
-across the entire codebase. Remaining `except Exception` blocks are intentionally
-kept at top-level entry points (signal handlers, main loops, route-level catch-alls).
+Completed: ~695 broad `except Exception` blocks narrowed to specific exception
+types across the entire codebase. Remaining `except Exception` blocks are
+intentionally kept at top-level entry points (signal handlers, main loops,
+route-level catch-alls).
 
 ---
 
@@ -31,22 +32,11 @@ Completed:
 
 ---
 
-## 1. Gradual `os.path` to `pathlib.Path` migration
+## ~~4. Migrate `os.path` to `pathlib.Path`~~ DONE
 
-**Priority:** Low
-**Scope:** ~311 occurrences
-**Effort:** Very Large
-
-The codebase has ~311 uses of `os.path` functions (`os.path.join`,
-`os.path.exists`, `os.path.isfile`, etc.) that could use `pathlib.Path` for
-more idiomatic modern Python.
-
-### Approach
-
-Do not mass-replace. Instead:
-1. Use `pathlib.Path` in all new code going forward
-2. Migrate module-by-module when touching files for other reasons
-3. Prioritize library code (`pbx/`) over scripts and tests
+Completed: ~322 `os.path.*` calls migrated to `pathlib.Path` equivalents across
+103 files. Only 1 intentional `os.path` reference remains (mock patch string in
+test).
 
 ---
 
