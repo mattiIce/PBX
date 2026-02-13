@@ -7,7 +7,6 @@ working server-side because the dtmf_payload_type parameter was not being passed
 to the build_audio_sdp function.
 """
 
-import unittest
 from typing import Any
 
 from unittest.mock import MagicMock, Mock, call

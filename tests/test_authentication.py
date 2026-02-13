@@ -2,7 +2,6 @@
 Test Phase 3 Authentication and Authorization
 """
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 

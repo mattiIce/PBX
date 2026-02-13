@@ -3,7 +3,6 @@ Unit tests for iLBC codec implementation
 Tests codec initialization, SDP negotiation, and encoding/decoding
 """
 
-import unittest
 from unittest.mock import MagicMock, Mock, patch
 
 

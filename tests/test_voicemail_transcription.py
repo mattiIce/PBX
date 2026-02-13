@@ -6,7 +6,6 @@ import os
 import struct
 import sys
 import tempfile
-import unittest
 import wave
 from datetime import datetime
 from typing import Any

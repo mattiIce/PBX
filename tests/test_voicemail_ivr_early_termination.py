@@ -9,7 +9,6 @@ detects this and exits gracefully without starting the IVR loop.
 
 import threading
 import time
-import unittest
 from unittest.mock import MagicMock, patch
 
 

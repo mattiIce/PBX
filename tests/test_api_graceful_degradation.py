@@ -6,7 +6,6 @@ when features like paging, LCR, etc. are not enabled.
 """
 
 import json
-import unittest
 from io import BytesIO
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch

@@ -3,7 +3,6 @@ Unit tests for Speex codec implementation
 Tests codec initialization, SDP negotiation, and encoding/decoding
 """
 
-import unittest
 from unittest.mock import Mock
 
 

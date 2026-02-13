@@ -2,7 +2,6 @@
 Tests for phone model-specific codec selection
 """
 
-import unittest
 from unittest.mock import Mock
 
 

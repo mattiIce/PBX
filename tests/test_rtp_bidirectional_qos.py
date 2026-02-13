@@ -2,7 +2,6 @@
 Test RTP bidirectional QoS tracking to verify packet loss calculation fix
 """
 
-import unittest
 from unittest.mock import Mock
 import pytest
 

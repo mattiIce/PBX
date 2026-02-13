@@ -4,7 +4,6 @@ Test WebRTC voicemail access RTP setup
 Verifies that WebRTC clients can access voicemail with audio prompts
 """
 
-import unittest
 from unittest.mock import MagicMock, patch
 
 

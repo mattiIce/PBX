@@ -7,7 +7,6 @@ Tests phone cleanup on boot, registration preservation, and incomplete registrat
 import os
 import shutil
 import tempfile
-import unittest
 from unittest.mock import Mock
 
 
@@ -271,25 +270,3 @@ class TestPhoneCleanupStartup:
         # Verify it uses OR between field conditions (mac_address OR ip_address OR extension_number)
         # Any single missing field should trigger deletion of that record
         assert "OR" in delete_query
-# ============================================================================
-# Test Runner
-# ============================================================================
-
-
-def run_functional_tests() -> bool:
-    """Run functional tests (non-unittest)"""
-
-    try:
-        test_clear_all_phones()
-        test_clear_empty_table()
-        test_register_after_clear()
-        test_pbx_preserves_phones_on_boot()
-
-        return True
-    except AssertionError as e:
-        return False
-    except Exception as e:
-        import traceback
-
-        traceback.print_exc()
-        return False
