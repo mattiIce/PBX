@@ -14,7 +14,7 @@ from pbx.features.dnd_scheduling import CalendarMonitor, DNDRule, DNDScheduler
 from pbx.features.presence import PresenceStatus, PresenceSystem
 
 
-def test_dnd_rule_creation():
+def test_dnd_rule_creation() -> bool:
     """Test DND rule creation"""
     print("Testing DND rule creation...")
 
@@ -36,7 +36,7 @@ def test_dnd_rule_creation():
     return True
 
 
-def test_time_based_rule():
+def test_time_based_rule() -> bool:
     """Test time-based rule evaluation"""
     print("Testing time-based rule evaluation...")
 
@@ -68,7 +68,7 @@ def test_time_based_rule():
     return True
 
 
-def test_overnight_rule():
+def test_overnight_rule() -> bool:
     """Test overnight time range (e.g., 22:00 to 06:00)"""
     print("Testing overnight time range...")
 
@@ -94,7 +94,7 @@ def test_overnight_rule():
     return True
 
 
-def test_dnd_scheduler_basic():
+def test_dnd_scheduler_basic() -> bool:
     """Test DND scheduler basic functionality"""
     print("Testing DND scheduler basic functionality...")
 
@@ -113,7 +113,7 @@ def test_dnd_scheduler_basic():
     return True
 
 
-def test_add_remove_rules():
+def test_add_remove_rules() -> bool:
     """Test adding and removing DND rules"""
     print("Testing add/remove DND rules...")
 
@@ -147,7 +147,7 @@ def test_add_remove_rules():
     return True
 
 
-def test_manual_override():
+def test_manual_override() -> bool:
     """Test manual DND override"""
     print("Testing manual DND override...")
 
@@ -177,7 +177,7 @@ def test_manual_override():
     return True
 
 
-def test_dnd_status():
+def test_dnd_status() -> bool:
     """Test getting DND status"""
     print("Testing DND status retrieval...")
 
@@ -201,7 +201,7 @@ def test_dnd_status():
     return True
 
 
-def test_calendar_monitor_registration():
+def test_calendar_monitor_registration() -> bool:
     """Test calendar monitor user registration"""
     print("Testing calendar monitor registration...")
 
@@ -222,7 +222,7 @@ def test_calendar_monitor_registration():
     return True
 
 
-def test_rule_priority():
+def test_rule_priority() -> bool:
     """Test DND rule priority"""
     print("Testing DND rule priority...")
 
@@ -260,7 +260,7 @@ def test_rule_priority():
     return True
 
 
-def test_rule_to_dict():
+def test_rule_to_dict() -> bool:
     """Test rule serialization"""
     print("Testing rule serialization...")
 
@@ -285,7 +285,7 @@ def test_rule_to_dict():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all DND scheduling tests"""
     print("=" * 60)
     print("DND Scheduling Tests")

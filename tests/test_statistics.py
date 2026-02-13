@@ -9,6 +9,7 @@ import sys
 import tempfile
 import unittest
 from datetime import datetime, timedelta
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -20,16 +21,16 @@ from pbx.features.statistics import StatisticsEngine
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self):
-        self.calls = []
-        self.extensions = {}
+    def __init__(self) -> None:
+        self.calls: list[Any] = []
+        self.extensions: dict[str, Any] = {}
         self.start_time = datetime.now() - timedelta(hours=5)
 
 
 class TestStatisticsEngine(unittest.TestCase):
     """Test statistics engine functionality"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
         self.cdr_system = CDRSystem(storage_path=self.temp_dir)
@@ -39,12 +40,12 @@ class TestStatisticsEngine(unittest.TestCase):
         # Create sample call data
         self._create_sample_cdr_data()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test fixtures"""
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
-    def _create_sample_cdr_data(self):
+    def _create_sample_cdr_data(self) -> None:
         """Create sample CDR records for testing"""
         today = datetime.now()
 
@@ -79,7 +80,7 @@ class TestStatisticsEngine(unittest.TestCase):
                     json.dump(record, f)
                     f.write("\n")
 
-    def test_dashboard_statistics(self):
+    def test_dashboard_statistics(self) -> None:
         """Test getting dashboard statistics"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
 
@@ -98,7 +99,7 @@ class TestStatisticsEngine(unittest.TestCase):
         self.assertTrue(overview["answered_calls"] > 0)
         self.assertTrue(overview["answer_rate"] > 0)
 
-    def test_daily_trends(self):
+    def test_daily_trends(self) -> None:
         """Test daily trends calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
         trends = stats["daily_trends"]
@@ -114,7 +115,7 @@ class TestStatisticsEngine(unittest.TestCase):
             self.assertIn("missed", trend)
             self.assertIn("failed", trend)
 
-    def test_hourly_distribution(self):
+    def test_hourly_distribution(self) -> None:
         """Test hourly distribution calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
         distribution = stats["hourly_distribution"]
@@ -127,7 +128,7 @@ class TestStatisticsEngine(unittest.TestCase):
             self.assertEqual(dist["hour"], i)
             self.assertIn("calls", dist)
 
-    def test_top_callers(self):
+    def test_top_callers(self) -> None:
         """Test top callers calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
         top_callers = stats["top_callers"]
@@ -139,7 +140,7 @@ class TestStatisticsEngine(unittest.TestCase):
         for i in range(len(top_callers) - 1):
             self.assertGreaterEqual(top_callers[i]["calls"], top_callers[i + 1]["calls"])
 
-    def test_call_disposition(self):
+    def test_call_disposition(self) -> None:
         """Test call disposition breakdown"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
         disposition = stats["call_disposition"]
@@ -151,7 +152,7 @@ class TestStatisticsEngine(unittest.TestCase):
         total_percentage = sum(d["percentage"] for d in disposition)
         self.assertAlmostEqual(total_percentage, 100.0, delta=0.1)
 
-    def test_peak_hours(self):
+    def test_peak_hours(self) -> None:
         """Test peak hours calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
         peak_hours = stats["peak_hours"]
@@ -164,7 +165,7 @@ class TestStatisticsEngine(unittest.TestCase):
             self.assertIn("hour", peak)
             self.assertIn("calls", peak)
 
-    def test_average_metrics(self):
+    def test_average_metrics(self) -> None:
         """Test average metrics calculation"""
         stats = self.stats_engine.get_dashboard_statistics(days=3)
         avg_metrics = stats["average_metrics"]
@@ -177,7 +178,7 @@ class TestStatisticsEngine(unittest.TestCase):
         # Averages should be positive
         self.assertGreater(avg_metrics["avg_calls_per_day"], 0)
 
-    def test_call_quality_metrics(self):
+    def test_call_quality_metrics(self) -> None:
         """Test call quality metrics (placeholder)"""
         quality = self.stats_engine.get_call_quality_metrics()
 
@@ -188,7 +189,7 @@ class TestStatisticsEngine(unittest.TestCase):
         self.assertIn("average_latency", quality)
         self.assertIn("quality_distribution", quality)
 
-    def test_real_time_metrics(self):
+    def test_real_time_metrics(self) -> None:
         """Test real-time metrics"""
         metrics = self.stats_engine.get_real_time_metrics(self.pbx_core)
 
@@ -201,7 +202,7 @@ class TestStatisticsEngine(unittest.TestCase):
         # Uptime should be greater than 0
         self.assertGreater(metrics["system_uptime"], 0)
 
-    def test_empty_data(self):
+    def test_empty_data(self) -> None:
         """Test statistics with empty data"""
         # Create a new statistics engine with empty CDR
         temp_dir = tempfile.mkdtemp()
@@ -223,17 +224,17 @@ class TestStatisticsEngine(unittest.TestCase):
 class TestCDRSystem(unittest.TestCase):
     """Test CDR system functionality"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
         self.cdr_system = CDRSystem(storage_path=self.temp_dir)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test fixtures"""
         if os.path.exists(self.temp_dir):
             shutil.rmtree(self.temp_dir)
 
-    def test_record_lifecycle(self):
+    def test_record_lifecycle(self) -> None:
         """Test CDR record lifecycle"""
         # Start a record
         record = self.cdr_system.start_record("test-call", "1001", "2001")
@@ -251,7 +252,7 @@ class TestCDRSystem(unittest.TestCase):
         # Record should be saved and removed from active records
         self.assertNotIn("test-call", self.cdr_system.active_records)
 
-    def test_get_statistics(self):
+    def test_get_statistics(self) -> None:
         """Test getting CDR statistics"""
         # Create a sample record
         self.cdr_system.start_record("test-call", "1001", "2001")
@@ -266,7 +267,7 @@ class TestCDRSystem(unittest.TestCase):
         self.assertEqual(stats["answer_rate"], 100.0)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromModule(sys.modules[__name__])

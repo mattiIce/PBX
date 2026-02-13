@@ -21,7 +21,7 @@ logger = get_logger()
 paging_bp = Blueprint("paging", __name__, url_prefix="/api/paging")
 
 
-def _get_paging_system():
+def _get_paging_system() -> Any:
     """Get paging system instance or None if not available."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "paging_system"):
@@ -35,7 +35,7 @@ def _get_paging_system():
 
 @paging_bp.route("/zones", methods=["GET"])
 @require_auth
-def handle_get_paging_zones():
+def handle_get_paging_zones() -> Response:
     """Get all paging zones."""
     paging_system = _get_paging_system()
     if not paging_system:
@@ -52,7 +52,7 @@ def handle_get_paging_zones():
 
 @paging_bp.route("/devices", methods=["GET"])
 @require_auth
-def handle_get_paging_devices():
+def handle_get_paging_devices() -> Response:
     """Get all paging DAC devices."""
     paging_system = _get_paging_system()
     if not paging_system:
@@ -69,7 +69,7 @@ def handle_get_paging_devices():
 
 @paging_bp.route("/active", methods=["GET"])
 @require_auth
-def handle_get_active_pages():
+def handle_get_active_pages() -> Response:
     """Get all active paging sessions."""
     paging_system = _get_paging_system()
     if not paging_system:
@@ -86,7 +86,7 @@ def handle_get_active_pages():
 
 @paging_bp.route("/zones", methods=["POST"])
 @require_auth
-def handle_add_paging_zone():
+def handle_add_paging_zone() -> Response:
     """Add a paging zone."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "paging_system"):
@@ -120,7 +120,7 @@ def handle_add_paging_zone():
 
 @paging_bp.route("/devices", methods=["POST"])
 @require_auth
-def handle_configure_paging_device():
+def handle_configure_paging_device() -> Response:
     """Configure a paging DAC device."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "paging_system"):
@@ -155,7 +155,7 @@ def handle_configure_paging_device():
 
 @paging_bp.route("/zones/<extension>", methods=["DELETE"])
 @require_auth
-def handle_delete_paging_zone(extension):
+def handle_delete_paging_zone(extension: str) -> Response:
     """Delete a paging zone."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "paging_system"):

@@ -12,7 +12,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.utils.encryption import get_encryption
 
 
-def test_fips_password_hashing():
+def test_fips_password_hashing() -> None:
     """Test FIPS-compliant password hashing"""
     print("Testing FIPS password hashing...")
 
@@ -41,7 +41,7 @@ def test_fips_password_hashing():
     print("  ✓ Wrong password correctly rejected")
 
 
-def test_fips_data_encryption():
+def test_fips_data_encryption() -> None:
     """Test FIPS-compliant data encryption"""
     print("Testing FIPS data encryption...")
 
@@ -73,7 +73,7 @@ def test_fips_data_encryption():
         print(f"  ⚠ Encryption test skipped: {e}")
 
 
-def test_fips_secure_token():
+def test_fips_secure_token() -> None:
     """Test secure token generation"""
     print("Testing secure token generation...")
 
@@ -90,7 +90,7 @@ def test_fips_secure_token():
     print("  ✓ Secure token generation works")
 
 
-def test_fips_hashing():
+def test_fips_hashing() -> None:
     """Test FIPS-compliant SHA-256 hashing"""
     print("Testing FIPS SHA-256 hashing...")
 
@@ -108,7 +108,7 @@ def test_fips_hashing():
     print("  ✓ SHA-256 hashing works")
 
 
-def test_extension_authentication():
+def test_extension_authentication() -> None:
     """Test extension authentication with FIPS"""
     print("Testing extension authentication with FIPS...")
 
@@ -131,7 +131,7 @@ def test_extension_authentication():
         print(f"  ⚠ Extension test skipped: {e}")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all FIPS tests"""
     print("=" * 60)
     print("Running FIPS Compliance Tests")

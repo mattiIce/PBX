@@ -18,14 +18,14 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.config = config
 
-    def get_status(self):
+    def get_status(self) -> dict[str, int]:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
-def test_api_server_restart():
+def test_api_server_restart() -> bool:
     """Test that API server can be restarted quickly without address conflicts"""
     print("=" * 60)
     print("Test: API Server Restart and Socket Reuse")
@@ -82,7 +82,7 @@ def test_api_server_restart():
     return True
 
 
-def test_failed_start_cleanup():
+def test_failed_start_cleanup() -> bool:
     """Test that failed server start properly cleans up socket"""
     print("=" * 60)
     print("Test: Failed Start Cleanup")

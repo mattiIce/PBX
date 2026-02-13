@@ -6,6 +6,7 @@ Tests that the dependency checker uses correct singular/plural forms
 
 import io
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 # Add parent directory to path
@@ -14,7 +15,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from pbx.utils.dependency_checker import print_dependency_report
 
 
-def capture_output(func):
+def capture_output(func: Callable[[], None]) -> str:
     """Capture stdout from a function"""
     old_stdout = sys.stdout
     sys.stdout = buffer = io.StringIO()
@@ -25,7 +26,7 @@ def capture_output(func):
         sys.stdout = old_stdout
 
 
-def test_singular_dependency():
+def test_singular_dependency() -> bool:
     """Test that 1 missing dependency uses singular form"""
     print("=" * 60)
     print("Test: Singular Dependency (count=1)")
@@ -52,7 +53,7 @@ def test_singular_dependency():
         return False
 
 
-def test_plural_dependencies():
+def test_plural_dependencies() -> bool:
     """Test that 2+ missing dependencies use plural form"""
     print("=" * 60)
     print("Test: Plural Dependencies (count=2)")
@@ -82,7 +83,7 @@ def test_plural_dependencies():
         return False
 
 
-def test_zero_dependencies():
+def test_zero_dependencies() -> bool:
     """Test that 0 missing dependencies shows no warning"""
     print("=" * 60)
     print("Test: Zero Dependencies (count=0)")
@@ -102,7 +103,7 @@ def test_zero_dependencies():
         return False
 
 
-def main():
+def main() -> bool:
     """Run all tests"""
     print("\n")
     print("=" * 60)

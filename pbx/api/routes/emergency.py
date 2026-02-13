@@ -151,7 +151,7 @@ def handle_trigger_emergency_notification() -> Response:
 
 @emergency_bp.route("/contacts/<contact_id>", methods=["DELETE"])
 @require_auth
-def handle_delete_emergency_contact(contact_id):
+def handle_delete_emergency_contact(contact_id: str) -> Response:
     """Delete emergency contact."""
     emergency_system, error = _get_emergency_system()
     if error:

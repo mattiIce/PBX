@@ -9,6 +9,7 @@ import tempfile
 import unittest
 import wave
 from datetime import datetime
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 # Add parent directory to path
@@ -26,7 +27,7 @@ sys.modules["google.cloud.speech"] = MagicMock()
 class TestVoicemailTranscription(unittest.TestCase):
     """Test voicemail transcription service"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
 
@@ -34,14 +35,14 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.test_audio_path = os.path.join(self.temp_dir, "test_voicemail.wav")
         self._create_test_wav(self.test_audio_path)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test fixtures"""
         # Remove test files
         if os.path.exists(self.test_audio_path):
             os.remove(self.test_audio_path)
         os.rmdir(self.temp_dir)
 
-    def _create_test_wav(self, filepath, duration=1.0, sample_rate=8000):
+    def _create_test_wav(self, filepath: str, duration: float = 1.0, sample_rate: int = 8000) -> None:
         """
         Create a test WAV file with a simple varying amplitude wave
 
@@ -66,7 +67,7 @@ class TestVoicemailTranscription(unittest.TestCase):
             wav_file.setframerate(sample_rate)
             wav_file.writeframes(b"".join(samples))
 
-    def test_transcription_service_disabled(self):
+    def test_transcription_service_disabled(self) -> None:
         """Test transcription service when disabled"""
         config = Mock()
         config.get = Mock(return_value={"voicemail_transcription": {"enabled": False}})
@@ -81,7 +82,7 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.assertIsNone(result["text"])
         self.assertEqual(result["error"], "Transcription service is disabled")
 
-    def test_transcription_file_not_found(self):
+    def test_transcription_file_not_found(self) -> None:
         """Test transcription with non-existent file"""
         config = Mock()
         config.get = Mock(
@@ -101,7 +102,7 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertIn("Audio file not found", result["error"])
 
-    def test_transcription_unsupported_provider(self):
+    def test_transcription_unsupported_provider(self) -> None:
         """Test transcription with unsupported provider"""
         config = Mock()
         config.get = Mock(
@@ -122,7 +123,7 @@ class TestVoicemailTranscription(unittest.TestCase):
 
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
-    def test_transcription_google_success(self, mock_speech):
+    def test_transcription_google_success(self, mock_speech: MagicMock) -> None:
         """Test successful Google Cloud Speech-to-Text transcription"""
         config = Mock()
         config.get = Mock(
@@ -168,7 +169,7 @@ class TestVoicemailTranscription(unittest.TestCase):
 
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
-    def test_transcription_google_no_results(self, mock_speech):
+    def test_transcription_google_no_results(self, mock_speech: MagicMock) -> None:
         """Test Google transcription with no results"""
         config = Mock()
         config.get = Mock(
@@ -198,7 +199,7 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.assertFalse(result["success"])
         self.assertEqual(result["error"], "Transcription returned no results")
 
-    def test_transcription_result_structure(self):
+    def test_transcription_result_structure(self) -> None:
         """Test that transcription result has correct structure"""
         config = Mock()
         config.get = Mock(return_value={"voicemail_transcription": {"enabled": False}})
@@ -225,7 +226,7 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.assertIsInstance(result["timestamp"], datetime)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromModule(sys.modules[__name__])

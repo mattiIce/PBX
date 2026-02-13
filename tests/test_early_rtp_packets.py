@@ -17,7 +17,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from pbx.rtp.handler import RTPRelay
 
 
-def build_rtp_packet(payload_type=0, sequence=0, timestamp=0):
+def build_rtp_packet(payload_type: int = 0, sequence: int = 0, timestamp: int = 0) -> bytes:
     """Build a simple RTP packet for testing"""
     version = 2
     padding = 0
@@ -35,7 +35,7 @@ def build_rtp_packet(payload_type=0, sequence=0, timestamp=0):
     return header + payload
 
 
-def test_early_rtp_packets():
+def test_early_rtp_packets() -> bool:
     """Test that RTP packets arriving before second endpoint is set are NOT dropped"""
     print("\n" + "=" * 70)
     print("Testing Early RTP Packet Handling (Race Condition Fix)")

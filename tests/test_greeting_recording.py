@@ -14,12 +14,12 @@ from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
 
 
-def create_fake_audio():
+def create_fake_audio() -> bytes:
     """Helper function to create fake audio data for testing"""
     return b"RIFF" + b"\x00" * 100
 
 
-def test_greeting_storage():
+def test_greeting_storage() -> None:
     """Test that greeting can be saved and retrieved"""
     print("Testing greeting storage...")
 
@@ -54,7 +54,7 @@ def test_greeting_storage():
         print("✓ Greeting storage works")
 
 
-def test_greeting_deletion():
+def test_greeting_deletion() -> None:
     """Test that greeting can be deleted"""
     print("Testing greeting deletion...")
 
@@ -78,7 +78,7 @@ def test_greeting_deletion():
         print("✓ Greeting deletion works")
 
 
-def test_ivr_options_menu():
+def test_ivr_options_menu() -> None:
     """Test IVR options menu state"""
     print("Testing IVR options menu...")
 
@@ -106,7 +106,7 @@ def test_ivr_options_menu():
         print("✓ IVR options menu works")
 
 
-def test_ivr_greeting_recording():
+def test_ivr_greeting_recording() -> None:
     """Test IVR greeting recording state"""
     print("Testing IVR greeting recording...")
 
@@ -130,7 +130,7 @@ def test_ivr_greeting_recording():
         print("✓ IVR greeting recording works")
 
 
-def test_ivr_save_recorded_greeting():
+def test_ivr_save_recorded_greeting() -> None:
     """Test saving recorded greeting through IVR"""
     print("Testing IVR save recorded greeting...")
 
@@ -160,7 +160,7 @@ def test_ivr_save_recorded_greeting():
         print("✓ IVR save recorded greeting works")
 
 
-def test_main_menu_to_options():
+def test_main_menu_to_options() -> None:
     """Test navigation from main menu to options"""
     print("Testing main menu to options navigation...")
 
@@ -181,7 +181,7 @@ def test_main_menu_to_options():
         print("✓ Main menu to options navigation works")
 
 
-def test_greeting_persistence():
+def test_greeting_persistence() -> None:
     """Test that greeting persists across mailbox instances"""
     print("Testing greeting persistence...")
 
@@ -212,7 +212,7 @@ def test_greeting_persistence():
         print("✓ Greeting persistence works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Greeting Recording Tests")

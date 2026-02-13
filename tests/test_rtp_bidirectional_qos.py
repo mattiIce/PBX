@@ -17,7 +17,7 @@ from pbx.rtp.handler import RTPRelayHandler
 class TestRTPBidirectionalQoS(unittest.TestCase):
     """Test bidirectional RTP relay QoS tracking"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         # Create mock PBX
         self.mock_pbx = Mock()
@@ -26,7 +26,7 @@ class TestRTPBidirectionalQoS(unittest.TestCase):
         # Create QoS monitor
         self.qos_monitor = QoSMonitor(self.mock_pbx)
 
-    def test_bidirectional_packet_loss_calculation(self):
+    def test_bidirectional_packet_loss_calculation(self) -> None:
         """
         Test that bidirectional RTP traffic doesn't cause false packet loss
 
@@ -85,7 +85,7 @@ class TestRTPBidirectionalQoS(unittest.TestCase):
         # Clean up
         handler.stop()
 
-    def test_interleaved_packets_no_false_loss(self):
+    def test_interleaved_packets_no_false_loss(self) -> None:
         """
         Test that interleaved packets from both endpoints don't cause false packet loss
 
@@ -132,7 +132,7 @@ class TestRTPBidirectionalQoS(unittest.TestCase):
         # Clean up
         handler.stop()
 
-    def test_actual_packet_loss_detection(self):
+    def test_actual_packet_loss_detection(self) -> None:
         """
         Test that actual packet loss is still detected correctly in each direction
         """

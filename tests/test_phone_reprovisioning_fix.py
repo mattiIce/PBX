@@ -18,7 +18,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 
-def test_phone_reprovisioning_removes_old_mapping():
+def test_phone_reprovisioning_removes_old_mapping() -> None:
     """
     Test that reprovisioning a phone to a new extension removes the old mapping
 
@@ -91,7 +91,7 @@ def test_phone_reprovisioning_removes_old_mapping():
     print("✓ Phone reprovisioning correctly removes old mapping")
 
 
-def test_phone_reprovisioning_by_ip_only():
+def test_phone_reprovisioning_by_ip_only() -> None:
     """
     Test reprovisioning when phone has no MAC address (IP-based tracking)
     """
@@ -145,7 +145,7 @@ def test_phone_reprovisioning_by_ip_only():
     print("✓ Phone reprovisioning by IP only works correctly")
 
 
-def test_phone_reprovisioning_with_mac_then_ip():
+def test_phone_reprovisioning_with_mac_then_ip() -> None:
     """
     Test reprovisioning when phone has MAC initially but then registers with IP only
     """
@@ -195,7 +195,7 @@ def test_phone_reprovisioning_with_mac_then_ip():
     print("✓ Phone reprovisioning with MAC then IP works correctly")
 
 
-def test_multiple_phones_different_extensions():
+def test_multiple_phones_different_extensions() -> None:
     """
     Test that different phones can still register to different extensions (normal case)
     """
@@ -227,7 +227,7 @@ def test_multiple_phones_different_extensions():
     print("✓ Multiple phones to different extensions works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Phone Reprovisioning Bug Fix Tests")

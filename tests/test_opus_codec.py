@@ -5,6 +5,7 @@ Tests for Opus Codec Support
 import os
 import sys
 import unittest
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -15,21 +16,21 @@ from pbx.features.opus_codec import OpusCodec, OpusCodecManager
 class MockPBX:
     """Mock PBX for testing"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.config = MockConfig()
 
 
 class MockConfig:
     """Mock config for testing"""
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
         return default
 
 
 class TestOpusCodec(unittest.TestCase):
     """Test OpusCodec class"""
 
-    def test_codec_initialization_default(self):
+    def test_codec_initialization_default(self) -> None:
         """Test codec initialization with default parameters"""
         codec = OpusCodec()
 
@@ -40,7 +41,7 @@ class TestOpusCodec(unittest.TestCase):
         self.assertTrue(codec.fec_enabled)
         self.assertFalse(codec.dtx_enabled)
 
-    def test_codec_initialization_custom(self):
+    def test_codec_initialization_custom(self) -> None:
         """Test codec initialization with custom parameters"""
         config = {
             "sample_rate": 16000,
@@ -64,7 +65,7 @@ class TestOpusCodec(unittest.TestCase):
         self.assertFalse(codec.fec_enabled)
         self.assertTrue(codec.dtx_enabled)
 
-    def test_codec_validation_sample_rate(self):
+    def test_codec_validation_sample_rate(self) -> None:
         """Test sample rate validation"""
         config = {"sample_rate": 99999}  # Invalid sample rate
         codec = OpusCodec(config)
@@ -72,7 +73,7 @@ class TestOpusCodec(unittest.TestCase):
         # Should fall back to default
         self.assertEqual(codec.sample_rate, OpusCodec.DEFAULT_SAMPLE_RATE)
 
-    def test_codec_validation_bitrate(self):
+    def test_codec_validation_bitrate(self) -> None:
         """Test bitrate validation"""
         # Too low
         codec1 = OpusCodec({"bitrate": 1000})
@@ -86,7 +87,7 @@ class TestOpusCodec(unittest.TestCase):
         codec3 = OpusCodec({"bitrate": 64000})
         self.assertEqual(codec3.bitrate, 64000)
 
-    def test_codec_validation_complexity(self):
+    def test_codec_validation_complexity(self) -> None:
         """Test complexity validation"""
         # Too low
         codec1 = OpusCodec({"complexity": -1})
@@ -100,7 +101,7 @@ class TestOpusCodec(unittest.TestCase):
         codec3 = OpusCodec({"complexity": 7})
         self.assertEqual(codec3.complexity, 7)
 
-    def test_application_types(self):
+    def test_application_types(self) -> None:
         """Test application type configuration"""
         # VoIP (default)
         codec1 = OpusCodec()
@@ -114,7 +115,7 @@ class TestOpusCodec(unittest.TestCase):
         codec3 = OpusCodec({"application": "lowdelay"})
         self.assertEqual(codec3.application, OpusCodec.APP_LOWDELAY)
 
-    def test_sdp_parameters(self):
+    def test_sdp_parameters(self) -> None:
         """Test SDP parameter generation"""
         codec = OpusCodec({"bitrate": 32000, "frame_size": 20, "fec": True, "dtx": False})
 

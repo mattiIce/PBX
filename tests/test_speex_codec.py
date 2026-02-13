@@ -17,7 +17,7 @@ from pbx.features.speex_codec import SpeexCodec, SpeexCodecManager
 class TestSpeexCodec(unittest.TestCase):
     """Test Speex codec functionality"""
 
-    def test_codec_initialization_default(self):
+    def test_codec_initialization_default(self) -> None:
         """Test codec initialization with default settings"""
         codec = SpeexCodec()
 
@@ -29,7 +29,7 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertFalse(codec.dtx_enabled)
         self.assertEqual(codec.complexity, 3)
 
-    def test_codec_initialization_narrowband(self):
+    def test_codec_initialization_narrowband(self) -> None:
         """Test narrowband mode initialization"""
         codec = SpeexCodec({"mode": "nb"})
 
@@ -37,7 +37,7 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertEqual(codec.sample_rate, 8000)
         self.assertEqual(codec.payload_type, 98)  # NB uses PT 98
 
-    def test_codec_initialization_wideband(self):
+    def test_codec_initialization_wideband(self) -> None:
         """Test wideband mode initialization"""
         codec = SpeexCodec({"mode": "wb"})
 
@@ -45,7 +45,7 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertEqual(codec.sample_rate, 16000)
         self.assertEqual(codec.payload_type, 99)  # WB uses PT 99
 
-    def test_codec_initialization_ultrawideband(self):
+    def test_codec_initialization_ultrawideband(self) -> None:
         """Test ultra-wideband mode initialization"""
         codec = SpeexCodec({"mode": "uwb"})
 
@@ -53,43 +53,43 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertEqual(codec.sample_rate, 32000)
         self.assertEqual(codec.payload_type, 100)  # UWB uses PT 100
 
-    def test_invalid_mode_defaults_to_nb(self):
+    def test_invalid_mode_defaults_to_nb(self) -> None:
         """Test that invalid mode defaults to narrowband"""
         codec = SpeexCodec({"mode": "invalid"})
 
         self.assertEqual(codec.mode, "nb")
 
-    def test_custom_quality(self):
+    def test_custom_quality(self) -> None:
         """Test custom quality setting"""
         codec = SpeexCodec({"quality": 10})
 
         self.assertEqual(codec.quality, 10)
 
-    def test_custom_complexity(self):
+    def test_custom_complexity(self) -> None:
         """Test custom complexity setting"""
         codec = SpeexCodec({"complexity": 7})
 
         self.assertEqual(codec.complexity, 7)
 
-    def test_vbr_configuration(self):
+    def test_vbr_configuration(self) -> None:
         """Test VBR configuration"""
         codec = SpeexCodec({"vbr": False})
 
         self.assertFalse(codec.vbr_enabled)
 
-    def test_vad_configuration(self):
+    def test_vad_configuration(self) -> None:
         """Test VAD configuration"""
         codec = SpeexCodec({"vad": False})
 
         self.assertFalse(codec.vad_enabled)
 
-    def test_dtx_configuration(self):
+    def test_dtx_configuration(self) -> None:
         """Test DTX configuration"""
         codec = SpeexCodec({"dtx": True})
 
         self.assertTrue(codec.dtx_enabled)
 
-    def test_get_info_narrowband(self):
+    def test_get_info_narrowband(self) -> None:
         """Test get_info for narrowband mode"""
         codec = SpeexCodec({"mode": "nb", "quality": 8, "vbr": True})
         info = codec.get_info()
@@ -102,7 +102,7 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertIn("Variable Bitrate", info["features"])
         self.assertIn("Voice Activity Detection", info["features"])
 
-    def test_get_info_wideband(self):
+    def test_get_info_wideband(self) -> None:
         """Test get_info for wideband mode"""
         codec = SpeexCodec({"mode": "wb"})
         info = codec.get_info()
@@ -110,21 +110,21 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertEqual(info["mode"], "Wideband")
         self.assertEqual(info["sample_rate"], 16000)
 
-    def test_get_sdp_description_narrowband(self):
+    def test_get_sdp_description_narrowband(self) -> None:
         """Test SDP description for narrowband"""
         codec = SpeexCodec({"mode": "nb", "payload_type": 98})
         sdp = codec.get_sdp_description()
 
         self.assertEqual(sdp, "rtpmap:98 SPEEX/8000")
 
-    def test_get_sdp_description_wideband(self):
+    def test_get_sdp_description_wideband(self) -> None:
         """Test SDP description for wideband"""
         codec = SpeexCodec({"mode": "wb", "payload_type": 99})
         sdp = codec.get_sdp_description()
 
         self.assertEqual(sdp, "rtpmap:99 SPEEX/16000")
 
-    def test_get_fmtp_with_vbr(self):
+    def test_get_fmtp_with_vbr(self) -> None:
         """Test FMTP generation with VBR enabled"""
         codec = SpeexCodec({"mode": "nb", "vbr": True, "payload_type": 98})
         fmtp = codec.get_fmtp()
@@ -132,21 +132,21 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertIn("vbr=on", fmtp)
         self.assertIn("fmtp:98", fmtp)
 
-    def test_get_fmtp_wideband(self):
+    def test_get_fmtp_wideband(self) -> None:
         """Test FMTP for wideband mode"""
         codec = SpeexCodec({"mode": "wb", "vbr": True, "payload_type": 99})
         fmtp = codec.get_fmtp()
 
         self.assertIn('mode="1,any"', fmtp)
 
-    def test_get_fmtp_ultrawideband(self):
+    def test_get_fmtp_ultrawideband(self) -> None:
         """Test FMTP for ultra-wideband mode"""
         codec = SpeexCodec({"mode": "uwb", "vbr": True, "payload_type": 100})
         fmtp = codec.get_fmtp()
 
         self.assertIn('mode="2,any"', fmtp)
 
-    def test_get_fmtp_no_vbr(self):
+    def test_get_fmtp_no_vbr(self) -> None:
         """Test FMTP without VBR"""
         codec = SpeexCodec({"mode": "nb", "vbr": False, "payload_type": 98})
         fmtp = codec.get_fmtp()
@@ -155,7 +155,7 @@ class TestSpeexCodec(unittest.TestCase):
         if fmtp:
             self.assertNotIn("vbr=on", fmtp)
 
-    def test_get_sdp_parameters(self):
+    def test_get_sdp_parameters(self) -> None:
         """Test complete SDP parameters"""
         codec = SpeexCodec({"mode": "nb", "vbr": True, "payload_type": 98})
         params = codec.get_sdp_parameters()
@@ -168,35 +168,35 @@ class TestSpeexCodec(unittest.TestCase):
         self.assertEqual(params["rtpmap"], "rtpmap:98 SPEEX/8000")
         self.assertIn("fmtp", params)
 
-    def test_frame_size_narrowband(self):
+    def test_frame_size_narrowband(self) -> None:
         """Test frame size calculation for narrowband"""
         codec = SpeexCodec({"mode": "nb"})
 
         # 20ms frame at 8kHz = 160 samples
         self.assertEqual(codec.frame_size, 160)
 
-    def test_frame_size_wideband(self):
+    def test_frame_size_wideband(self) -> None:
         """Test frame size calculation for wideband"""
         codec = SpeexCodec({"mode": "wb"})
 
         # 20ms frame at 16kHz = 320 samples
         self.assertEqual(codec.frame_size, 320)
 
-    def test_frame_size_ultrawideband(self):
+    def test_frame_size_ultrawideband(self) -> None:
         """Test frame size calculation for ultra-wideband"""
         codec = SpeexCodec({"mode": "uwb"})
 
         # 20ms frame at 32kHz = 640 samples
         self.assertEqual(codec.frame_size, 640)
 
-    def test_is_available(self):
+    def test_is_available(self) -> None:
         """Test availability check"""
         codec = SpeexCodec()
         available = codec.is_available()
 
         self.assertIsInstance(available, bool)
 
-    def test_encode_without_encoder(self):
+    def test_encode_without_encoder(self) -> None:
         """Test encoding fails gracefully without encoder"""
         codec = SpeexCodec({"mode": "nb"})
         codec.encoder = None
@@ -206,7 +206,7 @@ class TestSpeexCodec(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_encode_wrong_size(self):
+    def test_encode_wrong_size(self) -> None:
         """Test encoding with wrong PCM data size"""
         codec = SpeexCodec({"mode": "nb"})
         codec.encoder = Mock()
@@ -216,7 +216,7 @@ class TestSpeexCodec(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_decode_without_decoder(self):
+    def test_decode_without_decoder(self) -> None:
         """Test decoding fails gracefully without decoder"""
         codec = SpeexCodec({"mode": "nb"})
         codec.decoder = None
@@ -226,7 +226,7 @@ class TestSpeexCodec(unittest.TestCase):
 
         self.assertIsNone(result)
 
-    def test_reset_encoder(self):
+    def test_reset_encoder(self) -> None:
         """Test encoder reset"""
         codec = SpeexCodec({"mode": "nb"})
         codec.encoder = Mock()
@@ -235,7 +235,7 @@ class TestSpeexCodec(unittest.TestCase):
 
         self.assertIsNotNone(codec)
 
-    def test_reset_decoder(self):
+    def test_reset_decoder(self) -> None:
         """Test decoder reset"""
         codec = SpeexCodec({"mode": "nb"})
         codec.decoder = Mock()
@@ -248,7 +248,7 @@ class TestSpeexCodec(unittest.TestCase):
 class TestSpeexCodecManager(unittest.TestCase):
     """Test Speex codec manager functionality"""
 
-    def test_manager_initialization(self):
+    def test_manager_initialization(self) -> None:
         """Test codec manager initialization"""
         pbx = Mock()
         pbx.config = {"codecs": {"speex": {"enabled": True, "mode": "nb"}}}
@@ -259,7 +259,7 @@ class TestSpeexCodecManager(unittest.TestCase):
         self.assertEqual(manager.config, {"enabled": True, "mode": "nb"})
         self.assertEqual(len(manager.codecs), 0)
 
-    def test_manager_initialization_no_config(self):
+    def test_manager_initialization_no_config(self) -> None:
         """Test codec manager with no config"""
         pbx = Mock()
         pbx.config = None
@@ -268,7 +268,7 @@ class TestSpeexCodecManager(unittest.TestCase):
 
         self.assertEqual(manager.config, {})
 
-    def test_create_codec(self):
+    def test_create_codec(self) -> None:
         """Test creating codec for a call"""
         pbx = Mock()
         pbx.config = {"codecs": {"speex": {"mode": "wb"}}}
@@ -280,7 +280,7 @@ class TestSpeexCodecManager(unittest.TestCase):
         self.assertEqual(codec.mode, "wb")
         self.assertIn("call-123", manager.codecs)
 
-    def test_create_codec_with_custom_config(self):
+    def test_create_codec_with_custom_config(self) -> None:
         """Test creating codec with custom configuration"""
         pbx = Mock()
         pbx.config = {}
@@ -292,7 +292,7 @@ class TestSpeexCodecManager(unittest.TestCase):
         self.assertEqual(codec.mode, "uwb")
         self.assertEqual(codec.quality, 10)
 
-    def test_get_codec(self):
+    def test_get_codec(self) -> None:
         """Test retrieving codec for a call"""
         pbx = Mock()
         pbx.config = {}
@@ -303,7 +303,7 @@ class TestSpeexCodecManager(unittest.TestCase):
         retrieved = manager.get_codec("call-789")
         self.assertEqual(retrieved, codec)
 
-    def test_get_codec_not_found(self):
+    def test_get_codec_not_found(self) -> None:
         """Test retrieving non-existent codec"""
         pbx = Mock()
         pbx.config = {}
@@ -313,7 +313,7 @@ class TestSpeexCodecManager(unittest.TestCase):
 
         self.assertIsNone(retrieved)
 
-    def test_remove_codec(self):
+    def test_remove_codec(self) -> None:
         """Test removing codec for a call"""
         pbx = Mock()
         pbx.config = {}
@@ -327,7 +327,7 @@ class TestSpeexCodecManager(unittest.TestCase):
 
         self.assertNotIn("call-111", manager.codecs)
 
-    def test_get_all_codecs(self):
+    def test_get_all_codecs(self) -> None:
         """Test getting all codec instances"""
         pbx = Mock()
         pbx.config = {}
@@ -342,7 +342,7 @@ class TestSpeexCodecManager(unittest.TestCase):
         self.assertIn("call-1", all_codecs)
         self.assertIn("call-2", all_codecs)
 
-    def test_is_speex_available(self):
+    def test_is_speex_available(self) -> None:
         """Test checking Speex availability"""
         pbx = Mock()
         pbx.config = {}
@@ -356,7 +356,7 @@ class TestSpeexCodecManager(unittest.TestCase):
 class TestSpeexSDP(unittest.TestCase):
     """Test Speex SDP integration"""
 
-    def test_sdp_includes_speex(self):
+    def test_sdp_includes_speex(self) -> None:
         """Test that SDP includes Speex codec"""
         from pbx.sip.sdp import SDPBuilder
 
@@ -367,7 +367,7 @@ class TestSpeexSDP(unittest.TestCase):
         # Verify Speex is in SDP
         self.assertIn("rtpmap:98 SPEEX/8000", sdp)
 
-    def test_sdp_speex_wideband(self):
+    def test_sdp_speex_wideband(self) -> None:
         """Test SDP for Speex wideband"""
         from pbx.sip.sdp import SDPBuilder
 

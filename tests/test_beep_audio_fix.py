@@ -14,7 +14,7 @@ from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
 
 
-def test_beep_generation():
+def test_beep_generation() -> bool:
     """Test that beep tone is generated correctly"""
     print("\n" + "=" * 60)
     print("Testing Beep Audio Fix (PCMU Encoding)")
@@ -111,7 +111,7 @@ def test_beep_generation():
     return True
 
 
-def test_bug_scenario():
+def test_bug_scenario() -> bool:
     """
     Test the specific bug scenario:
     Before fix: play_beep sent 8000 bytes of PCM as if it were μ-law

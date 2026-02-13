@@ -11,7 +11,7 @@ from pbx.sip.message import SIPMessage, SIPMessageBuilder
 class TestSIPCallerIDHeaders(unittest.TestCase):
     """Test SIP caller ID header functionality"""
 
-    def test_add_caller_id_headers(self):
+    def test_add_caller_id_headers(self) -> None:
         """Test adding P-Asserted-Identity and Remote-Party-ID headers"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -37,7 +37,7 @@ class TestSIPCallerIDHeaders(unittest.TestCase):
         self.assertIn("privacy=of", rpid)
         self.assertIn("screen=no", rpid)
 
-    def test_caller_id_headers_format(self):
+    def test_caller_id_headers_format(self) -> None:
         """Test caller ID headers are properly formatted"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -58,7 +58,7 @@ class TestSIPCallerIDHeaders(unittest.TestCase):
 class TestSIPMACAddressHeader(unittest.TestCase):
     """Test SIP MAC address header functionality"""
 
-    def test_add_mac_address_header_colon_format(self):
+    def test_add_mac_address_header_colon_format(self) -> None:
         """Test adding MAC address header with colon format"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -70,7 +70,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         self.assertIsNotNone(x_mac)
         self.assertEqual(x_mac, "00:11:22:33:44:55")
 
-    def test_add_mac_address_header_dash_format(self):
+    def test_add_mac_address_header_dash_format(self) -> None:
         """Test adding MAC address header with dash format"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -83,7 +83,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         # Should be normalized to colon format and lowercase
         self.assertEqual(x_mac, "aa:bb:cc:dd:ee:ff")
 
-    def test_add_mac_address_header_no_separator(self):
+    def test_add_mac_address_header_no_separator(self) -> None:
         """Test adding MAC address header without separators"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -96,7 +96,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         # Should be formatted with colons
         self.assertEqual(x_mac, "00:11:22:33:44:55")
 
-    def test_add_mac_address_header_invalid(self):
+    def test_add_mac_address_header_invalid(self) -> None:
         """Test adding invalid MAC address doesn't add header"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -108,7 +108,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         # Should not add header for invalid MAC
         self.assertIsNone(x_mac)
 
-    def test_add_mac_address_header_none(self):
+    def test_add_mac_address_header_none(self) -> None:
         """Test adding None MAC address doesn't crash"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -119,7 +119,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
         x_mac = message.get_header("X-MAC-Address")
         self.assertIsNone(x_mac)
 
-    def test_add_mac_address_header_invalid_chars(self):
+    def test_add_mac_address_header_invalid_chars(self) -> None:
         """Test adding MAC with invalid characters doesn't add header"""
         message = SIPMessage()
         message.method = "INVITE"
@@ -135,7 +135,7 @@ class TestSIPMACAddressHeader(unittest.TestCase):
 class TestSIPMessageParsing(unittest.TestCase):
     """Test parsing SIP messages with new headers"""
 
-    def test_parse_invite_with_caller_id_headers(self):
+    def test_parse_invite_with_caller_id_headers(self) -> None:
         """Test parsing INVITE with P-Asserted-Identity and Remote-Party-ID"""
         raw_message = (
             "INVITE sip:1002@192.168.1.100 SIP/2.0\r\n"
@@ -162,7 +162,7 @@ class TestSIPMessageParsing(unittest.TestCase):
         self.assertIsNotNone(rpid)
         self.assertIn("John Doe", rpid)
 
-    def test_parse_invite_with_mac_header(self):
+    def test_parse_invite_with_mac_header(self) -> None:
         """Test parsing INVITE with X-MAC-Address header"""
         raw_message = (
             "INVITE sip:1002@192.168.1.100 SIP/2.0\r\n"
@@ -188,7 +188,7 @@ class TestSIPMessageParsing(unittest.TestCase):
 class TestSIPMessageBuilding(unittest.TestCase):
     """Test building complete SIP messages with all headers"""
 
-    def test_build_invite_with_all_headers(self):
+    def test_build_invite_with_all_headers(self) -> None:
         """Test building INVITE with caller ID and MAC headers"""
         message = SIPMessageBuilder.build_request(
             method="INVITE",

@@ -195,7 +195,7 @@ def handle_license_generate() -> tuple[Response, int]:
 
 
 @license_bp.route("/api/license/install", methods=["POST"])
-def handle_license_install():
+def handle_license_install() -> tuple[Response, int]:
     """Install a license key (license admin only)."""
     # Check license admin authorization
     is_authorized, payload = _require_license_admin()
@@ -247,7 +247,7 @@ def handle_license_install():
 
 
 @license_bp.route("/api/license/revoke", methods=["POST"])
-def handle_license_revoke():
+def handle_license_revoke() -> tuple[Response, int]:
     """Revoke current license (license admin only)."""
     # Check license admin authorization
     is_authorized, _ = _require_license_admin()
@@ -276,7 +276,7 @@ def handle_license_revoke():
 
 
 @license_bp.route("/api/license/toggle", methods=["POST"])
-def handle_license_toggle():
+def handle_license_toggle() -> tuple[Response, int]:
     """Enable or disable licensing enforcement (license admin only)."""
     # Check license admin authorization
     is_authorized, auth_status = _require_license_admin()
@@ -386,7 +386,7 @@ def handle_license_toggle():
 
 
 @license_bp.route("/api/license/remove_lock", methods=["POST"])
-def handle_license_remove_lock():
+def handle_license_remove_lock() -> tuple[Response, int]:
     """Remove license lock file (license admin only)."""
     # Check license admin authorization
     is_authorized, payload = _require_license_admin()
@@ -428,7 +428,7 @@ def handle_license_remove_lock():
 
 @license_bp.route("/api/license/check", methods=["POST"])
 @require_auth
-def handle_license_check_feature():
+def handle_license_check_feature() -> tuple[Response, int]:
     """Check if a specific feature is available."""
     try:
         from pbx.utils.licensing import get_license_manager

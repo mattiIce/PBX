@@ -16,7 +16,7 @@ from pbx.features.g722_codec import G722Codec, G722CodecManager
 class TestG722Codec(unittest.TestCase):
     """Test G.722 codec functionality"""
 
-    def test_codec_initialization(self):
+    def test_codec_initialization(self) -> None:
         """Test codec initialization"""
         codec = G722Codec()
 
@@ -24,7 +24,7 @@ class TestG722Codec(unittest.TestCase):
         self.assertEqual(codec.SAMPLE_RATE, 16000)
         self.assertEqual(codec.PAYLOAD_TYPE, 9)
 
-    def test_codec_info(self):
+    def test_codec_info(self) -> None:
         """Test codec information"""
         codec = G722Codec(bitrate=G722Codec.MODE_64K)
         info = codec.get_info()
@@ -34,7 +34,7 @@ class TestG722Codec(unittest.TestCase):
         self.assertEqual(info["bitrate"], 64000)
         self.assertEqual(info["payload_type"], 9)
 
-    def test_encode_stub(self):
+    def test_encode_stub(self) -> None:
         """Test encoding"""
         codec = G722Codec()
 
@@ -48,7 +48,7 @@ class TestG722Codec(unittest.TestCase):
         # bytes
         self.assertEqual(len(encoded), len(pcm_data) // 4)
 
-    def test_decode_stub(self):
+    def test_decode_stub(self) -> None:
         """Test decoding"""
         codec = G722Codec()
 
@@ -62,7 +62,7 @@ class TestG722Codec(unittest.TestCase):
         # bytes
         self.assertEqual(len(decoded), len(g722_data) * 4)
 
-    def test_sdp_description(self):
+    def test_sdp_description(self) -> None:
         """Test SDP description generation"""
         codec = G722Codec()
         sdp = codec.get_sdp_description()
@@ -71,12 +71,12 @@ class TestG722Codec(unittest.TestCase):
         self.assertIn("16000", sdp)
         self.assertIn("9", sdp)
 
-    def test_is_supported(self):
+    def test_is_supported(self) -> None:
         """Test codec support check"""
         supported = G722Codec.is_supported()
         self.assertTrue(supported)
 
-    def test_capabilities(self):
+    def test_capabilities(self) -> None:
         """Test codec capabilities"""
         caps = G722Codec.get_capabilities()
 
@@ -87,7 +87,7 @@ class TestG722Codec(unittest.TestCase):
         self.assertIn(56000, caps["bitrates"])
         self.assertIn(48000, caps["bitrates"])
 
-    def test_different_bitrates(self):
+    def test_different_bitrates(self) -> None:
         """Test different bitrate modes"""
         codec_64k = G722Codec(bitrate=G722Codec.MODE_64K)
         codec_56k = G722Codec(bitrate=G722Codec.MODE_56K)
@@ -97,7 +97,7 @@ class TestG722Codec(unittest.TestCase):
         self.assertEqual(codec_56k.bitrate, 56000)
         self.assertEqual(codec_48k.bitrate, 48000)
 
-    def test_encode_decode_roundtrip(self):
+    def test_encode_decode_roundtrip(self) -> None:
         """Test that encode/decode roundtrip preserves data shape"""
         codec = G722Codec()
 
@@ -128,14 +128,14 @@ class TestG722Codec(unittest.TestCase):
 class TestG722CodecManager(unittest.TestCase):
     """Test G.722 codec manager"""
 
-    def test_manager_initialization(self):
+    def test_manager_initialization(self) -> None:
         """Test manager initialization"""
         manager = G722CodecManager()
 
         self.assertIsNotNone(manager)
         self.assertTrue(manager.enabled)
 
-    def test_create_encoder(self):
+    def test_create_encoder(self) -> None:
         """Test encoder creation"""
         manager = G722CodecManager()
 
@@ -144,7 +144,7 @@ class TestG722CodecManager(unittest.TestCase):
         self.assertIsNotNone(encoder)
         self.assertIn("call-001", manager.encoders)
 
-    def test_create_decoder(self):
+    def test_create_decoder(self) -> None:
         """Test decoder creation"""
         manager = G722CodecManager()
 
@@ -153,7 +153,7 @@ class TestG722CodecManager(unittest.TestCase):
         self.assertIsNotNone(decoder)
         self.assertIn("call-001", manager.decoders)
 
-    def test_release_codec(self):
+    def test_release_codec(self) -> None:
         """Test codec release"""
         manager = G722CodecManager()
 
@@ -168,7 +168,7 @@ class TestG722CodecManager(unittest.TestCase):
         self.assertEqual(len(manager.encoders), 0)
         self.assertEqual(len(manager.decoders), 0)
 
-    def test_get_statistics(self):
+    def test_get_statistics(self) -> None:
         """Test statistics retrieval"""
         manager = G722CodecManager()
 
@@ -182,7 +182,7 @@ class TestG722CodecManager(unittest.TestCase):
         self.assertEqual(stats["active_decoders"], 1)
         self.assertTrue(stats["enabled"])
 
-    def test_sdp_capabilities(self):
+    def test_sdp_capabilities(self) -> None:
         """Test SDP capabilities"""
         manager = G722CodecManager()
 
@@ -191,7 +191,7 @@ class TestG722CodecManager(unittest.TestCase):
         self.assertIsInstance(caps, list)
         self.assertGreater(len(caps), 0)
 
-    def test_disabled_manager(self):
+    def test_disabled_manager(self) -> None:
         """Test manager when disabled"""
         config = {"codecs.g722.enabled": False}
         manager = G722CodecManager(config)
@@ -201,7 +201,7 @@ class TestG722CodecManager(unittest.TestCase):
         encoder = manager.create_encoder("call-001")
         self.assertIsNone(encoder)
 
-    def test_custom_bitrate(self):
+    def test_custom_bitrate(self) -> None:
         """Test custom bitrate configuration"""
         config = {"codecs.g722.bitrate": G722Codec.MODE_48K}
         manager = G722CodecManager(config)

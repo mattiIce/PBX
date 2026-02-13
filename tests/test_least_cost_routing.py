@@ -8,6 +8,7 @@ import sys
 import tempfile
 import unittest
 from datetime import time
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -18,7 +19,7 @@ from pbx.features.least_cost_routing import DialPattern, LeastCostRouting, RateE
 class MockPBX:
     """Mock PBX for testing"""
 
-    def __init__(self, db_path=None):
+    def __init__(self, db_path: str | None = None) -> None:
         self.trunk_manager = MockTrunkManager()
         self.config = MockConfig(db_path) if db_path else None
 
@@ -26,10 +27,10 @@ class MockPBX:
 class MockConfig:
     """Mock config for testing"""
 
-    def __init__(self, db_path):
+    def __init__(self, db_path: str) -> None:
         self.db_path = db_path
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
         if key == "database":
             return {"path": self.db_path}
         return default
@@ -38,17 +39,17 @@ class MockConfig:
 class MockTrunkManager:
     """Mock trunk manager for testing"""
 
-    def __init__(self):
-        self.trunks = {}
+    def __init__(self) -> None:
+        self.trunks: dict[str, MockTrunk] = {}
 
-    def get_trunk(self, trunk_id):
+    def get_trunk(self, trunk_id: str) -> "MockTrunk | None":
         return self.trunks.get(trunk_id)
 
 
 class MockTrunk:
     """Mock trunk for testing"""
 
-    def __init__(self, trunk_id):
+    def __init__(self, trunk_id: str) -> None:
         self.trunk_id = trunk_id
         self.total_calls = 100
         self.successful_calls = 95
@@ -57,7 +58,7 @@ class MockTrunk:
 class TestDialPattern(unittest.TestCase):
     """Test DialPattern class"""
 
-    def test_pattern_matching(self):
+    def test_pattern_matching(self) -> None:
         """Test dial pattern matching"""
         # US toll-free pattern
         pattern = DialPattern(r"^1(800|888|877|866)\d{7}$", "US Toll-Free")
@@ -67,7 +68,7 @@ class TestDialPattern(unittest.TestCase):
         self.assertFalse(pattern.matches("12125551234"))
         self.assertFalse(pattern.matches("5551234"))
 
-    def test_international_pattern(self):
+    def test_international_pattern(self) -> None:
         """Test international dial pattern"""
         # International calls (011 prefix)
         pattern = DialPattern(r"^011\d+$", "International")
@@ -80,7 +81,7 @@ class TestDialPattern(unittest.TestCase):
 class TestRateEntry(unittest.TestCase):
     """Test RateEntry class"""
 
-    def test_cost_calculation_basic(self):
+    def test_cost_calculation_basic(self) -> None:
         """Test basic cost calculation"""
         pattern = DialPattern(r"^\d{10}$", "US Local")
         rate = RateEntry(
@@ -93,7 +94,7 @@ class TestRateEntry(unittest.TestCase):
         # 180 seconds = 3 minutes = $0.03
         self.assertEqual(rate.calculate_cost(180), 0.03)
 
-    def test_cost_calculation_with_connection_fee(self):
+    def test_cost_calculation_with_connection_fee(self) -> None:
         """Test cost calculation with connection fee"""
         pattern = DialPattern(r"^011", "International")
         rate = RateEntry(
@@ -103,7 +104,7 @@ class TestRateEntry(unittest.TestCase):
         # 60 seconds = 1 minute = $0.20 + $0.05 connection = $0.25
         self.assertEqual(rate.calculate_cost(60), 0.25)
 
-    def test_cost_calculation_with_minimum(self):
+    def test_cost_calculation_with_minimum(self) -> None:
         """Test cost calculation with minimum duration"""
         pattern = DialPattern(r"^\d{10}$", "US Local")
         rate = RateEntry(
@@ -114,7 +115,7 @@ class TestRateEntry(unittest.TestCase):
         cost = rate.calculate_cost(10)
         self.assertEqual(cost, round((30 / 60.0) * 0.01, 4))
 
-    def test_cost_calculation_with_increment(self):
+    def test_cost_calculation_with_increment(self) -> None:
         """Test cost calculation with billing increment"""
         pattern = DialPattern(r"^\d{10}$", "US Local")
         rate = RateEntry(
@@ -130,7 +131,7 @@ class TestRateEntry(unittest.TestCase):
 class TestTimeBasedRate(unittest.TestCase):
     """Test TimeBasedRate class"""
 
-    def test_time_range_normal(self):
+    def test_time_range_normal(self) -> None:
         """Test time range (normal, non-crossing midnight)"""
         # Business hours: 9 AM to 5 PM weekdays
         rate = TimeBasedRate(
@@ -145,7 +146,7 @@ class TestTimeBasedRate(unittest.TestCase):
         # Just ensure it runs without error
         _ = rate.applies_now()
 
-    def test_time_range_midnight_crossing(self):
+    def test_time_range_midnight_crossing(self) -> None:
         """Test time range crossing midnight"""
         # Late night: 11 PM to 3 AM
         rate = TimeBasedRate(
@@ -164,20 +165,20 @@ class TestTimeBasedRate(unittest.TestCase):
 class TestLeastCostRouting(unittest.TestCase):
     """Test LeastCostRouting class"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test environment"""
         # Create temporary database
         self.db_fd, self.db_path = tempfile.mkstemp(suffix=".db")
         self.pbx = MockPBX(self.db_path)
         self.lcr = LeastCostRouting(self.pbx)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test environment"""
         # Close and remove temporary database
         os.close(self.db_fd)
         os.unlink(self.db_path)
 
-    def test_add_rate(self):
+    def test_add_rate(self) -> None:
         """Test adding a rate"""
         self.lcr.add_rate(
             trunk_id="trunk1", pattern=r"^\d{10}$", rate_per_minute=0.01, description="US Local"
@@ -186,7 +187,7 @@ class TestLeastCostRouting(unittest.TestCase):
         self.assertEqual(len(self.lcr.rate_entries), 1)
         self.assertEqual(self.lcr.rate_entries[0].trunk_id, "trunk1")
 
-    def test_add_time_based_rate(self):
+    def test_add_time_based_rate(self) -> None:
         """Test adding time-based rate"""
         self.lcr.add_time_based_rate(
             name="Peak Hours",
@@ -201,7 +202,7 @@ class TestLeastCostRouting(unittest.TestCase):
         self.assertEqual(len(self.lcr.time_based_rates), 1)
         self.assertEqual(self.lcr.time_based_rates[0].name, "Peak Hours")
 
-    def test_get_applicable_rates(self):
+    def test_get_applicable_rates(self) -> None:
         """Test getting applicable rates for a number"""
         # Add multiple rates for different patterns
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
@@ -214,7 +215,7 @@ class TestLeastCostRouting(unittest.TestCase):
         # Should be sorted by cost (lowest first)
         self.assertEqual(rates[0][0], "trunk1")
 
-    def test_select_trunk_cost_based(self):
+    def test_select_trunk_cost_based(self) -> None:
         """Test trunk selection based on cost"""
         # Add rates
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.02, "US Local - Expensive")
@@ -224,7 +225,7 @@ class TestLeastCostRouting(unittest.TestCase):
         selected = self.lcr.select_trunk("2125551234", ["trunk1", "trunk2"])
         self.assertEqual(selected, "trunk2")
 
-    def test_select_trunk_with_quality(self):
+    def test_select_trunk_with_quality(self) -> None:
         """Test trunk selection considering quality"""
         self.lcr.prefer_quality = True
         self.lcr.quality_weight = 0.5
@@ -250,7 +251,7 @@ class TestLeastCostRouting(unittest.TestCase):
         # Result depends on the weighting algorithm, just ensure it's one of the trunks
         self.assertIn(selected, ["trunk1", "trunk2"])
 
-    def test_statistics(self):
+    def test_statistics(self) -> None:
         """Test statistics gathering"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
         self.lcr.select_trunk("2125551234", ["trunk1"])
@@ -261,7 +262,7 @@ class TestLeastCostRouting(unittest.TestCase):
         self.assertEqual(stats["total_routes"], 1)
         self.assertEqual(stats["rate_entries"], 1)
 
-    def test_clear_rates(self):
+    def test_clear_rates(self) -> None:
         """Test clearing rates"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
         self.lcr.add_rate("trunk2", r"^011", 0.20, "International")
@@ -272,7 +273,7 @@ class TestLeastCostRouting(unittest.TestCase):
 
         self.assertEqual(len(self.lcr.rate_entries), 0)
 
-    def test_disabled_lcr(self):
+    def test_disabled_lcr(self) -> None:
         """Test that disabled LCR returns None"""
         self.lcr.enabled = False
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
@@ -280,7 +281,7 @@ class TestLeastCostRouting(unittest.TestCase):
         selected = self.lcr.select_trunk("2125551234", ["trunk1"])
         self.assertIsNone(selected)
 
-    def test_rate_persists_to_database(self):
+    def test_rate_persists_to_database(self) -> None:
         """Test that rates are saved to database"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
 
@@ -296,7 +297,7 @@ class TestLeastCostRouting(unittest.TestCase):
         self.assertEqual(row[1], r"^\d{10}$")
         self.assertEqual(row[2], 0.01)
 
-    def test_time_rate_persists_to_database(self):
+    def test_time_rate_persists_to_database(self) -> None:
         """Test that time-based rates are saved to database"""
         self.lcr.add_time_based_rate("Peak Hours", 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
 
@@ -312,7 +313,7 @@ class TestLeastCostRouting(unittest.TestCase):
         self.assertEqual(row[1], 9)
         self.assertEqual(row[2], 1.2)
 
-    def test_rates_load_from_database(self):
+    def test_rates_load_from_database(self) -> None:
         """Test that rates are loaded from database on initialization"""
         # Add rate and create new LCR instance (simulating restart)
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
@@ -324,7 +325,7 @@ class TestLeastCostRouting(unittest.TestCase):
         self.assertEqual(len(lcr2.rate_entries), 1)
         self.assertEqual(lcr2.rate_entries[0].trunk_id, "trunk1")
 
-    def test_time_rates_load_from_database(self):
+    def test_time_rates_load_from_database(self) -> None:
         """Test that time-based rates are loaded from database"""
         self.lcr.add_time_based_rate("Peak Hours", 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
 
@@ -335,7 +336,7 @@ class TestLeastCostRouting(unittest.TestCase):
         self.assertEqual(len(lcr2.time_based_rates), 1)
         self.assertEqual(lcr2.time_based_rates[0].name, "Peak Hours")
 
-    def test_clear_rates_deletes_from_database(self):
+    def test_clear_rates_deletes_from_database(self) -> None:
         """Test that clearing rates deletes from database"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
         self.lcr.clear_rates()
@@ -349,7 +350,7 @@ class TestLeastCostRouting(unittest.TestCase):
 
         self.assertEqual(count, 0)
 
-    def test_multiple_rates_persist(self):
+    def test_multiple_rates_persist(self) -> None:
         """Test that multiple rates persist across restarts"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
         self.lcr.add_rate("trunk2", r"^011", 0.20, "International")

@@ -15,7 +15,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB, RegisteredPhonesDB
 
 
-def test_database_extension_registration():
+def test_database_extension_registration() -> None:
     """Test that extensions in database can register (not just config.yml)"""
     print("Testing database-based extension registration...")
 
@@ -75,7 +75,7 @@ def test_database_extension_registration():
     print("✓ Database-based extension registration works")
 
 
-def test_config_extension_still_works():
+def test_config_extension_still_works() -> None:
     """Test that database-based extensions work with registration"""
     print("Testing config-based extension registration (backward compatibility)...")
 
@@ -112,7 +112,7 @@ def test_config_extension_still_works():
     print("✓ Config-based extension registration still works")
 
 
-def test_unknown_extension_rejected():
+def test_unknown_extension_rejected() -> None:
     """Test that unknown extensions are still rejected"""
     print("Testing unknown extension rejection...")
 
@@ -148,7 +148,7 @@ def test_unknown_extension_rejected():
     print("✓ Unknown extension rejection works")
 
 
-def test_database_priority():
+def test_database_priority() -> None:
     """Test that database takes priority over config"""
     print("Testing database priority over config...")
 
@@ -195,7 +195,7 @@ def test_database_priority():
     print("✓ Database priority over config works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Extension Database Registration Tests")

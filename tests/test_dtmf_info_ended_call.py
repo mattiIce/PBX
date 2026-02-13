@@ -16,7 +16,7 @@ from pbx.core.call import CallState
 from pbx.core.pbx import PBXCore
 
 
-def test_dtmf_info_for_ended_call_no_warning():
+def test_dtmf_info_for_ended_call_no_warning() -> None:
     """
     Test that DTMF INFO for ended calls doesn't produce warnings
 
@@ -99,7 +99,7 @@ def test_dtmf_info_for_ended_call_no_warning():
     print("✓ DTMF INFO for ended call handled gracefully with debug log")
 
 
-def test_dtmf_info_race_condition():
+def test_dtmf_info_race_condition() -> None:
     """
     Test race condition where DTMF INFO arrives during call teardown
     """
@@ -127,7 +127,7 @@ def test_dtmf_info_race_condition():
     print("✓ DTMF INFO race condition handled gracefully")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running DTMF INFO Ended Call Tests")

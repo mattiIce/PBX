@@ -20,14 +20,14 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.config = config
 
-    def get_status(self):
+    def get_status(self) -> dict[str, int]:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
-def get_free_port():
+def get_free_port() -> int:
     """Find a free port to use for testing."""
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
         s.bind(("127.0.0.1", 0))
@@ -36,7 +36,7 @@ def get_free_port():
     return port
 
 
-def test_admin_static_files():
+def test_admin_static_files() -> bool:
     """Test that admin static files can be served"""
     print("=" * 60)
     print("Test: Admin Static File Serving")

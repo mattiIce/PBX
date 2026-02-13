@@ -18,7 +18,7 @@ from pbx.features.mfa import (
 from pbx.utils.database import DatabaseBackend
 
 
-def test_totp_generation():
+def test_totp_generation() -> bool:
     """Test TOTP code generation"""
     print("Testing TOTP code generation...")
 
@@ -44,7 +44,7 @@ def test_totp_generation():
     return True
 
 
-def test_totp_verification():
+def test_totp_verification() -> bool:
     """Test TOTP code verification"""
     print("Testing TOTP code verification...")
 
@@ -75,7 +75,7 @@ def test_totp_verification():
     return True
 
 
-def test_totp_provisioning_uri():
+def test_totp_provisioning_uri() -> bool:
     """Test TOTP provisioning URI generation"""
     print("Testing TOTP provisioning URI...")
 
@@ -93,7 +93,7 @@ def test_totp_provisioning_uri():
     return True
 
 
-def test_mfa_manager_basic():
+def test_mfa_manager_basic() -> bool:
     """Test MFA manager basic functionality"""
     print("Testing MFA manager...")
 
@@ -110,7 +110,7 @@ def test_mfa_manager_basic():
     return True
 
 
-def test_mfa_enrollment_without_db():
+def test_mfa_enrollment_without_db() -> bool:
     """Test MFA enrollment without database"""
     print("Testing MFA enrollment (without database)...")
 
@@ -127,7 +127,7 @@ def test_mfa_enrollment_without_db():
     return True
 
 
-def test_mfa_with_database():
+def test_mfa_with_database() -> bool:
     """Test MFA with database backend"""
     print("Testing MFA with database...")
 
@@ -238,7 +238,7 @@ def test_mfa_with_database():
         raise e
 
 
-def test_backup_code_format():
+def test_backup_code_format() -> bool:
     """Test backup code format"""
     print("Testing backup code format...")
 
@@ -270,7 +270,7 @@ def test_backup_code_format():
     return True
 
 
-def test_yubikey_otp_format_validation():
+def test_yubikey_otp_format_validation() -> bool:
     """Test YubiKey OTP format validation"""
     print("Testing YubiKey OTP format validation...")
 
@@ -304,7 +304,7 @@ def test_yubikey_otp_format_validation():
     return True
 
 
-def test_yubikey_otp_verification_without_api():
+def test_yubikey_otp_verification_without_api() -> bool:
     """Test YubiKey OTP verification (format check only, no API credentials)"""
     print("Testing YubiKey OTP verification...")
 
@@ -329,7 +329,7 @@ def test_yubikey_otp_verification_without_api():
     return True
 
 
-def test_fido2_challenge_generation():
+def test_fido2_challenge_generation() -> bool:
     """Test FIDO2 challenge generation"""
     print("Testing FIDO2 challenge generation...")
 
@@ -357,7 +357,7 @@ def test_fido2_challenge_generation():
     return True
 
 
-def test_fido2_credential_registration():
+def test_fido2_credential_registration() -> bool:
     """Test FIDO2 credential registration"""
     print("Testing FIDO2 credential registration...")
 
@@ -384,7 +384,7 @@ def test_fido2_credential_registration():
     return True
 
 
-def test_fido2_assertion_verification():
+def test_fido2_assertion_verification() -> bool:
     """Test FIDO2 assertion verification"""
     print("Testing FIDO2 assertion verification...")
 
@@ -426,7 +426,7 @@ def test_fido2_assertion_verification():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all MFA tests"""
     print("=" * 60)
     print("MFA Feature Tests")

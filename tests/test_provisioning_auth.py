@@ -21,16 +21,16 @@ from pbx.utils.config import Config
 class MockPBXCore:
     """Mock PBX core for testing"""
 
-    def __init__(self, config):
+    def __init__(self, config: Config) -> None:
         self.config = config
         self.extension_registry = ExtensionRegistry(config)
         self.phone_provisioning = PhoneProvisioning(config)
 
-    def get_status(self):
+    def get_status(self) -> dict[str, int]:
         return {"registered_extensions": 0, "active_calls": 0, "uptime": 0}
 
 
-def test_provisioning_endpoints_require_auth():
+def test_provisioning_endpoints_require_auth() -> bool:
     """Test that provisioning endpoints require authentication"""
     print("Testing provisioning endpoints authentication...")
 
@@ -86,7 +86,7 @@ def test_provisioning_endpoints_require_auth():
         api_server.stop()
 
 
-def test_provisioning_endpoints_with_auth():
+def test_provisioning_endpoints_with_auth() -> bool:
     """Test that provisioning endpoints work with valid authentication"""
     print("Testing provisioning endpoints with authentication...")
 

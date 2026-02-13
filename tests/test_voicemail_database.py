@@ -15,7 +15,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def test_database_configuration():
+def test_database_configuration() -> None:
     """Test database configuration loading"""
     print("Testing database configuration...")
 
@@ -35,7 +35,7 @@ def test_database_configuration():
     print("✓ Database configuration loads correctly")
 
 
-def test_database_backend_initialization():
+def test_database_backend_initialization() -> None:
     """Test database backend initialization with SQLite fallback"""
     print("Testing database backend initialization...")
 
@@ -72,7 +72,7 @@ def test_database_backend_initialization():
             os.unlink(temp_db.name)
 
 
-def test_voicemail_database_integration():
+def test_voicemail_database_integration() -> None:
     """Test voicemail saving to database"""
     print("Testing voicemail database integration...")
 
@@ -137,7 +137,7 @@ def test_voicemail_database_integration():
             os.unlink(temp_db.name)
 
 
-def test_voicemail_without_database():
+def test_voicemail_without_database() -> None:
     """Test voicemail system works without database"""
     print("Testing voicemail system without database...")
 
@@ -165,7 +165,7 @@ def test_voicemail_without_database():
         shutil.rmtree(temp_dir)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Database Tests")

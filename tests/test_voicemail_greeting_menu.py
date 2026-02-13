@@ -21,7 +21,7 @@ from pbx.utils.config import Config
 TEST_AUDIO_DATA = b"test greeting audio data"
 
 
-def test_access_options_menu():
+def test_access_options_menu() -> None:
     """Test accessing the options menu from main menu"""
     print("Testing access to options menu...")
 
@@ -46,7 +46,7 @@ def test_access_options_menu():
     print("✓ Successfully accessed options menu")
 
 
-def test_start_greeting_recording():
+def test_start_greeting_recording() -> None:
     """Test starting greeting recording from options menu"""
     print("Testing start greeting recording...")
 
@@ -72,7 +72,7 @@ def test_start_greeting_recording():
     print("✓ Successfully started greeting recording")
 
 
-def test_finish_greeting_recording():
+def test_finish_greeting_recording() -> None:
     """Test finishing greeting recording with #"""
     print("Testing finish greeting recording...")
 
@@ -96,7 +96,7 @@ def test_finish_greeting_recording():
     print("✓ Successfully finished greeting recording")
 
 
-def test_greeting_review_playback():
+def test_greeting_review_playback() -> None:
     """Test playing back recorded greeting for review"""
     print("Testing greeting review playback...")
 
@@ -120,7 +120,7 @@ def test_greeting_review_playback():
     print("✓ Successfully requested greeting playback")
 
 
-def test_greeting_review_rerecord():
+def test_greeting_review_rerecord() -> None:
     """Test re-recording greeting from review menu"""
     print("Testing greeting re-record...")
 
@@ -145,7 +145,7 @@ def test_greeting_review_rerecord():
     print("✓ Successfully started re-recording")
 
 
-def test_greeting_review_delete():
+def test_greeting_review_delete() -> None:
     """Test deleting custom greeting from review menu"""
     print("Testing greeting deletion...")
 
@@ -173,7 +173,7 @@ def test_greeting_review_delete():
     print("✓ Successfully deleted greeting")
 
 
-def test_greeting_review_save():
+def test_greeting_review_save() -> None:
     """Test saving recorded greeting from review menu"""
     print("Testing greeting save...")
 
@@ -200,7 +200,7 @@ def test_greeting_review_save():
     print("✓ Successfully saved greeting")
 
 
-def test_complete_greeting_workflow():
+def test_complete_greeting_workflow() -> None:
     """Test complete workflow: record -> review -> save"""
     print("Testing complete greeting workflow...")
 
@@ -242,7 +242,7 @@ def test_complete_greeting_workflow():
     print("✓ Successfully completed greeting workflow")
 
 
-def test_return_to_main_menu_from_options():
+def test_return_to_main_menu_from_options() -> None:
     """Test returning to main menu from options menu"""
     print("Testing return to main menu from options...")
 
@@ -263,7 +263,7 @@ def test_return_to_main_menu_from_options():
     print("✓ Successfully returned to main menu")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Greeting Menu Tests")

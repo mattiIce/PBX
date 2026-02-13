@@ -82,7 +82,7 @@ def test_click_to_dial_init() -> None:
 
     # Initialize with mock PBX core
     class MockPBXCore:
-        def __init__(self):
+        def __init__(self) -> None:
             self.call_manager = None
 
     mock_pbx = MockPBXCore()
@@ -93,7 +93,7 @@ def test_click_to_dial_init() -> None:
     db.close()
 
 
-def test_click_to_dial_config():
+def test_click_to_dial_config() -> None:
     """Test click-to-dial configuration management"""
     print("\nTesting click-to-dial configuration...")
 
@@ -125,7 +125,7 @@ def test_click_to_dial_config():
     db.close()
 
 
-def test_click_to_dial_call_initiation():
+def test_click_to_dial_call_initiation() -> None:
     """Test click-to-dial call initiation (framework mode)"""
     print("\nTesting click-to-dial call initiation...")
 
@@ -158,7 +158,7 @@ def test_click_to_dial_call_initiation():
     db.close()
 
 
-def test_click_to_dial_with_mock_pbx():
+def test_click_to_dial_with_mock_pbx() -> None:
     """Test click-to-dial with mock PBX core"""
     print("\nTesting click-to-dial with mock PBX core...")
 
@@ -167,20 +167,20 @@ def test_click_to_dial_with_mock_pbx():
 
     # Create mock PBX core with call manager
     class MockCall:
-        def __init__(self, call_id, from_ext, to_ext):
+        def __init__(self, call_id: str, from_ext: str, to_ext: str) -> None:
             self.call_id = call_id
             self.from_extension = from_ext
             self.to_extension = to_ext
 
-        def start(self):
+        def start(self) -> None:
             pass
 
     class MockCallManager:
-        def create_call(self, call_id, from_extension, to_extension):
+        def create_call(self, call_id: str, from_extension: str, to_extension: str) -> MockCall:
             return MockCall(call_id, from_extension, to_extension)
 
     class MockPBXCore:
-        def __init__(self):
+        def __init__(self) -> None:
             self.call_manager = MockCallManager()
 
     mock_pbx = MockPBXCore()
@@ -200,7 +200,7 @@ def test_click_to_dial_with_mock_pbx():
     db.close()
 
 
-def test_click_to_dial_all_configs():
+def test_click_to_dial_all_configs() -> None:
     """Test getting all click-to-dial configurations"""
     print("\nTesting get all configurations...")
 

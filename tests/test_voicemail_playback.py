@@ -20,7 +20,7 @@ from pbx.rtp.handler import RTPPlayer
 from pbx.utils.config import Config
 
 
-def test_rtp_player_play_file():
+def test_rtp_player_play_file() -> None:
     """Test RTP player can play a WAV file"""
     print("Testing RTP player play_file method...")
 
@@ -94,7 +94,7 @@ def test_rtp_player_play_file():
         shutil.rmtree(temp_dir)
 
 
-def test_voicemail_access_plays_messages():
+def test_voicemail_access_plays_messages() -> None:
     """Test that voicemail access actually plays messages"""
     print("Testing voicemail access plays messages...")
 
@@ -146,7 +146,7 @@ def test_voicemail_access_plays_messages():
         shutil.rmtree(temp_dir)
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Playback Tests")

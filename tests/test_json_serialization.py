@@ -16,7 +16,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 
-def test_datetime_encoder():
+def test_datetime_encoder() -> None:
     """Test that DateTimeEncoder correctly serializes datetime objects"""
     print("Testing DateTimeEncoder...")
 
@@ -42,7 +42,7 @@ def test_datetime_encoder():
     print("✓ DateTimeEncoder works correctly")
 
 
-def test_registered_phones_json_serialization():
+def test_registered_phones_json_serialization() -> None:
     """Test JSON serialization of registered phones with datetime objects"""
     print("Testing registered phones JSON serialization...")
 
@@ -86,7 +86,7 @@ def test_registered_phones_json_serialization():
     print("✓ Registered phones JSON serialization works correctly")
 
 
-def test_registered_phones_db_with_encoder():
+def test_registered_phones_db_with_encoder() -> None:
     """Test that registered phones from database can be serialized"""
     print("Testing registered phones from database with JSON encoder...")
 
@@ -119,7 +119,7 @@ def test_registered_phones_db_with_encoder():
     print("✓ Database registered phones can be serialized to JSON")
 
 
-def run_all_tests():
+def run_all_tests() -> bool | None:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running JSON Serialization Tests")

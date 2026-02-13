@@ -7,6 +7,7 @@ import shutil
 import sys
 import tempfile
 import unittest
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
@@ -17,7 +18,7 @@ from pbx.features.auto_attendant import AAState, AutoAttendant, DestinationType
 class TestAutoAttendant(unittest.TestCase):
     """Test Auto Attendant functionality"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         # Create a temporary directory for audio files
         self.test_audio_dir = tempfile.mkdtemp()
@@ -46,19 +47,19 @@ class TestAutoAttendant(unittest.TestCase):
         # Initialize auto attendant
         self.aa = AutoAttendant(self.config)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test fixtures"""
         # Remove temporary audio directory
         if os.path.exists(self.test_audio_dir):
             shutil.rmtree(self.test_audio_dir)
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test auto attendant initialization"""
         self.assertTrue(self.aa.is_enabled())
         self.assertEqual(self.aa.get_extension(), "0")
         self.assertEqual(len(self.aa.menu_options), 4)
 
-    def test_start_session(self):
+    def test_start_session(self) -> None:
         """Test starting an auto attendant session"""
         result = self.aa.start_session("test-call-123", "1001")
 
@@ -67,7 +68,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertEqual(result["session"]["state"], AAState.MAIN_MENU)
         self.assertEqual(result["session"]["from_extension"], "1001")
 
-    def test_menu_selection_sales(self):
+    def test_menu_selection_sales(self) -> None:
         """Test selecting sales queue option"""
         # Start session
         result = self.aa.start_session("test-call-123", "1001")
@@ -80,7 +81,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertEqual(result["destination"], "8001")
         self.assertEqual(result["session"]["state"], AAState.TRANSFERRING)
 
-    def test_menu_selection_support(self):
+    def test_menu_selection_support(self) -> None:
         """Test selecting support queue option"""
         result = self.aa.start_session("test-call-123", "1001")
         session = result["session"]
@@ -91,7 +92,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertEqual(result["action"], "transfer")
         self.assertEqual(result["destination"], "8002")
 
-    def test_menu_selection_operator(self):
+    def test_menu_selection_operator(self) -> None:
         """Test selecting operator option"""
         result = self.aa.start_session("test-call-123", "1001")
         session = result["session"]
@@ -102,7 +103,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertEqual(result["action"], "transfer")
         self.assertEqual(result["destination"], "1001")
 
-    def test_invalid_input(self):
+    def test_invalid_input(self) -> None:
         """Test handling invalid menu option"""
         result = self.aa.start_session("test-call-123", "1001")
         session = result["session"]
@@ -114,7 +115,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertEqual(result["session"]["state"], AAState.INVALID)
         self.assertEqual(result["session"]["retry_count"], 1)
 
-    def test_max_retries_invalid(self):
+    def test_max_retries_invalid(self) -> None:
         """Test maximum retries for invalid input"""
         result = self.aa.start_session("test-call-123", "1001")
         session = result["session"]
@@ -143,7 +144,7 @@ class TestAutoAttendant(unittest.TestCase):
         # Should happen on 5th keypress (3 invalid + 2 menu replays)
         self.assertLessEqual(attempts, 6)
 
-    def test_timeout_handling(self):
+    def test_timeout_handling(self) -> None:
         """Test timeout handling"""
         result = self.aa.start_session("test-call-123", "1001")
         session = result["session"]
@@ -154,7 +155,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertEqual(result["action"], "play")
         self.assertEqual(result["session"]["retry_count"], 1)
 
-    def test_max_timeouts(self):
+    def test_max_timeouts(self) -> None:
         """Test maximum timeouts"""
         result = self.aa.start_session("test-call-123", "1001")
         session = result["session"]
@@ -169,7 +170,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertEqual(result["destination"], "1001")
         self.assertEqual(result.get("reason"), "timeout")
 
-    def test_get_menu_text(self):
+    def test_get_menu_text(self) -> None:
         """Test getting menu text description"""
         menu_text = self.aa.get_menu_text()
 
@@ -179,7 +180,7 @@ class TestAutoAttendant(unittest.TestCase):
         self.assertIn("Press 2", menu_text)
         self.assertIn("Support Queue", menu_text)
 
-    def test_end_session(self):
+    def test_end_session(self) -> None:
         """Test ending a session"""
         result = self.aa.start_session("test-call-123", "1001")
         session = result["session"]
@@ -192,10 +193,10 @@ class TestAutoAttendant(unittest.TestCase):
 class MockConfig:
     """Mock configuration object for testing"""
 
-    def __init__(self, data):
+    def __init__(self, data: dict[str, Any]) -> None:
         self.data = data
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: Any = None) -> Any:
         """Get configuration value"""
         keys = key.split(".")
         value = self.data
@@ -214,16 +215,16 @@ class MockConfig:
 class TestAudioPromptGeneration(unittest.TestCase):
     """Test audio prompt generation"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.test_dir = tempfile.mkdtemp()
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test fixtures"""
         if os.path.exists(self.test_dir):
             shutil.rmtree(self.test_dir)
 
-    def test_generate_prompts(self):
+    def test_generate_prompts(self) -> None:
         """Test generating audio prompt files"""
         from pbx.features.auto_attendant import generate_auto_attendant_prompts
 
@@ -253,7 +254,7 @@ class TestAudioPromptGeneration(unittest.TestCase):
                 self.assertEqual(header, b"RIFF", f"File {filename} should be a valid WAV file")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     loader = unittest.TestLoader()
     suite = loader.loadTestsFromModule(sys.modules[__name__])

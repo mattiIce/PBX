@@ -21,7 +21,7 @@ logger = get_logger()
 phone_book_bp = Blueprint("phone_book", __name__, url_prefix="/api/phone-book")
 
 
-def _get_phone_book():
+def _get_phone_book() -> tuple[Any, Response | None]:
     """Get phone book instance or return error response."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_book"):
@@ -35,7 +35,7 @@ def _get_phone_book():
 
 @phone_book_bp.route("", methods=["GET"])
 @require_auth
-def handle_get_phone_book():
+def handle_get_phone_book() -> Response:
     """Get all phone book entries."""
     phone_book, error = _get_phone_book()
     if error:
@@ -50,7 +50,7 @@ def handle_get_phone_book():
 
 @phone_book_bp.route("", methods=["POST"])
 @require_auth
-def handle_add_phone_book_entry():
+def handle_add_phone_book_entry() -> Response:
     """Add or update a phone book entry."""
     phone_book, error = _get_phone_book()
     if error:
@@ -86,7 +86,7 @@ def handle_add_phone_book_entry():
 
 @phone_book_bp.route("/sync", methods=["POST"])
 @require_auth
-def handle_sync_phone_book():
+def handle_sync_phone_book() -> Response:
     """Sync phone book from Active Directory."""
     phone_book, error = _get_phone_book()
     if error:
@@ -114,7 +114,7 @@ def handle_sync_phone_book():
 
 @phone_book_bp.route("/<extension>", methods=["DELETE"])
 @require_auth
-def handle_delete_phone_book_entry(extension):
+def handle_delete_phone_book_entry(extension: str) -> Response:
     """Delete a phone book entry."""
     phone_book, error = _get_phone_book()
     if error:
@@ -133,7 +133,7 @@ def handle_delete_phone_book_entry(extension):
         return send_json({"error": str(e)}, 500)
 
 
-def _generate_xml_from_extensions(pbx_core):
+def _generate_xml_from_extensions(pbx_core: Any) -> str:
     """Generate phone book XML from extension registry (fallback)."""
     if not pbx_core or not hasattr(pbx_core, "extension_registry"):
         return '<?xml version="1.0" encoding="UTF-8"?><YealinkIPPhoneDirectory><Title>Directory</Title></YealinkIPPhoneDirectory>'
@@ -155,7 +155,7 @@ def _generate_xml_from_extensions(pbx_core):
     return "\n".join(xml_lines)
 
 
-def _generate_cisco_xml_from_extensions(pbx_core):
+def _generate_cisco_xml_from_extensions(pbx_core: Any) -> str:
     """Generate Cisco phone book XML from extension registry (fallback)."""
     if not pbx_core or not hasattr(pbx_core, "extension_registry"):
         return '<?xml version="1.0" encoding="UTF-8"?><CiscoIPPhoneDirectory><Title>Directory</Title></CiscoIPPhoneDirectory>'
@@ -180,7 +180,7 @@ def _generate_cisco_xml_from_extensions(pbx_core):
 
 @phone_book_bp.route("/export/xml", methods=["GET"])
 @require_auth
-def handle_export_phone_book_xml():
+def handle_export_phone_book_xml() -> Response:
     """Export phone book as XML (Yealink format)."""
     try:
         pbx_core = get_pbx_core()
@@ -202,7 +202,7 @@ def handle_export_phone_book_xml():
 
 @phone_book_bp.route("/export/cisco-xml", methods=["GET"])
 @require_auth
-def handle_export_phone_book_cisco_xml():
+def handle_export_phone_book_cisco_xml() -> Response:
     """Export phone book as Cisco XML format."""
     try:
         pbx_core = get_pbx_core()
@@ -224,7 +224,7 @@ def handle_export_phone_book_cisco_xml():
 
 @phone_book_bp.route("/export/json", methods=["GET"])
 @require_auth
-def handle_export_phone_book_json():
+def handle_export_phone_book_json() -> Response:
     """Export phone book as JSON."""
     phone_book, error = _get_phone_book()
     if error:
@@ -239,7 +239,7 @@ def handle_export_phone_book_json():
 
 @phone_book_bp.route("/search", methods=["GET"])
 @require_auth
-def handle_search_phone_book():
+def handle_search_phone_book() -> Response:
     """Search phone book entries."""
     phone_book, error = _get_phone_book()
     if error:

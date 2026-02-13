@@ -10,6 +10,7 @@ import os
 import sys
 import unittest
 from io import BytesIO
+from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
 # Add parent directory to path
@@ -21,7 +22,7 @@ from pbx.api.rest_api import PBXAPIHandler
 class TestAPIGracefulDegradation(unittest.TestCase):
     """Test that API endpoints handle missing features gracefully"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         # Create a minimal mock PBX core without optional features
         self.pbx_core = MagicMock()
@@ -42,12 +43,12 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.response_data = None
         self.response_status = 200
 
-    def _capture_json_response(self, data, status=200):
+    def _capture_json_response(self, data: Any, status: int = 200) -> None:
         """Helper to capture JSON response"""
         self.response_data = data
         self.response_status = status
 
-    def _setup_handler_with_auth(self, is_admin=True):
+    def _setup_handler_with_auth(self, is_admin: bool = True) -> type:
         """Helper to set up handler with authentication state"""
         from pbx.api.rest_api import PBXAPIHandler
 
@@ -57,7 +58,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.handler._require_admin = lambda: (is_admin, payload)
         return PBXAPIHandler
 
-    def test_paging_zones_when_disabled(self):
+    def test_paging_zones_when_disabled(self) -> None:
         """Test that /api/paging/zones returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
         if hasattr(self.pbx_core, "paging_system"):
@@ -77,7 +78,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["zones"], [])
         self.assertEqual(self.response_status, 200)
 
-    def test_paging_devices_when_disabled(self):
+    def test_paging_devices_when_disabled(self) -> None:
         """Test that /api/paging/devices returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
         if hasattr(self.pbx_core, "paging_system"):
@@ -97,7 +98,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["devices"], [])
         self.assertEqual(self.response_status, 200)
 
-    def test_active_pages_when_disabled(self):
+    def test_active_pages_when_disabled(self) -> None:
         """Test that /api/paging/active returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
         if hasattr(self.pbx_core, "paging_system"):
@@ -117,7 +118,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["active_pages"], [])
         self.assertEqual(self.response_status, 200)
 
-    def test_lcr_rates_when_disabled(self):
+    def test_lcr_rates_when_disabled(self) -> None:
         """Test that /api/lcr/rates returns empty array when LCR is disabled"""
         # Configure pbx_core without LCR
         if hasattr(self.pbx_core, "lcr"):
@@ -139,7 +140,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["count"], 0)
         self.assertEqual(self.response_status, 200)
 
-    def test_lcr_statistics_when_disabled(self):
+    def test_lcr_statistics_when_disabled(self) -> None:
         """Test that /api/lcr/statistics returns empty stats when LCR is disabled"""
         # Configure pbx_core without LCR
         if hasattr(self.pbx_core, "lcr"):
@@ -159,7 +160,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["total_calls"], 0)
         self.assertEqual(self.response_status, 200)
 
-    def test_integration_activity_when_database_disabled(self):
+    def test_integration_activity_when_database_disabled(self) -> None:
         """Test that /api/framework/integrations/activity-log returns empty when DB is disabled"""
         # Configure pbx_core without database
         self.pbx_core.database = MagicMock()
@@ -179,7 +180,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["activities"], [])
         self.assertEqual(self.response_status, 200)
 
-    def test_dtmf_config_returns_defaults(self):
+    def test_dtmf_config_returns_defaults(self) -> None:
         """Test that /api/config/dtmf returns defaults when config is missing"""
         # Configure pbx_core with config that returns None
         self.pbx_core.config.get_dtmf_config.return_value = None
@@ -198,7 +199,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["payload_type"], 101)
         self.assertEqual(self.response_status, 200)
 
-    def test_dtmf_config_returns_defaults_when_unauthenticated(self):
+    def test_dtmf_config_returns_defaults_when_unauthenticated(self) -> None:
         """Test that /api/config/dtmf returns defaults for unauthenticated users"""
         # Set up handler without authentication
         PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)
@@ -214,7 +215,7 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         self.assertEqual(self.response_data["payload_type"], 101)
         self.assertEqual(self.response_status, 200)
 
-    def test_config_returns_empty_when_unauthenticated(self):
+    def test_config_returns_empty_when_unauthenticated(self) -> None:
         """Test that /api/config returns empty config for unauthenticated users"""
         # Set up handler without authentication
         PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)

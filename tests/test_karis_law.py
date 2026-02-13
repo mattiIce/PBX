@@ -10,6 +10,7 @@ Kari's Law requires multi-line telephone systems (MLTS) to:
 
 import os
 import sys
+from typing import Any
 from unittest.mock import MagicMock
 
 # Add parent directory to path
@@ -18,7 +19,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 from pbx.features.karis_law import KarisLawCompliance
 
 
-def create_mock_pbx():
+def create_mock_pbx() -> MagicMock:
     """Create mock PBX core for testing"""
     pbx = MagicMock()
 
@@ -67,7 +68,7 @@ def create_mock_pbx():
     return pbx
 
 
-def test_emergency_number_detection():
+def test_emergency_number_detection() -> None:
     """Test that emergency numbers are correctly detected"""
     print("Testing emergency number detection...")
 
@@ -93,7 +94,7 @@ def test_emergency_number_detection():
     print("✓ Emergency number detection works correctly")
 
 
-def test_emergency_number_normalization():
+def test_emergency_number_normalization() -> None:
     """Test normalization of emergency numbers"""
     print("Testing emergency number normalization...")
 
@@ -113,7 +114,7 @@ def test_emergency_number_normalization():
     print("✓ Emergency number normalization works correctly")
 
 
-def test_direct_911_dialing():
+def test_direct_911_dialing() -> None:
     """Test direct 911 dialing (Kari's Law requirement)"""
     print("Testing direct 911 dialing...")
 
@@ -150,7 +151,7 @@ def test_direct_911_dialing():
     print("✓ Direct 911 dialing works correctly")
 
 
-def test_legacy_prefix_support():
+def test_legacy_prefix_support() -> None:
     """Test that legacy prefixes (9911, 9-911) still work but are normalized"""
     print("Testing legacy prefix support...")
 
@@ -183,7 +184,7 @@ def test_legacy_prefix_support():
     print("✓ Legacy prefix support works correctly")
 
 
-def test_automatic_notification():
+def test_automatic_notification() -> None:
     """Test automatic notification to designated contacts"""
     print("Testing automatic notification...")
 
@@ -213,7 +214,7 @@ def test_automatic_notification():
     print("✓ Automatic notification works correctly")
 
 
-def test_location_information():
+def test_location_information() -> None:
     """Test location information provision (Ray Baum's Act)"""
     print("Testing location information provision...")
 
@@ -231,7 +232,7 @@ def test_location_information():
     print("✓ Location information provision works correctly")
 
 
-def test_emergency_call_history():
+def test_emergency_call_history() -> None:
     """Test emergency call history tracking"""
     print("Testing emergency call history...")
 
@@ -259,7 +260,7 @@ def test_emergency_call_history():
     print("✓ Emergency call history tracking works correctly")
 
 
-def test_compliance_validation():
+def test_compliance_validation() -> None:
     """Test compliance validation"""
     print("Testing compliance validation...")
 
@@ -276,7 +277,7 @@ def test_compliance_validation():
     print("✓ Compliance validation works correctly")
 
 
-def test_disabled_compliance():
+def test_disabled_compliance() -> None:
     """Test behavior when compliance is disabled"""
     print("Testing disabled compliance...")
 
@@ -303,7 +304,7 @@ def test_disabled_compliance():
     print("✓ Disabled compliance behavior works correctly")
 
 
-def test_no_trunk_available():
+def test_no_trunk_available() -> None:
     """Test behavior when no trunk is available"""
     print("Testing no trunk available scenario...")
 
@@ -329,7 +330,7 @@ def test_no_trunk_available():
     print("✓ No trunk available scenario works correctly")
 
 
-def test_statistics():
+def test_statistics() -> None:
     """Test statistics reporting"""
     print("Testing statistics...")
 
@@ -362,7 +363,7 @@ def test_statistics():
     print("✓ Statistics reporting works correctly")
 
 
-def test_multi_site_e911_routing():
+def test_multi_site_e911_routing() -> None:
     """Test multi-site E911 routing with site-specific trunks"""
     print("Testing multi-site E911 routing...")
 
@@ -414,7 +415,7 @@ def test_multi_site_e911_routing():
     # Track database call count to return appropriate results
     call_count = [0]
 
-    def mock_execute(query, params=None):
+    def mock_execute(query: str, params: Any = None) -> list[Any]:
         call_count[0] += 1
         # Return location for first query, site for second and third
         if "nomadic_e911_locations" in query:
@@ -429,7 +430,7 @@ def test_multi_site_e911_routing():
     site_trunk = MagicMock(trunk_id="site_a_emergency_trunk", name="Site A Emergency")
     site_trunk.can_make_call = MagicMock(return_value=True)
 
-    def get_trunk(trunk_id):
+    def get_trunk(trunk_id: str) -> MagicMock:
         if trunk_id == "site_a_emergency_trunk":
             return site_trunk
         return MagicMock(trunk_id=trunk_id, name="Default Trunk", can_make_call=lambda: True)
@@ -467,7 +468,7 @@ def test_multi_site_e911_routing():
     print("✓ Multi-site E911 routing works correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all Kari's Law tests"""
     print("=" * 70)
     print("Kari's Law Compliance Tests")

@@ -7,6 +7,7 @@ Tests CRM integration framework, screen pop support, and specific integrations (
 import os
 import sys
 import unittest
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -25,7 +26,7 @@ from pbx.features.crm_integrations import HubSpotIntegration, ZendeskIntegration
 # ============================================================================
 
 
-def test_caller_info_creation():
+def test_caller_info_creation() -> bool:
     """Test CallerInfo creation and conversion"""
     print("Testing CallerInfo creation...")
 
@@ -55,13 +56,13 @@ def test_caller_info_creation():
     return True
 
 
-def test_phone_book_lookup_provider():
+def test_phone_book_lookup_provider() -> bool:
     """Test phone book lookup provider"""
     print("\nTesting PhoneBookLookupProvider...")
 
     # Mock phone book
     class MockPhoneBook:
-        def search_contacts(self, query):
+        def search_contacts(self, query: str) -> list[dict[str, str]]:
             if "555-1234" in query:
                 return [
                     {
@@ -91,13 +92,13 @@ def test_phone_book_lookup_provider():
     return True
 
 
-def test_active_directory_lookup_provider():
+def test_active_directory_lookup_provider() -> bool:
     """Test Active Directory lookup provider"""
     print("\nTesting ActiveDirectoryLookupProvider...")
 
     # Mock AD integration
     class MockADIntegration:
-        def search_users(self, query):
+        def search_users(self, query: str) -> list[dict[str, str]]:
             if "555-5678" in query:
                 return [
                     {
@@ -127,12 +128,12 @@ def test_active_directory_lookup_provider():
     return True
 
 
-def test_crm_integration_initialization():
+def test_crm_integration_initialization() -> bool:
     """Test CRM integration initialization"""
     print("\nTesting CRM integration initialization...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.crm_integration.enabled": True,
                 "features.crm_integration.cache_enabled": True,
@@ -152,12 +153,12 @@ def test_crm_integration_initialization():
     return True
 
 
-def test_crm_integration_lookup():
+def test_crm_integration_lookup() -> bool:
     """Test CRM integration lookup with multiple providers"""
     print("\nTesting CRM integration lookup...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.crm_integration.enabled": True,
                 "features.crm_integration.cache_enabled": False,  # Disable cache for test
@@ -174,10 +175,10 @@ def test_crm_integration_lookup():
 
     # Add mock provider
     class MockProvider(CRMLookupProvider):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__({"enabled": True, "name": "Mock"})
 
-        def lookup(self, phone_number):
+        def lookup(self, phone_number: str) -> CallerInfo | None:
             if phone_number == "5551234":  # Normalized
                 caller_info = CallerInfo(phone_number)
                 caller_info.name = "Test User"
@@ -201,12 +202,12 @@ def test_crm_integration_lookup():
     return True
 
 
-def test_crm_integration_cache():
+def test_crm_integration_cache() -> bool:
     """Test CRM integration caching"""
     print("\nTesting CRM integration cache...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.crm_integration.enabled": True,
                 "features.crm_integration.cache_enabled": True,
@@ -220,11 +221,11 @@ def test_crm_integration_cache():
 
     # Add mock provider
     class MockProvider(CRMLookupProvider):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__({"enabled": True, "name": "Mock"})
             self.lookup_count = 0
 
-        def lookup(self, phone_number):
+        def lookup(self, phone_number: str) -> CallerInfo | None:
             self.lookup_count += 1
             if phone_number == "5559999":
                 caller_info = CallerInfo(phone_number)
@@ -258,12 +259,12 @@ def test_crm_integration_cache():
     return True
 
 
-def test_screen_pop_trigger():
+def test_screen_pop_trigger() -> bool:
     """Test screen pop triggering"""
     print("\nTesting screen pop trigger...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.crm_integration.enabled": True,
                 "features.crm_integration.providers": [],
@@ -271,16 +272,16 @@ def test_screen_pop_trigger():
             return config_map.get(key, default)
 
     class MockWebhookSystem:
-        def __init__(self):
-            self.last_event = None
-            self.last_data = None
+        def __init__(self) -> None:
+            self.last_event: str | None = None
+            self.last_data: dict[str, Any] | None = None
 
-        def trigger_event(self, event_type, data):
+        def trigger_event(self, event_type: str, data: dict[str, Any]) -> None:
             self.last_event = event_type
             self.last_data = data
 
     class MockPBXCore:
-        def __init__(self):
+        def __init__(self) -> None:
             self.webhook_system = MockWebhookSystem()
 
     config = MockConfig()
@@ -289,10 +290,10 @@ def test_screen_pop_trigger():
 
     # Add mock provider
     class MockProvider(CRMLookupProvider):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__({"enabled": True, "name": "Mock"})
 
-        def lookup(self, phone_number):
+        def lookup(self, phone_number: str) -> CallerInfo:
             caller_info = CallerInfo(phone_number)
             caller_info.name = "Screen Pop Test"
             return caller_info
@@ -314,12 +315,12 @@ def test_screen_pop_trigger():
     return True
 
 
-def test_phone_number_normalization():
+def test_phone_number_normalization() -> bool:
     """Test phone number normalization"""
     print("\nTesting phone number normalization...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             return {}.get(key, default)
 
     crm = CRMIntegration(MockConfig())
@@ -338,12 +339,12 @@ def test_phone_number_normalization():
     return True
 
 
-def test_provider_status():
+def test_provider_status() -> bool:
     """Test getting provider status"""
     print("\nTesting provider status...")
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.crm_integration.enabled": True,
                 "features.crm_integration.providers": [],
@@ -355,17 +356,17 @@ def test_provider_status():
 
     # Add mock providers
     class MockProvider1(CRMLookupProvider):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__({"enabled": True, "name": "Provider1"})
 
-        def lookup(self, phone_number):
+        def lookup(self, phone_number: str) -> None:
             return None
 
     class MockProvider2(CRMLookupProvider):
-        def __init__(self):
+        def __init__(self) -> None:
             super().__init__({"enabled": True, "name": "Provider2"})
 
-        def lookup(self, phone_number):
+        def lookup(self, phone_number: str) -> None:
             return None
 
     crm.providers.append(MockProvider1())
@@ -390,17 +391,17 @@ def test_provider_status():
 class TestHubSpotIntegration(unittest.TestCase):
     """Test HubSpot integration functionality"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test database"""
         import sqlite3
 
         class MockDB:
-            def __init__(self):
+            def __init__(self) -> None:
                 self.db_type = "sqlite"
                 self.conn = sqlite3.connect(":memory:")
                 self.enabled = True
 
-            def execute(self, query, params=None):
+            def execute(self, query: str, params: Any = None) -> list[Any]:
                 cursor = self.conn.cursor()
                 if params:
                     cursor.execute(query, params)
@@ -409,7 +410,7 @@ class TestHubSpotIntegration(unittest.TestCase):
                 self.conn.commit()
                 return cursor.fetchall()
 
-            def disconnect(self):
+            def disconnect(self) -> None:
                 self.conn.close()
 
         self.db = MockDB()
@@ -443,16 +444,16 @@ class TestHubSpotIntegration(unittest.TestCase):
         self.config = {}
         self.integration = HubSpotIntegration(self.db, self.config)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test database"""
         self.db.disconnect()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test integration initialization"""
         self.assertIsNotNone(self.integration)
         self.assertFalse(self.integration.enabled)
 
-    def test_update_config(self):
+    def test_update_config(self) -> None:
         """Test updating configuration"""
         config = {
             "enabled": True,
@@ -464,7 +465,7 @@ class TestHubSpotIntegration(unittest.TestCase):
         result = self.integration.update_config(config)
         self.assertTrue(result)
 
-    def test_get_config(self):
+    def test_get_config(self) -> None:
         """Test retrieving configuration"""
         # First create a config
         config = {"enabled": True, "api_key": "test-key-456", "portal_id": "67890"}
@@ -476,14 +477,14 @@ class TestHubSpotIntegration(unittest.TestCase):
         self.assertTrue(retrieved["enabled"])
         self.assertEqual(retrieved["portal_id"], "67890")
 
-    def test_sync_contact_disabled(self):
+    def test_sync_contact_disabled(self) -> None:
         """Test sync contact when integration is disabled"""
         contact = {"email": "test@example.com", "first_name": "John", "last_name": "Doe"}
 
         result = self.integration.sync_contact(contact)
         self.assertFalse(result)
 
-    def test_create_deal_disabled(self):
+    def test_create_deal_disabled(self) -> None:
         """Test create deal when integration is disabled"""
         deal = {"dealname": "Test Deal", "amount": 1000}
 
@@ -494,17 +495,17 @@ class TestHubSpotIntegration(unittest.TestCase):
 class TestZendeskIntegration(unittest.TestCase):
     """Test Zendesk integration functionality"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test database"""
         import sqlite3
 
         class MockDB:
-            def __init__(self):
+            def __init__(self) -> None:
                 self.db_type = "sqlite"
                 self.conn = sqlite3.connect(":memory:")
                 self.enabled = True
 
-            def execute(self, query, params=None):
+            def execute(self, query: str, params: Any = None) -> list[Any]:
                 cursor = self.conn.cursor()
                 if params:
                     cursor.execute(query, params)
@@ -513,7 +514,7 @@ class TestZendeskIntegration(unittest.TestCase):
                 self.conn.commit()
                 return cursor.fetchall()
 
-            def disconnect(self):
+            def disconnect(self) -> None:
                 self.conn.close()
 
         self.db = MockDB()
@@ -547,16 +548,16 @@ class TestZendeskIntegration(unittest.TestCase):
         self.config = {}
         self.integration = ZendeskIntegration(self.db, self.config)
 
-    def tearDown(self):
+    def tearDown(self) -> None:
         """Clean up test database"""
         self.db.disconnect()
 
-    def test_initialization(self):
+    def test_initialization(self) -> None:
         """Test integration initialization"""
         self.assertIsNotNone(self.integration)
         self.assertFalse(self.integration.enabled)
 
-    def test_update_config(self):
+    def test_update_config(self) -> None:
         """Test updating configuration"""
         config = {
             "enabled": True,
@@ -570,7 +571,7 @@ class TestZendeskIntegration(unittest.TestCase):
         result = self.integration.update_config(config)
         self.assertTrue(result)
 
-    def test_get_config(self):
+    def test_get_config(self) -> None:
         """Test retrieving configuration"""
         # First create a config
         config = {
@@ -587,7 +588,7 @@ class TestZendeskIntegration(unittest.TestCase):
         self.assertTrue(retrieved["enabled"])
         self.assertEqual(retrieved["subdomain"], "mycompany")
 
-    def test_create_ticket_disabled(self):
+    def test_create_ticket_disabled(self) -> None:
         """Test create ticket when integration is disabled"""
         ticket = {
             "subject": "Test Ticket",
@@ -598,12 +599,12 @@ class TestZendeskIntegration(unittest.TestCase):
         result = self.integration.create_ticket(ticket)
         self.assertIsNone(result)
 
-    def test_update_ticket_disabled(self):
+    def test_update_ticket_disabled(self) -> None:
         """Test update ticket when integration is disabled"""
         result = self.integration.update_ticket("123", {"status": "solved"})
         self.assertFalse(result)
 
-    def test_activity_logging(self):
+    def test_activity_logging(self) -> None:
         """Test that integration activity is logged"""
         # Enable integration
         config = {
@@ -628,7 +629,7 @@ class TestZendeskIntegration(unittest.TestCase):
 # ============================================================================
 
 
-def run_framework_tests():
+def run_framework_tests() -> bool:
     """Run CRM framework tests"""
     print("=" * 70)
     print("Testing CRM Integration Framework")
@@ -654,7 +655,7 @@ def run_framework_tests():
         return False
 
 
-def run_integration_tests():
+def run_integration_tests() -> bool:
     """Run specific CRM integration tests (HubSpot, Zendesk)"""
     print("\n" + "=" * 70)
     print("Testing Specific CRM Integrations (HubSpot, Zendesk)")

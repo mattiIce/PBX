@@ -19,7 +19,7 @@ from pbx.rtp.handler import RTPRecorder
 from pbx.utils.config import Config
 
 
-def test_rtp_recorder():
+def test_rtp_recorder() -> None:
     """Test RTP recorder can start and stop"""
     print("Testing RTP recorder...")
 
@@ -41,7 +41,7 @@ def test_rtp_recorder():
     print("✓ RTP recorder works")
 
 
-def test_wav_file_builder():
+def test_wav_file_builder() -> None:
     """Test WAV file building"""
     print("Testing WAV file builder...")
 
@@ -64,7 +64,7 @@ def test_wav_file_builder():
     print("✓ WAV file builder works")
 
 
-def test_voicemail_recording_timer():
+def test_voicemail_recording_timer() -> None:
     """Test that voicemail recording has proper timer setup"""
     print("Testing voicemail recording timer setup...")
 
@@ -133,7 +133,7 @@ def test_voicemail_recording_timer():
     print("✓ Voicemail recording timer setup works")
 
 
-def test_voicemail_save_on_hangup():
+def test_voicemail_save_on_hangup() -> None:
     """Test that voicemail is saved when caller hangs up"""
     print("Testing voicemail save on hangup...")
 
@@ -181,7 +181,7 @@ def test_voicemail_save_on_hangup():
         shutil.rmtree(temp_dir)
 
 
-def test_no_answer_answers_call():
+def test_no_answer_answers_call() -> None:
     """Test that no-answer handler answers the call instead of sending busy"""
     print("Testing that no-answer answers the call...")
 
@@ -245,7 +245,7 @@ def test_no_answer_answers_call():
     print("✓ No-answer handler answers the call correctly")
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Voicemail Recording Tests")

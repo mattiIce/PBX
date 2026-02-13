@@ -56,7 +56,7 @@ config_bp = Blueprint("config", __name__)
 
 
 @config_bp.route("/api/config", methods=["GET"])
-def get_config():
+def get_config() -> tuple[Response, int]:
     """Get current configuration.
 
     Returns configuration including integrations field required by frontend.
@@ -94,7 +94,7 @@ def get_config():
 
 @config_bp.route("/api/config/full", methods=["GET"])
 @require_admin
-def get_full_config():
+def get_full_config() -> tuple[Response, int]:
     """Get full system configuration for admin panel."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -232,7 +232,7 @@ def get_full_config():
 
 
 @config_bp.route("/api/config/dtmf", methods=["GET"])
-def get_dtmf_config():
+def get_dtmf_config() -> tuple[Response, int]:
     """Get DTMF configuration."""
     # SECURITY: Check admin authentication but allow graceful degradation
     # Return default config if not authenticated to prevent UI errors
@@ -261,7 +261,7 @@ def get_dtmf_config():
 
 @config_bp.route("/api/config", methods=["PUT"])
 @require_admin
-def update_config():
+def update_config() -> tuple[Response, int]:
     """Update system configuration."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -288,7 +288,7 @@ def update_config():
 
 @config_bp.route("/api/config/section", methods=["PUT"])
 @require_admin
-def update_config_section():
+def update_config_section() -> tuple[Response, int]:
     """Update a specific section of system configuration."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -307,7 +307,7 @@ def update_config_section():
         current_section = pbx_core.config.config.get(section, {})
 
         # Deep merge the data into the section
-        def deep_merge(target, source):
+        def deep_merge(target: dict[str, Any], source: dict[str, Any]) -> dict[str, Any]:
             """Deep merge source dict into target dict."""
             for key, value in source.items():
                 if key in target and isinstance(target[key], dict) and isinstance(value, dict):
@@ -340,7 +340,7 @@ def update_config_section():
 
 @config_bp.route("/api/config/dtmf", methods=["PUT", "POST"])
 @require_admin
-def update_dtmf_config():
+def update_dtmf_config() -> tuple[Response, int]:
     """Update DTMF configuration."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -367,7 +367,7 @@ def update_dtmf_config():
 
 @config_bp.route("/api/ssl/status", methods=["GET"])
 @require_admin
-def get_ssl_status():
+def get_ssl_status() -> tuple[Response, int]:
     """Get SSL/HTTPS configuration status."""
     pbx_core = get_pbx_core()
     if not pbx_core:
@@ -423,7 +423,7 @@ def get_ssl_status():
 
 @config_bp.route("/api/ssl/generate-certificate", methods=["POST"])
 @require_admin
-def generate_ssl_certificate():
+def generate_ssl_certificate() -> tuple[Response, int]:
     """Generate self-signed SSL certificate."""
     pbx_core = get_pbx_core()
     if not pbx_core:

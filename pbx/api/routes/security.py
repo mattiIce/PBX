@@ -27,7 +27,7 @@ security_bp = Blueprint("security", __name__)
 
 @security_bp.route("/api/hot-desk/sessions", methods=["GET"])
 @require_auth
-def handle_get_hot_desk_sessions():
+def handle_get_hot_desk_sessions() -> tuple[Response, int]:
     """Get all hot-desk sessions."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "hot_desking"):
@@ -42,7 +42,7 @@ def handle_get_hot_desk_sessions():
 
 @security_bp.route("/api/hot-desk/session/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_hot_desk_session(subpath):
+def handle_get_hot_desk_session(subpath: str) -> tuple[Response, int]:
     """Get specific hot-desk session by device."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "hot_desking"):
@@ -62,7 +62,7 @@ def handle_get_hot_desk_session(subpath):
 
 @security_bp.route("/api/hot-desk/extension/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_hot_desk_extension(subpath):
+def handle_get_hot_desk_extension(subpath: str) -> tuple[Response, int]:
     """Get hot-desk information for extension."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "hot_desking"):
@@ -92,7 +92,7 @@ def handle_get_hot_desk_extension(subpath):
 
 @security_bp.route("/api/hot-desk/login", methods=["POST"])
 @require_auth
-def handle_hot_desk_login():
+def handle_hot_desk_login() -> tuple[Response, int]:
     """Handle hot-desk login."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "hot_desking"):
@@ -127,7 +127,7 @@ def handle_hot_desk_login():
 
 @security_bp.route("/api/hot-desk/logout", methods=["POST"])
 @require_auth
-def handle_hot_desk_logout():
+def handle_hot_desk_logout() -> tuple[Response, int]:
     """Handle hot-desk logout."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "hot_desking"):
@@ -168,7 +168,7 @@ def handle_hot_desk_logout():
 
 @security_bp.route("/api/mfa/status/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_mfa_status(subpath):
+def handle_get_mfa_status(subpath: str) -> tuple[Response, int]:
     """Get MFA status for extension."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -191,7 +191,7 @@ def handle_get_mfa_status(subpath):
 
 @security_bp.route("/api/mfa/methods/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_mfa_methods(subpath):
+def handle_get_mfa_methods(subpath: str) -> tuple[Response, int]:
     """Get enrolled MFA methods for extension."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -208,7 +208,7 @@ def handle_get_mfa_methods(subpath):
 
 @security_bp.route("/api/mfa/enroll", methods=["POST"])
 @require_auth
-def handle_mfa_enroll():
+def handle_mfa_enroll() -> tuple[Response, int]:
     """Handle MFA enrollment."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -242,7 +242,7 @@ def handle_mfa_enroll():
 
 @security_bp.route("/api/mfa/verify-enrollment", methods=["POST"])
 @require_auth
-def handle_mfa_verify_enrollment():
+def handle_mfa_verify_enrollment() -> tuple[Response, int]:
     """Handle MFA enrollment verification."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -268,7 +268,7 @@ def handle_mfa_verify_enrollment():
 
 @security_bp.route("/api/mfa/verify", methods=["POST"])
 @require_auth
-def handle_mfa_verify():
+def handle_mfa_verify() -> tuple[Response, int]:
     """Handle MFA code verification."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -294,7 +294,7 @@ def handle_mfa_verify():
 
 @security_bp.route("/api/mfa/disable", methods=["POST"])
 @require_auth
-def handle_mfa_disable():
+def handle_mfa_disable() -> tuple[Response, int]:
     """Handle MFA disable."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -319,7 +319,7 @@ def handle_mfa_disable():
 
 @security_bp.route("/api/mfa/enroll-yubikey", methods=["POST"])
 @require_auth
-def handle_mfa_enroll_yubikey():
+def handle_mfa_enroll_yubikey() -> tuple[Response, int]:
     """Handle YubiKey enrollment."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -348,7 +348,7 @@ def handle_mfa_enroll_yubikey():
 
 @security_bp.route("/api/mfa/enroll-fido2", methods=["POST"])
 @require_auth
-def handle_mfa_enroll_fido2():
+def handle_mfa_enroll_fido2() -> tuple[Response, int]:
     """Handle FIDO2/WebAuthn credential enrollment."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "mfa_manager"):
@@ -384,7 +384,7 @@ def handle_mfa_enroll_fido2():
 
 @security_bp.route("/api/security/threat-summary", methods=["GET"])
 @require_auth
-def handle_get_threat_summary():
+def handle_get_threat_summary() -> tuple[Response, int]:
     """Get threat detection summary."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "threat_detector"):
@@ -403,7 +403,7 @@ def handle_get_threat_summary():
 
 @security_bp.route("/api/security/compliance-status", methods=["GET"])
 @require_auth
-def handle_get_security_compliance_status():
+def handle_get_security_compliance_status() -> tuple[Response, int]:
     """Get FIPS and security compliance status."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "security_monitor"):
@@ -418,7 +418,7 @@ def handle_get_security_compliance_status():
 
 @security_bp.route("/api/security/health", methods=["GET"])
 @require_auth
-def handle_get_security_health():
+def handle_get_security_health() -> tuple[Response, int]:
     """Get comprehensive security health check."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "security_monitor"):
@@ -434,7 +434,7 @@ def handle_get_security_health():
 
 @security_bp.route("/api/security/check-ip/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_check_ip(subpath):
+def handle_check_ip(subpath: str) -> tuple[Response, int]:
     """Check if IP is blocked."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "threat_detector"):
@@ -453,7 +453,7 @@ def handle_check_ip(subpath):
 
 @security_bp.route("/api/security/block-ip", methods=["POST"])
 @require_admin
-def handle_block_ip():
+def handle_block_ip() -> tuple[Response, int]:
     """Handle IP blocking."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "threat_detector"):
@@ -479,7 +479,7 @@ def handle_block_ip():
 
 @security_bp.route("/api/security/unblock-ip", methods=["POST"])
 @require_admin
-def handle_unblock_ip():
+def handle_unblock_ip() -> tuple[Response, int]:
     """Handle IP unblocking."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "threat_detector"):
@@ -508,7 +508,7 @@ def handle_unblock_ip():
 
 @security_bp.route("/api/dnd/status/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_dnd_status(subpath):
+def handle_get_dnd_status(subpath: str) -> tuple[Response, int]:
     """Get DND status for extension."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "dnd_scheduler"):
@@ -525,7 +525,7 @@ def handle_get_dnd_status(subpath):
 
 @security_bp.route("/api/dnd/rules/<path:subpath>", methods=["GET"])
 @require_auth
-def handle_get_dnd_rules(subpath):
+def handle_get_dnd_rules(subpath: str) -> tuple[Response, int]:
     """Get DND rules for extension."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "dnd_scheduler"):
@@ -542,7 +542,7 @@ def handle_get_dnd_rules(subpath):
 
 @security_bp.route("/api/dnd/rule", methods=["POST"])
 @require_auth
-def handle_add_dnd_rule():
+def handle_add_dnd_rule() -> tuple[Response, int]:
     """Handle adding DND rule."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "dnd_scheduler"):
@@ -568,7 +568,7 @@ def handle_add_dnd_rule():
 
 @security_bp.route("/api/dnd/register-calendar", methods=["POST"])
 @require_auth
-def handle_register_calendar_user():
+def handle_register_calendar_user() -> tuple[Response, int]:
     """Handle registering user for calendar-based DND."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "dnd_scheduler"):
@@ -593,7 +593,7 @@ def handle_register_calendar_user():
 
 @security_bp.route("/api/dnd/override", methods=["POST"])
 @require_auth
-def handle_dnd_override():
+def handle_dnd_override() -> tuple[Response, int]:
     """Handle manual DND override."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "dnd_scheduler"):
@@ -629,7 +629,7 @@ def handle_dnd_override():
 
 @security_bp.route("/api/dnd/rule/<rule_id>", methods=["DELETE"])
 @require_auth
-def handle_delete_dnd_rule(rule_id):
+def handle_delete_dnd_rule(rule_id: str) -> tuple[Response, int]:
     """Handle deleting DND rule."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "dnd_scheduler"):
@@ -648,7 +648,7 @@ def handle_delete_dnd_rule(rule_id):
 
 @security_bp.route("/api/dnd/override/<extension>", methods=["DELETE"])
 @require_auth
-def handle_clear_dnd_override(extension):
+def handle_clear_dnd_override(extension: str) -> tuple[Response, int]:
     """Handle clearing DND override."""
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "dnd_scheduler"):
