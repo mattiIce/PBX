@@ -32,28 +32,28 @@ python scripts/security_compliance_check.py --quiet
 **What it checks**:
 
 #### FIPS 140-2 Compliance
-- ✓ Kernel FIPS mode enabled
-- ✓ OpenSSL FIPS provider available
-- ✓ Cryptography library installed and configured
-- ✓ PBX FIPS mode enabled in config.yml
-- ✓ FIPS-approved algorithms:
+- Kernel FIPS mode enabled
+- OpenSSL FIPS provider available
+- Cryptography library installed and configured
+- PBX FIPS mode enabled in config.yml
+- FIPS-approved algorithms:
   - PBKDF2-HMAC-SHA256 (600,000 iterations)
   - SHA-256 hashing
   - AES-256-GCM encryption
 
 #### SOC 2 Type 2 Compliance
-- ✓ Control implementation status
-- ✓ Control testing coverage
-- ✓ Category compliance (Security, Availability, Processing Integrity, Confidentiality)
-- ✓ Implementation percentage
+- Control implementation status
+- Control testing coverage
+- Category compliance (Security, Availability, Processing Integrity, Confidentiality)
+- Implementation percentage
 
 #### Security Configuration
-- ✓ Authentication required
-- ✓ Password policy (minimum 12 characters)
-- ✓ Failed login protection
-- ✓ TLS/SIPS enabled (recommended)
-- ✓ SRTP enabled (recommended)
-- ✓ API authentication
+- Authentication required
+- Password policy (minimum 12 characters)
+- Failed login protection
+- TLS/SIPS enabled (recommended)
+- SRTP enabled (recommended)
+- API authentication
 
 **Exit codes**:
 - `0` - Fully compliant or compliant with warnings
@@ -463,6 +463,3 @@ For issues or questions:
 4. Review logs in `/var/log/pbx/`
 
 ---
-
-**Last Updated**: 2026-02-13
-**Status**: Production Ready

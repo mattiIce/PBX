@@ -547,10 +547,7 @@ geo.enable_gdpr_compliance(
 7. **Train Team:** Ensure staff understands procedures
 8. **Schedule Drills:** Regular DR testing
 
-## See Also
+## Related Documentation
 
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)
-- [SIP_TRUNK_GUIDE.md](SIP_TRUNK_GUIDE.md)
-- [DNS_SRV_FAILOVER_GUIDE.md](DNS_SRV_FAILOVER_GUIDE.md)
-- [MULTI_SITE_E911_GUIDE.md](MULTI_SITE_E911_GUIDE.md)
-- [API_DOCUMENTATION.md](API_DOCUMENTATION.md)
+- [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md) - Comprehensive documentation

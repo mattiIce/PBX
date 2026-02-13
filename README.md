@@ -1,115 +1,82 @@
 <div align="center">
   <img src="Warden VoIP Logo.png" alt="Warden VoIP" width="200"/>
-  
+
   # Warden VoIP
-  
+
   [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
   [![Python 3.12](https://img.shields.io/badge/python-3.12-blue.svg)](https://www.python.org/downloads/)
   [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
   [![Tests](https://github.com/mattiIce/PBX/workflows/Tests/badge.svg)](https://github.com/mattiIce/PBX/actions)
   [![Code Quality](https://github.com/mattiIce/PBX/workflows/Code%20Quality/badge.svg)](https://github.com/mattiIce/PBX/actions)
   [![codecov](https://codecov.io/gh/mattiIce/PBX/branch/main/graph/badge.svg)](https://codecov.io/gh/mattiIce/PBX)
-  
+
   **A comprehensive, feature-rich Private Branch Exchange (PBX) and VoIP system built from scratch in Python**
 </div>
 
 ---
 
-## 📚 Documentation
+## Documentation
 
-> **📖 Complete Guide**: See **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** for comprehensive documentation covering installation, deployment, features, integrations, security, troubleshooting, and API reference - all in one place!
+- **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - Comprehensive documentation covering installation, deployment, features, integrations, security, troubleshooting, and API reference
+- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Troubleshooting guide for administrators with solutions to all known issues
+- **[docs/](docs/)** - Operational guides (deployment, HA, incident response, capacity planning, reverse proxy)
+- **[docs/reference/](docs/reference/)** - Technical reference (SIP implementation, phone book API, framework features)
 
-> **🔧 Troubleshooting**: See **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** for a comprehensive troubleshooting guide for administrators with solutions to all known issues.
+## Features
 
-> **📊 For Executives**: See [EXECUTIVE_SUMMARY.md](docs/EXECUTIVE_SUMMARY.md) for business overview, ROI analysis, and strategic recommendations.
-
-> **🗂️ Documentation Index**: See [DOCUMENTATION_INDEX.md](docs/DOCUMENTATION_INDEX.md) for a full navigation guide.
-
-## 🌟 Features
-
-### Core PBX Features
-- **SIP Protocol Support** - Full Session Initiation Protocol implementation
-- **RTP Media Handling** - Real-time Protocol for audio streaming
-- **Extension Management** - User registration and authentication
-- **Call Routing** - Intelligent call routing based on dialplan rules
-- **Call Management** - Hold, resume, transfer, and forward calls
+### Core PBX
+- **SIP Protocol** - Full SIP implementation with TLS/SIPS support
+- **RTP Media** - Real-time audio streaming with multi-codec support (G.711, G.722, G.729, Opus, and more)
+- **Extension Management** - User registration, authentication, and directory
+- **Call Routing** - Intelligent routing based on dialplan rules
+- **Call Management** - Hold, resume, blind/attended transfer, and forward
 
 ### Advanced Call Features
-- **Auto Attendant (IVR)** - Automated call answering with menu options for routing calls
-- **Call Recording** - Record calls for compliance and quality assurance
-- **Call Queues (ACD)** - Automatic Call Distribution with multiple strategies
+- **Auto Attendant (IVR)** - Automated menus with DTMF navigation
+- **Call Recording** - Compliance and quality assurance recording
+- **Call Queues (ACD)** - Automatic Call Distribution with multiple strategies and skills-based routing
 - **Conference Calling** - Multi-party conference rooms
 - **Call Parking** - Park and retrieve calls from any extension
-- **Call Transfer** - Blind and attended transfers
 - **Music on Hold** - Customizable hold music
-- **Voicemail System** - Full-featured voicemail with custom greeting recording, email notifications, and auto-routing
+- **Voicemail** - Full-featured with email notifications, greeting recording, and transcription (Vosk)
+- **CDR** - Comprehensive call detail records and statistics
 
-### Modern VOIP Features
-- **Presence System** - Real-time user availability status
-- **SIP Trunk Support** - Connect to external SIP providers
-- **Phone Provisioning** - Auto-configuration for IP phones (Zultys, Yealink, Polycom, Cisco, Grandstream) and ATAs (Grandstream HT801/HT802, Cisco SPA112/SPA122/ATA191/ATA192) with customizable templates
-- **Phone Registration Tracking** - Automatic tracking of registered phones with MAC addresses and IP addresses
-- **SIP Send Line & Send MAC** - Caller ID headers (P-Asserted-Identity, Remote-Party-ID) and device MAC tracking for enhanced call identification (see [docs/reference/SIP_SEND_LINE_MAC_GUIDE.md](docs/reference/SIP_SEND_LINE_MAC_GUIDE.md))
-- **Phone Book System** - Centralized directory with AD sync, pushed to IP phones in multiple formats (Yealink, Cisco XML)
-- **Paging System** - Full overhead paging support with SIP/RTP integration (hardware-ready)
-- **Webhook System** - Event-driven integrations with HMAC signature support for real-time notifications
-- **CDR (Call Detail Records)** - Comprehensive call logging and statistics
-- **REST API** - HTTPS/HTTP API for integration and management
-- **Web Admin Panel** - Modern browser-based admin interface for managing extensions, users, and configuration
-- **Multi-codec Support** - G.711 (PCMU/PCMA), G.722 (HD), G.729, G.726, Opus, iLBC, Speex and more
-- **DTMF Detection** - Goertzel algorithm for interactive voice menus
+### Phone & Device Support
+- **IP Phone Provisioning** - Auto-configuration for Zultys, Yealink, Polycom, Cisco, Grandstream
+- **ATA Support** - Grandstream HT801/HT802, Cisco SPA112/SPA122/ATA191/ATA192 (see [docs/ATA_SUPPORT_GUIDE.md](docs/ATA_SUPPORT_GUIDE.md))
+- **Phone Book** - Centralized directory with AD sync, pushed to phones (Yealink XML, Cisco XML)
+- **BLF Monitoring** - Real-time busy lamp field status
+- **Paging System** - SIP/RTP overhead paging with zone support
 
-### Operator Console Features
-- **VIP Caller Database** - Priority handling for important callers
-- **Call Screening** - Intercept and screen calls before transfer
-- **Announced Transfers** - Announce caller before completing transfer
-- **Park and Page** - Park calls and page via multiple methods
-- **BLF Monitoring** - Real-time extension busy lamp field status
-- **Company Directory** - Quick lookup with search functionality
-
-### 🆓 Free & Open Source Integrations
-**Zero licensing costs - 100% free alternatives to expensive proprietary services**
-- **Jitsi Meet** - Video conferencing (Zoom alternative) - ✅ Integrated
-- **Matrix/Element** - Team messaging (Slack/Teams alternative) - ✅ Integrated  
-- **EspoCRM** - CRM with screen pop & call logging (Salesforce alternative) - ✅ Integrated
-- **Vosk** - Offline speech recognition for transcription - ✅ Integrated
-- **OpenLDAP** - Directory services (Active Directory compatible) - ✅ Compatible
-
-**📖 Documentation:**
-- **[COMPLETE_GUIDE.md](COMPLETE_GUIDE.md)** - 📘 **Complete comprehensive documentation (all-in-one)**
-- **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - 🔧 **Comprehensive troubleshooting guide for administrators**
-- **[docs/reference/](docs/reference/)** - Technical reference documentation
-
-**💰 Cost Savings**: $0/year vs $3,726+/user/year for proprietary stack
-
-### Enterprise Integrations (Optional - Proprietary)
-- **Zoom Integration** - Create instant or scheduled Zoom meetings from PBX
-- **Active Directory** - LDAP authentication and user directory sync
-- **Microsoft Outlook** - Calendar sync, availability, and contact integration
+### Integrations
+- **Jitsi Meet** - Video conferencing (free Zoom alternative)
+- **Matrix/Element** - Team messaging (free Slack/Teams alternative)
+- **EspoCRM** - CRM with screen pop & call logging (free Salesforce alternative)
+- **Vosk** - Offline speech recognition for voicemail transcription
+- **Zoom** - Meeting creation from PBX (optional, proprietary)
+- **Active Directory** - LDAP authentication and directory sync
+- **Microsoft Outlook** - Calendar and contact integration
 - **Microsoft Teams** - Presence sync and meeting escalation
+- **Webhook System** - Event-driven HTTP notifications with HMAC signatures
 
 ### Security & Compliance
-- **HTTPS/SSL Support** - Secure API communication with TLS 1.2-1.3 (see [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md#62-ssltls-configuration))
-- **In-House CA Integration** - Automatic certificate request from enterprise Certificate Authority
-- **FIPS 140-2 Compliant Encryption** - Government-grade security
-- **TLS/SIPS** - Encrypted SIP signaling with TLS 1.3 support
-- **SRTP** - Encrypted media streams
-- **FIPS-Approved Algorithms** - AES-256, SHA-256, PBKDF2
-- **Password Security** - PBKDF2-HMAC-SHA256 hashing with 600,000 iterations (OWASP 2024 recommendation)
-- **E911 Protection** - Automatic blocking of emergency calls during testing to prevent accidental 911 calls (see [COMPLETE_GUIDE.md](COMPLETE_GUIDE.md#63-compliance---e911))
+- **FIPS 140-2 Compliant** - Government-grade encryption (AES-256, SHA-256, PBKDF2)
+- **TLS 1.3 / SIPS / SRTP** - Encrypted signaling and media
+- **In-House CA** - Automatic certificate requests from enterprise CA
+- **Password Security** - PBKDF2-HMAC-SHA256 with 600,000 iterations
+- **Rate Limiting & IP Banning** - Brute force protection
+- **E911 Compliance** - Ray Baum's Act dispatchable location support
+- **Web Admin Panel** - Modern browser-based management with MFA support
 
-## 📋 Requirements
+## Requirements
 
 - Python 3.12
-- PyYAML (for configuration)
-- cryptography>=44.0.0 (for FIPS-compliant encryption)
-- Network access for SIP/RTP ports
+- PyYAML, cryptography>=44.0.0
+- Network access for SIP (5060/udp) and RTP (10000-20000/udp) ports
 
-## 🚀 Quick Start
+## Quick Start
 
-### Ubuntu Interactive Setup Wizard (Easiest!)
-
-For Ubuntu users, the easiest way to install is using the interactive setup wizard:
+### Ubuntu Setup Wizard (Easiest)
 
 ```bash
 git clone https://github.com/mattiIce/PBX.git
@@ -117,172 +84,67 @@ cd PBX
 sudo python3 setup_ubuntu.py
 ```
 
-The wizard will automatically:
-- Install system dependencies (espeak, ffmpeg, PostgreSQL, etc.)
-- Set up Python virtual environment
-- Configure PostgreSQL database
-- Generate SSL certificates
-- Create voice prompts
-- Initialize the database
-
-See **[COMPLETE_GUIDE.md - Section 1](COMPLETE_GUIDE.md#1-quick-start)** for detailed instructions.
-
-> **📌 Production Deployment?** If you're deploying to Ubuntu 24.04 LTS for production use, see the [Production Deployment](#-production-deployment-ubuntu-2404-lts) section below for automated setup.
+The wizard installs dependencies, sets up PostgreSQL, generates SSL certificates, creates voice prompts, and initializes the database. See **[COMPLETE_GUIDE.md - Section 1](COMPLETE_GUIDE.md#1-quick-start)** for details.
 
 ### Manual Installation
 
-1. Clone the repository:
 ```bash
 git clone https://github.com/mattiIce/PBX.git
 cd PBX
-```
 
-2. Install dependencies:
-```bash
-# Install Python dependencies (requires uv: https://docs.astral.sh/uv/)
-make install          # Development mode with dev tools
+# Install dependencies (requires uv: https://docs.astral.sh/uv/)
+make install          # Development mode
 # Or: make install-prod  # Production only
 
 # Install frontend dependencies
 npm install
-```
 
-3. Set up database (optional but recommended):
-```bash
-# For PostgreSQL (recommended for production)
-sudo apt-get install postgresql
-sudo -u postgres createdb pbx_system
-sudo -u postgres psql -c "CREATE USER pbx_user WITH PASSWORD 'YourPassword';"
-sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx_system TO pbx_user;"
-
-# Verify database connection
-python scripts/verify_database.py
-
-# Or use SQLite for testing (no setup needed)
-# Just configure database.type: sqlite in config.yml
-```
-
-See [COMPLETE_GUIDE.md - Section 1.3](COMPLETE_GUIDE.md#13-environment-configuration) for detailed database setup.
-
-4. Set up environment variables:
-```bash
-# Interactive setup (recommended)
+# Set up environment
 python scripts/setup_env.py
 
-# Or copy and edit manually
-cp .env.example .env
-nano .env
-```
-
-See [COMPLETE_GUIDE.md - Section 1.3](COMPLETE_GUIDE.md#13-environment-configuration) for detailed instructions on configuring credentials.
-
-5. Generate SSL certificate (required for HTTPS):
-```bash
-# Generate self-signed certificate for development/testing
+# Generate SSL certificate
 python scripts/generate_ssl_cert.py --hostname YOUR_IP_OR_HOSTNAME
 
-# For production, use a trusted CA like Let's Encrypt
-# See COMPLETE_GUIDE.md - Section 6.2 for detailed instructions
-```
-
-6. Configure the system:
-```bash
-# Edit config.yml with your settings
+# Configure and start
 nano config.yml
-```
-
-7. Start the PBX:
-```bash
 python main.py
 ```
 
-The PBX will start on:
-- SIP Server: UDP port 5060
-- RTP Media: UDP ports 10000-20000
-- REST API: HTTPS port 8080 (HTTP also supported, configure in config.yml)
-- Admin Panel: https://localhost:8080/admin/
+The PBX starts on:
+- **SIP**: UDP port 5060
+- **RTP Media**: UDP ports 10000-20000
+- **REST API / Admin Panel**: HTTPS port 8080
 
-**Note:** Browsers will show a security warning for self-signed certificates during development. This is normal. For production, use a certificate from a trusted CA like Let's Encrypt.
+See [COMPLETE_GUIDE.md - Section 1.3](COMPLETE_GUIDE.md#13-environment-configuration) for database and environment setup.
 
-## 🏭 Production Deployment (Ubuntu 24.04 LTS)
-
-For production deployments on Ubuntu 24.04 LTS, use the automated deployment script:
+## Production Deployment (Ubuntu 24.04 LTS)
 
 ```bash
-# Clone the repository
 git clone https://github.com/mattiIce/PBX.git
 cd PBX
-
-# Run deployment script (requires sudo)
 sudo bash scripts/deploy_production_pilot.sh
-
-# Or run in dry-run mode first to see what will be configured
-sudo bash scripts/deploy_production_pilot.sh --dry-run
+# Or dry-run first: sudo bash scripts/deploy_production_pilot.sh --dry-run
 ```
 
-**The script automatically configures:**
-- ✓ PostgreSQL database with secure password
-- ✓ Python virtual environment
-- ✓ Nginx reverse proxy (default; Apache also supported via separate script)
-- ✓ Firewall (UFW) with required ports
-- ✓ Daily backup system (2 AM)
-- ✓ Monitoring (Prometheus + Node Exporter)
-- ✓ Systemd service for automatic startup
+The script configures PostgreSQL, Python venv, Nginx reverse proxy, UFW firewall, daily backups, monitoring (Prometheus), and systemd service.
 
-**After deployment completes, see:** [COMPLETE_GUIDE.md - Section 2.2](COMPLETE_GUIDE.md#22-post-deployment-steps)
+**After deployment:** See [COMPLETE_GUIDE.md - Section 2.2](COMPLETE_GUIDE.md#22-post-deployment-steps) for post-deployment steps (database password, SSL, voice prompts).
 
-This section contains:
-- Critical first steps (database password, SSL setup)
-- Voice prompt generation (REQUIRED)
-- Testing and verification steps
-- Troubleshooting help
-
-### 🌐 Production URL Setup (RECOMMENDED for Production)
-
-For production deployments, you **should** access the admin panel via a friendly URL (e.g., `https://abps.albl.com`) instead of `IP:8080`:
-
-**Quick Setup (Automated - 5-10 minutes):**
-
-Choose your preferred web server:
+### Reverse Proxy Setup (Recommended)
 
 ```bash
-# For Nginx (recommended for new deployments)
+# Nginx (recommended)
 sudo scripts/setup_reverse_proxy.sh
 
-# For Apache (if you prefer Apache or have existing Apache infrastructure)
+# Apache (alternative)
 sudo scripts/setup_apache_reverse_proxy.sh
 ```
 
-**Documentation:**
-- **Nginx Setup:** [COMPLETE_GUIDE.md - Section 2.4](COMPLETE_GUIDE.md#24-reverse-proxy-setup-recommended) - Nginx reverse proxy configuration
-- **Apache Setup:** [docs/APACHE_REVERSE_PROXY_SETUP.md](docs/APACHE_REVERSE_PROXY_SETUP.md) - Apache reverse proxy configuration
-- **Configuration Example:** [apache-pbx.conf.example](apache-pbx.conf.example) - Apache virtual host template
+See [COMPLETE_GUIDE.md - Section 2.4](COMPLETE_GUIDE.md#24-reverse-proxy-setup-recommended) or [docs/APACHE_REVERSE_PROXY_SETUP.md](docs/APACHE_REVERSE_PROXY_SETUP.md).
 
-**Benefits:**
-- ✅ Access via friendly domain name (no port number needed)
-- ✅ HTTPS with free Let's Encrypt SSL certificate (auto-renews)
-- ✅ Enhanced security with reverse proxy and rate limiting
-- ✅ Professional appearance and industry best practice
-- ✅ WebSocket support for WebRTC phones
-- ✅ Better monitoring and logging
+## Admin Panel
 
-**Priority:** HIGH - This is the recommended configuration for any production deployment.
-
-## 🖥️ Admin Panel
-
-Access the web-based admin panel at `https://localhost:8080/admin/` to manage your PBX system through a modern, intuitive interface.
-
-**Note:** For self-signed certificates, you may need to accept a browser security warning on first access.
-
-### Features:
-- **Dashboard** - Real-time system status and statistics
-- **Extension Management** - Add, edit, and delete extensions
-- **User Management** - Manage user accounts and passwords
-- **Email Configuration** - Configure SMTP settings for voicemail notifications
-- **Active Calls** - Monitor ongoing calls
-- **Responsive Design** - Works on desktop, tablet, and mobile devices
-
-### Screenshots:
+Access at `https://localhost:8080/admin/` for system management.
 
 **Dashboard View:**
 ![Admin Dashboard](https://github.com/user-attachments/assets/fb9d6f67-e87b-4179-9777-cb54f3a45731)
@@ -290,421 +152,57 @@ Access the web-based admin panel at `https://localhost:8080/admin/` to manage yo
 **Extension Management:**
 ![Extension Management](https://github.com/user-attachments/assets/43bd4d95-92ae-4f1a-a38c-209ecd960c28)
 
-**Add Extension Modal:**
+**Add Extension:**
 ![Add Extension](https://github.com/user-attachments/assets/0794e891-4247-4de7-b552-92c4c5958302)
 
-**Configuration Settings:**
+**Configuration:**
 ![Configuration](https://github.com/user-attachments/assets/326b2987-a7e3-4aeb-b2b6-6e728478f9e1)
 
-## 📖 Configuration
+## Dialplan
 
-Edit `config.yml` to customize:
+| Pattern | Destination | Example |
+|---------|-------------|---------|
+| `0` | Auto attendant | Dial `0` |
+| `1xxx` | Internal extensions | Dial `1002` |
+| `2xxx` | Conference rooms | Dial `2001` |
+| `7x` | Call parking slots | Dial `70` |
+| `8xxx` | Call queues | Dial `8001` |
+| `*xxx` | Voicemail access | Dial `*1001` |
 
-- **Server Settings** - SIP/RTP ports and binding
-- **Extensions** - User accounts and email addresses
-- **Dialplan** - Call routing rules
-- **Features** - Enable/disable features
-- **Voicemail** - Email notifications and SMTP settings
-- **Call Queues** - Queue configuration
-- **SIP Trunks** - External provider settings
-
-### Voicemail-to-Email Setup
-
-The PBX system includes comprehensive voicemail-to-email functionality:
-
-```yaml
-voicemail:
-  email_notifications: true
-  no_answer_timeout: 30  # Route to voicemail after 30 seconds
-  
-  # SMTP Configuration
-  smtp:
-    host: "smtp.yourserver.com"
-    port: 587
-    use_tls: true
-    username: "your-username"
-    password: "your-password"
-  
-  # Email Settings
-  email:
-    from_address: "voicemail@yourcompany.com"
-    from_name: "PBX Voicemail System"
-    include_attachment: true
-    
-  # Daily Reminders
-  reminders:
-    enabled: true
-    time: "09:00"  # Send daily reminders at 9 AM
-    unread_only: true
-
-# Extensions with email addresses
-extensions:
-  - number: "1001"
-    name: "User Name"
-    email: "user@yourcompany.com"  # Receives voicemail notifications
-```
-
-**Features:**
-- Instant email notifications when voicemail received
-- Voicemail audio attached to email
-- All message details included (caller, timestamp, duration)
-- Daily reminders for unread voicemails
-- Automatic routing to voicemail on no-answer
-- Configurable timeout before voicemail
-
-## 🔌 API Usage
-
-Access the REST API at `http://localhost:8080/api/`
-
-### Example API Calls
+## API
 
 ```bash
-# Get system status
-curl http://localhost:8080/api/status
-
-# List extensions
-curl http://localhost:8080/api/extensions
-
-# Add a new extension
-curl -X POST http://localhost:8080/api/extensions \
-  -H "Content-Type: application/json" \
-  -d '{"number":"1005","name":"New User","email":"user@company.com","password":"securepass123","allow_external":true}'
-
-# Update an extension
-curl -X PUT http://localhost:8080/api/extensions/1005 \
-  -H "Content-Type: application/json" \
-  -d '{"name":"Updated Name","email":"newemail@company.com"}'
-
-# Delete an extension
-curl -X DELETE http://localhost:8080/api/extensions/1005
-
-# List active calls
-curl http://localhost:8080/api/calls
-
-# Get configuration
-curl http://localhost:8080/api/config
-
-# Update email configuration
-curl -X PUT http://localhost:8080/api/config \
-  -H "Content-Type: application/json" \
-  -d '{"smtp":{"host":"smtp.gmail.com","port":587},"email":{"from_address":"pbx@company.com"}}'
+curl http://localhost:8080/api/status              # System status
+curl http://localhost:8080/api/extensions           # List extensions
+curl http://localhost:8080/api/calls                # Active calls
+curl http://localhost:8080/api/cdr                  # Call records
+curl http://localhost:8080/api/config               # Configuration
 ```
 
-## 📱 Extension Dialing
+See [COMPLETE_GUIDE.md - Section 9.2](COMPLETE_GUIDE.md#92-rest-api-reference) for full API reference.
 
-### Dialplan Patterns
+## Monitoring
 
-- **0** - Auto attendant (automated menu system)
-- **1xxx** - Internal extensions (e.g., 1001, 1002)
-- **2xxx** - Conference rooms (e.g., 2001)
-- **7x** - Call parking slots (e.g., 70-79)
-- **8xxx** - Call queues (e.g., 8001 for Sales)
-- **\*xxx** - Voicemail access (e.g., \*1001)
+- **System logs**: `logs/pbx.log` (configurable level in `config.yml`)
+- **CDR files**: `cdr/cdr_YYYY-MM-DD.jsonl`
+- **API endpoints**: `/api/cdr`, `/api/statistics`
+- **Grafana dashboards**: See [grafana/dashboards/](grafana/dashboards/)
 
-### Example Calls
+## Known Issues
 
-- Dial `0` - Access auto attendant menu
-- Dial `1002` - Call extension 1002
-- Dial `2001` - Join conference room 2001
-- Dial `8001` - Enter sales queue
-- Dial `*1001` - Access voicemail for extension 1001
+- **WebRTC Browser Phone** is currently non-functional. Use physical IP phones or SIP softphone clients.
+- **Admin panel after updates**: If the panel doesn't display correctly, press `Ctrl+Shift+R` to force refresh cached files.
 
-## 🛠️ Architecture
+See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for comprehensive troubleshooting.
 
-For a detailed architecture overview including data flows, component interactions, and deployment options, see [COMPLETE_GUIDE.md - Section 8](COMPLETE_GUIDE.md#8-developer-guide).
+## License
 
-### Quick Overview
+MIT License - see [LICENSE](LICENSE).
 
-```
-PBX System
-├── pbx/
-│   ├── core/           # Core PBX logic
-│   │   ├── pbx.py      # Main PBX coordinator
-│   │   └── call.py     # Call management
-│   ├── sip/            # SIP protocol
-│   │   ├── server.py   # SIP server
-│   │   └── message.py  # SIP message handling
-│   ├── rtp/            # Media handling
-│   │   └── handler.py  # RTP stream management
-│   ├── features/       # Advanced features
-│   │   ├── extensions.py      # Extension registry
-│   │   ├── voicemail.py       # Voicemail system
-│   │   ├── conference.py      # Conference rooms
-│   │   ├── call_recording.py  # Call recording
-│   │   ├── call_queue.py      # ACD queues
-│   │   ├── presence.py        # Presence/status
-│   │   ├── call_parking.py    # Call parking
-│   │   ├── cdr.py             # Call detail records
-│   │   ├── music_on_hold.py   # MOH system
-│   │   └── sip_trunk.py       # External trunks
-│   ├── api/            # REST API
-│   │   └── rest_api.py # HTTP API server
-│   └── utils/          # Utilities
-│       ├── config.py   # Configuration management
-│       └── logger.py   # Logging system
-├── examples/           # Example clients
-├── logs/              # Log files
-├── recordings/        # Call recordings
-├── voicemail/         # Voicemail storage
-├── moh/               # Music on hold (5 tracks included)
-│   └── default/       # Default MOH class
-└── config.yml         # Main configuration
-```
+## Support
 
-## 🧪 Testing
-
-Run the example SIP client:
-
-```bash
-python examples/simple_client.py
-```
-
-This will:
-1. Register extension 1001 with the PBX
-2. Make a test call to extension 1002
-
-Run test suites to verify functionality:
-
-```bash
-# Basic tests
-python tests/test_basic.py
-
-# E911 protection tests
-python tests/test_e911_protection.py
-```
-
-**Important:** The E911 protection system automatically prevents emergency calls during testing. See [COMPLETE_GUIDE.md - Section 6.3](COMPLETE_GUIDE.md#63-compliance---e911) for details.
-
-## 🔐 Security
-
-- **FIPS 140-2 Compliance** - Government-grade cryptographic standards
-- **Authentication** - FIPS-compliant password hashing (PBKDF2-HMAC-SHA256)
-- **Encryption** - AES-256-GCM for data encryption
-- **TLS/SIPS** - Encrypted SIP signaling with FIPS-approved ciphers
-- **SRTP** - Encrypted RTP media streams
-- **Rate Limiting** - Protection against brute force attacks
-- **IP Banning** - Automatic blocking after failed attempts
-
-For detailed security information, see [COMPLETE_GUIDE.md - Section 6](COMPLETE_GUIDE.md#6-security--compliance) for comprehensive security reference and implementation details.
-
-## 📊 Monitoring
-
-### Logs
-- System logs: `logs/pbx.log`
-- Adjust log level in `config.yml` (DEBUG, INFO, WARNING, ERROR)
-
-### Call Detail Records
-- CDR files: `cdr/cdr_YYYY-MM-DD.jsonl`
-- Access via API: `/api/cdr`
-- Statistics: `/api/statistics`
-
-## 🎯 Use Cases
-
-- **Small Business Phone System** - Complete office telephony
-- **Call Center** - Queue management and recording
-- **Remote Teams** - Internal communication system
-- **Customer Support** - IVR and queue management
-- **Development/Testing** - SIP client development
-
-## 🔄 Integration
-
-The REST API allows integration with:
-- CRM systems
-- Helpdesk software
-- Custom applications
-- Monitoring systems
-- Analytics platforms
-
-## 📝 License
-
-This project is open source and available for use in building your in-house VOIP system.
-
-## 🤝 Contributing
-
-Contributions are welcome! This is a foundation for building a production-grade PBX system.
-
-## 📧 Support
-
-For issues and questions, please open a GitHub issue.
-
-## 🗺️ Roadmap
-
-### Core Features
-- [x] **FIPS 140-2 compliant encryption** - ✅ COMPLETED
-- [x] **TLS/SRTP encryption** - ✅ COMPLETED
-- [x] **Phone Provisioning** - ✅ COMPLETED
-- [x] **Voicemail-to-Email** - ✅ COMPLETED
-- [x] **DTMF Detection (Goertzel)** - ✅ COMPLETED
-- [x] **Voicemail IVR System** - ✅ COMPLETED
-- [x] **Auto Attendant (IVR)** - ✅ COMPLETED
-
-### Operator Console
-- [x] **VIP Caller Database** - ✅ COMPLETED
-- [x] **Call Screening & Interception** - ✅ COMPLETED
-- [x] **Announced Transfers** - ✅ COMPLETED
-- [x] **Park and Page** - ✅ COMPLETED
-- [x] **BLF Status Monitoring** - ✅ COMPLETED
-
-### Enterprise Integrations
-- [x] **Zoom Integration** (OAuth, Meetings) - ✅ COMPLETED
-- [x] **Active Directory/LDAP** (Auth, Search) - ✅ COMPLETED
-- [x] **Outlook Integration** (Calendar, Contacts) - ✅ COMPLETED
-- [x] **Microsoft Teams** (Presence, Meetings) - ✅ COMPLETED
-
-### Database Backend
-- [x] **PostgreSQL/SQLite Support** - ✅ COMPLETED
-  - Stores voicemail metadata (caller_id, duration, timestamp, listened status)
-  - Stores CDR (Call Detail Records)
-  - Stores VIP caller database
-  - Stores registered phone tracking (MAC addresses, IP addresses, extensions)
-  - Audio files stored efficiently on file system
-  - See [COMPLETE_GUIDE.md - Section 7.3](COMPLETE_GUIDE.md#73-database-management) for setup guide
-  - See [COMPLETE_GUIDE.md - Section 4.3](COMPLETE_GUIDE.md#43-phone-provisioning) for phone tracking details
-
-### Legacy System Migration
-- [x] **AT&T Merlin Legend Import** - ✅ COMPLETED
-  - Import voicemail messages, PINs, and custom greetings
-  - Supports CSV, JSON, and directory-based formats
-  - Flexible metadata parsing from filenames
-  - Batch import with dry-run preview
-  - See [COMPLETE_GUIDE.md - Section 5.5](COMPLETE_GUIDE.md#55-zoom-integration) for migration guide
-
-### Phone Provisioning
-- [x] **Auto-Configuration for IP Phones & ATAs** - ✅ COMPLETED
-  - **IP Phones**: Zultys, Yealink, Polycom, Cisco, Grandstream
-  - **Analog Telephone Adapters (ATAs)**: Grandstream HT801/HT802, Cisco SPA112/SPA122/ATA191/ATA192 ✨ UPDATED
-  - Connect traditional analog phones and fax machines to VoIP
-  - T.38 fax over IP support
-  - Echo cancellation for analog lines
-  - Template-based configuration with automatic device information population
-  - Customizable templates via web interface and API
-  - Template management (view, export, edit, reload)
-  - See [ATA Support Guide](docs/ATA_SUPPORT_GUIDE.md) for complete ATA setup
-  - See [COMPLETE_GUIDE.md - Section 4.3](COMPLETE_GUIDE.md#43-phone-provisioning) for provisioning setup guide
-
-### Phone Book & Directory
-- [x] **Phone Book System** - ✅ COMPLETED
-  - Centralized company directory
-  - Active Directory synchronization
-  - Multiple export formats (Yealink XML, Cisco XML, JSON)
-  - Database storage with search capability
-  - Push to IP phones automatically
-  - **NEW: LDAPS configuration for IP phones** (Zultys ZIP 33G/37G)
-  - Remote phone book URL as fallback method
-  - See [COMPLETE_GUIDE.md - Section 4.4](COMPLETE_GUIDE.md#44-phone-book-system) for setup guide and LDAPS configuration
-
-### Paging System
-- [x] **Paging System** - ✅ COMPLETED (Software)
-  - Full SIP/RTP integration with PBX core
-  - Zone-based paging configuration
-  - Digital-to-analog converter device management
-  - All-call and zone-specific paging
-  - Production-ready software (hardware deployment ready)
-  - See [COMPLETE_GUIDE.md - Section 4.6](COMPLETE_GUIDE.md#46-paging-system) for implementation guide
-
-### Webhook System
-- [x] **Event-Driven Integrations** - ✅ COMPLETED
-  - Real-time HTTP POST notifications for PBX events
-  - 15+ event types (calls, voicemail, extensions, queues, conferences)
-  - HMAC-SHA256 signature support for security
-  - Configurable subscriptions with custom headers
-  - Retry logic with exponential backoff
-  - Asynchronous delivery with worker threads
-  - See [COMPLETE_GUIDE.md - Section 4.7](COMPLETE_GUIDE.md#47-webhook-system) for setup guide
-
-### Known Issues
-
-⚠️ **Login Connection Error**
-- **Issue**: "Connection error. Please try again." when trying to log into admin panel
-- **Diagnosis**: The login page now shows troubleshooting info automatically
-  - Open browser console (F12) for detailed diagnostics
-  - Check if API server is running: `sudo systemctl status pbx`
-  - Verify port 9000 is accessible: `curl http://localhost:9000/api/status`
-- **Common Causes**: 
-  - PBX server not running
-  - Firewall blocking port 9000
-  - Wrong hostname/port configuration
-- **Fix**: See [COMPLETE_GUIDE.md - Section 7.1](COMPLETE_GUIDE.md#71-admin-panel) for step-by-step resolution
-
-⚠️ **Admin Panel After Updates**
-- **Issue**: After running server update scripts, the admin panel may not display correctly or buttons may not be clickable
-- **Cause**: Browser caching old CSS/JavaScript files
-- **Fix**: Press `Ctrl+Shift+R` (Windows/Linux) or `Cmd+Shift+R` (Mac) to force refresh
-- **Details**: See [COMPLETE_GUIDE.md - Section 7.1](COMPLETE_GUIDE.md#71-admin-panel) for comprehensive troubleshooting
-- **Status Check**: Visit `/admin/status-check.html` to verify your installation
-
-⚠️ **Audio Features**
-- **WebRTC Browser Phone**: Currently disabled and not working. Use physical IP phones or SIP clients for calls.
-- ~~**Hardphone Audio**: Audio sample rate mismatch issue~~ - ✅ **FIXED** (December 19, 2025)
-  - All voicemail and auto attendant prompts regenerated at correct 8kHz sample rate for PCMU codec
-  - Audio playback should now work correctly on IP phones
-- **WebRTC Audio**: WebRTC browser calling feature needs further investigation
-
-All other PBX features (call routing, voicemail storage, extensions, admin panel, etc.) are fully functional.
-
-### Framework Features (100% Free & Open Source)
-
-The PBX system includes comprehensive framework implementations for 20+ advanced features. **All features can be implemented using only free and open-source technologies - no paid services required!**
-
-**Implementation Status:**
-- **✅ Fully Implemented:** Production-ready with complete admin UI (Click-to-Dial, Paging, Speech Analytics, Nomadic E911)
-- **🔧 Enhanced Admin UI:** Full UI with live data, needs external service integration (6 features with free options documented)
-- **⚙️ Framework Only:** Backend ready, basic UI, needs service integration (10 features with free options documented)
-
-**AI-Powered Features (FREE options: Vosk, spaCy, Rasa, scikit-learn):**
-- 🔧 Conversational AI Assistant - Auto-responses and smart call handling
-- 🔧 Predictive Dialing - AI-optimized outbound campaigns
-- 🔧 Voice Biometrics - Speaker authentication and fraud detection
-- ⚙️ Call Quality Prediction - Proactive network issue detection
-
-**Analytics & Reporting (FREE options: Metabase, Superset, Redash):**
-- 🔧 Business Intelligence Integration - Export to BI tools
-- 🔧 Call Tagging & Categorization - AI-powered call classification
-- ⚙️ Call Recording Analytics - AI analysis of recorded calls
-
-**Mobile & Remote Work (FREE options: React Native, WebRTC):**
-- 🔧 Mobile Apps Framework - iOS and Android client support
-- ⚙️ Mobile Number Portability - Use business number on mobile
-
-**Advanced Features (FREE options documented):**
-- ⚙️ Call Blending - Mix inbound/outbound for efficiency
-- ⚙️ Predictive Voicemail Drop - Auto-leave message on voicemail detection
-- ⚙️ Geographic Redundancy - Multi-region trunk registration
-- ⚙️ DNS SRV Failover - Automatic server failover
-- ⚙️ Session Border Controller - Enhanced security (Kamailio, OpenSIPS)
-- ⚙️ Data Residency Controls - Geographic data storage options
-
-**Free & Open Source Integration Options:**
-- **Speech Recognition:** Vosk (offline, no cloud costs)
-- **NLP/AI:** spaCy, NLTK, Rasa, ChatterBot
-- **Machine Learning:** scikit-learn, TensorFlow
-- **BI Tools:** Metabase, Apache Superset, Redash
-- **Mobile:** React Native, Flutter (cross-platform)
-- **Predictive Dialer:** Vicidial (open source)
-- **SBC:** Kamailio, OpenSIPS, RTPEngine
-
-**Documentation:**
-- [docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](docs/reference/FRAMEWORK_FEATURES_COMPLETE_GUIDE.md) - Complete framework overview with free options
-- [IMPLEMENTATION_STATUS.md](docs/IMPLEMENTATION_STATUS.md) - Implementation status and details
-- [COMPLETE_GUIDE.md - Section 5](COMPLETE_GUIDE.md#5-integration-guides) - Business Intelligence integration
-- [docs/reference/CALL_TAGGING_GUIDE.md](docs/reference/CALL_TAGGING_GUIDE.md) - Call tagging and categorization
-- [docs/reference/MOBILE_APPS_GUIDE.md](docs/reference/MOBILE_APPS_GUIDE.md) - Mobile app framework
-
-**Note:** Framework features have complete backend implementations, database schemas, and REST APIs. All features can be implemented using free and open-source technologies - detailed integration guides available for each feature.
-
-### Future Enhancements
-- [ ] Fix WebRTC browser-based calling (currently non-functional)
-- [x] ~~Fix hardphone audio playback issues~~ - ✅ **COMPLETED** (December 19, 2025)
-- [x] ~~Resolve audio sample rate mismatch (8kHz vs 16kHz)~~ - ✅ **COMPLETED** (December 19, 2025)
-- [ ] Complete free/open-source service integrations for framework features
-- [ ] Native iOS and Android mobile apps (React Native/Flutter)
-- [ ] SMS/Messaging integration
-- [ ] Clustering/High availability
-- [ ] Full SIP Direct Routing to Teams
-- [ ] Professional voice recordings for auto attendant (TTS or voice actor)
-
-See [TODO.md](docs/TODO.md) for a comprehensive list of planned features organized by priority.
+For issues and questions, open a [GitHub issue](https://github.com/mattiIce/PBX/issues).
 
 ---
 
-**Built with ❤️ for creating robust in-house communication systems**
+**Built for robust in-house communication systems**

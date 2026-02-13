@@ -443,7 +443,7 @@ CREATE TABLE push_notification_log (
 4. **Deploy Apps:** Publish to App Store and Play Store
 5. **Monitor Usage:** Track device registrations and usage
 
-## See Also
+## Related Documentation
 
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)
 - [COMPLETE_GUIDE.md - Section 9.2: REST API](../../COMPLETE_GUIDE.md#92-rest-api-reference)

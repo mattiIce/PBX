@@ -79,19 +79,19 @@ describe('Feature Name', () => {
 Tests the following functions:
 
 - `loadVoicemailTab()`: Loading extensions list
-  - ✓ Successful extension loading
-  - ✓ Handling authentication errors (401)
-  - ✓ Handling server errors (500)
-  - ✓ Handling network errors
-  - ✓ Including authentication headers
+  - Successful extension loading
+  - Handling authentication errors (401)
+  - Handling server errors (500)
+  - Handling network errors
+  - Including authentication headers
 
 - `loadVoicemailForExtension()`: Loading voicemail messages
-  - ✓ Hiding sections when no extension provided
-  - ✓ Successful voicemail message loading
-  - ✓ Handling authentication errors (401)
-  - ✓ Handling server errors (500)
-  - ✓ Including authentication headers
-  - ✓ Showing sections when extension provided
+  - Hiding sections when no extension provided
+  - Successful voicemail message loading
+  - Handling authentication errors (401)
+  - Handling server errors (500)
+  - Including authentication headers
+  - Showing sections when extension provided
 
 ## Best Practices
 

@@ -2,17 +2,17 @@
 
 This directory contains scripts to generate voice prompts for the PBX system using **gTTS (Google Text-to-Speech)**.
 
-## Primary Script: `generate_espeak_voices.py` ⭐ RECOMMENDED
+## Primary Script: `generate_espeak_voices.py` (Recommended)
 
 Generates **PROFESSIONAL-QUALITY VOICE** prompts using gTTS (Google Text-to-Speech).
 
 **Advantages:**
-- ✅ Natural, human-like American English voice
-- ✅ Professional quality suitable for production
-- ✅ Free to use (no API key required)
-- ✅ Simple setup
-- ✅ Automatic generation from text prompts
-- ✅ Optimized for US English accent
+-Natural, human-like American English voice
+-Professional quality suitable for production
+-Free to use (no API key required)
+-Simple setup
+-Automatic generation from text prompts
+-Optimized for US English accent
 
 **Usage:**
 ```bash
@@ -53,9 +53,9 @@ python3 scripts/generate_tts_prompts.py --company "Your Company"
 
 ---
 
-## Admin Panel Integration 🎛️
+## Admin Panel Integration
 
-**NEW!** You can now configure voice prompts directly from the Admin Panel:
+You can configure voice prompts directly from the Admin Panel:
 
 1. Navigate to **Auto Attendant** tab
 2. Scroll to **Voice Prompts Configuration** section
@@ -98,7 +98,7 @@ These settings provide the most natural and professional-sounding voice for busi
 
 ## Customizing Voice Prompts
 
-### Option 1: Use Admin Panel (Recommended) 🎛️
+### Option 1: Use Admin Panel (Recommended)
 
 The easiest way to customize prompts:
 1. Open Admin Panel → Auto Attendant tab
@@ -172,18 +172,18 @@ Edit the script and change the `tld` parameter to your preferred accent.
 ## Why gTTS Only?
 
 **gTTS is the only supported voice generation method because:**
-1. ✅ **Best Quality:** Natural, human-like voice
-2. ✅ **Free:** No API keys or costs
-3. ✅ **Simple:** Easy to install and use
-4. ✅ **Reliable:** Backed by Google's TTS infrastructure
-5. ✅ **Professional:** Suitable for production business use
-6. ✅ **Maintained:** Active development and support
+1. **Best Quality** - Natural, human-like voice
+2. **Free** - No API keys or costs
+3. **Simple** - Easy to install and use
+4. **Reliable** - Backed by Google's TTS infrastructure
+5. **Professional** - Suitable for production business use
+6. **Maintained** - Active development and support
 
 Other TTS methods (espeak, pyttsx3, festival) produce robotic voices unsuitable for professional business use and have been removed.
 
 ---
 
-## Additional Resources
+## Related Documentation
 
 - [COMPLETE_GUIDE.md](../COMPLETE_GUIDE.md) - Comprehensive PBX documentation
 - [TROUBLESHOOTING.md](../TROUBLESHOOTING.md) - Troubleshooting guide

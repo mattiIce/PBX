@@ -290,10 +290,10 @@ MAC addresses are considered sensitive device identifiers:
 
 SIP Send Line and Send MAC features are **enabled by default** and require no configuration for basic operation. The PBX automatically:
 
-✅ Adds P-Asserted-Identity headers for caller identification  
-✅ Adds Remote-Party-ID headers for backward compatibility  
-✅ Adds X-MAC-Address headers for device tracking  
-✅ Extracts MAC addresses from REGISTER messages  
-✅ Configures phones via provisioning templates  
+- Adds P-Asserted-Identity headers for caller identification
+- Adds Remote-Party-ID headers for backward compatibility
+- Adds X-MAC-Address headers for device tracking
+- Extracts MAC addresses from REGISTER messages
+- Configures phones via provisioning templates  
 
 These features enhance call quality, troubleshooting, and device management without requiring manual intervention.

@@ -200,7 +200,7 @@ The generated MOH files in this directory are simple sine wave compositions crea
 
 **Important:** If you add commercial music files, ensure you have the proper licensing rights (BMI, ASCAP, SESAC, etc.) for public performance.
 
-## Additional Resources
+## Related Documentation
 
 - [PBX Features Documentation](../README.md#features)
 - [Music on Hold Implementation](../pbx/features/music_on_hold.py)
@@ -208,10 +208,10 @@ The generated MOH files in this directory are simple sine wave compositions crea
 
 ## Summary
 
-✅ **Pre-generated files included** - 5 pleasant tracks ready to use  
-✅ **Easy regeneration** - Simple script for custom durations  
-✅ **Proper format** - All files in telephony-standard format  
-✅ **Extensible** - Add your own files or create custom classes  
-✅ **No dependencies** - Uses Python's built-in wave module  
+- **Pre-generated files included** - 5 pleasant tracks ready to use
+- **Easy regeneration** - Simple script for custom durations
+- **Proper format** - All files in telephony-standard format
+- **Extensible** - Add your own files or create custom classes
+- **No dependencies** - Uses Python's built-in wave module  
 
 Your PBX system is ready to provide pleasant hold music to callers!

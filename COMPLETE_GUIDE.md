@@ -1,9 +1,5 @@
 # Warden VoIP PBX - Complete Documentation
 
-**Version:** 1.2.0
-**Last Updated:** 2026-02-13
-**Project:** https://github.com/mattiIce/PBX
-
 ---
 
 ## Table of Contents
@@ -144,13 +140,13 @@ sudo bash scripts/deploy_production_pilot.sh --dry-run
 ```
 
 **What Gets Configured:**
-- ✓ PostgreSQL database with secure credentials
-- ✓ Python virtual environment
-- ✓ Nginx reverse proxy (optional but recommended)
-- ✓ UFW firewall with required ports
-- ✓ Daily backup system (2 AM)
-- ✓ Prometheus + Node Exporter monitoring
-- ✓ Systemd service for auto-start
+- PostgreSQL database with secure credentials
+- Python virtual environment
+- Nginx reverse proxy (optional but recommended)
+- UFW firewall with required ports
+- Daily backup system (2 AM)
+- Prometheus + Node Exporter monitoring
+- Systemd service for auto-start
 
 ### 2.2 Post-Deployment Steps
 
@@ -290,18 +286,18 @@ server {
 ### 3.1 Feature Overview
 
 **Core PBX Capabilities:**
-- ✓ Full SIP protocol support (RFC 3261)
-- ✓ RTP media handling with multiple codecs
-- ✓ Extension management and authentication
-- ✓ Intelligent call routing and dial plans
-- ✓ Call hold, resume, transfer, forward
-- ✓ Conference calling (multi-party)
-- ✓ Call parking and retrieval
-- ✓ Music on hold (5 tracks included)
-- ✓ Voicemail with email notifications
-- ✓ Auto-attendant (IVR) system
-- ✓ Call Detail Records (CDR)
-- ✓ REST API for integration
+- Full SIP protocol support (RFC 3261)
+- RTP media handling with multiple codecs
+- Extension management and authentication
+- Intelligent call routing and dial plans
+- Call hold, resume, transfer, forward
+- Conference calling (multi-party)
+- Call parking and retrieval
+- Music on hold (5 tracks included)
+- Voicemail with email notifications
+- Auto-attendant (IVR) system
+- Call Detail Records (CDR)
+- REST API for integration
 
 ### 3.2 Audio Codec Support
 
@@ -509,14 +505,14 @@ webrtc:
 ### 4.1 Voicemail System
 
 **Capabilities:**
-- ✓ Custom greeting recording via phone
-- ✓ Automatic email notifications with audio attachment
-- ✓ Voicemail-to-email with transcription (optional)
-- ✓ Daily reminders for unread messages
-- ✓ Auto-route to voicemail on no-answer (configurable timeout)
-- ✓ PIN-based access from any phone
-- ✓ Message management (listen, delete, skip)
-- ✓ Database storage (PostgreSQL/SQLite)
+- Custom greeting recording via phone
+- Automatic email notifications with audio attachment
+- Voicemail-to-email with transcription (optional)
+- Daily reminders for unread messages
+- Auto-route to voicemail on no-answer (configurable timeout)
+- PIN-based access from any phone
+- Message management (listen, delete, skip)
+- Database storage (PostgreSQL/SQLite)
 
 **Configuration:**
 ```yaml
@@ -578,12 +574,12 @@ python scripts/init_voicemail_db.py
 ### 4.2 Auto-Attendant (IVR)
 
 **Features:**
-- ✓ Multi-level menu system
-- ✓ Custom voice prompts (TTS or recorded)
-- ✓ DTMF navigation
-- ✓ Business hours routing
-- ✓ Holiday schedules
-- ✓ Queue overflow routing
+- Multi-level menu system
+- Custom voice prompts (TTS or recorded)
+- DTMF navigation
+- Business hours routing
+- Holiday schedules
+- Queue overflow routing
 
 **Configuration:**
 ```yaml
@@ -702,12 +698,12 @@ nano provisioning_templates/yealink/t46s.cfg
 ### 4.4 Phone Book System
 
 **Features:**
-- ✓ Centralized company directory
-- ✓ Active Directory sync
-- ✓ Push to IP phones (multiple formats)
-- ✓ Search capability
-- ✓ Database storage
-- ✓ LDAPS support for phones
+- Centralized company directory
+- Active Directory sync
+- Push to IP phones (multiple formats)
+- Search capability
+- Database storage
+- LDAPS support for phones
 
 **Configuration:**
 ```yaml
@@ -823,11 +819,11 @@ curl -X POST https://localhost:8080/api/queues/8001/agents/1001/logout
 ### 4.6 Paging System
 
 **Features:**
-- ✓ Zone-based paging
-- ✓ All-call paging
-- ✓ SIP/RTP integration
-- ✓ Digital-to-analog converter support
-- ✓ Hardware-ready deployment
+- Zone-based paging
+- All-call paging
+- SIP/RTP integration
+- Digital-to-analog converter support
+- Hardware-ready deployment
 
 **Configuration:**
 ```yaml
@@ -1085,14 +1081,14 @@ curl -X POST https://localhost:8080/api/zoom/meeting \
 ### 6.1 Security Features
 
 **Implemented Security:**
-- ✓ FIPS 140-2 compliant encryption (AES-256-GCM)
-- ✓ TLS/SIPS support (encrypted signaling)
-- ✓ SRTP support (encrypted media)
-- ✓ PBKDF2-HMAC-SHA256 password hashing (600k iterations)
-- ✓ Rate limiting (brute force protection)
-- ✓ IP banning (automatic blocking)
-- ✓ HTTPS API with TLS 1.2+
-- ✓ Certificate management (Let's Encrypt, in-house CA)
+- FIPS 140-2 compliant encryption (AES-256-GCM)
+- TLS/SIPS support (encrypted signaling)
+- SRTP support (encrypted media)
+- PBKDF2-HMAC-SHA256 password hashing (600k iterations)
+- Rate limiting (brute force protection)
+- IP banning (automatic blocking)
+- HTTPS API with TLS 1.2+
+- Certificate management (Let's Encrypt, in-house CA)
 
 **Password Security:**
 ```yaml
@@ -2428,12 +2424,6 @@ npm test         # Run Jest tests
 
 ### 9.6 Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for:
-- Code style guidelines
-- Commit message format
-- Pull request process
-- Testing requirements
-
 **Quick Checklist:**
 - [ ] Code follows PEP 8 style (enforced by `make format`)
 - [ ] Type hints added to all functions
@@ -2546,9 +2536,7 @@ integrations:
 
 **Documentation:**
 - README.md - Project overview
-- CHANGELOG.md - Version history
-- docs/TODO.md - Planned features
-- docs/EXECUTIVE_SUMMARY.md - Business overview
+- TROUBLESHOOTING.md - Troubleshooting guide
 
 **External Resources:**
 - SIP Protocol: RFC 3261
@@ -2561,8 +2549,4 @@ integrations:
 - Email: support@yourcompany.com
 
 ---
-
-**Document Version:** 1.2.0
-**Last Updated:** 2026-02-13
-**Copyright:** Warden VoIP PBX Project
 

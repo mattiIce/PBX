@@ -382,7 +382,7 @@ Sends SIP NOTIFY to trigger ATA reboot.
 - **T.38** - Fax over IP standard (enabled by default)
 - **G.711 Passthrough** - Fallback mode
 
-## Additional Resources
+## Related Documentation
 
 - [Grandstream HT801 Documentation](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht801)
 - [Grandstream HT802 Documentation](https://www.grandstream.com/products/gateways-and-atas/analog-telephone-adaptors/product/ht802)
@@ -397,7 +397,7 @@ For issues not covered in this guide:
 
 1. Check PBX logs: `tail -f logs/pbx.log`
 2. Check ATA web interface system status
-3. Review [TROUBLESHOOTING.md](TROUBLESHOOTING.md)
+3. Review [TROUBLESHOOTING.md](../TROUBLESHOOTING.md)
 4. Search existing issues on GitHub
 5. Open a new issue with:
    - ATA make/model
@@ -406,6 +406,3 @@ For issues not covered in this guide:
    - Relevant log entries
 
 ---
-
-**Last Updated**: December 29, 2025
-**Version**: 1.0.0
