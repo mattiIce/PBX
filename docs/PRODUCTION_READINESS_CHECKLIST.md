@@ -38,13 +38,13 @@ This checklist ensures that all critical systems, security measures, monitoring,
   - [ ] Required ports opened:
     - [ ] 5060 UDP (SIP)
     - [ ] 10000-20000 UDP (RTP)
-    - [ ] 8080 TCP (HTTPS API - or via reverse proxy)
+    - [ ] 9000 TCP (HTTPS API - or via reverse proxy)
     - [ ] 443 TCP (HTTPS - if using reverse proxy)
   - [ ] QoS/DSCP configured for VoIP traffic
 
 ### 1.2 Database
 - [ ] **PostgreSQL Setup**
-  - [ ] PostgreSQL 14+ installed
+  - [ ] PostgreSQL 17+ installed
   - [ ] Database created (`pbx_system`)
   - [ ] Database user created with strong password
   - [ ] Database permissions configured correctly
@@ -124,7 +124,7 @@ This checklist ensures that all critical systems, security measures, monitoring,
 - [ ] **Web Server Setup**
   - [ ] Nginx or Apache installed
   - [ ] Virtual host configured
-  - [ ] Reverse proxy to port 8080 configured
+  - [ ] Reverse proxy to port 9000 configured
   - [ ] SSL/TLS certificate installed
   - [ ] HTTPS enabled and HTTP redirected
   - [ ] WebSocket support enabled (for WebRTC)

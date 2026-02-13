@@ -39,7 +39,7 @@ sudo journalctl -u pbx -n 100 -f
 python3 scripts/production_health_check.py
 
 # View active calls
-curl http://localhost:8080/api/calls
+curl http://localhost:9000/api/calls
 
 # Check database connectivity
 python3 scripts/verify_database.py
@@ -130,7 +130,7 @@ python3 -c "import yaml; yaml.safe_load(open('config.yml'))"
 sudo systemctl reload pbx
 
 # 4. Verify changes
-curl http://localhost:8080/api/config
+curl http://localhost:9000/api/config
 ```
 
 #### Update Environment Variables
@@ -152,7 +152,7 @@ python3 scripts/production_health_check.py
 
 ```bash
 # Via API
-curl -X POST http://localhost:8080/api/extensions \
+curl -X POST http://localhost:9000/api/extensions \
   -H "Content-Type: application/json" \
   -d '{
     "number": "1100",
@@ -169,7 +169,7 @@ curl -X POST http://localhost:8080/api/extensions \
 
 ```bash
 # Via API
-curl -X DELETE http://localhost:8080/api/extensions/1100
+curl -X DELETE http://localhost:9000/api/extensions/1100
 
 # Via Admin Panel
 # Navigate to: https://your-server/admin/#/extensions
@@ -226,7 +226,7 @@ FROM pg_database;
 1. **Confirm outage:**
    ```bash
    sudo systemctl status pbx
-   curl http://localhost:8080/health
+   curl http://localhost:9000/health
    ```
 
 2. **Check logs:**
@@ -245,7 +245,7 @@ FROM pg_database;
 4. **If restart fails:**
    ```bash
    # Check for port conflicts
-   sudo netstat -tulpn | grep -E ':(5060|8080)'
+   sudo netstat -tulpn | grep -E ':(5060|9000)'
    
    # Check disk space
    df -h
@@ -321,7 +321,7 @@ FROM pg_database;
 
 2. **Check active calls:**
    ```bash
-   curl http://localhost:8080/api/calls | python3 -m json.tool
+   curl http://localhost:9000/api/calls | python3 -m json.tool
    ```
 
 3. **Check QoS metrics:**
@@ -545,7 +545,7 @@ sudo systemctl restart pbx
 
 **Check 1: Port conflicts**
 ```bash
-sudo netstat -tulpn | grep -E ':(5060|8080|10000:20000)'
+sudo netstat -tulpn | grep -E ':(5060|9000|10000:20000)'
 ```
 
 **Check 2: Configuration errors**
@@ -567,7 +567,7 @@ python3 -c "import yaml, cryptography, twisted, sqlalchemy"
 
 **Check 1: SIP registration**
 ```bash
-curl http://localhost:8080/api/extensions
+curl http://localhost:9000/api/extensions
 ```
 
 **Check 2: Network/firewall**
@@ -601,7 +601,7 @@ mtr <remote_ip>
 **Check 3: Codec negotiation**
 ```bash
 # Check active call codec
-curl http://localhost:8080/api/calls | grep codec
+curl http://localhost:9000/api/calls | grep codec
 ```
 
 ### Admin Panel Not Accessible
@@ -617,7 +617,7 @@ sudo systemctl status apache2
 
 **Check 2: API server status**
 ```bash
-curl http://localhost:8080/health
+curl http://localhost:9000/health
 ```
 
 **Check 3: Browser cache**
@@ -695,9 +695,9 @@ python3 scripts/smoke_tests.py
 python3 scripts/verify_database.py
 
 # Monitoring
-curl http://localhost:8080/api/status
-curl http://localhost:8080/api/calls
-curl http://localhost:8080/metrics  # Prometheus metrics
+curl http://localhost:9000/api/status
+curl http://localhost:9000/api/calls
+curl http://localhost:9000/metrics  # Prometheus metrics
 
 # Database
 sudo -u postgres psql pbx_system

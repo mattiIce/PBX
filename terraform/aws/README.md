@@ -349,7 +349,7 @@ aws elbv2 describe-target-health \
 # SSH to instance and check service
 ssh -i ~/.ssh/pbx-production.pem ubuntu@<instance-ip>
 sudo systemctl status pbx
-curl http://localhost:8080/health
+curl http://localhost:9000/health
 ```
 
 ## Cleanup

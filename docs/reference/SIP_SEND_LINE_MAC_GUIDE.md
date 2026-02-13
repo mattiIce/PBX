@@ -209,7 +209,7 @@ If headers are not being sent:
 3. **Check extension has display name**:
    ```bash
    # Via API
-   curl http://localhost:8080/api/extensions/1001
+   curl http://localhost:9000/api/extensions/1001
    
    # Check database
    psql -d pbx_system -c "SELECT extension_number, name FROM extensions WHERE extension_number = '1001';"
@@ -218,7 +218,7 @@ If headers are not being sent:
 4. **Verify MAC address is registered**:
    ```bash
    # Via API
-   curl http://localhost:8080/api/phones
+   curl http://localhost:9000/api/phones
    
    # Check database
    psql -d pbx_system -c "SELECT extension_number, mac_address FROM registered_phones WHERE extension_number = '1001';"
@@ -232,7 +232,7 @@ If MAC address header is missing:
 2. **Update provisioning template**: Ensure phone is configured to send MAC
 3. **Manual registration**: You can manually register a phone with MAC via API:
    ```bash
-   curl -X POST http://localhost:8080/api/phones/register \
+   curl -X POST http://localhost:9000/api/phones/register \
      -H "Content-Type: application/json" \
      -d '{
        "mac": "00:11:22:33:44:55",

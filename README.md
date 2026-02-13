@@ -113,7 +113,7 @@ python main.py
 The PBX starts on:
 - **SIP**: UDP port 5060
 - **RTP Media**: UDP ports 10000-20000
-- **REST API / Admin Panel**: HTTPS port 8080
+- **REST API / Admin Panel**: HTTPS port 9000
 
 See [COMPLETE_GUIDE.md - Section 1.3](COMPLETE_GUIDE.md#13-environment-configuration) for database and environment setup.
 
@@ -144,7 +144,7 @@ See [COMPLETE_GUIDE.md - Section 2.4](COMPLETE_GUIDE.md#24-reverse-proxy-setup-r
 
 ## Admin Panel
 
-Access at `https://localhost:8080/admin/` for system management.
+Access at `https://localhost:9000/admin/` for system management.
 
 **Dashboard View:**
 ![Admin Dashboard](https://github.com/user-attachments/assets/fb9d6f67-e87b-4179-9777-cb54f3a45731)
@@ -172,11 +172,11 @@ Access at `https://localhost:8080/admin/` for system management.
 ## API
 
 ```bash
-curl http://localhost:8080/api/status              # System status
-curl http://localhost:8080/api/extensions           # List extensions
-curl http://localhost:8080/api/calls                # Active calls
-curl http://localhost:8080/api/cdr                  # Call records
-curl http://localhost:8080/api/config               # Configuration
+curl http://localhost:9000/api/status              # System status
+curl http://localhost:9000/api/extensions           # List extensions
+curl http://localhost:9000/api/calls                # Active calls
+curl http://localhost:9000/api/cdr                  # Call records
+curl http://localhost:9000/api/config               # Configuration
 ```
 
 See [COMPLETE_GUIDE.md - Section 9.2](COMPLETE_GUIDE.md#92-rest-api-reference) for full API reference.

@@ -39,7 +39,7 @@ Add this job to your `prometheus.yml`:
 scrape_configs:
   - job_name: 'pbx'
     static_configs:
-      - targets: ['pbx-server:8080']
+      - targets: ['pbx-server:9000']
     metrics_path: '/metrics'
     scrape_interval: 30s
     scrape_timeout: 10s
@@ -267,7 +267,7 @@ avg(rate(pbx_call_duration_seconds_sum[5m]) /
 
 2. **Check PBX metrics endpoint:**
    ```bash
-   curl http://pbx-server:8080/metrics
+   curl http://pbx-server:9000/metrics
    ```
 
 3. **Verify Prometheus data source:**

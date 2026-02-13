@@ -98,7 +98,7 @@ Unified lookup that accepts either MAC or IP address.
 
 **Example - Lookup by IP:**
 ```bash
-curl http://192.168.1.14:8080/api/phone-lookup/192.168.1.100
+curl http://192.168.1.14:9000/api/phone-lookup/192.168.1.100
 ```
 
 **Response:**
@@ -165,7 +165,7 @@ def correlate_by_ip(ip_address):
 
 **Solution:**
 ```bash
-curl http://192.168.1.14:8080/api/phone-lookup/192.168.1.105
+curl http://192.168.1.14:9000/api/phone-lookup/192.168.1.105
 ```
 
 **Result:**
@@ -181,7 +181,7 @@ curl http://192.168.1.14:8080/api/phone-lookup/192.168.1.105
 
 **Solution:**
 ```bash
-curl http://192.168.1.14:8080/api/phone-lookup/00:15:65:12:34:56
+curl http://192.168.1.14:9000/api/phone-lookup/00:15:65:12:34:56
 ```
 
 **Result:**
@@ -197,7 +197,7 @@ curl http://192.168.1.14:8080/api/phone-lookup/00:15:65:12:34:56
 
 **Solution:**
 ```bash
-curl http://192.168.1.14:8080/api/registered-phones/with-mac | jq .
+curl http://192.168.1.14:9000/api/registered-phones/with-mac | jq .
 ```
 
 **Result:**
@@ -212,7 +212,7 @@ curl http://192.168.1.14:8080/api/registered-phones/with-mac | jq .
 
 **Solution:**
 ```bash
-curl http://192.168.1.14:8080/api/registered-phones/extension/1002
+curl http://192.168.1.14:9000/api/registered-phones/extension/1002
 ```
 
 **Result:**
@@ -226,7 +226,7 @@ curl http://192.168.1.14:8080/api/registered-phones/extension/1002
 
 ```bash
 # 1. Register device for provisioning (stores MAC → Extension)
-curl -X POST http://192.168.1.14:8080/api/provisioning/devices \
+curl -X POST http://192.168.1.14:9000/api/provisioning/devices \
   -H "Content-Type: application/json" \
   -d '{
     "mac_address": "00:15:65:12:34:56",
@@ -240,15 +240,15 @@ curl -X POST http://192.168.1.14:8080/api/provisioning/devices \
 #    System captures: IP=192.168.1.100, Extension=1001
 
 # 3. Look up phone by IP to get MAC
-curl http://192.168.1.14:8080/api/phone-lookup/192.168.1.100
+curl http://192.168.1.14:9000/api/phone-lookup/192.168.1.100
 # Returns: MAC=001565123456, Extension=1001, Vendor=yealink
 
 # 4. Look up phone by MAC to get current IP
-curl http://192.168.1.14:8080/api/phone-lookup/00:15:65:12:34:56
+curl http://192.168.1.14:9000/api/phone-lookup/00:15:65:12:34:56
 # Returns: IP=192.168.1.100, Extension=1001
 
 # 5. Get all phones with complete information
-curl http://192.168.1.14:8080/api/registered-phones/with-mac
+curl http://192.168.1.14:9000/api/registered-phones/with-mac
 # Returns: Array of all phones with MAC, IP, vendor, model
 ```
 
@@ -280,7 +280,7 @@ When device is not found during provisioning:
 ✗ Provisioning failed for MAC 00:15:65:12:34:56 from IP 192.168.10.159
   Reason: Device not registered or template not found
   To register this device:
-    curl -X POST http://YOUR_PBX_IP:8080/api/provisioning/devices \
+    curl -X POST http://YOUR_PBX_IP:9000/api/provisioning/devices \
       -H 'Content-Type: application/json' \
       -d '{"mac_address":"00:15:65:12:34:56","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}'
 ```

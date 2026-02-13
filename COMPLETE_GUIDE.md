@@ -87,8 +87,8 @@ make dev              # Backend + frontend with hot reload
 **Access Points:**
 - SIP Server: UDP port 5060
 - RTP Media: UDP ports 10000-20000
-- Admin Panel: https://localhost:8080/admin/
-- REST API: https://localhost:8080/api/
+- Admin Panel: https://localhost:9000/admin/
+- REST API: https://localhost:9000/api/
 
 ### 1.3 Environment Configuration
 
@@ -212,7 +212,7 @@ sudo systemctl status pbx
 #### Step 6: Verify Installation
 ```bash
 # Check PBX is running
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 
 # Check database connection
 python scripts/verify_database.py
@@ -233,7 +233,7 @@ sudo ufw allow 10000:20000/udp
 
 # HTTPS admin/API
 sudo ufw allow 443/tcp
-sudo ufw allow 8080/tcp
+sudo ufw allow 9000/tcp
 
 # Enable firewall
 sudo ufw enable
@@ -242,7 +242,7 @@ sudo ufw enable
 ### 2.4 Reverse Proxy Setup (Recommended)
 
 Use Nginx reverse proxy for:
-- Friendly URLs (https://pbx.yourcompany.com instead of IP:8080)
+- Friendly URLs (https://pbx.yourcompany.com instead of IP:9000)
 - Let's Encrypt SSL with auto-renewal
 - Rate limiting and security
 - WebSocket support for WebRTC
@@ -265,7 +265,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/pbx.yourcompany.com/privkey.pem;
     
     location / {
-        proxy_pass https://localhost:8080;
+        proxy_pass https://localhost:9000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -426,7 +426,7 @@ extensions:
 
 **Add Extension via API:**
 ```bash
-curl -X POST https://localhost:8080/api/extensions \
+curl -X POST https://localhost:9000/api/extensions \
   -H "Content-Type: application/json" \
   -d '{
     "number": "1005",
@@ -736,13 +736,13 @@ phonebook:
   
   # Push to phones
   push_enabled: true
-  push_url: "http://pbx.company.com:8080/api/phonebook"
+  push_url: "http://pbx.company.com:9000/api/phonebook"
 ```
 
 **Manual Entry:**
 ```bash
 # Add entry via API
-curl -X POST https://localhost:8080/api/phonebook \
+curl -X POST https://localhost:9000/api/phonebook \
   -H "Content-Type: application/json" \
   -d '{
     "name": "John Doe",
@@ -808,8 +808,8 @@ queues:
 **Agent Login/Logout:**
 ```bash
 # Via API
-curl -X POST https://localhost:8080/api/queues/8001/agents/1001/login
-curl -X POST https://localhost:8080/api/queues/8001/agents/1001/logout
+curl -X POST https://localhost:9000/api/queues/8001/agents/1001/login
+curl -X POST https://localhost:9000/api/queues/8001/agents/1001/logout
 
 # Via phone (feature code)
 # Dial *72 to login to queue
@@ -979,10 +979,10 @@ integrations:
 **Search API:**
 ```bash
 # Search AD users
-curl "https://localhost:8080/api/ad/search?q=john"
+curl "https://localhost:9000/api/ad/search?q=john"
 
 # Get user details
-curl "https://localhost:8080/api/ad/user/jdoe"
+curl "https://localhost:9000/api/ad/user/jdoe"
 ```
 
 ### 5.3 CRM Integration (EspoCRM)
@@ -1044,7 +1044,7 @@ smtp:
 
 **OAuth Setup:**
 1. Create Zoom OAuth app: https://marketplace.zoom.us/
-2. Configure redirect URI: `https://pbx.company.com:8080/api/zoom/callback`
+2. Configure redirect URI: `https://pbx.company.com:9000/api/zoom/callback`
 3. Get Client ID and Secret
 
 ```bash
@@ -1060,12 +1060,12 @@ integrations:
     enabled: true
     client_id: "${ZOOM_CLIENT_ID}"
     client_secret: "${ZOOM_CLIENT_SECRET}"
-    redirect_uri: "https://pbx.company.com:8080/api/zoom/callback"
+    redirect_uri: "https://pbx.company.com:9000/api/zoom/callback"
 ```
 
 **Create Meeting:**
 ```bash
-curl -X POST https://localhost:8080/api/zoom/meeting \
+curl -X POST https://localhost:9000/api/zoom/meeting \
   -H "Content-Type: application/json" \
   -d '{
     "topic": "Sales Meeting",
@@ -1219,7 +1219,7 @@ security:
 
 ### 7.1 Admin Panel
 
-**Access:** https://pbx.company.com/admin/ (or https://localhost:8080/admin/)
+**Access:** https://pbx.company.com/admin/ (or https://localhost:9000/admin/)
 
 **Features:**
 - Dashboard - system status and statistics
@@ -1242,7 +1242,7 @@ If you see "Connection error. Please try again.":
 
 2. **Verify API is accessible:**
    ```bash
-   curl -k https://localhost:8080/api/status
+   curl -k https://localhost:9000/api/status
    ```
 
 3. **Check browser console (F12)** for detailed error messages
@@ -1252,7 +1252,7 @@ If you see "Connection error. Please try again.":
 5. **Check firewall:**
    ```bash
    sudo ufw status
-   sudo ufw allow 8080/tcp
+   sudo ufw allow 9000/tcp
    ```
 
 ### 7.2 Common Issues
@@ -1379,7 +1379,7 @@ tail -f logs/pbx.log | grep "CALL"
 
 **System Status API:**
 ```bash
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 ```
 
 Response:
@@ -1396,7 +1396,7 @@ Response:
 
 **Call Statistics:**
 ```bash
-curl -k https://localhost:8080/api/statistics
+curl -k https://localhost:9000/api/statistics
 ```
 
 **Prometheus Metrics:**
@@ -1513,7 +1513,7 @@ This section covers how to safely update your PBX system, including:
    python scripts/verify_database.py
    
    # Check active calls (should be 0 during maintenance)
-   curl -k https://localhost:8080/api/calls
+   curl -k https://localhost:9000/api/calls
    ```
 
 ### 8.3 Updating Python Packages
@@ -1583,7 +1583,7 @@ python -c "from cryptography.fernet import Fernet; print('OK')"
 
 # Restart and verify
 sudo systemctl start pbx
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 ```
 
 ### 8.4 Updating System Packages
@@ -1632,7 +1632,7 @@ python scripts/generate_voice_prompts.py
 python scripts/test_audio_comprehensive.py
 
 # Verify codecs still work
-curl -k https://localhost:8080/api/codecs
+curl -k https://localhost:9000/api/codecs
 ```
 
 ### 8.5 Updating PBX Code from Repository
@@ -1765,7 +1765,7 @@ python scripts/verify_database.py
 sudo systemctl start pbx
 
 # Test functionality
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 ```
 
 #### Creating New Migrations (Developers)
@@ -1888,7 +1888,7 @@ sudo tar -xzf /var/backups/pbx/manual-20250115/voicemail.tar.gz -C /
 sudo systemctl start pbx
 
 # Verify
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 ```
 
 #### Rollback to Specific Version
@@ -1915,14 +1915,14 @@ sudo systemctl restart pbx
 ```bash
 # 1. Service Health
 sudo systemctl status pbx
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 
 # 2. Database Connectivity
 python scripts/verify_database.py
 
 # 3. Extension Registration
 # Register a test phone and verify it shows in:
-curl -k https://localhost:8080/api/extensions
+curl -k https://localhost:9000/api/extensions
 
 # 4. Test Call
 # Make a test call between two extensions
@@ -1934,7 +1934,7 @@ curl -k https://localhost:8080/api/extensions
 # Check email notification received
 
 # 6. Admin Panel
-# Access https://your-server:8080/admin/
+# Access https://your-server:9000/admin/
 # Verify login works
 # Check dashboard loads
 # Clear browser cache first: Ctrl+Shift+R
@@ -2044,7 +2044,7 @@ sudo journalctl -u pbx -f | grep -i "error\|warning\|critical"
 htop
 
 # Check active calls
-watch -n 5 'curl -sk https://localhost:8080/api/calls | jq'
+watch -n 5 'curl -sk https://localhost:9000/api/calls | jq'
 
 # Database connections
 watch -n 10 "sudo -u postgres psql -c 'SELECT count(*) FROM pg_stat_activity WHERE datname=''pbx_system'';'"
@@ -2065,7 +2065,7 @@ systemctl is-active pbx >> /var/log/pbx_health.log 2>&1
 journalctl -u pbx --since "24 hours ago" | grep -i error | wc -l >> /var/log/pbx_health.log
 
 # Active calls
-curl -sk https://localhost:8080/api/statistics >> /var/log/pbx_health.log 2>&1
+curl -sk https://localhost:9000/api/statistics >> /var/log/pbx_health.log 2>&1
 
 echo "---" >> /var/log/pbx_health.log
 EOF
@@ -2087,10 +2087,10 @@ top -b -n 1 | grep python
 ps aux | grep python | awk '{sum+=$6} END {print sum/1024 " MB"}'
 
 # Call quality metrics
-curl -k https://localhost:8080/api/statistics
+curl -k https://localhost:9000/api/statistics
 
 # Response time
-time curl -k https://localhost:8080/api/status
+time curl -k https://localhost:9000/api/status
 ```
 
 ### 8.12 Common Update Scenarios
@@ -2114,7 +2114,7 @@ python -c "from cryptography.fernet import Fernet; print('✓ OK')"
 
 # 5. Restart and verify
 sudo systemctl start pbx
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 
 # 6. Monitor logs
 sudo journalctl -u pbx -f
@@ -2195,7 +2195,7 @@ PBX System
 │   ├── integrations/      - External service integrations
 │   ├── api/
 │   │   ├── app.py         - Flask application factory
-│   │   ├── routes/        - 21 Flask Blueprint modules
+│   │   ├── routes/        - 22 Flask Blueprint modules
 │   │   ├── schemas/       - Pydantic request/response validation
 │   │   ├── openapi.py     - Auto-generated OpenAPI spec
 │   │   └── errors.py      - Error handlers
@@ -2209,15 +2209,15 @@ PBX System
 ├── admin/js/
 │   ├── pages/             - 13 TypeScript page modules
 │   ├── ui/                - UI components (tabs, notifications)
-│   ├── client.ts          - API client
-│   └── store.ts           - State management
+│   ├── api/client.ts      - API client
+│   └── state/store.ts     - State management
 ├── alembic/               - Database migration scripts
 ├── Makefile               - Development workflow targets
 └── pyproject.toml         - Dependencies and tool config
 ```
 
 **Flask Blueprints (API Routes):**
-The API is organized into 21 Blueprints registered in `pbx/api/app.py`:
+The API is organized into 22 Blueprints registered in `pbx/api/app.py`:
 `health`, `auth`, `extensions`, `calls`, `provisioning`, `phones`, `config`, `voicemail`, `webrtc`, `integrations`, `phone_book`, `paging`, `webhooks`, `emergency`, `security`, `qos`, `features`, `framework`, `static`, `license`, `compat`, `docs`
 
 **Call Flow:**
@@ -2231,12 +2231,13 @@ The API is organized into 21 Blueprints registered in `pbx/api/app.py`:
 
 **Interactive API Documentation:**
 Full OpenAPI 3.0 documentation is auto-generated and available at:
-- **Swagger UI:** `https://your-server:8080/api/docs/swagger`
-- **OpenAPI JSON:** `https://your-server:8080/api/docs/openapi.json`
+- **Swagger UI:** `https://your-server:9000/api/docs/swagger`
+- **OpenAPI JSON:** `https://your-server:9000/api/docs/openapi.json`
 
 **Request Validation:**
 API requests are validated using Pydantic schemas defined in `pbx/api/schemas/`:
 - `auth.py` - Authentication request/response models
+- `config.py` - Configuration validation models
 - `extensions.py` - Extension CRUD validation
 - `provisioning.py` - Phone provisioning models
 - `common.py` - Shared response models
@@ -2302,7 +2303,7 @@ blueprints = [..., your_bp]
 **Prerequisites:**
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) (fast Python package manager)
-- Node.js 18+ and npm
+- Node.js 20+ and npm
 
 **Quick Start:**
 ```bash
@@ -2409,11 +2410,10 @@ The admin panel uses **TypeScript ES modules** organized in `admin/js/`:
 Each feature has a dedicated TypeScript module: `dashboard.ts`, `extensions.ts`, `calls.ts`, `voicemail.ts`, `phones.ts`, `provisioning.ts`, `config.ts`, `analytics.ts`, `emergency.ts`, `paging.ts`, `phone_book.ts`, `license.ts`, `security.ts`
 
 **Shared Modules:**
-- `admin/js/client.ts` - Centralized API client
-- `admin/js/store.ts` - State management
+- `admin/js/api/client.ts` - Centralized API client
+- `admin/js/state/store.ts` - State management
 - `admin/js/ui/tabs.ts` - Tab navigation
 - `admin/js/ui/notifications.ts` - Toast notifications
-- `admin/js/html.ts` - Safe HTML utilities
 
 **Building:**
 ```bash
@@ -2493,7 +2493,7 @@ integrations:
 | 5060 | UDP | SIP signaling |
 | 5061 | TCP/TLS | Secure SIP (SIPS) |
 | 10000-20000 | UDP | RTP media streams |
-| 8080 | TCP | HTTPS API/Admin |
+| 9000 | TCP | HTTPS API/Admin |
 | 8888 | TCP | Phone provisioning |
 | 443 | TCP | Nginx reverse proxy |
 | 9090 | TCP | Prometheus metrics |

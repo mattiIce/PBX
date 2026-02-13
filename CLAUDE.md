@@ -88,8 +88,7 @@ pbx/
 │   ├── jitter_buffer.py
 │   └── rtcp_monitor.py
 ├── features/         # 76 feature modules (pluggable)
-│   ├── codec_support/ # Audio codec plugins
-│   └── ...           # Each feature is a self-contained module
+│   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
 ├── utils/            # Cross-cutting concerns
 │   ├── config.py     # YAML config management
@@ -109,7 +108,7 @@ admin/                # Frontend admin interface
 ├── vite.config.js
 └── tsconfig.json
 
-tests/                # Python test suite (123 files)
+tests/                # Python test suite (126 files)
 ├── conftest.py       # Shared fixtures
 ├── integration/      # Integration tests (API, call flow, provisioning)
 └── test_*.py

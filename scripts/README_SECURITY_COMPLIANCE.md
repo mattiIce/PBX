@@ -259,7 +259,7 @@ The system automatically creates 16 default SOC 2 controls covering:
 python scripts/security_compliance_check.py
 
 # View controls via API
-curl http://localhost:8080/api/framework/compliance/soc2/controls
+curl http://localhost:9000/api/framework/compliance/soc2/controls
 ```
 
 #### 3. Test Controls
@@ -364,10 +364,10 @@ python scripts/test_soc2_controls.py
 python scripts/security_compliance_check.py --json | jq '.soc2.summary.tested'
 
 # Manual API approach (Alternative)
-curl http://localhost:8080/api/framework/compliance/soc2/controls
+curl http://localhost:9000/api/framework/compliance/soc2/controls
 
 # Update test results for each control
-curl -X POST http://localhost:8080/api/framework/compliance/soc2/control \
+curl -X POST http://localhost:9000/api/framework/compliance/soc2/control \
   -H "Content-Type: application/json" \
   -d '{
     "control_id": "CC6.1",

@@ -33,10 +33,10 @@ Use the command-line script to export all built-in templates:
 ```bash
 python scripts/export_all_templates.py
 ```
-This will export all 7 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yealink T28G, Yealink T46S, Polycom VVX 450, Cisco SPA504G, Grandstream GXP2170) to this directory. You can then edit any template you want to customize.
+This will export all 13 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yealink T28G, Yealink T46S, Polycom VVX 450, Cisco SPA504G, Grandstream GXP2170, plus 6 ATA templates: Grandstream HT801/HT802, Cisco SPA112/SPA122, Cisco ATA191/ATA192) to this directory. You can then edit any template you want to customize.
 
 ### Option 2: Export via Admin Panel
-1. Access the admin panel at `http://your-pbx-ip:8080/admin/`
+1. Access the admin panel at `http://your-pbx-ip:9000/admin/`
 2. Go to the "Phone Provisioning" tab
 3. Click "View Templates"
 4. Select a template and click "Export to File"
@@ -53,13 +53,13 @@ This will export all 7 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yeali
 ### Option 4: Use the API
 ```bash
 # View a template
-curl http://your-pbx-ip:8080/api/provisioning/templates/yealink/t46s
+curl http://your-pbx-ip:9000/api/provisioning/templates/yealink/t46s
 
 # Export template to file
-curl -X POST http://your-pbx-ip:8080/api/provisioning/templates/yealink/t46s/export
+curl -X POST http://your-pbx-ip:9000/api/provisioning/templates/yealink/t46s/export
 
 # Update template
-curl -X PUT http://your-pbx-ip:8080/api/provisioning/templates/yealink/t46s \
+curl -X PUT http://your-pbx-ip:9000/api/provisioning/templates/yealink/t46s \
   -H "Content-Type: application/json" \
   -d '{"content": "your template content here"}'
 ```
@@ -132,7 +132,7 @@ The PBX automatically handles DTMF from both **SIP INFO** messages and **in-band
 
 1. Export the built-in template:
    ```bash
-   curl -X POST http://localhost:8080/api/provisioning/templates/yealink/t46s/export
+   curl -X POST http://localhost:9000/api/provisioning/templates/yealink/t46s/export
    ```
 
 2. Edit `yealink_t46s.template`:
@@ -160,13 +160,13 @@ The PBX automatically handles DTMF from both **SIP INFO** messages and **in-band
 
 3. Save and reload:
    ```bash
-   curl -X POST http://localhost:8080/api/provisioning/reload-templates
+   curl -X POST http://localhost:9000/api/provisioning/reload-templates
    ```
 
 ## Template Testing
 
 After customizing a template, test it by:
-1. Requesting the configuration file: `curl http://your-pbx-ip:8080/provision/001122334455.cfg`
+1. Requesting the configuration file: `curl http://your-pbx-ip:9000/provision/001122334455.cfg`
 2. Verify all placeholders are replaced correctly
 3. Check that device-specific information appears where expected
 
@@ -174,7 +174,7 @@ After customizing a template, test it by:
 
 When you register a device via the admin console or API:
 ```bash
-curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
+curl -X POST http://your-pbx-ip:9000/api/provisioning/devices \
   -H "Content-Type: application/json" \
   -d '{
     "mac_address": "00:15:65:12:34:56",
@@ -197,8 +197,8 @@ If a phone isn't provisioning correctly:
 1. Check that the template file exists and has correct naming
 2. Verify placeholders are using correct syntax: `{{PLACEHOLDER}}` not `{PLACEHOLDER}`
 3. Check PBX logs: `tail -f logs/pbx.log | grep -i provision`
-4. Test template generation: `curl http://your-pbx-ip:8080/provision/{mac}.cfg`
-5. Use diagnostics: `curl http://your-pbx-ip:8080/api/provisioning/diagnostics`
+4. Test template generation: `curl http://your-pbx-ip:9000/provision/{mac}.cfg`
+5. Use diagnostics: `curl http://your-pbx-ip:9000/api/provisioning/diagnostics`
 
 ## Security Notes
 

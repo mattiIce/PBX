@@ -399,10 +399,10 @@ df -h / | awk 'NR==2{print $5}'
 **Application Metrics:**
 ```bash
 # Active calls
-curl http://localhost:8080/api/calls | jq 'length'
+curl http://localhost:9000/api/calls | jq 'length'
 
 # Registered extensions
-curl http://localhost:8080/api/extensions | jq '[.[] | select(.registered==true)] | length'
+curl http://localhost:9000/api/extensions | jq '[.[] | select(.registered==true)] | length'
 
 # QoS metrics
 python3 scripts/diagnose_qos.py

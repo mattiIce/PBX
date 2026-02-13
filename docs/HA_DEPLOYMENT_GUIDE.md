@@ -142,7 +142,7 @@ This guide describes how to deploy the Warden VoIP PBX system in a high availabi
 ### Software Requirements
 
 - Ubuntu 24.04 LTS on all nodes
-- PostgreSQL 14+ with streaming replication
+- PostgreSQL 17+ with streaming replication
 - HAProxy 2.8+ or Nginx Plus
 - Keepalived 2.2+ for VIP management
 - Redis 7+ for session state
@@ -345,8 +345,8 @@ backend api_backend
     balance roundrobin
     option httpchk GET /health
     http-check expect status 200
-    server pbx1 192.168.1.10:8080 check inter 10s
-    server pbx2 192.168.1.11:8080 check inter 10s
+    server pbx1 192.168.1.10:9000 check inter 10s
+    server pbx2 192.168.1.11:9000 check inter 10s
 
 # Stats page
 listen stats
@@ -597,8 +597,8 @@ sudo -u postgres psql -c "SELECT pg_is_in_recovery();"
 # Should return 'f' (false) on new primary
 
 # Verify PBX nodes reconnected
-curl http://192.168.1.10:8080/health
-curl http://192.168.1.11:8080/health
+curl http://192.168.1.10:9000/health
+curl http://192.168.1.11:9000/health
 ```
 
 **Test PBX Node Failover**:
@@ -806,7 +806,7 @@ nc -zv 192.168.1.11 5060
 for node in node1 node2 node3; do
   ssh $node "cd /opt/PBX && git pull && sudo systemctl restart pbx"
   sleep 60
-  curl http://$node:8080/health || exit 1
+  curl http://$node:9000/health || exit 1
 done
 ```
 

@@ -6,30 +6,22 @@ This directory contains Music on Hold (MOH) audio files for the PBX system.
 
 ```
 moh/
-└── default/          # Default MOH class
-    ├── ambient.wav   # Soothing ambient tones
-    ├── arpeggio.wav  # Pleasant arpeggio pattern
-    ├── chimes.wav    # Gentle chime sounds
-    ├── melody.wav    # Simple melodic tune
-    └── pad.wav       # Soft sustained pad sound
+└── default/                              # Default MOH class
+    └── phone-holding-music-163387.wav    # Default hold music track
 ```
 
-## Pre-Generated Files
+## Included Files
 
-This repository includes 5 pre-generated MOH tracks:
+This repository includes a default hold music track (`phone-holding-music-163387.wav`).
 
-1. **melody.wav** - Simple, pleasant melody using major scale notes
-2. **ambient.wav** - Soothing ambient tones with harmonious frequencies
-3. **arpeggio.wav** - Flowing arpeggio pattern
-4. **pad.wav** - Soft, sustained pad sound for a calming effect
-5. **chimes.wav** - Gentle chime sounds with natural decay
+You can generate additional tracks using the provided script (see below), or add your own
+WAV files to the `moh/default/` directory.
 
-All files are:
+Required audio format:
 - **Format:** WAV (uncompressed)
 - **Sample Rate:** 8000 Hz (telephony standard)
 - **Bit Depth:** 16-bit
 - **Channels:** Mono
-- **Duration:** 30 seconds each
 
 ## How MOH Works
 
@@ -208,7 +200,7 @@ The generated MOH files in this directory are simple sine wave compositions crea
 
 ## Summary
 
-- **Pre-generated files included** - 5 pleasant tracks ready to use
+- **Default track included** - Ready to use out of the box
 - **Easy regeneration** - Simple script for custom durations
 - **Proper format** - All files in telephony-standard format
 - **Extensible** - Add your own files or create custom classes

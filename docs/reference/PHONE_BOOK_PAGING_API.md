@@ -219,23 +219,23 @@ features:
 
 2. **Trigger sync from Active Directory:**
 ```bash
-curl -X POST http://localhost:8080/api/phone-book/sync
+curl -X POST http://localhost:9000/api/phone-book/sync
 ```
 
 3. **Verify entries:**
 ```bash
-curl http://localhost:8080/api/phone-book
+curl http://localhost:9000/api/phone-book
 ```
 
 4. **Configure Yealink phones to fetch directory:**
    - Phone web interface → Directory → Remote Phone Book
-   - URL: `http://<pbx-ip>:8080/api/phone-book/export/xml`
+   - URL: `http://<pbx-ip>:9000/api/phone-book/export/xml`
 
 ### Scenario 2: Manual Phone Book Entry
 
 ```bash
 # Add entry
-curl -X POST http://localhost:8080/api/phone-book \
+curl -X POST http://localhost:9000/api/phone-book \
   -H "Content-Type: application/json" \
   -d '{
     "extension": "1001",
@@ -245,10 +245,10 @@ curl -X POST http://localhost:8080/api/phone-book \
   }'
 
 # Search for entry
-curl "http://localhost:8080/api/phone-book/search?q=Jane"
+curl "http://localhost:9000/api/phone-book/search?q=Jane"
 
 # Update entry (same API call)
-curl -X POST http://localhost:8080/api/phone-book \
+curl -X POST http://localhost:9000/api/phone-book \
   -H "Content-Type: application/json" \
   -d '{
     "extension": "1001",
@@ -258,7 +258,7 @@ curl -X POST http://localhost:8080/api/phone-book \
   }'
 
 # Delete entry
-curl -X DELETE http://localhost:8080/api/phone-book/1001
+curl -X DELETE http://localhost:9000/api/phone-book/1001
 ```
 
 ### Scenario 3: Setup Paging System
@@ -274,7 +274,7 @@ features:
 
 2. **Configure DAC device:**
 ```bash
-curl -X POST http://localhost:8080/api/paging/devices \
+curl -X POST http://localhost:9000/api/paging/devices \
   -H "Content-Type: application/json" \
   -d '{
     "device_id": "paging-gateway-1",
@@ -288,7 +288,7 @@ curl -X POST http://localhost:8080/api/paging/devices \
 3. **Add paging zones:**
 ```bash
 # Zone 1 - Office
-curl -X POST http://localhost:8080/api/paging/zones \
+curl -X POST http://localhost:9000/api/paging/zones \
   -H "Content-Type: application/json" \
   -d '{
     "extension": "701",
@@ -297,7 +297,7 @@ curl -X POST http://localhost:8080/api/paging/zones \
   }'
 
 # Zone 2 - Warehouse
-curl -X POST http://localhost:8080/api/paging/zones \
+curl -X POST http://localhost:9000/api/paging/zones \
   -H "Content-Type: application/json" \
   -d '{
     "extension": "702",
@@ -313,7 +313,7 @@ curl -X POST http://localhost:8080/api/paging/zones \
 
 5. **Monitor active pages:**
 ```bash
-curl http://localhost:8080/api/paging/active
+curl http://localhost:9000/api/paging/active
 ```
 
 ---
@@ -327,7 +327,7 @@ import requests
 
 # Add phone book entry
 response = requests.post(
-    'http://localhost:8080/api/phone-book',
+    'http://localhost:9000/api/phone-book',
     json={
         'extension': '1001',
         'name': 'John Doe',
@@ -337,13 +337,13 @@ response = requests.post(
 print(response.json())
 
 # Get all entries
-entries = requests.get('http://localhost:8080/api/phone-book').json()
+entries = requests.get('http://localhost:9000/api/phone-book').json()
 for entry in entries:
     print(f"{entry['name']}: {entry['extension']}")
 
 # Search
 results = requests.get(
-    'http://localhost:8080/api/phone-book/search',
+    'http://localhost:9000/api/phone-book/search',
     params={'q': 'John'}
 ).json()
 ```
@@ -352,7 +352,7 @@ results = requests.get(
 
 ```javascript
 // Add phone book entry
-fetch('http://localhost:8080/api/phone-book', {
+fetch('http://localhost:9000/api/phone-book', {
   method: 'POST',
   headers: { 'Content-Type': 'application/json' },
   body: JSON.stringify({
@@ -365,7 +365,7 @@ fetch('http://localhost:8080/api/phone-book', {
 .then(data => console.log(data));
 
 // Get all entries
-fetch('http://localhost:8080/api/phone-book')
+fetch('http://localhost:9000/api/phone-book')
   .then(response => response.json())
   .then(entries => {
     entries.forEach(entry => {
@@ -390,7 +390,7 @@ entries=(
 for entry in "${entries[@]}"; do
   IFS=':' read -r ext name dept email <<< "$entry"
   
-  curl -X POST http://localhost:8080/api/phone-book \
+  curl -X POST http://localhost:9000/api/phone-book \
     -H "Content-Type: application/json" \
     -d "{
       \"extension\": \"$ext\",
