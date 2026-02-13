@@ -31,7 +31,7 @@ class FraudDetectionSystem:
 
         # Tracking data
         self.call_history = defaultdict(list)  # extension -> calls
-        self.alerts = []  # List of fraud alerts
+        self.alerts = []  # list of fraud alerts
         self.blocked_patterns = []  # Blocked number patterns
 
         if self.enabled:
@@ -42,7 +42,7 @@ class FraudDetectionSystem:
             )
             self.logger.info(f"  Max call duration: {self.max_call_duration}s")
 
-    def analyze_call(self, call_data: Dict) -> Dict:
+    def analyze_call(self, call_data: dict) -> dict:
         """
         Analyze a call for fraud patterns
 
@@ -236,7 +236,7 @@ class FraudDetectionSystem:
                 return True, pattern["reason"]
         return False, None
 
-    def get_alerts(self, extension: str | None = None, hours: int = 24) -> list[Dict]:
+    def get_alerts(self, extension: str | None = None, hours: int = 24) -> list[dict]:
         """Get recent fraud alerts"""
         cutoff = datetime.now() - timedelta(hours=hours)
 
@@ -247,7 +247,7 @@ class FraudDetectionSystem:
 
         return sorted(alerts, key=lambda x: x["fraud_score"], reverse=True)
 
-    def get_extension_statistics(self, extension: str) -> Dict:
+    def get_extension_statistics(self, extension: str) -> dict:
         """Get call statistics for an extension"""
         if extension not in self.call_history:
             return {"total_calls": 0}
@@ -281,7 +281,7 @@ class FraudDetectionSystem:
 
         self.logger.info(f"Cleaned up fraud detection data older than {days} days")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get fraud detection statistics"""
         return {
             "enabled": self.enabled,

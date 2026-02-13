@@ -33,7 +33,7 @@ class EmergencyContact:
             phone: External phone number (optional)
             email: Email address (optional)
             priority: Priority level (1=highest, 5=lowest)
-            notification_methods: List of methods ('call', 'sms', 'email', 'page')
+            notification_methods: list of methods ('call', 'sms', 'email', 'page')
         """
         self.name = name
         self.extension = extension
@@ -320,7 +320,7 @@ class EmergencyNotificationSystem:
 
             return False
 
-    def get_emergency_contacts(self, priority_filter: int = None) -> list[Dict]:
+    def get_emergency_contacts(self, priority_filter: int = None) -> list[dict]:
         """
         Get list of emergency contacts
 
@@ -328,7 +328,7 @@ class EmergencyNotificationSystem:
             priority_filter: Optional priority level to filter
 
         Returns:
-            List of contact dictionaries
+            list of contact dictionaries
         """
         with self.lock:
             contacts = self.emergency_contacts
@@ -338,12 +338,12 @@ class EmergencyNotificationSystem:
 
             return [c.to_dict() for c in contacts]
 
-    def trigger_emergency_notification(self, trigger_type: str, details: Dict) -> bool:
+    def trigger_emergency_notification(self, trigger_type: str, details: dict) -> bool:
         """
         Trigger emergency notifications to all designated contacts
 
         Args:
-            trigger_type: Type of emergency ('911_call', 'panic_button', 'manual')
+            trigger_type: type of emergency ('911_call', 'panic_button', 'manual')
             details: Dictionary with emergency details (caller, location, etc.)
 
         Returns:
@@ -387,14 +387,14 @@ class EmergencyNotificationSystem:
             return True
 
     def _notify_contact(
-        self, contact: EmergencyContact, trigger_type: str, details: Dict, notification_record: Dict
+        self, contact: EmergencyContact, trigger_type: str, details: dict, notification_record: dict
     ):
         """
         Notify a specific contact using configured methods
 
         Args:
             contact: Emergency contact
-            trigger_type: Type of emergency
+            trigger_type: type of emergency
             details: Emergency details
             notification_record: Notification record to update
         """
@@ -425,7 +425,7 @@ class EmergencyNotificationSystem:
             if "sms" not in notification_record["methods_used"]:
                 notification_record["methods_used"].append("sms")
 
-    def _send_call_notification(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+    def _send_call_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
         """Send call notification to contact"""
         if not contact.extension:
             self.logger.warning(f"Cannot call {contact.name}: no extension configured")
@@ -469,14 +469,14 @@ class EmergencyNotificationSystem:
         except Exception as e:
             self.logger.error(f"Error initiating emergency call: {e}")
 
-    def _send_page_notification(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+    def _send_page_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
         """Send overhead page notification"""
         if hasattr(self.pbx_core, "paging_system") and self.pbx_core.paging_system.enabled:
             # Use all-call paging for emergencies
             self.logger.warning(f"🔊 Emergency page triggered: {trigger_type}")
             # In full implementation, would trigger actual overhead paging
 
-    def _send_email_notification(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+    def _send_email_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
         """Send email notification"""
         if not contact.email:
             self.logger.warning(f"Cannot email {contact.name}: no email configured")
@@ -497,7 +497,7 @@ class EmergencyNotificationSystem:
                 # Build email body
                 body = """EMERGENCY NOTIFICATION
 
-Type: {trigger_type}
+type: {trigger_type}
 Time: {details.get('timestamp', datetime.now())}
 Contact: {contact.name}
 Priority: {contact.priority}
@@ -529,7 +529,7 @@ PBX Emergency Notification System
         except Exception as e:
             self.logger.error(f"Error sending emergency email: {e}")
 
-    def _format_email_details(self, details: Dict) -> str:
+    def _format_email_details(self, details: dict) -> str:
         """Format emergency details for email"""
         lines = []
         for key, value in details.items():
@@ -564,7 +564,7 @@ PBX Emergency Notification System
         server.send_message(msg)
         server.quit()
 
-    def _send_sms_notification(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+    def _send_sms_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
         """Send SMS notification"""
         if not contact.phone:
             self.logger.warning(f"Cannot SMS {contact.name}: no phone configured")
@@ -592,7 +592,7 @@ PBX Emergency Notification System
         except Exception as e:
             self.logger.error(f"Error sending emergency SMS: {e}")
 
-    def _send_sms_twilio(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+    def _send_sms_twilio(self, contact: EmergencyContact, trigger_type: str, details: dict):
         """Send SMS via Twilio"""
         try:
             # Check if Twilio is available
@@ -631,7 +631,7 @@ PBX Emergency Notification System
         except Exception as e:
             self.logger.error(f"Error sending Twilio SMS: {e}")
 
-    def _send_sms_aws(self, contact: EmergencyContact, trigger_type: str, details: Dict):
+    def _send_sms_aws(self, contact: EmergencyContact, trigger_type: str, details: dict):
         """Send SMS via AWS SNS"""
         try:
             # Check if boto3 is available
@@ -671,7 +671,7 @@ PBX Emergency Notification System
         except Exception as e:
             self.logger.error(f"Error sending AWS SNS SMS: {e}")
 
-    def _save_notification_to_db(self, notification_record: Dict):
+    def _save_notification_to_db(self, notification_record: dict):
         """Save notification record to database"""
         try:
             # Insert notification record with database-agnostic placeholders
@@ -703,7 +703,7 @@ PBX Emergency Notification System
         except Exception as e:
             self.logger.error(f"Failed to save notification to database: {e}")
 
-    def get_notification_history(self, limit: int = 50) -> list[Dict]:
+    def get_notification_history(self, limit: int = 50) -> list[dict]:
         """
         Get notification history
 
@@ -711,7 +711,7 @@ PBX Emergency Notification System
             limit: Maximum number of records to return
 
         Returns:
-            List of notification records
+            list of notification records
         """
         with self.lock:
             return self.notification_history[-limit:]
@@ -740,7 +740,7 @@ PBX Emergency Notification System
         # Trigger emergency notifications
         self.trigger_emergency_notification("911_call", details)
 
-    def test_emergency_notification(self) -> Dict:
+    def test_emergency_notification(self) -> dict:
         """
         Test emergency notification system
 

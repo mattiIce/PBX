@@ -21,7 +21,7 @@ class DNDRule:
         Args:
             rule_id: Unique rule identifier
             extension: Extension number
-            rule_type: Type of rule (calendar, time_based, manual)
+            rule_type: type of rule (calendar, time_based, manual)
             config: Rule configuration
         """
         self.rule_id = rule_id
@@ -197,7 +197,7 @@ class CalendarMonitor:
                             event.get("responseStatus", {}).get("response", "none").lower()
                         )
 
-                        # Set DND if busy and accepted
+                        # set DND if busy and accepted
                         if show_as in ["busy", "outofoffice", "tentative"] and response_status in [
                             "accepted",
                             "organizer",
@@ -240,7 +240,7 @@ class CalendarMonitor:
             extension: Extension number
 
         Returns:
-            Tuple of (in_meeting, meeting_info)
+            tuple of (in_meeting, meeting_info)
         """
         meeting = self.active_meetings.get(extension)
         return (meeting is not None, meeting)
@@ -355,7 +355,7 @@ class DNDScheduler:
 
         Args:
             extension: Extension number
-            rule_type: Type of rule (calendar, time_based)
+            rule_type: type of rule (calendar, time_based)
             config: Rule configuration
 
         Returns:
@@ -401,7 +401,7 @@ class DNDScheduler:
             extension: Extension number
 
         Returns:
-            List of rule dictionaries
+            list of rule dictionaries
         """
         if extension not in self.rules:
             return []
@@ -518,7 +518,7 @@ class DNDScheduler:
         if extension not in self.previous_statuses:
             self.previous_statuses[extension] = current_status
 
-        # Set DND or IN_MEETING
+        # set DND or IN_MEETING
         if self.calendar_dnd_enabled and self.calendar_monitor.is_in_meeting(extension)[0]:
             self.presence_system.set_status(
                 extension, PresenceStatus.IN_MEETING, "In calendar meeting"

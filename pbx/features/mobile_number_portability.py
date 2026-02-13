@@ -38,7 +38,7 @@ class MobileNumberPortability:
         self.mobile_first = mnp_config.get("mobile_first", False)
 
         # Number mappings
-        self.number_mappings: dict[str, Dict] = {}
+        self.number_mappings: dict[str, dict] = {}
 
         # Statistics
         self.total_mappings = 0
@@ -51,8 +51,8 @@ class MobileNumberPortability:
         self.logger.info(f"  Enabled: {self.enabled}")
 
     def map_number_to_mobile(
-        self, business_number: str, extension: str, mobile_device_id: str, settings: Dict = None
-    ) -> Dict:
+        self, business_number: str, extension: str, mobile_device_id: str, settings: dict = None
+    ) -> dict:
         """
         Map business number to mobile device
 
@@ -63,7 +63,7 @@ class MobileNumberPortability:
             settings: Additional settings
 
         Returns:
-            Dict: Mapping result
+            dict: Mapping result
         """
         settings = settings or {}
 
@@ -87,7 +87,7 @@ class MobileNumberPortability:
 
         return {"success": True, "business_number": business_number, "mapping_id": business_number}
 
-    def route_call(self, business_number: str, caller_id: str) -> Dict:
+    def route_call(self, business_number: str, caller_id: str) -> dict:
         """
         Route incoming call based on number mapping
 
@@ -96,7 +96,7 @@ class MobileNumberPortability:
             caller_id: Caller's number
 
         Returns:
-            Dict: Routing decision
+            dict: Routing decision
         """
         if business_number not in self.number_mappings:
             return {"route_to": "desk_phone", "reason": "No mobile mapping"}
@@ -198,7 +198,7 @@ class MobileNumberPortability:
             return True
         return False
 
-    def get_mapping(self, business_number: str) -> Dict | None:
+    def get_mapping(self, business_number: str) -> dict | None:
         """Get mapping for a business number"""
         return self.number_mappings.get(business_number)
 
@@ -210,7 +210,7 @@ class MobileNumberPortability:
             if mapping["extension"] == extension
         ]
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get MNP statistics"""
         active_mappings = sum(1 for m in self.number_mappings.values() if m["active"])
 

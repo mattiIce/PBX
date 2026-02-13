@@ -520,7 +520,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
                 )
             )
 
-        # Set restrictive permissions on private key
+        # set restrictive permissions on private key
         os.chmod(key_file, 0o600)
 
         # Write certificate to file

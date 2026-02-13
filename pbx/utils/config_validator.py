@@ -34,7 +34,7 @@ class ConfigValidator:
         Run all validation checks.
 
         Returns:
-            Tuple of (is_valid, errors_list, warnings_list)
+            tuple of (is_valid, errors_list, warnings_list)
         """
         self.errors = []
         self.warnings = []

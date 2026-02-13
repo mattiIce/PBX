@@ -105,7 +105,7 @@ class TimeBasedRate:
             name: Name of time period (e.g., "Peak Hours", "Weekend")
             start_time: Start time
             end_time: End time
-            days_of_week: List of applicable days (0=Monday, 6=Sunday)
+            days_of_week: list of applicable days (0=Monday, 6=Sunday)
             rate_multiplier: Multiplier for rates during this period
         """
         self.name = name
@@ -479,7 +479,7 @@ class LeastCostRouting:
             dialed_number: Number being dialed
 
         Returns:
-            List of (trunk_id, estimated_cost) tuples sorted by cost
+            list of (trunk_id, estimated_cost) tuples sorted by cost
         """
         applicable_rates = []
 
@@ -507,7 +507,7 @@ class LeastCostRouting:
 
         Args:
             dialed_number: Number being dialed
-            available_trunks: List of available trunk IDs
+            available_trunks: list of available trunk IDs
 
         Returns:
             Selected trunk ID or None
@@ -564,7 +564,7 @@ class LeastCostRouting:
         Select trunk considering both cost and quality
 
         Args:
-            available_rates: List of (trunk_id, cost) tuples
+            available_rates: list of (trunk_id, cost) tuples
 
         Returns:
             Selected trunk ID
@@ -597,7 +597,7 @@ class LeastCostRouting:
 
         return trunk_scores[0][0]
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get LCR statistics"""
         return {
             "enabled": self.enabled,

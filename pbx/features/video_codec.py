@@ -213,7 +213,7 @@ class VideoCodecManager:
         - AV1 (libaom)
 
         Returns:
-            list: List of available codec names
+            list: list of available codec names
         """
         available = self._detect_codecs_via_ffmpeg()
         available = self._detect_openh264(available)
@@ -374,7 +374,7 @@ class VideoCodecManager:
         resolution: VideoResolution,
         framerate: int,
         bitrate: int,
-    ) -> Dict:
+    ) -> dict:
         """
         Create a video encoder instance
 
@@ -386,7 +386,7 @@ class VideoCodecManager:
             bitrate: Target bitrate in kbps
 
         Returns:
-            Dict: Encoder configuration
+            dict: Encoder configuration
         """
         encoder_config = {
             "codec": codec.value,
@@ -437,7 +437,7 @@ class VideoCodecManager:
 
         return encoder_config
 
-    def create_decoder(self, codec: VideoCodec) -> Dict:
+    def create_decoder(self, codec: VideoCodec) -> dict:
         """
         Create a video decoder instance
 
@@ -445,7 +445,7 @@ class VideoCodecManager:
             codec: Video codec
 
         Returns:
-            Dict: Decoder configuration
+            dict: Decoder configuration
         """
         decoder_config = {
             "codec": codec.value,
@@ -479,8 +479,8 @@ class VideoCodecManager:
         Negotiate codec between local and remote endpoints
 
         Args:
-            local_codecs: List of locally supported codecs
-            remote_codecs: List of remotely supported codecs
+            local_codecs: list of locally supported codecs
+            remote_codecs: list of remotely supported codecs
 
         Returns:
             str | None: Negotiated codec or None
@@ -534,7 +534,7 @@ class VideoCodecManager:
 
         return bitrate
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get video codec statistics"""
         return {
             "enabled": self.enabled,

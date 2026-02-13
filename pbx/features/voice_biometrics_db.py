@@ -184,7 +184,7 @@ class VoiceBiometricsDatabase:
             self.logger.error(f"Error saving voice profile: {e}")
             return None
 
-    def get_profile(self, user_id: str) -> Dict | None:
+    def get_profile(self, user_id: str) -> dict | None:
         """Get voice profile by user ID"""
         try:
             cursor = self.db.connection.cursor()
@@ -324,7 +324,7 @@ class VoiceBiometricsDatabase:
         except Exception as e:
             self.logger.error(f"Error saving fraud detection: {e}")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get voice biometrics statistics"""
         try:
             cursor = self.db.connection.cursor()

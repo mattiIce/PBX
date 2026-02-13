@@ -30,7 +30,7 @@ class NomadicE911Engine:
         self.logger.info("Nomadic E911 Framework initialized")
 
     def update_location(
-        self, extension: str, location_data: Dict, auto_detected: bool = False
+        self, extension: str, location_data: dict, auto_detected: bool = False
     ) -> bool:
         """
         Update emergency location for extension
@@ -103,7 +103,7 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to update E911 location: {e}")
             return False
 
-    def get_location(self, extension: str) -> Dict | None:
+    def get_location(self, extension: str) -> dict | None:
         """
         Get current emergency location for extension
 
@@ -153,7 +153,7 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to get E911 location: {e}")
             return None
 
-    def detect_location_by_ip(self, extension: str, ip_address: str) -> Dict | None:
+    def detect_location_by_ip(self, extension: str, ip_address: str) -> dict | None:
         """
         Automatically detect location by IP address
         Uses internal network mapping (multi-site configs)
@@ -204,7 +204,7 @@ class NomadicE911Engine:
 
         return None
 
-    def find_site_by_ip(self, ip_address: str) -> Dict | None:
+    def find_site_by_ip(self, ip_address: str) -> dict | None:
         """
         Find site configuration by IP address (Public API)
 
@@ -216,7 +216,7 @@ class NomadicE911Engine:
         """
         return self._find_site_by_ip(ip_address)
 
-    def _find_site_by_ip(self, ip_address: str) -> Dict | None:
+    def _find_site_by_ip(self, ip_address: str) -> dict | None:
         """
         Find site configuration by IP address
 
@@ -296,7 +296,7 @@ class NomadicE911Engine:
         except (ValueError, TypeError):
             return False
 
-    def create_site_config(self, site_data: Dict) -> bool:
+    def create_site_config(self, site_data: dict) -> bool:
         """
         Create multi-site E911 configuration
 
@@ -343,12 +343,12 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to create site config: {e}")
             return False
 
-    def get_all_sites(self) -> list[Dict]:
+    def get_all_sites(self) -> list[dict]:
         """
         Get all E911 site configurations
 
         Returns:
-            List of site dictionaries with full address information
+            list of site dictionaries with full address information
         """
         try:
             result = self.db.execute("SELECT * FROM multi_site_e911_configs ORDER BY site_name")
@@ -381,7 +381,7 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to get E911 sites: {e}")
             return []
 
-    def get_location_history(self, extension: str, limit: int = 10) -> list[Dict]:
+    def get_location_history(self, extension: str, limit: int = 10) -> list[dict]:
         """
         Get location update history for extension
 
@@ -390,7 +390,7 @@ class NomadicE911Engine:
             limit: Maximum number of records
 
         Returns:
-            List of location update dictionaries
+            list of location update dictionaries
         """
         try:
             result = self.db.execute(

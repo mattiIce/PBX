@@ -187,7 +187,7 @@ class RTPRelay:
             call_id: Unique call identifier
 
         Returns:
-            Tuple of (rtp_port, rtcp_port) or None if allocation failed
+            tuple of (rtp_port, rtcp_port) or None if allocation failed
         """
         if not self.port_pool:
             self.logger.error("No available ports for RTP relay")
@@ -213,12 +213,12 @@ class RTPRelay:
 
     def set_endpoints(self, call_id, endpoint_a, endpoint_b):
         """
-        Set both endpoints for RTP relay
+        set both endpoints for RTP relay
 
         Args:
             call_id: Call identifier
-            endpoint_a: Tuple of (host, port) for first endpoint
-            endpoint_b: Tuple of (host, port) for second endpoint
+            endpoint_a: tuple of (host, port) for first endpoint
+            endpoint_b: tuple of (host, port) for second endpoint
         """
         if call_id in self.active_relays:
             handler = self.active_relays[call_id]["handler"]
@@ -285,15 +285,15 @@ class RTPRelayHandler:
 
     def set_endpoints(self, endpoint_a, endpoint_b):
         """
-        Set the two endpoints to relay between
+        set the two endpoints to relay between
 
         Either or both endpoints can be None initially. The relay will learn
         endpoints from actual RTP packets (symmetric RTP) or wait until both
         are explicitly set.
 
         Args:
-            endpoint_a: Tuple of (host, port) or None
-            endpoint_b: Tuple of (host, port) or None
+            endpoint_a: tuple of (host, port) or None
+            endpoint_b: tuple of (host, port) or None
         """
         with self.lock:
             # Only update if not None, preserving existing values

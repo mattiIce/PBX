@@ -155,7 +155,7 @@ class KarisLawCompliance:
 
     def handle_emergency_call(
         self, caller_extension: str, dialed_number: str, call_id: str, from_addr: tuple
-    ) -> tuple[bool, Dict]:
+    ) -> tuple[bool, dict]:
         """
         Handle emergency call according to Kari's Law
 
@@ -166,7 +166,7 @@ class KarisLawCompliance:
             from_addr: Caller address
 
         Returns:
-            Tuple of (success, routing_info)
+            tuple of (success, routing_info)
         """
         if not self.enabled:
             return False, {"error": "Kari's Law compliance disabled"}
@@ -263,7 +263,7 @@ class KarisLawCompliance:
             self.logger.warning(f"Could not create nomadic E911 engine: {e}")
             return None
 
-    def _format_dispatchable_location(self, location: Dict) -> str:
+    def _format_dispatchable_location(self, location: dict) -> str:
         """Format location dictionary as dispatchable location string"""
         parts = []
         if location.get("street_address"):
@@ -282,7 +282,7 @@ class KarisLawCompliance:
             parts.append(location["postal_code"])
         return ", ".join(parts) if parts else "Location on file"
 
-    def _get_location_info(self, extension: str) -> Dict | None:
+    def _get_location_info(self, extension: str) -> dict | None:
         """
         Get location information for extension (Ray Baum's Act)
 
@@ -320,7 +320,7 @@ class KarisLawCompliance:
 
         return None
 
-    def _get_caller_info(self, extension: str) -> Dict:
+    def _get_caller_info(self, extension: str) -> dict:
         """
         Get caller information
 
@@ -346,10 +346,10 @@ class KarisLawCompliance:
         caller_extension: str,
         normalized_number: str,
         call_id: str,
-        location_info: Dict | None,
-        caller_info: Dict,
+        location_info: dict | None,
+        caller_info: dict,
         nomadic_e911_engine: "NomadicE911Engine" | None = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Route emergency call to appropriate trunk
 
@@ -445,7 +445,7 @@ class KarisLawCompliance:
     def _get_site_emergency_trunk(
         self,
         extension: str,
-        location_info: Dict | None = None,
+        location_info: dict | None = None,
         nomadic_e911_engine: "NomadicE911Engine" | None = None,
     ) -> str | None:
         """
@@ -488,7 +488,7 @@ class KarisLawCompliance:
 
     def _get_site_info(
         self, extension: str, nomadic_e911_engine: "NomadicE911Engine" | None = None
-    ) -> Dict | None:
+    ) -> dict | None:
         """
         Get site information for extension (PSAP, ELIN, etc.)
 
@@ -518,7 +518,7 @@ class KarisLawCompliance:
             return None
 
     def _trigger_emergency_notification(
-        self, caller_extension: str, caller_info: Dict, location_info: Dict | None, call_id: str
+        self, caller_extension: str, caller_info: dict, location_info: dict | None, call_id: str
     ):
         """
         Trigger automatic notification to designated contacts (Kari's Law requirement)
@@ -578,7 +578,7 @@ class KarisLawCompliance:
             limit: Maximum number of records to return
 
         Returns:
-            List of emergency call records
+            list of emergency call records
         """
         calls = self.emergency_calls
 
@@ -588,7 +588,7 @@ class KarisLawCompliance:
         # Return most recent calls
         return calls[-limit:]
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """
         Get Kari's Law compliance statistics
 
@@ -603,7 +603,7 @@ class KarisLawCompliance:
             "emergency_trunk_configured": self.emergency_trunk_id is not None,
         }
 
-    def validate_compliance(self) -> Dict:
+    def validate_compliance(self) -> dict:
         """
         Validate Kari's Law compliance configuration
 

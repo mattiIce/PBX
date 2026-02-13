@@ -85,7 +85,7 @@ def check_module(module_name: str) -> bool:
 
 def check_dependencies(
     verbose: bool = False, requirements_path: str = "requirements.txt"
-) -> tuple[bool, dict[str, List]]:
+) -> tuple[bool, dict[str, list]]:
     """
     Check all dependencies from requirements.txt
 
@@ -94,7 +94,7 @@ def check_dependencies(
         requirements_path: Path to requirements.txt file
 
     Returns:
-        Tuple of (all_core_ok, report_dict)
+        tuple of (all_core_ok, report_dict)
         - all_core_ok: True if all core dependencies are satisfied
         - report_dict: Dictionary with 'missing_core', 'missing_optional', 'available_optional'
     """
@@ -159,7 +159,7 @@ def check_dependencies(
     return len(missing_core) == 0, report
 
 
-def print_dependency_report(report: dict[str, List], verbose: bool = False) -> None:
+def print_dependency_report(report: dict[str, list], verbose: bool = False) -> None:
     """Print a formatted dependency report"""
     missing_core = report["missing_core"]
     missing_optional = report["missing_optional"]

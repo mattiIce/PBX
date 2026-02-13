@@ -235,7 +235,7 @@ class STIRSHAKENManager:
             passport: JWT PASSporT token
 
         Returns:
-            Tuple of (valid: bool, payload: dict, reason: str)
+            tuple of (valid: bool, payload: dict, reason: str)
         """
         if not self.enabled or not self.enable_verification:
             return False, None, "Verification disabled"
@@ -374,7 +374,7 @@ class STIRSHAKENManager:
             identity_header: Identity header value
 
         Returns:
-            Tuple of (status: VerificationStatus, payload: dict)
+            tuple of (status: VerificationStatus, payload: dict)
         """
         if not identity_header:
             return VerificationStatus.NO_SIGNATURE, None
@@ -503,7 +503,7 @@ class STIRSHAKENManager:
             output_dir: Directory to save certificate files
 
         Returns:
-            Tuple of (cert_path, key_path)
+            tuple of (cert_path, key_path)
         """
         if not CRYPTO_AVAILABLE:
             raise RuntimeError("Cryptography library not available")
@@ -602,7 +602,7 @@ def verify_stir_shaken_invite(
         stir_shaken_manager: STIRSHAKENManager instance
 
     Returns:
-        Tuple of (status: VerificationStatus, payload: dict)
+        tuple of (status: VerificationStatus, payload: dict)
     """
     if not stir_shaken_manager or not stir_shaken_manager.enabled:
         return VerificationStatus.NOT_VERIFIED, None

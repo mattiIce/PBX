@@ -48,12 +48,12 @@ class WebhookEvent:
     CONFERENCE_PARTICIPANT_LEFT = "conference.participant_left"
     CONFERENCE_ENDED = "conference.ended"
 
-    def __init__(self, event_type: str, data: Dict):
+    def __init__(self, event_type: str, data: dict):
         """
         Initialize webhook event
 
         Args:
-            event_type: Type of event (e.g., "call.started")
+            event_type: type of event (e.g., "call.started")
             data: Event data dictionary
         """
         self.event_type = event_type
@@ -61,7 +61,7 @@ class WebhookEvent:
         self.timestamp = datetime.now().isoformat()
         self.event_id = f"{event_type}-{int(time.time() * 1000)}"
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert event to dictionary for JSON serialization"""
         return {
             "event_id": self.event_id,
@@ -87,7 +87,7 @@ class WebhookSubscription:
 
         Args:
             url: Target URL for webhook POST requests
-            events: List of event types to subscribe to (or ['*'] for all)
+            events: list of event types to subscribe to (or ['*'] for all)
             secret: Optional secret for HMAC signature verification
             headers: Optional custom headers to include in requests
             enabled: Whether this subscription is active
@@ -257,7 +257,7 @@ class WebhookSystem:
 
                 # Prepare headers
                 headers = {
-                    "Content-Type": "application/json",
+                    "Content-type": "application/json",
                     "User-Agent": "PBX-Webhook/1.0",
                     "X-Webhook-Event": event.event_type,
                     "X-Webhook-ID": event.event_id,
@@ -306,12 +306,12 @@ class WebhookSystem:
                 self.logger.debug("Webhook delivery error details", exc_info=True)
                 break
 
-    def trigger_event(self, event_type: str, data: Dict):
+    def trigger_event(self, event_type: str, data: dict):
         """
         Trigger a webhook event
 
         Args:
-            event_type: Type of event (e.g., WebhookEvent.CALL_STARTED)
+            event_type: type of event (e.g., WebhookEvent.CALL_STARTED)
             data: Event data dictionary
         """
         if not self.enabled:
@@ -349,7 +349,7 @@ class WebhookSystem:
 
         Args:
             url: Target URL
-            events: List of event types
+            events: list of event types
             secret: Optional secret
             headers: Optional custom headers
 
@@ -380,7 +380,7 @@ class WebhookSystem:
                     return True
         return False
 
-    def get_subscriptions(self) -> list[Dict]:
+    def get_subscriptions(self) -> list[dict]:
         """Get all webhook subscriptions"""
         with self.subscriptions_lock:
             return [

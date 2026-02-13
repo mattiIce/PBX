@@ -32,7 +32,7 @@ class HotDeskSession:
         """Update last activity timestamp"""
         self.last_activity = datetime.now()
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "extension": self.extension,
@@ -351,7 +351,7 @@ class HotDeskingSystem:
                 return True
             return False
 
-    def get_active_sessions(self) -> list[Dict]:
+    def get_active_sessions(self) -> list[dict]:
         """Get all active sessions"""
         with self.lock:
             return [session.to_dict() for session in self.sessions.values()]
@@ -361,7 +361,7 @@ class HotDeskingSystem:
         with self.lock:
             return len(self.sessions)
 
-    def get_extension_profile(self, extension: str) -> Dict | None:
+    def get_extension_profile(self, extension: str) -> dict | None:
         """
         Get extension profile for migration to device
 

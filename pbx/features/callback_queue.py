@@ -283,7 +283,7 @@ class CallbackQueue:
         caller_number: str,
         caller_name: str | None = None,
         preferred_time: datetime | None = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Request a callback instead of waiting in queue
 
@@ -348,7 +348,7 @@ class CallbackQueue:
             "status": "scheduled",
         }
 
-    def get_next_callback(self, queue_id: str) -> Dict | None:
+    def get_next_callback(self, queue_id: str) -> dict | None:
         """Get next callback to process for a queue"""
         if queue_id not in self.queue_callbacks or not self.queue_callbacks[queue_id]:
             return None
@@ -367,7 +367,7 @@ class CallbackQueue:
 
         return None
 
-    def start_callback(self, callback_id: str, agent_id: str) -> Dict:
+    def start_callback(self, callback_id: str, agent_id: str) -> dict:
         """Start processing a callback"""
         if callback_id not in self.callbacks:
             return {"error": "Callback not found"}
@@ -464,7 +464,7 @@ class CallbackQueue:
         self.logger.info(f"Callback {callback_id} cancelled")
         return True
 
-    def get_callback_info(self, callback_id: str) -> Dict | None:
+    def get_callback_info(self, callback_id: str) -> dict | None:
         """Get information about a callback"""
         callback = self.callbacks.get(callback_id)
         if not callback:
@@ -483,8 +483,8 @@ class CallbackQueue:
 
     def list_queue_callbacks(
         self, queue_id: str, status: CallbackStatus | None = None
-    ) -> list[Dict]:
-        """List callbacks for a queue"""
+    ) -> list[dict]:
+        """list callbacks for a queue"""
         callback_ids = self.queue_callbacks.get(queue_id, [])
 
         callbacks = []
@@ -495,7 +495,7 @@ class CallbackQueue:
 
         return callbacks
 
-    def get_queue_statistics(self, queue_id: str) -> Dict:
+    def get_queue_statistics(self, queue_id: str) -> dict:
         """Get callback statistics for a queue"""
         all_callbacks = [
             self.callbacks[cid]
@@ -544,7 +544,7 @@ class CallbackQueue:
         if to_remove:
             self.logger.info(f"Cleaned up {len(to_remove)} old callbacks")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get overall callback queue statistics"""
         status_counts = {}
         for callback in self.callbacks.values():

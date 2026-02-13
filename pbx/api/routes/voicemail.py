@@ -51,7 +51,7 @@ def handle_get_voicemail(subpath: str) -> Response:
         mailbox = pbx_core.voicemail_system.get_mailbox(extension)
 
         if len(parts) == 1:
-            # List all messages
+            # list all messages
             messages = mailbox.get_messages()
             data = []
             for msg in messages:

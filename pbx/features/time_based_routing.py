@@ -33,7 +33,7 @@ class TimeBasedRouting:
         for rule in rules:
             self.add_rule(rule)
 
-    def add_rule(self, rule: Dict) -> str:
+    def add_rule(self, rule: dict) -> str:
         """
         Add a time-based routing rule
 
@@ -69,7 +69,7 @@ class TimeBasedRouting:
 
     def get_routing_destination(
         self, destination: str, call_time: datetime | None = None
-    ) -> Dict:
+    ) -> dict:
         """
         Get routing destination based on time rules
 
@@ -117,7 +117,7 @@ class TimeBasedRouting:
             "original_destination": destination,
         }
 
-    def _evaluate_time_conditions(self, conditions: Dict, check_time: datetime) -> bool:
+    def _evaluate_time_conditions(self, conditions: dict, check_time: datetime) -> bool:
         """Evaluate if time conditions match"""
         # Check day of week
         if "days_of_week" in conditions:
@@ -256,15 +256,15 @@ class TimeBasedRouting:
             return True
         return False
 
-    def list_rules(self, destination: str | None = None) -> list[Dict]:
-        """List routing rules"""
+    def list_rules(self, destination: str | None = None) -> list[dict]:
+        """list routing rules"""
         if destination:
             rule_ids = self.destination_rules.get(destination, [])
             return [self.routing_rules[rid] for rid in rule_ids if rid in self.routing_rules]
 
         return list(self.routing_rules.values())
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get time-based routing statistics"""
         enabled_rules = sum(1 for r in self.routing_rules.values() if r.get("enabled", True))
 

@@ -112,7 +112,7 @@ class SessionToken:
         self.logger.info(f"Generated session token for extension {extension} (admin: {is_admin})")
         return token
 
-    def verify_token(self, token: str) -> tuple[bool, Dict | None]:
+    def verify_token(self, token: str) -> tuple[bool, dict | None]:
         """
         Verify and decode token
 
@@ -120,7 +120,7 @@ class SessionToken:
             token: Token string to verify
 
         Returns:
-            Tuple of (is_valid, payload_dict)
+            tuple of (is_valid, payload_dict)
             - is_valid: True if token is valid
             - payload_dict: Decoded payload if valid, None otherwise
         """

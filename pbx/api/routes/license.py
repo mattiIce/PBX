@@ -26,7 +26,7 @@ def _require_license_admin() -> tuple[bool, dict]:
     """Check if current user is the license administrator (extension 9322).
 
     Returns:
-        Tuple of (is_authorized, payload)
+        tuple of (is_authorized, payload)
 
     The payload will be:
         - On success: the authenticated user payload from verify_authentication()
@@ -69,7 +69,7 @@ def handle_license_status() -> tuple[Response, int]:
 @license_bp.route("/api/license/features", methods=["GET"])
 @require_auth
 def handle_license_features() -> tuple[Response, int]:
-    """List all available features for current license."""
+    """list all available features for current license."""
     try:
         from pbx.utils.licensing import get_license_manager
 

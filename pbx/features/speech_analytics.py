@@ -29,7 +29,7 @@ class SpeechAnalyticsEngine:
 
         self.logger.info("Speech Analytics Framework initialized")
 
-    def get_config(self, extension: str) -> Dict | None:
+    def get_config(self, extension: str) -> dict | None:
         """
         Get speech analytics configuration for extension
 
@@ -65,7 +65,7 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Failed to get speech analytics config: {e}")
             return None
 
-    def update_config(self, extension: str, config: Dict) -> bool:
+    def update_config(self, extension: str, config: dict) -> bool:
         """
         Update speech analytics configuration
 
@@ -139,7 +139,7 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Failed to update speech analytics config: {e}")
             return False
 
-    def analyze_audio_stream(self, call_id: str, audio_chunk: bytes) -> Dict:
+    def analyze_audio_stream(self, call_id: str, audio_chunk: bytes) -> dict:
         """
         Analyze audio stream in real-time
         Uses Vosk for offline speech recognition
@@ -232,7 +232,7 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Error in Vosk transcription: {e}")
             return ""
 
-    def analyze_sentiment(self, text: str) -> Dict:
+    def analyze_sentiment(self, text: str) -> dict:
         """
         Analyze sentiment of text using rule-based approach
         Simple but effective for real-time analysis
@@ -459,7 +459,7 @@ class SpeechAnalyticsEngine:
             keywords: Keywords to detect
 
         Returns:
-            List of detected keywords
+            list of detected keywords
         """
         detected = []
         text_lower = text.lower()
@@ -470,12 +470,12 @@ class SpeechAnalyticsEngine:
 
         return detected
 
-    def get_all_configs(self) -> list[Dict]:
+    def get_all_configs(self) -> list[dict]:
         """
         Get all speech analytics configurations
 
         Returns:
-            List of configuration dictionaries
+            list of configuration dictionaries
         """
         try:
             result = self.db.execute("SELECT * FROM speech_analytics_configs ORDER BY extension")
@@ -500,7 +500,7 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Failed to get all speech analytics configs: {e}")
             return []
 
-    def get_call_summary(self, call_id: str) -> Dict | None:
+    def get_call_summary(self, call_id: str) -> dict | None:
         """
         Get stored call summary
 
@@ -535,7 +535,7 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Error getting call summary: {e}")
             return None
 
-    def analyze_call_recording(self, call_id: str, audio_file_path: str) -> Dict:
+    def analyze_call_recording(self, call_id: str, audio_file_path: str) -> dict:
         """
         Analyze a complete call recording
 

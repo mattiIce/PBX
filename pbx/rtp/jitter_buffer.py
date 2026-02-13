@@ -293,7 +293,7 @@ class JitterBuffer:
 
     def set_length(self, length_ms: int):
         """
-        Set buffer length manually (disables adaptive mode)
+        set buffer length manually (disables adaptive mode)
 
         Args:
             length_ms: Buffer length in milliseconds
@@ -378,7 +378,7 @@ class JitterBufferManager:
         Get all jitter buffer instances
 
         Returns:
-            Dict mapping call_id to JitterBuffer
+            dict mapping call_id to JitterBuffer
         """
         return self.buffers.copy()
 

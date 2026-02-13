@@ -177,7 +177,7 @@ class VoiceBiometrics:
         self.logger.info(f"Created voice profile for user {user_id}")
         return profile
 
-    def start_enrollment(self, user_id: str) -> Dict:
+    def start_enrollment(self, user_id: str) -> dict:
         """
         Start voice enrollment process
 
@@ -185,7 +185,7 @@ class VoiceBiometrics:
             user_id: User identifier
 
         Returns:
-            Dict: Enrollment session information
+            dict: Enrollment session information
         """
         if user_id not in self.profiles:
             self.logger.error(f"No profile found for user {user_id}")
@@ -204,7 +204,7 @@ class VoiceBiometrics:
             "session_id": self._generate_session_id(user_id),
         }
 
-    def add_enrollment_sample(self, user_id: str, audio_data: bytes) -> Dict:
+    def add_enrollment_sample(self, user_id: str, audio_data: bytes) -> dict:
         """
         Add a voice sample for enrollment
 
@@ -213,7 +213,7 @@ class VoiceBiometrics:
             audio_data: Audio sample (WAV format, 16kHz, 16-bit PCM recommended)
 
         Returns:
-            Dict: Enrollment progress
+            dict: Enrollment progress
         """
         if user_id not in self.profiles:
             return {"success": False, "error": "Profile not found"}
@@ -252,7 +252,7 @@ class VoiceBiometrics:
             "enrollment_complete": enrollment_complete,
         }
 
-    def verify_speaker(self, user_id: str, audio_data: bytes) -> Dict:
+    def verify_speaker(self, user_id: str, audio_data: bytes) -> dict:
         """
         Verify speaker identity using voice biometrics
 
@@ -261,7 +261,7 @@ class VoiceBiometrics:
             audio_data: Audio sample to verify
 
         Returns:
-            Dict: Verification result with confidence score
+            dict: Verification result with confidence score
         """
         if user_id not in self.profiles:
             return {"verified": False, "confidence": 0.0, "error": "No profile found"}
@@ -305,7 +305,7 @@ class VoiceBiometrics:
             "timestamp": datetime.now().isoformat(),
         }
 
-    def detect_fraud(self, audio_data: bytes, caller_info: Dict) -> Dict:
+    def detect_fraud(self, audio_data: bytes, caller_info: dict) -> dict:
         """
         Detect potential fraud using voice analysis
 
@@ -314,7 +314,7 @@ class VoiceBiometrics:
             caller_info: Information about the caller
 
         Returns:
-            Dict: Fraud detection result
+            dict: Fraud detection result
         """
         if not self.fraud_detection_enabled:
             return {"fraud_detected": False, "reason": "Fraud detection disabled"}
@@ -485,7 +485,7 @@ class VoiceBiometrics:
         # Fallback if no features available
         return hashlib.sha256(f"{user_id}-{datetime.now()}".encode()).hexdigest()
 
-    def _calculate_match_score(self, profile: VoiceProfile, voice_features: Dict) -> float:
+    def _calculate_match_score(self, profile: VoiceProfile, voice_features: dict) -> float:
         """
         Calculate match score between voice features and profile using ML
 
@@ -577,7 +577,7 @@ class VoiceBiometrics:
 
         return score
 
-    def _extract_voice_features(self, audio_data: bytes) -> Dict:
+    def _extract_voice_features(self, audio_data: bytes) -> dict:
         """
         Extract voice features from audio data using pyAudioAnalysis and librosa
 
@@ -585,7 +585,7 @@ class VoiceBiometrics:
             audio_data: Raw audio bytes (expected: 16-bit PCM)
 
         Returns:
-            Dict: Extracted voice features
+            dict: Extracted voice features
         """
         if not audio_data or len(audio_data) < 100:
             return {}
@@ -735,7 +735,7 @@ class VoiceBiometrics:
             self.profiles[user_id].status = BiometricStatus.SUSPENDED
             self.logger.warning(f"Suspended voice profile for user {user_id}")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get voice biometrics statistics"""
         stats = {
             "total_profiles": len(self.profiles),

@@ -43,7 +43,7 @@ def get_license_status():
 @license_api.route("/api/license/features", methods=["GET"])
 def list_available_features():
     """
-    List all available features for current license.
+    list all available features for current license.
 
     Returns:
         JSON with available features list
@@ -474,7 +474,7 @@ def admin_login():
 
         # Verify credentials using encrypted verification
         if verify_license_admin_credentials(extension, username, pin):
-            # Set session
+            # set session
             session["extension"] = extension
             session["username"] = username
             session["is_license_admin"] = True

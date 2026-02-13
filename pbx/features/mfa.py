@@ -188,7 +188,7 @@ class YubiKeyOTPVerifier:
             otp: YubiKey OTP string (44 characters)
 
         Returns:
-            Tuple of (is_valid, error_message)
+            tuple of (is_valid, error_message)
         """
         # Validate OTP format
         if not otp or len(otp) != 44:
@@ -308,7 +308,7 @@ class YubiKeyOTPVerifier:
             otp: YubiKey OTP
 
         Returns:
-            Tuple of (is_valid, error_message)
+            tuple of (is_valid, error_message)
         """
         try:
             # Generate random nonce for replay protection
@@ -414,7 +414,7 @@ class FIDO2Verifier:
                 - client_data: Client data JSON (optional)
 
         Returns:
-            Tuple of (success, credential_id or error_message)
+            tuple of (success, credential_id or error_message)
         """
         try:
             credential_id = credential_data.get("credential_id")
@@ -470,7 +470,7 @@ class FIDO2Verifier:
             challenge: Expected challenge (base64-encoded, optional for backward compatibility)
 
         Returns:
-            Tuple of (is_valid, error_message)
+            tuple of (is_valid, error_message)
         """
         try:
             # Extract assertion components
@@ -791,7 +791,7 @@ class MFAManager:
             extension_number: Extension number
 
         Returns:
-            Tuple of (success, provisioning_uri, backup_codes)
+            tuple of (success, provisioning_uri, backup_codes)
         """
         if not self.enabled:
             return False, None, None
@@ -1077,7 +1077,7 @@ class MFAManager:
             device_name: Optional friendly name for the device
 
         Returns:
-            Tuple of (success, error_message)
+            tuple of (success, error_message)
         """
         if not self.yubikey_enabled or not self.yubikey_verifier:
             return False, "YubiKey support not enabled"
@@ -1146,7 +1146,7 @@ class MFAManager:
             device_name: Optional friendly name for the device
 
         Returns:
-            Tuple of (success, error_message)
+            tuple of (success, error_message)
         """
         if not self.fido2_enabled or not self.fido2_verifier:
             return False, "FIDO2 support not enabled"
@@ -1196,7 +1196,7 @@ class MFAManager:
             self.logger.error(f"FIDO2 enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
-    def get_enrolled_methods(self, extension_number: str) -> dict[str, List]:
+    def get_enrolled_methods(self, extension_number: str) -> dict[str, list]:
         """
         Get all enrolled MFA methods for user
 

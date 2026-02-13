@@ -249,7 +249,7 @@ class PhoneBook:
 
         return True
 
-    def get_entry(self, extension: str) -> Dict | None:
+    def get_entry(self, extension: str) -> dict | None:
         """
         Get a phone book entry
 
@@ -264,19 +264,19 @@ class PhoneBook:
 
         return self.entries.get(extension)
 
-    def get_all_entries(self) -> list[Dict]:
+    def get_all_entries(self) -> list[dict]:
         """
         Get all phone book entries
 
         Returns:
-            list: List of entry dictionaries
+            list: list of entry dictionaries
         """
         if not self.enabled:
             return []
 
         return sorted(self.entries.values(), key=lambda x: x["name"])
 
-    def search(self, query: str, max_results: int = 50) -> list[Dict]:
+    def search(self, query: str, max_results: int = 50) -> list[dict]:
         """
         Search phone book entries
 

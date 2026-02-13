@@ -66,7 +66,7 @@ class GeographicRedundancy:
 
         # Statistics
         self.total_failovers = 0
-        self.failover_history: list[Dict] = []
+        self.failover_history: list[dict] = []
 
         self.logger.info("Geographic redundancy initialized")
         self.logger.info(f"  Auto-failover: {self.auto_failover}")
@@ -80,7 +80,7 @@ class GeographicRedundancy:
         location: str,
         priority: int = 100,
         trunks: list[str] = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Add geographic region
 
@@ -92,7 +92,7 @@ class GeographicRedundancy:
             trunks: Trunk IDs in this region
 
         Returns:
-            Dict: Add result
+            dict: Add result
         """
         region = GeographicRegion(region_id, name, location)
         region.priority = priority
@@ -100,7 +100,7 @@ class GeographicRedundancy:
 
         self.regions[region_id] = region
 
-        # Set as active if first region or higher priority
+        # set as active if first region or higher priority
         if not self.active_region:
             self.active_region = region_id
             region.status = RegionStatus.ACTIVE
@@ -231,7 +231,7 @@ class GeographicRedundancy:
             self.logger.error(f"Service check failed: {e}")
             return False
 
-    def check_region_health(self, region_id: str) -> Dict:
+    def check_region_health(self, region_id: str) -> dict:
         """
         Check health of a region
 
@@ -239,7 +239,7 @@ class GeographicRedundancy:
             region_id: Region identifier
 
         Returns:
-            Dict: Health status
+            dict: Health status
         """
         if region_id not in self.regions:
             return {"healthy": False, "error": "Region not found"}
@@ -339,7 +339,7 @@ class GeographicRedundancy:
 
         return candidates[0][0]
 
-    def manual_failover(self, target_region_id: str) -> Dict:
+    def manual_failover(self, target_region_id: str) -> dict:
         """
         Manually failover to specific region
 
@@ -347,7 +347,7 @@ class GeographicRedundancy:
             target_region_id: Target region ID
 
         Returns:
-            Dict: Failover result
+            dict: Failover result
         """
         if target_region_id not in self.regions:
             return {"success": False, "error": "Region not found"}
@@ -368,7 +368,7 @@ class GeographicRedundancy:
 
         return {"success": True, "from_region": old_region, "to_region": target_region_id}
 
-    def get_active_region(self) -> Dict | None:
+    def get_active_region(self) -> dict | None:
         """Get current active region"""
         if self.active_region and self.active_region in self.regions:
             region = self.regions[self.active_region]
@@ -382,7 +382,7 @@ class GeographicRedundancy:
             }
         return None
 
-    def get_all_regions(self) -> list[Dict]:
+    def get_all_regions(self) -> list[dict]:
         """Get all regions"""
         return [
             {
@@ -398,7 +398,7 @@ class GeographicRedundancy:
             for region in self.regions.values()
         ]
 
-    def get_region_status(self, region_id: str) -> Dict | None:
+    def get_region_status(self, region_id: str) -> dict | None:
         """Get status of a specific region"""
         if region_id not in self.regions:
             return None
@@ -419,7 +419,7 @@ class GeographicRedundancy:
             ),
         }
 
-    def create_region(self, region_id: str, name: str, location: str) -> Dict:
+    def create_region(self, region_id: str, name: str, location: str) -> dict:
         """Create a new geographic region"""
         if region_id in self.regions:
             return {"success": False, "error": "Region already exists"}
@@ -431,7 +431,7 @@ class GeographicRedundancy:
 
         return {"success": True, "region_id": region_id, "name": name, "location": location}
 
-    def trigger_failover(self, target_region_id: str = None) -> Dict:
+    def trigger_failover(self, target_region_id: str = None) -> dict:
         """Trigger manual failover to specified region or auto-select"""
         if target_region_id:
             return self.manual_failover(target_region_id)
@@ -443,7 +443,7 @@ class GeographicRedundancy:
             else:
                 return {"success": False, "error": "No available regions for failover"}
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get redundancy statistics"""
         return {
             "enabled": self.enabled,

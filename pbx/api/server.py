@@ -67,7 +67,7 @@ class PBXFlaskServer:
 
         if not cert_file or not key_file:
             logger.error("SSL is enabled but cert_file or key_file not configured")
-            logger.error("Set api.ssl.enabled: false in config.yml to disable SSL")
+            logger.error("set api.ssl.enabled: false in config.yml to disable SSL")
             return
 
         if not os.path.exists(cert_file):

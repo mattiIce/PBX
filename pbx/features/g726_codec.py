@@ -558,7 +558,7 @@ class G726CodecManager:
         Get SDP capabilities for SIP negotiation.
 
         Returns:
-            List of SDP format lines.
+            list of SDP format lines.
         """
         if not self.enabled:
             return []

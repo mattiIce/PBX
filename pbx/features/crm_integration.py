@@ -37,7 +37,7 @@ class CallerInfo:
         # Source of the data (e.g., 'phone_book', 'crm', 'ad')
         self.source = None
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "phone_number": self.phone_number,
@@ -55,7 +55,7 @@ class CallerInfo:
         }
 
     @staticmethod
-    def from_dict(data: Dict) -> "CallerInfo":
+    def from_dict(data: dict) -> "CallerInfo":
         """Create from dictionary"""
         phone_number = data.get("phone_number", "")
         caller_info = CallerInfo(phone_number)
@@ -82,7 +82,7 @@ class CallerInfo:
 class CRMLookupProvider:
     """Base class for CRM lookup providers"""
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """
         Initialize CRM lookup provider
 
@@ -110,7 +110,7 @@ class CRMLookupProvider:
 class PhoneBookLookupProvider(CRMLookupProvider):
     """Phone book lookup provider"""
 
-    def __init__(self, config: Dict, phone_book=None):
+    def __init__(self, config: dict, phone_book=None):
         """
         Initialize phone book lookup provider
 
@@ -149,7 +149,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
 class ActiveDirectoryLookupProvider(CRMLookupProvider):
     """Active Directory lookup provider"""
 
-    def __init__(self, config: Dict, ad_integration=None):
+    def __init__(self, config: dict, ad_integration=None):
         """
         Initialize AD lookup provider
 
@@ -187,7 +187,7 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
 class ExternalCRMLookupProvider(CRMLookupProvider):
     """External CRM API lookup provider"""
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: dict):
         """
         Initialize external CRM lookup provider
 
@@ -208,7 +208,7 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
         try:
             # Prepare request
             url = f"{self.url}?phone={phone_number}"
-            headers = {"Content-Type": "application/json", "User-Agent": "PBX-CRM/1.0"}
+            headers = {"Content-type": "application/json", "User-Agent": "PBX-CRM/1.0"}
 
             if self.api_key:
                 headers["Authorization"] = f"Bearer {self.api_key}"
@@ -456,7 +456,7 @@ class CRMIntegration:
 
         self.logger.info(f"Screen pop triggered for call {call_id}: {phone_number} -> {extension}")
 
-    def get_provider_status(self) -> list[Dict]:
+    def get_provider_status(self) -> list[dict]:
         """Get status of all providers"""
         return [
             {"name": provider.name, "enabled": provider.enabled, "type": type(provider).__name__}

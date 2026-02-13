@@ -79,7 +79,7 @@ class PasswordPolicy:
             password: Password to validate
 
         Returns:
-            Tuple of (is_valid, error_message)
+            tuple of (is_valid, error_message)
         """
         if not password:
             return False, "Password cannot be empty"
@@ -231,7 +231,7 @@ class RateLimiter:
             identifier: User identifier (username, IP, etc.)
 
         Returns:
-            Tuple of (is_limited, seconds_until_unlock)
+            tuple of (is_limited, seconds_until_unlock)
         """
         now = time.time()
 
@@ -332,7 +332,7 @@ class SecurityAuditor:
         Log a security event
 
         Args:
-            event_type: Type of security event
+            event_type: type of security event
             identifier: User/extension identifier
             details: Additional event details
             success: Whether action was successful
@@ -431,7 +431,7 @@ class SecurePasswordManager:
             password: Plain text password
 
         Returns:
-            Tuple of (hashed_password, salt) as base64 strings
+            tuple of (hashed_password, salt) as base64 strings
         """
         return self.encryption.hash_password(password)
 
@@ -457,7 +457,7 @@ class SecurePasswordManager:
             password: Password to validate
 
         Returns:
-            Tuple of (is_valid, error_message)
+            tuple of (is_valid, error_message)
         """
         return self.policy.validate(password)
 
@@ -677,7 +677,7 @@ class ThreatDetector:
             ip_address: IP address to check
 
         Returns:
-            Tuple of (is_blocked, reason)
+            tuple of (is_blocked, reason)
         """
         if not self.enabled:
             return False, None
@@ -966,7 +966,7 @@ class ThreatDetector:
         except Exception as e:
             self.logger.error(f"Failed to log threat event: {e}")
 
-    def get_threat_summary(self, hours: int = 24) -> Dict:
+    def get_threat_summary(self, hours: int = 24) -> dict:
         """
         Get summary of recent threats
 

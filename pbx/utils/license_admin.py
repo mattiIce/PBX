@@ -217,7 +217,7 @@ def verify_license_admin_session(request) -> tuple[bool, str | None]:
         request: Flask request object
 
     Returns:
-        Tuple of (is_authorized, error_message)
+        tuple of (is_authorized, error_message)
     """
     try:
         # Check for session token

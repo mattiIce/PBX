@@ -115,7 +115,7 @@ class BIIntegration:
             "QoS Metrics", "SELECT * FROM qos_metrics WHERE timestamp >= :start_date"
         )
 
-    def _execute_query(self, query: str, start_date: datetime, end_date: datetime) -> list[Dict]:
+    def _execute_query(self, query: str, start_date: datetime, end_date: datetime) -> list[dict]:
         """
         Execute query and fetch data from database
 
@@ -125,7 +125,7 @@ class BIIntegration:
             end_date: End date parameter
 
         Returns:
-            list[Dict]: Query results
+            list[dict]: Query results
         """
         try:
             from pbx.utils.database import get_database
@@ -164,7 +164,7 @@ class BIIntegration:
             self.logger.error(f"Query execution failed: {e}")
             return []
 
-    def _format_data(self, data: list[Dict], format: ExportFormat, dataset_name: str) -> str:
+    def _format_data(self, data: list[dict], format: ExportFormat, dataset_name: str) -> str:
         """
         Convert data to requested format
 
@@ -191,7 +191,7 @@ class BIIntegration:
             self.logger.warning(f"Format {format.value} not yet implemented")
             return ""
 
-    def _export_csv(self, data: list[Dict], dataset_name: str, timestamp: str) -> str:
+    def _export_csv(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
         """Export data to CSV"""
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.csv"
 
@@ -210,7 +210,7 @@ class BIIntegration:
         self.logger.info(f"Exported {len(data)} rows to {filename}")
         return filename
 
-    def _export_json(self, data: list[Dict], dataset_name: str, timestamp: str) -> str:
+    def _export_json(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
         """Export data to JSON"""
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.json"
 
@@ -218,7 +218,7 @@ class BIIntegration:
         def serialize_datetime(obj):
             if isinstance(obj, datetime):
                 return obj.isoformat()
-            raise TypeError(f"Type {type(obj)} not serializable")
+            raise TypeError(f"type {type(obj)} not serializable")
 
         with open(filename, "w") as f:
             json.dump(data, f, indent=2, default=serialize_datetime)
@@ -226,7 +226,7 @@ class BIIntegration:
         self.logger.info(f"Exported {len(data)} rows to {filename}")
         return filename
 
-    def _export_excel(self, data: list[Dict], dataset_name: str, timestamp: str) -> str:
+    def _export_excel(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
         """Export data to Excel (requires openpyxl)"""
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.xlsx"
 
@@ -260,7 +260,7 @@ class BIIntegration:
         start_date: datetime = None,
         end_date: datetime = None,
         provider: BIProvider = None,
-    ) -> Dict:
+    ) -> dict:
         """
         Export dataset to specified format
 
@@ -272,7 +272,7 @@ class BIIntegration:
             provider: BI provider (optional)
 
         Returns:
-            Dict: Export result
+            dict: Export result
         """
         if dataset_name not in self.datasets:
             return {"success": False, "error": f"Dataset {dataset_name} not found"}
@@ -386,7 +386,7 @@ class BIIntegration:
             return None
 
     def _create_tableau_table_definition(
-        self, table_name: str, sample_row: Dict
+        self, table_name: str, sample_row: dict
     ) -> "TableDefinition":
         """Create Tableau table definition from sample row"""
         from tableauhyperapi import SqlType, TableDefinition, TableName
@@ -409,7 +409,7 @@ class BIIntegration:
 
         return TableDefinition(table_name=TableName("Extract", table_name), columns=columns)
 
-    def create_powerbi_dataset(self, dataset_name: str, credentials: Dict) -> Dict:
+    def create_powerbi_dataset(self, dataset_name: str, credentials: dict) -> dict:
         """
         Create Power BI dataset via REST API
 
@@ -418,7 +418,7 @@ class BIIntegration:
             credentials: Power BI API credentials (access_token, workspace_id)
 
         Returns:
-            Dict: Dataset creation result
+            dict: Dataset creation result
         """
         self.logger.info(f"Creating Power BI dataset for {dataset_name}")
 
@@ -451,7 +451,7 @@ class BIIntegration:
 
             headers = {
                 "Authorization": f"Bearer {access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             response = requests.post(url, headers=headers, json=schema, timeout=30)
@@ -474,7 +474,7 @@ class BIIntegration:
             self.logger.error(f"Failed to create Power BI dataset: {e}")
             return {"success": False, "error": str(e)}
 
-    def _create_powerbi_schema(self, dataset_name: str, sample_data: list[Dict]) -> Dict:
+    def _create_powerbi_schema(self, dataset_name: str, sample_data: list[dict]) -> dict:
         """Create Power BI dataset schema"""
         if not sample_data:
             return {"name": dataset_name, "tables": []}
@@ -498,7 +498,7 @@ class BIIntegration:
 
         return {"name": dataset_name, "tables": [{"name": dataset_name, "columns": columns}]}
 
-    def setup_direct_query(self, provider: BIProvider, connection_string: str) -> Dict:
+    def setup_direct_query(self, provider: BIProvider, connection_string: str) -> dict:
         """
         Setup direct query connection for BI tool
 
@@ -507,7 +507,7 @@ class BIIntegration:
             connection_string: Database connection string
 
         Returns:
-            Dict: Connection setup result
+            dict: Connection setup result
         """
         self.logger.info(f"Setting up direct query for {provider.value}")
         self.logger.info(f"  Connection: {connection_string}")
@@ -622,7 +622,7 @@ class BIIntegration:
             # Default to daily
             return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
-    def get_available_datasets(self) -> list[Dict]:
+    def get_available_datasets(self) -> list[dict]:
         """Get list of available datasets"""
         return [
             {
@@ -636,7 +636,7 @@ class BIIntegration:
             for name, dataset in self.datasets.items()
         ]
 
-    def test_connection(self, provider: BIProvider, credentials: Dict) -> Dict:
+    def test_connection(self, provider: BIProvider, credentials: dict) -> dict:
         """
         Test connection to BI provider
 
@@ -645,7 +645,7 @@ class BIIntegration:
             credentials: API credentials
 
         Returns:
-            Dict: Test result
+            dict: Test result
         """
         self.logger.info(f"Testing connection to {provider.value}")
 
@@ -707,7 +707,7 @@ class BIIntegration:
             self.logger.error(f"Connection test failed: {e}")
             return {"success": False, "provider": provider.value, "error": str(e)}
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get BI integration statistics"""
         return {
             "enabled": self.enabled,

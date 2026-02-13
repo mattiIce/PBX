@@ -32,7 +32,7 @@ class ClickToDialEngine:
 
         self.logger.info("Click-to-Dial Framework initialized")
 
-    def get_config(self, extension: str) -> Dict | None:
+    def get_config(self, extension: str) -> dict | None:
         """
         Get click-to-dial configuration for extension
 
@@ -67,7 +67,7 @@ class ClickToDialEngine:
             self.logger.error(f"Failed to get click-to-dial config: {e}")
             return None
 
-    def update_config(self, extension: str, config: Dict) -> bool:
+    def update_config(self, extension: str, config: dict) -> bool:
         """
         Update click-to-dial configuration
 
@@ -247,7 +247,7 @@ class ClickToDialEngine:
             self.logger.error(f"Failed to update call status: {e}")
             return False
 
-    def get_call_history(self, extension: str, limit: int = 100) -> list[Dict]:
+    def get_call_history(self, extension: str, limit: int = 100) -> list[dict]:
         """
         Get click-to-dial call history for extension
 
@@ -256,7 +256,7 @@ class ClickToDialEngine:
             limit: Maximum number of records
 
         Returns:
-            List of call history dictionaries
+            list of call history dictionaries
         """
         try:
             result = self.db.execute(
@@ -291,12 +291,12 @@ class ClickToDialEngine:
             self.logger.error(f"Failed to get call history: {e}")
             return []
 
-    def get_all_configs(self) -> list[Dict]:
+    def get_all_configs(self) -> list[dict]:
         """
         Get all click-to-dial configurations
 
         Returns:
-            List of configuration dictionaries
+            list of configuration dictionaries
         """
         try:
             result = self.db.execute("SELECT * FROM click_to_dial_configs ORDER BY extension")

@@ -167,7 +167,7 @@ class ConversationalAI:
         self.logger.info(f"Started conversation for call {call_id} from {caller_id}")
         return context
 
-    def process_user_input(self, call_id: str, user_input: str) -> Dict:
+    def process_user_input(self, call_id: str, user_input: str) -> dict:
         """
         Process user input and generate AI response
 
@@ -176,7 +176,7 @@ class ConversationalAI:
             user_input: User's speech converted to text
 
         Returns:
-            Dict containing response, intent, and entities
+            dict containing response, intent, and entities
         """
         if call_id not in self.active_conversations:
             self.logger.warning(f"No active conversation for call {call_id}")
@@ -278,7 +278,7 @@ class ConversationalAI:
             ),
         }
 
-    def _generate_response(self, context: ConversationContext, user_input: str) -> Dict:
+    def _generate_response(self, context: ConversationContext, user_input: str) -> dict:
         """
         Generate AI response using enhanced intent detection and entity extraction
 
@@ -298,7 +298,7 @@ class ConversationalAI:
             user_input: User's input
 
         Returns:
-            Dict with response, intent, entities, and confidence
+            dict with response, intent, entities, and confidence
         """
         # Detect intent using enhanced method with confidence scoring
         intent, confidence = self._detect_intent_with_confidence(user_input)
@@ -365,7 +365,7 @@ class ConversationalAI:
             text: User input
 
         Returns:
-            Tuple of (intent, confidence)
+            tuple of (intent, confidence)
         """
         # Use existing detect_intent method
         intent = self.detect_intent(text)
@@ -487,7 +487,7 @@ class ConversationalAI:
         # Default intent
         return "general_inquiry"
 
-    def extract_entities(self, text: str) -> Dict:
+    def extract_entities(self, text: str) -> dict:
         """
         Extract entities from text using pattern matching
 
@@ -500,7 +500,7 @@ class ConversationalAI:
             text: User's input text
 
         Returns:
-            Dict: Extracted entities (phone numbers, names, departments, dates, times, etc.)
+            dict: Extracted entities (phone numbers, names, departments, dates, times, etc.)
         """
         import re
 
@@ -616,7 +616,7 @@ class ConversationalAI:
             if call_id in self.conversation_ids:
                 del self.conversation_ids[call_id]
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get AI assistant statistics"""
         stats = {
             "total_conversations": self.total_conversations,
@@ -637,7 +637,7 @@ class ConversationalAI:
 
         return stats
 
-    def get_conversation_history(self, limit: int = 100) -> list[Dict]:
+    def get_conversation_history(self, limit: int = 100) -> list[dict]:
         """
         Get conversation history from database
 
@@ -645,7 +645,7 @@ class ConversationalAI:
             limit: Maximum number of conversations to return
 
         Returns:
-            List of conversation dictionaries
+            list of conversation dictionaries
         """
         if self.db:
             return self.db.get_conversation_history(limit)

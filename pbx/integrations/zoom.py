@@ -99,7 +99,7 @@ class ZoomIntegration:
 
     def create_meeting(
         self, topic: str, start_time: str = None, duration_minutes: int = 60, **kwargs
-    ) -> Dict | None:
+    ) -> dict | None:
         """
         Create a Zoom meeting
 
@@ -124,7 +124,7 @@ class ZoomIntegration:
 
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             # Build meeting payload
@@ -173,7 +173,7 @@ class ZoomIntegration:
             self.logger.error(f"Error creating Zoom meeting: {e}")
             return None
 
-    def start_instant_meeting(self, host_extension: str) -> Dict | None:
+    def start_instant_meeting(self, host_extension: str) -> dict | None:
         """
         Start an instant Zoom meeting from desk phone
 
@@ -311,7 +311,7 @@ class ZoomIntegration:
 
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             self.logger.info(f"Getting Zoom Phone status for user {user_id}")

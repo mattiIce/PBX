@@ -45,7 +45,7 @@ class ProductionHealthChecker:
         Used by orchestration systems to determine if the container should be restarted.
 
         Returns:
-            Tuple of (is_alive, details_dict)
+            tuple of (is_alive, details_dict)
         """
         try:
             uptime = time.time() - self.start_time
@@ -67,7 +67,7 @@ class ProductionHealthChecker:
         Used by load balancers to determine if traffic should be routed here.
 
         Returns:
-            Tuple of (is_ready, details_dict)
+            tuple of (is_ready, details_dict)
         """
         checks = {}
         is_ready = True
@@ -308,7 +308,7 @@ def format_health_check_response(
         format_type: "json", "prometheus", or "plain"
 
     Returns:
-        Tuple of (http_status_code, formatted_response)
+        tuple of (http_status_code, formatted_response)
     """
     import json
 

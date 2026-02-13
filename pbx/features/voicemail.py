@@ -342,7 +342,7 @@ class VoicemailBox:
             unread_only: Only return unread messages
 
         Returns:
-            List of message dictionaries
+            list of message dictionaries
         """
         if unread_only:
             return [msg for msg in self.messages if not msg["listened"]]
@@ -562,7 +562,7 @@ class VoicemailBox:
 
     def set_pin(self, pin):
         """
-        Set voicemail PIN
+        set voicemail PIN
 
         Args:
             pin: 4-digit PIN string
@@ -855,7 +855,7 @@ class VoicemailIVR:
                 f"[VM IVR] ⚠️  PIN DEBUG LOGGING ENABLED for extension {extension_number} - TESTING ONLY!"
             )
             self.logger.warning(
-                "[VM IVR] ⚠️  Set DEBUG_VM_PIN=false to disable sensitive PIN logging"
+                "[VM IVR] ⚠️  set DEBUG_VM_PIN=false to disable sensitive PIN logging"
             )
 
         self.logger.info(f"Voicemail IVR initialized for extension {extension_number}")

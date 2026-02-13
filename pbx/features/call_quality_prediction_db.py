@@ -167,7 +167,7 @@ class CallQualityPredictionDatabase:
             self.logger.error(f"Error creating quality prediction tables: {e}")
             return False
 
-    def save_metrics(self, call_id: str, metrics: Dict):
+    def save_metrics(self, call_id: str, metrics: dict):
         """Save quality metrics"""
         try:
             cursor = self.db.connection.cursor()
@@ -201,7 +201,7 @@ class CallQualityPredictionDatabase:
         except Exception as e:
             self.logger.error(f"Error saving quality metrics: {e}")
 
-    def save_prediction(self, call_id: str, prediction: Dict):
+    def save_prediction(self, call_id: str, prediction: dict):
         """Save quality prediction"""
         try:
             cursor = self.db.connection.cursor()
@@ -294,7 +294,7 @@ class CallQualityPredictionDatabase:
         except Exception as e:
             self.logger.error(f"Error saving alert: {e}")
 
-    def get_recent_predictions(self, limit: int = 100) -> list[Dict]:
+    def get_recent_predictions(self, limit: int = 100) -> list[dict]:
         """Get recent predictions"""
         try:
             cursor = self.db.connection.cursor()
@@ -321,7 +321,7 @@ class CallQualityPredictionDatabase:
             self.logger.error(f"Error getting predictions: {e}")
             return []
 
-    def get_active_alerts(self) -> list[Dict]:
+    def get_active_alerts(self) -> list[dict]:
         """Get active (unacknowledged) alerts"""
         try:
             cursor = self.db.connection.cursor()
@@ -364,7 +364,7 @@ class CallQualityPredictionDatabase:
         except Exception as e:
             self.logger.error(f"Error acknowledging alert: {e}")
 
-    def update_daily_trends(self, endpoint: str, metrics: Dict):
+    def update_daily_trends(self, endpoint: str, metrics: dict):
         """Update daily trend statistics"""
         try:
             cursor = self.db.connection.cursor()
@@ -407,7 +407,7 @@ class CallQualityPredictionDatabase:
         except Exception as e:
             self.logger.error(f"Error updating daily trends: {e}")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get quality prediction statistics"""
         try:
             cursor = self.db.connection.cursor()

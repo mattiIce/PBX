@@ -30,7 +30,7 @@ class VideoConferencingEngine:
 
         self.logger.info("Video Conferencing Framework initialized")
 
-    def create_room(self, room_data: Dict) -> int | None:
+    def create_room(self, room_data: dict) -> int | None:
         """
         Create video conference room
 
@@ -89,7 +89,7 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to create video conference room: {e}")
             return None
 
-    def join_room(self, room_id: int, participant_data: Dict) -> bool:
+    def join_room(self, room_id: int, participant_data: dict) -> bool:
         """
         Add participant to video conference room
 
@@ -161,7 +161,7 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to remove participant from room: {e}")
             return False
 
-    def get_room(self, room_id: int) -> Dict | None:
+    def get_room(self, room_id: int) -> dict | None:
         """
         Get video conference room details
 
@@ -200,7 +200,7 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to get video conference room: {e}")
             return None
 
-    def get_room_participants(self, room_id: int) -> list[Dict]:
+    def get_room_participants(self, room_id: int) -> list[dict]:
         """
         Get active participants in room
 
@@ -208,7 +208,7 @@ class VideoConferencingEngine:
             room_id: Room ID
 
         Returns:
-            List of participant dictionaries
+            list of participant dictionaries
         """
         try:
             result = self.db.execute(
@@ -241,7 +241,7 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to get room participants: {e}")
             return []
 
-    def update_codec_config(self, codec_data: Dict) -> bool:
+    def update_codec_config(self, codec_data: dict) -> bool:
         """
         Update video codec configuration
 
@@ -314,12 +314,12 @@ class VideoConferencingEngine:
             self.logger.error(f"Failed to update video codec config: {e}")
             return False
 
-    def get_all_rooms(self) -> list[Dict]:
+    def get_all_rooms(self) -> list[dict]:
         """
         Get all video conference rooms
 
         Returns:
-            List of room dictionaries
+            list of room dictionaries
         """
         try:
             result = self.db.execute(

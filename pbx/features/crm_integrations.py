@@ -28,7 +28,7 @@ class HubSpotIntegration:
 
         self.logger.info("HubSpot Integration Framework initialized")
 
-    def get_config(self) -> Dict | None:
+    def get_config(self) -> dict | None:
         """
         Get HubSpot integration configuration
 
@@ -56,7 +56,7 @@ class HubSpotIntegration:
             self.logger.error(f"Failed to get HubSpot config: {e}")
             return None
 
-    def update_config(self, config: Dict) -> bool:
+    def update_config(self, config: dict) -> bool:
         """
         Update HubSpot integration configuration
 
@@ -127,7 +127,7 @@ class HubSpotIntegration:
             self.logger.error(f"Failed to update HubSpot config: {e}")
             return False
 
-    def sync_contact(self, contact_data: Dict) -> bool:
+    def sync_contact(self, contact_data: dict) -> bool:
         """
         Sync contact to HubSpot
         Framework method - integrates with HubSpot API
@@ -165,7 +165,7 @@ class HubSpotIntegration:
             import requests
 
             headers = {
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
                 "Authorization": f"Bearer {config['api_key']}",
             }
 
@@ -177,7 +177,7 @@ class HubSpotIntegration:
                 response = requests.post(
                     config["webhook_url"],
                     json=payload,
-                    headers={"Content-Type": "application/json"},
+                    headers={"Content-type": "application/json"},
                     timeout=10,
                 )
             else:
@@ -214,7 +214,7 @@ class HubSpotIntegration:
             self.logger.error(f"HubSpot sync error: {e}")
             return False
 
-    def create_deal(self, deal_data: Dict) -> bool:
+    def create_deal(self, deal_data: dict) -> bool:
         """
         Create deal in HubSpot
         Uses webhook or HubSpot API
@@ -252,7 +252,7 @@ class HubSpotIntegration:
             import requests
 
             headers = {
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
                 "Authorization": f"Bearer {config['api_key']}",
             }
 
@@ -278,7 +278,7 @@ class HubSpotIntegration:
                 response = requests.post(
                     config["webhook_url"],
                     json=payload,
-                    headers={"Content-Type": "application/json"},
+                    headers={"Content-type": "application/json"},
                     timeout=10,
                 )
             else:
@@ -354,7 +354,7 @@ class ZendeskIntegration:
 
         self.logger.info("Zendesk Integration Framework initialized")
 
-    def get_config(self) -> Dict | None:
+    def get_config(self) -> dict | None:
         """
         Get Zendesk integration configuration
 
@@ -381,7 +381,7 @@ class ZendeskIntegration:
             self.logger.error(f"Failed to get Zendesk config: {e}")
             return None
 
-    def update_config(self, config: Dict) -> bool:
+    def update_config(self, config: dict) -> bool:
         """
         Update Zendesk integration configuration
 
@@ -451,7 +451,7 @@ class ZendeskIntegration:
             self.logger.error(f"Failed to update Zendesk config: {e}")
             return False
 
-    def create_ticket(self, ticket_data: Dict) -> str | None:
+    def create_ticket(self, ticket_data: dict) -> str | None:
         """
         Create ticket in Zendesk
         Uses webhook or Zendesk API
@@ -481,7 +481,7 @@ class ZendeskIntegration:
                 "priority": ticket_data.get("priority", config.get("default_priority", "normal")),
             }
 
-            # Set requester
+            # set requester
             if ticket_data.get("requester_email"):
                 ticket["requester"] = {"email": ticket_data["requester_email"]}
             elif ticket_data.get("requester_name"):
@@ -507,7 +507,7 @@ class ZendeskIntegration:
                 response = requests.post(
                     config["webhook_url"],
                     json={"ticket": ticket},
-                    headers={"Content-Type": "application/json"},
+                    headers={"Content-type": "application/json"},
                     timeout=10,
                 )
             else:
@@ -516,7 +516,7 @@ class ZendeskIntegration:
                 auth_bytes = base64.b64encode(auth_string.encode("utf-8"))
                 auth_header = f"Basic {auth_bytes.decode('utf-8')}"
 
-                headers = {"Content-Type": "application/json", "Authorization": auth_header}
+                headers = {"Content-type": "application/json", "Authorization": auth_header}
 
                 response = requests.post(
                     f"https://{subdomain}.zendesk.com/api/v2/tickets.json",
@@ -548,7 +548,7 @@ class ZendeskIntegration:
             self.logger.error(f"Zendesk ticket creation error: {e}")
             return None
 
-    def update_ticket(self, ticket_id: str, update_data: Dict) -> bool:
+    def update_ticket(self, ticket_id: str, update_data: dict) -> bool:
         """
         Update ticket in Zendesk
         Uses webhook or Zendesk API
@@ -596,7 +596,7 @@ class ZendeskIntegration:
                 response = requests.put(
                     f"{config['webhook_url']}/{ticket_id}",
                     json={"ticket": ticket},
-                    headers={"Content-Type": "application/json"},
+                    headers={"Content-type": "application/json"},
                     timeout=10,
                 )
             else:
@@ -605,7 +605,7 @@ class ZendeskIntegration:
                 auth_bytes = base64.b64encode(auth_string.encode("utf-8"))
                 auth_header = f"Basic {auth_bytes.decode('utf-8')}"
 
-                headers = {"Content-Type": "application/json", "Authorization": auth_header}
+                headers = {"Content-type": "application/json", "Authorization": auth_header}
 
                 response = requests.put(
                     f"https://{subdomain}.zendesk.com/api/v2/tickets/{ticket_id}.json",
@@ -653,7 +653,7 @@ class ZendeskIntegration:
         except Exception as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
-    def get_activity_log(self, limit: int = 100) -> list[Dict]:
+    def get_activity_log(self, limit: int = 100) -> list[dict]:
         """
         Get integration activity log
 
@@ -661,7 +661,7 @@ class ZendeskIntegration:
             limit: Maximum number of records
 
         Returns:
-            List of activity dictionaries
+            list of activity dictionaries
         """
         try:
             result = self.db.execute(

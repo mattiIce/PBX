@@ -49,14 +49,14 @@ class LansweeperIntegration:
                 )
 
     def _make_request(
-        self, endpoint: str, method: str = "GET", data: Dict | None = None
-    ) -> Dict | None:
+        self, endpoint: str, method: str = "GET", data: dict | None = None
+    ) -> dict | None:
         """Make API request to Lansweeper"""
         if not REQUESTS_AVAILABLE:
             return None
 
         url = f"{self.api_url}/{endpoint}"
-        headers = {"Content-Type": "application/json"}
+        headers = {"Content-type": "application/json"}
 
         # Add authentication
         if self.api_token:
@@ -89,7 +89,7 @@ class LansweeperIntegration:
             self.logger.error(f"Lansweeper API error: {e}")
             return None
 
-    def get_asset_by_mac(self, mac_address: str) -> Dict | None:
+    def get_asset_by_mac(self, mac_address: str) -> dict | None:
         """
         Get asset information by MAC address
 
@@ -124,7 +124,7 @@ class LansweeperIntegration:
 
         return None
 
-    def get_asset_by_ip(self, ip_address: str) -> Dict | None:
+    def get_asset_by_ip(self, ip_address: str) -> dict | None:
         """Get asset information by IP address"""
         if not self.enabled:
             return None
@@ -137,7 +137,7 @@ class LansweeperIntegration:
 
         return None
 
-    def get_phone_info(self, mac_address: str) -> Dict:
+    def get_phone_info(self, mac_address: str) -> dict:
         """
         Get phone information from Lansweeper
 
@@ -207,7 +207,7 @@ class LansweeperIntegration:
         )
         return True
 
-    def get_extension_location(self, extension: str) -> Dict | None:
+    def get_extension_location(self, extension: str) -> dict | None:
         """
         Get physical location of an extension from Lansweeper
 
@@ -284,12 +284,12 @@ class LansweeperIntegration:
 
         return success
 
-    def get_all_phones(self) -> list[Dict]:
+    def get_all_phones(self) -> list[dict]:
         """
         Get all IP phone assets from Lansweeper
 
         Returns:
-            List of phone assets
+            list of phone assets
         """
         if not self.enabled:
             return []
@@ -304,7 +304,7 @@ class LansweeperIntegration:
 
         return []
 
-    def get_user_assets(self, username: str) -> list[Dict]:
+    def get_user_assets(self, username: str) -> list[dict]:
         """
         Get all assets assigned to a user
 
@@ -312,7 +312,7 @@ class LansweeperIntegration:
             username: Username to query
 
         Returns:
-            List of assets
+            list of assets
         """
         if not self.enabled:
             return []
@@ -324,7 +324,7 @@ class LansweeperIntegration:
 
         return []
 
-    def search_assets(self, query: str) -> list[Dict]:
+    def search_assets(self, query: str) -> list[dict]:
         """
         Search for assets by name, IP, MAC, etc.
 
@@ -332,7 +332,7 @@ class LansweeperIntegration:
             query: Search query
 
         Returns:
-            List of matching assets
+            list of matching assets
         """
         if not self.enabled:
             return []
@@ -344,7 +344,7 @@ class LansweeperIntegration:
 
         return []
 
-    def get_building_phones(self, building: str) -> list[Dict]:
+    def get_building_phones(self, building: str) -> list[dict]:
         """
         Get all phones in a specific building
 
@@ -352,7 +352,7 @@ class LansweeperIntegration:
             building: Building name/ID
 
         Returns:
-            List of phones in building
+            list of phones in building
         """
         if not self.enabled:
             return []
@@ -366,7 +366,7 @@ class LansweeperIntegration:
 
         return building_phones
 
-    def generate_e911_report(self) -> Dict:
+    def generate_e911_report(self) -> dict:
         """
         Generate E911 report from Lansweeper data
 
@@ -427,7 +427,7 @@ class LansweeperIntegration:
         self.asset_cache.clear()
         self.logger.info("Cleared Lansweeper asset cache")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get Lansweeper integration statistics"""
         return {
             "enabled": self.enabled,

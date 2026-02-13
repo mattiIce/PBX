@@ -175,7 +175,7 @@ class PredictiveDialingDatabase:
             self.logger.error(f"Error creating predictive dialing tables: {e}")
             return False
 
-    def save_campaign(self, campaign_data: Dict) -> bool:
+    def save_campaign(self, campaign_data: dict) -> bool:
         """Save a campaign to database"""
         try:
             cursor = self.db.connection.cursor()
@@ -216,7 +216,7 @@ class PredictiveDialingDatabase:
             self.logger.error(f"Error saving campaign: {e}")
             return False
 
-    def save_contact(self, campaign_id: str, contact_data: Dict) -> bool:
+    def save_contact(self, campaign_id: str, contact_data: dict) -> bool:
         """Save a contact to a campaign"""
         try:
             cursor = self.db.connection.cursor()
@@ -257,7 +257,7 @@ class PredictiveDialingDatabase:
             self.logger.error(f"Error saving contact: {e}")
             return False
 
-    def save_attempt(self, campaign_id: str, contact_id: str, attempt_data: Dict):
+    def save_attempt(self, campaign_id: str, contact_id: str, attempt_data: dict):
         """Save a call attempt"""
         try:
             cursor = self.db.connection.cursor()
@@ -322,7 +322,7 @@ class PredictiveDialingDatabase:
         except Exception as e:
             self.logger.error(f"Error saving attempt: {e}")
 
-    def update_campaign_stats(self, campaign_id: str, stats: Dict):
+    def update_campaign_stats(self, campaign_id: str, stats: dict):
         """Update campaign statistics"""
         try:
             cursor = self.db.connection.cursor()
@@ -360,7 +360,7 @@ class PredictiveDialingDatabase:
         except Exception as e:
             self.logger.error(f"Error updating campaign stats: {e}")
 
-    def get_campaign(self, campaign_id: str) -> Dict | None:
+    def get_campaign(self, campaign_id: str) -> dict | None:
         """Get campaign by ID"""
         try:
             cursor = self.db.connection.cursor()
@@ -382,7 +382,7 @@ class PredictiveDialingDatabase:
             self.logger.error(f"Error getting campaign: {e}")
             return None
 
-    def get_all_campaigns(self) -> list[Dict]:
+    def get_all_campaigns(self) -> list[dict]:
         """Get all campaigns"""
         try:
             cursor = self.db.connection.cursor()
@@ -396,7 +396,7 @@ class PredictiveDialingDatabase:
             self.logger.error(f"Error getting campaigns: {e}")
             return []
 
-    def get_campaign_contacts(self, campaign_id: str) -> list[Dict]:
+    def get_campaign_contacts(self, campaign_id: str) -> list[dict]:
         """Get all contacts for a campaign"""
         try:
             cursor = self.db.connection.cursor()
@@ -416,7 +416,7 @@ class PredictiveDialingDatabase:
             self.logger.error(f"Error getting campaign contacts: {e}")
             return []
 
-    def get_statistics(self, campaign_id: str | None = None) -> Dict:
+    def get_statistics(self, campaign_id: str | None = None) -> dict:
         """Get dialing statistics"""
         try:
             cursor = self.db.connection.cursor()

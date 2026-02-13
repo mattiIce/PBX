@@ -55,7 +55,7 @@ class MusicOnHold:
             directory: Directory to scan
 
         Returns:
-            List of audio file paths
+            list of audio file paths
         """
         audio_extensions = [".wav", ".mp3", ".ogg", ".flac", ".aac"]
         audio_files = []
@@ -138,7 +138,7 @@ class MusicOnHold:
 
         Args:
             class_name: Name of MOH class
-            files: List of audio file paths
+            files: list of audio file paths
         """
         self.classes[class_name] = files
         self.logger.info(
@@ -157,6 +157,6 @@ class MusicOnHold:
             class_name: MOH class name
 
         Returns:
-            List of file paths
+            list of file paths
         """
         return self.classes.get(class_name, [])

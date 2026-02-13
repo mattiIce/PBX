@@ -42,7 +42,7 @@ class NetworkMetrics:
         self.bandwidth = 0  # kbps
         self.mos_score = 4.4  # Mean Opinion Score (1.0-5.0)
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "timestamp": self.timestamp.isoformat(),
@@ -86,7 +86,7 @@ class CallQualityPrediction:
         self.max_history_per_endpoint = 1000
 
         # Predictions
-        self.active_predictions: dict[str, Dict] = {}
+        self.active_predictions: dict[str, dict] = {}
 
         # Statistics
         self.total_predictions = 0
@@ -149,7 +149,7 @@ class CallQualityPrediction:
         if self.enabled:
             self._predict_quality(call_id)
 
-    def _predict_quality(self, call_id: str) -> Dict:
+    def _predict_quality(self, call_id: str) -> dict:
         """
         Predict future call quality using ML models or weighted moving average
 
@@ -157,7 +157,7 @@ class CallQualityPrediction:
             call_id: Call identifier
 
         Returns:
-            Dict: Prediction result
+            dict: Prediction result
         """
         if call_id not in self.metrics_history or len(self.metrics_history[call_id]) < 3:
             return {"success": False, "reason": "Insufficient data"}
@@ -303,7 +303,7 @@ class CallQualityPrediction:
         Calculate trend direction and magnitude
 
         Args:
-            values: List of metric values
+            values: list of metric values
 
         Returns:
             float: Trend value (positive = increasing, negative = decreasing)
@@ -380,7 +380,7 @@ class CallQualityPrediction:
 
         return recommendations
 
-    def get_prediction(self, call_id: str) -> Dict | None:
+    def get_prediction(self, call_id: str) -> dict | None:
         """Get current prediction for a call"""
         return self.active_predictions.get(call_id)
 
@@ -391,7 +391,7 @@ class CallQualityPrediction:
         if call_id in self.active_predictions:
             del self.active_predictions[call_id]
 
-    def _extract_features_and_targets(self, historical_data: list[Dict]) -> tuple:
+    def _extract_features_and_targets(self, historical_data: list[dict]) -> tuple:
         """Extract features and targets from historical data"""
         features = []
         targets = []
@@ -426,12 +426,12 @@ class CallQualityPrediction:
 
         return np.array(features), np.array(targets)
 
-    def train_model(self, historical_data: list[Dict]):
+    def train_model(self, historical_data: list[dict]):
         """
         Train ML model with historical data using RandomForest
 
         Args:
-            historical_data: List of historical call quality data
+            historical_data: list of historical call quality data
                 Each dict should contain: latency, jitter, packet_loss, bandwidth,
                 codec (optional), time_of_day (optional), mos_score
         """
@@ -595,7 +595,7 @@ class CallQualityPrediction:
         except Exception as e:
             self.logger.error(f"Error training model: {e}")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get prediction statistics"""
         accuracy = self.accurate_predictions / max(1, self.total_predictions)
 

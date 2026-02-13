@@ -78,7 +78,7 @@ class RecordingAnalytics:
         )
 
         # Analysis results storage
-        self.analyses: dict[str, Dict] = {}
+        self.analyses: dict[str, dict] = {}
 
         # Statistics
         self.total_analyses = 0
@@ -125,7 +125,7 @@ class RecordingAnalytics:
 
     def analyze_recording(
         self, recording_id: str, audio_path: str, analysis_types: list[str] = None
-    ) -> Dict:
+    ) -> dict:
         """
         Analyze a call recording
 
@@ -135,7 +135,7 @@ class RecordingAnalytics:
             analysis_types: Types of analysis to perform
 
         Returns:
-            Dict: Analysis results
+            dict: Analysis results
         """
         analysis_types = analysis_types or self.analysis_types
 
@@ -226,7 +226,7 @@ class RecordingAnalytics:
 
         return full_transcript, all_words, total_confidence, confidence_count
 
-    def _transcribe(self, audio_path: str) -> Dict:
+    def _transcribe(self, audio_path: str) -> dict:
         """
         Transcribe audio to text using Vosk (offline speech-to-text)
 
@@ -234,7 +234,7 @@ class RecordingAnalytics:
             audio_path: Path to audio file (WAV format, 16kHz recommended)
 
         Returns:
-            Dict: Transcription results with transcript, confidence, duration, words
+            dict: Transcription results with transcript, confidence, duration, words
         """
         try:
             # Try to use Vosk for offline transcription (already in requirements.txt)
@@ -300,7 +300,7 @@ class RecordingAnalytics:
                 "error": str(e),
             }
 
-    def _analyze_sentiment(self, audio_path: str) -> Dict:
+    def _analyze_sentiment(self, audio_path: str) -> dict:
         """
         Analyze call sentiment using spaCy and Vosk transcription
 
@@ -317,7 +317,7 @@ class RecordingAnalytics:
             audio_path: Path to audio file
 
         Returns:
-            Dict: Sentiment analysis results
+            dict: Sentiment analysis results
         """
         # First, get the transcript using Vosk
         transcript = ""
@@ -427,7 +427,7 @@ class RecordingAnalytics:
             "sentiment_timeline": [],  # Would track sentiment changes over call
         }
 
-    def _detect_keywords(self, audio_path: str) -> Dict:
+    def _detect_keywords(self, audio_path: str) -> dict:
         """
         Detect important keywords and topics
 
@@ -440,7 +440,7 @@ class RecordingAnalytics:
             audio_path: Path to audio file
 
         Returns:
-            Dict: Detected keywords and topics
+            dict: Detected keywords and topics
         """
         # First, we need a transcript - placeholder for now
         transcript = ""  # Would come from _transcribe(audio_path)
@@ -495,7 +495,7 @@ class RecordingAnalytics:
             "issue_keywords": issue_keywords_found,
         }
 
-    def _check_compliance(self, audio_path: str) -> Dict:
+    def _check_compliance(self, audio_path: str) -> dict:
         """
         Check compliance requirements
 
@@ -508,7 +508,7 @@ class RecordingAnalytics:
             audio_path: Path to audio file
 
         Returns:
-            Dict: Compliance check results
+            dict: Compliance check results
         """
         # First, we need a transcript - placeholder for now
         transcript = ""  # Would come from _transcribe(audio_path)
@@ -562,7 +562,7 @@ class RecordingAnalytics:
             "prohibited_phrases_found": prohibited_found,
         }
 
-    def _score_quality(self, audio_path: str) -> Dict:
+    def _score_quality(self, audio_path: str) -> dict:
         """
         Score call quality based on multiple factors
 
@@ -575,7 +575,7 @@ class RecordingAnalytics:
             audio_path: Path to audio file
 
         Returns:
-            Dict: Quality scores
+            dict: Quality scores
         """
         # First, we need a transcript - placeholder for now
         transcript = ""  # Would come from _transcribe(audio_path)
@@ -670,7 +670,7 @@ class RecordingAnalytics:
             "professionalism": round(professionalism, 2),
         }
 
-    def _summarize(self, audio_path: str) -> Dict:
+    def _summarize(self, audio_path: str) -> dict:
         """
         Generate call summary using extractive summarization
 
@@ -683,7 +683,7 @@ class RecordingAnalytics:
             audio_path: Path to audio file
 
         Returns:
-            Dict: Call summary with key points and action items
+            dict: Call summary with key points and action items
         """
         # First, we need a transcript - placeholder for now
         transcript = ""  # Would come from _transcribe(audio_path)
@@ -748,7 +748,7 @@ class RecordingAnalytics:
             "outcomes": outcomes[:3],  # Top 3 outcomes
         }
 
-    def search_recordings(self, criteria: Dict) -> list[str]:
+    def search_recordings(self, criteria: dict) -> list[str]:
         """
         Search recordings by analysis criteria with improved matching
 
@@ -798,7 +798,7 @@ class RecordingAnalytics:
 
         return matching
 
-    def get_analysis(self, recording_id: str) -> Dict | None:
+    def get_analysis(self, recording_id: str) -> dict | None:
         """
         Get analysis results for a recording
 
@@ -806,7 +806,7 @@ class RecordingAnalytics:
             recording_id: Recording identifier
 
         Returns:
-            Dict | None: Analysis results or None if not found
+            dict | None: Analysis results or None if not found
         """
         return self.analyses.get(recording_id)
 
@@ -877,7 +877,7 @@ class RecordingAnalytics:
                     compliance_data["non_compliant"] += 1
         return compliance_data
 
-    def get_trend_analysis(self, start_date: datetime, end_date: datetime) -> Dict:
+    def get_trend_analysis(self, start_date: datetime, end_date: datetime) -> dict:
         """
         Analyze trends over time with aggregated metrics
 
@@ -886,7 +886,7 @@ class RecordingAnalytics:
             end_date: End date for analysis
 
         Returns:
-            Dict: Trend analysis with sentiment, quality, keywords, and compliance data
+            dict: Trend analysis with sentiment, quality, keywords, and compliance data
         """
         filtered_analyses = self._filter_analyses_by_date(start_date, end_date)
 
@@ -920,7 +920,7 @@ class RecordingAnalytics:
             "date_range": {"start": start_date.isoformat(), "end": end_date.isoformat()},
         }
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get analytics statistics"""
         return {
             "enabled": self.enabled,

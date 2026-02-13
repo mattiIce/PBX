@@ -15,7 +15,7 @@ class SecurityHeaders:
         # Prevent clickjacking
         "X-Frame-Options": "DENY",
         # Prevent MIME type sniffing
-        "X-Content-Type-Options": "nosniff",
+        "X-Content-type-Options": "nosniff",
         # Enable XSS protection
         "X-XSS-Protection": "1; mode=block",
         # Referrer policy
@@ -85,13 +85,13 @@ class RateLimiter:
         self.max_tracked_ips = max_tracked_ips
 
         # Store buckets per client IP
-        self.buckets: dict[str, Dict] = {}
+        self.buckets: dict[str, dict] = {}
         self.last_cleanup = time.time()
 
         # Thread lock for concurrent access
         self._lock = threading.Lock()
 
-    def _refill_tokens(self, bucket: Dict) -> None:
+    def _refill_tokens(self, bucket: dict) -> None:
         """Refill tokens based on time elapsed."""
         now = time.time()
         elapsed = now - bucket["last_update"]
@@ -122,7 +122,7 @@ class RateLimiter:
             client_ip: Client IP address
 
         Returns:
-            Tuple of (allowed, retry_after_seconds)
+            tuple of (allowed, retry_after_seconds)
         """
         with self._lock:
             # Check if we've hit the maximum tracked IPs
@@ -162,7 +162,7 @@ class RateLimiter:
 
             return False, retry_after
 
-    def get_stats(self, client_ip: str) -> Dict:
+    def get_stats(self, client_ip: str) -> dict:
         """Get rate limit stats for client.
 
         Args:
@@ -211,7 +211,7 @@ class RequestValidator:
             path: Request path
 
         Returns:
-            Tuple of (valid, error_message)
+            tuple of (valid, error_message)
         """
         # Check for suspicious patterns
         path_lower = path.lower()
@@ -229,7 +229,7 @@ class RequestValidator:
             content_length: Content length from request
 
         Returns:
-            Tuple of (valid, error_message)
+            tuple of (valid, error_message)
         """
         if content_length is None:
             return True, None
@@ -284,7 +284,7 @@ class SecretValidator:
             config: Configuration dictionary
 
         Returns:
-            Tuple of (all_valid, missing_secrets)
+            tuple of (all_valid, missing_secrets)
         """
         import os
 
@@ -305,7 +305,7 @@ class SecretValidator:
             config: Configuration dictionary
 
         Returns:
-            List of weak secrets found
+            list of weak secrets found
         """
         import os
 

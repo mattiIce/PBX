@@ -60,7 +60,7 @@ class AICallRouting:
         except Exception as e:
             self.logger.error(f"Error initializing ML model: {e}")
 
-    def record_call_outcome(self, call_data: Dict) -> bool:
+    def record_call_outcome(self, call_data: dict) -> bool:
         """
         Record call routing outcome for training
 
@@ -140,14 +140,14 @@ class AICallRouting:
             self.logger.error(f"Error training ML model: {e}")
 
     def get_routing_recommendation(
-        self, call_info: Dict, available_destinations: list[str]
-    ) -> Dict:
+        self, call_info: dict, available_destinations: list[str]
+    ) -> dict:
         """
         Get AI-recommended routing destination
 
         Args:
             call_info: Current call information
-            available_destinations: List of available destinations
+            available_destinations: list of available destinations
 
         Returns:
             Routing recommendation with confidence score
@@ -203,7 +203,7 @@ class AICallRouting:
             self.logger.error(f"Error in ML routing: {e}")
             return self._rule_based_routing(call_info, available_destinations)
 
-    def _rule_based_routing(self, call_info: Dict, available_destinations: list[str]) -> Dict:
+    def _rule_based_routing(self, call_info: dict, available_destinations: list[str]) -> dict:
         """Fallback rule-based routing"""
         if not available_destinations:
             return {"destination": None, "confidence": 0.0, "method": "no_destinations"}
@@ -227,7 +227,7 @@ class AICallRouting:
 
         return {"destination": best_destination, "confidence": best_score, "method": "rule_based"}
 
-    def get_destination_performance(self, destination: str, days: int = 7) -> Dict:
+    def get_destination_performance(self, destination: str, days: int = 7) -> dict:
         """Get performance metrics for a destination"""
         cutoff = datetime.now() - timedelta(days=days)
 
@@ -293,7 +293,7 @@ class AICallRouting:
             self.logger.error(f"Error importing training data: {e}")
             return False
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get AI routing statistics"""
         model_trained = (
             self.model is not None and len(self.training_data) >= self.min_training_samples

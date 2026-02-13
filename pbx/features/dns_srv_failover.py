@@ -60,7 +60,7 @@ class DNSSRVFailover:
         self.logger.info(f"  Max failures: {self.max_failures}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def lookup_srv(self, service: str, protocol: str = "tcp", domain: str = None) -> list[Dict]:
+    def lookup_srv(self, service: str, protocol: str = "tcp", domain: str = None) -> list[dict]:
         """
         Lookup DNS SRV records
 
@@ -70,7 +70,7 @@ class DNSSRVFailover:
             domain: Domain name
 
         Returns:
-            list[Dict]: SRV records
+            list[dict]: SRV records
         """
         # Construct SRV query
         srv_name = f"_{service}._{protocol}.{domain}"
@@ -151,7 +151,7 @@ class DNSSRVFailover:
 
         return records
 
-    def _format_srv_records(self, records: list[SRVRecord]) -> list[Dict]:
+    def _format_srv_records(self, records: list[SRVRecord]) -> list[dict]:
         """Format SRV records for output"""
         return [
             {
@@ -166,7 +166,7 @@ class DNSSRVFailover:
 
     def select_server(
         self, service: str, protocol: str = "tcp", domain: str = None
-    ) -> Dict | None:
+    ) -> dict | None:
         """
         Select best available server from SRV records
 
@@ -176,7 +176,7 @@ class DNSSRVFailover:
             domain: Domain
 
         Returns:
-            Dict | None: Selected server or None
+            dict | None: Selected server or None
         """
         srv_name = f"_{service}._{protocol}.{domain}"
 
@@ -349,7 +349,7 @@ class DNSSRVFailover:
             self.srv_cache.clear()
             self.logger.info("Cleared entire SRV cache")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get DNS SRV failover statistics"""
         cache_hit_rate = self.cache_hits / max(1, self.total_lookups)
 

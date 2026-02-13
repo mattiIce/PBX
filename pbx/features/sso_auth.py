@@ -49,7 +49,7 @@ class SSOAuthService:
                 self.logger.warning("SAML provider selected but python3-saml not installed")
                 self.logger.info("  Install with: pip install python3-saml")
 
-    def initiate_saml_auth(self, request_data: Dict) -> Dict:
+    def initiate_saml_auth(self, request_data: dict) -> dict:
         """
         Initiate SAML authentication
 
@@ -81,7 +81,7 @@ class SSOAuthService:
             self.logger.error(f"Error initiating SAML auth: {e}")
             return {"error": str(e)}
 
-    def handle_saml_response(self, saml_response: str) -> Dict:
+    def handle_saml_response(self, saml_response: str) -> dict:
         """
         Handle SAML response from IdP
 
@@ -112,7 +112,7 @@ class SSOAuthService:
             self.logger.error(f"Error handling SAML response: {e}")
             return {"error": str(e)}
 
-    def initiate_oauth_auth(self, redirect_uri: str) -> Dict:
+    def initiate_oauth_auth(self, redirect_uri: str) -> dict:
         """
         Initiate OAuth authentication
 
@@ -140,7 +140,7 @@ class SSOAuthService:
 
         return {"auth_url": auth_url, "state": state}
 
-    def handle_oauth_callback(self, code: str, state: str) -> Dict:
+    def handle_oauth_callback(self, code: str, state: str) -> dict:
         """
         Handle OAuth callback
 
@@ -172,7 +172,7 @@ class SSOAuthService:
             self.logger.error(f"Error handling OAuth callback: {e}")
             return {"error": str(e)}
 
-    def _create_session(self, user_info: Dict) -> str:
+    def _create_session(self, user_info: dict) -> str:
         """Create a new SSO session"""
         session_id = secrets.token_urlsafe(32)
 
@@ -187,7 +187,7 @@ class SSOAuthService:
 
         return session_id
 
-    def validate_session(self, session_id: str) -> Dict | None:
+    def validate_session(self, session_id: str) -> dict | None:
         """Validate an SSO session"""
         if session_id not in self.active_sessions:
             return None
@@ -226,7 +226,7 @@ class SSOAuthService:
         if expired:
             self.logger.info(f"Cleaned up {len(expired)} expired SSO sessions")
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get SSO statistics"""
         return {
             "enabled": self.enabled,

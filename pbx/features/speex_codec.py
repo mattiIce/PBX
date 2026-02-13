@@ -158,7 +158,7 @@ class SpeexCodec:
         Get codec information
 
         Returns:
-            Dict with codec details
+            dict with codec details
         """
         mode_names = {
             self.MODE_NARROWBAND: "Narrowband",
@@ -229,7 +229,7 @@ class SpeexCodec:
         Get complete SDP parameters
 
         Returns:
-            Dict with SDP negotiation parameters
+            dict with SDP negotiation parameters
         """
         params = {
             "payload_type": self.payload_type,
@@ -267,7 +267,7 @@ class SpeexCodec:
             else:  # Ultra-wideband
                 self.encoder = speex.UWBEncoder()  # Ultra-wideband
 
-            # Set encoder parameters
+            # set encoder parameters
             if hasattr(self.encoder, "quality"):
                 self.encoder.quality = self.quality
             if hasattr(self.encoder, "complexity"):
@@ -449,7 +449,7 @@ class SpeexCodecManager:
         Get all codec instances
 
         Returns:
-            Dict mapping call_id to SpeexCodec
+            dict mapping call_id to SpeexCodec
         """
         return self.codecs.copy()
 

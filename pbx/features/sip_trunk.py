@@ -58,7 +58,7 @@ class SIPTrunk:
             username: SIP username
             password: SIP password
             port: SIP port (default 5060)
-            codec_preferences: List of preferred codecs
+            codec_preferences: list of preferred codecs
             priority: Trunk priority (lower is better, for failover)
             max_channels: Maximum concurrent channels
             health_check_interval: Seconds between health checks
@@ -460,7 +460,7 @@ class SIPTrunkSystem:
             number: Dialed number
 
         Returns:
-            Tuple of (trunk, transformed_number) or (None, None)
+            tuple of (trunk, transformed_number) or (None, None)
         """
         # Block E911 calls in test mode
         if self.e911_protection.block_if_e911(number, context="route_outbound"):
@@ -568,7 +568,7 @@ class SIPTrunkSystem:
         Get list of available trunks sorted by priority
 
         Returns:
-            List of available trunks
+            list of available trunks
         """
         available = [
             trunk
@@ -589,7 +589,7 @@ class SIPTrunkSystem:
             number: Dialed number
 
         Returns:
-            Tuple of (trunk, transformed_number) or (None, None)
+            tuple of (trunk, transformed_number) or (None, None)
         """
         # Block E911 calls in test mode
         if self.e911_protection.block_if_e911(number, context="route_outbound_with_failover"):

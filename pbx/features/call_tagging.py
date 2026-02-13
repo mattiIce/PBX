@@ -93,7 +93,7 @@ class CallTagging:
         self.custom_tags: set = set()
 
         # Tagging rules
-        self.tagging_rules: list[Dict] = []
+        self.tagging_rules: list[dict] = []
         self._initialize_default_rules()
 
         # Statistics
@@ -336,7 +336,7 @@ class CallTagging:
         return True
 
     def auto_tag_call(
-        self, call_id: str, transcript: str = None, metadata: Dict = None
+        self, call_id: str, transcript: str = None, metadata: dict = None
     ) -> list[str]:
         """
         Automatically tag a call based on content
@@ -468,7 +468,7 @@ class CallTagging:
             transcript: Call transcript
 
         Returns:
-            list[tuple]: List of (tag, confidence) tuples
+            list[tuple]: list of (tag, confidence) tuples
         """
         results = []
 
@@ -613,7 +613,7 @@ class CallTagging:
 
         return results
 
-    def _tag_from_metadata(self, metadata: Dict) -> list[str]:
+    def _tag_from_metadata(self, metadata: dict) -> list[str]:
         """Extract tags from call metadata"""
         tags = []
 
@@ -645,7 +645,7 @@ class CallTagging:
 
         return tags
 
-    def get_call_tags(self, call_id: str) -> list[Dict]:
+    def get_call_tags(self, call_id: str) -> list[dict]:
         """Get all tags for a call"""
         if call_id not in self.call_tags:
             return []
@@ -692,7 +692,7 @@ class CallTagging:
         self.logger.info(f"Added tagging rule: {name}")
         return True
 
-    def get_tag_statistics(self) -> Dict:
+    def get_tag_statistics(self) -> dict:
         """Get tag usage statistics"""
         tag_counts = {}
 
@@ -724,7 +724,7 @@ class CallTagging:
 
         return matching_calls
 
-    def get_all_tags(self) -> list[Dict]:
+    def get_all_tags(self) -> list[dict]:
         """Get all unique tags"""
         all_tags = set()
         for tags_list in self.call_tags.values():
@@ -736,7 +736,7 @@ class CallTagging:
 
         return [{"tag": tag} for tag in sorted(all_tags)]
 
-    def get_all_rules(self) -> list[Dict]:
+    def get_all_rules(self) -> list[dict]:
         """Get all tagging rules"""
         return self.tagging_rules.copy()
 
@@ -756,13 +756,13 @@ class CallTagging:
         self.logger.info(f"Created custom tag: {name}")
         return name
 
-    def create_rule(self, name: str, conditions: List, tag_id: str, priority: int = 100) -> str:
+    def create_rule(self, name: str, conditions: list, tag_id: str, priority: int = 100) -> str:
         """
         Create a new tagging rule
 
         Args:
             name: Rule name
-            conditions: List of conditions
+            conditions: list of conditions
             tag_id: Tag to apply
             priority: Rule priority
 
@@ -782,7 +782,7 @@ class CallTagging:
         return rule_id
 
     def classify_call(
-        self, call_id: str, transcript: str = None, metadata: Dict = None
+        self, call_id: str, transcript: str = None, metadata: dict = None
     ) -> list[str]:
         """
         Classify a call and return applicable tags
@@ -798,7 +798,7 @@ class CallTagging:
             metadata: Optional call metadata (queue, duration, disposition, etc.)
 
         Returns:
-            list[str]: List of tags
+            list[str]: list of tags
         """
         tags = []
         transcript_lower = (transcript or "").lower()
@@ -837,7 +837,7 @@ class CallTagging:
 
         return unique_tags
 
-    def _evaluate_rule(self, rule: Dict, transcript: str, metadata: Dict) -> bool:
+    def _evaluate_rule(self, rule: dict, transcript: str, metadata: dict) -> bool:
         """
         Evaluate a tagging rule against call data
 
@@ -890,7 +890,7 @@ class CallTagging:
             text: Text to analyze
 
         Returns:
-            Dict mapping entity types to lists of entities
+            dict mapping entity types to lists of entities
         """
         if not self.nlp_model:
             return {}
@@ -909,7 +909,7 @@ class CallTagging:
             self.logger.error(f"Entity extraction error: {e}")
             return {}
 
-    def analyze_sentiment_with_spacy(self, text: str) -> Dict:
+    def analyze_sentiment_with_spacy(self, text: str) -> dict:
         """
         Analyze sentiment using spaCy and rule-based approach
 
@@ -917,7 +917,7 @@ class CallTagging:
             text: Text to analyze
 
         Returns:
-            Dict with sentiment, score, and confidence
+            dict with sentiment, score, and confidence
         """
         if not self.nlp_model:
             return {"sentiment": "neutral", "score": 0.0, "confidence": 0.0}
@@ -994,7 +994,7 @@ class CallTagging:
             max_phrases: Maximum number of phrases to return
 
         Returns:
-            List of key phrases
+            list of key phrases
         """
         if not self.nlp_model:
             return []
@@ -1021,7 +1021,7 @@ class CallTagging:
             self.logger.error(f"Key phrase extraction error: {e}")
             return []
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get overall tagging statistics"""
         return {
             "enabled": self.enabled,

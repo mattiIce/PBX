@@ -217,7 +217,7 @@ class ConversationalAIDatabase:
         conversation_id: int,
         intent: str,
         confidence: float,
-        entities: Dict,
+        entities: dict,
         timestamp: datetime,
     ):
         """Save detected intent"""
@@ -284,7 +284,7 @@ class ConversationalAIDatabase:
         except Exception as e:
             self.logger.error(f"Error ending conversation: {e}")
 
-    def get_conversation_history(self, limit: int = 100) -> list[Dict]:
+    def get_conversation_history(self, limit: int = 100) -> list[dict]:
         """Get recent conversation history"""
         try:
             cursor = self.db.connection.cursor()
@@ -323,7 +323,7 @@ class ConversationalAIDatabase:
             self.logger.error(f"Error getting conversation history: {e}")
             return []
 
-    def get_intent_statistics(self) -> Dict:
+    def get_intent_statistics(self) -> dict:
         """Get intent usage statistics"""
         try:
             cursor = self.db.connection.cursor()

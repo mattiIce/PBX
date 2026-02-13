@@ -395,7 +395,7 @@ class G722Codec:
             code: One G.722 encoded byte
 
         Returns:
-            Tuple of two PCM samples (16-bit signed)
+            tuple of two PCM samples (16-bit signed)
         """
         state = self.decoder_state
 
@@ -477,7 +477,7 @@ class G722Codec:
             state: Decoder state
 
         Returns:
-            Tuple of two reconstructed 16kHz samples
+            tuple of two reconstructed 16kHz samples
         """
         # Simple QMF synthesis (simplified for this implementation)
         # In full ITU-T implementation, this uses interpolation filters
@@ -989,7 +989,7 @@ class G722CodecManager:
         Get SDP capabilities for SIP negotiation
 
         Returns:
-            List of SDP format lines
+            list of SDP format lines
         """
         if not self.enabled:
             return []

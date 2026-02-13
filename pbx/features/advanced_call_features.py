@@ -21,7 +21,7 @@ class AdvancedCallFeatures:
 
         # Track monitored calls
         self.monitored_calls = {}  # call_id -> monitoring info
-        self.supervisor_permissions = {}  # supervisor_id -> Set of allowed extensions
+        self.supervisor_permissions = {}  # supervisor_id -> set of allowed extensions
 
         if self.enabled:
             self.logger.info("Advanced call features initialized")
@@ -46,7 +46,7 @@ class AdvancedCallFeatures:
         # '*' means can monitor all
         return "*" in perms or extension in perms
 
-    def start_whisper(self, call_id: str, supervisor_id: str, agent_extension: str) -> Dict:
+    def start_whisper(self, call_id: str, supervisor_id: str, agent_extension: str) -> dict:
         """
         Start whisper mode (supervisor can speak to agent only, customer can't hear)
 
@@ -78,7 +78,7 @@ class AdvancedCallFeatures:
 
         return {"call_id": call_id, "mode": "whisper", "status": "active"}
 
-    def start_barge_in(self, call_id: str, supervisor_id: str, agent_extension: str) -> Dict:
+    def start_barge_in(self, call_id: str, supervisor_id: str, agent_extension: str) -> dict:
         """
         Start barge-in mode (supervisor joins call, all parties can hear)
 
@@ -110,7 +110,7 @@ class AdvancedCallFeatures:
 
         return {"call_id": call_id, "mode": "barge", "status": "active"}
 
-    def start_monitor(self, call_id: str, supervisor_id: str, agent_extension: str) -> Dict:
+    def start_monitor(self, call_id: str, supervisor_id: str, agent_extension: str) -> dict:
         """
         Start silent monitoring (supervisor can hear both parties, neither can hear supervisor)
 
@@ -151,12 +151,12 @@ class AdvancedCallFeatures:
             return True
         return False
 
-    def get_monitoring_info(self, call_id: str) -> Dict | None:
+    def get_monitoring_info(self, call_id: str) -> dict | None:
         """Get monitoring information for a call"""
         return self.monitored_calls.get(call_id)
 
-    def list_monitored_calls(self, supervisor_id: str | None = None) -> list[Dict]:
-        """List all monitored calls, optionally filtered by supervisor"""
+    def list_monitored_calls(self, supervisor_id: str | None = None) -> list[dict]:
+        """list all monitored calls, optionally filtered by supervisor"""
         calls = []
         for call_id, info in self.monitored_calls.items():
             if supervisor_id is None or info["supervisor_id"] == supervisor_id:
@@ -199,7 +199,7 @@ class AdvancedCallFeatures:
             return True
         return False
 
-    def get_statistics(self) -> Dict:
+    def get_statistics(self) -> dict:
         """Get advanced call features statistics"""
         mode_counts = {}
         for info in self.monitored_calls.values():

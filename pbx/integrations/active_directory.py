@@ -96,7 +96,7 @@ class ActiveDirectoryIntegration:
             self.connection = None
             return False
 
-    def authenticate_user(self, username: str, password: str) -> Dict | None:
+    def authenticate_user(self, username: str, password: str) -> dict | None:
         """
         Authenticate user against Active Directory
 
@@ -541,7 +541,7 @@ class ActiveDirectoryIntegration:
         Map AD groups to PBX permissions based on configuration
 
         Args:
-            user_groups: List of AD group names or DNs
+            user_groups: list of AD group names or DNs
 
         Returns:
             dict: Permissions dictionary (e.g., {'admin': True, 'external_calling': True})
@@ -586,7 +586,7 @@ class ActiveDirectoryIntegration:
                 # Apply permissions from this group
                 if isinstance(perms, list):
                     for perm in perms:
-                        # Set boolean True value for granted permissions
+                        # set boolean True value for granted permissions
                         permissions[perm] = True
                         self.logger.debug(f"  Granted permission: {perm}")
 
@@ -600,7 +600,7 @@ class ActiveDirectoryIntegration:
             username: Username
 
         Returns:
-            list: List of group names
+            list: list of group names
         """
         if not self.enabled or not LDAP3_AVAILABLE:
             return []
@@ -653,7 +653,7 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error getting groups for user {username}: {e}")
             return []
 
-    def search_users(self, query: str, max_results: int = 50) -> list[Dict]:
+    def search_users(self, query: str, max_results: int = 50) -> list[dict]:
         """
         Search for users in Active Directory
 
@@ -662,7 +662,7 @@ class ActiveDirectoryIntegration:
             max_results: Maximum number of results
 
         Returns:
-            list: List of user dictionaries
+            list: list of user dictionaries
         """
         if not self.enabled or not LDAP3_AVAILABLE:
             return []

@@ -840,7 +840,7 @@ def get_gdpr_requests() -> tuple[Response, int]:
 @framework_bp.route("/compliance/soc2/controls", methods=["GET"])
 @require_auth
 def get_soc2_controls() -> tuple[Response, int]:
-    """Get SOC 2 Type 2 controls."""
+    """Get SOC 2 type 2 controls."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
         try:
@@ -945,7 +945,7 @@ def create_gdpr_request() -> tuple[Response, int]:
 @framework_bp.route("/compliance/soc2/control", methods=["POST"])
 @require_auth
 def register_soc2_control() -> tuple[Response, int]:
-    """Register SOC 2 Type 2 control."""
+    """Register SOC 2 type 2 control."""
     pbx_core = get_pbx_core()
     if pbx_core and pbx_core.database.enabled:
         try:
@@ -1324,7 +1324,7 @@ def register_blending_agent() -> tuple[Response, int]:
 @framework_bp.route("/call-blending/agent/<agent_id>/mode", methods=["POST"])
 @require_auth
 def set_agent_mode(agent_id: str) -> tuple[Response, int]:
-    """Set blending agent mode."""
+    """set blending agent mode."""
     try:
         pbx_core = get_pbx_core()
         body = get_request_body()

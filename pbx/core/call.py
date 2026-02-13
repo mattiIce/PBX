@@ -69,7 +69,7 @@ class Call:
         self.start_time = datetime.now()
 
     def ring(self):
-        """Set call state to ringing"""
+        """set call state to ringing"""
         self.state = CallState.RINGING
 
     def connect(self):
@@ -170,7 +170,7 @@ class CallManager:
             extension: Extension number
 
         Returns:
-            List of Call objects
+            list of Call objects
         """
         calls = []
         for call in self.active_calls.values():

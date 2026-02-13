@@ -283,7 +283,7 @@ def generate_srtp_keys():
     Generate random SRTP keys
 
     Returns:
-        Tuple of (master_key, master_salt)
+        tuple of (master_key, master_salt)
     """
     import secrets
 

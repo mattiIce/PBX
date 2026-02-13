@@ -73,7 +73,7 @@ class ILBCCodec:
             )
             self.mode = self.DEFAULT_MODE
 
-        # Set parameters based on mode
+        # set parameters based on mode
         if self.mode == self.MODE_20MS:
             self.bitrate = self.BITRATE_20MS
             self.frame_size = self.FRAME_SIZE_20MS
@@ -122,7 +122,7 @@ class ILBCCodec:
         Get codec information
 
         Returns:
-            Dict with codec details
+            dict with codec details
         """
         return {
             "name": "iLBC",
@@ -167,7 +167,7 @@ class ILBCCodec:
         Get complete SDP parameters
 
         Returns:
-            Dict with SDP negotiation parameters
+            dict with SDP negotiation parameters
         """
         return {
             "payload_type": self.payload_type,
@@ -386,7 +386,7 @@ class ILBCCodecManager:
         Get all codec instances
 
         Returns:
-            Dict mapping call_id to ILBCCodec
+            dict mapping call_id to ILBCCodec
         """
         return self.codecs.copy()
 

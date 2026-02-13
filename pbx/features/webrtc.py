@@ -41,7 +41,7 @@ class WebRTCSession:
         """Update last activity timestamp"""
         self.last_activity = datetime.now()
 
-    def to_dict(self) -> Dict:
+    def to_dict(self) -> dict:
         """Convert session to dictionary"""
         return {
             "session_id": self.session_id,
@@ -250,7 +250,7 @@ class WebRTCSignalingServer:
                 if self.verbose_logging:
                     self.logger.info("[VERBOSE] Virtual extension created:")
                     self.logger.info(f"  Extension: {extension}")
-                    self.logger.info("  Type: Virtual WebRTC")
+                    self.logger.info("  type: Virtual WebRTC")
 
             return ext_obj
         except Exception as e:
@@ -490,7 +490,7 @@ class WebRTCSignalingServer:
 
         return True
 
-    def add_ice_candidate(self, session_id: str, candidate: Dict) -> bool:
+    def add_ice_candidate(self, session_id: str, candidate: dict) -> bool:
         """
         Add ICE candidate for session
 
@@ -523,7 +523,7 @@ class WebRTCSignalingServer:
 
         return True
 
-    def get_ice_servers_config(self) -> Dict:
+    def get_ice_servers_config(self) -> dict:
         """
         Get ICE servers configuration for client
 
@@ -584,7 +584,7 @@ class WebRTCSignalingServer:
         return True
 
     def set_session_metadata(self, session_id: str, key: str, value) -> bool:
-        """Set metadata for a session"""
+        """set metadata for a session"""
         session = self.get_session(session_id)
         if not session:
             return False
@@ -951,7 +951,7 @@ class WebRTCGateway:
                         f"[VERBOSE] Associated call ID {call_id} with session {session_id}"
                     )
 
-            # 5. Set up RTP relay for media path
+            # 5. set up RTP relay for media path
             rtp_ports = self.pbx_core.rtp_relay.allocate_relay(call_id)
             if rtp_ports:
                 call.rtp_ports = rtp_ports
@@ -983,7 +983,7 @@ class WebRTCGateway:
                         f"[VERBOSE] Initial action: {aa_session.get('action')}"
                     )
 
-                # Set up RTP player to play the welcome message
+                # set up RTP player to play the welcome message
                 if aa_session.get("action") == "play" and aa_session.get("file"):
                     audio_file = aa_session.get("file")
 

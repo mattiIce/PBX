@@ -49,7 +49,7 @@ def verify_authentication() -> tuple[bool, dict | None]:
     """Verify authentication token and return payload.
 
     Returns:
-        Tuple of (is_authenticated, payload)
+        tuple of (is_authenticated, payload)
     """
     token = get_auth_token()
     if not token:

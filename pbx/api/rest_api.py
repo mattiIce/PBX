@@ -92,7 +92,7 @@ class DateTimeEncoder(json.JSONEncoder):
 class PBXAPIHandler(BaseHTTPRequestHandler):
     """HTTP request handler for PBX API."""
 
-    pbx_core = None  # Set by PBXAPIServer
+    pbx_core = None  # set by PBXAPIServer
     logger = get_logger()  # Initialize logger for handler
     _integration_endpoints = None  # Cache for integration endpoints
     _health_checker = None  # Production health checker instance
@@ -139,18 +139,18 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         return True, None
 
     def _set_headers(self, status=200, content_type="application/json"):
-        """Set response headers with security enhancements."""
+        """set response headers with security enhancements."""
         self.send_response(status)
         self.send_header("Content-type", content_type)
 
         # CORS headers
         self.send_header("Access-Control-Allow-Origin", "*")
         self.send_header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-        self.send_header("Access-Control-Allow-Headers", "Content-Type, Authorization")
+        self.send_header("Access-Control-Allow-Headers", "Content-type, Authorization")
 
         # Security headers
-        # X-Content-Type-Options: Prevent MIME type sniffing
-        self.send_header("X-Content-Type-Options", "nosniff")
+        # X-Content-type-Options: Prevent MIME type sniffing
+        self.send_header("X-Content-type-Options", "nosniff")
 
         # X-Frame-Options: Prevent clickjacking
         self.send_header("X-Frame-Options", "DENY")
@@ -2305,7 +2305,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(e)}, 500)
 
     def _handle_set_static_ip(self, mac):
-        """Set static IP for a device."""
+        """set static IP for a device."""
         if not self.pbx_core or not hasattr(self.pbx_core, "phone_provisioning"):
             self._send_json({"error": "Phone provisioning not enabled"}, 500)
             return
@@ -2483,7 +2483,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
                 logger.warning("  To register this device:")
                 logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
-                logger.warning("      -H 'Content-Type: application/json' \\")
+                logger.warning("      -H 'Content-type: application/json' \\")
                 logger.warning(
                     '      -d \'{{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}}\''
                 )
@@ -2545,7 +2545,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Verify authentication token and return payload.
 
         Returns:
-            Tuple of (is_authenticated, payload)
+            tuple of (is_authenticated, payload)
             - is_authenticated: True if token is valid
             - payload: Token payload if valid, None otherwise
         """
@@ -2562,7 +2562,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Check if current user has admin privileges.
 
         Returns:
-            Tuple of (is_admin, payload)
+            tuple of (is_admin, payload)
             - is_admin: True if user is authenticated and has admin privileges
             - payload: Token payload if authenticated, None otherwise
         """
@@ -3368,7 +3368,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     )
                 )
 
-            # Set restrictive permissions on private key
+            # set restrictive permissions on private key
             os.chmod(key_file, 0o600)
 
             # Write certificate to file
@@ -3424,7 +3424,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             mailbox = self.pbx_core.voicemail_system.get_mailbox(extension)
 
             if len(parts) == 4:
-                # List all messages
+                # list all messages
                 messages = mailbox.get_messages()
                 data = []
                 for msg in messages:
@@ -4585,7 +4585,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(e)}, 500)
 
     def _handle_set_webrtc_phone_config(self):
-        """Set WebRTC phone extension configuration."""
+        """set WebRTC phone extension configuration."""
         try:
             data = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             extension = data.get("extension")
@@ -6224,7 +6224,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
 
                 # Send ZIP file as response
                 self.send_response(200)
-                self.send_header("Content-Type", "application/zip")
+                self.send_header("Content-type", "application/zip")
                 self.send_header("Content-Disposition", f'attachment; filename="{zip_filename}"')
                 self.send_header("Content-Length", str(len(zip_content)))
                 self.end_headers()
@@ -6301,7 +6301,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 greeting_data = f.read()
 
             self.send_response(200)
-            self.send_header("Content-Type", "audio/wav")
+            self.send_header("Content-type", "audio/wav")
             self.send_header(
                 "Content-Disposition", f'attachment; filename="greeting_{extension}.wav"'
             )
@@ -6474,7 +6474,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                 ):
                     # Send file
                     self.send_response(200)
-                    self.send_header("Content-Type", "text/csv")
+                    self.send_header("Content-type", "text/csv")
                     self.send_header(
                         "Content-Disposition",
                         f'attachment; filename="cdr_export_{start_date}_to_{end_date}.csv"',
@@ -6799,7 +6799,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
                     start_minute=int(data["start_minute"]),
                     end_hour=int(data["end_hour"]),
                     end_minute=int(data["end_minute"]),
-                    days=data["days"],  # List of day indices
+                    days=data["days"],  # list of day indices
                     multiplier=float(data["multiplier"]),
                 )
 
@@ -6957,7 +6957,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Find Me/Follow Me not initialized"}, 500)
 
     def _handle_set_fmfm_config(self):
-        """Set FMFM configuration for an extension."""
+        """set FMFM configuration for an extension."""
         self.logger.info("Received FMFM config save request")
 
         if self.pbx_core and hasattr(self.pbx_core, "find_me_follow_me"):
@@ -8515,7 +8515,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         else:
             self._send_json({"error": "Database not available"}, 500)
 
-    # Framework Feature Handlers - Compliance (SOC 2 Type 2 only)
+    # Framework Feature Handlers - Compliance (SOC 2 type 2 only)
     # GDPR and PCI DSS handlers commented out - not required for US-only operations
 
     # GDPR Handlers - COMMENTED OUT
@@ -8602,7 +8602,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
     """
 
     def _handle_get_soc2_controls(self):
-        """Get SOC 2 Type 2 controls."""
+        """Get SOC 2 type 2 controls."""
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 from pbx.features.compliance_framework import SOC2ComplianceEngine
@@ -8617,7 +8617,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": "Database not available"}, 500)
 
     def _handle_register_soc2_control(self):
-        """Register SOC 2 Type 2 control."""
+        """Register SOC 2 type 2 control."""
         if self.pbx_core and self.pbx_core.database.enabled:
             try:
                 body = self._get_body()
@@ -9078,7 +9078,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"error": str(e)}, 500)
 
     def _handle_set_agent_mode(self, agent_id: str):
-        """POST /api/framework/call-blending/agent/{agent_id}/mode - Set agent mode."""
+        """POST /api/framework/call-blending/agent/{agent_id}/mode - set agent mode."""
         try:
             body = self._get_body()
             mode = body.get("mode", "blended")
@@ -10249,7 +10249,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
         """Check if current user is the license administrator (extension 9322).
 
         Returns:
-            Tuple of (is_authorized, payload)
+            tuple of (is_authorized, payload)
 
         The payload will be:
             - On success: the authenticated user payload from _verify_authentication()
@@ -10286,7 +10286,7 @@ class PBXAPIHandler(BaseHTTPRequestHandler):
             self._send_json({"success": False, "error": str(e)}, 500)
 
     def _handle_license_features(self):
-        """List all available features for current license."""
+        """list all available features for current license."""
         try:
             from pbx.utils.licensing import get_license_manager
 
@@ -10669,10 +10669,10 @@ class ReusableHTTPServer(HTTPServer):
 
     def server_bind(self):
         """Bind the server with socket reuse options."""
-        # Set SO_REUSEADDR (already done by allow_reuse_address, but explicit is better)
+        # set SO_REUSEADDR (already done by allow_reuse_address, but explicit is better)
         self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-        # Set SO_REUSEPORT if available (helps with rapid restarts)
+        # set SO_REUSEPORT if available (helps with rapid restarts)
         if hasattr(socket, "SO_REUSEPORT"):
             try:
                 self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
@@ -10753,7 +10753,7 @@ class PBXAPIServer:
         self.ssl_enabled = False
         self.ssl_context = None
 
-        # Set PBX core for handler
+        # set PBX core for handler
         PBXAPIHandler.pbx_core = pbx_core
 
         # Configure SSL/TLS if enabled
@@ -10973,7 +10973,7 @@ class PBXAPIServer:
             self.logger.warning("To fix if using Apache/Nginx reverse proxy:")
             self.logger.warning("")
             self.logger.warning("  1. Edit config.yml")
-            self.logger.warning("  2. Set: api.ssl.enabled: false")
+            self.logger.warning("  2. set: api.ssl.enabled: false")
             self.logger.warning("  3. Restart PBX: sudo systemctl restart pbx")
             self.logger.warning("")
             self.logger.warning("If NOT using a reverse proxy and want direct HTTPS:")
@@ -11044,7 +11044,7 @@ class PBXAPIServer:
                         )
                     )
 
-                # Set restrictive permissions on private key
+                # set restrictive permissions on private key
                 os.chmod(key_file, 0o600)
                 self.logger.info(f"Private key saved to: {key_file}")
 
@@ -11153,7 +11153,7 @@ class PBXAPIServer:
                         self.server.socket, server_side=True
                     )
 
-                # Set timeout on socket to allow periodic checking of running flag
+                # set timeout on socket to allow periodic checking of running flag
                 self.server.socket.settimeout(1.0)
                 self.running = True
 

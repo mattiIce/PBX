@@ -100,8 +100,8 @@ class MatrixIntegration:
             return False
 
     def _make_request(
-        self, method: str, endpoint: str, data: Dict = None, params: Dict = None
-    ) -> Dict | None:
+        self, method: str, endpoint: str, data: dict = None, params: dict = None
+    ) -> dict | None:
         """
         Make authenticated API request to Matrix
 
@@ -122,7 +122,7 @@ class MatrixIntegration:
 
             headers = {
                 "Authorization": f"Bearer {self.bot_access_token}",
-                "Content-Type": "application/json",
+                "Content-type": "application/json",
             }
 
             response = requests.request(
@@ -266,7 +266,7 @@ class MatrixIntegration:
         Args:
             name: Room name
             topic: Room topic/description
-            invite_users: List of user IDs to invite
+            invite_users: list of user IDs to invite
 
         Returns:
             Room ID or None on error
@@ -347,7 +347,7 @@ class MatrixIntegration:
 
             headers = {
                 "Authorization": f"Bearer {self.bot_access_token}",
-                "Content-Type": content_type,
+                "Content-type": content_type,
             }
 
             with open(file_path, "rb") as f:
@@ -453,7 +453,7 @@ class MatrixIntegration:
             room_id: Matrix room ID
 
         Returns:
-            List of user IDs
+            list of user IDs
         """
         if not self.enabled:
             return []

@@ -347,13 +347,13 @@ class SkillsBasedRouter:
 
         return False
 
-    def set_queue_requirements(self, queue_number: str, requirements: list[Dict]) -> bool:
+    def set_queue_requirements(self, queue_number: str, requirements: list[dict]) -> bool:
         """
-        Set skill requirements for a queue
+        set skill requirements for a queue
 
         Args:
             queue_number: Queue number
-            requirements: List of skill requirement dicts with 'skill_id', 'min_proficiency', 'required'
+            requirements: list of skill requirement dicts with 'skill_id', 'min_proficiency', 'required'
 
         Returns:
             True if requirements were set
@@ -408,23 +408,23 @@ class SkillsBasedRouter:
                 self.logger.error(f"Failed to store queue requirements in database: {e}")
 
         self.logger.info(
-            f"Set {len(skill_reqs)} skill requirements for queue {queue_number}"
+            f"set {len(skill_reqs)} skill requirements for queue {queue_number}"
         )
         return True
 
     def find_best_agents(
         self, queue_number: str, available_agents: list[str], max_results: int = 5
-    ) -> list[Dict]:
+    ) -> list[dict]:
         """
         Find best agents for a queue based on skill requirements
 
         Args:
             queue_number: Queue number
-            available_agents: List of available agent extensions
+            available_agents: list of available agent extensions
             max_results: Maximum number of agents to return
 
         Returns:
-            List of agent dicts with 'extension', 'score', 'matching_skills'
+            list of agent dicts with 'extension', 'score', 'matching_skills'
         """
         if queue_number not in self.queue_requirements:
             # No requirements, return all available agents
@@ -467,7 +467,7 @@ class SkillsBasedRouter:
         Calculate agent score based on skill requirements
 
         Returns:
-            Tuple of (score, matching_skills)
+            tuple of (score, matching_skills)
         """
         if agent_extension not in self.agent_skills:
             return (0.0, [])
@@ -514,7 +514,7 @@ class SkillsBasedRouter:
 
         return (total_score, matching_skills)
 
-    def get_agent_skills(self, agent_extension: str) -> list[Dict]:
+    def get_agent_skills(self, agent_extension: str) -> list[dict]:
         """
         Get all skills for an agent
 
@@ -522,7 +522,7 @@ class SkillsBasedRouter:
             agent_extension: Agent's extension number
 
         Returns:
-            List of skill dicts
+            list of skill dicts
         """
         if agent_extension not in self.agent_skills:
             return []
@@ -537,11 +537,11 @@ class SkillsBasedRouter:
 
         return skills
 
-    def get_all_skills(self) -> list[Dict]:
+    def get_all_skills(self) -> list[dict]:
         """Get all available skills"""
         return [skill.to_dict() for skill in self.skills.values()]
 
-    def get_queue_requirements(self, queue_number: str) -> list[Dict]:
+    def get_queue_requirements(self, queue_number: str) -> list[dict]:
         """
         Get skill requirements for a queue
 
@@ -549,7 +549,7 @@ class SkillsBasedRouter:
             queue_number: Queue number
 
         Returns:
-            List of requirement dicts
+            list of requirement dicts
         """
         if queue_number not in self.queue_requirements:
             return []

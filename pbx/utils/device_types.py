@@ -1,5 +1,5 @@
 """
-Device Type Detection Utilities
+Device type Detection Utilities
 
 This module provides shared constants and utilities for detecting device types
 (ATA vs Phone) based on vendor and model information. Used by both the database

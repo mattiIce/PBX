@@ -389,7 +389,7 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
     These tones are designed to be recognizable and indicate specific messages.
 
     Args:
-        prompt_type: Type of prompt to generate:
+        prompt_type: type of prompt to generate:
             - 'leave_message': "Please leave a message after the tone"
             - 'enter_pin': "Please enter your PIN"
             - 'main_menu': "Main menu. Press 1 to listen to messages..."
@@ -547,7 +547,7 @@ def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
     Load a voice prompt WAV file from disk
 
     Args:
-        prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
+        prompt_type: type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
         prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
 
     Returns:
@@ -584,7 +584,7 @@ def get_prompt_audio(prompt_type, prompt_dir="voicemail_prompts", sample_rate=80
     It first attempts to load a recorded WAV file, and if that fails, generates tone-based prompts.
 
     Args:
-        prompt_type: Type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
+        prompt_type: type of prompt (e.g., 'enter_pin', 'main_menu', 'goodbye')
         prompt_dir: Directory containing prompt files (default: 'voicemail_prompts')
         sample_rate: Sample rate for generated prompts if file not found
 
