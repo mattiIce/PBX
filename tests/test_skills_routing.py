@@ -182,9 +182,6 @@ def test_find_best_agents() -> bool:
 
     assert len(best_agents) == 2, "Should find 2 agents with Python skill"
     assert best_agents[0]["extension"] == "1001", "Agent 1001 should be first (highest proficiency)"
-    print(
-        f"    Top agent: {best_agents[0]['extension']} (score: {best_agents[0]['score']:.2f})"
-    )
 
     return True
 
@@ -246,11 +243,6 @@ def test_scoring_algorithm() -> bool:
 
     assert len(best_agents) == 3, "All agents meet minimum requirements"
     assert best_agents[0]["extension"] == "1001", "Agent 1001 should rank highest"
-
-    for i, agent in enumerate(best_agents, 1):
-        print(
-            f"    {i}. Agent {agent['extension']}: score {agent['score']:.3f}, {len(agent['matching_skills'])} skills"
-        )
 
     return True
 
