@@ -4,14 +4,10 @@ Test voicemail recording functionality
 Tests that calls route to voicemail and can record messages
 """
 
-import os
 import shutil
-import sys
 import tempfile
 import time
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
 from pbx.core.pbx import PBXCore
@@ -21,7 +17,6 @@ from pbx.utils.config import Config
 
 def test_rtp_recorder() -> None:
     """Test RTP recorder can start and stop"""
-    print("Testing RTP recorder...")
 
     recorder = RTPRecorder(local_port=12000, call_id="test-call")
     assert recorder.start()
@@ -38,12 +33,9 @@ def test_rtp_recorder() -> None:
     assert duration >= 0
     assert audio is not None
 
-    print("✓ RTP recorder works")
-
 
 def test_wav_file_builder() -> None:
     """Test WAV file building"""
-    print("Testing WAV file builder...")
 
     # Create a temp config
     pbx = PBXCore("config.yml")
@@ -61,12 +53,9 @@ def test_wav_file_builder() -> None:
     # Check that audio data is included
     assert len(wav_data) > len(sample_audio)
 
-    print("✓ WAV file builder works")
-
 
 def test_voicemail_recording_timer() -> None:
     """Test that voicemail recording has proper timer setup"""
-    print("Testing voicemail recording timer setup...")
 
     # Create PBX instance
     pbx = PBXCore("config.yml")
@@ -130,12 +119,9 @@ def test_voicemail_recording_timer() -> None:
 
     pbx.call_manager.active_calls.clear()
 
-    print("✓ Voicemail recording timer setup works")
-
 
 def test_voicemail_save_on_hangup() -> None:
     """Test that voicemail is saved when caller hangs up"""
-    print("Testing voicemail save on hangup...")
 
     # Create temporary directory for voicemail
     temp_dir = tempfile.mkdtemp()
@@ -174,7 +160,6 @@ def test_voicemail_save_on_hangup() -> None:
         assert len(messages) > 0
         assert messages[0]["caller_id"] == "1001"
 
-        print("✓ Voicemail save on hangup works")
 
     finally:
         # Cleanup
@@ -183,7 +168,6 @@ def test_voicemail_save_on_hangup() -> None:
 
 def test_no_answer_answers_call() -> None:
     """Test that no-answer handler answers the call instead of sending busy"""
-    print("Testing that no-answer answers the call...")
 
     # Create PBX instance
     pbx = PBXCore("config.yml")
@@ -241,47 +225,3 @@ def test_no_answer_answers_call() -> None:
         call.voicemail_timer.cancel()
 
     pbx.call_manager.active_calls.clear()
-
-    print("✓ No-answer handler answers the call correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail Recording Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_rtp_recorder,
-        test_wav_file_builder,
-        test_voicemail_recording_timer,
-        test_voicemail_save_on_hangup,
-        test_no_answer_answers_call,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

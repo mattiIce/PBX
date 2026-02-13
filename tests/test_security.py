@@ -4,12 +4,9 @@ Tests for security features
 """
 
 import os
-import sys
 import tempfile
 import time
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import (
@@ -22,7 +19,6 @@ from pbx.utils.security import (
 
 def test_password_policy() -> None:
     """Test password policy validation"""
-    print("Testing password policy...")
 
     policy = PasswordPolicy()
 
@@ -70,12 +66,9 @@ def test_password_policy() -> None:
     assert not valid, "Password with repeated chars accepted"
     assert "repeated" in error.lower()
 
-    print("✓ Password policy validation works")
-
 
 def test_password_generation() -> None:
     """Test password generation"""
-    print("Testing password generation...")
 
     policy = PasswordPolicy()
 
@@ -90,12 +83,9 @@ def test_password_generation() -> None:
     password = policy.generate_strong_password(20)
     assert len(password) == 20, "Custom length not respected"
 
-    print("✓ Password generation works")
-
 
 def test_rate_limiter() -> None:
     """Test rate limiting"""
-    print("Testing rate limiter...")
 
     config = {
         "security.rate_limit.max_attempts": 3,
@@ -138,12 +128,9 @@ def test_rate_limiter() -> None:
     is_limited, _ = limiter3.is_rate_limited("test_user3")
     assert not is_limited, "Lockout didn't expire"
 
-    print("✓ Rate limiter works")
-
 
 def test_security_auditor() -> None:
     """Test security audit logging"""
-    print("Testing security auditor...")
 
     config = {"security.audit.enabled": True}
     auditor = SecurityAuditor(database=None, config=config)
@@ -188,12 +175,9 @@ def test_security_auditor() -> None:
 
         db.disconnect()
 
-    print("✓ Security auditor works")
-
 
 def test_password_manager() -> None:
     """Test secure password manager"""
-    print("Testing password manager...")
 
     config = {"security.fips_mode": False}
     mgr = get_password_manager(config)
@@ -224,12 +208,9 @@ def test_password_manager() -> None:
     valid, error = mgr.validate_new_password(generated)
     assert valid, f"Generated password invalid: {error}"
 
-    print("✓ Password manager works")
-
 
 def test_password_migration_compatibility() -> None:
     """Test that hashed passwords work with existing systems"""
-    print("Testing password migration compatibility...")
 
     config = {"security.fips_mode": False}
     mgr = get_password_manager(config)
@@ -259,53 +240,3 @@ def test_password_migration_compatibility() -> None:
         assert not mgr.verify_password(
             "wrong_password", data["hash"], data["salt"]
         ), f"Wrong password verified for {ext_num}"
-
-    print("✓ Password migration compatibility verified")
-
-
-def run_all_tests() -> bool:
-    """Run all tests"""
-    print("=" * 60)
-    print("Running Security Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_password_policy,
-        test_password_generation,
-        test_rate_limiter,
-        test_security_auditor,
-        test_password_manager,
-        test_password_migration_compatibility,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ Test failed: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ Test error: {test.__name__}")
-            print(f"  Error: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-        print()
-
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

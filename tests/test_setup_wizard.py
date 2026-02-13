@@ -13,8 +13,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 # Import the setup wizard
 from setup_ubuntu import SetupWizard
@@ -22,7 +20,6 @@ from setup_ubuntu import SetupWizard
 
 def test_setup_wizard_initialization() -> None:
     """Test that SetupWizard initializes correctly"""
-    print("Testing SetupWizard initialization...")
 
     wizard = SetupWizard()
 
@@ -34,12 +31,9 @@ def test_setup_wizard_initialization() -> None:
     assert isinstance(wizard.warnings, list), "warnings should be a list"
     assert isinstance(wizard.db_config, dict), "db_config should be a dict"
 
-    print("✓ SetupWizard initialization works")
-
 
 def test_check_python_version() -> None:
     """Test Python version checking"""
-    print("Testing Python version checking...")
 
     wizard = SetupWizard()
 
@@ -50,12 +44,9 @@ def test_check_python_version() -> None:
     else:
         assert result is False, "Should fail for Python < 3.12"
 
-    print("✓ Python version checking works")
-
 
 def test_check_root_non_root() -> None:
     """Test root checking when not running as root"""
-    print("Testing root checking (non-root)...")
 
     wizard = SetupWizard()
 
@@ -65,12 +56,9 @@ def test_check_root_non_root() -> None:
         assert result is False, "Should return False when not root"
         assert len(wizard.errors) > 0, "Should have recorded an error"
 
-    print("✓ Root checking works (non-root)")
-
 
 def test_check_root_as_root() -> None:
     """Test root checking when running as root"""
-    print("Testing root checking (as root)...")
 
     wizard = SetupWizard()
 
@@ -79,12 +67,9 @@ def test_check_root_as_root() -> None:
         result = wizard.check_root()
         assert result is True, "Should return True when root"
 
-    print("✓ Root checking works (as root)")
-
 
 def test_print_methods() -> None:
     """Test print methods for colored output"""
-    print("Testing print methods...")
 
     wizard = SetupWizard()
 
@@ -107,12 +92,9 @@ def test_print_methods() -> None:
     # Test print_header (should not raise errors)
     wizard.print_header("Test Header")
 
-    print("✓ Print methods work")
-
 
 def test_run_command_success() -> None:
     """Test run_command with successful execution"""
-    print("Testing run_command (success)...")
 
     wizard = SetupWizard()
 
@@ -130,12 +112,9 @@ def test_run_command_success() -> None:
         assert stdout == "Success output", "Should return stdout"
         assert stderr == "", "Should return stderr"
 
-    print("✓ run_command works (success)")
-
 
 def test_run_command_failure() -> None:
     """Test run_command with failed execution"""
-    print("Testing run_command (failure)...")
 
     wizard = SetupWizard()
 
@@ -152,12 +131,9 @@ def test_run_command_failure() -> None:
         assert ret == 1, "Should return error code"
         assert stderr == "Error output", "Should return stderr"
 
-    print("✓ run_command works (failure)")
-
 
 def test_setup_environment_file() -> None:
     """Test environment file creation"""
-    print("Testing environment file creation...")
 
     wizard = SetupWizard()
 
@@ -198,12 +174,9 @@ def test_setup_environment_file() -> None:
         if Path(temp_dir).exists():
             shutil.rmtree(temp_dir)
 
-    print("✓ Environment file creation works")
-
 
 def test_check_ubuntu_version_with_mock() -> None:
     """Test Ubuntu version checking with mocked file"""
-    print("Testing Ubuntu version checking (mocked)...")
 
     wizard = SetupWizard()
 
@@ -236,51 +209,3 @@ VERSION_ID="22.04"
         result = wizard.check_ubuntu_version()
         assert result is True, "Should pass for other Ubuntu versions"
         assert len(wizard.warnings) > 0, "Should have warning for non-24.04"
-
-    print("✓ Ubuntu version checking works (mocked)")
-
-
-def run_all_tests() -> bool:
-    """Run all tests"""
-    tests = [
-        test_setup_wizard_initialization,
-        test_check_python_version,
-        test_check_root_non_root,
-        test_check_root_as_root,
-        test_print_methods,
-        test_run_command_success,
-        test_run_command_failure,
-        test_setup_environment_file,
-        test_check_ubuntu_version_with_mock,
-    ]
-
-    print("=" * 70)
-    print("Running Setup Wizard Tests")
-    print("=" * 70)
-    print()
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} error: {e}")
-            failed += 1
-
-    print()
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

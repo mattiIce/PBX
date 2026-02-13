@@ -4,11 +4,8 @@ Tests for database permission error handling
 """
 
 import os
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
@@ -16,7 +13,6 @@ from pbx.utils.database import DatabaseBackend
 
 def test_index_creation_with_permission_error() -> None:
     """Test that index creation failures don't cause startup errors"""
-    print("Testing repeated table creation (simulates permission scenario)...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -46,7 +42,6 @@ def test_index_creation_with_permission_error() -> None:
         assert result is True
 
         db.disconnect()
-        print("✓ Repeated table/index creation is handled gracefully")
 
     finally:
         # Cleanup
@@ -56,7 +51,6 @@ def test_index_creation_with_permission_error() -> None:
 
 def test_table_already_exists_handling() -> None:
     """Test that 'already exists' errors are handled gracefully"""
-    print("Testing 'already exists' error handling...")
 
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
@@ -75,7 +69,6 @@ def test_table_already_exists_handling() -> None:
         assert db.create_tables() is True
 
         db.disconnect()
-        print("✓ 'Already exists' errors are handled gracefully")
 
     finally:
         if os.path.exists(temp_db.name):
@@ -84,7 +77,6 @@ def test_table_already_exists_handling() -> None:
 
 def test_critical_vs_non_critical_errors() -> None:
     """Test that critical and non-critical errors are handled differently"""
-    print("Testing critical vs non-critical error handling...")
 
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
     temp_db.close()
@@ -112,48 +104,7 @@ def test_critical_vs_non_critical_errors() -> None:
         assert result is False
 
         db.disconnect()
-        print("✓ Critical and non-critical errors are handled correctly")
 
     finally:
         if os.path.exists(temp_db.name):
             os.unlink(temp_db.name)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Running Database Permission Tests")
-    print("=" * 70)
-    print()
-
-    tests = [
-        test_index_creation_with_permission_error,
-        test_table_already_exists_handling,
-        test_critical_vs_non_critical_errors,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

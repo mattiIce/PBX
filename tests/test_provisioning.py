@@ -2,11 +2,7 @@
 """
 Tests for phone provisioning system
 """
-import os
-import sys
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.extensions import ExtensionRegistry
 from pbx.features.phone_provisioning import (
@@ -19,7 +15,6 @@ from pbx.utils.config import Config
 
 def test_device_mac_normalization() -> None:
     """Test MAC address normalization"""
-    print("Testing MAC address normalization...")
 
     # Test various MAC formats
     device1 = ProvisioningDevice("00:15:65:12:34:56", "1001", "yealink", "t46s")
@@ -42,12 +37,9 @@ def test_device_mac_normalization() -> None:
         device4.mac_address == expected
     ), f"Expected {expected}, got {device4.mac_address}"
 
-    print("✓ MAC address normalization works")
-
 
 def test_phone_template() -> None:
     """Test phone template configuration generation"""
-    print("Testing phone template...")
 
     template_content = """account.1.user_name = {{EXTENSION_NUMBER}}
 account.1.auth_name = {{EXTENSION_NUMBER}}
@@ -71,12 +63,9 @@ account.1.sip_server.1.port = {{SIP_PORT}}
     assert "192.168.1.100" in config, "SIP server not in config"
     assert "5060" in config, "SIP port not in config"
 
-    print("✓ Phone template works")
-
 
 def test_provisioning_device_registration() -> None:
     """Test device registration"""
-    print("Testing device registration...")
 
     # Create a minimal config
     config = Config("config.yml")
@@ -108,12 +97,9 @@ def test_provisioning_device_registration() -> None:
     retrieved = provisioning.get_device("00:15:65:12:34:56")
     assert retrieved is None, "Device still exists after unregistration"
 
-    print("✓ Device registration works")
-
 
 def test_supported_vendors_and_models() -> None:
     """Test supported vendors and models"""
-    print("Testing supported vendors and models...")
 
     config = Config("config.yml")
     provisioning = PhoneProvisioning(config)
@@ -141,12 +127,9 @@ def test_supported_vendors_and_models() -> None:
         len(all_models["zultys"]) == 2
     ), f"Expected 2 Zultys models, got {len(all_models['zultys'])}"
 
-    print("✓ Supported vendors and models work")
-
 
 def test_builtin_templates() -> None:
     """Test that built-in templates exist"""
-    print("Testing built-in templates...")
 
     config = Config("config.yml")
     provisioning = PhoneProvisioning(config)
@@ -175,12 +158,9 @@ def test_builtin_templates() -> None:
     grandstream_gxp2170_template = provisioning.get_template("grandstream", "gxp2170")
     assert grandstream_gxp2170_template is not None, "Grandstream GXP2170 template not found"
 
-    print("✓ Built-in templates exist")
-
 
 def test_config_generation() -> None:
     """Test configuration generation"""
-    print("Testing configuration generation...")
 
     config = Config("config.yml")
     provisioning = PhoneProvisioning(config)
@@ -210,12 +190,9 @@ def test_config_generation() -> None:
     # Check that device was marked as provisioned
     assert device.last_provisioned is not None, "Device not marked as provisioned"
 
-    print("✓ Configuration generation works")
-
 
 def test_unregistered_device_error_message() -> None:
     """Test that unregistered devices produce helpful error messages"""
-    print("Testing unregistered device error messages...")
 
     config = Config("config.yml")
     provisioning = PhoneProvisioning(config)
@@ -239,12 +216,9 @@ def test_unregistered_device_error_message() -> None:
     assert not history[0]["success"], "Request should have failed"
     assert "not registered" in history[0]["error"], "Error should mention registration"
 
-    print("✓ Unregistered device error messages work")
-
 
 def test_similar_mac_detection() -> None:
     """Test that similar MAC addresses are detected (helps identify typos)"""
-    print("Testing similar MAC detection...")
 
     config = Config("config.yml")
     provisioning = PhoneProvisioning(config)
@@ -265,12 +239,9 @@ def test_similar_mac_detection() -> None:
     # The warning log should mention similar MACs were found
     # We can't easily test log output, but we verified the code path exists
 
-    print("✓ Similar MAC detection works")
-
 
 def test_mac_placeholder_detection() -> None:
     """Test that MAC address placeholders are detected properly"""
-    print("Testing MAC placeholder detection...")
 
     from pbx.api.rest_api import MAC_ADDRESS_PLACEHOLDERS
     from pbx.features.phone_provisioning import normalize_mac_address
@@ -323,41 +294,3 @@ def test_mac_placeholder_detection() -> None:
         assert (
             is_placeholder == should_be_placeholder
         ), f"Failed for {description}: {mac_value} (expected placeholder={should_be_placeholder}, got {is_placeholder})"
-
-    print("✓ MAC placeholder detection works")
-
-
-def run_all_tests() -> bool | None:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Phone Provisioning Tests")
-    print("=" * 60)
-
-    try:
-        test_device_mac_normalization()
-        test_phone_template()
-        test_provisioning_device_registration()
-        test_supported_vendors_and_models()
-        test_builtin_templates()
-        test_config_generation()
-        test_unregistered_device_error_message()
-        test_similar_mac_detection()
-        test_mac_placeholder_detection()
-
-        print("=" * 60)
-        print("All tests passed!")
-        print("=" * 60)
-    except AssertionError as e:
-        print(f"\n✗ Test failed: {e}")
-        return False
-    except Exception as e:
-        print(f"\n✗ Unexpected error: {e}")
-        import traceback
-
-        traceback.print_exc()
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

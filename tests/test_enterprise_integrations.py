@@ -4,14 +4,10 @@ Tests for enterprise integration implementations
 Tests the newly implemented features in Zoom, Teams, Outlook, and Active Directory integrations
 """
 
-import os
-import sys
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.integrations.outlook import OutlookIntegration
@@ -82,7 +78,6 @@ class MockPBXCore:
 
 def test_zoom_phone_routing() -> None:
     """Test Zoom Phone SIP trunk routing"""
-    print("\nTesting Zoom Phone routing...")
 
     config = MockConfig(
         {
@@ -116,12 +111,9 @@ def test_zoom_phone_routing() -> None:
     assert result is True, "Should successfully route with configured trunk"
     assert zoom_trunk.channels_in_use == 1, "Should allocate channel"
 
-    print("✓ Zoom Phone routing works")
-
 
 def test_teams_direct_routing() -> None:
     """Test Microsoft Teams Direct Routing"""
-    print("\nTesting Teams Direct Routing...")
 
     config = MockConfig(
         {
@@ -166,12 +158,9 @@ def test_teams_direct_routing() -> None:
     result = teams.route_call_to_teams("+15551234567", "testuser", pbx_core=pbx_core)
     assert result is True, "Should handle user without domain"
 
-    print("✓ Teams Direct Routing works")
-
 
 def test_outlook_meeting_reminder() -> None:
     """Test Outlook meeting reminder scheduling"""
-    print("\nTesting Outlook meeting reminder...")
 
     config = MockConfig(
         {
@@ -219,12 +208,9 @@ def test_outlook_meeting_reminder() -> None:
         )
         assert result is True, "Should successfully schedule reminder with PBX core"
 
-    print("✓ Outlook meeting reminder works")
-
 
 def test_active_directory_sync() -> None:
     """Test Active Directory user sync (already fully implemented)"""
-    print("\nTesting Active Directory sync...")
 
     config = {
         "integrations": {
@@ -250,12 +236,9 @@ def test_active_directory_sync() -> None:
     result = ad.get_user_photo("testuser")
     assert result is None, "Should return None when disabled"
 
-    print("✓ Active Directory integration structure validated")
-
 
 def test_integration_error_handling() -> None:
     """Test that integrations handle errors gracefully"""
-    print("\nTesting error handling...")
 
     # Test with invalid/minimal config
     config = {"integrations": {}}
@@ -277,48 +260,3 @@ def test_integration_error_handling() -> None:
     assert teams.route_call_to_teams("123", "456") is False
     assert outlook.send_meeting_reminder("user@test.com", "meet-123") is False
     assert ad.sync_users() == 0
-
-    print("✓ Error handling works correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all enterprise integration tests"""
-    print("=" * 60)
-    print("Running Enterprise Integration Tests")
-    print("=" * 60)
-
-    tests = [
-        test_zoom_phone_routing,
-        test_teams_direct_routing,
-        test_outlook_meeting_reminder,
-        test_active_directory_sync,
-        test_integration_error_handling,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} error: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print("\n" + "=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

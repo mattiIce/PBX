@@ -4,12 +4,8 @@ Tests for provisioning config URL generation
 Tests the fix for connection error when API port differs from default
 """
 
-import os
-import sys
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
@@ -17,7 +13,6 @@ from pbx.utils.config import Config
 
 def test_config_url_uses_correct_port() -> None:
     """Test that config URLs use the configured API port, not hardcoded default"""
-    print("Testing config URL generation with custom port...")
 
     # Create a test config with custom port
     class TestConfig:
@@ -51,7 +46,6 @@ def test_config_url_uses_correct_port() -> None:
         device.config_url == expected_url
     ), f"Expected URL: {expected_url}, got: {device.config_url}"
 
-    print(f"✓ Config URL correctly uses port 9000: {device.config_url}")
 
     # Test with default port 8080
     config_8080 = TestConfig(api_port=8080)
@@ -61,12 +55,9 @@ def test_config_url_uses_correct_port() -> None:
 
     assert ":8080/" in device2.config_url, f"Expected port 8080 in URL, got: {device2.config_url}"
 
-    print(f"✓ Config URL correctly uses port 8080: {device2.config_url}")
-
 
 def test_config_url_regenerated_from_database() -> None:
     """Test that config URLs are regenerated when loading from database"""
-    print("Testing config URL regeneration from database...")
 
     # Create a mock database that returns old config URL with wrong port
     class MockDevice:
@@ -135,12 +126,9 @@ def test_config_url_regenerated_from_database() -> None:
         device.config_url == expected_url
     ), f"Expected regenerated URL: {expected_url}, got: {device.config_url}"
 
-    print(f"✓ Config URL regenerated correctly: {device.config_url}")
-
 
 def test_generate_config_url_helper() -> None:
     """Test the _generate_config_url helper method directly"""
-    print("Testing _generate_config_url helper method...")
 
     class TestConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -162,15 +150,3 @@ def test_generate_config_url_helper() -> None:
     url = provisioning._generate_config_url(mac)
 
     assert url == "http://10.0.0.5:9000/provision/aabbccddeeff.cfg", f"Unexpected URL: {url}"
-
-    print(f"✓ Helper method generates correct URL: {url}")
-
-
-if __name__ == "__main__":
-    test_config_url_uses_correct_port()
-    print()
-    test_config_url_regenerated_from_database()
-    print()
-    test_generate_config_url_helper()
-    print()
-    print("All provisioning config URL tests passed!")

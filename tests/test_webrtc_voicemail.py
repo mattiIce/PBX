@@ -4,28 +4,23 @@ Test WebRTC voicemail access RTP setup
 Verifies that WebRTC clients can access voicemail with audio prompts
 """
 
-import os
-import sys
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
 from pbx.features.webrtc import WebRTCGateway
 
 
-class TestWebRTCVoicemailAccess(unittest.TestCase):
+class TestWebRTCVoicemailAccess:
     """Test cases for WebRTC voicemail access"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         self.config_file = "config.yml"
 
     def test_webrtc_voicemail_pattern_detection(self) -> None:
         """Test that WebRTC gateway detects voicemail access pattern"""
-        print("\nTesting WebRTC voicemail pattern detection...")
 
         # Create mock PBX core
         mock_pbx_core = MagicMock()
@@ -104,11 +99,9 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
             assert args[2] == mock_mailbox, "Third arg should be mailbox"
             # Fourth arg is the VoicemailIVR instance
 
-        print("✓ WebRTC voicemail pattern detection works")
 
     def test_webrtc_voicemail_invalid_pattern(self) -> None:
         """Test that invalid patterns are not treated as voicemail"""
-        print("\nTesting invalid voicemail pattern rejection...")
 
         # Create mock PBX core
         mock_pbx_core = MagicMock()
@@ -137,11 +130,9 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
         # Should fail because dialplan check returns False
         assert call_id is None, "Call should fail for invalid extension"
 
-        print("✓ Invalid pattern rejection works")
 
     def test_webrtc_voicemail_missing_rtp_info(self) -> None:
         """Test that voicemail gracefully handles missing RTP info"""
-        print("\nTesting voicemail with missing RTP info...")
 
         # Create mock PBX core
         mock_pbx_core = MagicMock()
@@ -195,30 +186,3 @@ class TestWebRTCVoicemailAccess(unittest.TestCase):
 
         # IVR session should not start without RTP info (just logs warning)
         # This is graceful degradation
-
-        print("✓ Graceful handling of missing RTP info works")
-
-
-def run_tests() -> bool:
-    """Run all tests"""
-    print("=" * 70)
-    print("WebRTC Voicemail Access RTP Setup Tests")
-    print("=" * 70)
-
-    suite = unittest.TestLoader().loadTestsFromTestCase(TestWebRTCVoicemailAccess)
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-
-    print("\n" + "=" * 70)
-    if result.wasSuccessful():
-        print("✓ ALL TESTS PASSED")
-    else:
-        print("✗ SOME TESTS FAILED")
-    print("=" * 70)
-
-    return result.wasSuccessful()
-
-
-if __name__ == "__main__":
-    success = run_tests()
-    sys.exit(0 if success else 1)

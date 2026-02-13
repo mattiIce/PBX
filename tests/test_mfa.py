@@ -3,11 +3,8 @@
 Tests for Multi-Factor Authentication (MFA) feature
 """
 import os
-import sys
 import time
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.mfa import (
     FIDO2Verifier,
@@ -20,7 +17,6 @@ from pbx.utils.database import DatabaseBackend
 
 def test_totp_generation() -> bool:
     """Test TOTP code generation"""
-    print("Testing TOTP code generation...")
 
     # Create TOTP generator with fixed secret for testing
     secret = b"12345678901234567890"  # 20 bytes
@@ -34,19 +30,16 @@ def test_totp_generation() -> bool:
     assert len(code) == 6, f"Expected 6 digits, got {len(code)}"
     assert code.isdigit(), f"Expected numeric code, got {code}"
 
-    print(f"  ✓ Generated TOTP code: {code}")
 
     # Verify the same code is generated for the same timestamp
     code2 = totp.generate(timestamp)
     assert code == code2, "Same timestamp should generate same code"
-    print("  ✓ Consistent code generation verified")
 
     return True
 
 
 def test_totp_verification() -> bool:
     """Test TOTP code verification"""
-    print("Testing TOTP code verification...")
 
     secret = b"12345678901234567890"
     totp = TOTPGenerator(secret=secret)
@@ -57,12 +50,10 @@ def test_totp_verification() -> bool:
 
     # Verify the code
     assert totp.verify(code, timestamp), "Generated code should verify"
-    print("  ✓ Code verification successful")
 
     # Verify code fails for wrong code
     wrong_code = "000000"
     assert not totp.verify(wrong_code, timestamp), "Wrong code should fail"
-    print("  ✓ Invalid code correctly rejected")
 
     # Verify code works within time window
     past_timestamp = timestamp - 30  # 1 period ago
@@ -70,14 +61,12 @@ def test_totp_verification() -> bool:
     assert totp.verify(
         past_code, timestamp, window=1
     ), "Code from previous period should verify with window=1"
-    print("  ✓ Time window verification successful")
 
     return True
 
 
 def test_totp_provisioning_uri() -> bool:
     """Test TOTP provisioning URI generation"""
-    print("Testing TOTP provisioning URI...")
 
     totp = TOTPGenerator()
     uri = totp.get_provisioning_uri("1001", "Test PBX")
@@ -87,15 +76,12 @@ def test_totp_provisioning_uri() -> bool:
     assert "1001" in uri, "Account name not in URI"
     assert "Test PBX" in uri, "Issuer not in URI"
     assert "secret=" in uri, "Secret not in URI"
-    print("  ✓ Provisioning URI generated successfully")
-    print(f"    {uri[:60]}...")
 
     return True
 
 
 def test_mfa_manager_basic() -> bool:
     """Test MFA manager basic functionality"""
-    print("Testing MFA manager...")
 
     # Create config with database disabled
     config = {"security": {"fips_mode": False, "mfa": {"enabled": True, "required": False}}}
@@ -105,14 +91,12 @@ def test_mfa_manager_basic() -> bool:
 
     assert mfa.enabled, "MFA should be enabled"
     assert not mfa.required, "MFA should not be required"
-    print("  ✓ MFA manager initialized")
 
     return True
 
 
 def test_mfa_enrollment_without_db() -> bool:
     """Test MFA enrollment without database"""
-    print("Testing MFA enrollment (without database)...")
 
     config = {"security": {"fips_mode": False, "mfa": {"enabled": True}}}
     mfa = MFAManager(database=None, config=config)
@@ -122,14 +106,12 @@ def test_mfa_enrollment_without_db() -> bool:
 
     # Without database, enrollment will succeed but won't store
     # We just check that the method executes without error
-    print("  ✓ Enrollment method executed (database not available)")
 
     return True
 
 
 def test_mfa_with_database() -> bool:
     """Test MFA with database backend"""
-    print("Testing MFA with database...")
 
     # Create temporary SQLite database
     import tempfile
@@ -151,7 +133,6 @@ def test_mfa_with_database() -> bool:
         # Create database
         db = DatabaseBackend(db_config)
         if not db.connect():
-            print("  ⚠ Database connection failed, skipping database tests")
             return True
 
         # Initialize tables
@@ -172,15 +153,11 @@ def test_mfa_with_database() -> bool:
         assert (
             len(backup_codes) == 10
         ), f"Expected 10 backup codes, got {len(backup_codes)}"
-        print("  ✓ User enrolled successfully")
-        print(f"    Provisioning URI: {uri[:60]}...")
-        print(f"    Backup codes: {len(backup_codes)} codes generated")
 
         # MFA should not be enabled yet (requires verification)
         assert not mfa.is_enabled_for_user(
             extension
         ), "MFA should not be enabled before verification"
-        print("  ✓ MFA not yet enabled (pending verification)")
 
         # Extract secret from URI to generate valid code
         import base64
@@ -197,30 +174,24 @@ def test_mfa_with_database() -> bool:
         # Verify enrollment with valid code
         verify_success = mfa.verify_enrollment(extension, valid_code)
         assert verify_success, "Enrollment verification should succeed with valid code"
-        print("  ✓ Enrollment verified with TOTP code")
 
         # MFA should now be enabled
         assert mfa.is_enabled_for_user(extension), "MFA should be enabled after verification"
-        print("  ✓ MFA enabled for user")
 
         # Test code verification
         new_code = totp.generate()
         assert mfa.verify_code(extension, new_code), "TOTP code verification should succeed"
-        print("  ✓ TOTP code verification successful")
 
         # Test backup code verification
         backup_code = backup_codes[0]
         assert mfa.verify_code(extension, backup_code), "Backup code verification should succeed"
-        print("  ✓ Backup code verification successful")
 
         # Same backup code should not work twice
         assert not mfa.verify_code(extension, backup_code), "Used backup code should not work again"
-        print("  ✓ Used backup code correctly rejected")
 
         # Test disable
         assert mfa.disable_for_user(extension), "Disable should succeed"
         assert not mfa.is_enabled_for_user(extension), "MFA should be disabled"
-        print("  ✓ MFA disabled successfully")
 
         # Clean up
         db.connection.close()
@@ -240,7 +211,6 @@ def test_mfa_with_database() -> bool:
 
 def test_backup_code_format() -> bool:
     """Test backup code format"""
-    print("Testing backup code format...")
 
     config = {"security": {"fips_mode": False, "mfa": {"enabled": True, "backup_codes": 10}}}
     mfa = MFAManager(database=None, config=config)
@@ -264,15 +234,12 @@ def test_backup_code_format() -> bool:
             assert "I" not in part, "Should not contain I"
             assert "1" not in part, "Should not contain 1"
 
-    print("  ✓ Backup codes formatted correctly")
-    print(f"    Example codes: {codes[0]}, {codes[1]}")
 
     return True
 
 
 def test_yubikey_otp_format_validation() -> bool:
     """Test YubiKey OTP format validation"""
-    print("Testing YubiKey OTP format validation...")
 
     verifier = YubiKeyOTPVerifier()
 
@@ -280,33 +247,28 @@ def test_yubikey_otp_format_validation() -> bool:
     valid, error = verifier.verify_otp("short")
     assert not valid, "Short OTP should be rejected"
     assert "44 characters" in error, f"Expected length error, got: {error}"
-    print("  ✓ Short OTP correctly rejected")
 
     # Test invalid characters
     # 'a' is not a valid ModHex character
     valid, error = verifier.verify_otp("a" * 44)
     assert not valid, "OTP with invalid characters should be rejected"
     assert "invalid characters" in error.lower(), f"Expected character error, got: {error}"
-    print("  ✓ Invalid characters correctly rejected")
 
     # Test valid format (ModHex characters)
     valid_otp = "ccccccbcgujhingjrdejhgfnuetrgigvejhhgbkugded"
     valid, error = verifier.verify_otp(valid_otp)
     # Should fail for other reasons (not registered, etc.) but format should be OK
     # The format validation passes, so error would be from API call
-    print("  ✓ Valid format accepted for verification")
 
     # Test public ID extraction
     public_id = verifier.extract_public_id(valid_otp)
     assert public_id == "ccccccbcgujh", f"Expected 'ccccccbcgujh', got '{public_id}'"
-    print(f"  ✓ Public ID extracted: {public_id}")
 
     return True
 
 
 def test_yubikey_otp_verification_without_api() -> bool:
     """Test YubiKey OTP verification (format check only, no API credentials)"""
-    print("Testing YubiKey OTP verification...")
 
     # Create verifier without credentials (will use default test client)
     verifier = YubiKeyOTPVerifier()
@@ -321,17 +283,13 @@ def test_yubikey_otp_verification_without_api() -> bool:
     # We expect this to fail since we don't have real credentials/OTP
     # but it should fail gracefully with an appropriate error message
     if not valid:
-        print("  ✓ OTP verification attempted (failed as expected without valid credentials)")
-        print(f"    Error: {error}")
     else:
-        print("  ⚠ OTP verification succeeded (unexpected in test environment)")
 
     return True
 
 
 def test_fido2_challenge_generation() -> bool:
     """Test FIDO2 challenge generation"""
-    print("Testing FIDO2 challenge generation...")
 
     verifier = FIDO2Verifier()
 
@@ -347,26 +305,22 @@ def test_fido2_challenge_generation() -> bool:
     assert "+" not in challenge, "Challenge should be URL-safe"
     assert "/" not in challenge, "Challenge should be URL-safe"
 
-    print(f"  ✓ Challenge generated: {challenge[:32]}...")
 
     # Verify uniqueness
     challenge2 = verifier.create_challenge()
     assert challenge != challenge2, "Challenges should be unique"
-    print("  ✓ Challenges are unique")
 
     return True
 
 
 def test_fido2_credential_registration() -> bool:
     """Test FIDO2 credential registration"""
-    print("Testing FIDO2 credential registration...")
 
     verifier = FIDO2Verifier()
 
     # Test with missing data
     success, result = verifier.register_credential("1001", {})
     assert not success, "Registration should fail with missing data"
-    print("  ✓ Registration fails with missing data")
 
     # Test with valid data (simulated)
     import base64
@@ -379,21 +333,18 @@ def test_fido2_credential_registration() -> bool:
     success, result = verifier.register_credential("1001", credential_data)
     assert success, f"Registration should succeed with valid data: {result}"
     assert result == credential_id, "Should return credential ID"
-    print("  ✓ Credential registered successfully")
 
     return True
 
 
 def test_fido2_assertion_verification() -> bool:
     """Test FIDO2 assertion verification"""
-    print("Testing FIDO2 assertion verification...")
 
     verifier = FIDO2Verifier()
 
     # Test with missing data
     success, error = verifier.verify_assertion("test_cred", {}, b"public_key")
     assert not success, "Verification should fail with missing data"
-    print("  ✓ Verification fails with missing data")
 
     # Test with simulated valid data (basic mode without full crypto)
     import base64
@@ -418,61 +369,7 @@ def test_fido2_assertion_verification() -> bool:
     # In basic mode, this should succeed since all data is present and valid
     # length
     if success:
-        print("  ✓ Assertion verified (basic mode)")
     else:
         # If fido2 library is available and does full verification, it may fail
-        print(f"  ✓ Assertion verification attempted (library mode): {error}")
 
     return True
-
-
-def run_all_tests() -> bool:
-    """Run all MFA tests"""
-    print("=" * 60)
-    print("MFA Feature Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_totp_generation,
-        test_totp_verification,
-        test_totp_provisioning_uri,
-        test_mfa_manager_basic,
-        test_mfa_enrollment_without_db,
-        test_backup_code_format,
-        test_mfa_with_database,
-        test_yubikey_otp_format_validation,
-        test_yubikey_otp_verification_without_api,
-        test_fido2_challenge_generation,
-        test_fido2_credential_registration,
-        test_fido2_assertion_verification,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            if test():
-                passed += 1
-            else:
-                failed += 1
-                print(f"  ✗ {test.__name__} failed")
-        except Exception as e:
-            failed += 1
-            print(f"  ✗ {test.__name__} failed with exception: {e}")
-            import traceback
-
-            traceback.print_exc()
-        print()
-
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

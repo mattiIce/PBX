@@ -686,7 +686,3 @@ class TestAPIEndpoints:
         assert (
             "admin" in source.lower() and "403" in source
         ), "_handle_get_registered_atas should require admin privileges"
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])

@@ -6,11 +6,8 @@ This test verifies the fix for the G.722 codec issue where phones couldn't hear 
 import math
 import os
 import struct
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import WAV_FORMAT_PCM, pcm16_to_ulaw
@@ -62,23 +59,15 @@ def create_test_pcm_wav(sample_rate: int = 8000, duration_samples: int = 800) ->
 
 def test_pcm_to_pcmu_conversion() -> bool:
     """Test that PCM files are converted to PCMU, not G.722"""
-    print("\n" + "=" * 60)
-    print("Testing PCM to PCMU conversion (Fix for G.722 audio issue)")
-    print("=" * 60)
 
     # Create test PCM file at 8kHz
-    print("\n1. Creating test PCM WAV file (8kHz, 16-bit)...")
     pcm_file_8k = create_test_pcm_wav(sample_rate=8000, duration_samples=800)
-    print(f"   Created: {pcm_file_8k}")
 
     # Create test PCM file at 16kHz
-    print("\n2. Creating test PCM WAV file (16kHz, 16-bit)...")
     pcm_file_16k = create_test_pcm_wav(sample_rate=16000, duration_samples=1600)
-    print(f"   Created: {pcm_file_16k}")
 
     try:
         # Test 8kHz PCM file
-        print("\n3. Testing 8kHz PCM file playback...")
         player = RTPPlayer(
             local_port=20000, remote_host="127.0.0.1", remote_port=20001, call_id="test_call_8k"
         )
@@ -90,13 +79,10 @@ def test_pcm_to_pcmu_conversion() -> bool:
         player.stop()
 
         if result:
-            print("   ✓ 8kHz PCM file played successfully (converted to PCMU)")
         else:
-            print("   ✗ Failed to play 8kHz PCM file")
             return False
 
         # Test 16kHz PCM file
-        print("\n4. Testing 16kHz PCM file playback...")
         player = RTPPlayer(
             local_port=20004, remote_host="127.0.0.1", remote_port=20005, call_id="test_call_16k"
         )
@@ -107,13 +93,10 @@ def test_pcm_to_pcmu_conversion() -> bool:
         player.stop()
 
         if result:
-            print("   ✓ 16kHz PCM file played successfully (downsampled and converted to PCMU)")
         else:
-            print("   ✗ Failed to play 16kHz PCM file")
             return False
 
         # Test manual conversion
-        print("\n5. Testing manual PCM to PCMU conversion...")
         test_pcm_data = bytearray()
         for i in range(100):
             sample = int(8000 * math.sin(2 * math.pi * 440 * i / 8000))
@@ -131,14 +114,6 @@ def test_pcm_to_pcmu_conversion() -> bool:
             )
             return False
 
-        print("\n" + "=" * 60)
-        print("✓ All PCMU codec tests passed!")
-        print("=" * 60)
-        print("\nSummary:")
-        print("- PCM files are now converted to PCMU (G.711 μ-law)")
-        print("- 16kHz files are downsampled to 8kHz for compatibility")
-        print("- Phones using PCMU codec should now hear audio correctly")
-        print("=" * 60)
 
         return True
 
@@ -148,8 +123,3 @@ def test_pcm_to_pcmu_conversion() -> bool:
             os.remove(pcm_file_8k)
         if os.path.exists(pcm_file_16k):
             os.remove(pcm_file_16k)
-
-
-if __name__ == "__main__":
-    success = test_pcm_to_pcmu_conversion()
-    sys.exit(0 if success else 1)

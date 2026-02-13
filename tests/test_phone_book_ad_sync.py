@@ -3,17 +3,11 @@
 Test phone book auto-sync from Active Directory
 Tests that phone book automatically syncs after AD user sync completes
 """
-import os
-import sys
 from typing import Any
-
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def test_phone_book_auto_sync_after_ad_sync() -> bool:
     """Test that phone book automatically syncs after AD user sync"""
-    print("\nTesting phone book auto-sync after AD user sync...")
 
     # Create mock components
     class MockDatabase:
@@ -101,13 +95,11 @@ def test_phone_book_auto_sync_after_ad_sync() -> bool:
     assert phone_book.entries["1001"]["name"] == "John Doe", "Name should match"
     assert phone_book.entries["1002"]["name"] == "Jane Smith", "Name should match"
 
-    print("✓ Phone book auto-sync after AD sync works correctly")
     return True
 
 
 def test_phone_book_sync_disabled() -> bool:
     """Test that phone book sync doesn't happen when auto_sync_from_ad is disabled"""
-    print("\nTesting phone book sync when auto_sync_from_ad is disabled...")
 
     class MockDatabase:
         def __init__(self) -> None:
@@ -157,29 +149,4 @@ def test_phone_book_sync_disabled() -> bool:
     # Should return 0 when auto_sync_from_ad is disabled
     assert synced_count == 0, f"Should return 0 when disabled, got {synced_count}"
 
-    print("✓ Phone book respects auto_sync_from_ad setting")
     return True
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Testing Phone Book Auto-Sync from Active Directory")
-    print("=" * 70)
-
-    results = []
-    results.append(test_phone_book_auto_sync_after_ad_sync())
-    results.append(test_phone_book_sync_disabled())
-
-    print("\n" + "=" * 70)
-    if all(results):
-        print(f"✅ All phone book AD sync tests passed! ({len(results)}/{len(results)})")
-        return True
-    else:
-        print(f"❌ Some tests failed ({sum(results)}/{len(results)} passed)")
-        return False
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

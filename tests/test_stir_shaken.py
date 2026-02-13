@@ -6,12 +6,8 @@ Tests for STIR/SHAKEN caller ID authentication
 import base64
 import json
 import os
-import sys
 import tempfile
-from typing import Optional
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.stir_shaken import (
     CRYPTO_AVAILABLE,
@@ -24,10 +20,9 @@ from pbx.features.stir_shaken import (
 from pbx.sip.message import SIPMessage
 
 
-def create_test_manager() -> Optional[STIRSHAKENManager]:
+def create_test_manager() -> STIRSHAKENManager | None:
     """Create STIR/SHAKEN manager with test certificates"""
     if not CRYPTO_AVAILABLE:
-        print("⚠ Cryptography library not available, skipping tests")
         return None
 
     manager = STIRSHAKENManager()
@@ -52,10 +47,8 @@ def create_test_manager() -> Optional[STIRSHAKENManager]:
 
 def test_manager_initialization() -> bool:
     """Test manager initializes correctly"""
-    print("Testing STIR/SHAKEN manager initialization...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = STIRSHAKENManager()
@@ -64,16 +57,13 @@ def test_manager_initialization() -> bool:
         manager.enabled == CRYPTO_AVAILABLE
     ), "Manager enabled state should match crypto availability"
 
-    print("  ✓ Manager initialized successfully")
     return True
 
 
 def test_manager_with_config() -> bool:
     """Test manager initialization with config"""
-    print("Testing manager with config...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -83,28 +73,23 @@ def test_manager_with_config() -> bool:
     assert manager.enable_signing, "Signing should be enabled"
     assert manager.enable_verification, "Verification should be enabled"
 
-    print("  ✓ Manager configured successfully")
     return True
 
 
 def test_attestation_levels() -> bool:
     """Test attestation level enum"""
-    print("Testing attestation levels...")
 
     assert AttestationLevel.FULL.value == "A", "Full attestation should be 'A'"
     assert AttestationLevel.PARTIAL.value == "B", "Partial attestation should be 'B'"
     assert AttestationLevel.GATEWAY.value == "C", "Gateway attestation should be 'C'"
 
-    print("  ✓ Attestation levels correct")
     return True
 
 
 def test_create_passport_full() -> bool:
     """Test creating PASSporT with full attestation"""
-    print("Testing PASSporT creation (full attestation)...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -123,16 +108,13 @@ def test_create_passport_full() -> bool:
     assert len(payload_b64) > 0, "Payload should exist"
     assert len(sig_b64) > 0, "Signature should exist"
 
-    print(f"  ✓ Created PASSporT: {passport[:50]}...")
     return True
 
 
 def test_create_passport_partial() -> bool:
     """Test creating PASSporT with partial attestation"""
-    print("Testing PASSporT creation (partial attestation)...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -153,16 +135,13 @@ def test_create_passport_partial() -> bool:
     payload = json.loads(base64.urlsafe_b64decode(payload_b64))
     assert payload["attest"] == "B", "Attestation should be 'B'"
 
-    print("  ✓ Partial attestation verified")
     return True
 
 
 def test_verify_valid_passport() -> bool:
     """Test verifying a valid PASSporT"""
-    print("Testing PASSporT verification...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -181,16 +160,13 @@ def test_verify_valid_passport() -> bool:
     assert payload is not None, "Payload should be returned"
     assert payload["attest"] == "A", "Attestation should be 'A'"
 
-    print("  ✓ PASSporT verified successfully")
     return True
 
 
 def test_verify_invalid_signature() -> bool:
     """Test verifying PASSporT with invalid signature"""
-    print("Testing invalid signature detection...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -212,16 +188,13 @@ def test_verify_invalid_signature() -> bool:
 
     assert not valid, "Tampered PASSporT should fail verification"
 
-    print("  ✓ Invalid signature detected")
     return True
 
 
 def test_create_identity_header() -> bool:
     """Test creating SIP Identity header"""
-    print("Testing Identity header creation...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -237,16 +210,13 @@ def test_create_identity_header() -> bool:
     assert "ppt=" in identity, "Identity should contain ppt parameter"
     assert "shaken" in identity, "Identity should contain shaken"
 
-    print("  ✓ Created Identity header")
     return True
 
 
 def test_verify_identity_header() -> bool:
     """Test verifying Identity header"""
-    print("Testing Identity header verification...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -262,16 +232,13 @@ def test_verify_identity_header() -> bool:
     assert payload is not None, "Payload should be returned"
     assert payload["attest"] == "A", "Attestation should be 'A'"
 
-    print("  ✓ Identity header verified")
     return True
 
 
 def test_sip_integration() -> bool:
     """Test integration with SIP messages"""
-    print("Testing SIP INVITE integration...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -299,16 +266,13 @@ def test_sip_integration() -> bool:
     assert status == VerificationStatus.VERIFIED_FULL, "Should be verified full"
     assert payload is not None, "Payload should be returned"
 
-    print("  ✓ SIP INVITE integration working")
     return True
 
 
 def test_normalize_telephone_numbers() -> bool:
     """Test telephone number normalization"""
-    print("Testing telephone number normalization...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -325,16 +289,13 @@ def test_normalize_telephone_numbers() -> bool:
     normalized = manager._normalize_tn("(212) 555-1234")
     assert normalized == "+12125551234", "Should strip formatting"
 
-    print("  ✓ Telephone normalization working")
     return True
 
 
 def test_verification_status_display() -> bool:
     """Test verification status display info"""
-    print("Testing verification status display...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = create_test_manager()
@@ -350,16 +311,13 @@ def test_verification_status_display() -> bool:
     info = manager.get_verification_status_display(VerificationStatus.VERIFICATION_FAILED)
     assert info["trust_level"] == "none", "Failed verification should be no trust"
 
-    print("  ✓ Verification status display working")
     return True
 
 
 def test_certificate_generation() -> bool:
     """Test test certificate generation"""
-    print("Testing certificate generation...")
 
     if not CRYPTO_AVAILABLE:
-        print("  ⚠ Skipped (cryptography not available)")
         return True
 
     manager = STIRSHAKENManager()
@@ -379,56 +337,4 @@ def test_certificate_generation() -> bool:
         key_data = f.read()
         assert b"BEGIN PRIVATE KEY" in key_data, "Should be valid key"
 
-    print("  ✓ Certificate generation working")
     return True
-
-
-def run_all_tests() -> bool:
-    """Run all tests"""
-    tests = [
-        test_manager_initialization,
-        test_manager_with_config,
-        test_attestation_levels,
-        test_create_passport_full,
-        test_create_passport_partial,
-        test_verify_valid_passport,
-        test_verify_invalid_signature,
-        test_create_identity_header,
-        test_verify_identity_header,
-        test_sip_integration,
-        test_normalize_telephone_numbers,
-        test_verification_status_display,
-        test_certificate_generation,
-    ]
-
-    print("\n" + "=" * 70)
-    print("STIR/SHAKEN Caller ID Authentication Tests")
-    print("=" * 70 + "\n")
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            if test():
-                passed += 1
-            else:
-                failed += 1
-                print(f"  ✗ Test {test.__name__} failed")
-        except Exception as e:
-            failed += 1
-            print(f"  ✗ Test {test.__name__} error: {e}")
-            import traceback
-
-            traceback.print_exc()
-
-    print("\n" + "=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70 + "\n")
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

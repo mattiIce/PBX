@@ -8,13 +8,10 @@ import importlib
 import io
 import logging
 import os
-import sys
 import tempfile
 import types
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.audio import generate_voice_prompt
@@ -43,7 +40,6 @@ def restore_debug_vm_pin_env(original_value: str | None) -> None:
 
 def test_voice_prompt_generation() -> None:
     """Test that voice prompts are generated correctly"""
-    print("Testing voice prompt generation...")
 
     # Test various prompt types
     prompt_types = [
@@ -65,14 +61,9 @@ def test_voice_prompt_generation() -> None:
         assert b"WAVE" in prompt[:20], f"Prompt {prompt_type} doesn't have WAVE marker"
         assert len(prompt) > 100, f"Prompt {prompt_type} is too short"
 
-        print(f"  ✓ {prompt_type} prompt: {len(prompt)} bytes")
-
-    print("✓ Voice prompt generation works")
-
 
 def test_voicemail_ivr_initialization() -> None:
     """Test that VoicemailIVR can be initialized"""
-    print("Testing VoicemailIVR initialization...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -84,12 +75,9 @@ def test_voicemail_ivr_initialization() -> None:
     assert ivr.state == VoicemailIVR.STATE_WELCOME
     assert ivr.current_message_index == 0
 
-    print("✓ VoicemailIVR initialization works")
-
 
 def test_voicemail_ivr_welcome_state() -> None:
     """Test IVR welcome state handling"""
-    print("Testing VoicemailIVR welcome state...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -110,12 +98,9 @@ def test_voicemail_ivr_welcome_state() -> None:
     assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
     assert ivr.entered_pin == "1"  # First digit should be collected
 
-    print("✓ VoicemailIVR welcome state works")
-
 
 def test_voicemail_ivr_pin_entry() -> None:
     """Test IVR PIN entry"""
-    print("Testing VoicemailIVR PIN entry...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -139,12 +124,9 @@ def test_voicemail_ivr_pin_entry() -> None:
     assert result["prompt"] == "main_menu"
     assert ivr.state == VoicemailIVR.STATE_MAIN_MENU
 
-    print("✓ VoicemailIVR PIN entry works")
-
 
 def test_voicemail_ivr_invalid_pin() -> None:
     """Test IVR invalid PIN handling"""
-    print("Testing VoicemailIVR invalid PIN...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -169,12 +151,9 @@ def test_voicemail_ivr_invalid_pin() -> None:
     assert ivr.state == VoicemailIVR.STATE_PIN_ENTRY
     assert ivr.pin_attempts == 1
 
-    print("✓ VoicemailIVR invalid PIN handling works")
-
 
 def test_voicemail_ivr_main_menu() -> None:
     """Test IVR main menu navigation"""
-    print("Testing VoicemailIVR main menu...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -195,12 +174,9 @@ def test_voicemail_ivr_main_menu() -> None:
     assert "file_path" in result
     assert ivr.state == VoicemailIVR.STATE_PLAYING_MESSAGE
 
-    print("✓ VoicemailIVR main menu works")
-
 
 def test_voicemail_ivr_message_menu() -> None:
     """Test IVR message menu navigation"""
-    print("Testing VoicemailIVR message menu...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -226,12 +202,9 @@ def test_voicemail_ivr_message_menu() -> None:
     assert result["action"] == "play_message"
     assert ivr.current_message_index == 1
 
-    print("✓ VoicemailIVR message menu works")
-
 
 def test_voicemail_ivr_delete_message() -> None:
     """Test IVR message deletion"""
-    print("Testing VoicemailIVR message deletion...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -257,12 +230,9 @@ def test_voicemail_ivr_delete_message() -> None:
     final_count = len(mailbox.get_messages())
     assert final_count == initial_count - 1, "Message should be deleted"
 
-    print("✓ VoicemailIVR message deletion works")
-
 
 def test_voicemail_ivr_no_messages() -> None:
     """Test IVR when there are no messages"""
-    print("Testing VoicemailIVR with no messages...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -280,12 +250,9 @@ def test_voicemail_ivr_no_messages() -> None:
     assert result["action"] == "play_prompt"
     assert result["prompt"] == "no_messages"
 
-    print("✓ VoicemailIVR no messages handling works")
-
 
 def test_voicemail_ivr_exit() -> None:
     """Test IVR exit functionality"""
-    print("Testing VoicemailIVR exit...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -301,12 +268,9 @@ def test_voicemail_ivr_exit() -> None:
     assert result["prompt"] == "goodbye"
     assert ivr.state == VoicemailIVR.STATE_GOODBYE
 
-    print("✓ VoicemailIVR exit works")
-
 
 def test_voicemail_ivr_pin_entry_from_welcome() -> None:
     """Test IVR PIN entry starting from welcome state (verifies first digit not lost)"""
-    print("Testing VoicemailIVR PIN entry from welcome state...")
 
     config = Config("config.yml")
     vm_system = VoicemailSystem(storage_path="test_voicemail", config=config)
@@ -344,12 +308,9 @@ def test_voicemail_ivr_pin_entry_from_welcome() -> None:
     assert ivr.state == VoicemailIVR.STATE_MAIN_MENU
     assert ivr.entered_pin == "", "PIN should be cleared after verification"
 
-    print("✓ VoicemailIVR PIN entry from welcome state works (first digit not lost)")
-
 
 def test_debug_pin_flag_disabled_by_default() -> None:
     """Test that DEBUG_VM_PIN flag is disabled by default"""
-    print("Testing DEBUG_VM_PIN flag disabled by default...")
 
     # Save original value
     original_value = os.environ.get("DEBUG_VM_PIN")
@@ -376,7 +337,6 @@ def test_debug_pin_flag_disabled_by_default() -> None:
             ivr.debug_pin_logging is False
         ), "VoicemailIVR.debug_pin_logging should be False by default"
 
-        print("✓ DEBUG_VM_PIN flag is disabled by default")
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -384,7 +344,6 @@ def test_debug_pin_flag_disabled_by_default() -> None:
 
 def test_debug_pin_flag_enabled_when_set() -> None:
     """Test that DEBUG_VM_PIN flag is enabled when environment variable is set"""
-    print("Testing DEBUG_VM_PIN flag enabled when set...")
 
     # Save original value
     original_value = os.environ.get("DEBUG_VM_PIN")
@@ -423,7 +382,6 @@ def test_debug_pin_flag_enabled_when_set() -> None:
                 voicemail._DEBUG_PIN_LOGGING_ENABLED is False
             ), f"DEBUG_PIN_LOGGING should be False when DEBUG_VM_PIN='{falsy_value}'"
 
-        print("✓ DEBUG_VM_PIN flag enabled/disabled correctly based on environment variable")
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -431,7 +389,6 @@ def test_debug_pin_flag_enabled_when_set() -> None:
 
 def test_debug_pin_logging_suppressed_when_disabled() -> None:
     """Test that debug PIN logging is suppressed when DEBUG_VM_PIN is disabled"""
-    print("Testing debug PIN logging suppressed when disabled...")
 
     # Save original value
     original_value = os.environ.get("DEBUG_VM_PIN")
@@ -488,7 +445,6 @@ def test_debug_pin_logging_suppressed_when_disabled() -> None:
             "PIN verification result" in log_output
         ), "Regular PIN verification logging should still work"
 
-        print("✓ Debug PIN logging is suppressed when DEBUG_VM_PIN is disabled")
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -496,7 +452,6 @@ def test_debug_pin_logging_suppressed_when_disabled() -> None:
 
 def test_debug_pin_logging_emitted_when_enabled() -> None:
     """Test that debug PIN logging is emitted when DEBUG_VM_PIN is enabled"""
-    print("Testing debug PIN logging emitted when enabled...")
 
     # Save original value
     original_value = os.environ.get("DEBUG_VM_PIN")
@@ -561,7 +516,6 @@ def test_debug_pin_logging_emitted_when_enabled() -> None:
             "TESTING ONLY - Expected PIN: '1234'" in log_output
         ), "Expected PIN should be logged when DEBUG_VM_PIN is enabled"
 
-        print("✓ Debug PIN logging is emitted when DEBUG_VM_PIN is enabled")
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -569,7 +523,6 @@ def test_debug_pin_logging_emitted_when_enabled() -> None:
 
 def test_debug_pin_module_level_caching() -> None:
     """Test that the DEBUG_VM_PIN flag is cached at module level"""
-    print("Testing DEBUG_VM_PIN module-level caching...")
 
     # Save original value
     original_value = os.environ.get("DEBUG_VM_PIN")
@@ -601,7 +554,6 @@ def test_debug_pin_module_level_caching() -> None:
 
         assert ivr.debug_pin_logging is True, "New IVR should use cached module-level flag value"
 
-        print("✓ DEBUG_VM_PIN flag is cached at module level")
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -609,7 +561,6 @@ def test_debug_pin_module_level_caching() -> None:
 
 def test_voicemail_pin_from_database() -> None:
     """Test that voicemail PIN is loaded from database and verified correctly"""
-    print("Testing voicemail PIN from database...")
 
     # Create temporary database for testing
     temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
@@ -680,7 +631,6 @@ def test_voicemail_pin_from_database() -> None:
         assert ivr.state == VoicemailIVR.STATE_MAIN_MENU
 
         db.disconnect()
-        print("✓ Voicemail PIN from database works correctly")
 
     finally:
         # Cleanup - use try-except to handle potential issues
@@ -689,59 +639,3 @@ def test_voicemail_pin_from_database() -> None:
                 os.unlink(temp_db.name)
         except (OSError, PermissionError) as e:
             # Log but don't fail the test on cleanup errors
-            print(f"Warning: Could not clean up temporary database: {e}")
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail IVR Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_voice_prompt_generation,
-        test_voicemail_ivr_initialization,
-        test_voicemail_ivr_welcome_state,
-        test_voicemail_ivr_pin_entry,
-        test_voicemail_ivr_invalid_pin,
-        test_voicemail_ivr_pin_entry_from_welcome,  # New test for the fix
-        test_voicemail_ivr_main_menu,
-        test_voicemail_ivr_message_menu,
-        test_voicemail_ivr_delete_message,
-        test_voicemail_ivr_no_messages,
-        test_voicemail_ivr_exit,
-        test_voicemail_pin_from_database,  # New test for database PIN verification
-        # DEBUG_VM_PIN tests
-        test_debug_pin_flag_disabled_by_default,
-        test_debug_pin_flag_enabled_when_set,
-        test_debug_pin_logging_suppressed_when_disabled,
-        test_debug_pin_logging_emitted_when_enabled,
-        test_debug_pin_module_level_caching,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

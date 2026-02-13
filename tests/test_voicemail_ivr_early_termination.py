@@ -7,23 +7,19 @@ This test validates that when a call is terminated immediately after being answe
 detects this and exits gracefully without starting the IVR loop.
 """
 
-import os
-import sys
 import threading
 import time
 import unittest
 from unittest.mock import MagicMock, patch
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.core.call import Call, CallState
 
 
-class TestVoicemailIVREarlyTermination(unittest.TestCase):
+class TestVoicemailIVREarlyTermination:
     """Test cases for voicemail IVR early termination"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         self.config_file = "config.yml"
 
@@ -127,9 +123,8 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
 
                 # We should see the early termination message
                 # and NOT see the "IVR started" message
-                self.assertTrue(ended_before_start, "Should log that call ended before IVR started")
-                self.assertFalse(ivr_started, "Should NOT log 'IVR started' if call ended early")
-
+                assert ended_before_start, "Should log that call ended before IVR started"
+                assert not ivr_started, "Should NOT log 'IVR started' if call ended early"
     def test_ivr_session_ended_message_only_after_loop(self) -> None:
         """
         Test that "IVR session ended" log only appears after the IVR loop runs.
@@ -191,26 +186,6 @@ class TestVoicemailIVREarlyTermination(unittest.TestCase):
                 # (session_ended might still appear in finally block)
                 any("Voicemail IVR session ended" in str(call) for call in log_calls)
 
-                self.assertTrue(ended_before_start, "Should detect call ended before IVR started")
+                assert ended_before_start, "Should detect call ended before IVR started"
                 # Note: session_ended might still appear in finally block,
                 # but it should not appear at the same time as "IVR started"
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 60)
-    print("Running Voicemail IVR Early Termination Tests")
-    print("=" * 60)
-    print()
-
-    # Run tests
-    loader = unittest.TestLoader()
-    suite = loader.loadTestsFromModule(sys.modules[__name__])
-    runner = unittest.TextTestRunner(verbosity=2)
-    result = runner.run(suite)
-    return result.wasSuccessful()
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

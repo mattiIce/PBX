@@ -3,21 +3,17 @@ Test Find Me/Follow Me database persistence
 """
 
 import os
-import sys
 import tempfile
-import unittest
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.find_me_follow_me import FindMeFollowMe
 from pbx.utils.database import DatabaseBackend
 
 
-class TestFMFMPersistence(unittest.TestCase):
+class TestFMFMPersistence:
     """Test FMFM configuration persistence"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test database"""
         self.temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
         self.temp_db.close()
@@ -31,7 +27,7 @@ class TestFMFMPersistence(unittest.TestCase):
         self.database = DatabaseBackend(self.config)
         self.database.connect()
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test database"""
         if hasattr(self, "database") and self.database.connection:
             self.database.connection.close()
@@ -54,18 +50,16 @@ class TestFMFMPersistence(unittest.TestCase):
         }
 
         success = fmfm1.set_config("1000", config)
-        self.assertTrue(success, "Config should be saved successfully")
-
+        assert success, "Config should be saved successfully"
         # Create second instance to verify persistence
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm2.get_config("1000")
-        self.assertIsNotNone(loaded_config, "Config should be loaded from database")
-        self.assertEqual(loaded_config["mode"], "sequential")
-        self.assertEqual(len(loaded_config["destinations"]), 2)
-        self.assertEqual(loaded_config["destinations"][0]["number"], "1001")
-        self.assertEqual(loaded_config["no_answer_destination"], "2000")
-
+        assert loaded_config, "Config should be loaded from database" is not None
+        assert loaded_config["mode"] == "sequential"
+        assert len(loaded_config["destinations"]) == 2
+        assert loaded_config["destinations"][0]["number"] == "1001"
+        assert loaded_config["no_answer_destination"] == "2000"
     def test_add_destination_persistence(self) -> None:
         """Test that adding destinations persists to database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -77,9 +71,8 @@ class TestFMFMPersistence(unittest.TestCase):
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         config = fmfm2.get_config("1000")
-        self.assertIsNotNone(config)
-        self.assertEqual(len(config["destinations"]), 2)
-
+        assert config is not None
+        assert len(config["destinations"]) == 2
     def test_remove_destination_persistence(self) -> None:
         """Test that removing destinations persists to database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -101,10 +94,9 @@ class TestFMFMPersistence(unittest.TestCase):
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm2.get_config("1000")
-        self.assertIsNotNone(loaded_config)
-        self.assertEqual(len(loaded_config["destinations"]), 1)
-        self.assertEqual(loaded_config["destinations"][0]["number"], "1002")
-
+        assert loaded_config is not None
+        assert len(loaded_config["destinations"]) == 1
+        assert loaded_config["destinations"][0]["number"] == "1002"
     def test_enable_disable_persistence(self) -> None:
         """Test that enable/disable persists to database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -123,9 +115,8 @@ class TestFMFMPersistence(unittest.TestCase):
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm2.get_config("1000")
-        self.assertIsNotNone(loaded_config)
-        self.assertFalse(loaded_config["enabled"])
-
+        assert loaded_config is not None
+        assert not loaded_config["enabled"]
         # Enable again
         fmfm2.enable_fmfm("1000")
 
@@ -133,8 +124,7 @@ class TestFMFMPersistence(unittest.TestCase):
         fmfm3 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm3.get_config("1000")
-        self.assertTrue(loaded_config["enabled"])
-
+        assert loaded_config["enabled"]
     def test_delete_config_persistence(self) -> None:
         """Test that delete removes config from database"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -147,8 +137,7 @@ class TestFMFMPersistence(unittest.TestCase):
         fmfm1.set_config("1000", config)
 
         # Verify it exists
-        self.assertIsNotNone(fmfm1.get_config("1000"))
-
+        assert fmfm1.get_config("1000") is not None
         # Delete
         fmfm1.delete_config("1000")
 
@@ -156,8 +145,7 @@ class TestFMFMPersistence(unittest.TestCase):
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm2.get_config("1000")
-        self.assertIsNone(loaded_config, "Config should be deleted from database")
-
+        assert loaded_config, "Config should be deleted from database" is None
     def test_simultaneous_mode_persistence(self) -> None:
         """Test that simultaneous mode configs persist correctly"""
         fmfm1 = FindMeFollowMe(config=self.config, database=self.database)
@@ -177,10 +165,6 @@ class TestFMFMPersistence(unittest.TestCase):
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm2.get_config("1000")
-        self.assertIsNotNone(loaded_config)
-        self.assertEqual(loaded_config["mode"], "simultaneous")
-        self.assertEqual(len(loaded_config["destinations"]), 3)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert loaded_config is not None
+        assert loaded_config["mode"] == "simultaneous"
+        assert len(loaded_config["destinations"]) == 3

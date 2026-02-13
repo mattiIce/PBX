@@ -2,18 +2,13 @@
 """
 Test SDP parsing and building
 """
-import os
-import sys
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
 def test_sdp_parsing() -> None:
     """Test SDP parsing"""
-    print("Testing SDP parsing...")
 
     sdp_text = """v=0
 o=user1 123456 654321 IN IP4 192.168.1.100
@@ -45,12 +40,9 @@ a=sendrecv
         sdp.media[0]["port"] == 10000
     ), f"Expected port 10000, got {sdp.media[0]['port']}"
 
-    print("  ✓ SDP parsing works")
-
 
 def test_sdp_audio_info() -> None:
     """Test extracting audio info from SDP"""
-    print("Testing SDP audio info extraction...")
 
     sdp_text = """v=0
 o=user1 123456 654321 IN IP4 192.168.1.100
@@ -76,12 +68,9 @@ a=rtpmap:8 PCMA/8000
     ), f"Expected port 10000, got {audio_info['port']}"
     assert "0" in audio_info["formats"], "Expected codec 0 (PCMU) in formats"
 
-    print("  ✓ Audio info extraction works")
-
 
 def test_sdp_building() -> None:
     """Test SDP building"""
-    print("Testing SDP building...")
 
     sdp_body = SDPBuilder.build_audio_sdp(
         local_ip="192.168.1.14", local_port=10000, session_id="test-session-123"
@@ -94,7 +83,6 @@ def test_sdp_building() -> None:
     assert "PCMU" in sdp_body, "SDP should contain PCMU codec"
     assert "PCMA" in sdp_body, "SDP should contain PCMA codec"
 
-    print("  ✓ SDP building works")
 
     # Verify the built SDP can be parsed back
     sdp = SDPSession()
@@ -105,12 +93,9 @@ def test_sdp_building() -> None:
     assert audio_info["address"] == "192.168.1.14", "Parsed IP should match"
     assert audio_info["port"] == 10000, "Parsed port should match"
 
-    print("  ✓ Built SDP is valid and parseable")
-
 
 def test_sdp_media_level_connection() -> None:
     """Test SDP with media-level connection info"""
-    print("Testing SDP with media-level connection...")
 
     sdp_text = """v=0
 o=user1 123456 654321 IN IP4 192.168.1.100
@@ -131,12 +116,9 @@ a=rtpmap:0 PCMU/8000
         audio_info["address"] == "192.168.1.200"
     ), f"Expected media-level IP 192.168.1.200, got {audio_info['address']}"
 
-    print("  ✓ Media-level connection works")
-
 
 def test_ilbc_mode_configuration() -> None:
     """Test iLBC mode configuration in SDP"""
-    print("Testing iLBC mode configuration...")
 
     # Test with default mode (30ms)
     sdp_body_30 = SDPBuilder.build_audio_sdp(
@@ -150,7 +132,6 @@ def test_ilbc_mode_configuration() -> None:
     assert "rtpmap:97 iLBC/8000" in sdp_body_30, "SDP should contain iLBC codec"
     assert "fmtp:97 mode=30" in sdp_body_30, "SDP should contain mode=30 for iLBC"
 
-    print("  ✓ iLBC mode=30 configuration works")
 
     # Test with 20ms mode
     sdp_body_20 = SDPBuilder.build_audio_sdp(
@@ -163,51 +144,3 @@ def test_ilbc_mode_configuration() -> None:
 
     assert "rtpmap:97 iLBC/8000" in sdp_body_20, "SDP should contain iLBC codec"
     assert "fmtp:97 mode=20" in sdp_body_20, "SDP should contain mode=20 for iLBC"
-
-    print("  ✓ iLBC mode=20 configuration works")
-
-
-def run_all_tests() -> bool:
-    """Run all SDP tests"""
-    print("=" * 60)
-    print("Running SDP Tests")
-    print("=" * 60)
-    print()
-
-    tests = [
-        test_sdp_parsing,
-        test_sdp_audio_info,
-        test_sdp_building,
-        test_sdp_media_level_connection,
-        test_ilbc_mode_configuration,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ Test failed: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ Test error: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        print()
-
-    print("=" * 60)
-    print(f"Results: {passed} passed, {failed} failed")
-    if failed == 0:
-        print("✅ All SDP tests passed!")
-    print("=" * 60)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

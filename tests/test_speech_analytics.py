@@ -2,22 +2,18 @@
 Tests for Speech Analytics Framework
 """
 
-import os
 import sqlite3
-import sys
-import unittest
 from typing import Any
+import pytest
 
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from pbx.features.speech_analytics import SpeechAnalyticsEngine
 
 
-class TestSpeechAnalytics(unittest.TestCase):
+class TestSpeechAnalytics:
     """Test Speech Analytics functionality"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test database"""
 
         class MockDB:
@@ -74,16 +70,15 @@ class TestSpeechAnalytics(unittest.TestCase):
         }
         self.engine = SpeechAnalyticsEngine(self.db, self.config)
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test database"""
         self.db.disconnect()
 
     def test_initialization(self) -> None:
         """Test engine initialization"""
-        self.assertIsNotNone(self.engine)
+        assert self.engine is not None
         # Enabled based on config key 'speech_analytics.enabled'
-        self.assertTrue(self.engine.enabled)
-
+        assert self.engine.enabled
     def test_update_config(self) -> None:
         """Test updating configuration"""
         config = {
@@ -94,8 +89,7 @@ class TestSpeechAnalytics(unittest.TestCase):
         }
 
         result = self.engine.update_config("1001", config)
-        self.assertTrue(result)
-
+        assert result
     def test_get_config(self) -> None:
         """Test retrieving configuration"""
         # First create a config
@@ -104,19 +98,17 @@ class TestSpeechAnalytics(unittest.TestCase):
 
         # Now retrieve it
         retrieved = self.engine.get_config("1001")
-        self.assertIsNotNone(retrieved)
-        self.assertEqual(retrieved["extension"], "1001")
-        self.assertTrue(retrieved["enabled"])
-
+        assert retrieved is not None
+        assert retrieved["extension"] == "1001"
+        assert retrieved["enabled"]
     def test_sentiment_analysis_positive(self) -> None:
         """Test positive sentiment analysis"""
         text = "This is excellent service! I'm very happy and satisfied with the great support."
         result = self.engine.analyze_sentiment(text)
 
-        self.assertEqual(result["sentiment"], "positive")
-        self.assertGreater(result["score"], 0)
-        self.assertGreater(result["confidence"], 0)
-
+        assert result["sentiment"] == "positive"
+        assert result["score"] > 0
+        assert result["confidence"] > 0
     def test_sentiment_analysis_negative(self) -> None:
         """Test negative sentiment analysis"""
         text = (
@@ -124,45 +116,40 @@ class TestSpeechAnalytics(unittest.TestCase):
         )
         result = self.engine.analyze_sentiment(text)
 
-        self.assertEqual(result["sentiment"], "negative")
-        self.assertLess(result["score"], 0)
-        self.assertGreater(result["confidence"], 0)
-
+        assert result["sentiment"] == "negative"
+        assert result["score"] < 0
+        assert result["confidence"] > 0
     def test_sentiment_analysis_neutral(self) -> None:
         """Test neutral sentiment analysis"""
         text = "This is a regular phone call about account information."
         result = self.engine.analyze_sentiment(text)
 
-        self.assertEqual(result["sentiment"], "neutral")
-        self.assertAlmostEqual(result["score"], 0.0, delta=0.1)
-
+        assert result["sentiment"] == "neutral"
+        assert result["score"] == pytest.approx(0.0, abs=0.1)
     def test_sentiment_analysis_empty(self) -> None:
         """Test sentiment analysis with empty text"""
         result = self.engine.analyze_sentiment("")
 
-        self.assertEqual(result["sentiment"], "neutral")
-        self.assertEqual(result["score"], 0.0)
-
+        assert result["sentiment"] == "neutral"
+        assert result["score"] == 0.0
     def test_keyword_detection(self) -> None:
         """Test keyword detection"""
         text = "I have an urgent complaint about my refund"
         keywords = ["urgent", "complaint", "refund", "cancel"]
 
         detected = self.engine.detect_keywords(text, keywords)
-        self.assertIn("urgent", detected)
-        self.assertIn("complaint", detected)
-        self.assertIn("refund", detected)
-        self.assertNotIn("cancel", detected)
-
+        assert "urgent" in detected
+        assert "complaint" in detected
+        assert "refund" in detected
+        assert "cancel" not in detected
     def test_keyword_detection_case_insensitive(self) -> None:
         """Test case-insensitive keyword detection"""
         text = "URGENT: This is an IMPORTANT issue"
         keywords = ["urgent", "important"]
 
         detected = self.engine.detect_keywords(text, keywords)
-        self.assertIn("urgent", detected)
-        self.assertIn("important", detected)
-
+        assert "urgent" in detected
+        assert "important" in detected
     def test_generate_summary(self) -> None:
         """Test call summary generation"""
         transcript = """
@@ -174,18 +161,16 @@ class TestSpeechAnalytics(unittest.TestCase):
         """
 
         summary = self.engine.generate_summary("call-123", transcript)
-        self.assertIsNotNone(summary)
-        self.assertGreater(len(summary), 0)
+        assert summary is not None
+        assert len(summary) > 0
         # Summary should be shorter than original
-        self.assertLess(len(summary), len(transcript))
-
+        assert len(summary) < len(transcript)
     def test_generate_summary_short_text(self) -> None:
         """Test summary generation with short text"""
         transcript = "Hello, thanks."
         summary = self.engine.generate_summary("call-124", transcript)
 
-        self.assertEqual(summary, "Call too short to summarize")
-
+        assert summary == "Call too short to summarize"
     def test_generate_summary_stores_in_db(self) -> None:
         """Test that summary is stored in database"""
         transcript = """
@@ -199,15 +184,13 @@ class TestSpeechAnalytics(unittest.TestCase):
 
         # Retrieve from database
         retrieved = self.engine.get_call_summary(call_id)
-        self.assertIsNotNone(retrieved)
-        self.assertEqual(retrieved["call_id"], call_id)
-        self.assertIn("summary", retrieved)
-
+        assert retrieved is not None
+        assert retrieved["call_id"] == call_id
+        assert "summary" in retrieved
     def test_get_call_summary_not_found(self) -> None:
         """Test retrieving non-existent summary"""
         summary = self.engine.get_call_summary("nonexistent")
-        self.assertIsNone(summary)
-
+        assert summary is None
     def test_get_all_configs(self) -> None:
         """Test retrieving all configurations"""
         # Create multiple configs
@@ -215,25 +198,22 @@ class TestSpeechAnalytics(unittest.TestCase):
             self.engine.update_config(ext, {"enabled": True})
 
         configs = self.engine.get_all_configs()
-        self.assertEqual(len(configs), 3)
-
+        assert len(configs) == 3
     def test_analyze_audio_stream_without_vosk(self) -> None:
         """Test audio analysis without Vosk library"""
         # Should not crash even without Vosk
         result = self.engine.analyze_audio_stream("call-126", b"dummy_audio_data")
 
-        self.assertIsNotNone(result)
-        self.assertIn("call_id", result)
-        self.assertEqual(result["call_id"], "call-126")
-
+        assert result is not None
+        assert "call_id" in result
+        assert result["call_id"] == "call-126"
     def test_analyze_call_recording(self) -> None:
         """Test full call recording analysis"""
         result = self.engine.analyze_call_recording("call-127", "/tmp/test.wav")
 
-        self.assertIsNotNone(result)
-        self.assertEqual(result["call_id"], "call-127")
-        self.assertIn("status", result)
-
+        assert result is not None
+        assert result["call_id"] == "call-127"
+        assert "status" in result
     def test_sentiment_scoring(self) -> None:
         """Test sentiment score calculation"""
         # Mixed sentiment
@@ -241,8 +221,7 @@ class TestSpeechAnalytics(unittest.TestCase):
         result = self.engine.analyze_sentiment(text)
 
         # Should be close to neutral or slightly negative
-        self.assertLess(abs(result["score"]), 0.5)
-
+        assert abs(result["score"]) < 0.5
     def test_summary_preserves_important_info(self) -> None:
         """Test that summary preserves important information"""
         transcript = """
@@ -260,8 +239,4 @@ class TestSpeechAnalytics(unittest.TestCase):
         # Should contain at least one important keyword
         important_keywords = ["order", "urgent", "delivery", "problem"]
         has_important = any(kw in summary_lower for kw in important_keywords)
-        self.assertTrue(has_important)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert has_important

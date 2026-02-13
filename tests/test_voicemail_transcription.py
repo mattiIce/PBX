@@ -12,8 +12,6 @@ from datetime import datetime
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.voicemail_transcription import VoicemailTranscriptionService
 
@@ -24,10 +22,10 @@ sys.modules["google.cloud"] = MagicMock()
 sys.modules["google.cloud.speech"] = MagicMock()
 
 
-class TestVoicemailTranscription(unittest.TestCase):
+class TestVoicemailTranscription:
     """Test voicemail transcription service"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         self.temp_dir = tempfile.mkdtemp()
 
@@ -35,7 +33,7 @@ class TestVoicemailTranscription(unittest.TestCase):
         self.test_audio_path = os.path.join(self.temp_dir, "test_voicemail.wav")
         self._create_test_wav(self.test_audio_path)
 
-    def tearDown(self) -> None:
+    def teardown_method(self) -> None:
         """Clean up test fixtures"""
         # Remove test files
         if os.path.exists(self.test_audio_path):
@@ -74,14 +72,12 @@ class TestVoicemailTranscription(unittest.TestCase):
 
         service = VoicemailTranscriptionService(config)
 
-        self.assertFalse(service.enabled)
-
+        assert not service.enabled
         result = service.transcribe(self.test_audio_path)
 
-        self.assertFalse(result["success"])
-        self.assertIsNone(result["text"])
-        self.assertEqual(result["error"], "Transcription service is disabled")
-
+        assert not result["success"]
+        assert result["text"] is None
+        assert result["error"] == "Transcription service is disabled"
     def test_transcription_file_not_found(self) -> None:
         """Test transcription with non-existent file"""
         config = Mock()
@@ -99,9 +95,8 @@ class TestVoicemailTranscription(unittest.TestCase):
 
         result = service.transcribe("/nonexistent/file.wav")
 
-        self.assertFalse(result["success"])
-        self.assertIn("Audio file not found", result["error"])
-
+        assert not result["success"]
+        assert "Audio file not found" in result["error"]
     def test_transcription_unsupported_provider(self) -> None:
         """Test transcription with unsupported provider"""
         config = Mock()
@@ -118,9 +113,8 @@ class TestVoicemailTranscription(unittest.TestCase):
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
 
-        self.assertFalse(result["success"])
-        self.assertIn("Unsupported transcription provider", result["error"])
-
+        assert not result["success"]
+        assert "Unsupported transcription provider" in result["error"]
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
     def test_transcription_google_success(self, mock_speech: MagicMock) -> None:
@@ -161,12 +155,11 @@ class TestVoicemailTranscription(unittest.TestCase):
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
 
-        self.assertTrue(result["success"])
-        self.assertEqual(result["text"], "This is a Google transcription test.")
-        self.assertEqual(result["confidence"], 0.95)
-        self.assertEqual(result["provider"], "google")
-        self.assertIsNone(result["error"])
-
+        assert result["success"]
+        assert result["text"] == "This is a Google transcription test."
+        assert result["confidence"] == 0.95
+        assert result["provider"] == "google"
+        assert result["error"] is None
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
     def test_transcription_google_no_results(self, mock_speech: MagicMock) -> None:
@@ -196,9 +189,8 @@ class TestVoicemailTranscription(unittest.TestCase):
         service = VoicemailTranscriptionService(config)
         result = service.transcribe(self.test_audio_path)
 
-        self.assertFalse(result["success"])
-        self.assertEqual(result["error"], "Transcription returned no results")
-
+        assert not result["success"]
+        assert result["error"] == "Transcription returned no results"
     def test_transcription_result_structure(self) -> None:
         """Test that transcription result has correct structure"""
         config = Mock()
@@ -218,14 +210,11 @@ class TestVoicemailTranscription(unittest.TestCase):
             "error",
         ]
         for key in required_keys:
-            self.assertIn(key, result)
-
+            assert key in result
         # Verify types
-        self.assertIsInstance(result["success"], bool)
-        self.assertIsInstance(result["confidence"], float)
-        self.assertIsInstance(result["timestamp"], datetime)
-
-
+        assert isinstance(result["success"], bool)
+        assert isinstance(result["confidence"], float)
+        assert isinstance(result["timestamp"], datetime)
 def run_all_tests() -> bool:
     """Run all tests in this module"""
     loader = unittest.TestLoader()
@@ -233,7 +222,3 @@ def run_all_tests() -> bool:
     runner = unittest.TextTestRunner(verbosity=2)
     result = runner.run(suite)
     return result.wasSuccessful()
-
-
-if __name__ == "__main__":
-    unittest.main()

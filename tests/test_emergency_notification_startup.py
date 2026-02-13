@@ -5,11 +5,8 @@ Test to verify emergency notification system initializes without database errors
 
 import os
 import shutil
-import sys
 import tempfile
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
@@ -18,7 +15,6 @@ from pbx.utils.database import DatabaseBackend
 
 def test_emergency_notification_system_initialization() -> None:
     """Test that emergency notification system initializes without database errors"""
-    print("Testing emergency notification system initialization...")
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
@@ -61,7 +57,6 @@ def test_emergency_notification_system_initialization() -> None:
         contacts = emergency_system.get_emergency_contacts()
         assert contacts == [], "Should return empty list initially"
 
-        print("✓ Emergency notification system initialized without errors")
 
         # Clean up
         db.disconnect()
@@ -74,7 +69,6 @@ def test_emergency_notification_system_initialization() -> None:
 
 def test_emergency_notification_database_operations() -> None:
     """Test that emergency notification system can perform database operations"""
-    print("Testing emergency notification database operations...")
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
@@ -125,7 +119,6 @@ def test_emergency_notification_database_operations() -> None:
         assert len(contacts) == 1, f"Expected 1 contact, got {len(contacts)}"
         assert contacts[0]["name"] == "Test Contact", "Contact name mismatch"
 
-        print("✓ Emergency notification database operations work correctly")
 
         # Clean up
         db.disconnect()
@@ -134,42 +127,3 @@ def test_emergency_notification_database_operations() -> None:
         # Clean up
         if os.path.exists(temp_dir):
             shutil.rmtree(temp_dir)
-
-
-def run_all_tests() -> bool:
-    """Run all tests in this module"""
-    print("=" * 70)
-    print("Running Emergency Notification Startup Tests")
-    print("=" * 70)
-    print()
-
-    tests = [
-        test_emergency_notification_system_initialization,
-        test_emergency_notification_database_operations,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except Exception as e:
-            print(f"✗ {test.__name__} failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print()
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

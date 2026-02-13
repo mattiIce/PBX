@@ -4,14 +4,9 @@ Tests that the REST API endpoints match the URLs expected by the admin UI.
 """
 
 import os
-import sys
-import unittest
-
-# Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 
-class TestAPIEndpointURLs(unittest.TestCase):
+class TestAPIEndpointURLs:
     """Test that API endpoint URLs are correctly defined"""
 
     @classmethod
@@ -64,7 +59,7 @@ class TestAPIEndpointURLs(unittest.TestCase):
     def test_dtmf_handler_method_exists(self) -> None:
         """Verify DTMF handler methods are defined"""
         # Check that handler methods exist
-        self.assertIn("def _handle_get_dtmf_config", self.rest_api_content, "GET DTMF handler")
+        assert "def _handle_get_dtmf_config" in self.rest_api_content
         self.assertIn(
             "def _handle_update_dtmf_config", self.rest_api_content, "Update DTMF handler"
         )
@@ -82,7 +77,3 @@ class TestAPIEndpointURLs(unittest.TestCase):
             self.rest_api_content,
             "Clear activity log handler",
         )
-
-
-if __name__ == "__main__":
-    unittest.main()

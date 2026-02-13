@@ -4,18 +4,12 @@ Test codec negotiation between caller and callee
 Verifies that PBX correctly negotiates codecs to prevent "488 Not Acceptable Here" errors
 """
 
-import os
-import sys
-
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
 def test_codec_extraction_from_sdp() -> None:
     """Test extracting codecs from caller's SDP"""
-    print("Testing codec extraction from SDP...")
 
     # Simulate SDP from a phone with codecs: 8, 9, 0 (PCMA, G722, PCMU)
     caller_sdp_text = """v=0
@@ -44,13 +38,9 @@ a=sendrecv
     codecs = audio_info["formats"]
     assert codecs == ["8", "9", "0"], f"Expected ['8', '9', '0'], got {codecs}"
 
-    print(f"  ✓ Extracted codecs: {codecs}")
-    print("  ✓ Codec order preserved")
-
 
 def test_sdp_building_with_caller_codecs() -> None:
     """Test building SDP with caller's codec preferences"""
-    print("Testing SDP building with caller's codecs...")
 
     # Caller offered codecs: 8, 9, 0 (PCMA, G722, PCMU)
     caller_codecs = ["8", "9", "0"]
@@ -60,10 +50,8 @@ def test_sdp_building_with_caller_codecs() -> None:
         local_ip="192.168.1.14", local_port=10000, session_id="test-session", codecs=caller_codecs
     )
 
-    print("  Generated SDP:")
     for line in pbx_sdp.split("\r\n"):
         if line:
-            print(f"    {line}")
 
     # Verify the SDP contains caller's codecs in correct order
     assert "m=audio 10000 RTP/AVP 8 9 0" in pbx_sdp, "SDP should contain caller's codec order"
@@ -71,13 +59,9 @@ def test_sdp_building_with_caller_codecs() -> None:
     assert "rtpmap:9 G722/8000" in pbx_sdp, "SDP should contain G722 codec"
     assert "rtpmap:0 PCMU/8000" in pbx_sdp, "SDP should contain PCMU codec"
 
-    print("  ✓ SDP built with caller's codecs")
-    print("  ✓ Codec order maintained")
-
 
 def test_default_codecs_when_none_provided() -> None:
     """Test that default codecs are used when caller codecs are None"""
-    print("Testing default codec behavior...")
 
     # Build SDP without specifying codecs (should use defaults)
     pbx_sdp = SDPBuilder.build_audio_sdp(
@@ -89,12 +73,9 @@ def test_default_codecs_when_none_provided() -> None:
         "m=audio 10000 RTP/AVP 0 8 9 18 2 101" in pbx_sdp
     ), "SDP should contain default codec order"
 
-    print("  ✓ Default codecs used when none provided")
-
 
 def test_codec_negotiation_scenario() -> None:
     """Test full codec negotiation scenario"""
-    print("Testing full codec negotiation scenario...")
 
     # Step 1: Phone sends INVITE with SDP offering codecs 8, 9, 0
     phone_sdp_text = """v=0
@@ -115,7 +96,6 @@ a=sendrecv
     phone_audio = phone_sdp.get_audio_info()
     phone_codecs = phone_audio["formats"]
 
-    print(f"  Phone offered codecs: {phone_codecs}")
 
     # Step 3: PBX builds response SDP using phone's codecs
     pbx_sdp = SDPBuilder.build_audio_sdp(
@@ -131,19 +111,14 @@ a=sendrecv
     pbx_audio = pbx_sdp_parsed.get_audio_info()
     pbx_codecs = pbx_audio["formats"]
 
-    print(f"  PBX responded with: {pbx_codecs}")
 
     assert (
         pbx_codecs == phone_codecs
     ), f"PBX codecs {pbx_codecs} should match phone codecs {phone_codecs}"
 
-    print("  ✓ Codec negotiation successful")
-    print("  ✓ Phone and PBX codec lists match")
-
 
 def test_partial_codec_support() -> None:
     """Test when phone offers codecs we support"""
-    print("Testing partial codec support...")
 
     # Phone offers only PCMA and G722 (no PCMU)
     phone_codecs = ["8", "9"]
@@ -158,51 +133,3 @@ def test_partial_codec_support() -> None:
     assert "rtpmap:9 G722/8000" in pbx_sdp, "SDP should contain G722"
     # Should not contain PCMU since it wasn't offered
     assert "rtpmap:0 PCMU/8000" not in pbx_sdp, "SDP should not contain PCMU"
-
-    print("  ✓ Partial codec support works correctly")
-
-
-def run_all_tests() -> bool:
-    """Run all codec negotiation tests"""
-    print("=" * 70)
-    print("Running Codec Negotiation Tests")
-    print("=" * 70)
-    print()
-
-    tests = [
-        test_codec_extraction_from_sdp,
-        test_sdp_building_with_caller_codecs,
-        test_default_codecs_when_none_provided,
-        test_codec_negotiation_scenario,
-        test_partial_codec_support,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            test()
-            passed += 1
-        except AssertionError as e:
-            print(f"✗ Test failed: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        except Exception as e:
-            print(f"✗ Test error: {test.__name__}")
-            print(f"  Error: {e}")
-            failed += 1
-        print()
-
-    print("=" * 70)
-    print(f"Results: {passed} passed, {failed} failed")
-    if failed == 0:
-        print("✅ All codec negotiation tests passed!")
-    print("=" * 70)
-
-    return failed == 0
-
-
-if __name__ == "__main__":
-    success = run_all_tests()
-    sys.exit(0 if success else 1)

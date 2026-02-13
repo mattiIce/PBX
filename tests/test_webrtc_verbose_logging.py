@@ -4,20 +4,15 @@ Test WebRTC verbose logging feature
 """
 
 import logging
-import os
-import sys
 from io import StringIO
 from typing import Any
 
-# Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from pbx.features.webrtc import WebRTCGateway, WebRTCSignalingServer
 
 
 def test_verbose_logging_disabled() -> bool:
     """Test that verbose logging is disabled by default"""
-    print("\nTesting verbose logging disabled by default...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -36,13 +31,11 @@ def test_verbose_logging_disabled() -> bool:
 
     signaling.stop()
 
-    print("✓ Verbose logging disabled by default works")
     return True
 
 
 def test_verbose_logging_enabled() -> bool:
     """Test that verbose logging can be enabled"""
-    print("\nTesting verbose logging enabled...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -85,14 +78,11 @@ def test_verbose_logging_enabled() -> bool:
     signaling.stop()
     logger.removeHandler(handler)
 
-    print("✓ Verbose logging enabled works")
-    print(f"  Captured verbose logs: {'[VERBOSE]' in log_output}")
     return True
 
 
 def test_verbose_logging_in_offer_handling() -> bool:
     """Test verbose logging in SDP offer handling"""
-    print("\nTesting verbose logging in offer handling...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -144,13 +134,11 @@ a=rtpmap:0 PCMU/8000
     signaling.stop()
     logger.removeHandler(handler)
 
-    print("✓ Verbose logging in offer handling works")
     return True
 
 
 def test_gateway_verbose_logging() -> bool:
     """Test that gateway inherits verbose logging from signaling server"""
-    print("\nTesting gateway verbose logging...")
 
     class MockConfig:
         def get(self, key: str, default: Any = None) -> Any:
@@ -193,40 +181,4 @@ def test_gateway_verbose_logging() -> bool:
     signaling.stop()
     logger.removeHandler(handler)
 
-    print("✓ Gateway verbose logging works")
     return True
-
-
-if __name__ == "__main__":
-    print("======================================================================")
-    print("Testing WebRTC Verbose Logging Feature")
-    print("======================================================================")
-
-    tests = [
-        test_verbose_logging_disabled,
-        test_verbose_logging_enabled,
-        test_verbose_logging_in_offer_handling,
-        test_gateway_verbose_logging,
-    ]
-
-    passed = 0
-    failed = 0
-
-    for test in tests:
-        try:
-            if test():
-                passed += 1
-        except Exception as e:
-            print(f"✗ Test failed: {e}")
-            import traceback
-
-            traceback.print_exc()
-            failed += 1
-
-    print("\n======================================================================")
-    if failed == 0:
-        print(f"✅ All verbose logging tests passed! ({passed}/{len(tests)})")
-        sys.exit(0)
-    else:
-        print(f"❌ Some tests failed: {passed} passed, {failed} failed")
-        sys.exit(1)

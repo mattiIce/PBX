@@ -7,10 +7,6 @@ Quick validation of critical functionality
 import sys
 import urllib.request
 from collections.abc import Callable
-from pathlib import Path
-
-# Add project root to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 class SmokeTestRunner:
@@ -24,13 +20,10 @@ class SmokeTestRunner:
     def test(self, name: str, func: Callable[[], None]) -> bool:
         """Run a single test"""
         try:
-            print(f"  Testing {name}...", end=" ")
             func()
-            print("✓ PASS")
             self.passed += 1
             return True
         except Exception as e:
-            print(f"✗ FAIL: {e}")
             self.failed += 1
             self.errors.append((name, str(e)))
             return False
@@ -113,46 +106,30 @@ class SmokeTestRunner:
                 assert response.status == 200, "Health endpoint returned non-200"
         except Exception:
             # Server not running, skip this test
-            print("(server not running, skipped)", end=" ")
 
     def run_all(self) -> bool:
         """Run all smoke tests"""
-        print("\n" + "=" * 70)
-        print("PBX SYSTEM SMOKE TESTS")
-        print("=" * 70 + "\n")
 
         # Core functionality tests
-        print("Core Functionality:")
         self.test("Module imports", self.test_imports)
         self.test("Configuration loading", self.test_config_loading)
         self.test("Logging system", self.test_logger)
         self.test("Database schema", self.test_database_schema)
 
-        print("\nSecurity:")
         self.test("Encryption/Decryption", self.test_encryption)
         self.test("Password hashing", self.test_security_functions)
 
-        print("\nSIP/RTP:")
         self.test("SIP message parsing", self.test_sip_message_parsing)
         self.test("Audio utilities", self.test_audio_utils)
         self.test("DTMF detection", self.test_dtmf_detection)
 
-        print("\nAPI:")
         self.test("Health endpoint", self.test_health_endpoint_available)
 
         # Print summary
-        print("\n" + "=" * 70)
-        print("RESULTS")
-        print("=" * 70)
-        print(f"Passed: {self.passed}")
-        print(f"Failed: {self.failed}")
 
         if self.errors:
-            print("\nFailed Tests:")
             for name, error in self.errors:
-                print(f"  - {name}: {error}")
 
-        print("=" * 70 + "\n")
 
         return self.failed == 0
 
@@ -163,12 +140,6 @@ def main() -> None:
     success = runner.run_all()
 
     if success:
-        print("✓ All smoke tests passed!")
         sys.exit(0)
     else:
-        print("✗ Some smoke tests failed!")
         sys.exit(1)
-
-
-if __name__ == "__main__":
-    main()

@@ -6,23 +6,19 @@ when features like paging, LCR, etc. are not enabled.
 """
 
 import json
-import os
-import sys
 import unittest
 from io import BytesIO
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-# Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from pbx.api.rest_api import PBXAPIHandler
 
 
-class TestAPIGracefulDegradation(unittest.TestCase):
+class TestAPIGracefulDegradation:
     """Test that API endpoints handle missing features gracefully"""
 
-    def setUp(self) -> None:
+    def setup_method(self) -> None:
         """Set up test fixtures"""
         # Create a minimal mock PBX core without optional features
         self.pbx_core = MagicMock()
@@ -73,11 +69,10 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_paging_zones(self.handler)
 
         # Should return empty zones, not error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("zones", self.response_data)
-        self.assertEqual(self.response_data["zones"], [])
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "zones" in self.response_data
+        assert self.response_data["zones"] == []
+        assert self.response_status == 200
     def test_paging_devices_when_disabled(self) -> None:
         """Test that /api/paging/devices returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
@@ -93,11 +88,10 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_paging_devices(self.handler)
 
         # Should return empty devices, not error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("devices", self.response_data)
-        self.assertEqual(self.response_data["devices"], [])
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "devices" in self.response_data
+        assert self.response_data["devices"] == []
+        assert self.response_status == 200
     def test_active_pages_when_disabled(self) -> None:
         """Test that /api/paging/active returns empty array when paging is disabled"""
         # Configure pbx_core without paging system
@@ -113,11 +107,10 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_active_pages(self.handler)
 
         # Should return empty active_pages, not error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("active_pages", self.response_data)
-        self.assertEqual(self.response_data["active_pages"], [])
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "active_pages" in self.response_data
+        assert self.response_data["active_pages"] == []
+        assert self.response_status == 200
     def test_lcr_rates_when_disabled(self) -> None:
         """Test that /api/lcr/rates returns empty array when LCR is disabled"""
         # Configure pbx_core without LCR
@@ -133,13 +126,12 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_lcr_rates(self.handler)
 
         # Should return empty rates, not error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("rates", self.response_data)
-        self.assertEqual(self.response_data["rates"], [])
-        self.assertEqual(self.response_data["time_rates"], [])
-        self.assertEqual(self.response_data["count"], 0)
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "rates" in self.response_data
+        assert self.response_data["rates"] == []
+        assert self.response_data["time_rates"] == []
+        assert self.response_data["count"] == 0
+        assert self.response_status == 200
     def test_lcr_statistics_when_disabled(self) -> None:
         """Test that /api/lcr/statistics returns empty stats when LCR is disabled"""
         # Configure pbx_core without LCR
@@ -155,11 +147,10 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_lcr_statistics(self.handler)
 
         # Should return empty statistics, not error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("total_calls", self.response_data)
-        self.assertEqual(self.response_data["total_calls"], 0)
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "total_calls" in self.response_data
+        assert self.response_data["total_calls"] == 0
+        assert self.response_status == 200
     def test_integration_activity_when_database_disabled(self) -> None:
         """Test that /api/framework/integrations/activity-log returns empty when DB is disabled"""
         # Configure pbx_core without database
@@ -175,11 +166,10 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_integration_activity(self.handler)
 
         # Should return empty activities, not error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("activities", self.response_data)
-        self.assertEqual(self.response_data["activities"], [])
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "activities" in self.response_data
+        assert self.response_data["activities"] == []
+        assert self.response_status == 200
     def test_dtmf_config_returns_defaults(self) -> None:
         """Test that /api/config/dtmf returns defaults when config is missing"""
         # Configure pbx_core with config that returns None
@@ -192,13 +182,12 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_dtmf_config(self.handler)
 
         # Should return default configuration, not error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("mode", self.response_data)
-        self.assertIn("payload_type", self.response_data)
-        self.assertEqual(self.response_data["mode"], "rfc2833")
-        self.assertEqual(self.response_data["payload_type"], 101)
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "mode" in self.response_data
+        assert "payload_type" in self.response_data
+        assert self.response_data["mode"] == "rfc2833"
+        assert self.response_data["payload_type"] == 101
+        assert self.response_status == 200
     def test_dtmf_config_returns_defaults_when_unauthenticated(self) -> None:
         """Test that /api/config/dtmf returns defaults for unauthenticated users"""
         # Set up handler without authentication
@@ -208,13 +197,12 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_dtmf_config(self.handler)
 
         # Should return default configuration, not 403 error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("mode", self.response_data)
-        self.assertIn("payload_type", self.response_data)
-        self.assertEqual(self.response_data["mode"], "rfc2833")
-        self.assertEqual(self.response_data["payload_type"], 101)
-        self.assertEqual(self.response_status, 200)
-
+        assert self.response_data is not None
+        assert "mode" in self.response_data
+        assert "payload_type" in self.response_data
+        assert self.response_data["mode"] == "rfc2833"
+        assert self.response_data["payload_type"] == 101
+        assert self.response_status == 200
     def test_config_returns_empty_when_unauthenticated(self) -> None:
         """Test that /api/config returns empty config for unauthenticated users"""
         # Set up handler without authentication
@@ -224,14 +212,10 @@ class TestAPIGracefulDegradation(unittest.TestCase):
         PBXAPIHandler._handle_get_config(self.handler)
 
         # Should return empty config structure, not 403 error
-        self.assertIsNotNone(self.response_data)
-        self.assertIn("smtp", self.response_data)
-        self.assertIn("email", self.response_data)
-        self.assertIn("integrations", self.response_data)
-        self.assertEqual(self.response_data["smtp"]["host"], "")
-        self.assertEqual(self.response_data["integrations"], {})
-        self.assertEqual(self.response_status, 200)
-
-
-if __name__ == "__main__":
-    unittest.main()
+        assert self.response_data is not None
+        assert "smtp" in self.response_data
+        assert "email" in self.response_data
+        assert "integrations" in self.response_data
+        assert self.response_data["smtp"]["host"] == ""
+        assert self.response_data["integrations"] == {}
+        assert self.response_status == 200
