@@ -9,6 +9,7 @@ import time
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class AAState(Enum):
@@ -102,7 +103,7 @@ class AutoAttendant:
                     )
 
         # Create audio directory if it doesn't exist
-        if not os.path.exists(self.audio_path):
+        if not Path(self.audio_path).exists():
             os.makedirs(self.audio_path)
             self.logger.info(
                 f"Created auto attendant audio directory: {self.audio_path}"
@@ -219,7 +220,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info("Auto attendant database tables initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing auto attendant database: {e}")
 
     def _load_config_from_db(self):
@@ -242,7 +243,7 @@ class AutoAttendant:
                     "audio_path": row[4],
                 }
             return None
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error loading auto attendant config from database: {e}")
             return None
 
@@ -264,7 +265,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info("Auto attendant config saved to database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving auto attendant config to database: {e}")
 
     def _load_menu_options_from_db(self):
@@ -283,7 +284,7 @@ class AutoAttendant:
 
             if rows:
                 self.logger.info(f"Loaded {len(rows)} menu options from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error loading menu options from database: {e}")
 
     def _save_menu_option_to_db(self, digit, destination, description=""):
@@ -303,7 +304,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info(f"Menu option {digit} saved to database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving menu option to database: {e}")
 
     def _delete_menu_option_from_db(self, digit):
@@ -315,7 +316,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info(f"Menu option {digit} deleted from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error deleting menu option from database: {e}")
 
     def update_config(self, **kwargs):
@@ -415,7 +416,7 @@ class AutoAttendant:
         except sqlite3.IntegrityError as e:
             self.logger.error(f"Menu '{menu_id}' already exists: {e}")
             return False
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error creating menu: {e}")
             return False
 
@@ -465,7 +466,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Updated menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error updating menu: {e}")
             return False
 
@@ -511,7 +512,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Deleted menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error deleting menu: {e}")
             return False
 
@@ -552,7 +553,7 @@ class AutoAttendant:
                     "updated_at": row[8],
                 }
             return None
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting menu: {e}")
             return None
 
@@ -585,7 +586,7 @@ class AutoAttendant:
                 }
                 for row in rows
             ]
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error listing menus: {e}")
             return []
 
@@ -632,7 +633,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Added menu item {digit} to menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error adding menu item: {e}")
             return False
 
@@ -658,7 +659,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Removed menu item {digit} from menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error removing menu item: {e}")
             return False
 
@@ -695,7 +696,7 @@ class AutoAttendant:
                 }
                 for row in rows
             ]
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting menu items: {e}")
             return []
 
@@ -1089,12 +1090,12 @@ class AutoAttendant:
             menu = self.get_menu(prompt_type)
             if menu and menu.get("audio_file"):
                 # Use custom audio file if specified
-                if os.path.exists(menu["audio_file"]):
+                if Path(menu["audio_file"]).exists():
                     return menu["audio_file"]
 
         # Try to find recorded audio file first
-        wav_file = os.path.join(self.audio_path, f"{prompt_type}.wav")
-        if os.path.exists(wav_file):
+        wav_file = Path(self.audio_path) / f"{prompt_type}.wav"
+        if Path(wav_file).exists():
             return wav_file
 
         # If no recorded file, we'll generate tone-based prompt
@@ -1146,7 +1147,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
     logger.warning("Continuing with tone generation...")
 
     # Create output directory
-    if not os.path.exists(output_dir):
+    if not Path(output_dir).exists():
         os.makedirs(output_dir)
         logger.info(f"Created directory: {output_dir}")
 
@@ -1160,7 +1161,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
     }
 
     for prompt_name, prompt_type in prompts.items():
-        output_file = os.path.join(output_dir, f"{prompt_name}.wav")
+        output_file = Path(output_dir) / f"{prompt_name}.wav"
 
         try:
             # Generate the prompt
@@ -1171,7 +1172,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
                 f.write(wav_data)
 
             logger.info(f"Generated {output_file}")
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error generating {prompt_name}: {e}")
 
     logger.info(f"Auto attendant prompts generated in {output_dir}")
@@ -1202,10 +1203,10 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
             logger = get_logger()
 
             # Create output directory if needed
-            if not os.path.exists(output_dir):
+            if not Path(output_dir).exists():
                 os.makedirs(output_dir)
 
-            output_file = os.path.join(output_dir, f"{menu_id}.wav")
+            output_file = Path(output_dir) / f"{menu_id}.wav"
 
             # Generate with gTTS
             tts = gTTS(text=prompt_text, lang="en", slow=False)
@@ -1237,7 +1238,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
                     capture_output=True,
                 )
                 # Clean up temp file
-                if tmp_mp3_path and os.path.exists(tmp_mp3_path):
+                if tmp_mp3_path and Path(tmp_mp3_path).exists():
                     os.unlink(tmp_mp3_path)
                 logger.info(f"Generated submenu prompt: {output_file}")
                 return output_file
@@ -1254,12 +1255,12 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
             logger.warning("gTTS not available for submenu prompt generation")
             return None
 
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         # Clean up temp file on error
-        if tmp_mp3_path and os.path.exists(tmp_mp3_path):
+        if tmp_mp3_path and Path(tmp_mp3_path).exists():
             try:
                 os.unlink(tmp_mp3_path)
-            except Exception:
+            except OSError:
                 pass
         logger = get_logger()
         logger.error(f"Error generating submenu prompt: {e}")

@@ -9,6 +9,7 @@ import tempfile
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_emergency_contacts_table_creation() -> None:
@@ -59,7 +60,7 @@ def test_emergency_contacts_table_creation() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -109,7 +110,7 @@ def test_emergency_notifications_table_creation() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -151,5 +152,5 @@ def test_emergency_indexes_creation() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)

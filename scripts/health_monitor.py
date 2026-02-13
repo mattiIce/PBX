@@ -25,12 +25,14 @@ Requirements:
 
 import argparse
 import datetime
+from datetime import timezone
 import json
 import os
 import socket
 import subprocess
 import sys
 from pathlib import Path
+import sqlite3
 
 try:
     import psutil
@@ -52,7 +54,7 @@ class HealthMonitor:
         self.verify_ssl = verify_ssl
         self.base_dir = Path(__file__).parent.parent
         self.health_data = {
-            "timestamp": datetime.datetime.now().isoformat(),
+            "timestamp": datetime.datetime.now(timezone.utc).isoformat(),
             "hostname": socket.gethostname(),
             "checks": {},
             "alerts": [],
@@ -134,7 +136,7 @@ class HealthMonitor:
                             mem = proc.memory_info()
                             checks["process"]["cpu_percent"] = cpu
                             checks["process"]["memory_mb"] = mem.rss / (1024 * 1024)
-                        except Exception:
+                        except (KeyError, TypeError, ValueError):
                             # Resource usage metrics are optional; ignore errors collecting them
                             pass
                         break
@@ -163,7 +165,7 @@ class HealthMonitor:
                         f"CRITICAL: {service} not listening on port {port}"
                     )
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             checks["process"] = {
                 "status": "critical",
                 "message": f"Error checking PBX service: {e}",
@@ -221,7 +223,7 @@ class HealthMonitor:
                         "version": version,
                         "size": db_size,
                     }
-                except Exception as e:
+                except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
                     checks["connectivity"] = {
                         "status": "critical",
                         "message": f"Database connection failed: {e}",
@@ -263,7 +265,7 @@ class HealthMonitor:
                     "response_time_ms": int(response.elapsed.total_seconds() * 1000),
                     "message": f"{name}: {response.status_code}",
                 }
-            except Exception as e:
+            except (KeyError, TypeError, ValueError, requests.RequestException) as e:
                 checks[path] = {
                     "status": "critical",
                     "message": f"{name}: Connection failed - {e}",
@@ -316,7 +318,7 @@ class HealthMonitor:
                     # Parse expiration date
                     expiry_str = result.stdout.strip().split("=")[1]
                     expiry_date = datetime.datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
-                    days_until_expiry = (expiry_date - datetime.datetime.now()).days
+                    days_until_expiry = (expiry_date - datetime.datetime.now(timezone.utc)).days
 
                     if days_until_expiry < 7:
                         status = "critical"
@@ -334,7 +336,7 @@ class HealthMonitor:
                         "expiry_date": expiry_date.isoformat(),
                         "message": f"SSL certificate expires in {days_until_expiry} days",
                     }
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as e:
                 checks["expiration"] = {
                     "status": "warning",
                     "message": f"Could not check certificate expiration: {e}",

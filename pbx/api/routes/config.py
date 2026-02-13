@@ -21,6 +21,7 @@ from pbx.api.utils import (
     validate_limit_param,
 )
 from pbx.utils.logger import get_logger
+import ssl
 
 logger = get_logger()
 
@@ -227,7 +228,7 @@ def get_full_config() -> tuple[Response, int]:
         }
 
         return send_json(config_data), 200
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, ssl.SSLError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -334,7 +335,7 @@ def update_config_section() -> tuple[Response, int]:
             ), 200
         else:
             return send_json({"error": "Failed to save configuration"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -379,8 +380,8 @@ def get_ssl_status() -> tuple[Response, int]:
         key_file = ssl_config.get("key_file", "certs/server.key")
 
         # Check if certificate files exist
-        cert_exists = os.path.exists(cert_file)
-        key_exists = os.path.exists(key_file)
+        cert_exists = Path(cert_file).exists()
+        key_exists = Path(key_file).exists()
 
         # Get certificate details if it exists
         cert_details = None
@@ -400,7 +401,7 @@ def get_ssl_status() -> tuple[Response, int]:
                         "days_until_expiry": (cert.not_valid_after - now).days,
                         "serial_number": str(cert.serial_number),
                     }
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError) as e:
                 logger.warning(f"Failed to parse certificate: {e}")
 
         status_data = {
@@ -417,7 +418,7 @@ def get_ssl_status() -> tuple[Response, int]:
         }
 
         return send_json(status_data), 200
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -549,7 +550,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
                 "valid_days": days_valid,
             }
         ), 200
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Failed to generate SSL certificate: {e}")
         traceback.print_exc()
         return send_json({"error": str(e)}, 500), 500

@@ -6,10 +6,11 @@ Provides optional PostgreSQL/SQLite storage for VIP callers, CDR, and other data
 import json
 import os
 import traceback
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 try:
     import psycopg2
@@ -115,7 +116,7 @@ class DatabaseBackend:
             self.logger.info("✓ Successfully connected to PostgreSQL database")
             self.logger.info(f"  Connection established: {host}:{port}/{database}")
             return True
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"✗ PostgreSQL connection failed: {e}")
             self.logger.warning("Voicemail and other data will be stored ONLY in file system")
             self.logger.warning(
@@ -139,9 +140,9 @@ class DatabaseBackend:
             self._autocommit = False
             self.enabled = True
             self.logger.info("✓ Successfully connected to SQLite database")
-            self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
+            self.logger.info(f"  Database path: {str(Path(db_path).resolve())}")
             return True
-        except Exception as e:
+        except (OSError, sqlite3.Error) as e:
             self.logger.error(f"✗ SQLite connection failed: {e}")
             return False
 
@@ -182,7 +183,7 @@ class DatabaseBackend:
                 self.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             error_msg = str(e).lower()
             # Check if this is a permission error on existing objects
             # Common patterns across PostgreSQL, MySQL, SQLite
@@ -293,7 +294,7 @@ class DatabaseBackend:
                     self.connection.commit()
 
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error during script execution: {e}")
             self.logger.error(f"  Script length: {len(script)} characters")
             self.logger.error(f"  Database type: {self.db_type}")
@@ -335,7 +336,7 @@ class DatabaseBackend:
                     dict(row) if self.db_type == "postgresql" else {k: row[k] for k in row.keys()}
                 )
             return None
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Fetch one error: {e}")
             self.logger.error(f"  Query: {query}")
             self.logger.error(f"  Parameters: {params}")
@@ -377,7 +378,7 @@ class DatabaseBackend:
                 return [dict(row) for row in rows]
             else:
                 return [{k: row[k] for k in row.keys()} for row in rows]
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Fetch all error: {e}")
             self.logger.error(f"  Query: {query}")
             self.logger.error(f"  Parameters: {params}")
@@ -708,7 +709,7 @@ class DatabaseBackend:
                     )
                 else:
                     self.logger.debug(f"Column {column_name} already exists")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.debug(f"Column check/add for {column_name}: {e}")
                 if self.connection and not self._autocommit:
                     self.connection.rollback()
@@ -753,7 +754,7 @@ class DatabaseBackend:
                     )
                 else:
                     self.logger.debug(f"Column {column_name} already exists in extensions")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
                 if self.connection and not self._autocommit:
                     self.connection.rollback()
@@ -793,7 +794,7 @@ class DatabaseBackend:
                 self.logger.debug(
                     f"Column {device_type_column[0]} already exists in provisioned_devices"
                 )
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.debug(
                 f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}"
             )
@@ -861,7 +862,7 @@ class VIPCallerDB:
         """
         )
 
-        params = (caller_id, priority_level, name, notes, datetime.now())
+        params = (caller_id, priority_level, name, notes, datetime.now(timezone.utc))
         return self.db.execute(query, params)
 
     def remove_vip(self, caller_id: str) -> bool:
@@ -1015,7 +1016,7 @@ class RegisteredPhonesDB:
                 updated_ip,
                 updated_user_agent,
                 updated_contact_uri,
-                datetime.now(),
+                datetime.now(timezone.utc),
                 existing["id"],
             )
             success = self.db.execute(query, params)
@@ -1037,7 +1038,7 @@ class RegisteredPhonesDB:
             VALUES (?, ?, ?, ?, ?, ?, ?)
             """
             )
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             params = (mac_address, extension_number, ip_address, user_agent, contact_uri, now, now)
             success = self.db.execute(query, params)
             return (success, mac_address)
@@ -1207,7 +1208,7 @@ class RegisteredPhonesDB:
         """
         )
 
-        params = (new_extension_number, datetime.now(), mac_address)
+        params = (new_extension_number, datetime.now(timezone.utc), mac_address)
         success = self.db.execute(query, params)
 
         if success:
@@ -1257,7 +1258,7 @@ class RegisteredPhonesDB:
                 self.logger.error("Failed to cleanup incomplete phone registrations")
 
             return (success, count)
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error cleaning up incomplete phone registrations: {e}")
             return (False, 0)
 
@@ -1675,7 +1676,7 @@ class ExtensionDB:
             WHERE config_key = ?
             """
             )
-            return self.db.execute(query, (str_value, config_type, datetime.now(), updated_by, key))
+            return self.db.execute(query, (str_value, config_type, datetime.now(timezone.utc), updated_by, key))
         else:
             # Insert new
             query = (
@@ -1689,7 +1690,7 @@ class ExtensionDB:
             VALUES (?, ?, ?, ?, ?)
             """
             )
-            return self.db.execute(query, (key, str_value, config_type, datetime.now(), updated_by))
+            return self.db.execute(query, (key, str_value, config_type, datetime.now(timezone.utc), updated_by))
 
 
 class ProvisionedDevicesDB:
@@ -1761,7 +1762,7 @@ class ProvisionedDevicesDB:
                 device_type,
                 static_ip,
                 config_url,
-                datetime.now(),
+                datetime.now(timezone.utc),
                 mac_address,
             )
         else:
@@ -1781,7 +1782,7 @@ class ProvisionedDevicesDB:
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
             """
             )
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             params = (
                 mac_address,
                 extension_number,
@@ -1972,7 +1973,7 @@ class ProvisionedDevicesDB:
         WHERE mac_address = ?
         """
         )
-        return self.db.execute(query, (datetime.now(), mac_address))
+        return self.db.execute(query, (datetime.now(timezone.utc), mac_address))
 
     def set_static_ip(self, mac_address: str, static_ip: str) -> bool:
         """
@@ -1998,7 +1999,7 @@ class ProvisionedDevicesDB:
         WHERE mac_address = ?
         """
         )
-        return self.db.execute(query, (static_ip, datetime.now(), mac_address))
+        return self.db.execute(query, (static_ip, datetime.now(timezone.utc), mac_address))
 
 
 # Global instance

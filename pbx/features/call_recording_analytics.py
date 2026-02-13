@@ -4,10 +4,11 @@ AI analysis of recorded calls using FREE open-source libraries
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 # Import Vosk for FREE offline transcription (already integrated)
 try:
@@ -106,12 +107,12 @@ class RecordingAnalytics:
                     .get("transcription", {})
                     .get("vosk_model_path", "/opt/vosk-model-small-en-us-0.15")
                 )
-                if os.path.exists(model_path):
+                if Path(model_path).exists():
                     self.vosk_model = Model(model_path)
                     self.logger.info(f"Vosk model loaded from {model_path}")
                 else:
                     self.logger.warning(f"Vosk model not found at {model_path}")
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError) as e:
                 self.logger.warning(f"Could not load Vosk model: {e}")
 
         # Initialize spaCy for NLP
@@ -141,7 +142,7 @@ class RecordingAnalytics:
 
         results = {
             "recording_id": recording_id,
-            "analyzed_at": datetime.now().isoformat(),
+            "analyzed_at": datetime.now(timezone.utc).isoformat(),
             "analyses": {},
         }
 
@@ -178,12 +179,12 @@ class RecordingAnalytics:
         model_path = "models/vosk-model-small-en-us-0.15"
 
         try:
-            if os.path.exists(model_path):
+            if Path(model_path).exists():
                 return Model(model_path)
             else:
                 self.logger.warning(f"Vosk model not found at {model_path}")
                 self.logger.info("Download from: https://alphacephei.com/vosk/models")
-        except Exception as e:
+        except OSError as e:
             self.logger.warning(f"Could not load Vosk model: {e}")
 
         return None
@@ -290,7 +291,7 @@ class RecordingAnalytics:
                 "words": [],
                 "error": "Vosk not installed",
             }
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Transcription error: {e}")
             return {
                 "transcript": "",

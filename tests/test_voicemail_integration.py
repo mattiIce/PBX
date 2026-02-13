@@ -14,6 +14,7 @@ from pbx.core.call import Call, CallState
 from pbx.core.pbx import PBXCore
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 def test_complete_voicemail_flow() -> None:
@@ -52,7 +53,7 @@ def test_complete_voicemail_flow() -> None:
 
 
         # Step 4: Verify voicemail file exists
-        assert os.path.exists(messages[0]["file_path"])
+        assert Path(messages[0]["file_path"]).exists()
 
         # Verify it's a valid WAV file
         with open(messages[0]["file_path"], "rb") as f:

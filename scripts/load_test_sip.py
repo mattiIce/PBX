@@ -21,7 +21,7 @@ import sys
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 
@@ -123,7 +123,7 @@ class SIPLoadTester:
             finally:
                 sock.close()
 
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Error during registration for user {user_id}: {e}")
             return False, time.time() - start
 
@@ -174,7 +174,7 @@ class SIPLoadTester:
             finally:
                 sock.close()
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error during call {call_id}: {e}")
             return False, time.time() - start
 
@@ -254,7 +254,7 @@ class SIPLoadTester:
                             self.results["failed"] += 1
                         self.results["response_times"].append(response_time)
                         calls_completed += 1
-                    except Exception as e:
+                    except (KeyError, TypeError, ValueError) as e:
                         self.results["failed"] += 1
                         self.results["errors"][str(e)] += 1
                         calls_completed += 1
@@ -294,7 +294,7 @@ class SIPLoadTester:
 
         return LoadTestResults(
             test_type=self.config.test_type,
-            timestamp=datetime.now().isoformat(),
+            timestamp=datetime.now(timezone.utc).isoformat(),
             duration=duration,
             total_attempts=total_attempts,
             successful=self.results["successful"],
@@ -453,7 +453,7 @@ async def main():
     except KeyboardInterrupt:
         print("\n\nTest interrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
         logging.error(f"Test failed with error: {e}", exc_info=True)
         sys.exit(1)
 

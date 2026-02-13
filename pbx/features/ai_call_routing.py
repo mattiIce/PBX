@@ -5,7 +5,7 @@ Intelligent routing using free machine learning (scikit-learn)
 
 import json
 from collections import defaultdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -76,7 +76,7 @@ class AICallRouting:
             return False
 
         # Extract features
-        timestamp = call_data.get("timestamp", datetime.now())
+        timestamp = call_data.get("timestamp", datetime.now(timezone.utc))
         features = {
             "hour": timestamp.hour,
             "day_of_week": timestamp.weekday(),
@@ -136,7 +136,7 @@ class AICallRouting:
 
             self.logger.info(f"Trained ML model on {len(X)} samples")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error training ML model: {e}")
 
     def get_routing_recommendation(
@@ -165,7 +165,7 @@ class AICallRouting:
 
         try:
             # Extract features
-            timestamp = call_info.get("timestamp", datetime.now())
+            timestamp = call_info.get("timestamp", datetime.now(timezone.utc))
             features = [
                 [
                     timestamp.hour,
@@ -199,7 +199,7 @@ class AICallRouting:
                 ),
             }
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error in ML routing: {e}")
             return self._rule_based_routing(call_info, available_destinations)
 
@@ -229,7 +229,7 @@ class AICallRouting:
 
     def get_destination_performance(self, destination: str, days: int = 7) -> dict:
         """Get performance metrics for a destination"""
-        cutoff = datetime.now() - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
         outcomes = self.routing_decisions.get(destination, [])
         recent = [o for o in outcomes if o["timestamp"] > cutoff]
@@ -267,7 +267,7 @@ class AICallRouting:
 
             self.logger.info(f"Exported {len(export_data)} training samples to {filename}")
             return True
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error exporting training data: {e}")
             return False
 
@@ -289,7 +289,7 @@ class AICallRouting:
                 self._train_model()
 
             return True
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error importing training data: {e}")
             return False
 

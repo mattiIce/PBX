@@ -6,13 +6,14 @@ import os
 import smtplib
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from email.mime.audio import MIMEAudio
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class EmailNotifier:
@@ -133,7 +134,7 @@ class EmailNotifier:
             msg.attach(MIMEText(body, "plain"))
 
             # Attach audio file if requested and available
-            if self.include_attachment and audio_file_path and os.path.exists(audio_file_path):
+            if self.include_attachment and audio_file_path and Path(audio_file_path).exists():
                 try:
                     with open(audio_file_path, "rb") as f:
                         audio_data = f.read()
@@ -142,11 +143,11 @@ class EmailNotifier:
                     audio.add_header(
                         "Content-Disposition",
                         "attachment",
-                        filename=os.path.basename(audio_file_path),
+                        filename=Path(audio_file_path).name,
                     )
                     msg.attach(audio)
                     self.logger.debug(f"Attached audio file: {audio_file_path}")
-                except Exception as e:
+                except OSError as e:
                     self.logger.error(f"Failed to attach audio file: {e}")
 
             # Send email
@@ -216,7 +217,7 @@ class EmailNotifier:
             self.logger.info(f"Sent voicemail reminder to {to_email}")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send voicemail reminder: {e}")
             return False
 
@@ -296,7 +297,7 @@ class EmailNotifier:
             while self.reminders_enabled:
                 try:
                     # Check if it's time to send reminders
-                    now = datetime.now()
+                    now = datetime.now(timezone.utc)
                     reminder_hour, reminder_min = map(int, self.reminder_time.split(":"))
 
                     if now.hour == reminder_hour and now.minute == reminder_min:

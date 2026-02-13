@@ -13,6 +13,7 @@ import time
 from typing import Any
 
 import psutil
+import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -185,7 +186,7 @@ class ProductionHealthChecker:
         except ImportError:
             # Database module not available, that's ok in some configs
             return True, {"status": "not_configured", "message": "Database module not available"}
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             logger.error(f"Database check failed: {e}")
             return False, {"status": "error", "error": str(e)}
 
@@ -222,7 +223,7 @@ class ProductionHealthChecker:
                     "message": "SIP port appears to be in use (expected)",
                 }
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"SIP server check failed: {e}")
             return False, {"status": "error", "error": str(e)}
 
@@ -286,12 +287,12 @@ class ProductionHealthChecker:
                         [e for e in self.pbx_core.extension_registry.get_all() if e.registered]
                     )
                     metrics["total_extensions"] = len(self.pbx_core.extension_registry.get_all())
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     logger.debug(f"Could not get PBX metrics: {e}")
 
             return metrics
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error collecting metrics: {e}")
             return {}
 

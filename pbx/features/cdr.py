@@ -5,10 +5,11 @@ Tracks all calls for billing, analytics, and reporting
 
 import json
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class CallDisposition(Enum):
@@ -36,7 +37,7 @@ class CDRRecord:
         self.call_id = call_id
         self.from_extension = from_extension
         self.to_extension = to_extension
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
         self.answer_time = None
         self.end_time = None
         self.disposition = None
@@ -48,7 +49,7 @@ class CDRRecord:
 
     def mark_answered(self):
         """Mark call as answered"""
-        self.answer_time = datetime.now()
+        self.answer_time = datetime.now(timezone.utc)
         self.disposition = CallDisposition.ANSWERED
 
     def mark_ended(self, hangup_cause=None):
@@ -58,7 +59,7 @@ class CDRRecord:
         Args:
             hangup_cause: Reason for hangup
         """
-        self.end_time = datetime.now()
+        self.end_time = datetime.now(timezone.utc)
         self.hangup_cause = hangup_cause
 
         # Calculate durations
@@ -168,13 +169,13 @@ class CDRSystem:
         """
         # Save to daily file
         date_str = record.start_time.strftime("%Y-%m-%d")
-        filename = os.path.join(self.storage_path, f"cdr_{date_str}.jsonl")
+        filename = Path(self.storage_path) / f"cdr_{date_str}.jsonl"
 
         try:
             with open(filename, "a") as f:
                 json.dump(record.to_dict(), f)
                 f.write("\n")
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving CDR record: {e}")
 
     def get_records(self, date=None, limit=100):
@@ -189,11 +190,11 @@ class CDRSystem:
             list of CDR dictionaries
         """
         if date is None:
-            date = datetime.now().strftime("%Y-%m-%d")
+            date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-        filename = os.path.join(self.storage_path, f"cdr_{date}.jsonl")
+        filename = Path(self.storage_path) / f"cdr_{date}.jsonl"
 
-        if not os.path.exists(filename):
+        if not Path(filename).exists():
             return []
 
         records = []
@@ -204,7 +205,7 @@ class CDRSystem:
                         records.append(json.loads(line))
                         if len(records) >= limit:
                             break
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error reading CDR records: {e}")
 
         return records
@@ -232,7 +233,7 @@ class CDRSystem:
         answer_rate = (answered_calls / total_calls * 100) if total_calls > 0 else 0
 
         return {
-            "date": date or datetime.now().strftime("%Y-%m-%d"),
+            "date": date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             "total_calls": total_calls,
             "answered_calls": answered_calls,
             "failed_calls": failed_calls,
@@ -267,7 +268,7 @@ class CDRSystem:
 
         return {
             "extension": extension,
-            "date": date or datetime.now().strftime("%Y-%m-%d"),
+            "date": date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
             "total_calls": len(ext_records),
             "outbound_calls": outbound,
             "inbound_calls": inbound,

@@ -114,7 +114,7 @@ def test_head_request_for_static_files() -> bool:
 
             return True
 
-        except Exception as e:
+        except (OSError, ValueError) as e:
             import traceback
 
             traceback.print_exc()

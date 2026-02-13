@@ -79,7 +79,7 @@ class ProductionValidator:
                         self.log("Distribution: Ubuntu detected", "pass")
                     else:
                         self.log("Ubuntu 24.04 LTS recommended for production", "warn")
-            except Exception:
+            except OSError:
                 self.log("Could not determine Linux distribution", "warn")
         else:
             self.log(f"Operating System: {platform.system()} (Linux recommended)", "warn")
@@ -212,7 +212,7 @@ class ProductionValidator:
                             )
                         except psycopg2.Error as e:
                             self.log(f"Database connectivity: Failed (database error: {e})", "fail")
-                        except Exception as e:
+                        except (KeyError, TypeError, ValueError) as e:
                             self.log(
                                 f"Database connectivity: Failed (unexpected error: {e})", "fail"
                             )
@@ -225,7 +225,7 @@ class ProductionValidator:
                     )
                 else:
                     self.log(f"Database type: Unknown ({db_type})", "fail")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.log(f"Could not check database configuration: {e}", "fail")
 
     def check_directories(self):
@@ -306,7 +306,7 @@ class ProductionValidator:
                     self.log("PBX service: Enabled for autostart", "pass")
                 else:
                     self.log("PBX service: Not enabled for autostart", "warn")
-            except Exception:
+            except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
                 self.log("Could not check service status", "info")
         else:
             self.log("Systemd service file: Not installed", "warn")
@@ -354,7 +354,7 @@ class ProductionValidator:
                 self.log("Backup cron job: Configured", "pass")
             else:
                 self.log("Backup cron job: Not found (highly recommended)", "warn")
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
             self.log("Could not check cron jobs", "info")
 
     def command_exists(self, command):
@@ -377,7 +377,7 @@ class ProductionValidator:
                 s.settimeout(1)
                 result = s.connect_ex(("localhost", port))
                 return result != 0  # Port is available if connection fails
-        except Exception:
+        except OSError:
             return False
 
     def run_all_checks(self):

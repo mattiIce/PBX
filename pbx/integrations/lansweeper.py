@@ -3,7 +3,7 @@ Lansweeper Integration
 Integration with Lansweeper IT asset management system (free API)
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -108,7 +108,7 @@ class LansweeperIntegration:
         # Check cache
         if mac_normalized in self.asset_cache:
             cached = self.asset_cache[mac_normalized]
-            if (datetime.now() - cached["cached_at"]).seconds < self.cache_ttl:
+            if (datetime.now(timezone.utc) - cached["cached_at"]).seconds < self.cache_ttl:
                 return cached["data"]
 
         # Query Lansweeper API
@@ -117,7 +117,7 @@ class LansweeperIntegration:
 
         if result:
             # Cache result
-            self.asset_cache[mac_normalized] = {"data": result, "cached_at": datetime.now()}
+            self.asset_cache[mac_normalized] = {"data": result, "cached_at": datetime.now(timezone.utc)}
 
             self.logger.info(f"Retrieved asset info for MAC {mac_address}")
             return result
@@ -199,7 +199,7 @@ class LansweeperIntegration:
         self.phone_assets[extension] = {
             "mac_address": mac_address,
             "asset_info": asset,
-            "linked_at": datetime.now(),
+            "linked_at": datetime.now(timezone.utc),
         }
 
         self.logger.info(
@@ -279,7 +279,7 @@ class LansweeperIntegration:
         success &= self.update_asset_custom_field(mac_address, "PBX_Extension", extension)
         success &= self.update_asset_custom_field(mac_address, "PBX_Model", phone_model)
         success &= self.update_asset_custom_field(
-            mac_address, "PBX_Sync_Date", datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            mac_address, "PBX_Sync_Date", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
         )
 
         return success
@@ -379,7 +379,7 @@ class LansweeperIntegration:
         phones = self.get_all_phones()
 
         report = {
-            "generated_at": datetime.now().isoformat(),
+            "generated_at": datetime.now(timezone.utc).isoformat(),
             "total_phones": len(phones),
             "by_building": {},
             "missing_location": [],

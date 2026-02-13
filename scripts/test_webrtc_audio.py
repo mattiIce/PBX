@@ -16,12 +16,13 @@ Usage:
 import argparse
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.features.webrtc import WebRTCSignalingServer
+from pathlib import Path
 
 
 class WebRTCAudioTester:
@@ -107,7 +108,7 @@ class WebRTCAudioTester:
             try:
                 config = MockConfig()
                 signaling = WebRTCSignalingServer(config)
-            except Exception as e:
+            except (OSError, ValueError) as e:
                 self.log(f"WebRTC signaling initialization failed: {str(e)}", "WARN")
                 self.log("This is expected if WebRTC module requires different config", "WARN")
                 self.test_results["warnings"] += 1
@@ -140,7 +141,7 @@ class WebRTCAudioTester:
 
             return len(issues) == 0
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.log(f"Configuration test failed: {str(e)}", "FAIL")
             self.test_results["failed"] += 1
             self.test_results["errors"].append(f"Config error: {str(e)}")
@@ -421,14 +422,12 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
             print(guide)
 
         # Save guide to file
-        guide_path = os.path.join(
-            os.path.dirname(__file__), "..", "WEBRTC_AUDIO_TROUBLESHOOTING.md"
-        )
+        guide_path = str(Path(__file__).parent.parent / "WEBRTC_AUDIO_TROUBLESHOOTING.md")
 
         try:
             with open(guide_path, "w") as f:
                 f.write("# WebRTC Audio Troubleshooting Guide\n\n")
-                f.write(f"Generated: {datetime.now().isoformat()}\n\n")
+                f.write(f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n")
                 f.write(guide)
                 f.write("\n\n## Test Results\n\n")
                 f.write(f"- Passed: {self.test_results['passed']}\n")
@@ -444,7 +443,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
             self.test_results["passed"] += 1
             return True
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.log(f"Failed to save guide: {str(e)}", "WARN")
             self.test_results["warnings"] += 1
             return False

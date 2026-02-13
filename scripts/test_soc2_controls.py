@@ -16,16 +16,17 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.features.compliance_framework import SOC2ComplianceEngine
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 from pbx.utils.migrations import MigrationManager, register_all_migrations
+from pathlib import Path
 
 
 class SOC2ControlTester:
@@ -45,7 +46,7 @@ class SOC2ControlTester:
         self.db = DatabaseBackend(self.config)
         self.engine = None
         self.test_results = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "total_controls": 0,
             "passed": 0,
             "failed": 0,
@@ -289,9 +290,7 @@ class SOC2ControlTester:
         """
         # Check for availability monitoring configuration
         # The system has healthcheck.py which implies monitoring
-        healthcheck_exists = os.path.exists(
-            os.path.join(os.path.dirname(__file__), "..", "healthcheck.py")
-        )
+        healthcheck_exists = Path(__file__).parent.parent / "healthcheck.py"
 
         if healthcheck_exists:
             return True, "Health monitoring system available (healthcheck.py)"
@@ -425,7 +424,7 @@ class SOC2ControlTester:
             return False
 
         self.print_status(
-            f"Testing SOC 2 Type 2 Controls - {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Testing SOC 2 Type 2 Controls - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}",
             "INFO",
         )
         print()
@@ -462,13 +461,13 @@ class SOC2ControlTester:
                 "passed": passed,
                 "details": details,
                 "category": category,
-                "tested_at": datetime.now().isoformat(),
+                "tested_at": datetime.now(timezone.utc).isoformat(),
             }
 
             self.print_status(f"  {details}", status)
 
             # Update database with test results
-            test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')})"
+            test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')})"
             self.engine.update_control_test(control_id, test_result_text)
 
             print()
@@ -507,13 +506,13 @@ class SOC2ControlTester:
         self.test_results["controls"][control_id] = {
             "passed": passed,
             "details": details,
-            "tested_at": datetime.now().isoformat(),
+            "tested_at": datetime.now(timezone.utc).isoformat(),
         }
 
         self.print_status(f"{details}", status)
 
         # Update database
-        test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')})"
+        test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')})"
         self.engine.update_control_test(control_id, test_result_text)
 
         return passed
@@ -604,7 +603,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\nTesting cancelled by user")
         return 130
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
         print(f"\n\nError during testing: {e}", file=sys.stderr)
         import traceback
 

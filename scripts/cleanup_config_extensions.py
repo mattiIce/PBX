@@ -19,12 +19,13 @@ import argparse
 import os
 import shutil
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 
 import yaml
+from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
 def main():
@@ -53,7 +54,7 @@ def main():
 
     config_file = args.config
 
-    if not os.path.exists(config_file):
+    if not Path(config_file).exists():
         print(f"Error: Configuration file '{config_file}' not found")
         sys.exit(1)
 
@@ -87,7 +88,7 @@ def main():
 
     # Create backup if requested
     if args.backup:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
         backup_file = f"{config_file}.backup_{timestamp}"
         shutil.copy2(config_file, backup_file)
         print(f"✓ Created backup: {backup_file}")

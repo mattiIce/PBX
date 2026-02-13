@@ -112,7 +112,7 @@ class RFC2833EventPacket:
 
             packet = RFC2833EventPacket(event, end, volume, duration)
             return packet
-        except Exception:
+        except (KeyError, TypeError, ValueError, struct.error):
             return None
 
     def get_digit(self):
@@ -174,7 +174,7 @@ class RFC2833Receiver:
             receive_thread.start()
 
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start RFC 2833 receiver: {e}")
             return False
 
@@ -198,7 +198,7 @@ class RFC2833Receiver:
                 self.handle_rtp_packet(data, addr)
             except socket.timeout:
                 continue
-            except Exception as e:
+            except OSError as e:
                 if self.running:
                     self.logger.error(f"Error receiving RFC 2833 packet: {e}")
 
@@ -271,7 +271,7 @@ class RFC2833Receiver:
 
                 self.last_seq = seq_num
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, struct.error) as e:
             self.logger.error(f"Error parsing RFC 2833 packet: {e}")
 
 
@@ -315,7 +315,7 @@ class RFC2833Sender:
                 f"RFC 2833 sender started on port {self.local_port}"
             )
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start RFC 2833 sender: {e}")
             return False
 
@@ -377,7 +377,7 @@ class RFC2833Sender:
             self.logger.info(f"Sent RFC 2833 DTMF digit: {digit}")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending RFC 2833 DTMF: {e}")
             return False
 

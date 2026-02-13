@@ -58,7 +58,7 @@ def get_statistics() -> tuple[Response, int]:
             )
 
             return send_json(stats), 200
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting statistics: {e}")
             return send_json({"error": f"Error getting statistics: {str(e)}"}, 500), 500
     else:
@@ -95,7 +95,7 @@ def get_advanced_analytics() -> tuple[Response, int]:
 
         except ValueError as e:
             return send_json({"error": f"Invalid date format: {str(e)}"}, 400), 400
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting advanced analytics: {e}")
             return send_json({"error": f"Error getting advanced analytics: {str(e)}"}, 500), 500
     else:
@@ -116,7 +116,7 @@ def get_call_center_metrics() -> tuple[Response, int]:
 
             return send_json(metrics), 200
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting call center metrics: {e}")
             return send_json({"error": f"Error getting call center metrics: {str(e)}"}, 500), 500
     else:
@@ -167,7 +167,7 @@ def export_analytics() -> Response | tuple[Response, int]:
             else:
                 return send_json({"error": "Failed to export data"}, 500), 500
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             logger.error(f"Error exporting analytics: {e}")
             return send_json({"error": f"Error exporting analytics: {str(e)}"}, 500), 500
     else:

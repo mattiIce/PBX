@@ -4,9 +4,10 @@ Call and voicemail alerts using FCM (Firebase Cloud Messaging - free)
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # Try to import Firebase Admin SDK (free)
 try:
@@ -140,7 +141,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Mobile push notifications database schema initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing mobile push schema: {e}")
 
     def _load_devices_from_database(self):
@@ -186,7 +187,7 @@ class MobilePushNotifications:
             cursor.close()
             if rows:
                 self.logger.info(f"Loaded {len(rows)} mobile devices from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error loading mobile devices from database: {e}")
 
     def _save_device_to_database(self, user_id: str, device_token: str, platform: str):
@@ -196,7 +197,7 @@ class MobilePushNotifications:
 
         try:
             cursor = self.database.connection.cursor()
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             if self.database.db_type == "postgresql":
                 cursor.execute(
@@ -222,7 +223,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving device to database: {e}")
             return False
 
@@ -241,7 +242,7 @@ class MobilePushNotifications:
                     SET enabled = FALSE, updated_at = %s
                     WHERE user_id = %s AND device_token = %s
                 """,
-                    (datetime.now(), user_id, device_token),
+                    (datetime.now(timezone.utc), user_id, device_token),
                 )
             else:
                 cursor.execute(
@@ -250,13 +251,13 @@ class MobilePushNotifications:
                     SET enabled = 0, updated_at = ?
                     WHERE user_id = ? AND device_token = ?
                 """,
-                    (datetime.now(), user_id, device_token),
+                    (datetime.now(timezone.utc), user_id, device_token),
                 )
 
             self.database.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error removing device from database: {e}")
             return False
 
@@ -290,7 +291,7 @@ class MobilePushNotifications:
                         title,
                         body,
                         data_json,
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                         success,
                         error_message,
                     ),
@@ -307,7 +308,7 @@ class MobilePushNotifications:
                         title,
                         body,
                         data_json,
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                         1 if success else 0,
                         error_message,
                     ),
@@ -315,7 +316,7 @@ class MobilePushNotifications:
 
             self.database.connection.commit()
             cursor.close()
-        except Exception as e:
+        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving notification to database: {e}")
 
     def register_device(self, user_id: str, device_token: str, platform: str = "unknown") -> bool:
@@ -340,7 +341,7 @@ class MobilePushNotifications:
         for token_info in self.device_tokens[user_id]:
             if token_info["token"] == device_token:
                 # Update last seen
-                token_info["last_seen"] = datetime.now()
+                token_info["last_seen"] = datetime.now(timezone.utc)
                 return True
 
         # Add new device
@@ -348,8 +349,8 @@ class MobilePushNotifications:
             {
                 "token": device_token,
                 "platform": platform,
-                "registered_at": datetime.now(),
-                "last_seen": datetime.now(),
+                "registered_at": datetime.now(timezone.utc),
+                "last_seen": datetime.now(timezone.utc),
             }
         )
 
@@ -410,7 +411,7 @@ class MobilePushNotifications:
                 "type": "incoming_call",
                 "caller_id": caller_id,
                 "caller_name": caller_name or "",
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
 
@@ -439,7 +440,7 @@ class MobilePushNotifications:
                 "message_id": message_id,
                 "caller_id": caller_id,
                 "duration": str(duration),
-                "timestamp": datetime.now().isoformat(),
+                "timestamp": datetime.now(timezone.utc).isoformat(),
             },
         )
 
@@ -466,7 +467,7 @@ class MobilePushNotifications:
             data={
                 "type": "missed_call",
                 "caller_id": caller_id,
-                "call_time": (call_time or datetime.now()).isoformat(),
+                "call_time": (call_time or datetime.now(timezone.utc)).isoformat(),
             },
         )
 
@@ -503,7 +504,7 @@ class MobilePushNotifications:
                     "user_id": user_id,
                     "title": title,
                     "body": body,
-                    "sent_at": datetime.now(),
+                    "sent_at": datetime.now(timezone.utc),
                     "success_count": response.success_count,
                     "failure_count": response.failure_count,
                 }
@@ -519,7 +520,7 @@ class MobilePushNotifications:
                 "failure_count": response.failure_count,
             }
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending push notification: {e}")
 
             # Save error to database
@@ -546,7 +547,7 @@ class MobilePushNotifications:
         """Remove devices not seen in X days"""
         from datetime import timedelta
 
-        cutoff = datetime.now() - timedelta(days=days)
+        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
 
         removed_count = 0
         for user_id in list(self.device_tokens.keys()):
@@ -570,7 +571,7 @@ class MobilePushNotifications:
             [
                 n
                 for n in self.notification_history
-                if (datetime.now() - n["sent_at"]).total_seconds() < 86400
+                if (datetime.now(timezone.utc) - n["sent_at"]).total_seconds() < 86400
             ]
         )
 
@@ -596,5 +597,5 @@ class MobilePushNotifications:
             user_id,
             "Test Notification",
             "This is a test push notification from PBX Admin Panel",
-            {"type": "test", "timestamp": datetime.now().isoformat()},
+            {"type": "test", "timestamp": datetime.now(timezone.utc).isoformat()},
         )

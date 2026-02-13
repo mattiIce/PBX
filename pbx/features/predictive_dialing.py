@@ -3,10 +3,11 @@ Predictive Dialing
 AI-optimized outbound campaign management
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class CampaignStatus(Enum):
@@ -51,7 +52,7 @@ class Campaign:
         self.name = name
         self.dialing_mode = dialing_mode
         self.status = CampaignStatus.PENDING
-        self.created_at = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
         self.started_at = None
         self.ended_at = None
         self.contacts: list[Contact] = []
@@ -110,7 +111,7 @@ class PredictiveDialer:
                 self.db = PredictiveDialingDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Predictive dialing database layer initialized")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Predictive dialer initialized")
@@ -199,7 +200,7 @@ class PredictiveDialer:
 
         campaign = self.campaigns[campaign_id]
         campaign.status = CampaignStatus.RUNNING
-        campaign.started_at = datetime.now()
+        campaign.started_at = datetime.now(timezone.utc)
 
         self.logger.info(f"Started campaign {campaign_id}")
         self.logger.info(f"  Mode: {campaign.dialing_mode.value}")
@@ -250,7 +251,7 @@ class PredictiveDialer:
 
         campaign = self.campaigns[campaign_id]
         campaign.status = CampaignStatus.COMPLETED
-        campaign.ended_at = datetime.now()
+        campaign.ended_at = datetime.now(timezone.utc)
 
         # Calculate campaign statistics
         duration = (
@@ -380,7 +381,7 @@ class PredictiveDialer:
             return None
 
         campaign = self.campaigns[campaign_id]
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         for contact in campaign.contacts:
             if contact.status == "pending":
@@ -438,7 +439,7 @@ class PredictiveDialer:
         #     call_manager.queue_for_agent(call_id, queue='outbound')
 
         contact.attempts += 1
-        contact.last_attempt = datetime.now()
+        contact.last_attempt = datetime.now(timezone.utc)
         self.total_calls_made += 1
 
         self.logger.info(f"Dialing contact {contact.contact_id}: {contact.phone_number}")

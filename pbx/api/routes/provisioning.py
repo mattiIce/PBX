@@ -125,7 +125,7 @@ def handle_get_registered_atas() -> Response:
                         atas.append(enhanced)
 
             return send_json(atas)
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error loading registered ATAs from database: {e}")
             return send_json(
                 {"error": str(e), "details": "Check server logs for full error details"}, 500
@@ -541,7 +541,7 @@ def handle_provisioning_request(path: str) -> Response:
                             logger.info(
                                 f"  Stored IP-MAC mapping: {request_info['ip']} -> {stored_mac} (ext {device.extension_number})"
                             )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     # Don't fail provisioning if database storage fails
                     logger.warning(f"  Could not store IP-MAC mapping in database: {e}")
 
@@ -568,7 +568,7 @@ def handle_provisioning_request(path: str) -> Response:
                 '      -d \'{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}\''
             )
             return send_json({"error": "Device or template not found"}, 404)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error handling provisioning request: {e}")
         logger.error(f"  Path: {path}")
         logger.error(f"  Traceback: {traceback.format_exc()}")
@@ -624,7 +624,7 @@ def handle_register_device() -> Response:
                 logger.info(
                     f"Auto-provisioning: Extension {extension} not currently registered, phone will fetch config on next boot"
                 )
-        except Exception as reboot_error:
+        except (KeyError, TypeError, ValueError) as reboot_error:
             logger.warning(
                 f"Auto-provisioning: Could not auto-reboot phone for extension {extension}: {reboot_error}"
             )
@@ -639,7 +639,7 @@ def handle_register_device() -> Response:
             response_data["message"] = "Device registered. Phone will fetch config on next boot."
 
         return send_json(response_data)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -707,7 +707,7 @@ def handle_set_static_ip(mac: str) -> Response:
             return send_json({"success": True, "message": message})
         else:
             return send_json({"error": message}, 400)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -744,7 +744,7 @@ def handle_update_template(vendor: str, model: str) -> Response:
             )
         else:
             return send_json({"error": message}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 

@@ -18,10 +18,11 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
+from pathlib import Path
 
 
 def main():
@@ -151,7 +152,7 @@ def main():
                 else:
                     print("  ✗ Failed to migrate")
                     errors += 1
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 print(f"  ✗ Error: {e}")
                 errors += 1
         else:

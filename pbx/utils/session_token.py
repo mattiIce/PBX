@@ -153,7 +153,7 @@ class SessionToken:
 
             return True, payload
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.warning(f"Token verification error: {e}")
             return False, None
 
@@ -175,7 +175,7 @@ class SessionToken:
             payload_json = self._base64_decode(parts[1])
             payload = json.loads(payload_json)
             return payload.get("extension")
-        except Exception:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError):
             return None
 
 

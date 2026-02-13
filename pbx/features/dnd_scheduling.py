@@ -46,7 +46,7 @@ class DNDRule:
             return False
 
         if current_time is None:
-            current_time = datetime.now()
+            current_time = datetime.now(timezone.utc)
 
         if self.rule_type == "time_based":
             return self._check_time_based(current_time)
@@ -229,7 +229,7 @@ class CalendarMonitor:
                     # Update meeting info
                     self.active_meetings[extension] = current_meeting
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Error checking calendar for {extension}: {e}")
 
     def is_in_meeting(self, extension: str) -> tuple[bool, dict | None]:
@@ -441,7 +441,7 @@ class DNDScheduler:
         """
         until_time = None
         if duration_minutes:
-            until_time = datetime.now() + timedelta(minutes=duration_minutes)
+            until_time = datetime.now(timezone.utc) + timedelta(minutes=duration_minutes)
 
         self.manual_overrides[extension] = (status, until_time)
 
@@ -541,7 +541,7 @@ class DNDScheduler:
         if not self.presence_system:
             return
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         for extension in list(
             set(list(self.rules.keys()) + list(self.calendar_monitor.extension_email_map.keys()))
@@ -575,7 +575,7 @@ class DNDScheduler:
                     self._remove_dnd_status(extension)
                     del self.previous_statuses[extension]
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Error checking DND for {extension}: {e}")
 
     def get_status(self, extension: str) -> dict:

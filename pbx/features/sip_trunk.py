@@ -6,7 +6,7 @@ Includes health monitoring and automatic failover
 
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.e911_protection import E911Protection
@@ -106,7 +106,7 @@ class SIPTrunk:
             True if registration successful
         """
         self.logger.info(f"Registering SIP trunk {self.name} with {self.host}")
-        self.last_registration_attempt = datetime.now()
+        self.last_registration_attempt = datetime.now(timezone.utc)
 
         # In a real implementation:
         # 1. Send SIP REGISTER to provider
@@ -149,7 +149,7 @@ class SIPTrunk:
     def record_successful_call(self, setup_time: float = None):
         """Record successful call"""
         self.successful_calls += 1
-        self.last_successful_call = datetime.now()
+        self.last_successful_call = datetime.now(timezone.utc)
         self.consecutive_failures = 0
 
         if setup_time is not None:
@@ -165,7 +165,7 @@ class SIPTrunk:
     def record_failed_call(self, reason: str = None):
         """Record failed call"""
         self.failed_calls += 1
-        self.last_failed_call = datetime.now()
+        self.last_failed_call = datetime.now(timezone.utc)
         self.consecutive_failures += 1
 
         self.logger.warning(f"Call failed on trunk {self.name}: {reason or 'Unknown'}")
@@ -205,7 +205,7 @@ class SIPTrunk:
         Returns:
             Current health status
         """
-        self.last_health_check = datetime.now()
+        self.last_health_check = datetime.now(timezone.utc)
 
         # Check if trunk is registered
         if self.status != TrunkStatus.REGISTERED:
@@ -222,7 +222,7 @@ class SIPTrunk:
 
         # Check last successful call time
         if self.last_successful_call:
-            time_since_success = (datetime.now() - self.last_successful_call).total_seconds()
+            time_since_success = (datetime.now(timezone.utc) - self.last_successful_call).total_seconds()
             if time_since_success > 3600:  # 1 hour
                 self.health_status = TrunkHealthStatus.CRITICAL
 
@@ -529,7 +529,7 @@ class SIPTrunkSystem:
         self.logger.error(f"Handling failure of trunk: {failed_trunk.name}")
 
         # Mark failover time
-        failed_trunk.last_failover_time = datetime.now()
+        failed_trunk.last_failover_time = datetime.now(timezone.utc)
         failed_trunk.failover_count += 1
 
         # Find rules using this trunk

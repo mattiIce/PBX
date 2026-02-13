@@ -7,10 +7,11 @@ import os
 import threading
 import time
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from collections.abc import Callable
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class WebRTCSession:
@@ -28,8 +29,8 @@ class WebRTCSession:
         self.session_id = session_id
         self.extension = extension
         self.peer_connection_id = peer_connection_id or str(uuid.uuid4())
-        self.created_at = datetime.now()
-        self.last_activity = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(timezone.utc)
         self.state = "new"  # new, connecting, connected, disconnected
         self.local_sdp = None
         self.remote_sdp = None
@@ -39,7 +40,7 @@ class WebRTCSession:
 
     def update_activity(self):
         """Update last activity timestamp"""
-        self.last_activity = datetime.now()
+        self.last_activity = datetime.now(timezone.utc)
 
     def to_dict(self) -> dict:
         """Convert session to dictionary"""
@@ -190,7 +191,7 @@ class WebRTCSignalingServer:
     def _cleanup_stale_sessions(self):
         """Remove stale sessions that have timed out"""
         with self.lock:
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
             stale_sessions = []
 
             for session_id, session in self.sessions.items():
@@ -253,7 +254,7 @@ class WebRTCSignalingServer:
                     self.logger.info("  type: Virtual WebRTC")
 
             return ext_obj
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"Could not register WebRTC extension: {e}")
             return None
 
@@ -697,7 +698,7 @@ class WebRTCGateway:
             self.logger.debug("WebRTC to SIP SDP conversion complete")
             return result
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error converting WebRTC to SIP SDP: {e}")
             # Fallback: return original SDP
             return webrtc_sdp
@@ -776,7 +777,7 @@ class WebRTCGateway:
             self.logger.debug("SIP to WebRTC SDP conversion complete")
             return result
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error converting SIP to WebRTC SDP: {e}")
             # Fallback: return original SDP
             return sip_sdp
@@ -1010,7 +1011,7 @@ class WebRTCGateway:
                             # Start the RTP player
                             if player.start():
                                 # Play the audio file
-                                if audio_file and os.path.exists(audio_file):
+                                if audio_file and Path(audio_file).exists():
                                     player.play_file(audio_file)
                                     self.logger.info(
                                         f"Auto attendant playing welcome message for call {call_id}"
@@ -1155,7 +1156,7 @@ class WebRTCGateway:
 
             return call_id
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error initiating call from WebRTC: {e}")
             if self.verbose_logging:
                 self.logger.error("[VERBOSE] ===== Call initiation FAILED =====")
@@ -1308,7 +1309,7 @@ class WebRTCGateway:
             )
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error answering call from WebRTC: {e}")
             import traceback
 

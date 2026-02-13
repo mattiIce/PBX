@@ -9,6 +9,7 @@ import tempfile
 
 
 from pbx.rtp.handler import RTPPlayer
+from pathlib import Path
 
 
 def test_wav_file_playback() -> bool:
@@ -63,11 +64,11 @@ def test_wav_file_playback() -> bool:
 
         return True
 
-    except Exception as e:
+    except OSError as e:
         import traceback
 
         traceback.print_exc()
-        if os.path.exists(wav_file):
+        if Path(wav_file).exists():
             os.unlink(wav_file)
         return False
 

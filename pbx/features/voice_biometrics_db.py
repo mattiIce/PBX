@@ -4,9 +4,10 @@ Provides persistence for voice profiles, enrollments, and verifications
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class VoiceBiometricsDatabase:
@@ -146,7 +147,7 @@ class VoiceBiometricsDatabase:
             self.logger.info("Voice biometrics tables created successfully")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error creating voice biometrics tables: {e}")
             return False
 
@@ -180,7 +181,7 @@ class VoiceBiometricsDatabase:
             self.db.connection.commit()
             return profile_id
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving voice profile: {e}")
             return None
 
@@ -202,7 +203,7 @@ class VoiceBiometricsDatabase:
                 return dict(zip(columns, row))
             return None
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting voice profile: {e}")
             return None
 
@@ -227,7 +228,7 @@ class VoiceBiometricsDatabase:
             cursor.execute(sql, (samples, user_id))
             self.db.connection.commit()
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error updating enrollment progress: {e}")
 
     def save_verification(self, user_id: str, call_id: str, verified: bool, confidence: float):
@@ -245,7 +246,7 @@ class VoiceBiometricsDatabase:
                 INSERT INTO voice_verifications (profile_id, call_id, verified, confidence, timestamp)
                 VALUES (%s, %s, %s, %s, %s)
                 """
-                params = (profile["id"], call_id, verified, confidence, datetime.now())
+                params = (profile["id"], call_id, verified, confidence, datetime.now(timezone.utc))
             else:
                 sql = """
                 INSERT INTO voice_verifications (profile_id, call_id, verified, confidence, timestamp)
@@ -256,7 +257,7 @@ class VoiceBiometricsDatabase:
                     call_id,
                     1 if verified else 0,
                     confidence,
-                    datetime.now().isoformat(),
+                    datetime.now(timezone.utc).isoformat(),
                 )
 
             cursor.execute(sql, params)
@@ -276,7 +277,7 @@ class VoiceBiometricsDatabase:
             cursor.execute(update_sql, (user_id,))
             self.db.connection.commit()
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving verification: {e}")
 
     def save_fraud_detection(
@@ -302,7 +303,7 @@ class VoiceBiometricsDatabase:
                     fraud_detected,
                     risk_score,
                     json.dumps(indicators),
-                    datetime.now(),
+                    datetime.now(timezone.utc),
                 )
             else:
                 sql = """
@@ -315,13 +316,13 @@ class VoiceBiometricsDatabase:
                     1 if fraud_detected else 0,
                     risk_score,
                     json.dumps(indicators),
-                    datetime.now().isoformat(),
+                    datetime.now(timezone.utc).isoformat(),
                 )
 
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving fraud detection: {e}")
 
     def get_statistics(self) -> dict:
@@ -371,6 +372,6 @@ class VoiceBiometricsDatabase:
                 "fraud_attempts_detected": fraud_detected,
             }
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting statistics: {e}")
             return {}

@@ -17,6 +17,7 @@ from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.audio import generate_voice_prompt
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
+from pathlib import Path
 
 
 # Helper function for DEBUG_VM_PIN tests to manage environment and module reloading
@@ -635,7 +636,7 @@ def test_voicemail_pin_from_database() -> None:
     finally:
         # Cleanup - use try-except to handle potential issues
         try:
-            if os.path.exists(temp_db.name):
+            if Path(temp_db.name).exists():
                 os.unlink(temp_db.name)
         except (OSError, PermissionError):
             pass  # Don't fail the test on cleanup errors

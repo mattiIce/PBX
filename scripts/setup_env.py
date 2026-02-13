@@ -411,7 +411,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nCancelled by user.")
         sys.exit(0)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"\n\nError: {e}")
         import traceback
 

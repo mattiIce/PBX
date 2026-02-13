@@ -4,6 +4,7 @@ Logging configuration for PBX system
 
 import logging
 import os
+from pathlib import Path
 
 
 class PBXLogger:
@@ -52,7 +53,7 @@ class PBXLogger:
 
         # File handler
         if log_file:
-            log_dir = os.path.dirname(log_file)
+            log_dir = str(Path(log_file).parent)
             if log_dir:  # Only create directory if path includes a directory
                 os.makedirs(log_dir, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
@@ -108,7 +109,7 @@ class PBXLogger:
 
         # File handler (if log_file specified)
         if log_file:
-            log_dir = os.path.dirname(log_file)
+            log_dir = str(Path(log_file).parent)
             if log_dir:  # Only create directory if path includes a directory
                 os.makedirs(log_dir, exist_ok=True)
             file_handler = logging.FileHandler(log_file)

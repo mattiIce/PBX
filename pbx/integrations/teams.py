@@ -115,7 +115,7 @@ class TeamsIntegration:
                 self.logger.error(f"Authentication failed: {error} - {error_desc}")
                 return False
 
-        except Exception as e:
+        except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Error authenticating with Microsoft Teams: {e}")
             return False
 
@@ -174,7 +174,7 @@ class TeamsIntegration:
                 )
                 return False
 
-        except Exception as e:
+        except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Error syncing presence: {e}")
             return False
 
@@ -374,7 +374,7 @@ class TeamsIntegration:
                 )
                 return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error sending Teams chat message: {e}")
             return False
 
@@ -437,6 +437,6 @@ class TeamsIntegration:
                 )
                 return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error creating Teams meeting: {e}")
             return None

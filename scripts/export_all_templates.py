@@ -44,7 +44,7 @@ Examples:
 
     # Load config
     config_path = args.config
-    if not os.path.exists(config_path):
+    if not Path(config_path).exists():
         print(f"❌ Config file not found: {config_path}")
         print("   Please specify a valid config file path")
         return 1
@@ -124,7 +124,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"\n❌ Error: {e}")
         import traceback
 

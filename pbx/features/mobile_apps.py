@@ -3,7 +3,7 @@ Mobile Apps Framework
 iOS and Android mobile client support
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -34,8 +34,8 @@ class MobileDevice:
         self.platform = platform
         self.user_id = user_id
         self.push_token = push_token
-        self.registered_at = datetime.now()
-        self.last_active = datetime.now()
+        self.registered_at = datetime.now(timezone.utc)
+        self.last_active = datetime.now(timezone.utc)
         self.app_version = None
         self.os_version = None
         self.device_model = None
@@ -301,7 +301,7 @@ class MobileAppFramework:
                 "platform": device.platform.value,
             }
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send push notification: {str(e)}")
             return {"success": False, "error": str(e)}
 
@@ -390,7 +390,7 @@ class MobileAppFramework:
             "call_id": call_info.get("call_id"),
             "caller_id": call_info.get("caller_id"),
             "caller_name": call_info.get("caller_name"),
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         # Use CallKit (iOS) or ConnectionService (Android) integration
@@ -404,7 +404,7 @@ class MobileAppFramework:
     def update_device_activity(self, device_id: str):
         """Update device last active timestamp"""
         if device_id in self.devices:
-            self.devices[device_id].last_active = datetime.now()
+            self.devices[device_id].last_active = datetime.now(timezone.utc)
 
     def unregister_device(self, device_id: str) -> bool:
         """Unregister a mobile device"""
@@ -441,7 +441,7 @@ class MobileAppFramework:
     def get_statistics(self) -> dict:
         """Get mobile app statistics"""
         # Calculate active devices (active in last 24 hours)
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         active_count = sum(
             1 for d in self.devices.values() if (now - d.last_active).total_seconds() < 86400
         )

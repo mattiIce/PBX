@@ -5,7 +5,7 @@ Enables video conferencing, screen sharing, and recording
 
 import re
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -138,9 +138,9 @@ class JitsiIntegration:
                 "url": meeting_url,
                 "moderator_url": moderator_url,
                 "subject": subject or f"Meeting - {room_name}",
-                "scheduled_time": scheduled_time or datetime.now(),
+                "scheduled_time": scheduled_time or datetime.now(timezone.utc),
                 "duration": duration_minutes,
-                "created_at": datetime.now(),
+                "created_at": datetime.now(timezone.utc),
                 "server": self.server_url,
                 "moderator": moderator_name,
                 "participants": participant_names or [],
@@ -150,7 +150,7 @@ class JitsiIntegration:
 
             return meeting
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create Jitsi meeting: {e}")
             return {"success": False, "error": str(e)}
 
@@ -296,7 +296,7 @@ class JitsiIntegration:
         except ImportError:
             self.logger.warning("JWT library not available. Install with: pip install PyJWT")
             return ""
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to generate JWT token: {e}")
             return ""
 

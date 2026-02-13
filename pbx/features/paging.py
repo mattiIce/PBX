@@ -4,7 +4,7 @@ Provides support for overhead paging via digital-to-analog converters
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -125,7 +125,7 @@ class PagingSystem:
             return None
 
         # Generate page ID with UUID to ensure uniqueness
-        page_id = f"page-{datetime.now().strftime('%Y%m%d%H%M%S')}-{from_extension}-{uuid.uuid4().hex[:8]}"
+        page_id = f"page-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{from_extension}-{uuid.uuid4().hex[:8]}"
 
         # Determine zone(s)
         if to_extension == self.all_call_extension:
@@ -147,7 +147,7 @@ class PagingSystem:
             "to_extension": to_extension,
             "zones": zones,
             "zone_names": zone_names,
-            "started_at": datetime.now(),
+            "started_at": datetime.now(timezone.utc),
             "status": "active",
         }
 
@@ -185,7 +185,7 @@ class PagingSystem:
 
         page_info = self.active_pages[page_id]
         page_info["status"] = "ended"
-        page_info["ended_at"] = datetime.now()
+        page_info["ended_at"] = datetime.now(timezone.utc)
 
         self.logger.info(f"Page ended: {page_id} ({page_info['zone_names']})")
 
@@ -262,7 +262,7 @@ class PagingSystem:
             "name": name,
             "description": description,
             "dac_device": dac_device,
-            "created_at": datetime.now(),
+            "created_at": datetime.now(timezone.utc),
         }
 
         # Check if zone already exists
@@ -331,7 +331,7 @@ class PagingSystem:
             "sip_uri": sip_uri,
             "ip_address": ip_address,
             "port": port,
-            "configured_at": datetime.now(),
+            "configured_at": datetime.now(timezone.utc),
         }
 
         # Check if device already exists

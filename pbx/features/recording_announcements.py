@@ -4,9 +4,11 @@ Auto-play recording disclosure before recording starts
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
+from pathlib import Path
 
 
 class RecordingAnnouncements:
@@ -96,7 +98,7 @@ class RecordingAnnouncements:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Recording announcements database schema initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing recording announcements schema: {e}")
 
     def _log_announcement(
@@ -128,7 +130,7 @@ class RecordingAnnouncements:
                         consent_required,
                         consent_given,
                         consent_timeout,
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                     ),
                 )
             else:
@@ -144,18 +146,18 @@ class RecordingAnnouncements:
                         1 if consent_required else 0,
                         1 if consent_given else (0 if consent_given is False else None),
                         1 if consent_timeout else 0,
-                        datetime.now(),
+                        datetime.now(timezone.utc),
                     ),
                 )
 
             self.database.connection.commit()
             cursor.close()
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error logging announcement: {e}")
 
     def _check_audio_file(self):
         """Check if announcement audio file exists"""
-        if os.path.exists(self.audio_path):
+        if Path(self.audio_path).exists():
             self.logger.info(f"  Announcement audio: {self.audio_path}")
         else:
             self.logger.warning(f"  Announcement audio not found: {self.audio_path}")
@@ -209,10 +211,10 @@ class RecordingAnnouncements:
         result = {
             "call_id": call_id,
             "announcement_played": True,
-            "audio_file": self.audio_path if os.path.exists(self.audio_path) else None,
+            "audio_file": self.audio_path if Path(self.audio_path).exists() else None,
             "text": self.announcement_text,
             "party": party,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         self.announcements_played += 1
@@ -248,7 +250,7 @@ class RecordingAnnouncements:
             "announcement": announcement,
             "timeout_seconds": self.consent_timeout,
             "instructions": "Press 1 to accept recording, 2 to decline",
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
 
         return result
@@ -284,7 +286,7 @@ class RecordingAnnouncements:
             "require_consent": self.require_consent,
             "audio_file": self.audio_path,
             "text": self.announcement_text,
-            "audio_exists": os.path.exists(self.audio_path),
+            "audio_exists": Path(self.audio_path).exists(),
         }
 
     def update_announcement_text(self, text: str) -> bool:
@@ -295,7 +297,7 @@ class RecordingAnnouncements:
 
     def set_audio_file(self, path: str) -> bool:
         """set custom audio file for announcement"""
-        if not os.path.exists(path):
+        if not Path(path).exists():
             self.logger.error(f"Audio file not found: {path}")
             return False
 

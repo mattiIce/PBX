@@ -11,6 +11,7 @@ from flask import Blueprint, Response, current_app, redirect
 
 from pbx.api.utils import send_json
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 logger = get_logger()
 
@@ -32,17 +33,17 @@ def handle_static_file(path: str) -> Response:
     """
     try:
         admin_dir = current_app.config["ADMIN_DIR"]
-        full_path = os.path.join(admin_dir, path)
+        full_path = Path(admin_dir) / path
 
         # Prevent directory traversal attacks - ensure path stays within
         # admin directory
-        real_admin_dir = os.path.realpath(admin_dir)
-        real_full_path = os.path.realpath(full_path)
+        real_admin_dir = str(Path(admin_dir).resolve())
+        real_full_path = str(Path(full_path).resolve())
 
         if not real_full_path.startswith(real_admin_dir):
             return send_json({"error": "Access denied"}, 403)
 
-        if not os.path.exists(full_path) or not os.path.isfile(full_path):
+        if not Path(full_path).exists() or not Path(full_path).is_file():
             return send_json({"error": "File not found"}, 404)
 
         # Determine content type
@@ -63,5 +64,5 @@ def handle_static_file(path: str) -> Response:
     except KeyError:
         logger.error("ADMIN_DIR not configured in Flask app config")
         return send_json({"error": "Admin directory not configured"}, 500)
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)

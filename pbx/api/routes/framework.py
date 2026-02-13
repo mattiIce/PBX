@@ -8,7 +8,7 @@ Recording Analytics, Voicemail Drop, DNS SRV, SBC, and Data Residency.
 """
 
 import base64
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from flask import Blueprint, Response, jsonify, request, current_app
 
@@ -22,6 +22,7 @@ from pbx.api.utils import (
     DateTimeEncoder,
 )
 from pbx.utils.logger import get_logger
+import sqlite3
 
 logger = get_logger()
 
@@ -135,7 +136,7 @@ def analyze_sentiment() -> tuple[Response, int]:
             engine = SpeechAnalyticsEngine(pbx_core.database, pbx_core.config)
             result = engine.analyze_sentiment(text)
             return send_json(result), 200
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error analyzing sentiment: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -159,7 +160,7 @@ def generate_summary(call_id: str) -> tuple[Response, int]:
             engine = SpeechAnalyticsEngine(pbx_core.database, pbx_core.config)
             summary = engine.generate_summary(call_id, transcript)
             return send_json({"call_id": call_id, "summary": summary}), 200
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error generating summary: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -207,7 +208,7 @@ def get_video_room(room_id: str) -> tuple[Response, int]:
                 return send_json(room), 200
             else:
                 return send_json({"error": "Room not found"}, 404), 404
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting video room: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -252,7 +253,7 @@ def join_video_room(room_id: str) -> tuple[Response, int]:
                 return send_json({"success": True}), 200
             else:
                 return send_json({"error": "Failed to join room"}, 500), 500
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error joining video room: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -360,7 +361,7 @@ def click_to_dial_call(extension: str) -> tuple[Response, int]:
                 return send_json({"call_id": call_id, "success": True}), 200
             else:
                 return send_json({"error": "Failed to initiate call"}, 500), 500
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error initiating click-to-dial call: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -427,7 +428,7 @@ def get_team_messages(channel_id: str) -> tuple[Response, int]:
             engine = TeamMessagingEngine(pbx_core.database, pbx_core.config)
             messages = engine.get_channel_messages(int(channel_id))
             return send_json({"messages": messages}), 200
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting team messages: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -587,7 +588,7 @@ def detect_e911_location(extension: str) -> tuple[Response, int]:
                 return send_json(location), 200
             else:
                 return send_json({"error": "Location could not be detected"}, 404), 404
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error detecting E911 location: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -691,7 +692,7 @@ def get_integration_activity() -> tuple[Response, int]:
                 )
 
             return send_json({"activities": activities}), 200
-        except Exception as e:
+        except sqlite3.Error as e:
             logger.error(f"Error getting integration activity: {e}")
             # Return empty activities instead of error to prevent UI errors
             return send_json({"activities": []}), 200
@@ -752,7 +753,7 @@ def clear_integration_activity() -> tuple[Response, int]:
     if pbx_core and pbx_core.database.enabled:
         try:
             # Delete entries older than 30 days
-            cutoff_date = datetime.now() - timedelta(days=30)
+            cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
             delete_query = (
                 """DELETE FROM integration_activity_log
                    WHERE created_at < ?"""
@@ -771,7 +772,7 @@ def clear_integration_activity() -> tuple[Response, int]:
                     "message": "Old activity log entries cleared successfully",
                 }
             ), 200
-        except Exception as e:
+        except sqlite3.Error as e:
             logger.error(f"Error clearing integration activity: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -912,7 +913,7 @@ def withdraw_gdpr_consent() -> tuple[Response, int]:
                 return send_json({"success": True}), 200
             else:
                 return send_json({"error": "Failed to withdraw consent"}, 500), 500
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error withdrawing GDPR consent: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
@@ -1038,7 +1039,7 @@ def get_bi_export_status(dataset_name: str) -> tuple[Response, int]:
             return send_json(dataset), 200
         else:
             return send_json({"error": "Dataset not found"}, 404), 404
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting export status: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1069,7 +1070,7 @@ def export_bi_dataset() -> tuple[Response, int]:
 
         result = bi.export_dataset(dataset_name, format_enum)
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error exporting dataset: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1092,7 +1093,7 @@ def create_bi_dataset() -> tuple[Response, int]:
         bi = get_bi_integration(pbx_core.config if pbx_core else None)
         bi.create_custom_dataset(name, query)
         return send_json({"success": True, "dataset": name}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating dataset: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1120,7 +1121,7 @@ def test_bi_connection() -> tuple[Response, int]:
 
         result = bi.test_connection(provider_enum, credentials)
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error testing BI connection: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1197,7 +1198,7 @@ def create_call_tag() -> tuple[Response, int]:
         tagging = get_call_tagging(pbx_core.config if pbx_core else None)
         tag_id = tagging.create_tag(name, description, color)
         return send_json({"success": True, "tag_id": tag_id}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating tag: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1221,7 +1222,7 @@ def create_tagging_rule() -> tuple[Response, int]:
         tagging = get_call_tagging(pbx_core.config if pbx_core else None)
         rule_id = tagging.create_rule(name, conditions, tag_id)
         return send_json({"success": True, "rule_id": rule_id}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating tagging rule: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1316,7 +1317,7 @@ def register_blending_agent() -> tuple[Response, int]:
         blending = get_call_blending(pbx_core.config if pbx_core else None)
         result = blending.register_agent(agent_id, extension)
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error registering agent: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1335,7 +1336,7 @@ def set_agent_mode(agent_id: str) -> tuple[Response, int]:
         blending = get_call_blending(pbx_core.config if pbx_core else None)
         result = blending.set_agent_mode(agent_id, mode)
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error setting agent mode: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1415,7 +1416,7 @@ def create_geo_region() -> tuple[Response, int]:
         geo = get_geographic_redundancy(pbx_core.config if pbx_core else None)
         result = geo.create_region(region_id, name, location)
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating region: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1527,7 +1528,7 @@ def get_ai_conversation_history() -> tuple[Response, int]:
 
         history = ai.get_conversation_history(limit)
         return send_json({"history": history}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting conversation history: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1560,7 +1561,7 @@ def start_ai_conversation() -> tuple[Response, int]:
                 "started_at": context.started_at.isoformat(),
             }
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error starting conversation: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1587,7 +1588,7 @@ def process_ai_input() -> tuple[Response, int]:
         result = ai.process_user_input(call_id, user_input)
 
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error processing input: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1614,7 +1615,7 @@ def configure_ai_provider() -> tuple[Response, int]:
         ai.configure_provider(provider, api_key, **body.get("options", {}))
 
         return send_json({"success": True, "provider": provider}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error configuring provider: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1743,7 +1744,7 @@ def create_dialing_campaign() -> tuple[Response, int]:
         return send_json(
             {"success": True, "campaign_id": campaign.campaign_id, "name": campaign.name}
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating campaign: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1770,7 +1771,7 @@ def add_campaign_contacts() -> tuple[Response, int]:
         count = dialer.add_contacts(campaign_id, contacts)
 
         return send_json({"success": True, "contacts_added": count}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error adding contacts: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1928,7 +1929,7 @@ def create_voice_profile() -> tuple[Response, int]:
                 "status": profile.status,
             }
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating voice profile: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1954,7 +1955,7 @@ def start_voice_enrollment() -> tuple[Response, int]:
         result = vb.start_enrollment(user_id)
 
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error starting enrollment: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -1991,7 +1992,7 @@ def verify_speaker() -> tuple[Response, int]:
         result = vb.verify_speaker(user_id, audio_data)
 
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error verifying speaker: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2133,7 +2134,7 @@ def collect_quality_metrics() -> tuple[Response, int]:
         qp.collect_metrics(call_id, metrics)
 
         return send_json({"success": True, "call_id": call_id}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error collecting metrics: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2159,7 +2160,7 @@ def train_quality_model() -> tuple[Response, int]:
         qp.train_model(historical_data)
 
         return send_json({"success": True, "samples_trained": len(historical_data)}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error training model: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2236,7 +2237,7 @@ def calculate_video_bandwidth() -> tuple[Response, int]:
                 "bandwidth_mbps": bandwidth,
             }
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error calculating bandwidth: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2324,7 +2325,7 @@ def create_mobile_mapping() -> tuple[Response, int]:
         )
 
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating mobile mapping: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2347,7 +2348,7 @@ def toggle_mobile_mapping(business_number: str) -> tuple[Response, int]:
             return send_json({"success": True, "active": active}), 200
         else:
             return send_json({"error": "Mapping not found"}, 404), 404
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error toggling mobile mapping: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2449,7 +2450,7 @@ def analyze_recording() -> tuple[Response, int]:
         )
 
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error analyzing recording: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2469,7 +2470,7 @@ def search_recordings() -> tuple[Response, int]:
         results = ra.search_recordings(criteria)
 
         return send_json({"results": results}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error searching recordings: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2531,7 +2532,7 @@ def add_voicemail_message() -> tuple[Response, int]:
         vd.add_message(message_id, name, audio_path, duration=body.get("duration"))
 
         return send_json({"success": True, "message_id": message_id}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error adding voicemail message: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2555,7 +2556,7 @@ def drop_voicemail() -> tuple[Response, int]:
         result = vd.drop_message(call_id, message_id)
 
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error dropping voicemail: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2623,7 +2624,7 @@ def lookup_srv() -> tuple[Response, int]:
         records = dns.lookup_srv(service, protocol, domain)
 
         return send_json({"records": records}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error looking up SRV: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2684,7 +2685,7 @@ def allocate_sbc_relay() -> tuple[Response, int]:
         result = sbc.allocate_relay(call_id, codec)
 
         return send_json(result), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error allocating SBC relay: {e}")
         return send_json({"error": str(e)}, 500), 500
 
@@ -2745,6 +2746,6 @@ def get_storage_location() -> tuple[Response, int]:
         location = dr.get_storage_location(category, user_region)
 
         return send_json(location), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting storage location: {e}")
         return send_json({"error": str(e)}, 500), 500

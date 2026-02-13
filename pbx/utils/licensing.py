@@ -16,8 +16,9 @@ import json
 import logging
 import os
 import secrets
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from enum import Enum
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +66,7 @@ class LicenseManager:
 
         # License storage path
         self.license_path = self.config.get(
-            "license_file", os.path.join(os.path.dirname(__file__), "..", "..", ".license")
+            "license_file", str(Path(__file__).parent.parent / ".." / ".license")
         )
 
         # Grace period in days
@@ -102,8 +103,8 @@ class LicenseManager:
         # Check for license lock file (highest priority - enforces licensing)
         # This file is created when a commercial license is first installed
         # and prevents users from disabling licensing via config/env
-        license_lock_path = os.path.join(os.path.dirname(__file__), "..", "..", ".license_lock")
-        if os.path.exists(license_lock_path):
+        license_lock_path = str(Path(__file__).parent.parent / ".." / ".license_lock")
+        if Path(license_lock_path).exists():
             logger.info("License lock file detected - licensing enforcement is mandatory")
             return True
 
@@ -205,7 +206,7 @@ class LicenseManager:
 
     def _load_license(self) -> None:
         """Load license from file if it exists."""
-        if not os.path.exists(self.license_path):
+        if not Path(self.license_path).exists():
             logger.warning(f"No license file found at {self.license_path}")
             self.current_license = None
             return
@@ -225,7 +226,7 @@ class LicenseManager:
             else:
                 logger.error("License validation failed")
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Error loading license: {e}")
             self.current_license = None
 
@@ -310,12 +311,12 @@ class LicenseManager:
         Returns:
             License data dictionary
         """
-        issued_date = datetime.now().isoformat()
+        issued_date = datetime.now(timezone.utc).isoformat()
 
         # Calculate expiration
         expiration = None
         if expiration_days:
-            expiration = (datetime.now() + timedelta(days=expiration_days)).isoformat()
+            expiration = (datetime.now(timezone.utc) + timedelta(days=expiration_days)).isoformat()
 
         # Generate unique license key
         license_key = self._generate_key_string(issued_to, issued_date)
@@ -392,7 +393,7 @@ class LicenseManager:
 
             return True
 
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Error saving license: {e}")
             return False
 
@@ -406,11 +407,11 @@ class LicenseManager:
         Args:
             license_data: License data to include in lock file
         """
-        lock_path = os.path.join(os.path.dirname(self.license_path), ".license_lock")
+        lock_path = str(Path(self.license_path).parent / ".license_lock")
 
         try:
             lock_data = {
-                "created": datetime.now().isoformat(),
+                "created": datetime.now(timezone.utc).isoformat(),
                 "license_key": license_data.get("key", "")[:19] + "...",  # Partial key
                 "issued_to": license_data.get("issued_to", ""),
                 "type": license_data.get("type", ""),
@@ -427,7 +428,7 @@ class LicenseManager:
                 f"License lock file created at {lock_path} - licensing enforcement is now mandatory"
             )
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Error creating license lock file: {e}")
 
     def remove_license_lock(self) -> bool:
@@ -440,10 +441,10 @@ class LicenseManager:
         Returns:
             True if removed successfully, False otherwise
         """
-        lock_path = os.path.join(os.path.dirname(self.license_path), ".license_lock")
+        lock_path = str(Path(self.license_path).parent / ".license_lock")
 
         try:
-            if os.path.exists(lock_path):
+            if Path(lock_path).exists():
                 os.remove(lock_path)
                 logger.info("License lock file removed - licensing can now be disabled")
                 return True
@@ -451,7 +452,7 @@ class LicenseManager:
                 logger.warning("License lock file does not exist")
                 return False
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error removing license lock file: {e}")
             return False
 
@@ -474,7 +475,7 @@ class LicenseManager:
         expiration = self.current_license.get("expiration")
         if expiration:
             expiration_date = datetime.fromisoformat(expiration)
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             if now > expiration_date:
                 # Check grace period
@@ -491,7 +492,7 @@ class LicenseManager:
         # License is active
         if expiration:
             expiration_date = datetime.fromisoformat(expiration)
-            days_until_expiration = (expiration_date - datetime.now()).days
+            days_until_expiration = (expiration_date - datetime.now(timezone.utc)).days
             return (
                 LicenseStatus.ACTIVE,
                 f"License active. Expires in {days_until_expiration} days",
@@ -506,19 +507,19 @@ class LicenseManager:
         Returns:
             tuple of (status, message)
         """
-        trial_marker = os.path.join(os.path.dirname(self.license_path), ".trial_start")
+        trial_marker = str(Path(self.license_path).parent / ".trial_start")
 
-        if not os.path.exists(trial_marker):
+        if not Path(trial_marker).exists():
             # Start trial
             try:
                 with open(trial_marker, "w") as f:
-                    f.write(datetime.now().isoformat())
+                    f.write(datetime.now(timezone.utc).isoformat())
 
                 return (
                     LicenseStatus.ACTIVE,
                     f"Trial mode activated ({self.trial_period_days} days)",
                 )
-            except Exception as e:
+            except OSError as e:
                 logger.error(f"Error creating trial marker: {e}")
                 return LicenseStatus.INVALID, "Unable to activate trial mode"
 
@@ -528,7 +529,7 @@ class LicenseManager:
                 trial_start = datetime.fromisoformat(f.read().strip())
 
             trial_end = trial_start + timedelta(days=self.trial_period_days)
-            now = datetime.now()
+            now = datetime.now(timezone.utc)
 
             if now <= trial_end:
                 days_left = (trial_end - now).days
@@ -536,7 +537,7 @@ class LicenseManager:
             else:
                 return LicenseStatus.EXPIRED, "Trial period has expired"
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error checking trial status: {e}")
             return LicenseStatus.INVALID, "Unable to verify trial status"
 
@@ -674,14 +675,14 @@ class LicenseManager:
             True if revoked successfully, False otherwise
         """
         try:
-            if os.path.exists(self.license_path):
+            if Path(self.license_path).exists():
                 os.remove(self.license_path)
                 logger.info("License revoked")
 
             self.current_license = None
             return True
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error revoking license: {e}")
             return False
 

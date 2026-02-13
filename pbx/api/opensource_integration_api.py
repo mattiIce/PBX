@@ -36,7 +36,7 @@ def add_opensource_integration_endpoints(handler):
 
             handler._send_json(result)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to create Jitsi meeting: {e}")
             handler._send_json({"error": str(e)}, 500)
 
@@ -56,7 +56,7 @@ def add_opensource_integration_endpoints(handler):
 
             handler._send_json(result)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to create instant meeting: {e}")
             handler._send_json({"error": str(e)}, 500)
 
@@ -88,7 +88,7 @@ def add_opensource_integration_endpoints(handler):
             else:
                 handler._send_json({"success": False, "message": "Contact not found"})
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to search contact: {e}")
             handler._send_json({"error": str(e)}, 500)
 
@@ -115,7 +115,7 @@ def add_opensource_integration_endpoints(handler):
             else:
                 handler._send_json({"success": False, "error": "Failed to create contact"}, 500)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to create contact: {e}")
             handler._send_json({"error": str(e)}, 500)
 
@@ -142,7 +142,7 @@ def add_opensource_integration_endpoints(handler):
             else:
                 handler._send_json({"success": False, "error": "Failed to log call"}, 500)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to log call: {e}")
             handler._send_json({"error": str(e)}, 500)
 
@@ -168,7 +168,7 @@ def add_opensource_integration_endpoints(handler):
             else:
                 handler._send_json({"success": False, "error": "Failed to send message"}, 500)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to send Matrix message: {e}")
             handler._send_json({"error": str(e)}, 500)
 
@@ -188,7 +188,7 @@ def add_opensource_integration_endpoints(handler):
 
             handler._send_json({"success": success})
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to send notification: {e}")
             handler._send_json({"error": str(e)}, 500)
 
@@ -213,7 +213,7 @@ def add_opensource_integration_endpoints(handler):
             else:
                 handler._send_json({"success": False, "error": "Failed to create room"}, 500)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             handler.pbx_core.logger.error(f"Failed to create Matrix room: {e}")
             handler._send_json({"error": str(e)}, 500)
 

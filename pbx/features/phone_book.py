@@ -5,9 +5,10 @@ and can be pushed to IP phones
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # Import ExtensionDB for database-based AD sync
 try:
@@ -130,7 +131,7 @@ class PhoneBook:
                 self.entries[entry["extension"]] = entry
 
             self.logger.info(f"Loaded {len(self.entries)} phone book entries from database")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error loading phone book from database: {e}")
 
     def add_entry(
@@ -169,7 +170,7 @@ class PhoneBook:
             "mobile": mobile,
             "office_location": office_location,
             "ad_synced": ad_synced,
-            "updated_at": datetime.now(),
+            "updated_at": datetime.now(timezone.utc),
         }
 
         # Update in-memory cache
@@ -208,14 +209,14 @@ class PhoneBook:
                     mobile,
                     office_location,
                     ad_synced,
-                    datetime.now(),
+                    datetime.now(timezone.utc),
                 )
                 success = self.database.execute(query, params)
 
                 if success:
                     self.logger.info(f"Added/updated phone book entry: {extension} - {name}")
                 return success
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.error(f"Error saving phone book entry: {e}")
                 return False
 
@@ -357,7 +358,7 @@ class PhoneBook:
                 )
                 return synced_count
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 # Broad exception catch is intentional - we want to gracefully fall back to
                 # extension_registry for ANY database issue (connection,
                 # permissions, missing table, etc.)

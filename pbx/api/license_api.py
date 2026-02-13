@@ -12,6 +12,7 @@ from flask import Blueprint, jsonify, request
 
 from pbx.utils.license_admin import require_license_admin, verify_license_admin_session
 from pbx.utils.licensing import LicenseType, get_license_manager
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -95,7 +96,7 @@ def list_available_features():
             200,
         )
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error listing features: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -125,7 +126,7 @@ def check_feature():
 
         return jsonify({"success": True, "feature": feature_name, "available": available}), 200
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error checking feature: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -193,7 +194,7 @@ def generate_license():
 
         return jsonify({"success": True, "license": license_data}), 200
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error generating license: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -254,7 +255,7 @@ def install_license():
         else:
             return jsonify({"success": False, "error": "Failed to install license"}), 500
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error installing license: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -313,17 +314,17 @@ def toggle_licensing():
 
         # Update .env file for persistence
         # NOTE: PBX restart required for change to take full effect
-        env_file = os.path.join(os.path.dirname(__file__), "..", "..", ".env")
+        env_file = str(Path(__file__).parent.parent / ".." / ".env")
 
         # Read existing .env
         env_lines = []
-        if os.path.exists(env_file):
+        if Path(env_file).exists():
             with open(env_file, "r") as f:
                 env_lines = f.readlines()
 
         # Check if license lock exists
-        lock_path = os.path.join(os.path.dirname(__file__), "..", "..", ".license_lock")
-        if os.path.exists(lock_path):
+        lock_path = str(Path(__file__).parent.parent / ".." / ".license_lock")
+        if Path(lock_path).exists():
             return (
                 jsonify(
                     {
@@ -371,7 +372,7 @@ def toggle_licensing():
             200,
         )
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Error toggling licensing: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -496,7 +497,7 @@ def admin_login():
             logger.warning(f"Failed license admin login attempt: {extension}/{username}")
             return jsonify({"success": False, "error": "Invalid credentials"}), 401
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error during license admin login: {e}")
         return jsonify({"success": False, "error": "Authentication failed"}), 500
 

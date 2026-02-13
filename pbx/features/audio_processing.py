@@ -141,7 +141,7 @@ class AudioProcessor:
                 self.noise_level_history.pop(0)
 
             return float(rms)
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error estimating noise level: {e}")
             return 0.0
 

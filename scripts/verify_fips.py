@@ -9,10 +9,11 @@ import subprocess
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.utils.config import Config
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
+from pathlib import Path
 
 
 def print_header(text):
@@ -61,7 +62,7 @@ def check_system_fips():
             for line in result.stdout.split("\n")[:10]:
                 if line.strip():
                     print(f"         {line}")
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as e:
         print_status("OpenSSL FIPS provider", False, str(e))
         all_passed = False
 
@@ -114,7 +115,7 @@ def check_cryptography_library():
         print_status("Cryptography version >= 41.0.0", meets_requirement, f"Installed: {version}")
         if not meets_requirement:
             all_passed = False
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print_status("Cryptography version check", False, str(e))
         all_passed = False
 
@@ -134,7 +135,7 @@ def check_cryptography_library():
             all_passed = False
         else:
             print_status("Backend FIPS mode", False, "Cannot determine FIPS status from backend")
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print_status("OpenSSL backend check", False, str(e))
         all_passed = False
 
@@ -177,7 +178,7 @@ def check_pbx_configuration():
         enable_srtp = config.get("security.enable_srtp", False)
         print_status("SRTP enabled (recommended)", enable_srtp, "For encrypted media streams")
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print_status("Config file check", False, str(e))
         all_passed = False
 
@@ -256,7 +257,7 @@ def test_encryption_operations():
             print_status("Secure token generation", False, str(e))
             all_passed = False
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print_status("Encryption test initialization", False, str(e))
         all_passed = False
 
@@ -392,7 +393,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nVerification cancelled by user")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"\n\nError during verification: {e}")
         import traceback
 

@@ -373,7 +373,7 @@ class FeatureInitializer:
                         pbx_core.logger.warning(
                             "AD auto-sync completed but no extensions were synced"
                         )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     pbx_core.logger.error(
                         f"Failed to auto-sync users from Active Directory at startup: {e}"
                     )

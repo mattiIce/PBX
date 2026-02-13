@@ -4,9 +4,10 @@ HD video calls, screen sharing, and 4K video support
 """
 
 import hashlib
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class VideoConferencingEngine:
@@ -85,7 +86,7 @@ class VideoConferencingEngine:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to create video conference room: {e}")
             return None
 
@@ -125,7 +126,7 @@ class VideoConferencingEngine:
             )
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to add participant to room: {e}")
             return False
 
@@ -151,13 +152,13 @@ class VideoConferencingEngine:
                    SET left_at = %s
                    WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
                 ),
-                (datetime.now(), room_id, extension),
+                (datetime.now(timezone.utc), room_id, extension),
             )
 
             self.logger.info(f"Participant {extension} left room {room_id}")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to remove participant from room: {e}")
             return False
 
@@ -196,7 +197,7 @@ class VideoConferencingEngine:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get video conference room: {e}")
             return None
 
@@ -237,7 +238,7 @@ class VideoConferencingEngine:
 
             return participants
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get room participants: {e}")
             return []
 
@@ -310,7 +311,7 @@ class VideoConferencingEngine:
             self.logger.info(f"Updated video codec config: {codec_data['codec_name']}")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to update video codec config: {e}")
             return False
 
@@ -343,7 +344,7 @@ class VideoConferencingEngine:
 
             return rooms
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get all video conference rooms: {e}")
             return []
 
@@ -380,6 +381,6 @@ class VideoConferencingEngine:
             self.logger.info(f"Screen sharing flag enabled for {extension} in room {room_id}")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to enable screen sharing: {e}")
             return False

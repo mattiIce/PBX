@@ -99,7 +99,7 @@ def main() -> None:
     except ImportError as e:
         logger.error("FIPS Compliance Error: %s", e)
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error("Security check failed: %s", e)
         sys.exit(1)
 

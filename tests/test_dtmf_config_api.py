@@ -10,6 +10,7 @@ import yaml
 
 
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 class TestDTMFConfigMethods:
@@ -42,7 +43,7 @@ class TestDTMFConfigMethods:
 
     def teardown_method(self) -> None:
         """Clean up temporary config file"""
-        if os.path.exists(self.temp_config.name):
+        if Path(self.temp_config.name).exists():
             os.unlink(self.temp_config.name)
 
     def test_get_dtmf_config_default(self) -> None:

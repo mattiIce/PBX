@@ -4,9 +4,10 @@ Web and application-based dialing with WebRTC integration
 """
 
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class ClickToDialEngine:
@@ -63,7 +64,7 @@ class ClickToDialEngine:
                 }
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get click-to-dial config: {e}")
             return None
 
@@ -127,7 +128,7 @@ class ClickToDialEngine:
             self.logger.info(f"Updated click-to-dial config for {extension}")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to update click-to-dial config: {e}")
             return False
 
@@ -144,7 +145,7 @@ class ClickToDialEngine:
         Returns:
             Call ID or None
         """
-        call_id = f"c2d-{extension}-{int(datetime.now().timestamp())}"
+        call_id = f"c2d-{extension}-{int(datetime.now(timezone.utc).timestamp())}"
 
         try:
             # Log call initiation in database
@@ -181,7 +182,7 @@ class ClickToDialEngine:
                         f"Click-to-dial call created via PBX: {extension} -> {destination} "
                         f"(source: {source}, sip_call_id: {sip_call_id})"
                     )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.warning(f"PBX call integration failed, using framework mode: {e}")
                     # Fall back to framework logging only
                     self.logger.info(
@@ -195,7 +196,7 @@ class ClickToDialEngine:
 
             return call_id
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to initiate click-to-dial call: {e}")
             return None
 
@@ -243,7 +244,7 @@ class ClickToDialEngine:
 
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to update call status: {e}")
             return False
 
@@ -287,7 +288,7 @@ class ClickToDialEngine:
 
             return history
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to get call history: {e}")
             return []
 
@@ -315,6 +316,6 @@ class ClickToDialEngine:
 
             return configs
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get all click-to-dial configs: {e}")
             return []

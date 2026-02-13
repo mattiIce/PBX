@@ -6,9 +6,10 @@ Tracks call quality metrics including jitter, packet loss, latency, and MOS scor
 import threading
 import time
 from collections import deque
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class QoSMetrics:
@@ -22,7 +23,7 @@ class QoSMetrics:
             call_id: Unique identifier for the call
         """
         self.call_id = call_id
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
         self.end_time = None
 
         # Packet statistics
@@ -200,7 +201,7 @@ class QoSMetrics:
     def end_call(self) -> None:
         """Mark the call as ended"""
         with self.lock:
-            self.end_time = datetime.now()
+            self.end_time = datetime.now(timezone.utc)
             # Ensure MOS score is calculated at call end
             self._calculate_mos()
 
@@ -216,7 +217,7 @@ class QoSMetrics:
             if self.end_time:
                 duration = (self.end_time - self.start_time).total_seconds()
             else:
-                duration = (datetime.now() - self.start_time).total_seconds()
+                duration = (datetime.now(timezone.utc) - self.start_time).total_seconds()
 
             # Calculate packet loss percentage
             total_packets = self.packets_received + self.packets_lost
@@ -470,7 +471,7 @@ class QoSMonitor:
                     "severity": "warning",
                     "message": f"Low MOS score: {summary['mos_score']} (threshold: {self.alert_thresholds['mos_min']})",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
 
@@ -482,7 +483,7 @@ class QoSMonitor:
                     "severity": "error",
                     "message": f"High packet loss: {summary['packet_loss_percentage']}% (threshold: {self.alert_thresholds['packet_loss_max']}%)",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
 
@@ -494,7 +495,7 @@ class QoSMonitor:
                     "severity": "warning",
                     "message": f"High jitter: {summary['jitter_avg_ms']}ms (threshold: {self.alert_thresholds['jitter_max']}ms)",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
 
@@ -506,7 +507,7 @@ class QoSMonitor:
                     "severity": "warning",
                     "message": f"High latency: {summary['latency_avg_ms']}ms (threshold: {self.alert_thresholds['latency_max']}ms)",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now().isoformat(),
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
                 }
             )
 
@@ -559,7 +560,7 @@ class QoSMonitor:
                 self.logger.debug(
                     f"Stored QoS metrics for call {summary['call_id']} in database"
                 )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to store QoS metrics in database: {e}")
 
     def update_alert_thresholds(self, thresholds: dict) -> None:

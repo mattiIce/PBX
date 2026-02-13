@@ -9,6 +9,7 @@ import tempfile
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 def create_fake_audio() -> bytes:
@@ -40,7 +41,7 @@ def test_greeting_storage() -> None:
         assert mailbox.has_custom_greeting(), "Should have custom greeting after saving"
         greeting_path = mailbox.get_greeting_path()
         assert greeting_path is not None, "Greeting path should not be None after saving"
-        assert os.path.exists(greeting_path), "Greeting file should exist"
+        assert Path(greeting_path).exists(), "Greeting file should exist"
 
         # Verify content
         with open(greeting_path, "rb") as f:

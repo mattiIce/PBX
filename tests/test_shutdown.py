@@ -11,6 +11,7 @@ import yaml
 
 
 from pbx.core.pbx import PBXCore
+from pathlib import Path
 
 
 def test_pbx_shutdown() -> None:
@@ -68,7 +69,7 @@ def test_pbx_shutdown() -> None:
 
     finally:
         # Clean up config file
-        if os.path.exists(config_file):
+        if Path(config_file).exists():
             os.unlink(config_file)
 
 
@@ -139,5 +140,5 @@ def test_signal_handling_simulation() -> None:
 
     finally:
         # Clean up
-        if os.path.exists(config_file):
+        if Path(config_file).exists():
             os.unlink(config_file)

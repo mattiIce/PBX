@@ -7,9 +7,10 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.features.music_on_hold import MusicOnHold
+from pathlib import Path
 
 
 def test_moh_system():
@@ -51,12 +52,12 @@ def test_moh_system():
         return False
 
     for filepath in files:
-        filename = os.path.basename(filepath)
-        size_kb = os.path.getsize(filepath) / 1024
+        filename = Path(filepath).name
+        size_kb = Path(filepath).stat().st_size / 1024
         print(f"     • {filename} ({size_kb:.1f} KB)")
 
         # Check if file exists
-        if not os.path.exists(filepath):
+        if not Path(filepath).exists():
             print("       ✗ ERROR: File does not exist!")
             return False
 
@@ -80,7 +81,7 @@ def test_moh_system():
         return False
 
     print(f"   ✓ MOH started for call {test_call_id}")
-    print(f"   Playing: {os.path.basename(audio_file)}")
+    print(f"   Playing: {Path(audio_file).name}")
     print()
 
     # Test getting next file
@@ -90,7 +91,7 @@ def test_moh_system():
         print("   ✗ ERROR: Failed to get next MOH file!")
         return False
 
-    print(f"   ✓ Next file: {os.path.basename(next_file)}")
+    print(f"   ✓ Next file: {Path(next_file).name}")
     print()
 
     # Test stopping MOH

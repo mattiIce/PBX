@@ -11,10 +11,12 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+import sqlite3
+from pathlib import Path
 
 
 def print_header(text):
@@ -67,7 +69,7 @@ def check_config():
         print(f"  Username: {db_config['user']}")
 
         return config, db_config
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"✗ Failed to load configuration: {e}")
         return None, None
 
@@ -132,7 +134,7 @@ def check_connection(config):
             print(f"  Database enabled: {db.enabled}")
             return False
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         print(f"✗ Connection error: {e}")
         import traceback
 

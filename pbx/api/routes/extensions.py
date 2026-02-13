@@ -57,7 +57,7 @@ def get_extensions() -> tuple[Response, int]:
             return send_json(data), 200
         else:
             return send_json({"error": "PBX not initialized"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting extensions: {e}")
         return send_json({"error": "Failed to retrieve extensions"}, 500), 500
 
@@ -141,7 +141,7 @@ def add_extension() -> tuple[Response, int]:
             return send_json({"success": True, "message": "Extension added successfully"}), 200
         else:
             return send_json({"error": "Failed to add extension"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -212,7 +212,7 @@ def update_extension(number: str) -> tuple[Response, int]:
             return send_json({"success": True, "message": "Extension updated successfully"}), 200
         else:
             return send_json({"error": "Failed to update extension"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -244,5 +244,5 @@ def delete_extension(number: str) -> tuple[Response, int]:
             return send_json({"success": True, "message": "Extension deleted successfully"}), 200
         else:
             return send_json({"error": "Failed to delete extension"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500

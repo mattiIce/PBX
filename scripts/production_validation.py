@@ -65,7 +65,7 @@ class ProductionValidator:
             return result.returncode == 0, result.stdout + result.stderr
         except subprocess.TimeoutExpired:
             return False, f"Command timed out after {timeout}s"
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError) as e:
             return False, str(e)
 
     def check_http_endpoint(self, path: str, expected_status: int = 200) -> bool:
@@ -75,7 +75,7 @@ class ProductionValidator:
             req = urllib.request.Request(url, method="GET")
             with urllib.request.urlopen(req, timeout=5) as response:
                 return response.status == expected_status
-        except Exception:
+        except OSError:
             return False
 
     # ===== Configuration Tests =====
@@ -93,7 +93,7 @@ class ProductionValidator:
                 with open(config_file) as f:
                     yaml.safe_load(f)
                 self.log("config.yml is valid", "pass")
-            except Exception as e:
+            except OSError as e:
                 self.log(f"config.yml is invalid: {e}", "fail")
         else:
             self.log("config.yml not found", "fail")

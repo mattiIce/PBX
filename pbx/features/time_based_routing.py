@@ -3,7 +3,7 @@ Time-Based Routing
 Route calls based on business hours and schedules
 """
 
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -49,10 +49,10 @@ class TimeBasedRouting:
             return ""
 
         # Generate rule ID
-        rule_id = f"tbr_{datetime.now().strftime('%Y%m%d%H%M%S')}_{len(self.routing_rules)}"
+        rule_id = f"tbr_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{len(self.routing_rules)}"
 
         rule["rule_id"] = rule_id
-        rule["created_at"] = datetime.now()
+        rule["created_at"] = datetime.now(timezone.utc)
         rule["enabled"] = rule.get("enabled", True)
         rule["priority"] = rule.get("priority", 100)
 
@@ -84,7 +84,7 @@ class TimeBasedRouting:
             return {"destination": destination, "rule": None}
 
         if call_time is None:
-            call_time = datetime.now()
+            call_time = datetime.now(timezone.utc)
 
         # Get rules for this destination
         rule_ids = self.destination_rules.get(destination, [])

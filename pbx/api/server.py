@@ -12,6 +12,7 @@ import traceback
 
 from pbx.api.app import create_app
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 logger = get_logger()
 
@@ -61,7 +62,7 @@ class PBXFlaskServer:
         ca_config = ssl_config.get("ca", {})
         ca_enabled = ca_config.get("enabled", False)
 
-        if ca_enabled and (not cert_file or not os.path.exists(cert_file)):
+        if ca_enabled and (not cert_file or not Path(cert_file).exists()):
             logger.info("Certificate not found, attempting to request from in-house CA")
             self._request_certificate_from_ca(ca_config, cert_file, key_file)
 
@@ -70,11 +71,11 @@ class PBXFlaskServer:
             logger.error("set api.ssl.enabled: false in config.yml to disable SSL")
             return
 
-        if not os.path.exists(cert_file):
+        if not Path(cert_file).exists():
             logger.error(f"SSL certificate file not found: {cert_file}")
             return
 
-        if not os.path.exists(key_file):
+        if not Path(key_file).exists():
             logger.error(f"SSL private key file not found: {key_file}")
             return
 
@@ -83,7 +84,7 @@ class PBXFlaskServer:
             self.ssl_context.load_cert_chain(cert_file, key_file)
 
             ca_cert = ca_config.get("ca_cert")
-            if ca_cert and os.path.exists(ca_cert):
+            if ca_cert and Path(ca_cert).exists():
                 self.ssl_context.load_verify_locations(cafile=ca_cert)
 
             self.ssl_context.set_ciphers("HIGH:!aNULL:!eNULL:!EXPORT:!DES:!MD5:!PSK:!RC4")
@@ -95,7 +96,7 @@ class PBXFlaskServer:
 
             self.ssl_enabled = True
             logger.info(f"SSL/HTTPS enabled with certificate: {cert_file}")
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, ssl.SSLError) as e:
             logger.error(f"Failed to configure SSL: {e}")
             traceback.print_exc()
 
@@ -122,7 +123,7 @@ class PBXFlaskServer:
             if response.status_code == 200:
                 data = response.json()
                 if data.get("certificate") and data.get("private_key"):
-                    os.makedirs(os.path.dirname(cert_file), exist_ok=True)
+                    os.makedirs(str(Path(cert_file).parent), exist_ok=True)
                     with open(cert_file, "w") as f:
                         f.write(data["certificate"])
                     with open(key_file, "w") as f:
@@ -133,7 +134,7 @@ class PBXFlaskServer:
 
             logger.error(f"CA certificate request failed: {response.status_code}")
             return False
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
             logger.error(f"Error requesting certificate from CA: {e}")
             return False
 
@@ -167,7 +168,7 @@ class PBXFlaskServer:
                 use_reloader=debug,
                 debug=debug,
             )
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, ssl.SSLError) as e:
             if self.running:
                 logger.error(f"Flask server error: {e}")
 

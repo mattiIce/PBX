@@ -116,7 +116,7 @@ class SmokeTestRunner:
                     print(f"  ✗ {name}: {message}")
                     self.failed += 1
                     all_passed = False
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 print(f"  ✗ {name}: ERROR - {e}")
                 self.failed += 1
                 all_passed = False
@@ -136,7 +136,7 @@ class SmokeTestRunner:
 
             return True, ""
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             return False, str(e)
 
     def test_liveness(self) -> tuple[bool, str]:
@@ -152,7 +152,7 @@ class SmokeTestRunner:
 
             return True, ""
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             return False, str(e)
 
     def test_readiness(self) -> tuple[bool, str]:
@@ -171,7 +171,7 @@ class SmokeTestRunner:
 
             return True, ""
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             return False, str(e)
 
     def test_api_status(self) -> tuple[bool, str]:
@@ -191,7 +191,7 @@ class SmokeTestRunner:
 
             return True, ""
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             return False, str(e)
 
     def test_detailed_health(self) -> tuple[bool, str]:
@@ -208,7 +208,7 @@ class SmokeTestRunner:
 
             return True, ""
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             return False, str(e)
 
     def test_metrics(self) -> tuple[bool, str]:
@@ -306,7 +306,7 @@ class SmokeTestRunner:
             try:
                 data = json.loads(e.read().decode())
                 return e.code, data
-            except Exception:
+            except (ValueError, json.JSONDecodeError):
                 return e.code, {"error": str(e)}
         except urllib.error.URLError as e:
             raise Exception(f"Connection failed: {e}")

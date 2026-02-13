@@ -8,6 +8,7 @@ import tempfile
 
 from pbx.features.find_me_follow_me import FindMeFollowMe
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 class TestFMFMPersistence:
@@ -31,7 +32,7 @@ class TestFMFMPersistence:
         """Clean up test database"""
         if hasattr(self, "database") and self.database.connection:
             self.database.connection.close()
-        if os.path.exists(self.temp_db.name):
+        if Path(self.temp_db.name).exists():
             os.unlink(self.temp_db.name)
 
     def test_database_persistence(self) -> None:
@@ -55,7 +56,7 @@ class TestFMFMPersistence:
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm2.get_config("1000")
-        assert loaded_config, "Config should be loaded from database" is not None
+        assert loaded_config is not None, "Config should be loaded from database"
         assert loaded_config["mode"] == "sequential"
         assert len(loaded_config["destinations"]) == 2
         assert loaded_config["destinations"][0]["number"] == "1001"
@@ -149,7 +150,7 @@ class TestFMFMPersistence:
         fmfm2 = FindMeFollowMe(config=self.config, database=self.database)
 
         loaded_config = fmfm2.get_config("1000")
-        assert loaded_config, "Config should be deleted from database" is None
+        assert loaded_config is None, "Config should be deleted from database"
 
     def test_simultaneous_mode_persistence(self) -> None:
         """Test that simultaneous mode configs persist correctly"""

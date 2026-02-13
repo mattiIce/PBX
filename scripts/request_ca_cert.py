@@ -111,7 +111,7 @@ def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="cert
     print(f"3. Submitting CSR to CA: {ca_server}{ca_endpoint}")
 
     try:
-        verify = ca_cert if ca_cert and os.path.exists(ca_cert) else True
+        verify = ca_cert if ca_cert and Path(ca_cert).exists() else True
 
         response = requests.post(
             f"{ca_server}{ca_endpoint}",
@@ -172,7 +172,7 @@ def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="cert
     except requests.exceptions.RequestException as e:
         print(f"   ✗ Error communicating with CA: {e}")
         return False
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
         print(f"   ✗ Error: {e}")
         import traceback
 
@@ -193,9 +193,9 @@ def load_ca_config_from_yml(config_file="config.yml"):
             "server_url": ca_config.get("server_url"),
             "endpoint": ca_config.get("request_endpoint", "/api/sign-cert"),
             "ca_cert": ca_config.get("ca_cert"),
-            "cert_dir": os.path.dirname(ssl_config.get("cert_file", "certs/server.crt")) or "certs",
+            "cert_dir": str(Path(ssl_config.get("cert_file", "certs/server.crt").parent)) or "certs",
         }
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         print(f"Warning: Could not load CA config from {config_file}: {e}")
         return {}
 
@@ -239,7 +239,7 @@ if __name__ == "__main__":
             with open(args.config, "r") as f:
                 config = yaml.safe_load(f)
             hostname = config.get("server", {}).get("external_ip", "localhost")
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError):
             hostname = "localhost"
 
     if not ca_server:

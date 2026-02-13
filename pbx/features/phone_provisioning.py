@@ -13,10 +13,11 @@ Manual reboot options if needed:
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 
 class PhoneTemplate:
@@ -142,7 +143,7 @@ class ProvisioningDevice:
         else:
             self.device_type = device_type
         self.config_url = config_url
-        self.created_at = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
         self.last_provisioned = None
 
     def _detect_device_type(self, vendor: str, model: str) -> str:
@@ -164,7 +165,7 @@ class ProvisioningDevice:
 
     def mark_provisioned(self):
         """Mark device as provisioned"""
-        self.last_provisioned = datetime.now()
+        self.last_provisioned = datetime.now(timezone.utc)
 
     def to_dict(self):
         """Convert to dictionary"""
@@ -276,7 +277,7 @@ class PhoneProvisioning:
             self.logger.info(
                 f"Loaded {len(db_devices)} provisioned devices from database"
             )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading devices from database: {e}")
 
     def _load_builtin_templates(self):
@@ -1043,11 +1044,11 @@ P2351 = 1
         """Load custom templates from configuration"""
         custom_templates_dir = self.config.get("provisioning.custom_templates_dir", None)
 
-        if custom_templates_dir and os.path.exists(custom_templates_dir):
+        if custom_templates_dir and Path(custom_templates_dir).exists():
             try:
                 for filename in os.listdir(custom_templates_dir):
                     if filename.endswith(".template"):
-                        filepath = os.path.join(custom_templates_dir, filename)
+                        filepath = Path(custom_templates_dir) / filename
                         # Parse filename: vendor_model.template
                         parts = filename.replace(".template", "").split("_")
                         if len(parts) >= 2:
@@ -1059,7 +1060,7 @@ P2351 = 1
 
                             self.add_template(vendor, model, template_content)
                             self.logger.info(f"Loaded custom template for {vendor} {model}")
-            except Exception as e:
+            except OSError as e:
                 self.logger.error(f"Error loading custom templates: {e}")
 
     def add_template(self, vendor, model, template_content):
@@ -1344,7 +1345,7 @@ P2351 = 1
         """
         # Log the provisioning request for troubleshooting
         request_log = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "mac_address": mac_address,
             "normalized_mac": normalize_mac_address(mac_address),
             "ip_address": request_info.get("ip") if request_info else None,
@@ -1616,7 +1617,7 @@ P2351 = 1
                 uri=f"sip:{extension_number}@{extension.address[0]}:{extension.address[1]}",
                 from_addr=f"<sip:{server_ip}:{sip_port}>",
                 to_addr=f"<sip:{extension_number}@{server_ip}>",
-                call_id=f"notify-reboot-{extension_number}-{datetime.now().timestamp()}",
+                call_id=f"notify-reboot-{extension_number}-{datetime.now(timezone.utc).timestamp()}",
                 cseq=1,
             )
 
@@ -1633,7 +1634,7 @@ P2351 = 1
             )
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
             return False
 
@@ -1681,9 +1682,9 @@ P2351 = 1
                 "provisioning.custom_templates_dir", "provisioning_templates"
             )
             template_filename = f"{vendor}_{model}.template"
-            template_path = os.path.join(custom_dir, template_filename)
+            template_path = Path(custom_dir) / template_filename
 
-            if os.path.exists(template_path):
+            if Path(template_path).exists():
                 is_custom = True
 
             templates_list.append(
@@ -1745,16 +1746,16 @@ P2351 = 1
         custom_dir = self.config.get("provisioning.custom_templates_dir", "provisioning_templates")
 
         # Create directory if it doesn't exist
-        if not os.path.exists(custom_dir):
+        if not Path(custom_dir).exists():
             try:
                 os.makedirs(custom_dir)
                 self.logger.info(f"Created custom templates directory: {custom_dir}")
-            except Exception as e:
+            except OSError as e:
                 return False, f"Failed to create directory: {e}", None
 
         # Write template to file
         template_filename = f"{vendor.lower()}_{model.lower()}.template"
-        template_path = os.path.join(custom_dir, template_filename)
+        template_path = Path(custom_dir) / template_filename
 
         try:
             with open(template_path, "w") as f:
@@ -1762,7 +1763,7 @@ P2351 = 1
 
             self.logger.info(f"Exported template to: {template_path}")
             return True, f"Template exported to {template_path}", template_path
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to export template: {e}")
             return False, f"Failed to export template: {e}", None
 
@@ -1793,15 +1794,15 @@ P2351 = 1
         custom_dir = self.config.get("provisioning.custom_templates_dir", "provisioning_templates")
 
         # Create directory if it doesn't exist
-        if not os.path.exists(custom_dir):
+        if not Path(custom_dir).exists():
             try:
                 os.makedirs(custom_dir)
-            except Exception as e:
+            except OSError as e:
                 return False, f"Failed to create directory: {e}"
 
         # Write template to file
         template_filename = f"{vendor.lower()}_{model.lower()}.template"
-        template_path = os.path.join(custom_dir, template_filename)
+        template_path = Path(custom_dir) / template_filename
 
         try:
             with open(template_path, "w") as f:
@@ -1812,7 +1813,7 @@ P2351 = 1
 
             self.logger.info(f"Updated template: {vendor} {model}")
             return True, "Template updated successfully"
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to update template: {e}")
             return False, f"Failed to update template: {e}"
 
@@ -1866,7 +1867,7 @@ P2351 = 1
                 device = self.devices_db.get_device(normalized_mac)
                 if device:
                     return device.get("static_ip")
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Failed to get static IP: {e}")
 
         return None
@@ -1895,6 +1896,6 @@ P2351 = 1
 
             self.logger.info(f"Reloaded {stats['total_templates']} templates")
             return True, "Templates reloaded successfully", stats
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to reload templates: {e}")
             return False, f"Failed to reload templates: {e}", None

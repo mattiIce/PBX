@@ -4,9 +4,10 @@ Provides persistence for campaigns, contacts, and call results
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class PredictiveDialingDatabase:
@@ -171,7 +172,7 @@ class PredictiveDialingDatabase:
             self.logger.info("Predictive dialing tables created successfully")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error creating predictive dialing tables: {e}")
             return False
 
@@ -212,7 +213,7 @@ class PredictiveDialingDatabase:
             self.db.connection.commit()
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving campaign: {e}")
             return False
 
@@ -253,7 +254,7 @@ class PredictiveDialingDatabase:
             self.db.connection.commit()
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving contact: {e}")
             return False
 
@@ -280,7 +281,7 @@ class PredictiveDialingDatabase:
                 contact_id,
                 attempt_data.get("call_id"),
                 attempt_data.get("attempt_number"),
-                attempt_data.get("timestamp", datetime.now().isoformat()),
+                attempt_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
                 attempt_data.get("result"),
                 attempt_data.get("duration"),
                 attempt_data.get("agent_id"),
@@ -309,7 +310,7 @@ class PredictiveDialingDatabase:
                 """
 
             update_params = (
-                attempt_data.get("timestamp", datetime.now().isoformat()),
+                attempt_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
                 attempt_data.get("status", "attempted"),
                 attempt_data.get("result"),
                 campaign_id,
@@ -319,7 +320,7 @@ class PredictiveDialingDatabase:
             cursor.execute(update_sql, update_params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving attempt: {e}")
 
     def update_campaign_stats(self, campaign_id: str, stats: dict):
@@ -357,7 +358,7 @@ class PredictiveDialingDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error updating campaign stats: {e}")
 
     def get_campaign(self, campaign_id: str) -> dict | None:
@@ -378,7 +379,7 @@ class PredictiveDialingDatabase:
                 return dict(zip(columns, row))
             return None
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting campaign: {e}")
             return None
 
@@ -392,7 +393,7 @@ class PredictiveDialingDatabase:
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting campaigns: {e}")
             return []
 
@@ -412,7 +413,7 @@ class PredictiveDialingDatabase:
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting campaign contacts: {e}")
             return []
 
@@ -457,6 +458,6 @@ class PredictiveDialingDatabase:
                     }
                 return {}
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting statistics: {e}")
             return {}

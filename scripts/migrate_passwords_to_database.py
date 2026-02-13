@@ -16,12 +16,14 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 from pbx.utils.security import get_password_manager
+import sqlite3
+from pathlib import Path
 
 
 def migrate_passwords(config_file="config.yml", dry_run=False):
@@ -205,7 +207,7 @@ def migrate_passwords(config_file="config.yml", dry_run=False):
                 print("  ✗ Failed to store in database")
                 errors += 1
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             print(f"  ✗ Error: {e}")
             errors += 1
 

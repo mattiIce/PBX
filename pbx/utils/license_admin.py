@@ -245,7 +245,7 @@ def verify_license_admin_session(request) -> tuple[bool, str | None]:
         logger.warning(f"Unauthorized license admin access attempt from {request.remote_addr}")
         return False, "Unauthorized. License management requires administrator authentication."
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error verifying license admin session: {e}")
         return False, "Authentication verification failed"
 

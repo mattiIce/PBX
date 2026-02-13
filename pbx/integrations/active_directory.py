@@ -91,7 +91,7 @@ class ActiveDirectoryIntegration:
                 self.logger.error("Failed to bind to Active Directory")
                 return False
 
-        except Exception as e:
+        except (OSError, ValueError) as e:
             self.logger.error(f"Error connecting to Active Directory: {e}")
             self.connection = None
             return False
@@ -172,7 +172,7 @@ class ActiveDirectoryIntegration:
                 self.logger.warning(f"Authentication failed for user: {username}")
                 return None
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
@@ -441,7 +441,7 @@ class ActiveDirectoryIntegration:
                         else:
                             self.logger.warning(f"Failed to create extension {extension_number}")
 
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     user_desc = username if username else "unknown"
                     self.logger.error(f"Error syncing user {user_desc}: {e}")
                     continue
@@ -529,7 +529,7 @@ class ActiveDirectoryIntegration:
 
             return {"synced_count": synced_count, "extensions_to_reboot": []}
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error synchronizing users from Active Directory: {e}")
             import traceback
 
@@ -649,7 +649,7 @@ class ActiveDirectoryIntegration:
             self.logger.info(f"Found {len(groups)} groups for user {username}")
             return groups
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error getting groups for user {username}: {e}")
             return []
 
@@ -719,7 +719,7 @@ class ActiveDirectoryIntegration:
             self.logger.info(f"Found {len(results)} users matching: {query}")
             return results
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error searching users: {e}")
             return []
 
@@ -775,6 +775,6 @@ class ActiveDirectoryIntegration:
                 self.logger.info(f"No photo available for user {username}")
                 return None
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error getting photo for user {username}: {e}")
             return None

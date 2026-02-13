@@ -5,7 +5,7 @@ Continuously monitors and enforces security compliance during PBX operation
 
 import threading
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 from pbx.utils.logger import get_logger
@@ -124,7 +124,7 @@ class SecurityMonitor:
         Returns:
             Dictionary with check results
         """
-        self.last_check_time = datetime.now()
+        self.last_check_time = datetime.now(timezone.utc)
         results = {
             "timestamp": self.last_check_time.isoformat(),
             "checks": {},
@@ -233,7 +233,7 @@ class SecurityMonitor:
             # Send webhook
             self.webhook_system.trigger("security.compliance_alert", event_data)
             self.logger.info(f"Security alert sent via webhook (severity: {severity})")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send security alert via webhook: {e}")
 
     def _check_fips_compliance(self) -> dict:
@@ -283,7 +283,7 @@ class SecurityMonitor:
             result["details"]["fips_mode"] = True
             result["message"] = "FIPS 140-2 compliance verified"
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             result["status"] = "FAIL"
             result["message"] = f"FIPS compliance check failed: {str(e)}"
             result["details"]["error"] = str(e)

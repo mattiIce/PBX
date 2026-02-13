@@ -3,7 +3,7 @@ Zoom Integration
 Enables Zoom Phone, video meetings, and collaboration features
 """
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -59,7 +59,7 @@ class ZoomIntegration:
             return False
 
         # Check if token is still valid
-        if self.access_token and self.token_expiry and datetime.now() < self.token_expiry:
+        if self.access_token and self.token_expiry and datetime.now(timezone.utc) < self.token_expiry:
             return True
 
         if not all([self.account_id, self.client_id, self.client_secret]):
@@ -81,7 +81,7 @@ class ZoomIntegration:
                 data = response.json()
                 self.access_token = data.get("access_token")
                 expires_in = data.get("expires_in", 3600)
-                self.token_expiry = datetime.now() + timedelta(
+                self.token_expiry = datetime.now(timezone.utc) + timedelta(
                     seconds=expires_in - TOKEN_EXPIRY_BUFFER_SECONDS
                 )
 
@@ -93,7 +93,7 @@ class ZoomIntegration:
                 )
                 return False
 
-        except Exception as e:
+        except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Zoom authentication error: {e}")
             return False
 
@@ -169,7 +169,7 @@ class ZoomIntegration:
                 )
                 return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error creating Zoom meeting: {e}")
             return None
 
@@ -337,6 +337,6 @@ class ZoomIntegration:
                 )
                 return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error getting Zoom Phone status: {e}")
             return None

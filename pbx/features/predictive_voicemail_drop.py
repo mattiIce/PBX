@@ -3,7 +3,7 @@ Predictive Voicemail Drop
 Auto-leave message on voicemail detection
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -83,10 +83,10 @@ class VoicemailDropSystem:
                 "beep_detected": False,
                 "detection_time": 0.0,
                 "detection_method": "insufficient_data",
-                "detected_at": datetime.now().isoformat(),
+                "detected_at": datetime.now(timezone.utc).isoformat(),
             }
 
-        start_time = datetime.now()
+        start_time = datetime.now(timezone.utc)
 
         # Convert audio bytes to samples (assuming 16-bit PCM)
         try:
@@ -133,7 +133,7 @@ class VoicemailDropSystem:
         # Determine if voicemail based on threshold
         is_voicemail = confidence >= self.detection_threshold
 
-        detection_time = (datetime.now() - start_time).total_seconds()
+        detection_time = (datetime.now(timezone.utc) - start_time).total_seconds()
 
         detection_result = {
             "call_id": call_id,
@@ -142,7 +142,7 @@ class VoicemailDropSystem:
             "beep_detected": beep_detected,
             "detection_time": round(detection_time, 3),
             "detection_method": detection_method,
-            "detected_at": datetime.now().isoformat(),
+            "detected_at": datetime.now(timezone.utc).isoformat(),
         }
 
         self.logger.info(
@@ -256,7 +256,7 @@ class VoicemailDropSystem:
             "message_id": message_id,
             "message_name": message["name"],
             "duration": message["duration"],
-            "dropped_at": datetime.now().isoformat(),
+            "dropped_at": datetime.now(timezone.utc).isoformat(),
         }
 
     def add_message(
@@ -279,7 +279,7 @@ class VoicemailDropSystem:
             "name": name,
             "audio_path": audio_path,
             "duration": duration or 0.0,
-            "created_at": datetime.now(),
+            "created_at": datetime.now(timezone.utc),
             "use_count": 0,
         }
 

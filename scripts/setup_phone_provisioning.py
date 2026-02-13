@@ -109,7 +109,7 @@ class PhoneProvisioningSetup:
         except FileNotFoundError:
             print(f"❌ Configuration file not found: {self.config_path}")
             return False
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             print(f"❌ Error loading configuration: {e}")
             return False
 
@@ -119,7 +119,7 @@ class PhoneProvisioningSetup:
             with open(self.config_path, "w") as f:
                 yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
             return True
-        except Exception as e:
+        except OSError as e:
             print(f"❌ Error saving configuration: {e}")
             return False
 
@@ -132,7 +132,7 @@ class PhoneProvisioningSetup:
             response = requests.get(f"{self.api_url}/api/status", timeout=2)
             self.pbx_running = response.status_code == 200
             return self.pbx_running
-        except Exception:
+        except (KeyError, TypeError, ValueError, requests.RequestException):
             self.pbx_running = False
             return False
 
@@ -155,7 +155,7 @@ class PhoneProvisioningSetup:
             response = requests.get(f"{self.api_url}/api/provisioning/vendors", timeout=2)
             if response.status_code == 200:
                 return response.json()
-        except Exception:
+        except (KeyError, TypeError, ValueError, requests.RequestException):
             pass
 
         return {"vendors": [], "models": {}}
@@ -185,7 +185,7 @@ class PhoneProvisioningSetup:
                 timeout=5,
             )
             return response.status_code == 200
-        except Exception as e:
+        except requests.RequestException as e:
             print(f"❌ Error registering device: {e}")
             return False
 
@@ -621,7 +621,7 @@ Examples:
     except KeyboardInterrupt:
         print("\n\n❌ Setup cancelled by user")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"\n\n❌ Error: {e}")
         import traceback
 

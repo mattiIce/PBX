@@ -32,10 +32,11 @@ import os
 import sys
 
 # Add parent directory to path
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 class Colors:
@@ -291,7 +292,7 @@ class ADIntegrationTester:
                 )
                 return True, users
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.print_test("Search for users", "FAIL", f"Error: {e}")
             return False, []
 

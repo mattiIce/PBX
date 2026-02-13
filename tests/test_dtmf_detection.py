@@ -52,7 +52,7 @@ class TestDTMFDetection:
 
         # Detector should NOT detect any tone
         digit = self.detector.detect_tone(samples)
-        assert digit, "Silence should not be detected as DTMF tone" is None
+        assert digit is None, "Silence should not be detected as DTMF tone"
 
     def test_no_detection_on_white_noise(self) -> None:
         """Test that white noise does not trigger false DTMF detection"""
@@ -63,7 +63,7 @@ class TestDTMFDetection:
 
         # Detector should NOT detect any tone
         digit = self.detector.detect_tone(samples)
-        assert digit, "White noise should not be detected as DTMF tone" is None
+        assert digit is None, "White noise should not be detected as DTMF tone"
 
     def test_no_detection_on_single_frequency(self) -> None:
         """Test that a single frequency tone is not detected as DTMF"""
@@ -77,7 +77,7 @@ class TestDTMFDetection:
 
         # Detector should NOT detect a tone (needs both low and high freq)
         digit = self.detector.detect_tone(samples)
-        assert digit, "Single frequency should not be detected as DTMF tone" is None
+        assert digit is None, "Single frequency should not be detected as DTMF tone"
 
     def test_no_detection_on_weak_tone(self) -> None:
         """Test that very weak tones are not detected"""
@@ -97,7 +97,7 @@ class TestDTMFDetection:
         # Detector should NOT detect such a weak tone (below 0.01 energy
         # threshold)
         digit = self.detector.detect_tone(samples)
-        assert digit, "Very weak tones (below energy threshold) should not be detected" is None
+        assert digit is None, "Very weak tones (below energy threshold) should not be detected"
 
     def test_detect_sequence(self) -> None:
         """Test detection of a sequence of DTMF tones"""

@@ -135,7 +135,7 @@ def handle_login() -> Response:
             }
         )
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Login error: {e}")
         logger.error(traceback.format_exc())
         return send_json({"error": "Authentication failed"}, 500)

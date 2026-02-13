@@ -6,10 +6,11 @@ Provides password management, rate limiting, and security validation
 import re
 import secrets
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class PasswordPolicy:
@@ -341,7 +342,7 @@ class SecurityAuditor:
         if not self.enabled:
             return
 
-        timestamp = datetime.now().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         log_entry = {
             "timestamp": timestamp,
             "event_type": event_type,
@@ -620,7 +621,7 @@ class ThreatDetector:
             self.database.execute(blocked_ips_table)
             self.database.execute(threat_events_table)
             self.logger.info("Threat detection database schema initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to initialize threat detection schema: {e}")
 
     def _get_active_blocks_query(self):
@@ -666,7 +667,7 @@ class ThreatDetector:
                 self.logger.info(
                     f"Loaded {len(results)} blocked IPs from database"
                 )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to load blocked IPs from database: {e}")
 
     def is_ip_blocked(self, ip_address: str) -> tuple[bool, str | None]:
@@ -963,7 +964,7 @@ class ThreatDetector:
             """
             )
             self.database.execute(insert_query, (ip_address, event_type, severity, details))
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to log threat event: {e}")
 
     def get_threat_summary(self, hours: int = 24) -> dict:
@@ -1033,7 +1034,7 @@ class ThreatDetector:
 
             return summary
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get threat summary: {e}")
             return summary
 

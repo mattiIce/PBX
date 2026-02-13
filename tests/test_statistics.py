@@ -6,13 +6,14 @@ import json
 import os
 import shutil
 import tempfile
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Any
 import pytest
 
 
 from pbx.features.cdr import CallDisposition, CDRSystem
 from pbx.features.statistics import StatisticsEngine
+from pathlib import Path
 
 
 class MockPBXCore:
@@ -21,7 +22,7 @@ class MockPBXCore:
     def __init__(self) -> None:
         self.calls: list[Any] = []
         self.extensions: dict[str, Any] = {}
-        self.start_time = datetime.now() - timedelta(hours=5)
+        self.start_time = datetime.now(timezone.utc) - timedelta(hours=5)
 
 
 class TestStatisticsEngine:
@@ -39,17 +40,17 @@ class TestStatisticsEngine:
 
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
-        if os.path.exists(self.temp_dir):
+        if Path(self.temp_dir).exists():
             shutil.rmtree(self.temp_dir)
 
     def _create_sample_cdr_data(self) -> None:
         """Create sample CDR records for testing"""
-        today = datetime.now()
+        today = datetime.now(timezone.utc)
 
         # Create CDR records for the last 3 days
         for day_offset in range(3):
             date = (today - timedelta(days=day_offset)).strftime("%Y-%m-%d")
-            filename = os.path.join(self.temp_dir, f"cdr_{date}.jsonl")
+            filename = Path(self.temp_dir) / f"cdr_{date}.jsonl"
 
             with open(filename, "w") as f:
                 # Create 10 sample records per day
@@ -205,7 +206,7 @@ class TestStatisticsEngine:
             assert stats["overview"]["total_calls"] == 0
             assert len(stats["daily_trends"]) == 7
         finally:
-            if os.path.exists(temp_dir):
+            if Path(temp_dir).exists():
                 shutil.rmtree(temp_dir)
 
 
@@ -219,7 +220,7 @@ class TestCDRSystem:
 
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
-        if os.path.exists(self.temp_dir):
+        if Path(self.temp_dir).exists():
             shutil.rmtree(self.temp_dir)
 
     def test_record_lifecycle(self) -> None:

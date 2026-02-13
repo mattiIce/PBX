@@ -10,6 +10,7 @@ from datetime import datetime
 from typing import Any
 
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 try:
     import requests
@@ -95,7 +96,7 @@ class MatrixIntegration:
                 self.logger.error(f"Matrix authentication failed: {response.status_code}")
                 return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Matrix authentication error: {e}")
             return False
 
@@ -135,7 +136,7 @@ class MatrixIntegration:
                 self.logger.error(f"Matrix API error: {response.status_code} - {response.text}")
                 return None
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.logger.error(f"Matrix API request failed: {e}")
             return None
 
@@ -174,7 +175,7 @@ class MatrixIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to send Matrix message: {e}")
             return None
 
@@ -292,7 +293,7 @@ class MatrixIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to create room: {e}")
             return None
 
@@ -317,7 +318,7 @@ class MatrixIntegration:
 
             return result is not None
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.logger.error(f"Failed to invite user: {e}")
             return False
 
@@ -339,7 +340,7 @@ class MatrixIntegration:
 
         try:
 
-            if not os.path.exists(file_path):
+            if not Path(file_path).exists():
                 self.logger.error(f"File not found: {file_path}")
                 return None
 
@@ -360,7 +361,7 @@ class MatrixIntegration:
                 self.logger.error(f"File upload failed: {response.status_code}")
                 return None
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to upload file: {e}")
             return None
 
@@ -398,13 +399,13 @@ class MatrixIntegration:
             txn_id = f"pbx_{int(time.time() * 1000)}"
 
             if not filename:
-                filename = os.path.basename(file_path)
+                filename = Path(file_path).name
 
             data = {
                 "msgtype": "m.file",
                 "body": filename,
                 "url": mxc_uri,
-                "info": {"size": os.path.getsize(file_path), "mimetype": content_type},
+                "info": {"size": Path(file_path).stat().st_size, "mimetype": content_type},
             }
 
             result = self._make_request(
@@ -416,7 +417,7 @@ class MatrixIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to send file: {e}")
             return None
 
@@ -471,7 +472,7 @@ class MatrixIntegration:
 
             return []
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to get room members: {e}")
             return []
 

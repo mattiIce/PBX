@@ -79,7 +79,7 @@ def handle_add_webhook() -> Response:
                 },
             }
         )
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 

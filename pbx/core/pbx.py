@@ -9,7 +9,7 @@ import threading
 import time
 import traceback
 import uuid
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Any
 
 from pbx.api.server import PBXFlaskServer
@@ -27,6 +27,7 @@ from pbx.sip.server import SIPServer
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 from pbx.utils.logger import PBXLogger, get_logger
+import sqlite3
 
 
 class PBXCore:
@@ -55,7 +56,7 @@ class PBXCore:
         self.quiet_startup = self.config.get("logging.quiet_startup", False)
 
         # Track system start time for uptime calculation
-        self.start_time = datetime.now()
+        self.start_time = datetime.now(timezone.utc)
 
         # Initialize database backend
         self.database = DatabaseBackend(self.config)
@@ -250,7 +251,7 @@ class PBXCore:
                         )
                         self.logger.warning("=" * 70)
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Failed to auto-seed extension {number}: {e}")
 
         if seeded_count > 0:
@@ -382,7 +383,7 @@ class PBXCore:
                             self.logger.debug(
                                 f"Loaded extension {extension_number} into registry from database"
                             )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.debug(f"Error checking extension in database: {e}")
 
             # Fall back to config if not found in database or database not
@@ -444,7 +445,7 @@ class PBXCore:
                         "ip_address": addr[0],
                         "port": addr[1],
                         "user_agent": user_agent,
-                        "timestamp": datetime.now().isoformat(),
+                        "timestamp": datetime.now(timezone.utc).isoformat(),
                     },
                 )
 
@@ -602,7 +603,7 @@ class PBXCore:
             result = self.database.fetch_one(query, (extension_number,))
             if result and result.get("user_agent"):
                 return result["user_agent"]
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.debug(f"Error retrieving User-Agent for extension {extension_number}: {e}")
 
         return None
@@ -663,7 +664,7 @@ class PBXCore:
             ip = s.getsockname()[0]
             s.close()
             return ip
-        except Exception:
+        except OSError:
             return "127.0.0.1"  # Last resort fallback
 
     def handle_callee_answer(self, call_id: str, response_message: Any, callee_addr: tuple[str, int]) -> None:

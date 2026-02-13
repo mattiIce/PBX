@@ -121,7 +121,7 @@ def handle_hot_desk_login() -> tuple[Response, int]:
             ), 200
         else:
             return send_json({"error": "Login failed"}, 401), 401
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -157,7 +157,7 @@ def handle_hot_desk_logout() -> tuple[Response, int]:
             ), 200
         else:
             return send_json({"error": "device_id or extension is required"}, 400), 400
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -236,7 +236,7 @@ def handle_mfa_enroll() -> tuple[Response, int]:
             ), 200
         else:
             return send_json({"error": "MFA enrollment failed"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -262,7 +262,7 @@ def handle_mfa_verify_enrollment() -> tuple[Response, int]:
             return send_json({"success": True, "message": "MFA successfully activated"}), 200
         else:
             return send_json({"error": "Invalid code"}, 401), 401
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -288,7 +288,7 @@ def handle_mfa_verify() -> tuple[Response, int]:
             return send_json({"success": True, "message": "MFA verification successful"}), 200
         else:
             return send_json({"error": "Invalid code"}, 401), 401
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -313,7 +313,7 @@ def handle_mfa_disable() -> tuple[Response, int]:
             return send_json({"success": True, "message": "MFA disabled successfully"}), 200
         else:
             return send_json({"error": "Failed to disable MFA"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -342,7 +342,7 @@ def handle_mfa_enroll_yubikey() -> tuple[Response, int]:
             return send_json({"success": True, "message": "YubiKey enrolled successfully"}), 200
         else:
             return send_json({"error": error or "YubiKey enrollment failed"}, 400), 400
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -373,7 +373,7 @@ def handle_mfa_enroll_fido2() -> tuple[Response, int]:
             ), 200
         else:
             return send_json({"error": error or "FIDO2 enrollment failed"}, 400), 400
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -397,7 +397,7 @@ def handle_get_threat_summary() -> tuple[Response, int]:
         summary = pbx_core.threat_detector.get_threat_summary(hours)
 
         return send_json(summary), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -473,7 +473,7 @@ def handle_block_ip() -> tuple[Response, int]:
         return send_json(
             {"success": True, "message": f"IP {ip_address} blocked successfully"}
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -497,7 +497,7 @@ def handle_unblock_ip() -> tuple[Response, int]:
         return send_json(
             {"success": True, "message": f"IP {ip_address} unblocked successfully"}
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -562,7 +562,7 @@ def handle_add_dnd_rule() -> tuple[Response, int]:
         return send_json(
             {"success": True, "rule_id": rule_id, "message": "DND rule added successfully"}
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 
@@ -587,7 +587,7 @@ def handle_register_calendar_user() -> tuple[Response, int]:
         return send_json(
             {"success": True, "message": f"Calendar monitoring registered for {extension}"}
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
 

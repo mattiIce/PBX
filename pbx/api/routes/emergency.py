@@ -48,7 +48,7 @@ def handle_get_emergency_contacts() -> Response:
 
         return send_json({"contacts": contacts, "total": len(contacts)})
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting emergency contacts: {e}")
         return send_json({"error": f"Error getting emergency contacts: {str(e)}"}, 500)
 
@@ -69,7 +69,7 @@ def handle_get_emergency_history() -> Response:
 
         return send_json({"history": history, "total": len(history)})
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting emergency history: {e}")
         return send_json({"error": f"Error getting emergency history: {str(e)}"}, 500)
 
@@ -119,7 +119,7 @@ def handle_add_emergency_contact() -> Response:
             }
         )
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error adding emergency contact: {e}")
         return send_json({"error": f"Error adding emergency contact: {str(e)}"}, 500)
 
@@ -142,7 +142,7 @@ def handle_trigger_emergency_notification() -> Response:
 
         return send_json({"success": success, "message": "Emergency notification triggered"})
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error triggering emergency notification: {e}")
         return send_json(
             {"error": f"Error triggering emergency notification: {str(e)}"}, 500

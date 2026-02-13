@@ -11,6 +11,7 @@ import tempfile
 
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import WAV_FORMAT_PCM, pcm16_to_ulaw
+from pathlib import Path
 
 
 def create_test_pcm_wav(sample_rate: int = 8000, duration_samples: int = 800) -> str:
@@ -110,7 +111,7 @@ def test_pcm_to_pcmu_conversion() -> bool:
 
     finally:
         # Clean up
-        if os.path.exists(pcm_file_8k):
+        if Path(pcm_file_8k).exists():
             os.remove(pcm_file_8k)
-        if os.path.exists(pcm_file_16k):
+        if Path(pcm_file_16k).exists():
             os.remove(pcm_file_16k)

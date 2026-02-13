@@ -7,6 +7,7 @@ import re
 import yaml
 
 from pbx.utils.env_loader import get_env_loader, load_env_file
+from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,7 @@ class Config:
 
         # Load .env file if it exists
         if load_env:
-            env_file = os.path.join(os.path.dirname(config_file), ".env")
+            env_file = str(Path(config_file).parent / ".env")
             load_env_file(env_file)
             self.env_loader = get_env_loader()
 
@@ -55,7 +56,7 @@ class Config:
 
     def load(self):
         """Load configuration from YAML file and resolve environment variables"""
-        if os.path.exists(self.config_file):
+        if Path(self.config_file).exists():
             with open(self.config_file, "r") as f:
                 self.config = yaml.safe_load(f) or {}
 
@@ -123,7 +124,7 @@ class Config:
         except OSError as e:
             logger.error("Error saving config: Disk error - %s", e)
             return False
-        except Exception as e:
+        except OSError as e:
             logger.error("Error saving config: %s", e)
             return False
 
@@ -168,7 +169,7 @@ class Config:
 
             self.config["extensions"].append(new_ext)
             return self.save()
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error adding extension: %s", e)
             return False
 
@@ -209,7 +210,7 @@ class Config:
                     return self.save()
 
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating extension: %s", e)
             return False
 
@@ -237,7 +238,7 @@ class Config:
                 return self.save()
 
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error deleting extension: %s", e)
             return False
 
@@ -284,7 +285,7 @@ class Config:
                 self.config["voicemail"]["email_notifications"] = config_data["email_notifications"]
 
             return self.save()
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating email config: %s", e)
             return False
 
@@ -315,7 +316,7 @@ class Config:
                     return self.save()
 
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating voicemail PIN: %s", e)
             return False
 
@@ -338,7 +339,7 @@ class Config:
                 "relay_enabled": self.get("features.webrtc.dtmf.relay_enabled", True),
             }
             return dtmf_config
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error getting DTMF config: %s", e)
             return None
 
@@ -433,6 +434,6 @@ class Config:
                 dtmf_config["detection_threshold"] = validated
 
             return self.save()
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating DTMF config: %s", e)
             return False

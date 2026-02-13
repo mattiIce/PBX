@@ -6,7 +6,7 @@ based on destination, time of day, and carrier rates
 
 import re
 import sqlite3
-from datetime import datetime, time
+from datetime import datetime, time, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -116,7 +116,7 @@ class TimeBasedRate:
 
     def applies_now(self) -> bool:
         """Check if this time period applies now"""
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
         current_time = now.time()
         current_day = now.weekday()
 
@@ -216,7 +216,7 @@ class LeastCostRouting:
             conn.commit()
             conn.close()
             self.logger.info("LCR database tables initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing LCR database: {e}")
 
     def _load_from_database(self):
@@ -272,7 +272,7 @@ class LeastCostRouting:
             if time_rows:
                 self.logger.info(f"Loaded {len(time_rows)} time-based rates from database")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error loading LCR rates from database: {e}")
 
     def _save_rate_to_db(
@@ -311,7 +311,7 @@ class LeastCostRouting:
             conn.commit()
             conn.close()
             self.logger.debug(f"LCR rate saved to database: {trunk_id} - {pattern}")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving LCR rate to database: {e}")
 
     def _save_time_rate_to_db(
@@ -345,7 +345,7 @@ class LeastCostRouting:
             conn.commit()
             conn.close()
             self.logger.debug(f"Time-based rate saved to database: {name}")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving time-based rate to database: {e}")
 
     def _delete_all_rates_from_db(self):
@@ -357,7 +357,7 @@ class LeastCostRouting:
             conn.commit()
             conn.close()
             self.logger.info("All LCR rates deleted from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error deleting LCR rates from database: {e}")
 
     def _delete_all_time_rates_from_db(self):
@@ -369,7 +369,7 @@ class LeastCostRouting:
             conn.commit()
             conn.close()
             self.logger.info("All time-based rates deleted from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error deleting time-based rates from database: {e}")
 
     def add_rate(
@@ -539,7 +539,7 @@ class LeastCostRouting:
 
         # Record decision
         decision = {
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "number": dialed_number,
             "selected_trunk": selected_trunk,
             "estimated_cost": available_rates[0][1],

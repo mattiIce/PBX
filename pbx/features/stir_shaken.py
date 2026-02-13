@@ -118,7 +118,7 @@ class STIRSHAKENManager:
                     key_data, password=None, backend=default_backend()
                 )
             self.logger.info(f"Loaded private key from {key_path}")
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to load private key: {e}")
             self.enabled = False
 
@@ -129,7 +129,7 @@ class STIRSHAKENManager:
                 cert_data = f.read()
                 self.certificate = x509.load_pem_x509_certificate(cert_data, default_backend())
             self.logger.info(f"Loaded certificate from {cert_path}")
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to load certificate: {e}")
             self.enabled = False
 
@@ -146,7 +146,7 @@ class STIRSHAKENManager:
                         cert = x509.load_pem_x509_certificate(cert_pem.strip(), default_backend())
                         self.ca_bundle.append(cert)
             self.logger.info(f"Loaded CA bundle with {len(self.ca_bundle)} certificates")
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to load CA bundle: {e}")
 
     def create_passport(
@@ -289,10 +289,10 @@ class STIRSHAKENManager:
                 self.logger.debug(f"Verified PASSporT: {payload}")
                 return True, payload, "Signature valid"
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 return False, payload, f"Signature verification failed: {e}"
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"PASSporT verification error: {e}")
             return False, None, str(e)
 
@@ -360,7 +360,7 @@ class STIRSHAKENManager:
                 "ppt": params.get("ppt"),
             }
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to parse Identity header: {e}")
             return None
 

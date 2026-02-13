@@ -3,9 +3,10 @@ Conversational AI Assistant
 Auto-responses and smart call handling using AI
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # NLTK for natural language processing
 try:
@@ -32,7 +33,7 @@ class ConversationContext:
         """
         self.call_id = call_id
         self.caller_id = caller_id
-        self.started_at = datetime.now()
+        self.started_at = datetime.now(timezone.utc)
         self.messages = []
         self.intent = None
         self.entities = {}
@@ -40,7 +41,7 @@ class ConversationContext:
     def add_message(self, role: str, content: str):
         """Add a message to the conversation"""
         self.messages.append(
-            {"role": role, "content": content, "timestamp": datetime.now().isoformat()}
+            {"role": role, "content": content, "timestamp": datetime.now(timezone.utc).isoformat()}
         )
 
 
@@ -97,7 +98,7 @@ class ConversationalAI:
                 self.db = ConversationalAIDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Conversational AI database layer initialized")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Conversational AI assistant initialized")
@@ -202,8 +203,8 @@ class ConversationalAI:
         if self.db and call_id in self.conversation_ids:
             conversation_id = self.conversation_ids[call_id]
             # Save messages
-            self.db.save_message(conversation_id, "user", user_input, datetime.now())
-            self.db.save_message(conversation_id, "assistant", response["response"], datetime.now())
+            self.db.save_message(conversation_id, "user", user_input, datetime.now(timezone.utc))
+            self.db.save_message(conversation_id, "assistant", response["response"], datetime.now(timezone.utc))
             # Save intent
             if response["intent"] and response["intent"] != "general_inquiry":
                 confidence = response.get("confidence", 0.9)
@@ -212,7 +213,7 @@ class ConversationalAI:
                     response["intent"],
                     confidence,
                     response["entities"],
-                    datetime.now(),
+                    datetime.now(timezone.utc),
                 )
 
         # Track intents
@@ -446,7 +447,7 @@ class ConversationalAI:
                 for keywords, intent in nltk_intent_patterns:
                     if any(keyword in lemmatized for keyword in keywords):
                         return intent
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.debug(f"NLTK intent detection failed: {e}, falling back to patterns")
 
         # Standard intent patterns with priority (most specific first)
@@ -599,7 +600,7 @@ class ConversationalAI:
         """
         if call_id in self.active_conversations:
             context = self.active_conversations[call_id]
-            duration = (datetime.now() - context.started_at).total_seconds()
+            duration = (datetime.now(timezone.utc) - context.started_at).total_seconds()
 
             # Save to database
             if self.db:

@@ -7,7 +7,7 @@ import re
 import socket
 import time
 from collections import defaultdict
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -374,7 +374,7 @@ class SessionBorderController:
             "rtcp_port": rtcp_port,
             "relay_ip": relay_ip,
             "codec": codec,
-            "allocated_at": datetime.now().isoformat(),
+            "allocated_at": datetime.now(timezone.utc).isoformat(),
         }
 
         self.relay_sessions[call_id] = relay_info

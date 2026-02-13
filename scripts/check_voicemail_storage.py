@@ -9,10 +9,12 @@ voicemails are being saved to the database or file system only.
 import os
 import sys
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+import sqlite3
+from pathlib import Path
 
 
 def main():
@@ -70,7 +72,7 @@ def main():
             else:
                 print("\n⚠ Note: voicemail_messages table doesn't exist yet")
                 print("  It will be created automatically when PBX starts")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             print(f"\n⚠ Could not check voicemail count: {e}")
 
         db.disconnect()

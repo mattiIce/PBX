@@ -8,10 +8,11 @@ Can be run as a cron job or service health check
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
+from pathlib import Path
 
 # Add parent directory to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 def check_kernel_fips():
@@ -44,7 +45,7 @@ def check_cryptography():
         backend = default_backend()
         backend_str = str(backend)
         return "FIPS: True" in backend_str
-    except Exception:
+    except (KeyError, TypeError, ValueError):
         return False
 
 
@@ -57,7 +58,7 @@ def check_pbx_config():
         fips_mode = config.get("security.fips_mode", False)
         enforce_fips = config.get("security.enforce_fips", False)
         return fips_mode, enforce_fips
-    except Exception:
+    except (KeyError, TypeError, ValueError):
         return False, False
 
 
@@ -80,7 +81,7 @@ def check_encryption_operations():
 
 def generate_health_report():
     """Generate health check report"""
-    timestamp = datetime.now().isoformat()
+    timestamp = datetime.now(timezone.utc).isoformat()
 
     # Perform all checks
     kernel_fips = check_kernel_fips()

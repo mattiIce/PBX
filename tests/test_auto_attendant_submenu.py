@@ -9,6 +9,7 @@ from typing import Any
 
 
 from pbx.features.auto_attendant import AAState, AutoAttendant, DestinationType
+from pathlib import Path
 
 
 class TestAutoAttendantSubmenu:
@@ -18,7 +19,7 @@ class TestAutoAttendantSubmenu:
         """Set up test fixtures"""
         # Create a temporary directory for test database
         self.test_dir = tempfile.mkdtemp()
-        self.db_path = os.path.join(self.test_dir, "test.db")
+        self.db_path = Path(self.test_dir) / "test.db"
 
         # Create a mock config
         self.config_data = {
@@ -28,7 +29,7 @@ class TestAutoAttendantSubmenu:
                 "timeout": 10,
                 "max_retries": 3,
                 "operator_extension": "1001",
-                "audio_path": os.path.join(self.test_dir, "audio"),
+                "audio_path": Path(self.test_dir) / "audio",
             },
             "database": {"path": self.db_path},
         }
@@ -42,7 +43,7 @@ class TestAutoAttendantSubmenu:
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
         # Remove temporary directory
-        if os.path.exists(self.test_dir):
+        if Path(self.test_dir).exists():
             shutil.rmtree(self.test_dir)
 
     def test_database_initialization(self) -> None:

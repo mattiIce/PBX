@@ -3,7 +3,7 @@ Advanced Call Features
 Call whisper, barge-in, and supervisor monitoring
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
 
@@ -68,7 +68,7 @@ class AdvancedCallFeatures:
             "mode": "whisper",
             "supervisor_id": supervisor_id,
             "agent_extension": agent_extension,
-            "started_at": datetime.now(),
+            "started_at": datetime.now(timezone.utc),
             "audio_mode": "supervisor_to_agent_only",
         }
 
@@ -100,7 +100,7 @@ class AdvancedCallFeatures:
             "mode": "barge",
             "supervisor_id": supervisor_id,
             "agent_extension": agent_extension,
-            "started_at": datetime.now(),
+            "started_at": datetime.now(timezone.utc),
             "audio_mode": "three_way_conference",
         }
 
@@ -132,7 +132,7 @@ class AdvancedCallFeatures:
             "mode": "monitor",
             "supervisor_id": supervisor_id,
             "agent_extension": agent_extension,
-            "started_at": datetime.now(),
+            "started_at": datetime.now(timezone.utc),
             "audio_mode": "supervisor_listen_only",
         }
 
@@ -166,7 +166,7 @@ class AdvancedCallFeatures:
                         "mode": info["mode"],
                         "supervisor_id": info["supervisor_id"],
                         "agent_extension": info["agent_extension"],
-                        "duration": (datetime.now() - info["started_at"]).total_seconds(),
+                        "duration": (datetime.now(timezone.utc) - info["started_at"]).total_seconds(),
                     }
                 )
         return calls

@@ -3,9 +3,11 @@ Voicemail system
 """
 
 import os
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
+import sqlite3
+from pathlib import Path
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -69,7 +71,7 @@ class VoicemailBox:
             transcription_service: VoicemailTranscriptionService object (optional)
         """
         self.extension_number = extension_number
-        self.storage_path = os.path.join(storage_path, extension_number)
+        self.storage_path = Path(storage_path) / extension_number
         self.messages = []
         self.logger = get_logger()
         self.config = config
@@ -79,9 +81,7 @@ class VoicemailBox:
         self.pin = None  # Voicemail PIN (plaintext, for config file PINs)
         self.pin_hash = None  # Voicemail PIN hash (for database PINs)
         self.pin_salt = None  # Voicemail PIN salt (for database PINs)
-        self.greeting_path = os.path.join(
-            self.storage_path, GREETING_FILENAME
-        )  # Custom greeting file
+        self.greeting_path = Path(self.storage_path) / GREETING_FILENAME  # Custom greeting file
 
         # Load PIN from database first (if available), then fall back to config
         pin_loaded = False
@@ -99,7 +99,7 @@ class VoicemailBox:
                         self.logger.debug(
                             f"Loaded voicemail PIN hash from database for extension {extension_number}"
                         )
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(
                     f"Error loading voicemail PIN from database for extension {extension_number}: {e}"
                 )
@@ -138,11 +138,11 @@ class VoicemailBox:
         Returns:
             Message ID
         """
-        timestamp = datetime.now()
+        timestamp = datetime.now(timezone.utc)
         timestamp_str = timestamp.strftime("%Y%m%d_%H%M%S")
         message_id = f"{caller_id}_{timestamp_str}"
 
-        file_path = os.path.join(self.storage_path, f"{message_id}.wav")
+        file_path = Path(self.storage_path) / f"{message_id}.wav"
 
         with open(file_path, "wb") as f:
             f.write(audio_data)
@@ -204,7 +204,7 @@ class VoicemailBox:
                         f"✗ Failed to save voicemail metadata to database for extension {self.extension_number}"
                     )
                     self.logger.warning(f"  Message ID: {message_id}")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.error(f"✗ Error saving voicemail to database: {e}")
                 self.logger.error(f"  Message ID: {message_id}")
                 self.logger.error(f"  Extension: {self.extension_number}")
@@ -260,7 +260,7 @@ class VoicemailBox:
                             ),
                         )
                         self.logger.info("✓ Transcription saved to database")
-                    except Exception as e:
+                    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
                         self.logger.error(f"✗ Error saving transcription to database: {e}")
             else:
                 self.logger.warning(
@@ -292,7 +292,7 @@ class VoicemailBox:
                         self.logger.debug(
                             f"Found email address from database for extension {self.extension_number}"
                         )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.error(f"Error getting extension from database: {e}")
 
             # Fallback to config file if not found in database
@@ -376,7 +376,7 @@ class VoicemailBox:
                         self.logger.info(
                             f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database"
                         )
-                    except Exception as e:
+                    except sqlite3.Error as e:
                         self.logger.error(f"✗ Error updating voicemail in database: {e}")
                 else:
                     self.logger.warning(
@@ -400,7 +400,7 @@ class VoicemailBox:
                 self.logger.info(f"Deleting voicemail {message_id}...")
 
                 # Delete file
-                if os.path.exists(msg["file_path"]):
+                if Path(msg["file_path"]).exists():
                     os.remove(msg["file_path"])
                     self.logger.info(
                         f"  ✓ Deleted audio file: {msg['file_path']}"
@@ -421,7 +421,7 @@ class VoicemailBox:
                         self.logger.info(
                             f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database"
                         )
-                    except Exception as e:
+                    except sqlite3.Error as e:
                         self.logger.error(f"  ✗ Error deleting voicemail from database: {e}")
                 else:
                     self.logger.warning("  Database not available - only file deleted")
@@ -481,12 +481,12 @@ class VoicemailBox:
                                     self.logger.warning(
                                         f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time"
                                     )
-                                    timestamp = datetime.now()
+                                    timestamp = datetime.now(timezone.utc)
                         except ValueError:
                             self.logger.warning(
                                 f"Invalid timestamp format for voicemail {row['message_id']}, using current time"
                             )
-                            timestamp = datetime.now()
+                            timestamp = datetime.now(timezone.utc)
 
                     message = {
                         "id": row["message_id"],
@@ -519,7 +519,7 @@ class VoicemailBox:
                         f"  Total: {len(self.messages)} messages ({unread_count} unread)"
                     )
                 return
-            except Exception as e:
+            except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
                 self.logger.error(f"✗ Error loading voicemail messages from database: {e}")
                 self.logger.warning("  Falling back to loading from file system")
                 # Fall back to loading from disk
@@ -527,12 +527,12 @@ class VoicemailBox:
             self.logger.warning("Database not available - loading voicemails from file system only")
 
         # Load from disk if database is not available or failed
-        if not os.path.exists(self.storage_path):
+        if not Path(self.storage_path).exists():
             return
 
         for filename in os.listdir(self.storage_path):
             if filename.endswith(".wav"):
-                file_path = os.path.join(self.storage_path, filename)
+                file_path = Path(self.storage_path) / filename
                 # Parse message info from filename: {caller_id}_{timestamp}.wav
                 name_without_ext = filename[:-4]
                 parts = name_without_ext.split("_")
@@ -597,7 +597,7 @@ class VoicemailBox:
             try:
                 enc = get_encryption()
                 return enc.verify_password(str(pin), self.pin_hash, self.pin_salt)
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(
                     f"Error verifying voicemail PIN hash for extension {self.extension_number}: {e}"
                 )
@@ -617,7 +617,7 @@ class VoicemailBox:
         Returns:
             True if custom greeting exists
         """
-        exists = os.path.exists(self.greeting_path)
+        exists = Path(self.greeting_path).exists()
         self.logger.debug(
             f"Checking custom greeting for extension {self.extension_number}: "
             f"{'exists' if exists else 'not found'} at {self.greeting_path}"
@@ -654,14 +654,14 @@ class VoicemailBox:
             )
 
             # Verify the file was written successfully
-            if os.path.exists(self.greeting_path):
-                file_size = os.path.getsize(self.greeting_path)
+            if Path(self.greeting_path).exists():
+                file_size = Path(self.greeting_path).stat().st_size
                 self.logger.info(f"Verified greeting file exists on disk ({file_size} bytes)")
                 return True
             else:
                 self.logger.error(f"Greeting file was not created at {self.greeting_path}")
                 return False
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(
                 f"Error saving greeting for extension {self.extension_number}: {e}"
             )
@@ -690,14 +690,14 @@ class VoicemailBox:
             True if greeting was deleted
         """
         try:
-            if os.path.exists(self.greeting_path):
+            if Path(self.greeting_path).exists():
                 os.remove(self.greeting_path)
                 self.logger.info(
                     f"Deleted custom greeting for extension {self.extension_number}"
                 )
                 return True
             return False
-        except Exception as e:
+        except OSError as e:
             self.logger.error(
                 f"Error deleting greeting for extension {self.extension_number}: {e}"
             )

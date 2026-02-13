@@ -9,6 +9,7 @@ from typing import Any
 
 
 from pbx.features.auto_attendant import AAState, AutoAttendant, DestinationType
+from pathlib import Path
 
 
 class TestAutoAttendant:
@@ -46,7 +47,7 @@ class TestAutoAttendant:
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
         # Remove temporary audio directory
-        if os.path.exists(self.test_audio_dir):
+        if Path(self.test_audio_dir).exists():
             shutil.rmtree(self.test_audio_dir)
 
     def test_initialization(self) -> None:
@@ -216,7 +217,7 @@ class TestAudioPromptGeneration:
 
     def teardown_method(self) -> None:
         """Clean up test fixtures"""
-        if os.path.exists(self.test_dir):
+        if Path(self.test_dir).exists():
             shutil.rmtree(self.test_dir)
 
     def test_generate_prompts(self) -> None:
@@ -236,10 +237,10 @@ class TestAudioPromptGeneration:
         ]
 
         for filename in expected_files:
-            file_path = os.path.join(self.test_dir, filename)
-            assert os.path.exists(file_path), f"File {filename} should exist"
+            file_path = Path(self.test_dir) / filename
+            assert Path(file_path).exists(), f"File {filename} should exist"
             # Check that file is not empty
-            file_size = os.path.getsize(file_path)
+            file_size = Path(file_path).stat().st_size
             assert file_size > 0, f"File {filename} should not be empty"
             # Check WAV header (should start with 'RIFF')
             with open(file_path, "rb") as f:

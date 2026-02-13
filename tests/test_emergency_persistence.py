@@ -10,6 +10,7 @@ import tempfile
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_emergency_contact_persistence_across_restarts() -> None:
@@ -17,7 +18,7 @@ def test_emergency_contact_persistence_across_restarts() -> None:
 
     # Create a temporary directory for test database
     temp_dir = tempfile.mkdtemp()
-    db_path = os.path.join(temp_dir, "test_persistence.db")
+    db_path = Path(temp_dir) / "test_persistence.db"
 
     try:
         # ========================================
@@ -190,5 +191,5 @@ def test_emergency_contact_persistence_across_restarts() -> None:
 
     finally:
         # Clean up
-        if os.path.exists(temp_dir):
+        if Path(temp_dir).exists():
             shutil.rmtree(temp_dir)

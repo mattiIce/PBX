@@ -11,6 +11,7 @@ import tempfile
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
+from pathlib import Path
 
 
 def test_extensions_columns_migration() -> None:
@@ -88,7 +89,7 @@ def test_extensions_columns_migration() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -129,7 +130,7 @@ def test_extensions_columns_already_exist() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)
 
 
@@ -202,5 +203,5 @@ def test_insert_with_voicemail_pin() -> None:
 
     finally:
         # Cleanup
-        if os.path.exists(temp_db.name):
+        if Path(temp_db.name).exists():
             os.unlink(temp_db.name)

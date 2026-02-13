@@ -13,6 +13,7 @@ import time
 import traceback
 
 from pbx.features.webhooks import WebhookEvent
+from pathlib import Path
 
 
 class CallRouter:
@@ -284,7 +285,7 @@ class CallRouter:
                         phones = pbx.registered_phones_db.get_by_extension(from_ext)
                         if phones and len(phones) > 0 and phones[0].get("mac_address"):
                             mac_address = phones[0]["mac_address"]
-                    except Exception as e:
+                    except (KeyError, TypeError, ValueError) as e:
                         pbx.logger.debug(f"Could not retrieve MAC for extension {from_ext}: {e}")
 
                 # Also check if MAC was sent in the original INVITE
@@ -518,8 +519,8 @@ class CallRouter:
                             f"Using custom greeting for extension {call.to_extension}: {custom_greeting_path}"
                         )
                         # Verify file exists and is readable
-                        if os.path.exists(custom_greeting_path):
-                            file_size = os.path.getsize(custom_greeting_path)
+                        if Path(custom_greeting_path).exists():
+                            file_size = Path(custom_greeting_path).stat().st_size
                             pbx.logger.info(f"Custom greeting file exists ({file_size} bytes)")
                         else:
                             pbx.logger.warning(
@@ -558,7 +559,7 @@ class CallRouter:
                     pbx.logger.warning(
                         f"Failed to start RTP player for greeting on call {call_id}"
                     )
-            except Exception as e:
+            except OSError as e:
                 pbx.logger.error(f"Error playing voicemail greeting: {e}")
 
             # Start RTP recorder on the allocated port

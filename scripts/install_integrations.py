@@ -538,7 +538,7 @@ class IntegrationInstaller:
                     cleanup_errors = []
                     for temp_file in [mysql_config_path, mysql_sql_path]:
                         try:
-                            if temp_file and os.path.exists(temp_file):
+                            if temp_file and Path(temp_file).exists():
                                 os.remove(temp_file)
                         except OSError as e:
                             cleanup_errors.append(f"{temp_file}: {e}")

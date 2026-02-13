@@ -107,7 +107,7 @@ def test_admin_static_files() -> bool:
 
         result = True
 
-    except Exception as e:
+    except (OSError, ValueError) as e:
         import traceback
 
         traceback.print_exc()

@@ -8,7 +8,7 @@ import os
 import shutil
 import tempfile
 import zipfile
-from datetime import datetime
+from datetime import datetime, timezone
 
 from flask import Blueprint, Response, jsonify, request, current_app
 
@@ -22,6 +22,7 @@ from pbx.api.utils import (
     DateTimeEncoder,
 )
 from pbx.utils.logger import get_logger
+from pathlib import Path
 
 logger = get_logger()
 
@@ -97,7 +98,7 @@ def handle_get_voicemail(subpath: str) -> Response:
                 )
             else:
                 # Default: Serve audio file for playback in admin panel
-                if os.path.exists(message["file_path"]):
+                if Path(message["file_path"]).exists():
                     with open(message["file_path"], "rb") as f:
                         audio_data = f.read()
                     response = current_app.response_class(
@@ -108,7 +109,7 @@ def handle_get_voicemail(subpath: str) -> Response:
                     return response
                 else:
                     return send_json({"error": "Audio file not found"}, 404)
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -151,7 +152,7 @@ def handle_update_voicemail(subpath: str) -> Response:
             return send_json({"success": True, "message": "Message marked as read"})
         else:
             return send_json({"error": "Invalid operation"}, 400)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -283,7 +284,7 @@ def _handle_get_voicemail_box_details(subpath: str) -> Response:
             )
 
         return send_json(details)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -305,7 +306,7 @@ def _handle_get_voicemail_greeting(subpath: str) -> Response:
         mailbox = vm_system.get_mailbox(extension)
         greeting_path = mailbox.get_greeting_path()
 
-        if not greeting_path or not os.path.exists(greeting_path):
+        if not greeting_path or not Path(greeting_path).exists():
             return send_json({"error": "No custom greeting found"}, 404)
 
         # Serve greeting file
@@ -321,7 +322,7 @@ def _handle_get_voicemail_greeting(subpath: str) -> Response:
         response.headers["Content-Length"] = str(len(greeting_data))
         return response
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Error getting voicemail greeting: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -349,8 +350,8 @@ def handle_export_voicemail_box(subpath: str) -> Response:
 
         # Create temporary directory for ZIP creation
         temp_dir = tempfile.mkdtemp()
-        zip_filename = f"voicemail_{extension}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
-        zip_path = os.path.join(temp_dir, zip_filename)
+        zip_filename = f"voicemail_{extension}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.zip"
+        zip_path = Path(temp_dir) / zip_filename
 
         try:
             with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zipf:
@@ -358,7 +359,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
                 manifest_lines = ["Voicemail Export Manifest\n"]
                 manifest_lines.append(f"Extension: {extension}\n")
                 manifest_lines.append(
-                    f"Export Date: {datetime.now().isoformat()}\n"
+                    f"Export Date: {datetime.now(timezone.utc).isoformat()}\n"
                 )
                 manifest_lines.append(
                     f"Total Messages: {len(messages)}\n\n"
@@ -368,8 +369,8 @@ def handle_export_voicemail_box(subpath: str) -> Response:
 
                 for msg in messages:
                     # Add audio file to ZIP
-                    if os.path.exists(msg["file_path"]):
-                        arcname = os.path.basename(msg["file_path"])
+                    if Path(msg["file_path"]).exists():
+                        arcname = Path(msg["file_path"]).name
                         zipf.write(msg["file_path"], arcname)
 
                         # Add to manifest
@@ -404,7 +405,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
             # Clean up temporary directory
             shutil.rmtree(temp_dir, ignore_errors=True)
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Error exporting voicemail box: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -476,7 +477,7 @@ def handle_clear_voicemail_box(subpath: str) -> Response:
                 "deleted_count": deleted_count,
             }
         )
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 

@@ -107,7 +107,7 @@ class OutlookIntegration:
                 self.logger.error(f"Authentication failed: {error} - {error_desc}")
                 return False
 
-        except Exception as e:
+        except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Error authenticating with Microsoft Graph: {e}")
             return False
 
@@ -133,9 +133,9 @@ class OutlookIntegration:
 
         # Default to today's events if not specified
         if not start_time:
-            start_time = datetime.now().replace(hour=0, minute=0, second=0).isoformat() + "Z"
+            start_time = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0).isoformat() + "Z"
         if not end_time:
-            end_time = (datetime.now() + timedelta(days=1)).replace(
+            end_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
                 hour=0, minute=0, second=0
             ).isoformat() + "Z"
 
@@ -183,7 +183,7 @@ class OutlookIntegration:
                 )
                 return []
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error fetching calendar events: {e}")
             return []
 
@@ -287,7 +287,7 @@ class OutlookIntegration:
                 )
                 return []
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error syncing contacts: {e}")
             return []
 
@@ -362,7 +362,7 @@ class OutlookIntegration:
                 )
                 return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error logging call to calendar: {e}")
             return False
 
@@ -407,7 +407,7 @@ class OutlookIntegration:
                 )
                 return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error getting OOO status: {e}")
             return None
 

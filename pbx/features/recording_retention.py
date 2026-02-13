@@ -3,7 +3,7 @@ Recording Retention Policies
 Automated management of call recording retention and cleanup
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
@@ -69,7 +69,7 @@ class RecordingRetentionManager:
             return ""
 
         policy_id = policy.get("name", f"policy_{len(self.retention_policies)}")
-        self.retention_policies[policy_id] = {**policy, "created_at": datetime.now()}
+        self.retention_policies[policy_id] = {**policy, "created_at": datetime.now(timezone.utc)}
 
         self.logger.info(f"Added retention policy: {policy_id} ({policy['retention_days']} days)")
         return policy_id
@@ -158,13 +158,13 @@ class RecordingRetentionManager:
 
         summary = {"total": 0, "to_keep": 0, "to_delete": 0, "to_archive": 0, "by_age": {}}
 
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         for recording_file in recording_dir.glob("**/*.wav"):
             summary["total"] += 1
 
             # Get file age
-            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime)
+            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=timezone.utc)
             age_days = (now - file_mtime).days
 
             # Categorize by age
@@ -203,11 +203,11 @@ class RecordingRetentionManager:
 
         deleted_files = []
         deleted_size = 0
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         for recording_file in recording_dir.glob("**/*.wav"):
             # Get file age
-            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime)
+            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=timezone.utc)
             age_days = (now - file_mtime).days
 
             # Get retention period
@@ -232,7 +232,7 @@ class RecordingRetentionManager:
                         self.logger.error(
                             f"File not found (already deleted?) {recording_file}: {e}"
                         )
-                    except Exception as e:
+                    except OSError as e:
                         self.logger.error(f"Unexpected error deleting {recording_file}: {e}")
 
         if not dry_run:
@@ -277,10 +277,10 @@ class RecordingRetentionManager:
 
         archived_files = []
         archived_size = 0
-        now = datetime.now()
+        now = datetime.now(timezone.utc)
 
         for recording_file in recording_dir.glob("**/*.wav"):
-            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime)
+            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=timezone.utc)
             file_age = (now - file_mtime).days
 
             if file_age > age_days:
@@ -294,7 +294,7 @@ class RecordingRetentionManager:
                     archived_files.append(str(recording_file))
                     archived_size += file_size
                     self.archived_count += 1
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.error(f"Error archiving {recording_file}: {e}")
 
         self.logger.info(f"Archived {len(archived_files)} recordings to {archive_path}")

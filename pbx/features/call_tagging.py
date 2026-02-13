@@ -3,7 +3,7 @@ Call Tagging & Categorization
 AI-powered call classification and tagging
 """
 
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -58,7 +58,7 @@ class CallTag:
         self.tag = tag
         self.source = source
         self.confidence = confidence
-        self.created_at = datetime.now()
+        self.created_at = datetime.now(timezone.utc)
 
 
 class CallTagging:
@@ -423,7 +423,7 @@ class CallTagging:
 
             self.logger.debug(f"spaCy classification added {len(results)} tags")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"spaCy classification failed: {e}")
 
         return results
@@ -456,7 +456,7 @@ class CallTagging:
             self.logger.debug(f"ML classification: {results[:3]}")
             return results[:5]  # Return top 5
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"ML classification failed: {e}, falling back to rule-based")
             return []
 

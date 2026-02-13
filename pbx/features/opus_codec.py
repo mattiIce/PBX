@@ -196,7 +196,7 @@ class OpusCodec:
                 f"Opus encoder created: {self.sample_rate}Hz, {self.bitrate}bps"
             )
             return self.encoder
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create Opus encoder: {e}")
             return None
 
@@ -252,7 +252,7 @@ class OpusCodec:
             # Encode the frame
             encoded = self.encoder.encode(pcm_data, frame_samples)
             return encoded
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Opus encoding error: {e}")
             return None
 
@@ -281,7 +281,7 @@ class OpusCodec:
             # Decode the packet
             decoded = self.decoder.decode(opus_data, frame_size)
             return decoded
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Opus decoding error: {e}")
             return None
 
@@ -307,7 +307,7 @@ class OpusCodec:
             # Pass None as the packet to trigger PLC
             concealment = self.decoder.decode(None, frame_size, decode_fec=False)
             return concealment
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Opus PLC error: {e}")
             return None
 
@@ -335,7 +335,7 @@ class OpusCodec:
             # Decode FEC from the next packet
             fec_audio = self.decoder.decode(opus_data, frame_size, decode_fec=True)
             return fec_audio
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Opus FEC decoding error: {e}")
             return None
 

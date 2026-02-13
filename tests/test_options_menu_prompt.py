@@ -9,18 +9,19 @@ import os
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
+from pathlib import Path
 
 
 def test_options_menu_prompt_file_exists() -> None:
     """Test that options_menu.wav file exists"""
 
-    options_menu_path = os.path.join("voicemail_prompts", "options_menu.wav")
-    assert os.path.exists(
+    options_menu_path = Path("voicemail_prompts") / "options_menu.wav"
+    assert Path(
         options_menu_path
-    ), f"options_menu.wav should exist at {options_menu_path}"
+    ).exists(), f"options_menu.wav should exist at {options_menu_path}"
 
     # Verify it's a valid file with non-zero size
-    file_size = os.path.getsize(options_menu_path)
+    file_size = Path(options_menu_path).stat().st_size
     assert file_size > 0, "options_menu.wav should not be empty"
 
 

@@ -5,7 +5,7 @@ Provides caller information lookup and CRM integration capabilities
 
 import json
 import threading
-from datetime import datetime
+from datetime import datetime, timezone
 from collections.abc import Callable
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -140,7 +140,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
                 caller_info.notes = contact.get("notes")
                 caller_info.source = "phone_book"
                 return caller_info
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Phone book lookup error: {e}")
 
         return None
@@ -178,7 +178,7 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
                 caller_info.company = user.get("company")
                 caller_info.source = "active_directory"
                 return caller_info
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Active Directory lookup error: {e}")
 
         return None
@@ -246,7 +246,7 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
                 return caller_info
         except (URLError, HTTPError) as e:
             self.logger.warning(f"External CRM lookup failed for {phone_number}: {e}")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"External CRM lookup error: {e}")
 
         return None
@@ -405,7 +405,7 @@ class CRMIntegration:
         with self.cache_lock:
             if phone_number in self.cache:
                 caller_info, timestamp = self.cache[phone_number]
-                age = (datetime.now() - timestamp).total_seconds()
+                age = (datetime.now(timezone.utc) - timestamp).total_seconds()
 
                 if age < self.cache_timeout:
                     return caller_info
@@ -418,7 +418,7 @@ class CRMIntegration:
     def _add_to_cache(self, phone_number: str, caller_info: CallerInfo):
         """Add caller info to cache"""
         with self.cache_lock:
-            self.cache[phone_number] = (caller_info, datetime.now())
+            self.cache[phone_number] = (caller_info, datetime.now(timezone.utc))
 
     def clear_cache(self):
         """Clear lookup cache"""
@@ -446,7 +446,7 @@ class CRMIntegration:
             "call_id": call_id,
             "phone_number": phone_number,
             "extension": extension,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "caller_info": caller_info.to_dict() if caller_info else None,
         }
 

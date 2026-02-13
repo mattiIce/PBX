@@ -36,7 +36,7 @@ class EnvSetup:
         print()
 
         # Check if .env already exists
-        if os.path.exists(self.env_file):
+        if Path(self.env_file).exists():
             response = input(f"{self.env_file} already exists. Overwrite? (y/N): ")
             if response.lower() != "y":
                 print("Aborted.")
@@ -120,7 +120,7 @@ class EnvSetup:
         Returns:
             True if valid, False otherwise
         """
-        if not os.path.exists(self.env_file):
+        if not Path(self.env_file).exists():
             print(f"Error: {self.env_file} not found")
             return False
 
@@ -278,7 +278,7 @@ class EnvSetup:
         """Load existing environment file."""
         self.variables = {}
 
-        if not os.path.exists(self.env_file):
+        if not Path(self.env_file).exists():
             return
 
         with open(self.env_file, "r") as f:
@@ -299,7 +299,7 @@ class EnvSetup:
         try:
             # Create file with restricted permissions
             Path(self.env_file).touch(mode=0o600)
-        except Exception:
+        except OSError:
             pass  # Windows doesn't support chmod
 
         with open(self.env_file, "w") as f:

@@ -5,10 +5,11 @@ Multi-region trunk registration for disaster recovery
 
 import socket
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class RegionStatus(Enum):
@@ -174,7 +175,7 @@ class GeographicRedundancy:
             else:
                 # Connection failed
                 return 9999.0  # High latency indicates failure
-        except Exception as e:
+        except OSError as e:
             self.logger.warning(f"Network latency check failed: {e}")
             return 9999.0
 
@@ -203,13 +204,13 @@ class GeographicRedundancy:
                         cursor.execute("SELECT 1")
                         cursor.fetchone()
                         return True
-                except Exception as e:
+                except sqlite3.Error as e:
                     self.logger.warning(f"Database query failed: {e}")
                     return False
             else:
                 # Database not configured, assume OK
                 return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.warning(f"Database check failed: {e}")
             # If database module not available, assume OK
             return True
@@ -271,7 +272,7 @@ class GeographicRedundancy:
             health_score -= 0.4
 
         region.health_score = health_score
-        region.last_health_check = datetime.now()
+        region.last_health_check = datetime.now(timezone.utc)
 
         healthy = health_score >= 0.7
 
@@ -285,7 +286,7 @@ class GeographicRedundancy:
             "healthy": healthy,
             "health_score": health_score,
             "checks": health_checks,
-            "checked_at": datetime.now().isoformat(),
+            "checked_at": datetime.now(timezone.utc).isoformat(),
         }
 
     def _trigger_failover(self, failed_region_id: str, reason: str):
@@ -316,7 +317,7 @@ class GeographicRedundancy:
             "from_region": failed_region_id,
             "to_region": backup_region,
             "reason": reason,
-            "timestamp": datetime.now().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
         }
         self.failover_history.append(failover_event)
 

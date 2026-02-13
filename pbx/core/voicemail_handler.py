@@ -10,6 +10,7 @@ import struct
 import threading
 import time
 import traceback
+from pathlib import Path
 
 
 class VoicemailHandler:
@@ -316,7 +317,7 @@ class VoicemailHandler:
             # End the call after playback
             pbx.end_call(call_id)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             pbx.logger.error(f"Error in voicemail playback: {e}")
             traceback.print_exc()
             # Ensure call is ended even if there's an error
@@ -475,7 +476,7 @@ class VoicemailHandler:
                 finally:
                     try:
                         os.unlink(prompt_file)
-                    except Exception:
+                    except OSError:
                         pass
 
                 time.sleep(0.5)
@@ -620,7 +621,7 @@ class VoicemailHandler:
                             pbx.logger.info(
                                 f"[VM IVR] Playing voicemail message: {message_id} from {caller_id}"
                             )
-                            if file_path and os.path.exists(file_path):
+                            if file_path and Path(file_path).exists():
                                 player.play_file(file_path)
                                 mailbox.mark_listened(message_id)
                                 pbx.logger.info(
@@ -920,7 +921,7 @@ class VoicemailHandler:
             pbx.end_call(call_id)
             pbx.logger.info("[VM IVR] ✓ Call ended")
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             pbx.logger.error("")
             pbx.logger.error(f"{'=' * 70}")
             pbx.logger.error("ERROR IN VOICEMAIL IVR SESSION")
@@ -997,7 +998,7 @@ class VoicemailHandler:
 
             pbx.logger.debug(f"DTMF monitoring ended for voicemail recording on call {call_id}")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, struct.error) as e:
             pbx.logger.error(f"Error in voicemail DTMF monitoring: {e}")
             pbx.logger.error(traceback.format_exc())
 

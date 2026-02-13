@@ -7,6 +7,7 @@ import os
 import sys
 
 import psycopg2
+import sqlite3
 
 
 # Database configuration
@@ -50,7 +51,7 @@ def test_connection():
         cur.close()
         conn.close()
         return True
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         print(f"✗ Connection failed: {e}")
         return False
 
@@ -83,7 +84,7 @@ def verify_tables():
         cur.close()
         conn.close()
         return True
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         print(f"✗ Verification failed: {e}")
         return False
 
@@ -118,7 +119,7 @@ def add_sample_data():
         cur.close()
         conn.close()
         return True
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         print(f"✗ Sample data insertion failed: {e}")
         return False
 
