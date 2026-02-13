@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class CampaignStatus(Enum):
@@ -110,7 +111,7 @@ class PredictiveDialer:
                 self.db = PredictiveDialingDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Predictive dialing database layer initialized")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Predictive dialer initialized")

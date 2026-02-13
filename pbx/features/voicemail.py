@@ -6,6 +6,7 @@ import os
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
+import sqlite3
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -99,7 +100,7 @@ class VoicemailBox:
                         self.logger.debug(
                             f"Loaded voicemail PIN hash from database for extension {extension_number}"
                         )
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(
                     f"Error loading voicemail PIN from database for extension {extension_number}: {e}"
                 )
@@ -204,7 +205,7 @@ class VoicemailBox:
                         f"✗ Failed to save voicemail metadata to database for extension {self.extension_number}"
                     )
                     self.logger.warning(f"  Message ID: {message_id}")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.error(f"✗ Error saving voicemail to database: {e}")
                 self.logger.error(f"  Message ID: {message_id}")
                 self.logger.error(f"  Extension: {self.extension_number}")
@@ -260,7 +261,7 @@ class VoicemailBox:
                             ),
                         )
                         self.logger.info("✓ Transcription saved to database")
-                    except Exception as e:
+                    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
                         self.logger.error(f"✗ Error saving transcription to database: {e}")
             else:
                 self.logger.warning(
@@ -292,7 +293,7 @@ class VoicemailBox:
                         self.logger.debug(
                             f"Found email address from database for extension {self.extension_number}"
                         )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.error(f"Error getting extension from database: {e}")
 
             # Fallback to config file if not found in database
@@ -376,7 +377,7 @@ class VoicemailBox:
                         self.logger.info(
                             f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database"
                         )
-                    except Exception as e:
+                    except sqlite3.Error as e:
                         self.logger.error(f"✗ Error updating voicemail in database: {e}")
                 else:
                     self.logger.warning(
@@ -421,7 +422,7 @@ class VoicemailBox:
                         self.logger.info(
                             f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database"
                         )
-                    except Exception as e:
+                    except sqlite3.Error as e:
                         self.logger.error(f"  ✗ Error deleting voicemail from database: {e}")
                 else:
                     self.logger.warning("  Database not available - only file deleted")
@@ -519,7 +520,7 @@ class VoicemailBox:
                         f"  Total: {len(self.messages)} messages ({unread_count} unread)"
                     )
                 return
-            except Exception as e:
+            except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
                 self.logger.error(f"✗ Error loading voicemail messages from database: {e}")
                 self.logger.warning("  Falling back to loading from file system")
                 # Fall back to loading from disk
@@ -597,7 +598,7 @@ class VoicemailBox:
             try:
                 enc = get_encryption()
                 return enc.verify_password(str(pin), self.pin_hash, self.pin_salt)
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(
                     f"Error verifying voicemail PIN hash for extension {self.extension_number}: {e}"
                 )
@@ -661,7 +662,7 @@ class VoicemailBox:
             else:
                 self.logger.error(f"Greeting file was not created at {self.greeting_path}")
                 return False
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(
                 f"Error saving greeting for extension {self.extension_number}: {e}"
             )
@@ -697,7 +698,7 @@ class VoicemailBox:
                 )
                 return True
             return False
-        except Exception as e:
+        except OSError as e:
             self.logger.error(
                 f"Error deleting greeting for extension {self.extension_number}: {e}"
             )

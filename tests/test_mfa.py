@@ -199,7 +199,7 @@ def test_mfa_with_database() -> bool:
 
         return True
 
-    except Exception as e:
+    except OSError as e:
         # Clean up on error
         if os.path.exists(db_path):
             try:

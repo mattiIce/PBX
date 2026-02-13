@@ -109,7 +109,7 @@ def handle_detailed_health() -> Response:
             mimetype="application/json",
         )
         return response
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
         logger.error(f"Detailed health check error: {e}")
         return send_json({"status": "error", "error": str(e)}, 500)
 
@@ -135,7 +135,7 @@ def handle_prometheus_metrics() -> Response:
             mimetype="text/plain; version=0.0.4",
         )
         return response
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Metrics endpoint error: {e}")
         response = current_app.response_class(
             response=f"# ERROR: {str(e)}\n",

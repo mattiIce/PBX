@@ -232,7 +232,7 @@ class RecordingRetentionManager:
                         self.logger.error(
                             f"File not found (already deleted?) {recording_file}: {e}"
                         )
-                    except Exception as e:
+                    except OSError as e:
                         self.logger.error(f"Unexpected error deleting {recording_file}: {e}")
 
         if not dry_run:
@@ -294,7 +294,7 @@ class RecordingRetentionManager:
                     archived_files.append(str(recording_file))
                     archived_size += file_size
                     self.archived_count += 1
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.error(f"Error archiving {recording_file}: {e}")
 
         self.logger.info(f"Archived {len(archived_files)} recordings to {archive_path}")

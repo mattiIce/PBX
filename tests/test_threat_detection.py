@@ -209,7 +209,7 @@ def test_with_database() -> bool:
 
         return True
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         # Clean up on error
         if os.path.exists(db_path):
             try:

@@ -263,7 +263,7 @@ class EnvironmentLoader:
 
             return loaded_count
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error loading environment file {env_file}: {e}")
             return 0
 

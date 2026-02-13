@@ -104,7 +104,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
                 success_count += 1
             else:
                 logger.error("  ✗ FAILED to generate")
-        except Exception as e:
+        except OSError as e:
             logger.error(f"  ✗ ERROR: {e}")
 
         logger.info("")
@@ -206,7 +206,7 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
                 success_count += 1
             else:
                 logger.error("  ✗ FAILED to generate")
-        except Exception as e:
+        except OSError as e:
             logger.error(f"  ✗ ERROR: {e}")
 
         logger.info("")

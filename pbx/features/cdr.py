@@ -174,7 +174,7 @@ class CDRSystem:
             with open(filename, "a") as f:
                 json.dump(record.to_dict(), f)
                 f.write("\n")
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving CDR record: {e}")
 
     def get_records(self, date=None, limit=100):
@@ -204,7 +204,7 @@ class CDRSystem:
                         records.append(json.loads(line))
                         if len(records) >= limit:
                             break
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error reading CDR records: {e}")
 
         return records

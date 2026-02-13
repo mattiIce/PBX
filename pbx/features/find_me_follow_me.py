@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class FindMeFollowMe:
@@ -58,7 +59,7 @@ class FindMeFollowMe:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("FMFM database schema initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing FMFM schema: {e}")
 
     def _load_configs(self):
@@ -114,7 +115,7 @@ class FindMeFollowMe:
 
             cursor.close()
             self.logger.info(f"Loaded {len(rows)} FMFM configurations from database")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error loading FMFM configs from database: {e}")
 
     def _save_to_database(self, extension: str):
@@ -178,7 +179,7 @@ class FindMeFollowMe:
             self.database.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving FMFM config to database: {e}")
             return False
 
@@ -198,7 +199,7 @@ class FindMeFollowMe:
             self.database.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error deleting FMFM config from database: {e}")
             return False
 

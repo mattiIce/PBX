@@ -108,7 +108,7 @@ def handle_get_voicemail(subpath: str) -> Response:
                     return response
                 else:
                     return send_json({"error": "Audio file not found"}, 404)
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -151,7 +151,7 @@ def handle_update_voicemail(subpath: str) -> Response:
             return send_json({"success": True, "message": "Message marked as read"})
         else:
             return send_json({"error": "Invalid operation"}, 400)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -283,7 +283,7 @@ def _handle_get_voicemail_box_details(subpath: str) -> Response:
             )
 
         return send_json(details)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -321,7 +321,7 @@ def _handle_get_voicemail_greeting(subpath: str) -> Response:
         response.headers["Content-Length"] = str(len(greeting_data))
         return response
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Error getting voicemail greeting: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -404,7 +404,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
             # Clean up temporary directory
             shutil.rmtree(temp_dir, ignore_errors=True)
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Error exporting voicemail box: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -476,7 +476,7 @@ def handle_clear_voicemail_box(subpath: str) -> Response:
                 "deleted_count": deleted_count,
             }
         )
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 

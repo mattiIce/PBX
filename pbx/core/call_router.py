@@ -284,7 +284,7 @@ class CallRouter:
                         phones = pbx.registered_phones_db.get_by_extension(from_ext)
                         if phones and len(phones) > 0 and phones[0].get("mac_address"):
                             mac_address = phones[0]["mac_address"]
-                    except Exception as e:
+                    except (KeyError, TypeError, ValueError) as e:
                         pbx.logger.debug(f"Could not retrieve MAC for extension {from_ext}: {e}")
 
                 # Also check if MAC was sent in the original INVITE
@@ -558,7 +558,7 @@ class CallRouter:
                     pbx.logger.warning(
                         f"Failed to start RTP player for greeting on call {call_id}"
                     )
-            except Exception as e:
+            except OSError as e:
                 pbx.logger.error(f"Error playing voicemail greeting: {e}")
 
             # Start RTP recorder on the allocated port

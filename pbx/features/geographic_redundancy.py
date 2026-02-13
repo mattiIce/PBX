@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class RegionStatus(Enum):
@@ -174,7 +175,7 @@ class GeographicRedundancy:
             else:
                 # Connection failed
                 return 9999.0  # High latency indicates failure
-        except Exception as e:
+        except OSError as e:
             self.logger.warning(f"Network latency check failed: {e}")
             return 9999.0
 
@@ -203,13 +204,13 @@ class GeographicRedundancy:
                         cursor.execute("SELECT 1")
                         cursor.fetchone()
                         return True
-                except Exception as e:
+                except sqlite3.Error as e:
                     self.logger.warning(f"Database query failed: {e}")
                     return False
             else:
                 # Database not configured, assume OK
                 return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.warning(f"Database check failed: {e}")
             # If database module not available, assume OK
             return True

@@ -124,7 +124,7 @@ def test_voicemail_access_checks_registry() -> None:
             # Extension is non-standard length, pattern check informational only
             pattern_matches = re.match(voicemail_pattern, voicemail_ext)
 
-    except Exception:
+    except (KeyError, TypeError, ValueError):
         pass
 
 

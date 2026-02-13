@@ -35,7 +35,7 @@ def setup_config():
             with open(config_path, "r") as f:
                 config = yaml.safe_load(f)
                 return config.get("licensing", {})
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         print(f"Warning: Could not load config.yml: {e}")
 
     return {}
@@ -104,7 +104,7 @@ def cmd_install(args):
     try:
         with open(args.license_file, "r") as f:
             license_data = json.load(f)
-    except Exception as e:
+    except (OSError, ValueError, json.JSONDecodeError) as e:
         print(f"Error: Failed to load license file: {e}")
         return 1
 
@@ -366,7 +366,7 @@ def cmd_batch_generate(args):
                 import yaml
 
                 batch_config = yaml.safe_load(f)
-    except Exception as e:
+    except (OSError, ValueError, json.JSONDecodeError) as e:
         print(f"Error: Failed to load batch file: {e}")
         return 1
 
@@ -434,7 +434,7 @@ def cmd_batch_generate(args):
             print(f"  ✓ Saved to: {output_file}")
             generated_count += 1
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             error_msg = f"License {i} ({license_spec.get('issued_to', 'unknown')}): {str(e)}"
             errors.append(error_msg)
             print(f"  ✗ Error: {e}")

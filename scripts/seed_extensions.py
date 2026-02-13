@@ -179,7 +179,7 @@ def main():
             else:
                 print("  ✗ Failed to seed")
                 errors += 1
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             print(f"  ✗ Error: {e}")
             errors += 1
 

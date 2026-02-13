@@ -247,7 +247,7 @@ if __name__ == "__main__":
         print(f"Details: {e}")
         print("Make sure the PBX is running and accessible")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"\n✗ Error: {e}")
         import traceback
 

@@ -489,7 +489,7 @@ class StatisticsEngine:
             self.logger.info(f"Exported {len(records)} records to {filename}")
             return True
 
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to export to CSV: {e}")
             return False
 

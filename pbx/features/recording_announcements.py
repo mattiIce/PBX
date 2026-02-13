@@ -7,6 +7,7 @@ import os
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class RecordingAnnouncements:
@@ -96,7 +97,7 @@ class RecordingAnnouncements:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Recording announcements database schema initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing recording announcements schema: {e}")
 
     def _log_announcement(
@@ -150,7 +151,7 @@ class RecordingAnnouncements:
 
             self.database.connection.commit()
             cursor.close()
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error logging announcement: {e}")
 
     def _check_audio_file(self):

@@ -79,7 +79,7 @@ class VoicemailTranscriptionService:
                                 self.logger.info(
                                     "  Download model from: https://alphacephei.com/vosk/models"
                                 )
-                        except Exception as e:
+                        except OSError as e:
                             self.logger.error(f"  Failed to load Vosk model: {e}")
                     else:
                         self.logger.warning(
@@ -272,7 +272,7 @@ class VoicemailTranscriptionService:
                     "Transcription returned empty text", language, "vosk"
                 )
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Vosk transcription error: {e}")
             return self._create_error_response(str(e), language, "vosk")
 
@@ -359,7 +359,7 @@ class VoicemailTranscriptionService:
                 "error": "Transcription returned no results",
             }
 
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Google transcription error: {e}")
             return {
                 "success": False,

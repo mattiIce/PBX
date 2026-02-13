@@ -7,6 +7,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # ML libraries for improved prediction
 try:
@@ -116,7 +117,7 @@ class CallQualityPrediction:
                 self.db = CallQualityPredictionDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Call quality prediction database layer initialized")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Call quality prediction system initialized")
@@ -592,7 +593,7 @@ class CallQualityPrediction:
             self.logger.info(f"  Features: {n_features}")
             self.logger.info(f"  Model weights: {[f'{w:.3f}' for w in self.model_weights[:4]]}")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error training model: {e}")
 
     def get_statistics(self) -> dict:

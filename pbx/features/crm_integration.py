@@ -140,7 +140,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
                 caller_info.notes = contact.get("notes")
                 caller_info.source = "phone_book"
                 return caller_info
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Phone book lookup error: {e}")
 
         return None
@@ -178,7 +178,7 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
                 caller_info.company = user.get("company")
                 caller_info.source = "active_directory"
                 return caller_info
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Active Directory lookup error: {e}")
 
         return None
@@ -246,7 +246,7 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
                 return caller_info
         except (URLError, HTTPError) as e:
             self.logger.warning(f"External CRM lookup failed for {phone_number}: {e}")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"External CRM lookup error: {e}")
 
         return None

@@ -63,5 +63,5 @@ def handle_static_file(path: str) -> Response:
     except KeyError:
         logger.error("ADMIN_DIR not configured in Flask app config")
         return send_json({"error": "Admin directory not configured"}, 500)
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)

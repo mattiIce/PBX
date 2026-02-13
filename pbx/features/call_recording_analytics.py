@@ -111,7 +111,7 @@ class RecordingAnalytics:
                     self.logger.info(f"Vosk model loaded from {model_path}")
                 else:
                     self.logger.warning(f"Vosk model not found at {model_path}")
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError) as e:
                 self.logger.warning(f"Could not load Vosk model: {e}")
 
         # Initialize spaCy for NLP
@@ -183,7 +183,7 @@ class RecordingAnalytics:
             else:
                 self.logger.warning(f"Vosk model not found at {model_path}")
                 self.logger.info("Download from: https://alphacephei.com/vosk/models")
-        except Exception as e:
+        except OSError as e:
             self.logger.warning(f"Could not load Vosk model: {e}")
 
         return None
@@ -290,7 +290,7 @@ class RecordingAnalytics:
                 "words": [],
                 "error": "Vosk not installed",
             }
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Transcription error: {e}")
             return {
                 "transcript": "",

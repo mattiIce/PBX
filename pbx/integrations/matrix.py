@@ -95,7 +95,7 @@ class MatrixIntegration:
                 self.logger.error(f"Matrix authentication failed: {response.status_code}")
                 return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Matrix authentication error: {e}")
             return False
 
@@ -135,7 +135,7 @@ class MatrixIntegration:
                 self.logger.error(f"Matrix API error: {response.status_code} - {response.text}")
                 return None
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.logger.error(f"Matrix API request failed: {e}")
             return None
 
@@ -174,7 +174,7 @@ class MatrixIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to send Matrix message: {e}")
             return None
 
@@ -292,7 +292,7 @@ class MatrixIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to create room: {e}")
             return None
 
@@ -317,7 +317,7 @@ class MatrixIntegration:
 
             return result is not None
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.logger.error(f"Failed to invite user: {e}")
             return False
 
@@ -360,7 +360,7 @@ class MatrixIntegration:
                 self.logger.error(f"File upload failed: {response.status_code}")
                 return None
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to upload file: {e}")
             return None
 
@@ -416,7 +416,7 @@ class MatrixIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to send file: {e}")
             return None
 
@@ -471,7 +471,7 @@ class MatrixIntegration:
 
             return []
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to get room members: {e}")
             return []
 

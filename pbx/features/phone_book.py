@@ -8,6 +8,7 @@ import json
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # Import ExtensionDB for database-based AD sync
 try:
@@ -130,7 +131,7 @@ class PhoneBook:
                 self.entries[entry["extension"]] = entry
 
             self.logger.info(f"Loaded {len(self.entries)} phone book entries from database")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error loading phone book from database: {e}")
 
     def add_entry(
@@ -215,7 +216,7 @@ class PhoneBook:
                 if success:
                     self.logger.info(f"Added/updated phone book entry: {extension} - {name}")
                 return success
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.error(f"Error saving phone book entry: {e}")
                 return False
 
@@ -357,7 +358,7 @@ class PhoneBook:
                 )
                 return synced_count
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 # Broad exception catch is intentional - we want to gracefully fall back to
                 # extension_registry for ANY database issue (connection,
                 # permissions, missing table, etc.)

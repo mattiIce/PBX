@@ -63,7 +63,7 @@ def test_wav_file_playback() -> bool:
 
         return True
 
-    except Exception as e:
+    except OSError as e:
         import traceback
 
         traceback.print_exc()

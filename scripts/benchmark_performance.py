@@ -14,6 +14,7 @@ import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from typing import Any
+import sqlite3
 
 
 @dataclass
@@ -60,7 +61,7 @@ class PerformanceBenchmark:
 
             result = subprocess.run(["nproc"], capture_output=True, text=True, check=True)
             info["cpu_cores"] = int(result.stdout.strip())
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
             info["cpu_model"] = "Unknown"
             info["cpu_cores"] = 0
 
@@ -72,7 +73,7 @@ class PerformanceBenchmark:
                         mem_kb = int(line.split()[1])
                         info["memory_gb"] = round(mem_kb / 1024 / 1024, 2)
                         break
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError):
             info["memory_gb"] = 0
 
         # Get disk info
@@ -84,7 +85,7 @@ class PerformanceBenchmark:
                 info["disk_total"] = parts[1]
                 info["disk_used"] = parts[2]
                 info["disk_available"] = parts[3]
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
             info["disk_total"] = "Unknown"
 
         # Get OS info
@@ -94,7 +95,7 @@ class PerformanceBenchmark:
                     if line.startswith("PRETTY_NAME"):
                         info["os"] = line.split("=")[1].strip().strip('"')
                         break
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError):
             info["os"] = "Unknown"
 
         return info
@@ -133,7 +134,7 @@ class PerformanceBenchmark:
                     if result.returncode == 0:
                         duration = float(result.stdout.strip())
                         times.append(duration)
-                except Exception as exc:
+                except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as exc:
                     # Ignore individual request failures but log for diagnostic purposes
                     print(f"Warning: API benchmark request to {url} failed: {exc}", file=sys.stderr)
 
@@ -189,7 +190,7 @@ class PerformanceBenchmark:
             metrics["simple_query_ms"] = 5.0  # Placeholder
             metrics["complex_query_ms"] = 50.0  # Placeholder
 
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError, sqlite3.Error, subprocess.SubprocessError):
             metrics["connection_time_ms"] = -1
             metrics["error"] = "Database connection failed"
 
@@ -215,7 +216,7 @@ class PerformanceBenchmark:
             metrics["estimated_cps"] = cpu_cores * 5  # Calls per second
             metrics["call_setup_time_ms"] = 150  # Placeholder
 
-        except Exception:
+        except (KeyError, TypeError, ValueError):
             metrics["error"] = "Could not estimate call capacity"
 
         return metrics
@@ -242,7 +243,7 @@ class PerformanceBenchmark:
                             metrics["cpu_usage_percent"] = round(100 - idle, 2)
                             break
                     break
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
             metrics["cpu_usage_percent"] = 0
 
         # Memory usage
@@ -259,7 +260,7 @@ class PerformanceBenchmark:
                 if mem_total > 0:
                     mem_used = mem_total - mem_available
                     metrics["memory_usage_percent"] = round((mem_used / mem_total) * 100, 2)
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError):
             metrics["memory_usage_percent"] = 0
 
         # Disk I/O
@@ -272,7 +273,7 @@ class PerformanceBenchmark:
             )
             # Parse iostat output (simplified)
             metrics["disk_io_util_percent"] = 5.0  # Placeholder
-        except Exception:
+        except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
             metrics["disk_io_util_percent"] = 0
 
         return metrics

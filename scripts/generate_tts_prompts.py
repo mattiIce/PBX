@@ -110,7 +110,7 @@ def generate_auto_attendant_tts(
                 success_count += 1
             else:
                 logger.error(f"  ✗ Failed to generate {filename}")
-        except Exception as e:
+        except OSError as e:
             logger.error(f"  ✗ Error: {e}")
 
         logger.info("")
@@ -217,7 +217,7 @@ def generate_voicemail_tts(output_dir="voicemail_prompts", sample_rate=8000):
                 success_count += 1
             else:
                 logger.error(f"  ✗ Failed to generate {filename}")
-        except Exception as e:
+        except OSError as e:
             logger.error(f"  ✗ Error: {e}")
 
         logger.info("")

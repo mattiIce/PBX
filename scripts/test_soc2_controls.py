@@ -604,7 +604,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\nTesting cancelled by user")
         return 130
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
         print(f"\n\nError during testing: {e}", file=sys.stderr)
         import traceback
 

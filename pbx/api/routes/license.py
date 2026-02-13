@@ -129,7 +129,7 @@ def handle_license_features() -> tuple[Response, int]:
                 "licensing_enabled": True,
             }
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error listing features: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500
 
@@ -189,7 +189,7 @@ def handle_license_generate() -> tuple[Response, int]:
         )
 
         return send_json({"success": True, "license": license_data}), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error generating license: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500
 
@@ -241,7 +241,7 @@ def handle_license_install() -> tuple[Response, int]:
             ), 200
         else:
             return send_json({"success": False, "error": "Failed to install license"}, 500), 500
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error installing license: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500
 
@@ -380,7 +380,7 @@ def handle_license_toggle() -> tuple[Response, int]:
                 "message": f'Licensing {"enabled" if enabled else "disabled"} successfully',
             }
         ), 200
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Error toggling licensing: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500
 
@@ -445,6 +445,6 @@ def handle_license_check_feature() -> tuple[Response, int]:
         return send_json(
             {"success": True, "feature": feature_name, "available": available}
         ), 200
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error checking feature: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500

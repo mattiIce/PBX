@@ -117,7 +117,7 @@ def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
     except FileNotFoundError:
         logger.warning("ffmpeg not found. Install ffmpeg for G.722 support.")
         return False
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as e:
         logger.warning(f"G.722 encoding error: {e}, falling back to PCM")
         logger.debug(f"Full error details: {e}", exc_info=True)
         return False
@@ -256,7 +256,7 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
                 file_size = os.path.getsize(output_file)
                 logger.info(f"Generated {filename}: {file_size:,} bytes")
                 success_count += 1
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Failed to generate {filename}: {e}")
 
     return success_count, total_count

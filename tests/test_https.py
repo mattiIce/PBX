@@ -92,7 +92,7 @@ def test_certificate_files() -> bool:
     try:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(cert_file, key_file)
-    except Exception as e:
+    except (OSError, ssl.SSLError) as e:
         return False
 
     return True
@@ -203,7 +203,7 @@ def test_https_connection() -> bool:
                 api_server.stop()
                 return False
 
-    except Exception as e:
+    except (OSError, ValueError, json.JSONDecodeError, ssl.SSLError) as e:
         import traceback
 
         traceback.print_exc()

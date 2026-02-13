@@ -6,6 +6,7 @@ Auto-responses and smart call handling using AI
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # NLTK for natural language processing
 try:
@@ -97,7 +98,7 @@ class ConversationalAI:
                 self.db = ConversationalAIDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Conversational AI database layer initialized")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Conversational AI assistant initialized")
@@ -446,7 +447,7 @@ class ConversationalAI:
                 for keywords, intent in nltk_intent_patterns:
                     if any(keyword in lemmatized for keyword in keywords):
                         return intent
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.debug(f"NLTK intent detection failed: {e}, falling back to patterns")
 
         # Standard intent patterns with priority (most specific first)

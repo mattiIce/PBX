@@ -211,7 +211,7 @@ def main():
             print("Test users provided: cmattinson, bsautter")
             print("Check their extension numbers in config.yml")
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"Error during synchronization: {e}")
         import traceback
 

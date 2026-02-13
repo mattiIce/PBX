@@ -123,7 +123,7 @@ class Config:
         except OSError as e:
             logger.error("Error saving config: Disk error - %s", e)
             return False
-        except Exception as e:
+        except OSError as e:
             logger.error("Error saving config: %s", e)
             return False
 
@@ -168,7 +168,7 @@ class Config:
 
             self.config["extensions"].append(new_ext)
             return self.save()
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error adding extension: %s", e)
             return False
 
@@ -209,7 +209,7 @@ class Config:
                     return self.save()
 
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating extension: %s", e)
             return False
 
@@ -237,7 +237,7 @@ class Config:
                 return self.save()
 
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error deleting extension: %s", e)
             return False
 
@@ -284,7 +284,7 @@ class Config:
                 self.config["voicemail"]["email_notifications"] = config_data["email_notifications"]
 
             return self.save()
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating email config: %s", e)
             return False
 
@@ -315,7 +315,7 @@ class Config:
                     return self.save()
 
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating voicemail PIN: %s", e)
             return False
 
@@ -338,7 +338,7 @@ class Config:
                 "relay_enabled": self.get("features.webrtc.dtmf.relay_enabled", True),
             }
             return dtmf_config
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error getting DTMF config: %s", e)
             return None
 
@@ -433,6 +433,6 @@ class Config:
                 dtmf_config["detection_threshold"] = validated
 
             return self.save()
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error("Error updating DTMF config: %s", e)
             return False

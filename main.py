@@ -49,7 +49,7 @@ if __name__ == "__main__":
         if not check_and_report(verbose=verbose, strict=True):
             print("\n✗ Dependency check failed. Install missing packages and try again.")
             sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"Warning: Could not check dependencies: {e}")
         print("Continuing anyway...")
 
@@ -107,7 +107,7 @@ if __name__ == "__main__":
         print(f"\n✗ FIPS Compliance Error: {e}")
         print("  System cannot start in FIPS mode")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"\n✗ Security check failed: {e}")
         sys.exit(1)
 

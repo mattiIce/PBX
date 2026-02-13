@@ -9,6 +9,7 @@ from collections import deque
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class QoSMetrics:
@@ -559,7 +560,7 @@ class QoSMonitor:
                 self.logger.debug(
                     f"Stored QoS metrics for call {summary['call_id']} in database"
                 )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to store QoS metrics in database: {e}")
 
     def update_alert_thresholds(self, thresholds: dict) -> None:

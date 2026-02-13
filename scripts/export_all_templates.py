@@ -124,7 +124,7 @@ if __name__ == "__main__":
     except KeyboardInterrupt:
         print("\n\nInterrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"\n❌ Error: {e}")
         import traceback
 

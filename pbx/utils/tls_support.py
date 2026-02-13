@@ -82,7 +82,7 @@ class TLSManager:
                 f"TLS context created (FIPS mode: {self.fips_mode}, " f"TLS 1.2-1.3 supported)"
             )
 
-        except Exception as e:
+        except (OSError, ssl.SSLError) as e:
             self.logger.error(f"Failed to create SSL context: {e}")
             self.ssl_context = None
 
@@ -106,7 +106,7 @@ class TLSManager:
                 socket, server_side=server_side, do_handshake_on_connect=True
             )
             return ssl_socket
-        except Exception as e:
+        except (OSError, ssl.SSLError) as e:
             self.logger.error(f"Failed to wrap socket with TLS: {e}")
             return None
 
@@ -195,7 +195,7 @@ class SRTPManager:
 
             return encrypted
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to encrypt RTP packet: {e}")
             return None
 
@@ -226,7 +226,7 @@ class SRTPManager:
 
             return decrypted
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to decrypt SRTP packet: {e}")
             return None
 

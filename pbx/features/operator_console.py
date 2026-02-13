@@ -374,7 +374,7 @@ class OperatorConsole:
             try:
                 with open(self.vip_db_path, "r") as f:
                     return json.load(f)
-            except Exception as e:
+            except (OSError, ValueError, json.JSONDecodeError) as e:
                 self.logger.error(f"Failed to load VIP database: {e}")
                 return {}
         return {}
@@ -385,7 +385,7 @@ class OperatorConsole:
             with open(self.vip_db_path, "w") as f:
                 json.dump(self.vip_callers, f, indent=2)
             return True
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Failed to save VIP database: {e}")
             return False
 

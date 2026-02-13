@@ -95,7 +95,7 @@ class PBXFlaskServer:
 
             self.ssl_enabled = True
             logger.info(f"SSL/HTTPS enabled with certificate: {cert_file}")
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, ssl.SSLError) as e:
             logger.error(f"Failed to configure SSL: {e}")
             traceback.print_exc()
 
@@ -133,7 +133,7 @@ class PBXFlaskServer:
 
             logger.error(f"CA certificate request failed: {response.status_code}")
             return False
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
             logger.error(f"Error requesting certificate from CA: {e}")
             return False
 
@@ -167,7 +167,7 @@ class PBXFlaskServer:
                 use_reloader=debug,
                 debug=debug,
             )
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, ssl.SSLError) as e:
             if self.running:
                 logger.error(f"Flask server error: {e}")
 

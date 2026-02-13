@@ -106,7 +106,7 @@ class SecurityComplianceChecker:
             )
             if not openssl_fips:
                 fips_results["issues"].append("OpenSSL FIPS provider not available")
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as e:
             fips_results["checks"]["openssl_fips"] = False
             self.print_status("OpenSSL FIPS provider", False, str(e))
 
@@ -126,7 +126,7 @@ class SecurityComplianceChecker:
                 fips_results["issues"].append(
                     "Cryptography library required. Install: pip install cryptography>=41.0.0"
                 )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             fips_results["checks"]["crypto_library"] = False
             fips_results["compliant"] = False
             self.print_status("Cryptography library", False, str(e))
@@ -149,7 +149,7 @@ class SecurityComplianceChecker:
                 fips_results["issues"].append(
                     "FIPS mode not enabled in config.yml. Set security.fips_mode: true"
                 )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             fips_results["checks"]["pbx_fips_mode"] = False
             fips_results["compliant"] = False
             self.print_status("PBX FIPS configuration", False, str(e))
@@ -199,12 +199,12 @@ class SecurityComplianceChecker:
                     if not aes_ok:
                         algorithms_ok = False
                         fips_results["issues"].append("AES-256-GCM algorithm test failed")
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     fips_results["checks"]["aes_256_gcm"] = False
                     self.print_status("AES-256-GCM encryption", False, str(e))
                     algorithms_ok = False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             algorithms_ok = False
             fips_results["issues"].append(f"Algorithm testing failed: {e}")
             self.print_status("FIPS algorithms", False, str(e))
@@ -321,7 +321,7 @@ class SecurityComplianceChecker:
                     "Less than 80% of implemented controls have been tested"
                 )
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             soc2_results["compliant"] = False
             soc2_results["issues"].append(f"SOC 2 check failed: {e}")
             self.print_status("SOC 2 Compliance Engine", False, str(e))
@@ -401,7 +401,7 @@ class SecurityComplianceChecker:
             if not api_auth:
                 security_results["issues"].append("API authentication not required - security risk")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             security_results["compliant"] = False
             security_results["issues"].append(f"Configuration check failed: {e}")
             self.print_status("Security configuration", False, str(e))
@@ -538,7 +538,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\nCompliance check cancelled by user")
         return 130
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
         print(f"\n\nError during compliance check: {e}")
         import traceback
 

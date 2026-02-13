@@ -22,6 +22,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 from pbx.utils.security import get_password_manager
+import sqlite3
 
 
 def migrate_passwords(config_file="config.yml", dry_run=False):
@@ -205,7 +206,7 @@ def migrate_passwords(config_file="config.yml", dry_run=False):
                 print("  ✗ Failed to store in database")
                 errors += 1
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             print(f"  ✗ Error: {e}")
             errors += 1
 

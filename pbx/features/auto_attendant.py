@@ -219,7 +219,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info("Auto attendant database tables initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing auto attendant database: {e}")
 
     def _load_config_from_db(self):
@@ -242,7 +242,7 @@ class AutoAttendant:
                     "audio_path": row[4],
                 }
             return None
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error loading auto attendant config from database: {e}")
             return None
 
@@ -264,7 +264,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info("Auto attendant config saved to database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving auto attendant config to database: {e}")
 
     def _load_menu_options_from_db(self):
@@ -283,7 +283,7 @@ class AutoAttendant:
 
             if rows:
                 self.logger.info(f"Loaded {len(rows)} menu options from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error loading menu options from database: {e}")
 
     def _save_menu_option_to_db(self, digit, destination, description=""):
@@ -303,7 +303,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info(f"Menu option {digit} saved to database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving menu option to database: {e}")
 
     def _delete_menu_option_from_db(self, digit):
@@ -315,7 +315,7 @@ class AutoAttendant:
             conn.commit()
             conn.close()
             self.logger.info(f"Menu option {digit} deleted from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error deleting menu option from database: {e}")
 
     def update_config(self, **kwargs):
@@ -415,7 +415,7 @@ class AutoAttendant:
         except sqlite3.IntegrityError as e:
             self.logger.error(f"Menu '{menu_id}' already exists: {e}")
             return False
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error creating menu: {e}")
             return False
 
@@ -465,7 +465,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Updated menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error updating menu: {e}")
             return False
 
@@ -511,7 +511,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Deleted menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error deleting menu: {e}")
             return False
 
@@ -552,7 +552,7 @@ class AutoAttendant:
                     "updated_at": row[8],
                 }
             return None
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting menu: {e}")
             return None
 
@@ -585,7 +585,7 @@ class AutoAttendant:
                 }
                 for row in rows
             ]
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error listing menus: {e}")
             return []
 
@@ -632,7 +632,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Added menu item {digit} to menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error adding menu item: {e}")
             return False
 
@@ -658,7 +658,7 @@ class AutoAttendant:
             conn.close()
             self.logger.info(f"Removed menu item {digit} from menu '{menu_id}'")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error removing menu item: {e}")
             return False
 
@@ -695,7 +695,7 @@ class AutoAttendant:
                 }
                 for row in rows
             ]
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting menu items: {e}")
             return []
 
@@ -1171,7 +1171,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
                 f.write(wav_data)
 
             logger.info(f"Generated {output_file}")
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error generating {prompt_name}: {e}")
 
     logger.info(f"Auto attendant prompts generated in {output_dir}")
@@ -1254,12 +1254,12 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
             logger.warning("gTTS not available for submenu prompt generation")
             return None
 
-    except Exception as e:
+    except (OSError, subprocess.SubprocessError) as e:
         # Clean up temp file on error
         if tmp_mp3_path and os.path.exists(tmp_mp3_path):
             try:
                 os.unlink(tmp_mp3_path)
-            except Exception:
+            except OSError:
                 pass
         logger = get_logger()
         logger.error(f"Error generating submenu prompt: {e}")

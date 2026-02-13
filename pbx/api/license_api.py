@@ -95,7 +95,7 @@ def list_available_features():
             200,
         )
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error listing features: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -125,7 +125,7 @@ def check_feature():
 
         return jsonify({"success": True, "feature": feature_name, "available": available}), 200
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error checking feature: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -193,7 +193,7 @@ def generate_license():
 
         return jsonify({"success": True, "license": license_data}), 200
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error generating license: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -254,7 +254,7 @@ def install_license():
         else:
             return jsonify({"success": False, "error": "Failed to install license"}), 500
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error installing license: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -371,7 +371,7 @@ def toggle_licensing():
             200,
         )
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError) as e:
         logger.error(f"Error toggling licensing: {e}")
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -496,7 +496,7 @@ def admin_login():
             logger.warning(f"Failed license admin login attempt: {extension}/{username}")
             return jsonify({"success": False, "error": "Invalid credentials"}), 401
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error during license admin login: {e}")
         return jsonify({"success": False, "error": "Authentication failed"}), 500
 

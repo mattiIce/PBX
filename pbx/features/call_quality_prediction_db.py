@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class CallQualityPredictionDatabase:
@@ -163,7 +164,7 @@ class CallQualityPredictionDatabase:
             self.logger.info("Call quality prediction tables created successfully")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error creating quality prediction tables: {e}")
             return False
 
@@ -198,7 +199,7 @@ class CallQualityPredictionDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving quality metrics: {e}")
 
     def save_prediction(self, call_id: str, prediction: dict):
@@ -250,7 +251,7 @@ class CallQualityPredictionDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving prediction: {e}")
 
     def save_alert(
@@ -291,7 +292,7 @@ class CallQualityPredictionDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving alert: {e}")
 
     def get_recent_predictions(self, limit: int = 100) -> list[dict]:
@@ -317,7 +318,7 @@ class CallQualityPredictionDatabase:
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting predictions: {e}")
             return []
 
@@ -344,7 +345,7 @@ class CallQualityPredictionDatabase:
             rows = cursor.fetchall()
             return [dict(zip(columns, row)) for row in rows]
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting active alerts: {e}")
             return []
 
@@ -361,7 +362,7 @@ class CallQualityPredictionDatabase:
             cursor.execute(sql, (alert_id,))
             self.db.connection.commit()
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error acknowledging alert: {e}")
 
     def update_daily_trends(self, endpoint: str, metrics: dict):
@@ -404,7 +405,7 @@ class CallQualityPredictionDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error updating daily trends: {e}")
 
     def get_statistics(self) -> dict:
@@ -453,6 +454,6 @@ class CallQualityPredictionDatabase:
                 "avg_mos_24h": avg_mos_24h,
             }
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting statistics: {e}")
             return {}

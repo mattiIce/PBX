@@ -225,7 +225,7 @@ class LicenseManager:
             else:
                 logger.error("License validation failed")
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Error loading license: {e}")
             self.current_license = None
 
@@ -392,7 +392,7 @@ class LicenseManager:
 
             return True
 
-        except Exception as e:
+        except (OSError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Error saving license: {e}")
             return False
 
@@ -427,7 +427,7 @@ class LicenseManager:
                 f"License lock file created at {lock_path} - licensing enforcement is now mandatory"
             )
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             logger.error(f"Error creating license lock file: {e}")
 
     def remove_license_lock(self) -> bool:
@@ -451,7 +451,7 @@ class LicenseManager:
                 logger.warning("License lock file does not exist")
                 return False
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error removing license lock file: {e}")
             return False
 
@@ -518,7 +518,7 @@ class LicenseManager:
                     LicenseStatus.ACTIVE,
                     f"Trial mode activated ({self.trial_period_days} days)",
                 )
-            except Exception as e:
+            except OSError as e:
                 logger.error(f"Error creating trial marker: {e}")
                 return LicenseStatus.INVALID, "Unable to activate trial mode"
 
@@ -536,7 +536,7 @@ class LicenseManager:
             else:
                 return LicenseStatus.EXPIRED, "Trial period has expired"
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error checking trial status: {e}")
             return LicenseStatus.INVALID, "Unable to verify trial status"
 
@@ -681,7 +681,7 @@ class LicenseManager:
             self.current_license = None
             return True
 
-        except Exception as e:
+        except OSError as e:
             logger.error(f"Error revoking license: {e}")
             return False
 

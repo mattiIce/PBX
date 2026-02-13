@@ -6,6 +6,7 @@ Provides persistence for conversations, intents, and statistics
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class ConversationalAIDatabase:
@@ -141,7 +142,7 @@ class ConversationalAIDatabase:
             self.logger.info("Conversational AI tables created successfully")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error creating Conversational AI tables: {e}")
             return False
 
@@ -185,7 +186,7 @@ class ConversationalAIDatabase:
             self.db.connection.commit()
             return conversation_id
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving conversation: {e}")
             return None
 
@@ -209,7 +210,7 @@ class ConversationalAIDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving message: {e}")
 
     def save_intent(
@@ -256,7 +257,7 @@ class ConversationalAIDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving intent: {e}")
 
     def end_conversation(self, call_id: str, final_intent: str, message_count: int):
@@ -281,7 +282,7 @@ class ConversationalAIDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error ending conversation: {e}")
 
     def get_conversation_history(self, limit: int = 100) -> list[dict]:
@@ -319,7 +320,7 @@ class ConversationalAIDatabase:
                 columns = [desc[0] for desc in cursor.description]
                 return [dict(zip(columns, row)) for row in rows]
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting conversation history: {e}")
             return []
 
@@ -345,6 +346,6 @@ class ConversationalAIDatabase:
                 rows = cursor.fetchall()
                 return {row[0]: row[1] for row in rows}
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting intent statistics: {e}")
             return {}

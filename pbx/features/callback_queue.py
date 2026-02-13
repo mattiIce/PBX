@@ -7,6 +7,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class CallbackStatus(Enum):
@@ -112,7 +113,7 @@ class CallbackQueue:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Callback queue database schema initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing callback queue schema: {e}")
 
     def _load_callbacks_from_database(self):
@@ -182,7 +183,7 @@ class CallbackQueue:
             cursor.close()
             if rows:
                 self.logger.info(f"Loaded {len(rows)} active callbacks from database")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading callbacks from database: {e}")
 
     def _save_callback_to_database(self, callback_id: str):
@@ -273,7 +274,7 @@ class CallbackQueue:
             self.database.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving callback to database: {e}")
             return False
 

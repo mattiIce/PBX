@@ -44,7 +44,7 @@ def check_cryptography():
         backend = default_backend()
         backend_str = str(backend)
         return "FIPS: True" in backend_str
-    except Exception:
+    except (KeyError, TypeError, ValueError):
         return False
 
 
@@ -57,7 +57,7 @@ def check_pbx_config():
         fips_mode = config.get("security.fips_mode", False)
         enforce_fips = config.get("security.enforce_fips", False)
         return fips_mode, enforce_fips
-    except Exception:
+    except (KeyError, TypeError, ValueError):
         return False, False
 
 

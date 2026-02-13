@@ -276,7 +276,7 @@ class PhoneProvisioning:
             self.logger.info(
                 f"Loaded {len(db_devices)} provisioned devices from database"
             )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading devices from database: {e}")
 
     def _load_builtin_templates(self):
@@ -1059,7 +1059,7 @@ P2351 = 1
 
                             self.add_template(vendor, model, template_content)
                             self.logger.info(f"Loaded custom template for {vendor} {model}")
-            except Exception as e:
+            except OSError as e:
                 self.logger.error(f"Error loading custom templates: {e}")
 
     def add_template(self, vendor, model, template_content):
@@ -1633,7 +1633,7 @@ P2351 = 1
             )
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
             return False
 
@@ -1749,7 +1749,7 @@ P2351 = 1
             try:
                 os.makedirs(custom_dir)
                 self.logger.info(f"Created custom templates directory: {custom_dir}")
-            except Exception as e:
+            except OSError as e:
                 return False, f"Failed to create directory: {e}", None
 
         # Write template to file
@@ -1762,7 +1762,7 @@ P2351 = 1
 
             self.logger.info(f"Exported template to: {template_path}")
             return True, f"Template exported to {template_path}", template_path
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to export template: {e}")
             return False, f"Failed to export template: {e}", None
 
@@ -1796,7 +1796,7 @@ P2351 = 1
         if not os.path.exists(custom_dir):
             try:
                 os.makedirs(custom_dir)
-            except Exception as e:
+            except OSError as e:
                 return False, f"Failed to create directory: {e}"
 
         # Write template to file
@@ -1812,7 +1812,7 @@ P2351 = 1
 
             self.logger.info(f"Updated template: {vendor} {model}")
             return True, "Template updated successfully"
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to update template: {e}")
             return False, f"Failed to update template: {e}"
 
@@ -1866,7 +1866,7 @@ P2351 = 1
                 device = self.devices_db.get_device(normalized_mac)
                 if device:
                     return device.get("static_ip")
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Failed to get static IP: {e}")
 
         return None
@@ -1895,6 +1895,6 @@ P2351 = 1
 
             self.logger.info(f"Reloaded {stats['total_templates']} templates")
             return True, "Templates reloaded successfully", stats
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to reload templates: {e}")
             return False, f"Failed to reload templates: {e}", None

@@ -229,7 +229,7 @@ class CalendarMonitor:
                     # Update meeting info
                     self.active_meetings[extension] = current_meeting
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Error checking calendar for {extension}: {e}")
 
     def is_in_meeting(self, extension: str) -> tuple[bool, dict | None]:
@@ -575,7 +575,7 @@ class DNDScheduler:
                     self._remove_dnd_status(extension)
                     del self.previous_statuses[extension]
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Error checking DND for {extension}: {e}")
 
     def get_status(self, extension: str) -> dict:

@@ -277,7 +277,7 @@ class DNSSRVFailover:
             # DNS resolution failed
             self.logger.error(f"Cannot resolve hostname: {target}")
             return False
-        except Exception as e:
+        except OSError as e:
             # Other errors
             self.logger.error(f"Health check error for {target}:{port}: {e}")
             return False

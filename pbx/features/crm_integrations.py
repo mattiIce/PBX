@@ -5,6 +5,7 @@ HubSpot and Zendesk integration for marketing and support
 
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class HubSpotIntegration:
@@ -52,7 +53,7 @@ class HubSpotIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get HubSpot config: {e}")
             return None
 
@@ -123,7 +124,7 @@ class HubSpotIntegration:
             self.logger.info("Updated HubSpot integration config")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to update HubSpot config: {e}")
             return False
 
@@ -209,7 +210,7 @@ class HubSpotIntegration:
             self._log_activity("hubspot", "sync_contact", "error", str(e))
             self.logger.error(f"HubSpot API request failed: {e}")
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self._log_activity("hubspot", "sync_contact", "error", str(e))
             self.logger.error(f"HubSpot sync error: {e}")
             return False
@@ -309,7 +310,7 @@ class HubSpotIntegration:
             self._log_activity("hubspot", "create_deal", "error", str(e))
             self.logger.error(f"HubSpot API request failed: {e}")
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self._log_activity("hubspot", "create_deal", "error", str(e))
             self.logger.error(f"HubSpot deal creation error: {e}")
             return False
@@ -329,7 +330,7 @@ class HubSpotIntegration:
                 ),
                 (integration_type, action, status, details),
             )
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
 
@@ -377,7 +378,7 @@ class ZendeskIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get Zendesk config: {e}")
             return None
 
@@ -447,7 +448,7 @@ class ZendeskIntegration:
             self.logger.info("Updated Zendesk integration config")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to update Zendesk config: {e}")
             return False
 
@@ -543,7 +544,7 @@ class ZendeskIntegration:
             self._log_activity("zendesk", "create_ticket", "error", str(e))
             self.logger.error(f"Zendesk API request failed: {e}")
             return None
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self._log_activity("zendesk", "create_ticket", "error", str(e))
             self.logger.error(f"Zendesk ticket creation error: {e}")
             return None
@@ -630,7 +631,7 @@ class ZendeskIntegration:
             self._log_activity("zendesk", "update_ticket", "error", str(e))
             self.logger.error(f"Zendesk API request failed: {e}")
             return False
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self._log_activity("zendesk", "update_ticket", "error", str(e))
             self.logger.error(f"Zendesk ticket update error: {e}")
             return False
@@ -650,7 +651,7 @@ class ZendeskIntegration:
                 ),
                 (integration_type, action, status, details),
             )
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
     def get_activity_log(self, limit: int = 100) -> list[dict]:
@@ -689,6 +690,6 @@ class ZendeskIntegration:
 
             return activities
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to get activity log: {e}")
             return []

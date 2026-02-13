@@ -17,6 +17,7 @@ import subprocess
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+import sqlite3
 
 
 class BackupVerifier:
@@ -111,7 +112,7 @@ class BackupVerifier:
                     else:
                         self.log_check("Contains schema", False, "No CREATE statements found")
 
-            except Exception as e:
+            except (OSError, sqlite3.Error) as e:
                 self.log_check("Readable backup file", False, str(e))
                 return False
 
@@ -180,7 +181,7 @@ class BackupVerifier:
 
             return True
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, sqlite3.Error, subprocess.SubprocessError) as e:
             self.log_check("Database restore test", False, str(e))
             return False
 
@@ -191,7 +192,7 @@ class BackupVerifier:
                     ["sudo", "-u", "postgres", "dropdb", temp_db], capture_output=True, timeout=30
                 )
                 print(f"  Cleaned up temporary database: {temp_db}")
-            except Exception:
+            except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
                 print(f"  Warning: Could not clean up temporary database: {temp_db}")
 
     def verify_config_backup(self) -> bool:
@@ -251,7 +252,7 @@ class BackupVerifier:
             else:
                 self.log_check("Automated backup scheduled", False, "Could not check crontab")
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as e:
             self.log_check("Automated backup scheduled", False, str(e))
 
         return False

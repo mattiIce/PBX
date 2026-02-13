@@ -10,6 +10,7 @@ from datetime import datetime, timezone
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # ML libraries for improved accuracy
 try:
@@ -131,7 +132,7 @@ class VoiceBiometrics:
                 self.db = VoiceBiometricsDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Voice biometrics database layer initialized")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Voice biometrics system initialized")
@@ -477,7 +478,7 @@ class VoiceBiometrics:
                     self.logger.info(
                         f"Trained GMM model for user {user_id} with {len(feature_vectors)} samples"
                     )
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.warning(f"Could not train GMM model: {e}")
 
             return voiceprint
@@ -534,7 +535,7 @@ class VoiceBiometrics:
                 self.logger.debug(f"GMM score: {log_likelihood:.2f} -> similarity: {score:.3f}")
                 return score
 
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.warning(f"GMM matching failed: {e}, falling back to distance-based")
 
         # Fallback to distance-based matching if GMM not available
@@ -641,7 +642,7 @@ class VoiceBiometrics:
 
                             self.logger.debug("Extracted features using pyAudioAnalysis")
 
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.debug(f"pyAudioAnalysis feature extraction failed: {e}")
 
             # Try librosa for additional features
@@ -667,7 +668,7 @@ class VoiceBiometrics:
 
                     self.logger.debug("Extracted features using librosa")
 
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.debug(f"librosa feature extraction failed: {e}")
 
             # Fallback to basic feature extraction if libraries not available
@@ -713,7 +714,7 @@ class VoiceBiometrics:
 
             return features
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"Error extracting voice features: {e}")
             return {}
 

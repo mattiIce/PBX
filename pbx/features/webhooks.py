@@ -301,7 +301,7 @@ class WebhookSystem:
                         f"Webhook delivery failed after {self.max_retries} attempts: {event.event_type} -> {subscription.url}"
                     )
 
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
                 self.logger.error(f"Unexpected error delivering webhook: {e}")
                 self.logger.debug("Webhook delivery error details", exc_info=True)
                 break

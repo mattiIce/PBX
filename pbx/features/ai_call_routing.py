@@ -136,7 +136,7 @@ class AICallRouting:
 
             self.logger.info(f"Trained ML model on {len(X)} samples")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error training ML model: {e}")
 
     def get_routing_recommendation(
@@ -199,7 +199,7 @@ class AICallRouting:
                 ),
             }
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error in ML routing: {e}")
             return self._rule_based_routing(call_info, available_destinations)
 
@@ -267,7 +267,7 @@ class AICallRouting:
 
             self.logger.info(f"Exported {len(export_data)} training samples to {filename}")
             return True
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error exporting training data: {e}")
             return False
 
@@ -289,7 +289,7 @@ class AICallRouting:
                 self._train_model()
 
             return True
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error importing training data: {e}")
             return False
 

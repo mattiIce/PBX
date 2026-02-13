@@ -74,7 +74,7 @@ def check_config():
 
         return True
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"✗ Error loading config: {e}")
         return False
 
@@ -101,7 +101,7 @@ def check_api_connectivity(host="localhost", port=8080):
         print(f"✗ Cannot connect to API server at {host}:{port}")
         print("  Is the PBX running? Start it with: python main.py")
         return False
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError, requests.RequestException) as e:
         print(f"✗ Error connecting to API: {e}")
         return False
 
@@ -143,7 +143,7 @@ def get_diagnostics(host="localhost", port=8080):
             print(f"✗ API returned status code: {response.status_code}")
             return None
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error fetching diagnostics: {e}")
         return None
 
@@ -191,7 +191,7 @@ def get_recent_requests(host="localhost", port=8080, limit=10):
             print(f"✗ API returned status code: {response.status_code}")
             return []
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error fetching request history: {e}")
         return []
 
@@ -238,7 +238,7 @@ def test_mac_lookup(mac_address, host="localhost", port=8080):
             print(f"✗ API returned status code: {response.status_code}")
             return False
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error checking device: {e}")
         return False
 
@@ -271,7 +271,7 @@ def test_config_download(mac_address, host="localhost", port=8080):
             print(f"  Response: {response.text}")
             return False
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error downloading config: {e}")
         return False
 

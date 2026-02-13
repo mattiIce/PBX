@@ -291,7 +291,7 @@ class ADIntegrationTester:
                 )
                 return True, users
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.print_test("Search for users", "FAIL", f"Error: {e}")
             return False, []
 

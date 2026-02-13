@@ -22,6 +22,7 @@ import urllib.request
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class TOTPGenerator:
@@ -295,7 +296,7 @@ class YubiKeyOTPVerifier:
                     response_dict[key.strip()] = value.strip()
 
             return response_dict
-        except Exception as e:
+        except OSError as e:
             self.logger.debug(f"Failed to query {server_url}: {e}")
             return None
 
@@ -362,7 +363,7 @@ class YubiKeyOTPVerifier:
             # If we get here, all servers failed
             return False, last_error or "All YubiCloud servers unavailable"
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"YubiCloud verification failed: {e}")
             return False, str(e)
 
@@ -450,7 +451,7 @@ class FIDO2Verifier:
 
             return True, credential_id
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"FIDO2 registration failed: {e}")
             return False, str(e)
 
@@ -569,7 +570,7 @@ class FIDO2Verifier:
                             f"Signature verification failed: {str(e)}",
                         )
 
-                except Exception as e:
+                except (KeyError, TypeError, ValueError) as e:
                     self.logger.error(f"FIDO2 verification error: {e}")
                     return False, f"Verification error: {str(e)}"
             else:
@@ -589,7 +590,7 @@ class FIDO2Verifier:
                 )
                 return True, None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"FIDO2 verification failed: {e}")
             return False, str(e)
 
@@ -780,7 +781,7 @@ class MFAManager:
             self.database.execute(yubikey_devices_table)
             self.database.execute(fido2_credentials_table)
             self.logger.info("MFA database schema initialized (TOTP, YubiKey, FIDO2)")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to initialize MFA schema: {e}")
 
     def enroll_user(self, extension_number: str) -> tuple[bool, str | None, list | None]:
@@ -898,7 +899,7 @@ class MFAManager:
             self.logger.info(f"MFA enrollment initiated for extension {extension_number}")
             return True, provisioning_uri, backup_codes
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"MFA enrollment failed for {extension_number}: {e}")
             return False, None, None
 
@@ -949,7 +950,7 @@ class MFAManager:
 
             return False
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"MFA enrollment verification failed for {extension_number}: {e}")
             return False
 
@@ -1025,7 +1026,7 @@ class MFAManager:
 
             return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to check MFA status for {extension_number}: {e}")
             return False
 
@@ -1061,7 +1062,7 @@ class MFAManager:
             self.logger.info(f"MFA disabled for extension {extension_number}")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to disable MFA for {extension_number}: {e}")
             return False
 
@@ -1130,7 +1131,7 @@ class MFAManager:
             self.logger.info(f"YubiKey {public_id} enrolled for extension {extension_number}")
             return True, None
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"YubiKey enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
@@ -1192,7 +1193,7 @@ class MFAManager:
             self.logger.info(f"FIDO2 credential enrolled for extension {extension_number}")
             return True, None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"FIDO2 enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
@@ -1275,7 +1276,7 @@ class MFAManager:
 
             return methods
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get enrolled methods for {extension_number}: {e}")
             return methods
 
@@ -1336,7 +1337,7 @@ class MFAManager:
 
             return False
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"YubiKey verification failed for {extension_number}: {e}")
             return False
 
@@ -1387,7 +1388,7 @@ class MFAManager:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get secret for {extension_number}: {e}")
             return None
 
@@ -1438,7 +1439,7 @@ class MFAManager:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get secret for enrollment {extension_number}: {e}")
             import traceback
 
@@ -1491,7 +1492,7 @@ class MFAManager:
 
             return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to verify backup code for {extension_number}: {e}")
             return False
 
@@ -1515,7 +1516,7 @@ class MFAManager:
             """
             )
             self.database.execute(update_query, (extension_number,))
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to update last used for {extension_number}: {e}")
 
     def _generate_backup_codes(self, count: int = None) -> list:

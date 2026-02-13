@@ -23,6 +23,7 @@ from dataclasses import asdict, dataclass
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+import sqlite3
 
 
 @dataclass
@@ -87,7 +88,7 @@ class DisasterRecoveryTester:
             return False, e.stdout, e.stderr
         except subprocess.TimeoutExpired:
             return False, "", "Command timed out after 300 seconds"
-        except Exception as e:
+        except (OSError, subprocess.SubprocessError) as e:
             return False, "", str(e)
 
     def test_database_backup(self) -> bool:
@@ -149,7 +150,7 @@ class DisasterRecoveryTester:
                 self.results["errors"].append(f"Database backup failed: {stderr}")
                 return False
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.results["errors"].append(f"Database backup exception: {str(e)}")
             return False
 
@@ -198,7 +199,7 @@ class DisasterRecoveryTester:
             self.logger.info(f"Configuration backup successful: {len(backed_up_files)} files")
             return True
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.results["errors"].append(f"Configuration backup failed: {str(e)}")
             return False
 
@@ -236,7 +237,7 @@ class DisasterRecoveryTester:
             self.logger.info(f"Data backup successful: {total_size / 1024 / 1024:.2f} MB")
             return True
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.results["errors"].append(f"Data backup failed: {str(e)}")
             return False
 
@@ -361,7 +362,7 @@ class DisasterRecoveryTester:
                 self.results["errors"].append(f"Database restore verification failed: {stderr}")
                 return False
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, sqlite3.Error) as e:
             self.results["errors"].append(f"Database restore failed: {str(e)}")
             return False
 
@@ -397,7 +398,7 @@ class DisasterRecoveryTester:
             self.logger.info(f"Configuration restore successful: {len(restored_files)} files")
             return True
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.results["errors"].append(f"Configuration restore failed: {str(e)}")
             return False
 
@@ -441,7 +442,7 @@ class DisasterRecoveryTester:
             self.results["verification"] = verification_results
             return verification_results["all_valid"]
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.results["errors"].append(f"Verification failed: {str(e)}")
             return False
 
@@ -652,7 +653,7 @@ def main():
     except KeyboardInterrupt:
         print("\n\nTest interrupted by user")
         sys.exit(1)
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
         logging.error(f"Test failed with error: {e}", exc_info=True)
         sys.exit(1)
 

@@ -28,6 +28,7 @@ import socket
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
+import sqlite3
 
 try:
     import psycopg2
@@ -85,7 +86,7 @@ class HealthCheck:
                 s.settimeout(timeout)
                 s.connect((host, port))
             return True
-        except Exception:
+        except OSError:
             return False
 
     def check_service_ports(self):
@@ -133,7 +134,7 @@ class HealthCheck:
             self.log("Database connectivity", "pass", "critical")
             if not self.critical_only and not self.json_output:
                 print(f"  Version: {version[:50]}")
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.log(f"Database connection failed: {str(e)}", "fail", "critical")
 
     def check_redis(self):
@@ -179,7 +180,7 @@ class HealthCheck:
                 self.log(f"Disk space low: {free_percent:.1f}% free", "warn", "warning")
             else:
                 self.log(f"Disk space: {free_percent:.1f}% free", "pass", "info")
-        except Exception as e:
+        except OSError as e:
             self.log(f"Could not check disk space: {str(e)}", "warn", "warning")
 
     def check_memory(self):
@@ -209,7 +210,7 @@ class HealthCheck:
                     self.log(f"Memory low: {available_percent:.1f}% available", "warn", "warning")
                 else:
                     self.log(f"Memory: {available_percent:.1f}% available", "pass", "info")
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.log(f"Could not check memory: {str(e)}", "warn", "warning")
 
     def check_ssl_certificate(self):
@@ -234,7 +235,7 @@ class HealthCheck:
                         f.read()
                     self.log(f"SSL certificate found at {cert_path}", "pass", "warning")
                     break
-                except Exception as e:
+                except OSError as e:
                     self.log(f"Could not validate certificate: {str(e)}", "warn", "warning")
                     break
 
@@ -256,7 +257,7 @@ class HealthCheck:
                 with open(config_file) as f:
                     yaml.safe_load(f)
                 self.log("config.yml is valid YAML", "pass", "critical")
-            except Exception as e:
+            except OSError as e:
                 self.log(f"config.yml is invalid: {str(e)}", "fail", "critical")
         else:
             self.log("config.yml not found", "fail", "critical")

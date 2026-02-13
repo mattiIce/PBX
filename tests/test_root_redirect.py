@@ -61,7 +61,7 @@ def test_root_redirect() -> bool:
 
         conn.close()
 
-    except Exception as e:
+    except (OSError, ValueError) as e:
         import traceback
 
         traceback.print_exc()

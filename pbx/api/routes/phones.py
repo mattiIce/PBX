@@ -73,7 +73,7 @@ def handle_phone_lookup(identifier: str) -> Response:
                 phone = pbx_core.registered_phones_db.get_by_mac(normalized_mac)
                 if phone:
                     result["registered_phone"] = phone
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 logger.error(f"Error looking up MAC in registered_phones: {e}")
 
     # Try IP address lookup
@@ -101,7 +101,7 @@ def handle_phone_lookup(identifier: str) -> Response:
                                 break
                         if device:
                             result["provisioned_device"] = device.to_dict()
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 logger.error(f"Error looking up IP in registered_phones: {e}")
     else:
         result["type"] = "unknown"
@@ -165,7 +165,7 @@ def handle_reboot_phones() -> Response:
                 "failed_count": results["failed_count"],
             }
         )
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 

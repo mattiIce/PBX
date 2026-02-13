@@ -91,7 +91,7 @@ class EspoCRMIntegration:
                 self.logger.error(f"EspoCRM API error: {response.status_code} - {response.text}")
                 return None
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.logger.error(f"EspoCRM API request failed: {e}")
             return None
 
@@ -139,7 +139,7 @@ class EspoCRMIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to find contact: {e}")
             return None
 
@@ -185,7 +185,7 @@ class EspoCRMIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to create contact: {e}")
             return None
 
@@ -229,7 +229,7 @@ class EspoCRMIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to log call: {e}")
             return None
 
@@ -250,7 +250,7 @@ class EspoCRMIntegration:
             result = self._make_request("GET", f"Contact/{contact_id}")
             return result
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.logger.error(f"Failed to get contact: {e}")
             return None
 
@@ -277,7 +277,7 @@ class EspoCRMIntegration:
 
             return None
 
-        except Exception as e:
+        except requests.RequestException as e:
             self.logger.error(f"Failed to update contact: {e}")
             return None
 
@@ -316,7 +316,7 @@ class EspoCRMIntegration:
 
             return []
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to search contacts: {e}")
             return []
 
@@ -364,7 +364,7 @@ class EspoCRMIntegration:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to create opportunity: {e}")
             return None
 
@@ -398,7 +398,7 @@ class EspoCRMIntegration:
 
             return []
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to get activities: {e}")
             return []
 
@@ -442,7 +442,7 @@ class EspoCRMIntegration:
 
             return {"success": False, "reason": "Contact not found"}
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to handle incoming call: {e}")
             return {"success": False, "error": str(e)}
 
@@ -485,7 +485,7 @@ class EspoCRMIntegration:
 
             return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to log completed call: {e}")
             return False
 

@@ -75,7 +75,7 @@ class SIPServer:
             listen_thread.start()
 
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start SIP server: {e}")
             return False
 
@@ -104,7 +104,7 @@ class SIPServer:
             except socket.timeout:
                 # Timeout allows us to check running flag periodically
                 continue
-            except Exception as e:
+            except OSError as e:
                 if self.running:
                     self.logger.error(f"Error receiving message: {e}")
 
@@ -584,5 +584,5 @@ class SIPServer:
         try:
             self.socket.sendto(message.encode("utf-8"), addr)
             self.logger.debug(f"Sent message to {addr}")
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Error sending message: {e}")

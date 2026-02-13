@@ -87,7 +87,7 @@ class CallRecording:
 
                 self.logger.info(f"Saved recording to {self.file_path}")
                 return self.file_path
-            except Exception as e:
+            except OSError as e:
                 self.logger.error(f"Error saving recording: {e}")
                 return None
 

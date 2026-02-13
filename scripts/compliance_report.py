@@ -79,7 +79,7 @@ class ComplianceReporter:
             # Check for suspicious activity
             self._check_suspicious_activity(events)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.report_data["findings"].append(
                 {
                     "severity": "low",
@@ -151,7 +151,7 @@ class ComplianceReporter:
                     "status": "compliant" if result.returncode == 0 else "non_compliant",
                     "description": "FIPS 140-2 cryptographic standards",
                 }
-            except Exception:
+            except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
                 controls["fips_140_2"] = {
                     "status": "unknown",
                     "description": "FIPS 140-2 cryptographic standards",
@@ -254,7 +254,7 @@ class ComplianceReporter:
                             "recommendation": "Review health check output and address any issues",
                         }
                     )
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as e:
                 self.report_data["findings"].append(
                     {
                         "severity": "low",

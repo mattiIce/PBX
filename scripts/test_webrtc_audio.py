@@ -107,7 +107,7 @@ class WebRTCAudioTester:
             try:
                 config = MockConfig()
                 signaling = WebRTCSignalingServer(config)
-            except Exception as e:
+            except (OSError, ValueError) as e:
                 self.log(f"WebRTC signaling initialization failed: {str(e)}", "WARN")
                 self.log("This is expected if WebRTC module requires different config", "WARN")
                 self.test_results["warnings"] += 1
@@ -140,7 +140,7 @@ class WebRTCAudioTester:
 
             return len(issues) == 0
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.log(f"Configuration test failed: {str(e)}", "FAIL")
             self.test_results["failed"] += 1
             self.test_results["errors"].append(f"Config error: {str(e)}")
@@ -444,7 +444,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
             self.test_results["passed"] += 1
             return True
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.log(f"Failed to save guide: {str(e)}", "WARN")
             self.test_results["warnings"] += 1
             return False

@@ -253,7 +253,7 @@ class WebRTCSignalingServer:
                     self.logger.info("  type: Virtual WebRTC")
 
             return ext_obj
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"Could not register WebRTC extension: {e}")
             return None
 
@@ -697,7 +697,7 @@ class WebRTCGateway:
             self.logger.debug("WebRTC to SIP SDP conversion complete")
             return result
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error converting WebRTC to SIP SDP: {e}")
             # Fallback: return original SDP
             return webrtc_sdp
@@ -776,7 +776,7 @@ class WebRTCGateway:
             self.logger.debug("SIP to WebRTC SDP conversion complete")
             return result
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error converting SIP to WebRTC SDP: {e}")
             # Fallback: return original SDP
             return sip_sdp
@@ -1155,7 +1155,7 @@ class WebRTCGateway:
 
             return call_id
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error initiating call from WebRTC: {e}")
             if self.verbose_logging:
                 self.logger.error("[VERBOSE] ===== Call initiation FAILED =====")
@@ -1308,7 +1308,7 @@ class WebRTCGateway:
             )
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error answering call from WebRTC: {e}")
             import traceback
 

@@ -77,7 +77,7 @@ class SSOAuthService:
                 "request_id": request_id,
                 "callback_url": request_data.get("callback_url", "/auth/saml/callback"),
             }
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error initiating SAML auth: {e}")
             return {"error": str(e)}
 
@@ -108,7 +108,7 @@ class SSOAuthService:
             session_id = self._create_session(user_info)
 
             return {"session_id": session_id, "user_info": user_info}
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error handling SAML response: {e}")
             return {"error": str(e)}
 

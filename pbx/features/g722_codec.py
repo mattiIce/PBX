@@ -320,7 +320,7 @@ class G722Codec:
 
             return bytes(encoded)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, struct.error) as e:
             self.logger.error(f"G.722 encoding error: {e}")
             return None
 
@@ -350,7 +350,7 @@ class G722Codec:
 
             return bytes(decoded)
 
-        except Exception as e:
+        except (ValueError, struct.error) as e:
             self.logger.error(f"G.722 decoding error: {e}")
             return None
 

@@ -139,7 +139,7 @@ def test_emergency_contact_persistence_postgresql() -> bool:
 
         return True
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         import traceback
 
         traceback.print_exc()

@@ -301,7 +301,7 @@ class MobileAppFramework:
                 "platform": device.platform.value,
             }
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send push notification: {str(e)}")
             return {"success": False, "error": str(e)}
 

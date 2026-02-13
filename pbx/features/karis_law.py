@@ -300,7 +300,7 @@ class KarisLawCompliance:
                 if location:
                     location["dispatchable_location"] = self._format_dispatchable_location(location)
                     return location
-            except Exception as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.warning(f"Could not get nomadic E911 location: {e}")
 
         # Check if E911 location service is available (single-site)
@@ -482,7 +482,7 @@ class KarisLawCompliance:
 
             return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"Could not get site emergency trunk: {e}")
             return None
 
@@ -513,7 +513,7 @@ class KarisLawCompliance:
             site = nomadic_e911.find_site_by_ip(location["ip_address"])
             return site
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"Could not get site info: {e}")
             return None
 

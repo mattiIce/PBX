@@ -299,7 +299,7 @@ class EnvSetup:
         try:
             # Create file with restricted permissions
             Path(self.env_file).touch(mode=0o600)
-        except Exception:
+        except OSError:
             pass  # Windows doesn't support chmod
 
         with open(self.env_file, "w") as f:

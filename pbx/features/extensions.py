@@ -144,7 +144,7 @@ class ExtensionRegistry:
                 self.logger.warning(
                     "Add extensions using the admin panel or run: python scripts/migrate_extensions_to_db.py"
                 )
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading extensions from database: {e}")
             import traceback
 

@@ -57,7 +57,7 @@ class RTPHandler:
             receive_thread.start()
 
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start RTP handler: {e}")
             return False
 
@@ -74,7 +74,7 @@ class RTPHandler:
             try:
                 data, addr = self.socket.recvfrom(2048)
                 self._handle_rtp_packet(data, addr)
-            except Exception as e:
+            except OSError as e:
                 if self.running:
                     self.logger.error(f"Error receiving RTP packet: {e}")
 
@@ -152,7 +152,7 @@ class RTPHandler:
             self.timestamp += len(payload)
 
             return True
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
             self.logger.error(f"Error sending RTP packet: {e}")
             return False
 
@@ -323,7 +323,7 @@ class RTPRelayHandler:
             receive_thread.start()
 
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start RTP relay handler: {e}")
             return False
 
@@ -463,7 +463,7 @@ class RTPRelayHandler:
                             seq_num = header[2]
                             timestamp = header[3]
                             payload_size = len(data) - 12
-                        except Exception as parse_error:
+                        except (KeyError, TypeError, ValueError, struct.error) as parse_error:
                             self.logger.debug(f"Error parsing RTP header for QoS: {parse_error}")
 
                     if is_from_a and self.learned_b:
@@ -522,7 +522,7 @@ class RTPRelayHandler:
                         # This is rare since endpoint_a is usually set first
                         self.logger.debug("Packet from B dropped - waiting for A endpoint")
 
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
                 if self.running:
                     self.logger.error(f"Error in RTP relay loop: {e}")
 
@@ -574,7 +574,7 @@ class RTPRecorder:
             record_thread.start()
 
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start RTP recorder: {e}")
             return False
 
@@ -629,7 +629,7 @@ class RTPRecorder:
             except socket.timeout:
                 # Timeout is normal, just continue
                 continue
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
                 if self.running:
                     self.logger.error(f"Error in RTP record loop: {e}")
 
@@ -708,7 +708,7 @@ class RTPPlayer:
                 f"RTP player started on port {self.local_port} for call {self.call_id}"
             )
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start RTP player: {e}")
             return False
 
@@ -782,7 +782,7 @@ class RTPPlayer:
             )
             return True
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending audio: {e}")
             return False
 
@@ -1031,7 +1031,7 @@ class RTPPlayer:
                                 self.logger.info(
                                     f"Converted PCM to PCMU: {len(audio_data)} bytes (μ-law)"
                                 )
-                            except Exception as e:
+                            except (KeyError, TypeError, ValueError) as e:
                                 self.logger.error(f"Failed to convert PCM to PCMU: {e}")
                                 return False
                         elif payload_type == 9:
@@ -1059,7 +1059,7 @@ class RTPPlayer:
                             return False
                         f.read(chunk_size)
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error playing audio file {file_path}: {e}")
             import traceback
 
@@ -1127,7 +1127,7 @@ class RTPDTMFListener:
             listen_thread.start()
 
             return True
-        except Exception as e:
+        except OSError as e:
             self.logger.error(f"Failed to start RTP DTMF listener: {e}")
             return False
 
@@ -1189,7 +1189,7 @@ class RTPDTMFListener:
             except socket.timeout:
                 # Timeout is normal, just continue
                 continue
-            except Exception as e:
+            except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
                 if self.running:
                     self.logger.error(f"Error in RTP DTMF listen loop: {e}")
 

@@ -239,6 +239,6 @@ class PagingHandler:
             # End the page
             pbx.paging_system.end_page(call.page_id)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             pbx.logger.error(f"Error in paging session {call_id}: {e}")
             pbx.logger.debug("Paging session error details", exc_info=True)

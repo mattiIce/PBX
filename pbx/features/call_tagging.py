@@ -423,7 +423,7 @@ class CallTagging:
 
             self.logger.debug(f"spaCy classification added {len(results)} tags")
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"spaCy classification failed: {e}")
 
         return results
@@ -456,7 +456,7 @@ class CallTagging:
             self.logger.debug(f"ML classification: {results[:3]}")
             return results[:5]  # Return top 5
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"ML classification failed: {e}, falling back to rule-based")
             return []
 

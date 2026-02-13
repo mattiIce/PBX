@@ -6,6 +6,7 @@ Provides live transcription, sentiment analysis, and call summarization
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class SpeechAnalyticsEngine:
@@ -61,7 +62,7 @@ class SpeechAnalyticsEngine:
                     "alert_threshold": float(row[7]) if row[7] else 0.7,
                 }
             return None
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get speech analytics config: {e}")
             return None
 
@@ -135,7 +136,7 @@ class SpeechAnalyticsEngine:
             self.logger.info(f"Updated speech analytics config for {extension}")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to update speech analytics config: {e}")
             return False
 
@@ -178,7 +179,7 @@ class SpeechAnalyticsEngine:
                 keywords = ["urgent", "complaint", "cancel", "refund", "problem"]
                 result["keywords_detected"] = self.detect_keywords(transcription, keywords)
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error analyzing audio stream: {e}")
 
         return result
@@ -228,7 +229,7 @@ class SpeechAnalyticsEngine:
         except ImportError:
             self.logger.warning("Vosk library not available, transcription disabled")
             return ""
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error in Vosk transcription: {e}")
             return ""
 
@@ -446,7 +447,7 @@ class SpeechAnalyticsEngine:
                 (call_id, transcript, summary, sentiment["sentiment"], sentiment["score"]),
             )
             return True
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error storing summary: {e}")
             return False
 
@@ -496,7 +497,7 @@ class SpeechAnalyticsEngine:
 
             return configs
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get all speech analytics configs: {e}")
             return []
 
@@ -531,7 +532,7 @@ class SpeechAnalyticsEngine:
                     "created_at": row[6],
                 }
             return None
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error getting call summary: {e}")
             return None
 

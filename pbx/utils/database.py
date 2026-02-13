@@ -115,7 +115,7 @@ class DatabaseBackend:
             self.logger.info("✓ Successfully connected to PostgreSQL database")
             self.logger.info(f"  Connection established: {host}:{port}/{database}")
             return True
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"✗ PostgreSQL connection failed: {e}")
             self.logger.warning("Voicemail and other data will be stored ONLY in file system")
             self.logger.warning(
@@ -141,7 +141,7 @@ class DatabaseBackend:
             self.logger.info("✓ Successfully connected to SQLite database")
             self.logger.info(f"  Database path: {os.path.abspath(db_path)}")
             return True
-        except Exception as e:
+        except (OSError, sqlite3.Error) as e:
             self.logger.error(f"✗ SQLite connection failed: {e}")
             return False
 
@@ -182,7 +182,7 @@ class DatabaseBackend:
                 self.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             error_msg = str(e).lower()
             # Check if this is a permission error on existing objects
             # Common patterns across PostgreSQL, MySQL, SQLite
@@ -293,7 +293,7 @@ class DatabaseBackend:
                     self.connection.commit()
 
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error during script execution: {e}")
             self.logger.error(f"  Script length: {len(script)} characters")
             self.logger.error(f"  Database type: {self.db_type}")
@@ -335,7 +335,7 @@ class DatabaseBackend:
                     dict(row) if self.db_type == "postgresql" else {k: row[k] for k in row.keys()}
                 )
             return None
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Fetch one error: {e}")
             self.logger.error(f"  Query: {query}")
             self.logger.error(f"  Parameters: {params}")
@@ -377,7 +377,7 @@ class DatabaseBackend:
                 return [dict(row) for row in rows]
             else:
                 return [{k: row[k] for k in row.keys()} for row in rows]
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Fetch all error: {e}")
             self.logger.error(f"  Query: {query}")
             self.logger.error(f"  Parameters: {params}")
@@ -708,7 +708,7 @@ class DatabaseBackend:
                     )
                 else:
                     self.logger.debug(f"Column {column_name} already exists")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.debug(f"Column check/add for {column_name}: {e}")
                 if self.connection and not self._autocommit:
                     self.connection.rollback()
@@ -753,7 +753,7 @@ class DatabaseBackend:
                     )
                 else:
                     self.logger.debug(f"Column {column_name} already exists in extensions")
-            except Exception as e:
+            except sqlite3.Error as e:
                 self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
                 if self.connection and not self._autocommit:
                     self.connection.rollback()
@@ -793,7 +793,7 @@ class DatabaseBackend:
                 self.logger.debug(
                     f"Column {device_type_column[0]} already exists in provisioned_devices"
                 )
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.debug(
                 f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}"
             )
@@ -1257,7 +1257,7 @@ class RegisteredPhonesDB:
                 self.logger.error("Failed to cleanup incomplete phone registrations")
 
             return (success, count)
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error cleaning up incomplete phone registrations: {e}")
             return (False, 0)
 

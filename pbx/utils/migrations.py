@@ -5,6 +5,7 @@ Manages schema versioning and migrations
 
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class MigrationManager:
@@ -87,7 +88,7 @@ class MigrationManager:
             self.db.execute(sql)
             self.logger.info("Migrations table initialized")
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Failed to initialize migrations table: {e}")
             return False
 
@@ -103,7 +104,7 @@ class MigrationManager:
             if result and result.get("max_version") is not None:
                 return result["max_version"]
             return 0
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.warning(f"Could not get current version: {e}")
             return 0
 
@@ -157,7 +158,7 @@ class MigrationManager:
             self.logger.info("All migrations applied successfully")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Migration failed: {e}")
             return False
 
@@ -200,7 +201,7 @@ class MigrationManager:
                     )
 
             return status
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to get migration status: {e}")
             return []
 

@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 # Try to import Firebase Admin SDK (free)
 try:
@@ -140,7 +141,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Mobile push notifications database schema initialized")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error initializing mobile push schema: {e}")
 
     def _load_devices_from_database(self):
@@ -186,7 +187,7 @@ class MobilePushNotifications:
             cursor.close()
             if rows:
                 self.logger.info(f"Loaded {len(rows)} mobile devices from database")
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error loading mobile devices from database: {e}")
 
     def _save_device_to_database(self, user_id: str, device_token: str, platform: str):
@@ -222,7 +223,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving device to database: {e}")
             return False
 
@@ -256,7 +257,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             return True
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error removing device from database: {e}")
             return False
 
@@ -315,7 +316,7 @@ class MobilePushNotifications:
 
             self.database.connection.commit()
             cursor.close()
-        except Exception as e:
+        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving notification to database: {e}")
 
     def register_device(self, user_id: str, device_token: str, platform: str = "unknown") -> bool:
@@ -519,7 +520,7 @@ class MobilePushNotifications:
                 "failure_count": response.failure_count,
             }
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending push notification: {e}")
 
             # Save error to database

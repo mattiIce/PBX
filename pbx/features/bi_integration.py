@@ -14,6 +14,7 @@ if TYPE_CHECKING:
     from tableauhyperapi import TableDefinition
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class BIProvider(Enum):
@@ -160,7 +161,7 @@ class BIIntegration:
             else:
                 self.logger.error(f"Unsupported database type: {db.db_type}")
                 return []
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Query execution failed: {e}")
             return []
 
@@ -381,7 +382,7 @@ class BIIntegration:
                 dataset_name,
                 datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S"),
             )
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create Tableau extract: {e}")
             return None
 
@@ -470,7 +471,7 @@ class BIIntegration:
                 }
         except ImportError:
             return {"success": False, "error": "requests library not installed"}
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to create Power BI dataset: {e}")
             return {"success": False, "error": str(e)}
 
@@ -703,7 +704,7 @@ class BIIntegration:
                 "provider": provider.value,
                 "error": "Required library not installed (requests)",
             }
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Connection test failed: {e}")
             return {"success": False, "provider": provider.value, "error": str(e)}
 

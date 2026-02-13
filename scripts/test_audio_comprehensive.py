@@ -129,7 +129,7 @@ class AudioTester:
 
         except wave.Error as e:
             return False, f"WAV file error: {str(e)}"
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             return False, f"Unexpected error: {str(e)}"
 
     def test_voicemail_prompts(self):
@@ -212,7 +212,7 @@ class AudioTester:
                 self.test_results["failed"] += 1
                 return False
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, struct.error) as e:
             self.log(f"Audio conversion failed: {str(e)}", "FAIL")
             self.test_results["failed"] += 1
             self.test_results["errors"].append(f"Conversion error: {str(e)}")

@@ -67,7 +67,7 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
     except urllib.error.URLError as e:
         print(f"✗ {method} {endpoint} - Connection error: {e}")
         return False
-    except Exception as e:
+    except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
         print(f"✗ {method} {endpoint} - Error: {e}")
         return False
 

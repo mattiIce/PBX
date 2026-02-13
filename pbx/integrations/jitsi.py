@@ -150,7 +150,7 @@ class JitsiIntegration:
 
             return meeting
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create Jitsi meeting: {e}")
             return {"success": False, "error": str(e)}
 
@@ -296,7 +296,7 @@ class JitsiIntegration:
         except ImportError:
             self.logger.warning("JWT library not available. Install with: pip install PyJWT")
             return ""
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to generate JWT token: {e}")
             return ""
 

@@ -7,6 +7,7 @@ import json
 from datetime import datetime, timezone
 
 from pbx.utils.logger import get_logger
+import sqlite3
 
 
 class VoiceBiometricsDatabase:
@@ -146,7 +147,7 @@ class VoiceBiometricsDatabase:
             self.logger.info("Voice biometrics tables created successfully")
             return True
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error creating voice biometrics tables: {e}")
             return False
 
@@ -180,7 +181,7 @@ class VoiceBiometricsDatabase:
             self.db.connection.commit()
             return profile_id
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error saving voice profile: {e}")
             return None
 
@@ -202,7 +203,7 @@ class VoiceBiometricsDatabase:
                 return dict(zip(columns, row))
             return None
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting voice profile: {e}")
             return None
 
@@ -227,7 +228,7 @@ class VoiceBiometricsDatabase:
             cursor.execute(sql, (samples, user_id))
             self.db.connection.commit()
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error updating enrollment progress: {e}")
 
     def save_verification(self, user_id: str, call_id: str, verified: bool, confidence: float):
@@ -276,7 +277,7 @@ class VoiceBiometricsDatabase:
             cursor.execute(update_sql, (user_id,))
             self.db.connection.commit()
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving verification: {e}")
 
     def save_fraud_detection(
@@ -321,7 +322,7 @@ class VoiceBiometricsDatabase:
             cursor.execute(sql, params)
             self.db.connection.commit()
 
-        except Exception as e:
+        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving fraud detection: {e}")
 
     def get_statistics(self) -> dict:
@@ -371,6 +372,6 @@ class VoiceBiometricsDatabase:
                 "fraud_attempts_detected": fraud_detected,
             }
 
-        except Exception as e:
+        except sqlite3.Error as e:
             self.logger.error(f"Error getting statistics: {e}")
             return {}

@@ -102,7 +102,7 @@ def handle_ad_search() -> Response:
         results = pbx_core.ad_integration.search_users(query, max_results)
 
         return send_json({"success": True, "count": len(results), "results": results})
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -126,7 +126,7 @@ def handle_ad_sync() -> Response:
             )
         else:
             return send_json({"success": False, "error": result["error"]}, 400)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -155,7 +155,7 @@ def handle_crm_lookup() -> Response:
             return send_json({"found": True, "caller_info": caller_info.to_dict()})
         else:
             return send_json({"found": False, "message": "Caller not found"})
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -194,7 +194,7 @@ def handle_jitsi_create_meeting() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Jitsi create meeting: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -214,7 +214,7 @@ def handle_jitsi_instant_meeting() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Jitsi instant meeting: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -237,7 +237,7 @@ def handle_espocrm_create_contact() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in EspoCRM create contact: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -257,7 +257,7 @@ def handle_espocrm_log_call() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in EspoCRM log call: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -277,7 +277,7 @@ def handle_espocrm_search_contact() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in EspoCRM search contact: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -300,7 +300,7 @@ def handle_matrix_send_message() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Matrix send message: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -320,7 +320,7 @@ def handle_matrix_send_notification() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Matrix send notification: {e}")
         return send_json({"error": str(e)}, 500)
 
@@ -340,6 +340,6 @@ def handle_matrix_create_room() -> Response:
             return handler(request)
         else:
             return send_json({"error": "Handler not found"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Matrix create room: {e}")
         return send_json({"error": str(e)}, 500)

@@ -229,7 +229,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
 
             return True
 
-    except Exception as e:
+    except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
         warnings.warn(f"Failed to convert WAV to G.722: {e}")
         return False
 

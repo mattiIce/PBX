@@ -16,7 +16,7 @@ def check_port(host, port, timeout=5):
             s.settimeout(timeout)
             s.connect((host, port))
         return True
-    except Exception:
+    except OSError:
         return False
 
 
@@ -26,7 +26,7 @@ def check_http_health(url, timeout=5):
         req = urllib.request.Request(url, method="GET")
         with urllib.request.urlopen(req, timeout=timeout) as response:
             return response.status == 200
-    except Exception:
+    except OSError:
         return False
 
 

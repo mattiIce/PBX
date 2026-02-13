@@ -146,7 +146,7 @@ class EmailNotifier:
                     )
                     msg.attach(audio)
                     self.logger.debug(f"Attached audio file: {audio_file_path}")
-                except Exception as e:
+                except OSError as e:
                     self.logger.error(f"Failed to attach audio file: {e}")
 
             # Send email
@@ -216,7 +216,7 @@ class EmailNotifier:
             self.logger.info(f"Sent voicemail reminder to {to_email}")
             return True
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send voicemail reminder: {e}")
             return False
 

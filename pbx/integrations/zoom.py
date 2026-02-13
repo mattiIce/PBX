@@ -169,7 +169,7 @@ class ZoomIntegration:
                 )
                 return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error creating Zoom meeting: {e}")
             return None
 
@@ -337,6 +337,6 @@ class ZoomIntegration:
                 )
                 return None
 
-        except Exception as e:
+        except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error getting Zoom Phone status: {e}")
             return None

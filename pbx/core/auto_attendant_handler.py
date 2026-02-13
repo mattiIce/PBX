@@ -399,7 +399,7 @@ class AutoAttendantHandler:
                     f"Returned RTP port {call.aa_rtp_port} to pool"
                 )
 
-        except Exception as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             pbx.logger.error(f"Error in auto attendant session: {e}")
             import traceback
 

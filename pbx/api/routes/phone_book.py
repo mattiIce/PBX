@@ -80,7 +80,7 @@ def handle_add_phone_book_entry() -> Response:
             )
         else:
             return send_json({"error": "Failed to add phone book entry"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -253,5 +253,5 @@ def handle_search_phone_book() -> Response:
 
         results = phone_book.search(query)
         return send_json(results)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)

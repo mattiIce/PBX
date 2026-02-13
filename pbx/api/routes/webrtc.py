@@ -79,7 +79,7 @@ def handle_create_webrtc_session() -> Response:
             )
 
         return send_json(response_data)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Error creating WebRTC session: {e}")
             logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
@@ -120,7 +120,7 @@ def handle_webrtc_offer() -> Response:
             if verbose_logging:
                 logger.warning("[VERBOSE] Session not found for offer")
             return send_json({"error": "Session not found"}, 404)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Error handling WebRTC offer: {e}")
             logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
@@ -149,7 +149,7 @@ def handle_webrtc_answer() -> Response:
             return send_json({"success": True, "message": "Answer received"})
         else:
             return send_json({"error": "Session not found"}, 404)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
@@ -187,7 +187,7 @@ def handle_webrtc_ice_candidate() -> Response:
             if verbose_logging:
                 logger.warning("[VERBOSE] Session not found for ICE candidate")
             return send_json({"error": "Session not found"}, 404)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Error handling ICE candidate: {e}")
         return send_json({"error": str(e)}, 500)
@@ -244,7 +244,7 @@ def handle_webrtc_call() -> Response:
             if verbose_logging:
                 logger.error("[VERBOSE] Call initiation failed - no call ID returned")
             return send_json({"error": "Failed to initiate call"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Exception in call handler: {e}")
             logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
@@ -304,7 +304,7 @@ def handle_webrtc_hangup() -> Response:
 
         return send_json({"success": True, "message": "Call terminated successfully"})
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Exception in hangup handler: {e}")
             logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
@@ -417,7 +417,7 @@ def handle_webrtc_dtmf() -> Response:
                 )
             return send_json({"error": "No RTP handlers available for this call"}, 500)
 
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Exception in DTMF handler: {e}")
             logger.error(f"[VERBOSE] Traceback:\n{traceback.format_exc()}")
@@ -524,6 +524,6 @@ def handle_set_webrtc_phone_config() -> Response:
             return send_json({"success": True, "extension": extension})
         else:
             return send_json({"error": "Failed to save configuration"}, 500)
-    except Exception as e:
+    except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error setting WebRTC phone config: {e}")
         return send_json({"error": str(e)}, 500)
