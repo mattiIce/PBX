@@ -5,23 +5,24 @@ Tests that phone book automatically syncs after AD user sync completes
 """
 import os
 import sys
+from typing import Any
 
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def test_phone_book_auto_sync_after_ad_sync():
+def test_phone_book_auto_sync_after_ad_sync() -> bool:
     """Test that phone book automatically syncs after AD user sync"""
     print("\nTesting phone book auto-sync after AD user sync...")
 
     # Create mock components
     class MockDatabase:
-        def __init__(self):
+        def __init__(self) -> None:
             self.enabled = True
             self.db_type = "sqlite"
-            self.extensions = []
+            self.extensions: list[Any] = []
 
-        def fetch_all(self, query, params=None):
+        def fetch_all(self, query: str, params: Any = None) -> list[dict[str, Any]]:
             """Mock fetch_all for extensions table"""
             if "extensions" in query and "ad_synced" in query:
                 # Return AD-synced extensions
@@ -44,16 +45,16 @@ def test_phone_book_auto_sync_after_ad_sync():
                 return []
             return []
 
-        def execute(self, query, params=None):
+        def execute(self, query: str, params: Any = None) -> bool:
             """Mock execute for INSERT/UPDATE"""
             return True
 
-        def _execute_with_context(self, query, context, params=None, critical=True):
+        def _execute_with_context(self, query: str, context: str, params: Any = None, critical: bool = True) -> bool:
             """Mock execute with context"""
             return True
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.phone_book.enabled": True,
                 "features.phone_book.auto_sync_from_ad": True,
@@ -61,14 +62,14 @@ def test_phone_book_auto_sync_after_ad_sync():
             return config_map.get(key, default)
 
     class MockExtensionRegistry:
-        def __init__(self):
-            self.extensions = {}
+        def __init__(self) -> None:
+            self.extensions: dict[str, Any] = {}
 
-        def get_all(self):
+        def get_all(self) -> list[Any]:
             return []
 
     class MockADIntegration:
-        def __init__(self):
+        def __init__(self) -> None:
             self.enabled = True
 
     # Test the phone book initialization and sync
@@ -104,26 +105,26 @@ def test_phone_book_auto_sync_after_ad_sync():
     return True
 
 
-def test_phone_book_sync_disabled():
+def test_phone_book_sync_disabled() -> bool:
     """Test that phone book sync doesn't happen when auto_sync_from_ad is disabled"""
     print("\nTesting phone book sync when auto_sync_from_ad is disabled...")
 
     class MockDatabase:
-        def __init__(self):
+        def __init__(self) -> None:
             self.enabled = True
             self.db_type = "sqlite"
 
-        def fetch_all(self, query, params=None):
+        def fetch_all(self, query: str, params: Any = None) -> list[Any]:
             return []
 
-        def execute(self, query, params=None):
+        def execute(self, query: str, params: Any = None) -> bool:
             return True
 
-        def _execute_with_context(self, query, context, params=None, critical=True):
+        def _execute_with_context(self, query: str, context: str, params: Any = None, critical: bool = True) -> bool:
             return True
 
     class MockConfig:
-        def get(self, key, default=None):
+        def get(self, key: str, default: Any = None) -> Any:
             config_map = {
                 "features.phone_book.enabled": True,
                 "features.phone_book.auto_sync_from_ad": False,  # Disabled
@@ -131,11 +132,11 @@ def test_phone_book_sync_disabled():
             return config_map.get(key, default)
 
     class MockExtensionRegistry:
-        def get_all(self):
+        def get_all(self) -> list[Any]:
             return []
 
     class MockADIntegration:
-        def __init__(self):
+        def __init__(self) -> None:
             self.enabled = True
 
     from pbx.features.phone_book import PhoneBook
@@ -160,7 +161,7 @@ def test_phone_book_sync_disabled():
     return True
 
 
-def run_all_tests():
+def run_all_tests() -> bool:
     """Run all tests in this module"""
     print("=" * 70)
     print("Testing Phone Book Auto-Sync from Active Directory")

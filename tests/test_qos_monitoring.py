@@ -245,7 +245,7 @@ class TestQoSMonitor(unittest.TestCase):
 
         self.assertEqual(len(history), 5)
 
-    def test_historical_metrics_filtering(self):
+    def test_historical_metrics_filtering(self) -> None:
         """Test filtering historical metrics by MOS score"""
         # Create calls with different quality
         for i in range(10):
@@ -275,7 +275,7 @@ class TestQoSMonitor(unittest.TestCase):
         for call in high_quality:
             self.assertGreaterEqual(call["mos_score"], 4.0)
 
-    def test_alert_generation_low_mos(self):
+    def test_alert_generation_low_mos(self) -> None:
         """Test alert generation for low MOS score"""
         call_id = "bad-quality-call"
         metrics = self.monitor.start_monitoring(call_id)
@@ -295,7 +295,7 @@ class TestQoSMonitor(unittest.TestCase):
         alert_types = [a["type"] for a in self.monitor.alerts]
         self.assertIn("low_mos", alert_types)
 
-    def test_alert_generation_packet_loss(self):
+    def test_alert_generation_packet_loss(self) -> None:
         """Test alert generation for high packet loss"""
         call_id = "packet-loss-call"
         metrics = self.monitor.start_monitoring(call_id)
@@ -311,7 +311,7 @@ class TestQoSMonitor(unittest.TestCase):
         alert_types = [a["type"] for a in alerts]
         self.assertIn("high_packet_loss", alert_types)
 
-    def test_clear_alerts(self):
+    def test_clear_alerts(self) -> None:
         """Test clearing alerts"""
         # Generate some alerts
         call_id = "bad-call"
@@ -333,7 +333,7 @@ class TestQoSMonitor(unittest.TestCase):
         self.assertGreater(count, 0)
         self.assertEqual(len(self.monitor.alerts), 0)
 
-    def test_get_statistics(self):
+    def test_get_statistics(self) -> None:
         """Test overall statistics generation"""
         # Monitor several calls with varying quality
         for i in range(20):
@@ -360,7 +360,7 @@ class TestQoSMonitor(unittest.TestCase):
         self.assertGreater(stats["calls_with_issues"], 0)
         self.assertGreater(stats["issue_percentage"], 0.0)
 
-    def test_update_thresholds(self):
+    def test_update_thresholds(self) -> None:
         """Test updating alert thresholds"""
         # Set custom thresholds
         new_thresholds = {
@@ -377,7 +377,7 @@ class TestQoSMonitor(unittest.TestCase):
         self.assertEqual(self.monitor.alert_thresholds["jitter_max"], 30.0)
         self.assertEqual(self.monitor.alert_thresholds["latency_max"], 200.0)
 
-    def test_max_historical_records_limit(self):
+    def test_max_historical_records_limit(self) -> None:
         """Test that historical data doesn't exceed maximum"""
         # Set a small limit for testing
         self.monitor.max_historical_records = 100

@@ -12,7 +12,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 
-def test_phone_registration():
+def test_phone_registration() -> None:
     """Test phone registration in database"""
     print("Testing phone registration...")
 
@@ -53,7 +53,7 @@ def test_phone_registration():
     print("✓ Phone registration with MAC works")
 
 
-def test_phone_registration_without_mac():
+def test_phone_registration_without_mac() -> None:
     """Test phone registration without MAC address (IP-based fallback)"""
     print("Testing phone registration without MAC (IP-based)...")
 
@@ -88,7 +88,7 @@ def test_phone_registration_without_mac():
     print("✓ Phone registration without MAC (IP-based) works")
 
 
-def test_phone_update_registration():
+def test_phone_update_registration() -> None:
     """Test updating phone registration"""
     print("Testing phone registration update...")
 
@@ -126,7 +126,7 @@ def test_phone_update_registration():
     print("✓ Phone registration update works")
 
 
-def test_list_phones_by_extension():
+def test_list_phones_by_extension() -> None:
     """Test listing all phones for an extension"""
     print("Testing listing phones by extension...")
 
@@ -154,7 +154,7 @@ def test_list_phones_by_extension():
     print("✓ Listing phones by extension works")
 
 
-def test_list_all_phones():
+def test_list_all_phones() -> None:
     """Test listing all registered phones"""
     print("Testing listing all phones...")
 
@@ -182,7 +182,7 @@ def test_list_all_phones():
     print("✓ Listing all phones works")
 
 
-def test_mac_preservation_on_reregistration():
+def test_mac_preservation_on_reregistration() -> None:
     """
     Test that MAC address is preserved when phone re-registers without MAC
 
@@ -239,7 +239,7 @@ def test_mac_preservation_on_reregistration():
     print("✓ MAC preservation on re-registration works")
 
 
-def test_ip_preservation_on_reregistration():
+def test_ip_preservation_on_reregistration() -> None:
     """
     Test that IP address is preserved when phone re-registers with MAC only
     """
@@ -271,7 +271,7 @@ def test_ip_preservation_on_reregistration():
     print("✓ IP preservation on re-registration works")
 
 
-def test_update_phone_extension():
+def test_update_phone_extension() -> None:
     """
     Test updating a phone's extension when reprovisioning to a different extension
 
@@ -336,7 +336,7 @@ def test_update_phone_extension():
     print("✓ Phone extension update (reprovisioning) works")
 
 
-def test_update_phone_extension_without_mac():
+def test_update_phone_extension_without_mac() -> None:
     """
     Test that update_phone_extension requires a MAC address
     """
@@ -363,7 +363,7 @@ def test_update_phone_extension_without_mac():
     print("✓ Phone extension update validation works")
 
 
-def run_all_tests():
+def run_all_tests() -> bool | None:
     """Run all tests in this module"""
     print("=" * 60)
     print("Running Registered Phones Tests")

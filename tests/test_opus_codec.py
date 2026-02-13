@@ -127,7 +127,7 @@ class TestOpusCodec(unittest.TestCase):
         self.assertIn("fmtp", sdp)
         self.assertIsInstance(sdp["fmtp"], str)
 
-    def test_fmtp_string_generation(self):
+    def test_fmtp_string_generation(self) -> None:
         """Test format parameters string generation"""
         codec = OpusCodec({"bitrate": 32000, "frame_size": 20, "fec": True, "dtx": False})
 
@@ -139,21 +139,21 @@ class TestOpusCodec(unittest.TestCase):
         self.assertIn("maxaveragebitrate=32000", fmtp)
         self.assertNotIn("usedtx=1", fmtp)  # DTX is disabled
 
-    def test_fmtp_with_dtx(self):
+    def test_fmtp_with_dtx(self) -> None:
         """Test format parameters with DTX enabled"""
         codec = OpusCodec({"dtx": True})
 
         fmtp = codec._build_fmtp_string()
         self.assertIn("usedtx=1", fmtp)
 
-    def test_is_available(self):
+    def test_is_available(self) -> None:
         """Test availability check"""
         codec = OpusCodec()
 
         # Should return boolean
         self.assertIsInstance(codec.is_available(), bool)
 
-    def test_get_info(self):
+    def test_get_info(self) -> None:
         """Test codec information retrieval"""
         codec = OpusCodec()
 
@@ -176,7 +176,7 @@ class TestOpusCodec(unittest.TestCase):
         self.assertFalse(info["encoder_ready"])  # Not created yet
         self.assertFalse(info["decoder_ready"])  # Not created yet
 
-    def test_encoder_creation_without_library(self):
+    def test_encoder_creation_without_library(self) -> None:
         """Test encoder creation when library is not available"""
         codec = OpusCodec()
 
@@ -185,7 +185,7 @@ class TestOpusCodec(unittest.TestCase):
             encoder = codec.create_encoder()
             self.assertIsNone(encoder)
 
-    def test_decoder_creation_without_library(self):
+    def test_decoder_creation_without_library(self) -> None:
         """Test decoder creation when library is not available"""
         codec = OpusCodec()
 
@@ -194,7 +194,7 @@ class TestOpusCodec(unittest.TestCase):
             decoder = codec.create_decoder()
             self.assertIsNone(decoder)
 
-    def test_encode_without_library(self):
+    def test_encode_without_library(self) -> None:
         """Test encoding when library is not available"""
         codec = OpusCodec()
 
@@ -203,7 +203,7 @@ class TestOpusCodec(unittest.TestCase):
             result = codec.encode(b"\x00" * 1920)  # 20ms @ 48kHz
             self.assertIsNone(result)
 
-    def test_decode_without_library(self):
+    def test_decode_without_library(self) -> None:
         """Test decoding when library is not available"""
         codec = OpusCodec()
 
@@ -212,7 +212,7 @@ class TestOpusCodec(unittest.TestCase):
             result = codec.decode(b"\x00" * 100)
             self.assertIsNone(result)
 
-    def test_packet_loss_concealment_without_library(self):
+    def test_packet_loss_concealment_without_library(self) -> None:
         """Test PLC when library is not available"""
         codec = OpusCodec()
 
@@ -221,27 +221,27 @@ class TestOpusCodec(unittest.TestCase):
             result = codec.handle_packet_loss()
             self.assertIsNone(result)
 
-    def test_reset_encoder(self):
+    def test_reset_encoder(self) -> None:
         """Test encoder reset"""
         codec = OpusCodec()
 
         # Should not crash even if encoder not created
         codec.reset_encoder()
 
-    def test_reset_decoder(self):
+    def test_reset_decoder(self) -> None:
         """Test decoder reset"""
         codec = OpusCodec()
 
         # Should not crash even if decoder not created
         codec.reset_decoder()
 
-    def test_all_sample_rates(self):
+    def test_all_sample_rates(self) -> None:
         """Test all supported sample rates"""
         for rate in OpusCodec.SAMPLE_RATES:
             codec = OpusCodec({"sample_rate": rate})
             self.assertEqual(codec.sample_rate, rate)
 
-    def test_bitrate_range(self):
+    def test_bitrate_range(self) -> None:
         """Test various bitrate values"""
         # Valid bitrates
         valid_bitrates = [6000, 8000, 16000, 24000, 32000, 64000, 128000]
@@ -250,7 +250,7 @@ class TestOpusCodec(unittest.TestCase):
             codec = OpusCodec({"bitrate": bitrate})
             self.assertEqual(codec.bitrate, bitrate)
 
-    def test_frame_sizes(self):
+    def test_frame_sizes(self) -> None:
         """Test various frame sizes"""
         frame_sizes = [10, 20, 40, 60]
 
@@ -262,17 +262,17 @@ class TestOpusCodec(unittest.TestCase):
 class TestOpusCodecManager(unittest.TestCase):
     """Test OpusCodecManager class"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.pbx = MockPBX()
         self.manager = OpusCodecManager(self.pbx)
 
-    def test_manager_initialization(self):
+    def test_manager_initialization(self) -> None:
         """Test manager initialization"""
         self.assertIsNotNone(self.manager)
         self.assertEqual(len(self.manager.codecs), 0)
 
-    def test_create_codec(self):
+    def test_create_codec(self) -> None:
         """Test creating codec for a call"""
         codec = self.manager.create_codec("call-001")
 
@@ -280,7 +280,7 @@ class TestOpusCodecManager(unittest.TestCase):
         self.assertIsInstance(codec, OpusCodec)
         self.assertIn("call-001", self.manager.codecs)
 
-    def test_create_codec_with_config(self):
+    def test_create_codec_with_config(self) -> None:
         """Test creating codec with custom config"""
         config = {"sample_rate": 16000, "bitrate": 24000}
 
@@ -289,7 +289,7 @@ class TestOpusCodecManager(unittest.TestCase):
         self.assertEqual(codec.sample_rate, 16000)
         self.assertEqual(codec.bitrate, 24000)
 
-    def test_get_codec(self):
+    def test_get_codec(self) -> None:
         """Test retrieving codec for a call"""
         self.manager.create_codec("call-001")
 
@@ -297,12 +297,12 @@ class TestOpusCodecManager(unittest.TestCase):
         self.assertIsNotNone(codec)
         self.assertIsInstance(codec, OpusCodec)
 
-    def test_get_nonexistent_codec(self):
+    def test_get_nonexistent_codec(self) -> None:
         """Test retrieving codec that doesn't exist"""
         codec = self.manager.get_codec("call-999")
         self.assertIsNone(codec)
 
-    def test_remove_codec(self):
+    def test_remove_codec(self) -> None:
         """Test removing codec for a call"""
         self.manager.create_codec("call-001")
         self.assertIn("call-001", self.manager.codecs)
@@ -310,12 +310,12 @@ class TestOpusCodecManager(unittest.TestCase):
         self.manager.remove_codec("call-001")
         self.assertNotIn("call-001", self.manager.codecs)
 
-    def test_remove_nonexistent_codec(self):
+    def test_remove_nonexistent_codec(self) -> None:
         """Test removing codec that doesn't exist"""
         # Should not crash
         self.manager.remove_codec("call-999")
 
-    def test_get_all_codecs(self):
+    def test_get_all_codecs(self) -> None:
         """Test retrieving all active codecs"""
         self.manager.create_codec("call-001")
         self.manager.create_codec("call-002")
@@ -328,12 +328,12 @@ class TestOpusCodecManager(unittest.TestCase):
         self.assertIn("call-002", all_codecs)
         self.assertIn("call-003", all_codecs)
 
-    def test_is_opus_available(self):
+    def test_is_opus_available(self) -> None:
         """Test Opus library availability check"""
         available = self.manager.is_opus_available()
         self.assertIsInstance(available, bool)
 
-    def test_multiple_calls(self):
+    def test_multiple_calls(self) -> None:
         """Test managing codecs for multiple calls"""
         # Create codecs for 10 calls
         for i in range(10):
@@ -356,7 +356,7 @@ class TestOpusCodecManager(unittest.TestCase):
 class TestOpusCodecWithLibrary(unittest.TestCase):
     """Test Opus codec with actual library (if available)"""
 
-    def setUp(self):
+    def setUp(self) -> None:
         """Set up test fixtures"""
         self.codec = OpusCodec()
 
@@ -364,7 +364,7 @@ class TestOpusCodecWithLibrary(unittest.TestCase):
         if not self.codec.opus_available:
             self.skipTest("opuslib not available")
 
-    def test_encoder_creation(self):
+    def test_encoder_creation(self) -> None:
         """Test actual encoder creation"""
         encoder = self.codec.create_encoder()
 
@@ -374,7 +374,7 @@ class TestOpusCodecWithLibrary(unittest.TestCase):
         info = self.codec.get_info()
         self.assertTrue(info["encoder_ready"])
 
-    def test_decoder_creation(self):
+    def test_decoder_creation(self) -> None:
         """Test actual decoder creation"""
         decoder = self.codec.create_decoder()
 
@@ -384,7 +384,7 @@ class TestOpusCodecWithLibrary(unittest.TestCase):
         info = self.codec.get_info()
         self.assertTrue(info["decoder_ready"])
 
-    def test_encode_decode_cycle(self):
+    def test_encode_decode_cycle(self) -> None:
         """Test encoding and decoding audio"""
         # Create encoder and decoder
         self.codec.create_encoder()
@@ -406,7 +406,7 @@ class TestOpusCodecWithLibrary(unittest.TestCase):
         self.assertIsInstance(decoded, bytes)
         self.assertEqual(len(decoded), len(pcm_data))
 
-    def test_packet_loss_concealment(self):
+    def test_packet_loss_concealment(self) -> None:
         """Test packet loss concealment"""
         # Create decoder
         self.codec.create_decoder()
