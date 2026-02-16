@@ -4,7 +4,7 @@ declare global {
     interface Window {
         // api/client.ts
         fetchWithTimeout: (url: string, options?: RequestInit, timeout?: number) => Promise<Response>;
-        getAuthHeaders: () => { 'Content-Type': string; Authorization?: string };
+        getAuthHeaders: () => Record<string, string>;
         getApiBaseUrl: () => string;
         DEFAULT_FETCH_TIMEOUT: number;
 
@@ -77,7 +77,7 @@ declare global {
         loadProvisioningSettings: () => Promise<void>;
         loadPhonebookSettings: () => Promise<void>;
         deleteDevice: (macAddress: string) => Promise<void>;
-        viewTemplate: ((name: string) => void) | ((vendor: string, model: string) => Promise<void>);
+        viewTemplate: (...args: string[]) => void | Promise<void>;
 
         // pages/phones.ts
         loadRegisteredPhones: () => Promise<void>;

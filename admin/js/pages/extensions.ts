@@ -91,7 +91,7 @@ export function closeAddExtensionModal(): void {
 }
 
 export function editExtension(number: string): void {
-    const ext = (window.currentExtensions ?? []).find((e: Extension) => e.number === number);
+    const ext = ((window.currentExtensions ?? []) as Extension[]).find((e) => e.number === number);
     if (!ext) return;
 
     const el = (id: string): HTMLElement | null => document.getElementById(id);

@@ -212,4 +212,4 @@ window.loadProvisioningTemplates = loadProvisioningTemplates;
 window.loadProvisioningSettings = loadProvisioningSettings;
 window.loadPhonebookSettings = loadPhonebookSettings;
 window.deleteDevice = deleteDevice;
-window.viewTemplate = viewTemplate;
+window.viewTemplate = viewTemplate as (...args: string[]) => void | Promise<void>;

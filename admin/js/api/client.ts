@@ -17,11 +17,11 @@ export interface FetchOptions extends Omit<RequestInit, 'signal'> {
  * Headers returned by getAuthHeaders, always including Content-Type
  * and optionally including an Authorization bearer token.
  */
-export interface AuthHeaders {
-    [key: string]: string | undefined;
-    'Content-Type': string;
-    Authorization?: string;
-}
+/**
+ * Type alias for auth headers - compatible with HeadersInit / Record<string, string>.
+ * Always includes Content-Type; Authorization is added when a token is available.
+ */
+export type AuthHeaders = Record<string, string>;
 
 /**
  * Generic shape for JSON responses returned by the PBX API.
