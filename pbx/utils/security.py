@@ -942,7 +942,9 @@ class ThreatDetector:
 
         return analysis
 
-    def _log_threat_event(self, ip_address: str, event_type: str, severity: str, details: str) -> None:
+    def _log_threat_event(
+        self, ip_address: str, event_type: str, severity: str, details: str
+    ) -> None:
         """Log threat event to database"""
         if not self.database or not self.database.enabled:
             return

@@ -177,7 +177,7 @@ class SIPLoadTester:
             self.logger.error(f"Error during call {call_id}: {e}")
             return False, time.time() - start
 
-    async def run_registration_test(self):
+    async def run_registration_test(self) -> None:
         """Run registration load test"""
         self.logger.info(f"Starting registration load test: {self.config.users_count} users")
         self.start_time = time.time()
@@ -210,7 +210,7 @@ class SIPLoadTester:
 
         self.end_time = time.time()
 
-    async def run_call_test(self):
+    async def run_call_test(self) -> None:
         """Run call load test"""
         self.logger.info(
             f"Starting call load test: {self.config.concurrent_calls} concurrent, "
@@ -267,7 +267,7 @@ class SIPLoadTester:
 
         self.end_time = time.time()
 
-    async def run_mixed_test(self):
+    async def run_mixed_test(self) -> None:
         """Run mixed load test (registrations + calls)"""
         self.logger.info("Starting mixed load test")
         self.start_time = time.time()

@@ -34,22 +34,22 @@ def markdown_to_html(markdown_content: str) -> str:
     html = markdown_content
 
     # Convert headers with anchor IDs
-    def replace_h1(match):
+    def replace_h1(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h1 id="{anchor_id}">{text}</h1>'
 
-    def replace_h2(match):
+    def replace_h2(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h2 id="{anchor_id}">{text}</h2>'
 
-    def replace_h3(match):
+    def replace_h3(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h3 id="{anchor_id}">{text}</h3>'
 
-    def replace_h4(match):
+    def replace_h4(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h4 id="{anchor_id}">{text}</h4>'
@@ -69,7 +69,7 @@ def markdown_to_html(markdown_content: str) -> str:
     html = re.sub(r"`([^`]+)`", r"<code>\1</code>", html)
 
     # Convert code blocks
-    def replace_code_block(match):
+    def replace_code_block(match: re.Match) -> str:
         lang = match.group(1) or ""
         code = match.group(2)
         # Escape HTML in code blocks

@@ -89,7 +89,7 @@ class WebRTCAudioTester:
         try:
             # Mock configuration for testing
             class MockConfig:
-                def get(self, key, default=None):
+                def get(self, key: str, default: object = None) -> object:
                     config_map = {
                         "features.webrtc.enabled": True,
                         "features.webrtc.session_timeout": 300,

@@ -18,6 +18,7 @@ export interface FetchOptions extends Omit<RequestInit, 'signal'> {
  * and optionally including an Authorization bearer token.
  */
 export interface AuthHeaders {
+    [key: string]: string | undefined;
     'Content-Type': string;
     Authorization?: string;
 }

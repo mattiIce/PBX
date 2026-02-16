@@ -77,7 +77,7 @@ declare global {
         loadProvisioningSettings: () => Promise<void>;
         loadPhonebookSettings: () => Promise<void>;
         deleteDevice: (macAddress: string) => Promise<void>;
-        viewTemplate: (name: string) => void;
+        viewTemplate: ((name: string) => void) | ((vendor: string, model: string) => Promise<void>);
 
         // pages/phones.ts
         loadRegisteredPhones: () => Promise<void>;

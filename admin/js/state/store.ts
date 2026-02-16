@@ -60,6 +60,7 @@ class Store<T extends Record<string, unknown>> {
  * Shape of the global PBX admin state.
  */
 export interface PbxState {
+    [key: string]: unknown;
     currentUser: string | null;
     currentExtensions: unknown[];
     currentTab: string;
