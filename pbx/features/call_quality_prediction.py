@@ -6,6 +6,7 @@ Proactive network issue detection using ML
 import sqlite3
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -34,7 +35,7 @@ class QualityLevel(Enum):
 class NetworkMetrics:
     """Network metrics for a call or endpoint"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize network metrics"""
         self.timestamp = datetime.now(UTC)
         self.latency = 0  # milliseconds
@@ -68,7 +69,7 @@ class CallQualityPrediction:
     - Recommendation engine
     """
 
-    def __init__(self, config=None, db_backend=None):
+    def __init__(self, config: Any | None = None, db_backend: Any | None = None) -> None:
         """Initialize call quality prediction system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -125,7 +126,7 @@ class CallQualityPrediction:
         self.logger.info(f"  MOS alert threshold: {self.alert_threshold_mos}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def collect_metrics(self, call_id: str, metrics: NetworkMetrics):
+    def collect_metrics(self, call_id: str, metrics: NetworkMetrics) -> None:
         """
         Collect network metrics for a call
 
@@ -388,7 +389,7 @@ class CallQualityPrediction:
         """Get current prediction for a call"""
         return self.active_predictions.get(call_id)
 
-    def clear_history(self, call_id: str):
+    def clear_history(self, call_id: str) -> None:
         """Clear metrics history for a call"""
         if call_id in self.metrics_history:
             del self.metrics_history[call_id]
@@ -430,7 +431,7 @@ class CallQualityPrediction:
 
         return np.array(features), np.array(targets)
 
-    def train_model(self, historical_data: list[dict]):
+    def train_model(self, historical_data: list[dict]) -> None:
         """
         Train ML model with historical data using RandomForest
 
@@ -633,7 +634,7 @@ class CallQualityPrediction:
 _quality_prediction = None
 
 
-def get_quality_prediction(config=None, db_backend=None) -> CallQualityPrediction:
+def get_quality_prediction(config: Any | None = None, db_backend: Any | None = None) -> CallQualityPrediction:
     """Get or create call quality prediction instance"""
     global _quality_prediction
     if _quality_prediction is None:

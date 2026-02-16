@@ -458,16 +458,16 @@ class VoicemailHandler:
                     f"[VM IVR] ✓ IVR initialized - Action: {initial_action.get('action')}, Prompt: {initial_action.get('prompt')}"
                 )
 
-                prompt_type = initial_action.get("prompt", "enter_pin")
+                prompt_type: str = initial_action.get("prompt", "enter_pin")
                 # Try to load from voicemail_prompts/ directory, fallback to
                 # tone generation
                 pbx.logger.info(f"[VM IVR] Loading audio prompt: {prompt_type}")
-                pin_prompt = get_prompt_audio(prompt_type)
+                pin_prompt: bytes = get_prompt_audio(prompt_type)
                 pbx.logger.info(f"[VM IVR] ✓ Prompt audio loaded ({len(pin_prompt)} bytes)")
 
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
                     temp_file.write(pin_prompt)
-                    prompt_file = temp_file.name
+                    prompt_file: str = temp_file.name
 
                 try:
                     pbx.logger.info(
@@ -507,20 +507,20 @@ class VoicemailHandler:
                 pbx.logger.info("")
 
                 # Main IVR loop - listen for DTMF input
-                ivr_active = True
-                last_audio_check = time.time()
+                ivr_active: bool = True
+                last_audio_check: float = time.time()
 
                 # DTMF debouncing: track last detected digit and time to
                 # prevent duplicates
-                last_detected_digit = None
-                last_detection_time = 0.0
-                DTMF_DEBOUNCE_SECONDS = 0.5  # Ignore same digit within 500ms
+                last_detected_digit: str | None = None
+                last_detection_time: float = 0.0
+                DTMF_DEBOUNCE_SECONDS: float = 0.5  # Ignore same digit within 500ms
 
                 # Constants for DTMF detection
                 # ~0.5s of audio at 160 bytes per 20ms RTP packet
-                DTMF_DETECTION_PACKETS = 40  # 40 packets * 20ms = 0.8s of audio
+                DTMF_DETECTION_PACKETS: int = 40  # 40 packets * 20ms = 0.8s of audio
                 # Minimum audio data needed for reliable DTMF detection
-                MIN_AUDIO_BYTES_FOR_DTMF = 1600
+                MIN_AUDIO_BYTES_FOR_DTMF: int = 1600
 
                 while ivr_active:
                     # Check if call is still active
@@ -530,7 +530,7 @@ class VoicemailHandler:
 
                     # Detect DTMF from either SIP INFO (out-of-band) or in-band
                     # audio
-                    digit = None
+                    digit: str | None = None
 
                     # Priority 1: Check for DTMF from SIP INFO messages (most
                     # reliable)
@@ -566,7 +566,7 @@ class VoicemailHandler:
                                     if digit:
                                         # Debounce: ignore duplicate detections
                                         # of same digit within debounce period
-                                        current_time = time.time()
+                                        current_time: float = time.time()
                                         if (
                                             digit == last_detected_digit
                                             and (current_time - last_detection_time)
@@ -594,7 +594,7 @@ class VoicemailHandler:
                             f"[VM IVR] Processing DTMF '{digit}' through IVR state machine..."
                         )
                         pbx.logger.info(f"[VM IVR] Current IVR state: {voicemail_ivr.state}")
-                        action = voicemail_ivr.handle_dtmf(digit)
+                        action: dict[str, Any] = voicemail_ivr.handle_dtmf(digit)
                         pbx.logger.info(f"[VM IVR] IVR returned action: {action.get('action')}")
                         pbx.logger.info(f"[VM IVR] New IVR state: {voicemail_ivr.state}")
 
@@ -607,9 +607,9 @@ class VoicemailHandler:
                                 )
                                 break
                             # Play the voicemail message
-                            file_path = action.get("file_path")
-                            message_id = action.get("message_id")
-                            caller_id = action.get("caller_id")
+                            file_path: str | None = action.get("file_path")
+                            message_id: str | None = action.get("message_id")
+                            caller_id: str | None = action.get("caller_id")
                             pbx.logger.info(
                                 f"[VM IVR] Playing voicemail message: {message_id} from {caller_id}"
                             )

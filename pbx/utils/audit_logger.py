@@ -166,7 +166,7 @@ class AuditLogger:
 
     def log_extension_update(
         self, user: str, extension_number: str, details: dict, ip_address: str
-    ):
+    ) -> None:
         """Log extension update."""
         self.log_action(
             action="update",
@@ -177,7 +177,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_extension_delete(self, user: str, extension_number: str, ip_address: str):
+    def log_extension_delete(self, user: str, extension_number: str, ip_address: str) -> None:
         """Log extension deletion."""
         self.log_action(
             action="delete",
@@ -187,7 +187,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_config_change(self, user: str, config_key: str, details: dict, ip_address: str):
+    def log_config_change(self, user: str, config_key: str, details: dict, ip_address: str) -> None:
         """Log configuration change."""
         self.log_action(
             action="update",
@@ -198,7 +198,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_password_change(self, user: str, target_user: str, ip_address: str):
+    def log_password_change(self, user: str, target_user: str, ip_address: str) -> None:
         """Log password change."""
         self.log_action(
             action="password_change",
@@ -208,7 +208,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_permission_change(self, user: str, target_user: str, details: dict, ip_address: str):
+    def log_permission_change(self, user: str, target_user: str, details: dict, ip_address: str) -> None:
         """Log permission change."""
         self.log_action(
             action="permission_change",
@@ -219,7 +219,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_security_event(self, event_type: str, user: str, details: dict, ip_address: str):
+    def log_security_event(self, event_type: str, user: str, details: dict, ip_address: str) -> None:
         """Log security event."""
         self.log_action(
             action=event_type,
@@ -230,7 +230,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_data_export(self, user: str, export_type: str, details: dict, ip_address: str):
+    def log_data_export(self, user: str, export_type: str, details: dict, ip_address: str) -> None:
         """Log data export."""
         self.log_action(
             action="export",
@@ -241,7 +241,7 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_backup_operation(self, user: str, operation: str, details: dict):
+    def log_backup_operation(self, user: str, operation: str, details: dict) -> None:
         """Log backup operation."""
         self.log_action(
             action=operation,

@@ -106,7 +106,7 @@ async function loadAutoAttendantMenuOptions() {
         });
 
         tbody.innerHTML = '';
-        sortedOptions.forEach(option => {
+        for (const option of sortedOptions) {
             const row = document.createElement('tr');
 
             // Digit column
@@ -136,7 +136,7 @@ async function loadAutoAttendantMenuOptions() {
 
             // Actions column
             const actionsCell = document.createElement('td');
-            
+
             // Navigate button for submenus
             if (option.destination_type === 'submenu') {
                 const navBtn = document.createElement('button');
@@ -145,7 +145,7 @@ async function loadAutoAttendantMenuOptions() {
                 navBtn.onclick = () => navigateToMenu(option.destination_value);
                 actionsCell.appendChild(navBtn);
             }
-            
+
             const editBtn = document.createElement('button');
             editBtn.className = 'btn btn-primary';
             editBtn.textContent = '✏️ Edit';
@@ -160,7 +160,7 @@ async function loadAutoAttendantMenuOptions() {
 
             row.appendChild(actionsCell);
             tbody.appendChild(row);
-        });
+        }
     } catch (error) {
         console.error('Error loading menu options:', error);
         showNotification('Failed to load menu options', 'error');
@@ -193,9 +193,9 @@ async function loadLegacyMenuOptions() {
         });
 
         tbody.innerHTML = '';
-        sortedOptions.forEach(option => {
+        for (const option of sortedOptions) {
             const row = document.createElement('tr');
-            
+
             const digitCell = document.createElement('td');
             digitCell.innerHTML = `<strong>${escapeHtml(option.digit)}</strong>`;
             row.appendChild(digitCell);
@@ -227,7 +227,7 @@ async function loadLegacyMenuOptions() {
 
             row.appendChild(actionsCell);
             tbody.appendChild(row);
-        });
+        }
     } catch (error) {
         console.error('Error loading legacy menu options:', error);
         throw error;
@@ -243,7 +243,7 @@ function getDestinationTypeIcon(type) {
         'voicemail': '📧',
         'operator': '🎧'
     };
-    return icons[type] || '❓';
+    return icons[type] ?? '❓';
 }
 
 // Navigate to a different menu
@@ -325,7 +325,7 @@ function closeAddMenuOptionModal() {
 function editMenuOption(digit, destination_type, destination_value, description) {
     document.getElementById('edit-menu-digit').value = digit;
     document.getElementById('edit-menu-digit-display').textContent = digit;
-    document.getElementById('edit-menu-dest-type').value = destination_type || 'extension';
+    document.getElementById('edit-menu-dest-type').value = destination_type ?? 'extension';
     document.getElementById('edit-menu-description').value = description;
     
     // Update field visibility based on type
@@ -579,7 +579,7 @@ async function loadAvailableMenus() {
         const response = await fetch(`${API_BASE}/api/auto-attendant/menus`);
         if (response.ok) {
             const data = await response.json();
-            availableMenus = data.menus || [];
+            availableMenus = data.menus ?? [];
             console.log(`Loaded ${availableMenus.length} menu(s) for submenu selection`);
             return availableMenus;
         } else {
@@ -617,18 +617,18 @@ async function updateSubmenuDropdowns() {
             newSubmenuSelect.appendChild(noMenusOption);
             newSubmenuSelect.disabled = true;
         } else {
-            menus.forEach(menu => {
+            for (const menu of menus) {
                 if (menu.menu_id !== currentMenuId) {  // Don't include current menu
                     const option = document.createElement('option');
                     option.value = menu.menu_id;
                     option.textContent = `${menu.menu_name} (${menu.menu_id})`;
                     newSubmenuSelect.appendChild(option);
                 }
-            });
+            }
             newSubmenuSelect.disabled = false;
         }
     }
-    
+
     // Update edit modal submenu dropdown
     const editSubmenuSelect = document.getElementById('edit-menu-submenu');
     if (editSubmenuSelect) {
@@ -641,18 +641,18 @@ async function updateSubmenuDropdowns() {
             editSubmenuSelect.appendChild(noMenusOption);
             editSubmenuSelect.disabled = true;
         } else {
-            menus.forEach(menu => {
+            for (const menu of menus) {
                 if (menu.menu_id !== currentMenuId) {
                     const option = document.createElement('option');
                     option.value = menu.menu_id;
                     option.textContent = `${menu.menu_name} (${menu.menu_id})`;
                     editSubmenuSelect.appendChild(option);
                 }
-            });
+            }
             editSubmenuSelect.disabled = false;
         }
     }
-    
+
     // Update parent menu dropdown in create submenu modal
     const parentSelect = document.getElementById('submenu-parent');
     if (parentSelect) {
@@ -666,7 +666,7 @@ async function updateSubmenuDropdowns() {
             parentSelect.appendChild(noMenusOption);
             console.warn('No menus loaded for parent dropdown');
         } else {
-            menus.forEach(menu => {
+            for (const menu of menus) {
                 const option = document.createElement('option');
                 option.value = menu.menu_id;
                 option.textContent = `${menu.menu_name} (${menu.menu_id})`;
@@ -674,7 +674,7 @@ async function updateSubmenuDropdowns() {
                     option.selected = true;
                 }
                 parentSelect.appendChild(option);
-            });
+            }
             console.log(`Populated parent menu dropdown with ${menus.length} menu(s)`);
         }
     }
