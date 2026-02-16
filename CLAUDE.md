@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (76 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
+Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (77 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
 
 ## Quick Reference
 
@@ -65,7 +65,7 @@ make pre-commit-run
 ```
 pbx/
 ├── api/              # REST API layer (Flask)
-│   ├── routes/       # 22 route modules organized by feature
+│   ├── routes/       # 23 route modules organized by feature
 │   ├── schemas/      # Request/response validation
 │   ├── app.py        # Flask app factory (create_app)
 │   ├── errors.py     # Error handling
@@ -87,7 +87,7 @@ pbx/
 │   ├── handler.py    # RTP relay
 │   ├── jitter_buffer.py
 │   └── rtcp_monitor.py
-├── features/         # 76 feature modules (pluggable)
+├── features/         # 77 feature modules (pluggable)
 │   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
 ├── utils/            # Cross-cutting concerns
@@ -159,7 +159,7 @@ make test-python       # Run all Python tests
 make test-js           # Run all JavaScript tests
 make test-unit         # Only unit tests: pytest -m unit
 make test-integration  # Only integration tests: pytest -m integration
-make test-cov          # With coverage (80% minimum)
+make test-cov          # With coverage (70% minimum)
 ```
 
 ### Test Conventions
@@ -211,12 +211,13 @@ System dependencies required in CI: `espeak`, `ffmpeg`, `libopus-dev`, `portaudi
 
 Configured in `.pre-commit-config.yaml`:
 
-1. **pre-commit-hooks** (v6.0.0) — trailing whitespace, EOF, YAML/JSON/TOML checks, merge conflicts, debug statements, LF line endings, test naming
+1. **pre-commit-hooks** (v5.0.0) — trailing whitespace, EOF, YAML/JSON/TOML/XML checks, merge conflicts, debug statements, private key detection, LF line endings, test naming, no-commit-to-main
 2. **ruff** (v0.9.10) — lint with `--fix` + format
-3. **mypy** (v1.19.1) — type checking (excludes tests)
-4. **bandit** (1.9.3) — security scanning (excludes tests)
-5. **yamllint** (v1.38.0) — YAML linting (excludes config files)
-6. **markdownlint-cli2** (v0.17.1) — Markdown linting
+3. **mypy** (v1.15.0) — type checking (excludes tests, skipped in CI)
+4. **bandit** (1.9.0) — security scanning (excludes tests)
+5. **yamllint** (v1.35.1) — YAML linting (excludes config files)
+6. **markdownlint-cli2** (v0.17.2) — Markdown linting
+7. **shellcheck** (v0.10.0.1) — shell script linting
 
 ## Key Files
 
@@ -236,7 +237,7 @@ Configured in `.pre-commit-config.yaml`:
 
 ## Ruff Rules Summary
 
-Selected rule sets: `E`, `W`, `F`, `I`, `N`, `UP`, `B`, `A`, `C4`, `DTZ`, `T10`, `ISC`, `PIE`, `PT`, `RSE`, `RET`, `SIM`, `TCH`, `ARG`, `PTH`, `ERA`, `PL`, `PERF`, `RUF`
+Selected rule sets: `E`, `W`, `F`, `I`, `N`, `UP`, `B`, `A`, `C4`, `DTZ`, `T10`, `ISC`, `PIE`, `PT`, `RSE`, `RET`, `SIM`, `TCH`, `ARG`, `PTH`, `ERA`, `PL`, `PERF`, `FURB`, `LOG`, `RUF`
 
 Notable ignored rules:
 - `E501` — line length (formatter handles it)

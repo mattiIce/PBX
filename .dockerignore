@@ -89,7 +89,6 @@ local_config/
 Thumbs.db
 
 # Development files
-requirements-dev.txt
 .pre-commit-config.yaml
 .pylintrc
 .flake8
