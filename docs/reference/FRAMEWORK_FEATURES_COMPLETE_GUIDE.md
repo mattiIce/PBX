@@ -355,9 +355,6 @@ POST /api/framework/call-tagging/tag
   "tags": ["urgent", "vip-customer"]
 }
 
-# Search by tag
-GET /api/framework/call-tagging/search?tag=urgent
-
 # Get statistics
 GET /api/framework/call-tagging/statistics
 ```

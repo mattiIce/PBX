@@ -187,7 +187,7 @@ python scripts/generate_tts_prompts.py
 
 # Verify prompts were created
 ls -lh voicemail_prompts/
-ls -lh auto_attendant/prompts/
+ls -lh auto_attendant/
 ```
 
 #### Step 4: Configure PBX
@@ -265,7 +265,7 @@ server {
     ssl_certificate_key /etc/letsencrypt/live/pbx.yourcompany.com/privkey.pem;
     
     location / {
-        proxy_pass https://localhost:9000;
+        proxy_pass http://localhost:9000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -562,7 +562,7 @@ voicemail:
 **Database Setup:**
 ```bash
 # PostgreSQL (recommended for production)
-sudo -u postgres createdb pbx_voicemail
+# Voicemail is stored in the main pbx_system database
 python scripts/init_database.py
 
 # Tables created:
@@ -583,12 +583,12 @@ python scripts/init_database.py
 
 **Configuration:**
 ```yaml
-# auto_attendant/config.yml
+# config.yml (auto_attendant section)
 auto_attendant:
   enabled: true
   extension: "0"  # Dial 0 to reach AA
   
-  greeting: "auto_attendant/prompts/welcome.wav"
+  greeting: "auto_attendant/welcome.wav"
   
   menu_options:
     "1":
@@ -641,7 +641,7 @@ auto_attendant:
 python scripts/generate_tts_prompts.py
 
 # Generate custom prompt
-python scripts/generate_tts_prompts.py --text "Thank you for calling ABC Company" --output auto_attendant/prompts/custom_welcome.wav
+python scripts/generate_tts_prompts.py --text "Thank you for calling ABC Company" --output auto_attendant/custom_welcome.wav
 ```
 
 ### 4.3 Phone Provisioning
@@ -685,7 +685,7 @@ provisioning:
 ls provisioning_templates/
 
 # Edit template (variables auto-populated)
-nano provisioning_templates/yealink/t46s.cfg
+nano provisioning_templates/yealink_t46s.template
 
 # Available variables:
 # {EXTENSION} - Extension number
@@ -736,13 +736,13 @@ phonebook:
   
   # Push to phones
   push_enabled: true
-  push_url: "http://pbx.company.com:9000/api/phonebook"
+  push_url: "http://pbx.company.com:9000/api/phone-book"
 ```
 
 **Manual Entry:**
 ```bash
 # Add entry via API
-curl -X POST https://localhost:9000/api/phonebook \
+curl -X POST https://localhost:9000/api/phone-book \
   -H "Content-Type: application/json" \
   -d '{
     "name": "John Doe",
@@ -979,10 +979,10 @@ integrations:
 **Search API:**
 ```bash
 # Search AD users
-curl "https://localhost:9000/api/ad/search?q=john"
+curl "https://localhost:9000/api/integrations/ad/search?q=john"
 
-# Get user details
-curl "https://localhost:9000/api/ad/user/jdoe"
+# Check AD integration status
+curl "https://localhost:9000/api/integrations/ad/status"
 ```
 
 ### 5.3 CRM Integration (EspoCRM)
@@ -1405,7 +1405,7 @@ curl -k https://localhost:9000/api/statistics
 **Prometheus Metrics:**
 If monitoring is enabled:
 ```bash
-curl http://localhost:9090/metrics
+curl http://localhost:9000/metrics
 ```
 
 Metrics include:
@@ -1828,12 +1828,12 @@ make sync
 # Validate config.yml syntax
 python -c "import yaml; yaml.safe_load(open('config.yml'))"
 
-# Compare with example config
-diff config.yml config.yml.example
+# Validate syntax
+python -c "import yaml; yaml.safe_load(open('config.yml'))"
 
 # Reset to default (backup first!)
 cp config.yml config.yml.backup
-cp config.yml.example config.yml
+git checkout config.yml
 # Then manually restore your settings
 ```
 
@@ -2234,7 +2234,7 @@ The API is organized into 22 Blueprints registered in `pbx/api/app.py`:
 
 **Interactive API Documentation:**
 Full OpenAPI 3.0 documentation is auto-generated and available at:
-- **Swagger UI:** `https://your-server:9000/api/docs/swagger`
+- **Swagger UI:** `https://your-server:9000/api/docs`
 - **OpenAPI JSON:** `https://your-server:9000/api/docs/openapi.json`
 
 **Request Validation:**
@@ -2454,7 +2454,7 @@ server:
   
 # Security
 security:
-  fips_mode: false
+  fips_mode: true
   password_hashing:
     algorithm: "pbkdf2_hmac_sha256"
     iterations: 600000

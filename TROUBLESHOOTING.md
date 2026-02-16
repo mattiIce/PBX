@@ -129,7 +129,7 @@ file voicemail_prompts/*.wav
 # Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 8 bit, mono 8000 Hz"
 
 # Check auto-attendant prompts
-file auto_attendant/prompts/*.wav
+file auto_attendant/*.wav
 ```
 
 **Additional Verification:**
@@ -157,23 +157,23 @@ sudo systemctl restart pbx
 ```bash
 # Check if prompts exist
 ls -lh voicemail_prompts/
-ls -lh auto_attendant/prompts/
+ls -lh auto_attendant/
 
 # Generate if missing
 python scripts/generate_tts_prompts.py
 
 # Verify files were created
 ls -lh voicemail_prompts/*.wav
-ls -lh auto_attendant/prompts/*.wav
+ls -lh auto_attendant/*.wav
 ```
 
 **2. Incorrect File Permissions:**
 ```bash
 # Fix permissions
 sudo chown -R pbx:pbx voicemail_prompts/
-sudo chown -R pbx:pbx auto_attendant/prompts/
+sudo chown -R pbx:pbx auto_attendant/
 sudo chmod 644 voicemail_prompts/*.wav
-sudo chmod 644 auto_attendant/prompts/*.wav
+sudo chmod 644 auto_attendant/*.wav
 ```
 
 **3. Codec Encoding Issues:**
@@ -899,7 +899,7 @@ curl http://localhost:8888/provision/1001
 **1. Check Template Variables:**
 ```bash
 # View template
-cat provisioning_templates/yealink/t46s.cfg
+cat provisioning_templates/yealink_t46s.template
 
 # Verify variables are correct:
 # {EXTENSION}, {PASSWORD}, {SIP_SERVER}, etc.
@@ -1087,7 +1087,7 @@ sudo -u postgres psql pbx_system -c "SELECT * FROM schema_version;"
 **4. Manual Table Creation:**
 ```bash
 # If specific table missing
-sudo -u postgres psql pbx_system < schema/create_table.sql
+alembic upgrade head
 ```
 
 ### Voicemail Database Issues
@@ -1401,7 +1401,7 @@ grep -n ">>>>>>" config.yml
 **4. Use Example as Template:**
 ```bash
 # Compare with working example
-diff config.yml config.example.yml
+python -c "import yaml; yaml.safe_load(open('config.yml'))"
 ```
 
 **5. Test Minimal Config:**

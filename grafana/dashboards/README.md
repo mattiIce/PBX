@@ -291,7 +291,7 @@ avg(rate(pbx_call_duration_seconds_sum[5m]) /
 - [Prometheus Documentation](https://prometheus.io/docs/)
 - [Grafana Documentation](https://grafana.com/docs/)
 - [PromQL Query Language](https://prometheus.io/docs/prometheus/latest/querying/basics/)
-- [PBX Metrics Exporter Code](../pbx/utils/prometheus_exporter.py)
+- [PBX Metrics Exporter Code](../../pbx/utils/prometheus_exporter.py)
 
 ## Support
 

@@ -168,8 +168,8 @@ sudo -u postgres psql << EOF
 CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'repl_password';
 EOF
 
-# Edit /etc/postgresql/14/main/postgresql.conf
-sudo tee -a /etc/postgresql/14/main/postgresql.conf << EOF
+# Edit /etc/postgresql/17/main/postgresql.conf
+sudo tee -a /etc/postgresql/17/main/postgresql.conf << EOF
 # Replication settings
 wal_level = replica
 max_wal_senders = 3
@@ -177,8 +177,8 @@ wal_keep_size = 64
 hot_standby = on
 EOF
 
-# Edit /etc/postgresql/14/main/pg_hba.conf
-sudo tee -a /etc/postgresql/14/main/pg_hba.conf << EOF
+# Edit /etc/postgresql/17/main/pg_hba.conf
+sudo tee -a /etc/postgresql/17/main/pg_hba.conf << EOF
 # Replication connections
 host    replication     replicator      192.168.1.11/32         scram-sha-256
 EOF
@@ -194,10 +194,10 @@ sudo systemctl restart postgresql
 sudo systemctl stop postgresql
 
 # Remove data directory
-sudo rm -rf /var/lib/postgresql/14/main
+sudo rm -rf /var/lib/postgresql/17/main
 
 # Create base backup from primary
-sudo -u postgres pg_basebackup -h 192.168.1.10 -D /var/lib/postgresql/14/main \
+sudo -u postgres pg_basebackup -h 192.168.1.10 -D /var/lib/postgresql/17/main \
   -U replicator -P -v -R -X stream -C -S standby1
 
 # Start PostgreSQL
@@ -250,8 +250,8 @@ bootstrap:
 postgresql:
   listen: 0.0.0.0:5432
   connect_address: 192.168.1.10:5432
-  data_dir: /var/lib/postgresql/14/main
-  bin_dir: /usr/lib/postgresql/14/bin
+  data_dir: /var/lib/postgresql/17/main
+  bin_dir: /usr/lib/postgresql/17/bin
   authentication:
     replication:
       username: replicator

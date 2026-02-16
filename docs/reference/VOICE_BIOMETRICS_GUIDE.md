@@ -151,7 +151,7 @@ Response:
 
 #### Detect Fraud
 ```bash
-POST /api/framework/voice-biometrics/fraud-check
+POST /api/framework/voice-biometrics/verify
 {
   "audio_sample": "base64-encoded-audio"
 }
@@ -167,7 +167,7 @@ Response:
 
 #### Get Voiceprint Status
 ```bash
-GET /api/framework/voice-biometrics/voiceprint/{extension}
+GET /api/framework/voice-biometrics/profile/{extension}
 
 Response:
 {

@@ -327,7 +327,7 @@ Content-Type: application/json
 ### Get ATA Configuration
 
 ```bash
-GET /api/provision/000b82123456.cfg
+GET /provision/000b82123456.cfg
 ```
 
 Returns the fully-configured provisioning file for the ATA.
