@@ -244,7 +244,7 @@ class SpeexCodec:
 
         return params
 
-    def create_encoder(self):
+    def create_encoder(self) -> Any:
         """
         Create Speex encoder
 
@@ -282,7 +282,7 @@ class SpeexCodec:
             self.logger.error(f"Failed to create Speex encoder: {e}")
             self.encoder = None
 
-    def create_decoder(self):
+    def create_decoder(self) -> Any:
         """
         Create Speex decoder
 

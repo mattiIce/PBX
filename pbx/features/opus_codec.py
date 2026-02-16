@@ -163,7 +163,7 @@ class OpusCodec:
 
         return "; ".join(params)
 
-    def create_encoder(self):
+    def create_encoder(self) -> Any:
         """
         Create Opus encoder instance
 
@@ -196,7 +196,7 @@ class OpusCodec:
             self.logger.error(f"Failed to create Opus encoder: {e}")
             return None
 
-    def create_decoder(self):
+    def create_decoder(self) -> Any:
         """
         Create Opus decoder instance
 

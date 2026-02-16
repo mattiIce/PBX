@@ -177,7 +177,7 @@ class ILBCCodec:
             "fmtp": self.get_fmtp(),
         }
 
-    def create_encoder(self):
+    def create_encoder(self) -> Any:
         """
         Create iLBC encoder
 
@@ -196,7 +196,7 @@ class ILBCCodec:
             self.logger.error(f"Failed to create iLBC encoder: {e}")
             self.encoder = None
 
-    def create_decoder(self):
+    def create_decoder(self) -> Any:
         """
         Create iLBC decoder
 

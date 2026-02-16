@@ -108,7 +108,7 @@ class ConversationalAI:
         self.logger.info(f"  NLTK available: {NLTK_AVAILABLE}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_nltk(self):
+    def _initialize_nltk(self) -> None:
         """Initialize NLTK components for NLP processing"""
         if not NLTK_AVAILABLE:
             self.logger.info("NLTK not available - install with: pip install nltk")
@@ -225,7 +225,7 @@ class ConversationalAI:
 
         return response
 
-    def _build_response_handlers(self):
+    def _build_response_handlers(self) -> None:
         """Build intent-to-response handler mapping"""
         return {
             "emergency_request": lambda entities: (

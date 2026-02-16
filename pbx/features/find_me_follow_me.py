@@ -34,7 +34,7 @@ class FindMeFollowMe:
             self.logger.info("Find Me/Follow Me system initialized")
             self._load_configs()
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize database schema for FMFM"""
         if not self.database or not self.database.enabled:
             return
@@ -76,7 +76,7 @@ class FindMeFollowMe:
             if cfg["extension"] not in self.user_configs:
                 self.user_configs[cfg["extension"]] = cfg
 
-    def _load_from_database(self):
+    def _load_from_database(self) -> None:
         """Load FMFM configurations from database"""
         if not self.database or not self.database.enabled:
             return

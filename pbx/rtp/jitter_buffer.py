@@ -371,12 +371,12 @@ class JitterBufferManager:
         """
         return self.buffers.get(call_id)
 
-    def remove_buffer(self, call_id: str):
+    def remove_buffer(self, call_id: str) -> None:
         """
-        Remove jitter buffer for a call
+        Remove jitter buffer for a call.
 
         Args:
-            call_id: Call identifier
+            call_id: Call identifier.
         """
         if call_id in self.buffers:
             del self.buffers[call_id]

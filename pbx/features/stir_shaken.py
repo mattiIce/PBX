@@ -567,7 +567,7 @@ def add_stir_shaken_to_invite(
     from_number: str,
     to_number: str,
     attestation: AttestationLevel = AttestationLevel.FULL,
-):
+) -> None:
     """
     Add STIR/SHAKEN Identity header to SIP INVITE message
 

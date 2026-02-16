@@ -189,7 +189,7 @@ class ConversationalAIDatabase:
             self.logger.error(f"Error saving conversation: {e}")
             return None
 
-    def save_message(self, conversation_id: int, role: str, content: str, timestamp: datetime):
+    def save_message(self, conversation_id: int, role: str, content: str, timestamp: datetime) -> None:
         """Save a message in the conversation"""
         try:
             cursor = self.db.connection.cursor()
@@ -219,7 +219,7 @@ class ConversationalAIDatabase:
         confidence: float,
         entities: dict,
         timestamp: datetime,
-    ):
+    ) -> None:
         """Save detected intent"""
         try:
             cursor = self.db.connection.cursor()

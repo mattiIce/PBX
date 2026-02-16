@@ -259,7 +259,7 @@ class PredictiveDialingDatabase:
             self.logger.error(f"Error saving contact: {e}")
             return False
 
-    def save_attempt(self, campaign_id: str, contact_id: str, attempt_data: dict):
+    def save_attempt(self, campaign_id: str, contact_id: str, attempt_data: dict) -> None:
         """Save a call attempt"""
         try:
             cursor = self.db.connection.cursor()

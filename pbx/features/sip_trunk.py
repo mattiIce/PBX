@@ -182,7 +182,7 @@ class SIPTrunk:
             self.status = TrunkStatus.FAILED
             self.health_status = TrunkHealthStatus.DOWN
 
-    def _update_health_status(self):
+    def _update_health_status(self) -> None:
         """Update health status based on metrics"""
         if self.total_calls < 10:
             # Not enough data yet
@@ -367,7 +367,7 @@ class SIPTrunkSystem:
         self.auto_recovery_enabled = True
         self.failover_threshold = 3  # consecutive failures before failover
 
-    def start_health_monitoring(self):
+    def start_health_monitoring(self) -> None:
         """Start health monitoring thread"""
         if self.monitoring_active:
             self.logger.warning("Health monitoring already active")
@@ -387,7 +387,7 @@ class SIPTrunkSystem:
             self.health_check_thread.join(timeout=5)
         self.logger.info("Stopped SIP trunk health monitoring")
 
-    def _health_monitoring_loop(self):
+    def _health_monitoring_loop(self) -> None:
         """Background thread for health monitoring"""
         while self.monitoring_active:
             try:
@@ -397,7 +397,7 @@ class SIPTrunkSystem:
                 self.logger.error(f"Error in health monitoring loop: {e}")
                 time.sleep(5)
 
-    def _perform_health_checks(self):
+    def _perform_health_checks(self) -> None:
         """Perform health checks on all trunks"""
         for trunk in self.trunks.values():
             try:
@@ -520,7 +520,7 @@ class SIPTrunkSystem:
 
         return False
 
-    def _handle_trunk_failure(self, failed_trunk: SIPTrunk):
+    def _handle_trunk_failure(self, failed_trunk: SIPTrunk) -> None:
         """
         Handle trunk failure and initiate failover if needed
 

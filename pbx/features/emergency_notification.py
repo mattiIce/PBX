@@ -425,7 +425,7 @@ class EmergencyNotificationSystem:
             if "sms" not in notification_record["methods_used"]:
                 notification_record["methods_used"].append("sms")
 
-    def _send_call_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_call_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send call notification to contact"""
         if not contact.extension:
             self.logger.warning(f"Cannot call {contact.name}: no extension configured")
@@ -476,7 +476,7 @@ class EmergencyNotificationSystem:
             self.logger.warning(f"🔊 Emergency page triggered: {trigger_type}")
             # In full implementation, would trigger actual overhead paging
 
-    def _send_email_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_email_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send email notification"""
         if not contact.email:
             self.logger.warning(f"Cannot email {contact.name}: no email configured")
@@ -564,7 +564,7 @@ PBX Emergency Notification System
         server.send_message(msg)
         server.quit()
 
-    def _send_sms_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_sms_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send SMS notification"""
         if not contact.phone:
             self.logger.warning(f"Cannot SMS {contact.name}: no phone configured")
@@ -592,7 +592,7 @@ PBX Emergency Notification System
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending emergency SMS: {e}")
 
-    def _send_sms_twilio(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_sms_twilio(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send SMS via Twilio"""
         try:
             # Check if Twilio is available
@@ -631,7 +631,7 @@ PBX Emergency Notification System
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending Twilio SMS: {e}")
 
-    def _send_sms_aws(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_sms_aws(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send SMS via AWS SNS"""
         try:
             # Check if boto3 is available
@@ -716,7 +716,7 @@ PBX Emergency Notification System
         with self.lock:
             return self.notification_history[-limit:]
 
-    def on_911_call(self, caller_extension: str, caller_name: str, location: str | None = None):
+    def on_911_call(self, caller_extension: str, caller_name: str, location: str | None = None) -> None:
         """
         Handle 911 call detection
 

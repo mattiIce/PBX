@@ -243,7 +243,7 @@ class PhoneProvisioning:
                 "To use HTTP for provisioning: set provisioning.url_format to http://... in config.yml"
             )
 
-    def _load_devices_from_database(self):
+    def _load_devices_from_database(self) -> None:
         """Load provisioned devices from database into memory"""
         if not self.devices_db:
             return
@@ -276,7 +276,7 @@ class PhoneProvisioning:
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading devices from database: {e}")
 
-    def _load_builtin_templates(self):
+    def _load_builtin_templates(self) -> None:
         """Load built-in phone templates"""
 
         # Zultys ZIP 33G template (basic SIP phone)
@@ -1482,7 +1482,7 @@ P2351 = 1
 
         return config_content, content_type
 
-    def _add_request_log(self, request_log):
+    def _add_request_log(self, request_log: dict) -> None:
         """Add request to history, keeping only recent requests"""
         self.provision_requests.append(request_log)
         # Keep only the last N requests

@@ -435,7 +435,7 @@ class VoicemailBox:
                 return True
         return False
 
-    def _load_messages(self):
+    def _load_messages(self) -> None:
         """Load existing voicemail messages from database or disk"""
         # Try loading from database first if available
         if self.database and self.database.enabled:

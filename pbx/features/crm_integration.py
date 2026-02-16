@@ -412,7 +412,7 @@ class CRMIntegration:
 
         return None
 
-    def _add_to_cache(self, phone_number: str, caller_info: CallerInfo):
+    def _add_to_cache(self, phone_number: str, caller_info: CallerInfo) -> None:
         """Add caller info to cache"""
         with self.cache_lock:
             self.cache[phone_number] = (caller_info, datetime.now(UTC))
@@ -423,7 +423,7 @@ class CRMIntegration:
             self.cache.clear()
         self.logger.info("Caller lookup cache cleared")
 
-    def trigger_screen_pop(self, phone_number: str, call_id: str, extension: str):
+    def trigger_screen_pop(self, phone_number: str, call_id: str, extension: str) -> None:
         """
         Trigger screen pop notification for incoming call
 

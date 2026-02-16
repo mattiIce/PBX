@@ -240,7 +240,7 @@ class WebhookSystem:
                 event, subscription = item
                 self._deliver_webhook(event, subscription)
 
-    def _deliver_webhook(self, event: WebhookEvent, subscription: WebhookSubscription):
+    def _deliver_webhook(self, event: WebhookEvent, subscription: WebhookSubscription) -> None:
         """
         Deliver webhook to subscription with retry logic
 
@@ -303,7 +303,7 @@ class WebhookSystem:
                 self.logger.debug("Webhook delivery error details", exc_info=True)
                 break
 
-    def trigger_event(self, event_type: str, data: dict):
+    def trigger_event(self, event_type: str, data: dict) -> None:
         """
         Trigger a webhook event
 

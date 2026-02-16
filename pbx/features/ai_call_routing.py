@@ -49,7 +49,7 @@ class AICallRouting:
             self.logger.info("AI call routing initialized")
             self._initialize_model()
 
-    def _initialize_model(self):
+    def _initialize_model(self) -> None:
         """Initialize ML model"""
         if not SKLEARN_AVAILABLE:
             return
@@ -102,7 +102,7 @@ class AICallRouting:
 
         return True
 
-    def _train_model(self):
+    def _train_model(self) -> None:
         """Train the ML model on historical data"""
         if (
             not SKLEARN_AVAILABLE

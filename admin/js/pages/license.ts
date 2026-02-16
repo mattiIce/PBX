@@ -71,7 +71,7 @@ export async function loadLicenseFeatures(): Promise<void> {
             return;
         }
 
-        const features = data.features || {};
+        const features = data.features ?? {};
         container.innerHTML = Object.entries(features).map(([name, enabled]) =>
             `<div class="feature-item">
                 <span>${name.replace(/_/g, ' ')}</span>
@@ -105,7 +105,7 @@ export async function installLicense(): Promise<void> {
             loadLicenseStatus();
             loadLicenseFeatures();
         } else {
-            showNotification(data.error || 'Failed to install license', 'error');
+            showNotification(data.error ?? 'Failed to install license', 'error');
         }
     } catch (error: unknown) {
         console.error('Error installing license:', error);

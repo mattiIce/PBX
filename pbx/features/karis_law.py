@@ -510,7 +510,7 @@ class KarisLawCompliance:
 
     def _trigger_emergency_notification(
         self, caller_extension: str, caller_info: dict, location_info: dict | None, call_id: str
-    ):
+    ) -> None:
         """
         Trigger automatic notification to designated contacts (Kari's Law requirement)
 

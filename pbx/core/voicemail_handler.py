@@ -12,21 +12,29 @@ import threading
 import time
 import traceback
 from pathlib import Path
+from typing import Any
 
 
 class VoicemailHandler:
     """Handles voicemail access, IVR sessions, message playback, and recording"""
 
-    def __init__(self, pbx_core):
+    def __init__(self, pbx_core: Any) -> None:
         """
         Initialize VoicemailHandler with reference to PBXCore.
 
         Args:
             pbx_core: The PBXCore instance
         """
-        self.pbx_core = pbx_core
+        self.pbx_core: Any = pbx_core
 
-    def handle_voicemail_access(self, from_ext, to_ext, call_id, message, from_addr):
+    def handle_voicemail_access(
+        self,
+        from_ext: str,
+        to_ext: str,
+        call_id: str,
+        message: Any,
+        from_addr: tuple[str, int],
+    ) -> bool:
         """
         Handle voicemail access calls (*xxxx pattern)
 
@@ -46,7 +54,7 @@ class VoicemailHandler:
         pbx = self.pbx_core
 
         # Extract the target extension from *xxxx pattern
-        target_ext = to_ext[1:]  # Remove the * prefix
+        target_ext: str = to_ext[1:]  # Remove the * prefix
 
         pbx.logger.info("=" * 70)
         pbx.logger.info("VOICEMAIL ACCESS INITIATED")
@@ -58,7 +66,7 @@ class VoicemailHandler:
 
         # Verify the target extension exists (check both database and config)
         pbx.logger.info(f"[VM Access] Step 1: Verifying target extension {target_ext} exists")
-        extension_exists = False
+        extension_exists: bool = False
 
         # Check extension registry first (includes both database and config
         # extensions)
@@ -83,8 +91,8 @@ class VoicemailHandler:
 
         # Parse SDP from caller's INVITE
         pbx.logger.info("[VM Access] Step 3: Parsing SDP from caller INVITE")
-        caller_sdp = None
-        caller_codecs = None
+        caller_sdp: dict[str, Any] | None = None
+        caller_codecs: list[str] | None = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
@@ -132,7 +140,7 @@ class VoicemailHandler:
 
         # Answer the call
         pbx.logger.info("[VM Access] Step 7: Building SIP 200 OK response")
-        server_ip = pbx._get_server_ip()
+        server_ip: str = pbx._get_server_ip()
         pbx.logger.info(f"[VM Access] Server IP: {server_ip}")
 
         # Determine which codecs to offer based on caller's phone model
@@ -173,8 +181,8 @@ class VoicemailHandler:
         ok_response.set_header("Content-type", "application/sdp")
 
         # Build Contact header
-        sip_port = pbx.config.get("server.sip_port", 5060)
-        contact_uri = f"<sip:{target_ext}@{server_ip}:{sip_port}>"
+        sip_port: int = pbx.config.get("server.sip_port", 5060)
+        contact_uri: str = f"<sip:{target_ext}@{server_ip}:{sip_port}>"
         ok_response.set_header("Contact", contact_uri)
         pbx.logger.info(f"[VM Access] Contact header: {contact_uri}")
 
@@ -222,7 +230,13 @@ class VoicemailHandler:
 
         return True
 
-    def _playback_voicemails(self, call_id, call, mailbox, messages):
+    def _playback_voicemails(
+        self,
+        call_id: str,
+        call: Any,
+        mailbox: Any,
+        messages: list[dict[str, Any]],
+    ) -> None:
         """
         Play voicemail messages to caller
 
@@ -284,7 +298,7 @@ class VoicemailHandler:
                             time.sleep(0.5)
 
                         # Play the voicemail message
-                        file_path = message["file_path"]
+                        file_path: str = message["file_path"]
                         pbx.logger.info(f"Playing voicemail {idx + 1}/{len(messages)}: {file_path}")
 
                         if player.play_file(file_path):
@@ -317,7 +331,9 @@ class VoicemailHandler:
             except Exception as e:
                 pbx.logger.error(f"Error ending call during cleanup: {e}")
 
-    def _voicemail_ivr_session(self, call_id, call, mailbox, voicemail_ivr):
+    def _voicemail_ivr_session(
+        self, call_id: str, call: Any, mailbox: Any, voicemail_ivr: Any
+    ) -> None:
         """
         Interactive voicemail management session with IVR menu
 
@@ -429,7 +445,7 @@ class VoicemailHandler:
                 # Use '*' which won't be collected as part of PIN (only 0-9 are
                 # collected)
                 pbx.logger.info("[VM IVR] Initializing IVR state machine...")
-                initial_action = voicemail_ivr.handle_dtmf("*")
+                initial_action: dict[str, Any] = voicemail_ivr.handle_dtmf("*")
 
                 # Play the PIN entry prompt that the IVR returned
                 if not isinstance(initial_action, dict):

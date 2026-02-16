@@ -111,7 +111,7 @@ class PresenceSystem:
         self.auto_away_timeout = auto_away_timeout
         self.auto_offline_timeout = auto_offline_timeout
 
-    def register_user(self, extension: str, name: str =""):
+    def register_user(self, extension: str, name: str ="") -> None:
         """
         Register user for presence
 
@@ -253,7 +253,7 @@ class PresenceSystem:
                 )
                 # In a real implementation, send presence update messages
 
-    def check_auto_status(self):
+    def check_auto_status(self) -> None:
         """Check and update auto-away/offline status based on inactivity"""
         for user in self.users.values():
             if user.status == PresenceStatus.OFFLINE:

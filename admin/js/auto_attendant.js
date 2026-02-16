@@ -9,10 +9,10 @@ async function loadAutoAttendantConfig() {
         if (configResponse.ok) {
             const config = await configResponse.json();
 
-            document.getElementById('aa-enabled').checked = config.enabled || false;
-            document.getElementById('aa-extension').value = config.extension || '0';
-            document.getElementById('aa-timeout').value = config.timeout || 10;
-            document.getElementById('aa-max-retries').value = config.max_retries || 3;
+            document.getElementById('aa-enabled').checked = config.enabled ?? false;
+            document.getElementById('aa-extension').value = config.extension ?? '0';
+            document.getElementById('aa-timeout').value = config.timeout ?? 10;
+            document.getElementById('aa-max-retries').value = config.max_retries ?? 3;
         }
 
         // Load available menus first
@@ -38,8 +38,8 @@ async function loadAutoAttendantPrompts() {
         }
 
         const data = await response.json();
-        const prompts = data.prompts || {};
-        const companyName = data.company_name || '';
+        const prompts = data.prompts ?? {};
+        const companyName = data.company_name ?? '';
 
         // Set company name
         const companyNameField = document.getElementById('aa-company-name');

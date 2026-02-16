@@ -230,7 +230,7 @@ class SRTPManager:
             self.logger.error(f"Failed to decrypt SRTP packet: {e}")
             return None
 
-    def _derive_nonce(self, salt, sequence_number):
+    def _derive_nonce(self, salt: bytes, sequence_number: int) -> bytes:
         """
         Derive nonce from salt and sequence number per RFC 3711 section 4.1.1
 
@@ -262,7 +262,7 @@ class SRTPManager:
 
         return bytes(nonce)
 
-    def close_session(self, call_id):
+    def close_session(self, call_id: str) -> None:
         """
         Close SRTP session
 
@@ -273,12 +273,12 @@ class SRTPManager:
             del self.sessions[call_id]
             self.logger.info(f"Closed SRTP session for call {call_id}")
 
-    def is_available(self):
+    def is_available(self) -> bool:
         """Check if SRTP is available"""
         return CRYPTO_AVAILABLE
 
 
-def generate_srtp_keys():
+def generate_srtp_keys() -> tuple[bytes, bytes]:
     """
     Generate random SRTP keys
 

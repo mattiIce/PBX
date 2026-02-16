@@ -46,7 +46,7 @@ def handle_static_file(path: str) -> Response:
             return send_json({"error": "File not found"}, 404)
 
         # Determine content type
-        content_type, _ = mimetypes.guess_type(full_path)
+        content_type, _ = mimetypes.guess_type(str(full_path))
         if not content_type:
             content_type = "application/octet-stream"
 

@@ -145,7 +145,7 @@ class CallQueue:
         if extension in self.agents:
             del self.agents[extension]
 
-    def enqueue(self, call_id: str, caller_extension: str):
+    def enqueue(self, call_id: str, caller_extension: str) -> None:
         """
         Add call to queue
 

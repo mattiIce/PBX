@@ -287,7 +287,7 @@ class GeographicRedundancy:
             "checked_at": datetime.now(UTC).isoformat(),
         }
 
-    def _trigger_failover(self, failed_region_id: str, reason: str):
+    def _trigger_failover(self, failed_region_id: str, reason: str) -> None:
         """
         Trigger failover to backup region
 

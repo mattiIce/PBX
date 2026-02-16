@@ -6,6 +6,8 @@ Collects and analyzes Real-Time Control Protocol statistics for
 call quality monitoring and troubleshooting.
 """
 
+from __future__ import annotations
+
 import math
 import time
 from dataclasses import dataclass
@@ -16,7 +18,7 @@ from pbx.utils.logger import get_logger
 
 @dataclass
 class RTCPStats:
-    """RTCP statistics for a call"""
+    """RTCP statistics for a call."""
 
     # Sender statistics
     packets_sent: int = 0
@@ -97,24 +99,24 @@ class RTCPMonitor:
 
         self.logger.info(f"RTCP monitor initialized for call {call_id}")
 
-    def update_sent_packet(self, size: int):
+    def update_sent_packet(self, size: int) -> None:
         """
-        Update statistics for sent packet
+        Update statistics for sent packet.
 
         Args:
-            size: Packet size in bytes
+            size: Packet size in bytes.
         """
         self.stats.packets_sent += 1
         self.stats.bytes_sent += size
 
-    def update_received_packet(self, sequence: int, timestamp: int, size: int):
+    def update_received_packet(self, sequence: int, timestamp: int, size: int) -> None:
         """
-        Update statistics for received packet
+        Update statistics for received packet.
 
         Args:
-            sequence: RTP sequence number
-            timestamp: RTP timestamp
-            size: Packet size in bytes
+            sequence: RTP sequence number.
+            timestamp: RTP timestamp.
+            size: Packet size in bytes.
         """
         arrival_time = time.time()
 
@@ -139,24 +141,24 @@ class RTCPMonitor:
         # Estimate MOS score
         self._estimate_mos()
 
-    def update_lost_packet(self):
-        """Update statistics for lost packet"""
+    def update_lost_packet(self) -> None:
+        """Update statistics for lost packet."""
         self.stats.packets_lost += 1
         self._calculate_packet_loss()
         self._estimate_mos()
 
-    def update_rtt(self, rtt_ms: float):
+    def update_rtt(self, rtt_ms: float) -> None:
         """
-        Update round-trip time
+        Update round-trip time.
 
         Args:
-            rtt_ms: Round-trip time in milliseconds
+            rtt_ms: Round-trip time in milliseconds.
         """
         self.stats.rtt_ms = rtt_ms
         self._estimate_mos()
 
-    def _update_sequence(self, sequence: int):
-        """Track sequence numbers and detect cycles"""
+    def _update_sequence(self, sequence: int) -> None:
+        """Track sequence numbers and detect cycles."""
         if self.stats.last_sequence is None:
             self.stats.last_sequence = sequence
             self.stats.highest_sequence = sequence

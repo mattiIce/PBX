@@ -547,7 +547,7 @@ class BIIntegration:
         }
         return instructions.get(provider, "Configure direct database connection in your BI tool")
 
-    def create_custom_dataset(self, name: str, query: str):
+    def create_custom_dataset(self, name: str, query: str) -> None:
         """
         Create custom dataset
 
@@ -562,7 +562,7 @@ class BIIntegration:
 
     def schedule_export(
         self, dataset_name: str, schedule: str, format: ExportFormat = ExportFormat.CSV
-    ):
+    ) -> None:
         """
         Schedule automatic export
 

@@ -50,7 +50,7 @@ class RecordingAnnouncements:
             self.logger.info(f"  Require consent: {self.require_consent}")
             self._check_audio_file()
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize database schema for recording announcements"""
         if not self.database or not self.database.enabled:
             return
@@ -109,7 +109,7 @@ class RecordingAnnouncements:
         consent_required: bool,
         consent_given: bool | None,
         consent_timeout: bool,
-    ):
+    ) -> None:
         """Log announcement to database"""
         if not self.database or not self.database.enabled:
             return

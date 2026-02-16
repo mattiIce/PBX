@@ -169,7 +169,7 @@ class CallQualityPredictionDatabase:
             self.logger.error(f"Error creating quality prediction tables: {e}")
             return False
 
-    def save_metrics(self, call_id: str, metrics: dict):
+    def save_metrics(self, call_id: str, metrics: dict) -> None:
         """Save quality metrics"""
         try:
             cursor = self.db.connection.cursor()
@@ -203,7 +203,7 @@ class CallQualityPredictionDatabase:
         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving quality metrics: {e}")
 
-    def save_prediction(self, call_id: str, prediction: dict):
+    def save_prediction(self, call_id: str, prediction: dict) -> None:
         """Save quality prediction"""
         try:
             cursor = self.db.connection.cursor()
@@ -263,7 +263,7 @@ class CallQualityPredictionDatabase:
         message: str,
         metric_value: float,
         threshold_value: float,
-    ):
+    ) -> None:
         """Save quality alert"""
         try:
             cursor = self.db.connection.cursor()

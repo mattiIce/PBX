@@ -153,7 +153,7 @@ class CallTagging:
             ]
         )
 
-    def _initialize_ml_classifier(self):
+    def _initialize_ml_classifier(self) -> None:
         """Initialize ML classifier with training data"""
         if not SKLEARN_AVAILABLE:
             self.logger.info("scikit-learn not available, using rule-based classification only")
@@ -281,7 +281,7 @@ class CallTagging:
             self.logger.warning(f"Could not initialize ML classifier: {e}")
             self.ml_classifier = None
 
-    def _initialize_spacy(self):
+    def _initialize_spacy(self) -> None:
         """Initialize spaCy NLP model for advanced text analysis"""
         if not SPACY_AVAILABLE:
             self.logger.info("spaCy not available - install with: pip install spacy")

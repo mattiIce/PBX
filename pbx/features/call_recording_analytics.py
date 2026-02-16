@@ -170,7 +170,7 @@ class RecordingAnalytics:
 
         return results
 
-    def _load_vosk_model(self):
+    def _load_vosk_model(self) -> None:
         """Load Vosk speech recognition model"""
         from vosk import Model
 
@@ -186,7 +186,7 @@ class RecordingAnalytics:
 
         return None
 
-    def _process_vosk_audio(self, recognizer: Any, wf: Any):
+    def _process_vosk_audio(self, recognizer: Any, wf: Any) -> str:
         """Process audio file with Vosk recognizer"""
         import json
 

@@ -232,7 +232,7 @@ class VoiceBiometricsDatabase:
         except sqlite3.Error as e:
             self.logger.error(f"Error updating enrollment progress: {e}")
 
-    def save_verification(self, user_id: str, call_id: str, verified: bool, confidence: float):
+    def save_verification(self, user_id: str, call_id: str, verified: bool, confidence: float) -> None:
         """Save verification result"""
         try:
             # Get profile ID
@@ -287,7 +287,7 @@ class VoiceBiometricsDatabase:
         fraud_detected: bool,
         risk_score: float,
         indicators: list[str],
-    ):
+    ) -> None:
         """Save fraud detection result"""
         try:
             cursor = self.db.connection.cursor()

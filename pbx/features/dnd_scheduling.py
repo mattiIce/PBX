@@ -534,7 +534,7 @@ class DNDScheduler:
             previous = self.previous_statuses[extension]
             self.presence_system.set_status(extension, previous)
 
-    def _check_all_rules(self):
+    def _check_all_rules(self) -> None:
         """Check all rules and update presence accordingly"""
         if not self.presence_system:
             return

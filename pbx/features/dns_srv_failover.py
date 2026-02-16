@@ -284,7 +284,7 @@ class DNSSRVFailover:
             self.logger.error(f"Health check error for {target}:{port}: {e}")
             return False
 
-    def mark_server_failed(self, service: str, protocol: str, domain: str, target: str, port: int):
+    def mark_server_failed(self, service: str, protocol: str, domain: str, target: str, port: int) -> None:
         """
         Mark server as failed
 
@@ -325,7 +325,7 @@ class DNSSRVFailover:
 
     def mark_server_recovered(
         self, service: str, protocol: str, domain: str, target: str, port: int
-    ):
+    ) -> None:
         """Mark server as recovered"""
         srv_name = f"_{service}._{protocol}.{domain}"
 

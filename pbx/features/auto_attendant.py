@@ -954,7 +954,7 @@ class AutoAttendant:
         # Invalid option
         return self._handle_invalid_input(session)
 
-    def _navigate_to_submenu(self, session: dict, submenu_id) -> dict:
+    def _navigate_to_submenu(self, session: dict, submenu_id: str) -> dict:
         """
         Navigate to a submenu
 

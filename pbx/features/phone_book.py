@@ -60,7 +60,7 @@ class PhoneBook:
         else:
             self.logger.info("Phone book feature disabled")
 
-    def _create_table(self):
+    def _create_table(self) -> None:
         """Create phone book table in database"""
         if not self.database or not self.database.enabled:
             return False
@@ -118,7 +118,7 @@ class PhoneBook:
 
         return success
 
-    def _load_from_database(self):
+    def _load_from_database(self) -> None:
         """Load phone book entries from database"""
         if not self.database or not self.database.enabled:
             return

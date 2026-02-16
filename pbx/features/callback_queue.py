@@ -61,7 +61,7 @@ class CallbackQueue:
             self.logger.info(f"  Max wait time: {self.max_wait_time} minutes")
             self.logger.info(f"  Retry attempts: {self.retry_attempts}")
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize database schema for callback queue"""
         if not self.database or not self.database.enabled:
             return
@@ -117,7 +117,7 @@ class CallbackQueue:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing callback queue schema: {e}")
 
-    def _load_callbacks_from_database(self):
+    def _load_callbacks_from_database(self) -> None:
         """Load active callbacks from database"""
         if not self.database or not self.database.enabled:
             return

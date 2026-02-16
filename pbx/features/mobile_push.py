@@ -56,7 +56,7 @@ class MobilePushNotifications:
             self.logger.warning("Mobile push enabled but firebase-admin not installed")
             self.logger.info("  Install with: pip install firebase-admin")
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize database schema for mobile push notifications"""
         if not self.database or not self.database.enabled:
             return
@@ -145,7 +145,7 @@ class MobilePushNotifications:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing mobile push schema: {e}")
 
-    def _load_devices_from_database(self):
+    def _load_devices_from_database(self) -> None:
         """Load device registrations from database"""
         if not self.database or not self.database.enabled:
             return
@@ -271,7 +271,7 @@ class MobilePushNotifications:
         data: dict,
         success: bool,
         error_message: str | None = None,
-    ):
+    ) -> None:
         """Save notification history to database"""
         if not self.database or not self.database.enabled:
             return

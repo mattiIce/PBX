@@ -188,7 +188,7 @@ class PredictiveDialer:
         self.logger.info(f"Added {added} contacts to campaign {campaign_id}")
         return added
 
-    def start_campaign(self, campaign_id: str):
+    def start_campaign(self, campaign_id: str) -> dict:
         """
         Start a campaign
 
@@ -236,7 +236,7 @@ class PredictiveDialer:
             self.logger.info(f"  Power mode: Dialing {self.lines_per_agent} lines per agent")
             # In production: Dial multiple contacts simultaneously per agent
 
-    def pause_campaign(self, campaign_id: str):
+    def pause_campaign(self, campaign_id: str) -> dict:
         """Pause a campaign"""
         if campaign_id not in self.campaigns:
             return
@@ -245,7 +245,7 @@ class PredictiveDialer:
         campaign.status = CampaignStatus.PAUSED
         self.logger.info(f"Paused campaign {campaign_id}")
 
-    def stop_campaign(self, campaign_id: str):
+    def stop_campaign(self, campaign_id: str) -> dict:
         """Stop a campaign"""
         if campaign_id not in self.campaigns:
             return

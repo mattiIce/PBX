@@ -102,7 +102,7 @@ class ExtensionRegistry:
 
         return Extension(number, name, ext_config)
 
-    def _load_extensions(self):
+    def _load_extensions(self) -> None:
         """Load extensions from database only (for security)"""
         # SECURITY: Extensions must be loaded from database only.
         # Loading from config.yml is insecure as it exposes passwords in plain

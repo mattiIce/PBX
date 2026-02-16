@@ -1492,7 +1492,7 @@ class MFAManager:
             self.logger.error(f"Failed to verify backup code for {extension_number}: {e}")
             return False
 
-    def _update_last_used(self, extension_number: str):
+    def _update_last_used(self, extension_number: str) -> None:
         """Update last used timestamp"""
         if not self.database or not self.database.enabled:
             return

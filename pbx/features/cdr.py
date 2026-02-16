@@ -105,7 +105,7 @@ class CDRSystem:
 
         Path(storage_path).mkdir(parents=True, exist_ok=True)
 
-    def start_record(self, call_id: str, from_extension: str, to_extension: str):
+    def start_record(self, call_id: str, from_extension: str, to_extension: str) -> CDRRecord:
         """
         Start CDR record for new call
 
@@ -133,7 +133,7 @@ class CDRSystem:
         if record:
             record.mark_answered()
 
-    def end_record(self, call_id: str, hangup_cause: str | None =None):
+    def end_record(self, call_id: str, hangup_cause: str | None =None) -> None:
         """
         End CDR record
 

@@ -109,7 +109,7 @@ class ConferenceSystem:
             self.logger.info(f"Created conference room {room_number}")
         return self.rooms[room_number]
 
-    def get_room(self, room_number: str):
+    def get_room(self, room_number: str) -> Any | None:
         """
         Get conference room
 

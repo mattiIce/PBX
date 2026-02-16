@@ -54,15 +54,15 @@ PAYLOAD_TYPES = {
 }
 
 
-def print_header():
-    """Print tool header"""
+def print_header() -> None:
+    """Print tool header."""
     print(f"\n{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}")
     print(f"{BOLD}{BLUE}   DTMF RFC2833 Payload Type Selector{RESET}")
     print(f"{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}\n")
 
 
-def print_payload_info(pt_num, info, is_recommended=False):
-    """Print information about a payload type"""
+def print_payload_info(pt_num: str, info: dict, is_recommended: bool = False) -> None:
+    """Print information about a payload type."""
     marker = f"{GREEN}✓{RESET}" if is_recommended else " "
     print(f"{marker} {BOLD}Payload Type {pt_num}{RESET}: {info['name']}")
     print(f"  Description: {info['description']}")
@@ -71,8 +71,8 @@ def print_payload_info(pt_num, info, is_recommended=False):
     print()
 
 
-def ask_question(question, options):
-    """Ask a yes/no question"""
+def ask_question(question: str, options: list[str]) -> int:
+    """Ask a multiple-choice question."""
     print(f"{YELLOW}{question}{RESET}")
     for i, option in enumerate(options, 1):
         print(f"  {i}. {option}")
@@ -88,8 +88,8 @@ def ask_question(question, options):
         print(f"{RED}Invalid choice. Please enter a number between 1 and {len(options)}.{RESET}")
 
 
-def recommend_payload_type():
-    """Interactive recommendation flow"""
+def recommend_payload_type() -> str:
+    """Interactive recommendation flow."""
     print_header()
 
     # Question 1: Is DTMF working?
@@ -150,8 +150,8 @@ def recommend_payload_type():
     return "100"
 
 
-def show_all_options():
-    """Display all available payload types"""
+def show_all_options() -> None:
+    """Display all available payload types."""
     print_header()
     print(f"{BOLD}Available Payload Types{RESET}\n")
 
@@ -166,8 +166,8 @@ def show_all_options():
     print("Custom values can be used if required by your provider.\n")
 
 
-def show_configuration_example(payload_type):
-    """Show how to configure the selected payload type"""
+def show_configuration_example(payload_type: str) -> None:
+    """Show how to configure the selected payload type."""
     print(f"\n{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}")
     print(f"{BOLD}Configuration Instructions{RESET}\n")
 

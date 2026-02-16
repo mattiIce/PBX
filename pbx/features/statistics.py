@@ -13,7 +13,7 @@ from typing import Any
 class StatisticsEngine:
     """Advanced statistics and analytics engine"""
 
-    def __init__(self, cdr_system) -> None:
+    def __init__(self, cdr_system: Any) -> None:
         """
         Initialize statistics engine
 
