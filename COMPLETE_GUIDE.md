@@ -1412,7 +1412,7 @@ Metrics include:
 - `pbx_active_calls` - Current active calls
 - `pbx_total_calls` - Total calls since startup
 - `pbx_registered_extensions` - Registered extensions
-- `pbx_voicemail_messages` - Unread voicemails
+- `pbx_voicemail_messages_total` - Unread voicemails
 - `pbx_queue_calls_waiting` - Calls in queues
 
 ### 7.6 Backup & Recovery
