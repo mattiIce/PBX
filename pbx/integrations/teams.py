@@ -173,7 +173,9 @@ class TeamsIntegration:
             self.logger.error(f"Error syncing presence: {e}")
             return False
 
-    def route_call_to_teams(self, from_number: str, to_teams_user: str, pbx_core: object | None = None) -> bool:
+    def route_call_to_teams(
+        self, from_number: str, to_teams_user: str, pbx_core: object | None = None
+    ) -> bool:
         """
         Route a call from PBX to Microsoft Teams user via SIP Direct Routing
 

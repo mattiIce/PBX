@@ -15,7 +15,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path for imports
@@ -32,7 +32,7 @@ def setup_config():
 
         config_path = str(Path(__file__).parent.parent / "config.yml")
         if Path(config_path).exists():
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
                 return config.get("licensing", {})
     except (KeyError, OSError, TypeError, ValueError) as e:
@@ -75,9 +75,7 @@ def cmd_generate(args):
     import re
 
     safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", args.org).lower()
-    output_file = (
-        args.output or f"license_{safe_org}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
-    )
+    output_file = args.output or f"license_{safe_org}_{datetime.now(UTC).strftime('%Y%m%d')}.json"
 
     with open(output_file, "w") as f:
         json.dump(license_data, f, indent=2)
@@ -104,7 +102,7 @@ def cmd_install(args):
         return 1
 
     try:
-        with open(args.license_file, "r") as f:
+        with open(args.license_file) as f:
             license_data = json.load(f)
     except (OSError, ValueError, json.JSONDecodeError) as e:
         print(f"Error: Failed to load license file: {e}")
@@ -131,9 +129,8 @@ def cmd_install(args):
         print(f"Message: {message}")
 
         return 0
-    else:
-        print("\n✗ Failed to install license")
-        return 1
+    print("\n✗ Failed to install license")
+    return 1
 
 
 def cmd_status(args):
@@ -188,9 +185,8 @@ def cmd_revoke(args):
     if lm.revoke_license():
         print("✓ License revoked successfully")
         return 0
-    else:
-        print("✗ Failed to revoke license")
-        return 1
+    print("✗ Failed to revoke license")
+    return 1
 
 
 def cmd_enable(args):
@@ -203,7 +199,7 @@ def cmd_enable(args):
     # Read existing .env
     env_lines = []
     if Path(env_file).exists():
-        with open(env_file, "r") as f:
+        with open(env_file) as f:
             env_lines = f.readlines()
 
     # Update or add PBX_LICENSING_ENABLED
@@ -238,7 +234,7 @@ def cmd_disable(args):
     # Read existing .env
     env_lines = []
     if Path(env_file).exists():
-        with open(env_file, "r") as f:
+        with open(env_file) as f:
             env_lines = f.readlines()
 
     # Check for license lock file
@@ -291,9 +287,8 @@ def cmd_remove_lock(args):
         print("\nLicensing can now be disabled via:")
         print(f"  python {__file__} disable")
         return 0
-    else:
-        print("✗ License lock file does not exist or could not be removed")
-        return 1
+    print("✗ License lock file does not exist or could not be removed")
+    return 1
 
 
 def cmd_features(args):
@@ -359,7 +354,7 @@ def cmd_batch_generate(args):
         return 1
 
     try:
-        with open(args.batch_file, "r") as f:
+        with open(args.batch_file) as f:
             if args.batch_file.endswith(".json"):
                 import json
 
@@ -425,7 +420,7 @@ def cmd_batch_generate(args):
             import re
 
             safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", issued_to).lower()
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             output_file = Path(output_dir) / f"license_{safe_org}_{timestamp}_{i}.json"
 
             with open(output_file, "w") as f:
@@ -435,7 +430,7 @@ def cmd_batch_generate(args):
             generated_count += 1
 
         except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
-            error_msg = f"License {i} ({license_spec.get('issued_to', 'unknown')}): {str(e)}"
+            error_msg = f"License {i} ({license_spec.get('issued_to', 'unknown')}): {e!s}"
             errors.append(error_msg)
             print(f"  ✗ Error: {e}")
 
@@ -565,25 +560,24 @@ Examples:
     try:
         if args.command == "generate":
             return cmd_generate(args)
-        elif args.command == "batch-generate":
+        if args.command == "batch-generate":
             return cmd_batch_generate(args)
-        elif args.command == "install":
+        if args.command == "install":
             return cmd_install(args)
-        elif args.command == "status":
+        if args.command == "status":
             return cmd_status(args)
-        elif args.command == "features":
+        if args.command == "features":
             return cmd_features(args)
-        elif args.command == "revoke":
+        if args.command == "revoke":
             return cmd_revoke(args)
-        elif args.command == "enable":
+        if args.command == "enable":
             return cmd_enable(args)
-        elif args.command == "disable":
+        if args.command == "disable":
             return cmd_disable(args)
-        elif args.command == "remove-lock":
+        if args.command == "remove-lock":
             return cmd_remove_lock(args)
-        else:
-            parser.print_help()
-            return 1
+        parser.print_help()
+        return 1
 
     except Exception as e:
         print(f"\nError: {e}")

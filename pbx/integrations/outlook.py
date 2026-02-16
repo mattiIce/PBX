@@ -209,8 +209,8 @@ class OutlookIntegration:
             for event in events:
                 if not event.get("is_cancelled"):
                     # Parse event times as timezone-aware
-                    event_start = datetime.fromisoformat(event["start"].replace("Z", "+00:00"))
-                    event_end = datetime.fromisoformat(event["end"].replace("Z", "+00:00"))
+                    event_start = datetime.fromisoformat(event["start"])
+                    event_end = datetime.fromisoformat(event["end"])
 
                     if event_start <= now <= event_end:
                         return "busy"
@@ -317,7 +317,7 @@ class OutlookIntegration:
 
             # Parse timestamp
             if isinstance(timestamp, str):
-                start_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
+                start_time = datetime.fromisoformat(timestamp)
             else:
                 start_time = datetime.now(UTC)
 
@@ -465,10 +465,7 @@ class OutlookIntegration:
             # Parse meeting start time - handle various ISO formats
             try:
                 # Try with 'Z' suffix (Zulu time)
-                if start_time_str.endswith("Z"):
-                    start_time = datetime.fromisoformat(start_time_str.replace("Z", "+00:00"))
-                # Try direct ISO format parsing
-                elif "+" in start_time_str or start_time_str.endswith("+00:00"):
+                if start_time_str.endswith(("Z", "+00:00")) or "+" in start_time_str:
                     start_time = datetime.fromisoformat(start_time_str)
                 else:
                     # Assume UTC if no timezone specified

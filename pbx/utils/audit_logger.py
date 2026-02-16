@@ -208,7 +208,9 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_permission_change(self, user: str, target_user: str, details: dict, ip_address: str) -> None:
+    def log_permission_change(
+        self, user: str, target_user: str, details: dict, ip_address: str
+    ) -> None:
         """Log permission change."""
         self.log_action(
             action="permission_change",
@@ -219,7 +221,9 @@ class AuditLogger:
             ip_address=ip_address,
         )
 
-    def log_security_event(self, event_type: str, user: str, details: dict, ip_address: str) -> None:
+    def log_security_event(
+        self, event_type: str, user: str, details: dict, ip_address: str
+    ) -> None:
         """Log security event."""
         self.log_action(
             action=event_type,

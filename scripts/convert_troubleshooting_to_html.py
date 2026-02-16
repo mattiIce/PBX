@@ -70,7 +70,7 @@ def markdown_to_html(markdown_content: str) -> str:
 
     # Convert code blocks
     def replace_code_block(match):
-        lang = match.group(1) if match.group(1) else ""
+        lang = match.group(1) or ""
         code = match.group(2)
         # Escape HTML in code blocks
         code = code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")

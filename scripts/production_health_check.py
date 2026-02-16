@@ -190,9 +190,7 @@ class HealthCheck:
 
         try:
             with open("/proc/meminfo") as f:
-                meminfo = {
-                    line.split()[0].rstrip(":"): int(line.split()[1]) for line in f.readlines()
-                }
+                meminfo = {line.split()[0].rstrip(":"): int(line.split()[1]) for line in f}
 
             mem_total = meminfo.get("MemTotal", 0)
             mem_available = meminfo.get("MemAvailable", 0)

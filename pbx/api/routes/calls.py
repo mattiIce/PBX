@@ -78,7 +78,7 @@ def get_advanced_analytics() -> tuple[Response, int]:
                 filters["min_duration"] = int(request.args.get("min_duration"))
 
             analytics = pbx_core.statistics_engine.get_advanced_analytics(
-                start_date, end_date, filters if filters else None
+                start_date, end_date, filters or None
             )
 
             return send_json(analytics), 200

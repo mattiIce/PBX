@@ -443,7 +443,7 @@ class ActiveDirectoryIntegration:
                             self.logger.warning(f"Failed to create extension {extension_number}")
 
                 except (KeyError, TypeError, ValueError) as e:
-                    user_desc = username if username else "unknown"
+                    user_desc = username or "unknown"
                     self.logger.error(f"Error syncing user {user_desc}: {e}")
                     continue
 

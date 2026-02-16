@@ -143,7 +143,9 @@ def pcm16_to_g722(pcm_data: bytes, sample_rate: int = 8000) -> bytes:
     return g722_data if g722_data is not None else b""
 
 
-def convert_pcm_wav_to_g722_wav(input_wav_path: str | Path, output_wav_path: str | Path | None = None) -> bool:
+def convert_pcm_wav_to_g722_wav(
+    input_wav_path: str | Path, output_wav_path: str | Path | None = None
+) -> bool:
     """
     Convert a PCM WAV file to G.722 WAV format
 
@@ -233,7 +235,9 @@ def convert_pcm_wav_to_g722_wav(input_wav_path: str | Path, output_wav_path: str
         return False
 
 
-def generate_beep_tone(frequency: int = 1000, duration_ms: int = 500, sample_rate: int = 8000) -> bytes:
+def generate_beep_tone(
+    frequency: int = 1000, duration_ms: int = 500, sample_rate: int = 8000
+) -> bytes:
     """
     Generate a simple beep tone in raw PCM format
 
@@ -258,7 +262,11 @@ def generate_beep_tone(frequency: int = 1000, duration_ms: int = 500, sample_rat
 
 
 def build_wav_header(
-    data_size: int, sample_rate: int = 8000, channels: int = 1, bits_per_sample: int = 16, audio_format: int = WAV_FORMAT_PCM
+    data_size: int,
+    sample_rate: int = 8000,
+    channels: int = 1,
+    bits_per_sample: int = 16,
+    audio_format: int = WAV_FORMAT_PCM,
 ) -> bytes:
     """
     Build a WAV file header
@@ -575,7 +583,9 @@ def load_prompt_file(prompt_type: str, prompt_dir: str = "voicemail_prompts") ->
     return None
 
 
-def get_prompt_audio(prompt_type: str, prompt_dir: str = "voicemail_prompts", sample_rate: int = 8000) -> bytes:
+def get_prompt_audio(
+    prompt_type: str, prompt_dir: str = "voicemail_prompts", sample_rate: int = 8000
+) -> bytes:
     """
     Get voice prompt audio, trying to load from file first, then generating tones as fallback
 

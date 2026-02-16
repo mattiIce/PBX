@@ -431,8 +431,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
 
                 if self.test_results["recommendations"]:
                     f.write("\n## Recommendations\n\n")
-                    for rec in self.test_results["recommendations"]:
-                        f.write(f"- {rec}\n")
+                    f.writelines(f"- {rec}\n" for rec in self.test_results["recommendations"])
 
             self.log(f"Troubleshooting guide saved to: {guide_path}", "PASS")
             self.test_results["passed"] += 1

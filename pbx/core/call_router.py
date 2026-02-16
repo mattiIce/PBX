@@ -187,7 +187,7 @@ class CallRouter:
 
             if pbx.webrtc_gateway:
                 # Get caller's SDP if available
-                caller_sdp_str = message.body if message.body else None
+                caller_sdp_str = message.body or None
 
                 # Route the call through WebRTC gateway
                 success = pbx.webrtc_gateway.receive_call(

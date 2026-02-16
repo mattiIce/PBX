@@ -99,7 +99,7 @@ def test_rate_limiter() -> None:
     assert not is_limited, "User incorrectly rate limited"
 
     # Record failed attempts
-    for i in range(3):
+    for _i in range(3):
         limiter.record_attempt("test_user", successful=False)
 
     # Should now be rate limited
@@ -116,7 +116,7 @@ def test_rate_limiter() -> None:
 
     # Test lockout expiry
     limiter3 = RateLimiter(config)
-    for i in range(3):
+    for _i in range(3):
         limiter3.record_attempt("test_user3", successful=False)
 
     is_limited, remaining = limiter3.is_rate_limited("test_user3")
@@ -234,7 +234,7 @@ def test_password_migration_compatibility() -> None:
         )
 
     # Verify wrong passwords don't authenticate
-    for ext_num in plaintext_passwords.keys():
+    for ext_num in plaintext_passwords:
         data = migrated_data[ext_num]
         assert not mgr.verify_password("wrong_password", data["hash"], data["salt"]), (
             f"Wrong password verified for {ext_num}"

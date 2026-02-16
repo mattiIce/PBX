@@ -29,8 +29,12 @@ def test_datetime_encoder() -> None:
     parsed = json.loads(json_str)
     assert parsed["id"] == 1, "ID should match"
     assert parsed["name"] == "Test", "Name should match"
-    assert parsed["created_at"] == "2025-12-05T14:30:00+00:00", "Created timestamp should be ISO format"
-    assert parsed["updated_at"] == "2025-12-05T15:45:30+00:00", "Updated timestamp should be ISO format"
+    assert parsed["created_at"] == "2025-12-05T14:30:00+00:00", (
+        "Created timestamp should be ISO format"
+    )
+    assert parsed["updated_at"] == "2025-12-05T15:45:30+00:00", (
+        "Updated timestamp should be ISO format"
+    )
 
 
 def test_registered_phones_json_serialization() -> None:

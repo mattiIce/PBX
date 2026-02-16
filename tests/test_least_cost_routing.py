@@ -6,10 +6,10 @@ import os
 import sqlite3
 import tempfile
 from datetime import time
+from pathlib import Path
 from typing import Any
 
 from pbx.features.least_cost_routing import DialPattern, LeastCostRouting, RateEntry, TimeBasedRate
-from pathlib import Path
 
 
 class MockPBX:

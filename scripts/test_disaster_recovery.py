@@ -16,14 +16,14 @@ import json
 import logging
 import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-import sqlite3
 
 
 @dataclass
@@ -100,7 +100,7 @@ class DisasterRecoveryTester:
             Path(self.config.backup_dir).mkdir(parents=True, exist_ok=True)
 
             # Backup filename with timestamp
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             backup_file = Path(self.config.backup_dir) / f"pbx_db_backup_{timestamp}.sql"
 
             # Run pg_dump
@@ -121,7 +121,7 @@ class DisasterRecoveryTester:
                 "-v",
             ]
 
-            success, stdout, stderr = self.run_command(cmd)
+            success, _stdout, stderr = self.run_command(cmd)
 
             if success or self.config.dry_run:
                 if not self.config.dry_run:
@@ -138,18 +138,15 @@ class DisasterRecoveryTester:
                             f"Database backup successful: {file_size / 1024 / 1024:.2f} MB"
                         )
                         return True
-                    else:
-                        self.results["errors"].append("Database backup file not created")
-                        return False
-                else:
-                    self.results["backup"]["database"] = {"success": True, "dry_run": True}
-                    return True
-            else:
-                self.results["errors"].append(f"Database backup failed: {stderr}")
-                return False
+                    self.results["errors"].append("Database backup file not created")
+                    return False
+                self.results["backup"]["database"] = {"success": True, "dry_run": True}
+                return True
+            self.results["errors"].append(f"Database backup failed: {stderr}")
+            return False
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Database backup exception: {str(e)}")
+            self.results["errors"].append(f"Database backup exception: {e!s}")
             return False
 
     def test_config_backup(self) -> bool:
@@ -182,12 +179,11 @@ class DisasterRecoveryTester:
                             if not self.config.dry_run:
                                 shutil.copy2(file, dest)
                             backed_up_files.append(file)
-                else:
-                    if Path(pattern).exists():
-                        dest = Path(config_backup_dir) / Path(pattern).name
-                        if not self.config.dry_run:
-                            shutil.copy2(pattern, dest)
-                        backed_up_files.append(pattern)
+                elif Path(pattern).exists():
+                    dest = Path(config_backup_dir) / Path(pattern).name
+                    if not self.config.dry_run:
+                        shutil.copy2(pattern, dest)
+                    backed_up_files.append(pattern)
 
             self.results["backup"]["config"] = {
                 "success": True,
@@ -198,7 +194,7 @@ class DisasterRecoveryTester:
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Configuration backup failed: {str(e)}")
+            self.results["errors"].append(f"Configuration backup failed: {e!s}")
             return False
 
     def test_voicemail_backup(self) -> bool:
@@ -222,7 +218,7 @@ class DisasterRecoveryTester:
                         shutil.copytree(dir_name, dest, dirs_exist_ok=True)
 
                         # Calculate size
-                        for root, dirs, files in os.walk(dest):
+                        for root, _dirs, files in os.walk(dest):
                             total_size += sum(Path(Path(root).stat().st_size / f) for f in files)
 
                     backed_up_dirs.append(dir_name)
@@ -236,7 +232,7 @@ class DisasterRecoveryTester:
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Data backup failed: {str(e)}")
+            self.results["errors"].append(f"Data backup failed: {e!s}")
             return False
 
     def test_database_restore(self) -> bool:
@@ -356,12 +352,11 @@ class DisasterRecoveryTester:
                     self.run_command(cmd_cleanup, check=False)
 
                 return True
-            else:
-                self.results["errors"].append(f"Database restore verification failed: {stderr}")
-                return False
+            self.results["errors"].append(f"Database restore verification failed: {stderr}")
+            return False
 
         except (KeyError, OSError, TypeError, ValueError, sqlite3.Error) as e:
-            self.results["errors"].append(f"Database restore failed: {str(e)}")
+            self.results["errors"].append(f"Database restore failed: {e!s}")
             return False
 
     def test_config_restore(self) -> bool:
@@ -397,7 +392,7 @@ class DisasterRecoveryTester:
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Configuration restore failed: {str(e)}")
+            self.results["errors"].append(f"Configuration restore failed: {e!s}")
             return False
 
     def verify_backup_integrity(self) -> bool:
@@ -441,7 +436,7 @@ class DisasterRecoveryTester:
             return verification_results["all_valid"]
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Verification failed: {str(e)}")
+            self.results["errors"].append(f"Verification failed: {e!s}")
             return False
 
     def calculate_rto_rpo(self) -> tuple[float, float]:
@@ -512,7 +507,7 @@ class DisasterRecoveryTester:
         # Compile results
         results = DRTestResults(
             test_type=self.config.test_type,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             duration=duration,
             overall_success=overall_success,
             backup_results=self.results["backup"],

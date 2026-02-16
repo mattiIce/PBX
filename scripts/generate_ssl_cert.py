@@ -23,7 +23,9 @@ except ImportError:
     sys.exit(1)
 
 
-def generate_self_signed_cert(cert_dir: str = "certs", hostname: str = "localhost", days_valid: int = 365) -> None:
+def generate_self_signed_cert(
+    cert_dir: str = "certs", hostname: str = "localhost", days_valid: int = 365
+) -> None:
     """
     Generate a self-signed SSL certificate.
 

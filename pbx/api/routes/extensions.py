@@ -118,9 +118,9 @@ def add_extension() -> tuple[Response, int]:
                 number=number,
                 name=name,
                 password_hash=password_hash,
-                email=email if email else None,
+                email=email or None,
                 allow_external=allow_external,
-                voicemail_pin=voicemail_pin if voicemail_pin else None,
+                voicemail_pin=voicemail_pin or None,
                 ad_synced=False,
                 ad_username=None,
                 is_admin=is_admin,
@@ -182,7 +182,7 @@ def update_extension(number: str) -> tuple[Response, int]:
             # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
             # Currently storing plain password; system supports both plain
             # and hashed passwords
-            password_hash = password if password else None
+            password_hash = password or None
             success = pbx_core.extension_db.update(
                 number=number,
                 name=name,

@@ -18,7 +18,13 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 def diagnose_call_quality(
-    call_id: str, packets_sent: int, packets_received: int, packets_lost: int, jitter_avg: float, latency_avg: float, duration: float
+    call_id: str,
+    packets_sent: int,
+    packets_received: int,
+    packets_lost: int,
+    jitter_avg: float,
+    latency_avg: float,
+    duration: float,
 ) -> None:
     """
     Diagnose call quality issues

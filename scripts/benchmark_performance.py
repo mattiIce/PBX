@@ -55,7 +55,7 @@ class PerformanceBenchmark:
         # Get CPU info
         try:
             with open("/proc/cpuinfo") as f:
-                cpu_lines = [line for line in f.readlines() if "model name" in line.lower()]
+                cpu_lines = [line for line in f if "model name" in line.lower()]
                 if cpu_lines:
                     info["cpu_model"] = cpu_lines[0].split(":")[1].strip()
 

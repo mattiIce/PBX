@@ -61,7 +61,7 @@ class ADIntegrationTester:
         self.ad = None
         self.test_results = []
 
-    def print_header(self, title: str):
+    def print_header(self, title: str) -> None:
         """Print a formatted header"""
         print()
         print("=" * 70)
@@ -69,7 +69,7 @@ class ADIntegrationTester:
         print("=" * 70)
         print()
 
-    def print_test(self, test_name: str, status: str, details: str = ""):
+    def print_test(self, test_name: str, status: str, details: str = "") -> None:
         """Print test result"""
         if status == "PASS":
             icon = f"{Colors.GREEN}✓{Colors.RESET}"
@@ -485,7 +485,7 @@ class ADIntegrationTester:
         self.print_summary(success=True)
         return True
 
-    def print_summary(self, success: bool):
+    def print_summary(self, success: bool) -> None:
         """Print test summary"""
         self.print_header("Test Summary")
 
@@ -529,7 +529,7 @@ class ADIntegrationTester:
             print("  3. Test SIP registration with a synced extension")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Test Active Directory integration",
         formatter_class=argparse.RawDescriptionHelpFormatter,

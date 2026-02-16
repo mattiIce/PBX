@@ -1609,7 +1609,7 @@ class ExtensionDB:
                     return default
                 if config_type == "json":
                     return json.loads(value) if value else default
-                return value if value else default
+                return value or default
             except (ValueError, json.JSONDecodeError, AttributeError) as e:
                 self.logger.warning(
                     f"Error parsing config value for key '{key}': {e}. Returning default."

@@ -330,7 +330,9 @@ class PBXMetricsExporter:
         """
         self.extension_registrations_total.labels(status=status).inc()
 
-    def record_api_request(self, method: str, endpoint: str, status_code: int, duration: float) -> None:
+    def record_api_request(
+        self, method: str, endpoint: str, status_code: int, duration: float
+    ) -> None:
         """
         Record API request.
 
@@ -356,7 +358,9 @@ class PBXMetricsExporter:
         self.cpu_usage_percent.set(cpu_percent)
         self.memory_usage_bytes.set(memory_bytes)
 
-    def update_queue_metrics(self, queue_name: str, waiting_calls: int, avg_wait_time: float) -> None:
+    def update_queue_metrics(
+        self, queue_name: str, waiting_calls: int, avg_wait_time: float
+    ) -> None:
         """
         Update call queue metrics.
 

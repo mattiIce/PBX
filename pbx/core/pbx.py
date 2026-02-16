@@ -904,7 +904,7 @@ class PBXCore:
         )
 
         # Determine which party to send REFER to (typically the caller)
-        refer_to_addr = call.caller_addr if call.caller_addr else call.callee_addr
+        refer_to_addr = call.caller_addr or call.callee_addr
         if not refer_to_addr:
             self.logger.error(f"No address found for REFER in call {call_id}")
             return False

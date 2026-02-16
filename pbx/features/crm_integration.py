@@ -394,8 +394,7 @@ class CRMIntegration:
         # remove separately
         normalized = re.sub(r"[^\d+]", "", phone_number)
         # Remove leading + if present
-        if normalized.startswith("+"):
-            normalized = normalized[1:]
+        normalized = normalized.removeprefix("+")
         return normalized
 
     def _get_from_cache(self, phone_number: str) -> CallerInfo | None:

@@ -122,7 +122,9 @@ class Config:
             logger.error("Error saving config: Disk error - %s", e)
             return False
 
-    def add_extension(self, number: str | int, name: str, email: str, password: str, allow_external: bool = True) -> bool:
+    def add_extension(
+        self, number: str | int, name: str, email: str, password: str, allow_external: bool = True
+    ) -> bool:
         """
         Add a new extension to configuration
 
@@ -167,7 +169,14 @@ class Config:
             logger.error("Error adding extension: %s", e)
             return False
 
-    def update_extension(self, number: str | int, name: str | None = None, email: str | None = None, password: str | None = None, allow_external: bool | None = None) -> bool:
+    def update_extension(
+        self,
+        number: str | int,
+        name: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+        allow_external: bool | None = None,
+    ) -> bool:
         """
         Update an existing extension
 

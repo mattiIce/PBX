@@ -778,7 +778,9 @@ class VoicemailHandler:
                                     ):
                                         greeting_audio_raw: bytes = b"".join(recorder.recorded_data)
                                         # Convert raw audio to WAV format before saving
-                                        greeting_audio_wav: bytes = pbx._build_wav_file(greeting_audio_raw)
+                                        greeting_audio_wav: bytes = pbx._build_wav_file(
+                                            greeting_audio_raw
+                                        )
                                         voicemail_ivr.save_recorded_greeting(greeting_audio_wav)
                                         pbx.logger.info(
                                             f"Saved recorded greeting as WAV ({len(greeting_audio_wav)} bytes, {len(greeting_audio_raw)} bytes raw audio)"
@@ -954,7 +956,9 @@ class VoicemailHandler:
                             # Use struct.unpack for efficient batch conversion
                             samples: list[float] = []
                             # Process in chunks for efficiency
-                            chunk_size: int = min(len(recent_audio), 8192)  # Process up to 8KB at once
+                            chunk_size: int = min(
+                                len(recent_audio), 8192
+                            )  # Process up to 8KB at once
                             for i in range(0, len(recent_audio), chunk_size):
                                 chunk = recent_audio[i : i + chunk_size]
                                 # Unpack bytes and convert to float samples

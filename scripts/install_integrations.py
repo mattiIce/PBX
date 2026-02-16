@@ -42,7 +42,13 @@ class IntegrationInstaller:
         }.get(level, "")
         print(f"{prefix} {message}")
 
-    def run_command(self, cmd: list[str] | str, check: bool = True, capture: bool = False, show_output: bool = True) -> bool | str:
+    def run_command(
+        self,
+        cmd: list[str] | str,
+        check: bool = True,
+        capture: bool = False,
+        show_output: bool = True,
+    ) -> bool | str:
         """
         Run a command safely using subprocess without shell=True.
 
@@ -84,7 +90,9 @@ class IntegrationInstaller:
                 self.log(f"Error: {e}", "ERROR")
             return False
 
-    def run_shell_command(self, cmd: str, check: bool = True, capture: bool = False, show_output: bool = True) -> bool | str:
+    def run_shell_command(
+        self, cmd: str, check: bool = True, capture: bool = False, show_output: bool = True
+    ) -> bool | str:
         """
         Run a shell command that requires pipes/redirections (trusted input only).
         This is kept separate to clearly mark which commands need shell=True.

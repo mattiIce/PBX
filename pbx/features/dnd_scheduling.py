@@ -186,8 +186,8 @@ class CalendarMonitor:
                 current_meeting = None
 
                 for event in events:
-                    event_start = datetime.fromisoformat(event["start"].replace("Z", "+00:00"))
-                    event_end = datetime.fromisoformat(event["end"].replace("Z", "+00:00"))
+                    event_start = datetime.fromisoformat(event["start"])
+                    event_end = datetime.fromisoformat(event["end"])
 
                     # Check if event is happening now
                     if event_start <= now <= event_end:

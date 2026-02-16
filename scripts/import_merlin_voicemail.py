@@ -208,7 +208,9 @@ def parse_filename_metadata(audio_dir: str) -> tuple[list[dict], dict]:
                 time_str = parts[2]
 
                 try:
-                    timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S").replace(tzinfo=UTC)
+                    timestamp = datetime.strptime(
+                        f"{date_str}_{time_str}", "%Y%m%d_%H%M%S"
+                    ).replace(tzinfo=UTC)
                 except (ValueError, TypeError):
                     timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime, tz=UTC)
 
@@ -253,7 +255,13 @@ def parse_pins_csv(csv_path: str) -> dict[str, str]:
     return pins
 
 
-def import_voicemail_messages(messages: list[dict], audio_dir: str | None, config: object, database: object, dry_run: bool = False) -> tuple[int, int, int]:
+def import_voicemail_messages(
+    messages: list[dict],
+    audio_dir: str | None,
+    config: object,
+    database: object,
+    dry_run: bool = False,
+) -> tuple[int, int, int]:
     """
     Import voicemail messages into the PBX system
 
@@ -356,7 +364,9 @@ def import_voicemail_messages(messages: list[dict], audio_dir: str | None, confi
     return imported, skipped, errors
 
 
-def import_voicemail_pins(pins: dict[str, str], config: object, database: object, dry_run: bool = False) -> tuple[int, int, int]:
+def import_voicemail_pins(
+    pins: dict[str, str], config: object, database: object, dry_run: bool = False
+) -> tuple[int, int, int]:
     """
     Import voicemail PINs
 
@@ -404,7 +414,9 @@ def import_voicemail_pins(pins: dict[str, str], config: object, database: object
     return imported, skipped, errors
 
 
-def import_greetings(greetings_dir: str, config: object, database: object, dry_run: bool = False) -> tuple[int, int]:
+def import_greetings(
+    greetings_dir: str, config: object, database: object, dry_run: bool = False
+) -> tuple[int, int]:
     """
     Import custom voicemail greetings
 

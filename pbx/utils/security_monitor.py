@@ -436,6 +436,8 @@ class SecurityMonitor:
         return True
 
 
-def get_security_monitor(config: dict | None = None, webhook_system: object = None) -> SecurityMonitor:
+def get_security_monitor(
+    config: dict | None = None, webhook_system: object = None
+) -> SecurityMonitor:
     """Get security monitor instance"""
     return SecurityMonitor(config, webhook_system)

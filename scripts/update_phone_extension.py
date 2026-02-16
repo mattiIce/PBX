@@ -112,11 +112,11 @@ def update_phone_extension(mac_address: str, new_extension: str) -> bool:
         print("1. Update the phone provisioning configuration:")
         print("   - Via Admin Panel: Phone Provisioning tab")
         print("   - Or in config.yml: Update the device's extension")
-        print("")
+        print()
         print("2. Reboot the phone to fetch new configuration:")
         print("   - Power cycle the phone")
         print("   - Or use phone menu to reboot")
-        print("")
+        print()
         print("3. Verify the phone registers with new extension")
         print("=" * 60)
     else:
@@ -131,11 +131,11 @@ def main() -> None:
     """Main entry point."""
     if len(sys.argv) != 3:
         print("Usage: python scripts/update_phone_extension.py <mac_address> <new_extension>")
-        print("")
+        print()
         print("Examples:")
         print("  python scripts/update_phone_extension.py 001565123456 1002")
         print("  python scripts/update_phone_extension.py 00:15:65:12:34:56 1002")
-        print("")
+        print()
         print("Note: MAC address format doesn't matter (colons optional)")
         sys.exit(1)
 

@@ -14,7 +14,14 @@ import urllib.error
 import urllib.request
 
 
-def test_endpoint(base_url: str, endpoint: str, method: str = "GET", data: dict | None = None, expected_status: int = 200, timeout: int = 10) -> bool:
+def test_endpoint(
+    base_url: str,
+    endpoint: str,
+    method: str = "GET",
+    data: dict | None = None,
+    expected_status: int = 200,
+    timeout: int = 10,
+) -> bool:
     """Test a single API endpoint."""
     url = f"{base_url}{endpoint}"
 

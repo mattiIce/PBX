@@ -13,7 +13,9 @@ import wave
 from pathlib import Path
 
 
-def generate_tone(frequency: float, duration: float, sample_rate: int = 8000, amplitude: float = 0.3) -> list[int]:
+def generate_tone(
+    frequency: float, duration: float, sample_rate: int = 8000, amplitude: float = 0.3
+) -> list[int]:
     """
     Generate a sine wave tone.
 
@@ -40,7 +42,9 @@ def generate_tone(frequency: float, duration: float, sample_rate: int = 8000, am
     return samples
 
 
-def generate_chord(frequencies: list[float], duration: float, sample_rate: int = 8000, amplitude: float = 0.2) -> list[int]:
+def generate_chord(
+    frequencies: list[float], duration: float, sample_rate: int = 8000, amplitude: float = 0.2
+) -> list[int]:
     """
     Generate a chord (multiple frequencies played together).
 

@@ -6,10 +6,10 @@ Ensures configuration and menu options persist across restarts
 import os
 import sqlite3
 import tempfile
+from pathlib import Path
 from typing import Any
 
 from pbx.features.auto_attendant import AutoAttendant
-from pathlib import Path
 
 
 class MockConfig:

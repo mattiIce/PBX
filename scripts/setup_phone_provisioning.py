@@ -29,7 +29,9 @@ except ImportError:
 class PhoneProvisioningSetup:
     """Interactive setup for phone provisioning"""
 
-    def __init__(self, config_path: str = "config.yml", api_url: str = "https://localhost:9000") -> None:
+    def __init__(
+        self, config_path: str = "config.yml", api_url: str = "https://localhost:9000"
+    ) -> None:
         self.config_path = config_path
         self.api_url = api_url
         self.config = None
@@ -52,7 +54,9 @@ class PhoneProvisioningSetup:
         print(f"  {text}")
         print("─" * 70)
 
-    def get_input(self, prompt: str, default: str | None = None, validation_func: object = None) -> str:
+    def get_input(
+        self, prompt: str, default: str | None = None, validation_func: object = None
+    ) -> str:
         """Get user input with optional default and validation"""
         while True:
             if default:

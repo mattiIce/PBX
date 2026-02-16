@@ -188,7 +188,9 @@ class ZoomIntegration:
         topic = f"Instant Meeting - Extension {host_extension}"
         return self.create_meeting(topic=topic, duration_minutes=60)
 
-    def route_to_zoom_phone(self, from_number: str, to_number: str, pbx_core: object | None = None) -> bool:
+    def route_to_zoom_phone(
+        self, from_number: str, to_number: str, pbx_core: object | None = None
+    ) -> bool:
         """
         Route call through Zoom Phone SIP trunking
 

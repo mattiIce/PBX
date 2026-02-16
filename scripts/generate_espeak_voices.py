@@ -32,16 +32,18 @@ if not is_tts_available():
     print("=" * 70)
     print("ERROR: TTS dependencies not installed!")
     print("=" * 70)
-    print("")
+    print()
     print("Please install required packages:")
     print(f"  {get_tts_requirements()}")
-    print("")
+    print()
     print("After installation, run this script again.")
     print("=" * 70)
     sys.exit(1)
 
 
-def generate_auto_attendant_voices(output_dir: str = "auto_attendant", company_name: str = "your company") -> int:
+def generate_auto_attendant_voices(
+    output_dir: str = "auto_attendant", company_name: str = "your company"
+) -> int:
     """
     Generate voice prompts for auto attendant
 

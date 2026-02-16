@@ -231,7 +231,9 @@ class ConnectionRetry:
                 retry.handle_error(e)
     """
 
-    def __init__(self, max_retries: int = 5, base_delay: float = 1.0, max_delay: float = 60.0) -> None:
+    def __init__(
+        self, max_retries: int = 5, base_delay: float = 1.0, max_delay: float = 60.0
+    ) -> None:
         """
         Initialize retry handler.
 

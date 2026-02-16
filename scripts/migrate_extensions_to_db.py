@@ -139,9 +139,9 @@ def main() -> None:
                     number=number,
                     name=name,
                     password_hash=password_hash,
-                    email=email if email else None,
+                    email=email or None,
                     allow_external=allow_external,
-                    voicemail_pin=voicemail_pin if voicemail_pin else None,
+                    voicemail_pin=voicemail_pin or None,
                     ad_synced=ad_synced,
                     ad_username=None,
                 )

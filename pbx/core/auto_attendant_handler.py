@@ -172,9 +172,7 @@ class AutoAttendantHandler:
 
         return True
 
-    def _auto_attendant_session(
-        self, call_id: str, call: Any, session: dict[str, Any]
-    ) -> None:
+    def _auto_attendant_session(self, call_id: str, call: Any, session: dict[str, Any]) -> None:
         """
         Handle auto attendant session with menu and DTMF input
 

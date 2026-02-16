@@ -22,7 +22,9 @@ class TLSManager:
     Supports FIPS-approved cipher suites
     """
 
-    def __init__(self, cert_file: str | None = None, key_file: str | None = None, fips_mode: bool = False) -> None:
+    def __init__(
+        self, cert_file: str | None = None, key_file: str | None = None, fips_mode: bool = False
+    ) -> None:
         """
         Initialize TLS manager
 
@@ -168,7 +170,9 @@ class SRTPManager:
             self.logger.error(f"Failed to create SRTP session: {e}")
             return False
 
-    def encrypt_rtp_packet(self, call_id: str, rtp_packet: bytes, sequence_number: int) -> bytes | None:
+    def encrypt_rtp_packet(
+        self, call_id: str, rtp_packet: bytes, sequence_number: int
+    ) -> bytes | None:
         """
         Encrypt RTP packet using SRTP
 
@@ -199,7 +203,9 @@ class SRTPManager:
             self.logger.error(f"Failed to encrypt RTP packet: {e}")
             return None
 
-    def decrypt_rtp_packet(self, call_id: str, encrypted_packet: bytes, sequence_number: int) -> bytes | None:
+    def decrypt_rtp_packet(
+        self, call_id: str, encrypted_packet: bytes, sequence_number: int
+    ) -> bytes | None:
         """
         Decrypt SRTP packet
 

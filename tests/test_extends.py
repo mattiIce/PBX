@@ -214,7 +214,7 @@ class TestGracefulShutdownExceptions(TestCase):
         retry = ConnectionRetry(max_retries=3)
         attempts = 0
         with self.assertRaises(StopIteration):
-            for attempt in retry:
+            for _attempt in retry:
                 attempts += 1
                 retry.handle_error(ConnectionError("test"))
         self.assertEqual(attempts, 3)
@@ -296,7 +296,7 @@ class TestCallRouterExceptions(TestCase):
         pbx_core.sip_core.send_request.side_effect = Exception("SIP transport error")
         pbx_core.logger = mock.MagicMock()
 
-        router = CallRouter(pbx_core)
+        CallRouter(pbx_core)
         # Should handle the exception gracefully
         # The exact behavior depends on implementation details
 
@@ -373,7 +373,7 @@ class TestConfigExceptions(TestCase):
         # Set a config with invalid JSON
         db.set_config("test_json_key", "not valid json", config_type="json")
         # Getting it should return default, not raise
-        result = db.get_config("test_json_key", default={"fallback": True})
+        db.get_config("test_json_key", default={"fallback": True})
         # The exact behavior depends on whether it was stored as-is or rejected
 
 
@@ -400,7 +400,7 @@ class TestPhoneRegistrationExceptions(TestCase):
 
     def test_register_phone_with_invalid_mac(self) -> None:
         """Invalid MAC address should be handled specifically."""
-        from pbx.utils.database import RegisteredPhonesDB, DatabaseBackend
+        from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
         config = {"database.type": "sqlite", "database.path": ":memory:"}
         db = DatabaseBackend(config)
@@ -420,7 +420,7 @@ class TestPhoneRegistrationExceptions(TestCase):
 
     def test_cleanup_incomplete_registrations(self) -> None:
         """Cleanup should handle database errors gracefully."""
-        from pbx.utils.database import RegisteredPhonesDB, DatabaseBackend
+        from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
         config = {"database.type": "sqlite", "database.path": ":memory:"}
         db = DatabaseBackend(config)
@@ -468,7 +468,7 @@ class TestExceptionSpecificity(TestCase):
         bare_except_files = []
 
         for filepath in route_files:
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 try:
                     tree = ast.parse(f.read())
                     for node in ast.walk(tree):
@@ -493,7 +493,7 @@ class TestExceptionSpecificity(TestCase):
         total_except_count = 0
 
         for filepath in core_files:
-            with open(filepath, "r") as f:
+            with open(filepath) as f:
                 try:
                     tree = ast.parse(f.read())
                     for node in ast.walk(tree):
@@ -522,7 +522,7 @@ class TestExceptionSpecificity(TestCase):
         import ast
 
         filepath = "/home/user/PBX/pbx/utils/database.py"
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             tree = ast.parse(f.read())
 
         specific_exception_types = set()
@@ -549,15 +549,14 @@ class TestExceptionSpecificity(TestCase):
         import ast
 
         filepath = "/home/user/PBX/pbx/utils/database.py"
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             tree = ast.parse(f.read())
 
         has_import_error_handler = False
         for node in ast.walk(tree):
-            if isinstance(node, ast.ExceptHandler):
-                if node.type is not None:
-                    if isinstance(node.type, ast.Name) and node.type.id == "ImportError":
-                        has_import_error_handler = True
+            if isinstance(node, ast.ExceptHandler) and node.type is not None:
+                if isinstance(node.type, ast.Name) and node.type.id == "ImportError":
+                    has_import_error_handler = True
 
         self.assertTrue(
             has_import_error_handler,
@@ -569,15 +568,14 @@ class TestExceptionSpecificity(TestCase):
         import ast
 
         filepath = "/home/user/PBX/pbx/utils/graceful_shutdown.py"
-        with open(filepath, "r") as f:
+        with open(filepath) as f:
             tree = ast.parse(f.read())
 
         exception_types = set()
         for node in ast.walk(tree):
-            if isinstance(node, ast.ExceptHandler):
-                if node.type is not None:
-                    if isinstance(node.type, ast.Name):
-                        exception_types.add(node.type.id)
+            if isinstance(node, ast.ExceptHandler) and node.type is not None:
+                if isinstance(node.type, ast.Name):
+                    exception_types.add(node.type.id)
 
         # Should use Exception (with context) rather than bare except
         self.assertIn("Exception", exception_types)

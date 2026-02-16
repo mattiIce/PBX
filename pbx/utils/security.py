@@ -622,7 +622,7 @@ class ThreatDetector:
         except sqlite3.Error as e:
             self.logger.error(f"Failed to initialize threat detection schema: {e}")
 
-    def _get_active_blocks_query(self):
+    def _get_active_blocks_query(self) -> str:
         """Get SQL query for active blocked IPs based on database type"""
         if self.database.db_type == "postgresql":
             return """
@@ -637,7 +637,7 @@ class ThreatDetector:
             WHERE blocked_until > datetime('now') AND unblocked_at IS NULL
             """
 
-    def _load_blocked_ips_from_database(self):
+    def _load_blocked_ips_from_database(self) -> None:
         """Load active blocked IPs from database into memory"""
         if not self.database or not self.database.enabled:
             return
@@ -654,7 +654,7 @@ class ThreatDetector:
 
                     # Convert timestamp string to unix time
                     if isinstance(blocked_until, str):
-                        dt = datetime.fromisoformat(blocked_until.replace("Z", "+00:00"))
+                        dt = datetime.fromisoformat(blocked_until)
                         blocked_until_ts = dt.timestamp()
                     else:
                         blocked_until_ts = blocked_until
@@ -714,7 +714,7 @@ class ThreatDetector:
 
         return False, None
 
-    def block_ip(self, ip_address: str, reason: str, duration: int | None = None):
+    def block_ip(self, ip_address: str, reason: str, duration: int | None = None) -> None:
         """
         Block an IP address
 
@@ -757,7 +757,7 @@ class ThreatDetector:
         self.logger.warning(f"IP {ip_address} blocked: {reason} (duration: {duration}s)")
         self._log_threat_event(ip_address, "ip_blocked", "high", reason)
 
-    def unblock_ip(self, ip_address: str):
+    def unblock_ip(self, ip_address: str) -> None:
         """
         Manually unblock an IP address
 
@@ -787,7 +787,7 @@ class ThreatDetector:
 
         self.logger.info(f"IP {ip_address} manually unblocked")
 
-    def _auto_unblock_ip(self, ip_address: str):
+    def _auto_unblock_ip(self, ip_address: str) -> None:
         """Auto-unblock IP when duration expires"""
         if self.database and self.database.enabled:
             update_query = (
@@ -805,7 +805,7 @@ class ThreatDetector:
             )
             self.database.execute(update_query, (True, ip_address))
 
-    def record_failed_attempt(self, ip_address: str, reason: str):
+    def record_failed_attempt(self, ip_address: str, reason: str) -> None:
         """
         Record failed authentication attempt
 
@@ -882,7 +882,7 @@ class ThreatDetector:
 
     def analyze_request_pattern(
         self, ip_address: str, user_agent: str | None = None
-    ) -> dict[str, any]:
+    ) -> dict[str, object]:
         """
         Analyze request patterns for anomalies
 
@@ -942,7 +942,7 @@ class ThreatDetector:
 
         return analysis
 
-    def _log_threat_event(self, ip_address: str, event_type: str, severity: str, details: str):
+    def _log_threat_event(self, ip_address: str, event_type: str, severity: str, details: str) -> None:
         """Log threat event to database"""
         if not self.database or not self.database.enabled:
             return

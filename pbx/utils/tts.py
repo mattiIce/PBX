@@ -123,7 +123,9 @@ def _encode_g722_with_ffmpeg(pcm_wav_path: str, output_file: str, sample_rate: i
         return False
 
 
-def _export_audio(audio: object, output_file: str, convert_to_g722: bool, sample_rate: int) -> str | None:
+def _export_audio(
+    audio: object, output_file: str, convert_to_g722: bool, sample_rate: int
+) -> str | None:
     """
     Export audio to output file, optionally converting to G.722
 
@@ -156,7 +158,13 @@ def _export_audio(audio: object, output_file: str, convert_to_g722: bool, sample
 
 
 def text_to_wav_telephony(
-    text: str, output_file: str | Path, language: str = "en", tld: str = "com", slow: bool = False, sample_rate: int = 8000, convert_to_g722: bool = False
+    text: str,
+    output_file: str | Path,
+    language: str = "en",
+    tld: str = "com",
+    slow: bool = False,
+    sample_rate: int = 8000,
+    convert_to_g722: bool = False,
 ) -> bool:
     """
     Convert text to WAV file in telephony format using gTTS (Google Text-to-Speech)
@@ -215,7 +223,12 @@ def text_to_wav_telephony(
             Path(temp_wav_path).unlink()
 
 
-def generate_prompts(prompts: dict[str, str], output_dir: str, company_name: str | None = None, sample_rate: int = 8000) -> tuple[int, int]:
+def generate_prompts(
+    prompts: dict[str, str],
+    output_dir: str,
+    company_name: str | None = None,
+    sample_rate: int = 8000,
+) -> tuple[int, int]:
     """
     Generate multiple voice prompts from text
 

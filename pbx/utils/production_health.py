@@ -258,7 +258,7 @@ class ProductionHealthChecker:
                 "cpu_percent": round(cpu_percent, 2),
                 "memory_percent": round(memory.percent, 2),
                 "disk_percent": round(disk.percent, 2),
-                "warnings": warnings if warnings else None,
+                "warnings": warnings or None,
             }
 
         except Exception as e:

@@ -7262,12 +7262,12 @@ async function loadPagingDevices() {
         `).join('');
 
         // Add event listeners for delete buttons
-        document.querySelectorAll('.btn-delete-device').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const deviceId = this.getAttribute('data-device-id');
+        for (const btn of document.querySelectorAll('.btn-delete-device')) {
+            btn.addEventListener('click', () => {
+                const deviceId = btn.getAttribute('data-device-id');
                 deletePagingDevice(deviceId);
             });
-        });
+        }
     } catch (error) {
         if (suppressErrorNotifications) {
             console.info('Error loading paging devices (expected if paging not enabled):', error.message);
@@ -7474,22 +7474,22 @@ async function loadClickToDialConfigs() {
 
         if (extensionSelect && currentExtensions) {
             extensionSelect.innerHTML = '<option value="">Select Extension</option>';
-            currentExtensions.forEach(ext => {
+            for (const ext of currentExtensions) {
                 const option = document.createElement('option');
                 option.value = ext.number;
                 option.textContent = `${ext.number} - ${ext.name}`;
                 extensionSelect.appendChild(option);
-            });
+            }
         }
 
         if (historyExtensionSelect && currentExtensions) {
             historyExtensionSelect.innerHTML = '<option value="">All Extensions</option>';
-            currentExtensions.forEach(ext => {
+            for (const ext of currentExtensions) {
                 const option = document.createElement('option');
                 option.value = ext.number;
                 option.textContent = `${ext.number} - ${ext.name}`;
                 historyExtensionSelect.appendChild(option);
-            });
+            }
         }
 
         // Populate configurations table
@@ -7925,10 +7925,10 @@ async function loadLicenseFeatures() {
                     html += '<div style="margin-bottom: 15px;"><strong>Available Features:</strong>';
                     html += '<ul style="margin: 10px 0; padding-left: 20px; columns: 2; column-gap: 20px;">';
 
-                    data.features.sort().forEach(feature => {
+                    for (const feature of data.features.sort()) {
                         const displayName = feature.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
                         html += `<li>✓ ${escapeHtml(displayName)}</li>`;
-                    });
+                    }
 
                     html += '</ul></div>';
                 }

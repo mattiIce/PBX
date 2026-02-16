@@ -229,7 +229,7 @@ class IntegrationSetup:
                     if "password" in key.lower() or "secret" in key.lower() or "key" in key.lower():
                         value_display = "***" if value else "(not set)"
                     else:
-                        value_display = value if value else "(not set)"
+                        value_display = value or "(not set)"
                     print(f"    - {key}: {value_display}")
 
         print("\n" + "=" * 60)

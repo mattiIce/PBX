@@ -22,7 +22,13 @@ except ImportError as e:
     sys.exit(1)
 
 
-def request_certificate_from_ca(ca_server: str, ca_endpoint: str, hostname: str, cert_dir: str = "certs", ca_cert: str | None = None) -> bool:
+def request_certificate_from_ca(
+    ca_server: str,
+    ca_endpoint: str,
+    hostname: str,
+    cert_dir: str = "certs",
+    ca_cert: str | None = None,
+) -> bool:
     """
     Request certificate from in-house CA
 

@@ -89,7 +89,9 @@ class FIPSEncryption:
             password = password + b":" + salt[: self.MIN_PASSWORD_LENGTH - len(password) - 1]
         return password
 
-    def hash_password(self, password: str | bytes, salt: str | bytes | None = None) -> tuple[str, str]:
+    def hash_password(
+        self, password: str | bytes, salt: str | bytes | None = None
+    ) -> tuple[str, str]:
         """
         Hash password using FIPS-approved SHA-256
 
@@ -129,7 +131,9 @@ class FIPSEncryption:
         # Return base64-encoded strings for storage
         return (base64.b64encode(hashed).decode("utf-8"), base64.b64encode(salt).decode("utf-8"))
 
-    def verify_password(self, password: str | bytes, hashed_password: str | bytes, salt: str | bytes) -> bool:
+    def verify_password(
+        self, password: str | bytes, hashed_password: str | bytes, salt: str | bytes
+    ) -> bool:
         """
         Verify password against hash
 
@@ -203,7 +207,9 @@ class FIPSEncryption:
             base64.b64encode(encryptor.tag).decode("utf-8"),
         )
 
-    def decrypt_data(self, encrypted_data: str | bytes, nonce: str | bytes, tag: str | bytes, key: str | bytes) -> bytes:
+    def decrypt_data(
+        self, encrypted_data: str | bytes, nonce: str | bytes, tag: str | bytes, key: str | bytes
+    ) -> bytes:
         """
         Decrypt data using AES-256-GCM
 
@@ -260,7 +266,9 @@ class FIPSEncryption:
         token = secrets.token_bytes(length)
         return base64.b64encode(token).decode("utf-8")
 
-    def derive_key(self, password: str | bytes, salt: str | bytes | None = None, key_length: int = 32) -> tuple[bytes, bytes]:
+    def derive_key(
+        self, password: str | bytes, salt: str | bytes | None = None, key_length: int = 32
+    ) -> tuple[bytes, bytes]:
         """
         Derive encryption key from password using PBKDF2 (FIPS-approved KDF)
 

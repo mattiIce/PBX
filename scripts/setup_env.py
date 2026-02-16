@@ -176,7 +176,9 @@ def read_existing_env() -> tuple[dict[str, str], Path]:
     return env_vars, env_file
 
 
-def prompt_for_value(var_name: str, var_info: dict, current_value: str | None = None, retry_count: int = 0) -> str:
+def prompt_for_value(
+    var_name: str, var_info: dict, current_value: str | None = None, retry_count: int = 0
+) -> str:
     """Prompt user for an environment variable value"""
     # Prevent infinite recursion
     if retry_count >= 3:
@@ -184,7 +186,7 @@ def prompt_for_value(var_name: str, var_info: dict, current_value: str | None = 
         return ""
 
     desc = var_info["description"]
-    default = current_value if current_value else var_info.get("default", "")
+    default = current_value or var_info.get("default", "")
     example = var_info.get("example", "")
     required = var_info.get("required", False)
     help_text = var_info.get("help", "")
@@ -388,7 +390,7 @@ def main() -> None:
             if var_info.get("sensitive", False) and value:
                 display_value = "*" * 8
             else:
-                display_value = value if value else "(not set)"
+                display_value = value or "(not set)"
             print(f"  {var_name}: {display_value}")
         print()
 

@@ -241,7 +241,7 @@ class ProductionValidator:
 
     # ===== Integration Tests =====
 
-    def test_integrations(self):
+    def test_integrations(self) -> None:
         """Test external integrations."""
         if self.skip_integration:
             print(f"\n{BLUE}=== Integration Tests (SKIPPED) ==={RESET}")
@@ -255,7 +255,7 @@ class ProductionValidator:
 
     # ===== Documentation Tests =====
 
-    def test_documentation(self):
+    def test_documentation(self) -> None:
         """Test that required documentation exists."""
         print(f"\n{BLUE}=== Documentation Tests ==={RESET}")
 
@@ -276,7 +276,7 @@ class ProductionValidator:
 
     # ===== Main Test Runner =====
 
-    def run_all_tests(self):
+    def run_all_tests(self) -> None:
         """Run all validation tests."""
         print(f"{BLUE}{'=' * 70}{RESET}")
         print(f"{BLUE}Production Validation Test Suite{RESET}")
@@ -302,7 +302,7 @@ class ProductionValidator:
                 print(f"{RED}Error running {test_suite.__name__}: {e}{RESET}")
                 self.results["failed"] += 1
 
-    def print_summary(self):
+    def print_summary(self) -> int:
         """Print test summary."""
         print(f"\n{BLUE}{'=' * 70}{RESET}")
         print(f"{BLUE}Test Summary{RESET}")
@@ -326,7 +326,7 @@ class ProductionValidator:
         return 2
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Production Validation Test Suite")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--skip-integration", action="store_true", help="Skip integration tests")

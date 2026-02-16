@@ -9,12 +9,12 @@ import tempfile
 import time
 import traceback
 from datetime import UTC
+from pathlib import Path
 from typing import Any
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 from pbx.utils.tls_support import TLSManager
-from pathlib import Path
 
 
 def generate_test_certificate() -> tuple[str | None, str | None]:

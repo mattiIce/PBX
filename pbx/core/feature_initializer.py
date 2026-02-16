@@ -294,9 +294,7 @@ class FeatureInitializer:
         """Initialize Active Directory integration"""
         from pbx.integrations.active_directory import ActiveDirectoryIntegration
 
-        config_file: str = (
-            config._config_file if hasattr(config, "_config_file") else "config.yml"
-        )
+        config_file: str = config._config_file if hasattr(config, "_config_file") else "config.yml"
 
         ad_config: dict[str, Any] = {
             "integrations.active_directory.enabled": config.get(
@@ -380,9 +378,7 @@ class FeatureInitializer:
             pbx_core.ad_integration = None
 
     @staticmethod
-    def _init_open_source_integrations(
-        pbx_core: Any, config: Any, logger: logging.Logger
-    ) -> None:
+    def _init_open_source_integrations(pbx_core: Any, config: Any, logger: logging.Logger) -> None:
         """Initialize open-source and third-party integrations"""
         # Jitsi Meet - Video conferencing
         if config.get("integrations.jitsi.enabled", False):

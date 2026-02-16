@@ -19,19 +19,19 @@ from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.config import Config
 
 
-def print_header(text):
+def print_header(text: str) -> None:
     """Print a formatted header"""
     print("\n" + "=" * 70)
     print(f"  {text}")
     print("=" * 70)
 
 
-def print_section(text):
+def print_section(text: str) -> None:
     """Print a formatted section header"""
     print(f"\n--- {text} ---")
 
 
-def check_config():
+def check_config() -> bool:
     """Check provisioning configuration"""
     print_section("Configuration Check")
 
@@ -80,7 +80,7 @@ def check_config():
         return False
 
 
-def check_api_connectivity(host="localhost", port=9000):
+def check_api_connectivity(host: str = "localhost", port: int = 9000) -> bool:
     """Check if API server is accessible"""
     print_section("API Connectivity Check")
 
@@ -106,7 +106,7 @@ def check_api_connectivity(host="localhost", port=9000):
         return False
 
 
-def get_diagnostics(host="localhost", port=9000):
+def get_diagnostics(host: str = "localhost", port: int = 9000) -> dict | None:
     """Get provisioning diagnostics from API"""
     print_section("Provisioning Diagnostics")
 
@@ -147,7 +147,7 @@ def get_diagnostics(host="localhost", port=9000):
         return None
 
 
-def get_recent_requests(host="localhost", port=9000, limit=10):
+def get_recent_requests(host: str = "localhost", port: int = 9000, limit: int = 10) -> list:
     """Get recent provisioning requests"""
     print_section(f"Recent Provisioning Requests (last {limit})")
 
@@ -194,7 +194,7 @@ def get_recent_requests(host="localhost", port=9000, limit=10):
         return []
 
 
-def test_mac_lookup(mac_address, host="localhost", port=9000):
+def test_mac_lookup(mac_address: str, host: str = "localhost", port: int = 9000) -> bool:
     """Test if a specific MAC address is registered"""
     print_section(f"Testing MAC Address: {mac_address}")
 
@@ -240,7 +240,7 @@ def test_mac_lookup(mac_address, host="localhost", port=9000):
         return False
 
 
-def test_config_download(mac_address, host="localhost", port=9000):
+def test_config_download(mac_address: str, host: str = "localhost", port: int = 9000) -> bool:
     """Test downloading config for a MAC address"""
     print_section(f"Testing Config Download for: {mac_address}")
 
@@ -272,7 +272,7 @@ def test_config_download(mac_address, host="localhost", port=9000):
         return False
 
 
-def print_network_recommendations():
+def print_network_recommendations() -> None:
     """Print network connectivity recommendations"""
     print("\n1. Check Network Connectivity:")
     print("   - Ensure phones can reach the PBX server IP address")
@@ -280,7 +280,7 @@ def print_network_recommendations():
     print("   - Verify firewall allows access to port 9000")
 
 
-def print_phone_config_recommendations():
+def print_phone_config_recommendations() -> None:
     """Print phone configuration recommendations"""
     print("\n2. Verify Phone Configuration:")
     print("   - Check phone's provisioning URL setting")
@@ -289,7 +289,7 @@ def print_phone_config_recommendations():
     print("   - Ensure phone is using DHCP Option 66 OR manual URL")
 
 
-def print_device_registration_recommendations():
+def print_device_registration_recommendations() -> None:
     """Print device registration recommendations"""
     print("\n3. Check Device Registration:")
     print("   - Use: curl https://localhost:9000/api/provisioning/devices")
@@ -298,7 +298,7 @@ def print_device_registration_recommendations():
     print("   - Note: System automatically triggers phone reboot after registration")
 
 
-def print_log_review_recommendations():
+def print_log_review_recommendations() -> None:
     """Print log review recommendations"""
     print("\n4. Review Logs:")
     print("   - Check logs/pbx.log for detailed provisioning logs")
@@ -306,7 +306,7 @@ def print_log_review_recommendations():
     print("   - Check for errors in config generation")
 
 
-def print_manual_test_recommendations():
+def print_manual_test_recommendations() -> None:
     """Print manual testing recommendations"""
     print("\n5. Test Manually:")
     print("   - Get MAC address from phone (usually in phone menu: Status → Network)")
@@ -315,7 +315,7 @@ def print_manual_test_recommendations():
     print("   - If failed, issue is with PBX device registration")
 
 
-def print_common_issues():
+def print_common_issues() -> None:
     """Print common issues"""
     print("\n6. Common Issues:")
     print("   - Wrong MAC address format (use : or - or no separator)")
@@ -326,7 +326,7 @@ def print_common_issues():
     print("   - Wrong vendor/model in device registration")
 
 
-def print_reprovisioning_recommendations():
+def print_reprovisioning_recommendations() -> None:
     """Print re-provisioning recommendations"""
     print("\n7. Force Phone to Re-provision:")
     print("   - System automatically reboots phones after registration and AD sync")
@@ -335,7 +335,7 @@ def print_reprovisioning_recommendations():
     print("   - Some phones need factory reset for new provisioning URL")
 
 
-def print_recommendations():
+def print_recommendations() -> None:
     """Print troubleshooting recommendations"""
     print_section("Troubleshooting Recommendations")
 
@@ -348,7 +348,7 @@ def print_recommendations():
     print_reprovisioning_recommendations()
 
 
-def main():
+def main() -> None:
     """Main troubleshooting flow"""
     print_header("Phone Auto-Provisioning Troubleshooting Tool")
 
