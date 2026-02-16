@@ -13,7 +13,7 @@ from pbx.utils.logger import get_logger
 class CallRecording:
     """Manages recording for a single call"""
 
-    def __init__(self, call_id, recording_path="recordings"):
+    def __init__(self, call_id: str, recording_path: str ="recordings") -> None:
         """
         Initialize call recording
 
@@ -31,7 +31,7 @@ class CallRecording:
 
         Path(recording_path).mkdir(parents=True, exist_ok=True)
 
-    def start(self, from_ext, to_ext):
+    def start(self, from_ext: str, to_ext: str):
         """
         Start recording
 
@@ -55,7 +55,7 @@ class CallRecording:
         self.logger.info(f"Started recording call {self.call_id} to {self.file_path}")
         return self.file_path
 
-    def add_audio(self, audio_data):
+    def add_audio(self, audio_data: bytes) -> None:
         """
         Add audio data to recording
 
@@ -102,7 +102,7 @@ class CallRecording:
 class CallRecordingSystem:
     """Manages call recording for all calls"""
 
-    def __init__(self, recording_path="recordings", auto_record=False):
+    def __init__(self, recording_path: str ="recordings", auto_record: bool =False) -> None:
         """
         Initialize call recording system
 
@@ -118,7 +118,7 @@ class CallRecordingSystem:
 
         Path(recording_path).mkdir(parents=True, exist_ok=True)
 
-    def start_recording(self, call_id, from_ext, to_ext):
+    def start_recording(self, call_id: str, from_ext: str, to_ext: str) -> bool:
         """
         Start recording a call
 
@@ -141,7 +141,7 @@ class CallRecordingSystem:
             return True
         return False
 
-    def stop_recording(self, call_id):
+    def stop_recording(self, call_id: str):
         """
         Stop recording a call
 
@@ -169,7 +169,7 @@ class CallRecordingSystem:
             return file_path
         return None
 
-    def add_audio(self, call_id, audio_data):
+    def add_audio(self, call_id: str, audio_data: bytes) -> None:
         """
         Add audio data to recording
 
@@ -181,11 +181,11 @@ class CallRecordingSystem:
         if recording:
             recording.add_audio(audio_data)
 
-    def is_recording(self, call_id):
+    def is_recording(self, call_id: str) -> bool:
         """Check if call is being recorded"""
         return call_id in self.active_recordings
 
-    def get_recordings(self, limit=100):
+    def get_recordings(self, limit: int =100) -> list:
         """
         Get recording metadata
 

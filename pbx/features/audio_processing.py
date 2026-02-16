@@ -17,7 +17,7 @@ except ImportError:
 class AudioProcessor:
     """Advanced audio processing for noise suppression and echo cancellation"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize audio processor"""
         self.logger = get_logger()
         self.config = config or {}
@@ -148,7 +148,7 @@ class AudioProcessor:
             return 0.0
         return sum(self.noise_level_history) / len(self.noise_level_history)
 
-    def reset_statistics(self):
+    def reset_statistics(self) -> None:
         """Reset processing statistics"""
         self.frames_processed = 0
         self.noise_level_history = []

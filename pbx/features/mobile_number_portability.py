@@ -26,7 +26,7 @@ class MobileNumberPortability:
     - Mobile app with SIP support
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize mobile number portability"""
         self.logger = get_logger()
         self.config = config or {}

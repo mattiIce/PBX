@@ -38,7 +38,7 @@ class OpusCodec:
     # Complexity levels (0-10, where 10 is highest quality)
     DEFAULT_COMPLEXITY = 5  # Balance between quality and CPU
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         """
         Initialize Opus codec handler
 
@@ -333,7 +333,7 @@ class OpusCodec:
             self.logger.error(f"Opus FEC decoding error: {e}")
             return None
 
-    def reset_encoder(self):
+    def reset_encoder(self) -> None:
         """Reset encoder state"""
         if self.encoder:
             try:
@@ -342,7 +342,7 @@ class OpusCodec:
             except Exception as e:
                 self.logger.error(f"Failed to reset encoder: {e}")
 
-    def reset_decoder(self):
+    def reset_decoder(self) -> None:
         """Reset decoder state"""
         if self.decoder:
             try:
@@ -391,7 +391,7 @@ class OpusCodecManager:
     Manages Opus codecs for multiple calls
     """
 
-    def __init__(self, pbx):
+    def __init__(self, pbx) -> None:
         """
         Initialize Opus codec manager
 
@@ -439,7 +439,7 @@ class OpusCodecManager:
         """
         return self.codecs.get(call_id)
 
-    def remove_codec(self, call_id: str):
+    def remove_codec(self, call_id: str) -> None:
         """
         Remove Opus codec for a call
 

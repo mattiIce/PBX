@@ -16,7 +16,7 @@ class ClickToDialEngine:
     Enables dialing from web interfaces and applications
     """
 
-    def __init__(self, db_backend, config: dict, pbx_core=None):
+    def __init__(self, db_backend, config: dict, pbx_core=None) -> None:
         """
         Initialize click-to-dial engine
 

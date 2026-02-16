@@ -30,7 +30,7 @@ class PhoneBook:
     - Provides API access for management
     """
 
-    def __init__(self, config: dict, database=None):
+    def __init__(self, config: dict, database=None) -> None:
         """
         Initialize phone book
 
@@ -306,7 +306,7 @@ class PhoneBook:
 
         return results
 
-    def sync_from_ad(self, ad_integration, extension_registry) -> int:
+    def sync_from_ad(self, ad_integration, extension_registry: str) -> int:
         """
         Sync phone book from Active Directory
 

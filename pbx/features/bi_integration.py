@@ -41,7 +41,7 @@ class ExportFormat(Enum):
 class DataSet:
     """Represents a dataset for BI export"""
 
-    def __init__(self, name: str, query: str):
+    def __init__(self, name: str, query: str) -> None:
         """Initialize dataset"""
         self.name = name
         self.query = query
@@ -63,7 +63,7 @@ class BIIntegration:
     - Metabase (SQL, API)
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize BI integration"""
         self.logger = get_logger()
         self.config = config or {}
@@ -91,7 +91,7 @@ class BIIntegration:
         self.logger.info(f"  Auto export: {self.auto_export_enabled}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_default_datasets(self):
+    def _initialize_default_datasets(self) -> None:
         """Initialize default datasets"""
         # Call Detail Records
         self.datasets["cdr"] = DataSet(

@@ -445,7 +445,7 @@ class LicenseManager:
 
         try:
             if Path(lock_path).exists():
-                os.remove(lock_path)
+                Path(lock_path).unlink()
                 logger.info("License lock file removed - licensing can now be disabled")
                 return True
             logger.warning("License lock file does not exist")
@@ -672,7 +672,7 @@ class LicenseManager:
         """
         try:
             if Path(self.license_path).exists():
-                os.remove(self.license_path)
+                Path(self.license_path).unlink()
                 logger.info("License revoked")
 
             self.current_license = None

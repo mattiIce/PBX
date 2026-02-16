@@ -62,7 +62,7 @@ class RecordingAnalytics:
     - Custom ML models (compliance, quality)
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize recording analytics"""
         self.logger = get_logger()
         self.config = config or {}
@@ -94,7 +94,7 @@ class RecordingAnalytics:
         self.logger.info(f"  spaCy available: {SPACY_AVAILABLE}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_models(self):
+    def _initialize_models(self) -> None:
         """Initialize NLP models for analysis"""
         # Initialize Vosk for transcription
         if VOSK_AVAILABLE:

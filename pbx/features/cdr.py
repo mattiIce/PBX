@@ -24,7 +24,7 @@ class CallDisposition(Enum):
 class CDRRecord:
     """Represents a single call detail record"""
 
-    def __init__(self, call_id, from_extension, to_extension):
+    def __init__(self, call_id: str, from_extension: str, to_extension: str) -> None:
         """
         Initialize CDR record
 
@@ -46,12 +46,12 @@ class CDRRecord:
         self.hangup_cause = None
         self.user_agent = None
 
-    def mark_answered(self):
+    def mark_answered(self) -> None:
         """Mark call as answered"""
         self.answer_time = datetime.now(UTC)
         self.disposition = CallDisposition.ANSWERED
 
-    def mark_ended(self, hangup_cause=None):
+    def mark_ended(self, hangup_cause: str | None =None) -> None:
         """
         Mark call as ended
 
@@ -70,7 +70,7 @@ class CDRRecord:
         if not self.disposition:
             self.disposition = CallDisposition.FAILED
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "call_id": self.call_id,
@@ -91,7 +91,7 @@ class CDRRecord:
 class CDRSystem:
     """Manages call detail records"""
 
-    def __init__(self, storage_path="cdr"):
+    def __init__(self, storage_path: str ="cdr") -> None:
         """
         Initialize CDR system
 
@@ -104,7 +104,7 @@ class CDRSystem:
 
         Path(storage_path).mkdir(parents=True, exist_ok=True)
 
-    def start_record(self, call_id, from_extension, to_extension):
+    def start_record(self, call_id: str, from_extension: str, to_extension: str):
         """
         Start CDR record for new call
 
@@ -121,7 +121,7 @@ class CDRSystem:
         self.logger.debug(f"Started CDR record for call {call_id}")
         return record
 
-    def mark_answered(self, call_id):
+    def mark_answered(self, call_id: str) -> None:
         """
         Mark call as answered
 
@@ -132,7 +132,7 @@ class CDRSystem:
         if record:
             record.mark_answered()
 
-    def end_record(self, call_id, hangup_cause=None):
+    def end_record(self, call_id: str, hangup_cause: str | None =None):
         """
         End CDR record
 
@@ -147,7 +147,7 @@ class CDRSystem:
             del self.active_records[call_id]
             self.logger.debug(f"Ended CDR record for call {call_id}")
 
-    def set_recording(self, call_id, recording_file):
+    def set_recording(self, call_id: str, recording_file: str) -> None:
         """
         set recording file for call
 
@@ -159,7 +159,7 @@ class CDRSystem:
         if record:
             record.recording_file = recording_file
 
-    def _save_record(self, record):
+    def _save_record(self, record) -> None:
         """
         Save CDR record to file
 
@@ -177,7 +177,7 @@ class CDRSystem:
         except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving CDR record: {e}")
 
-    def get_records(self, date=None, limit=100):
+    def get_records(self, date: str | None =None, limit: int =100) -> list:
         """
         Get CDR records
 
@@ -209,7 +209,7 @@ class CDRSystem:
 
         return records
 
-    def get_statistics(self, date=None):
+    def get_statistics(self, date: str | None =None) -> dict:
         """
         Get call statistics
 
@@ -242,7 +242,7 @@ class CDRSystem:
             "average_duration": round(avg_duration, 2),
         }
 
-    def get_extension_statistics(self, extension, date=None):
+    def get_extension_statistics(self, extension: str, date: str | None =None) -> dict:
         """
         Get statistics for specific extension
 

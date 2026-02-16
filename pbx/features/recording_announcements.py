@@ -13,7 +13,7 @@ from pbx.utils.logger import get_logger
 class RecordingAnnouncements:
     """System for playing recording disclosure announcements"""
 
-    def __init__(self, config=None, database=None):
+    def __init__(self, config=None, database=None) -> None:
         """Initialize recording announcements"""
         self.logger = get_logger()
         self.config = config or {}

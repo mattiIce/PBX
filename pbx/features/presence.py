@@ -24,7 +24,7 @@ class PresenceStatus(Enum):
 class UserPresence:
     """Represents presence information for a user"""
 
-    def __init__(self, extension, name=""):
+    def __init__(self, extension: str, name: str ="") -> None:
         """
         Initialize user presence
 
@@ -41,7 +41,7 @@ class UserPresence:
         self.in_call = False
         self.call_id = None
 
-    def set_status(self, status, custom_message=""):
+    def set_status(self, status: str, custom_message: str ="") -> None:
         """
         set presence status
 
@@ -54,7 +54,7 @@ class UserPresence:
         self.last_status_change = datetime.now(UTC)
         self.last_activity = datetime.now(UTC)
 
-    def set_in_call(self, call_id):
+    def set_in_call(self, call_id: str) -> None:
         """
         Mark user as in call
 
@@ -66,14 +66,14 @@ class UserPresence:
         self.status = PresenceStatus.IN_CALL
         self.last_activity = datetime.now(UTC)
 
-    def clear_call(self):
+    def clear_call(self) -> None:
         """Mark user as not in call"""
         self.in_call = False
         self.call_id = None
         if self.status == PresenceStatus.IN_CALL:
             self.status = PresenceStatus.AVAILABLE
 
-    def update_activity(self):
+    def update_activity(self) -> None:
         """Update last activity timestamp"""
         self.last_activity = datetime.now(UTC)
 
@@ -81,7 +81,7 @@ class UserPresence:
         """Get time since last activity in seconds"""
         return (datetime.now(UTC) - self.last_activity).total_seconds()
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "extension": self.extension,
@@ -97,7 +97,7 @@ class UserPresence:
 class PresenceSystem:
     """Manages presence for all users"""
 
-    def __init__(self, auto_away_timeout=300, auto_offline_timeout=1800):
+    def __init__(self, auto_away_timeout: int =300, auto_offline_timeout: int =1800) -> None:
         """
         Initialize presence system
 
@@ -111,7 +111,7 @@ class PresenceSystem:
         self.auto_away_timeout = auto_away_timeout
         self.auto_offline_timeout = auto_offline_timeout
 
-    def register_user(self, extension, name=""):
+    def register_user(self, extension: str, name: str =""):
         """
         Register user for presence
 
@@ -130,7 +130,7 @@ class PresenceSystem:
             self._notify_subscribers(extension)
         return self.users[extension]
 
-    def unregister_user(self, extension):
+    def unregister_user(self, extension: str):
         """
         Unregister user
 
@@ -142,7 +142,7 @@ class PresenceSystem:
             user.set_status(PresenceStatus.OFFLINE)
             self._notify_subscribers(extension)
 
-    def set_status(self, extension, status, custom_message=""):
+    def set_status(self, extension: str, status: str, custom_message: str ="") -> bool:
         """
         set user status
 
@@ -162,7 +162,7 @@ class PresenceSystem:
             return True
         return False
 
-    def set_in_call(self, extension, call_id):
+    def set_in_call(self, extension: str, call_id: str) -> None:
         """
         Mark user as in call
 
@@ -175,7 +175,7 @@ class PresenceSystem:
             user.set_in_call(call_id)
             self._notify_subscribers(extension)
 
-    def clear_call(self, extension):
+    def clear_call(self, extension: str) -> None:
         """
         Clear in-call status
 
@@ -187,7 +187,7 @@ class PresenceSystem:
             user.clear_call()
             self._notify_subscribers(extension)
 
-    def update_activity(self, extension):
+    def update_activity(self, extension: str) -> None:
         """
         Update user activity
 
@@ -198,7 +198,7 @@ class PresenceSystem:
         if user:
             user.update_activity()
 
-    def get_status(self, extension):
+    def get_status(self, extension: str):
         """
         Get user presence status
 
@@ -210,7 +210,7 @@ class PresenceSystem:
         """
         return self.users.get(extension)
 
-    def subscribe(self, subscriber_extension, watched_extension):
+    def subscribe(self, subscriber_extension: str, watched_extension: str):
         """
         Subscribe to presence updates
 
@@ -225,7 +225,7 @@ class PresenceSystem:
             self.subscribers[watched_extension].append(subscriber_extension)
             self.logger.debug(f"{subscriber_extension} subscribed to {watched_extension}")
 
-    def unsubscribe(self, subscriber_extension, watched_extension):
+    def unsubscribe(self, subscriber_extension: str, watched_extension: str):
         """
         Unsubscribe from presence updates
 
@@ -237,7 +237,7 @@ class PresenceSystem:
             if subscriber_extension in self.subscribers[watched_extension]:
                 self.subscribers[watched_extension].remove(subscriber_extension)
 
-    def _notify_subscribers(self, extension):
+    def _notify_subscribers(self, extension: str):
         """
         Notify subscribers of presence change
 
@@ -273,7 +273,7 @@ class PresenceSystem:
                     user.set_status(PresenceStatus.AWAY, "Auto-away")
                     self._notify_subscribers(user.extension)
 
-    def get_all_status(self):
+    def get_all_status(self) -> list:
         """
         Get status of all users
 
@@ -282,7 +282,7 @@ class PresenceSystem:
         """
         return [user.to_dict() for user in self.users.values()]
 
-    def get_available_users(self):
+    def get_available_users(self) -> list:
         """
         Get list of available users
 

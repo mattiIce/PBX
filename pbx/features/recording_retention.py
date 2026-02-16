@@ -12,7 +12,7 @@ from pbx.utils.logger import get_logger
 class RecordingRetentionManager:
     """Manager for call recording retention policies"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize retention manager"""
         self.logger = get_logger()
         self.config = config or {}
@@ -45,7 +45,7 @@ class RecordingRetentionManager:
             self.logger.info(f"  Compliance retention: {self.compliance_retention} days")
             self._load_policies()
 
-    def _load_policies(self):
+    def _load_policies(self) -> None:
         """Load retention policies from config"""
         policies = (
             self.config.get("features", {}).get("recording_retention", {}).get("policies", [])

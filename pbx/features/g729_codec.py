@@ -34,7 +34,7 @@ class G729Codec:
     PAYLOAD_TYPE = 18  # Standard RTP payload type for G.729
     BITRATE = 8000  # 8 kbit/s
 
-    def __init__(self, variant: str = "G729AB"):
+    def __init__(self, variant: str = "G729AB") -> None:
         """
         Initialize G.729 codec
 
@@ -185,7 +185,7 @@ class G729CodecManager:
     Manager for G.729 codec instances and configuration
     """
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize G.729 codec manager
 

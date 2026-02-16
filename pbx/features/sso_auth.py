@@ -18,7 +18,7 @@ except ImportError:
 class SSOAuthService:
     """Single Sign-On authentication service"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize SSO service"""
         self.logger = get_logger()
         self.config = config or {}
@@ -211,7 +211,7 @@ class SSOAuthService:
             return True
         return False
 
-    def cleanup_expired_sessions(self):
+    def cleanup_expired_sessions(self) -> None:
         """Clean up expired sessions"""
         now = datetime.now(UTC)
         expired = [

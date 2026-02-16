@@ -70,7 +70,7 @@ class VideoCodecManager:
     - Hardware encoders (NVENC, QuickSync, etc.)
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize video codec manager"""
         self.logger = get_logger()
         self.config = config or {}

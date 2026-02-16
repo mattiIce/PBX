@@ -19,7 +19,7 @@ if TYPE_CHECKING:
 class WebRTCSession:
     """Represents a WebRTC session"""
 
-    def __init__(self, session_id: str, extension: str, peer_connection_id: str | None = None):
+    def __init__(self, session_id: str, extension: str, peer_connection_id: str | None = None) -> None:
         """
         Initialize WebRTC session
 
@@ -40,7 +40,7 @@ class WebRTCSession:
         self.call_id = None
         self.metadata = {}
 
-    def update_activity(self):
+    def update_activity(self) -> None:
         """Update last activity timestamp"""
         self.last_activity = datetime.now(UTC)
 
@@ -68,7 +68,7 @@ class WebRTCSignalingServer:
     - Integration with SIP infrastructure
     """
 
-    def __init__(self, config=None, pbx_core=None):
+    def __init__(self, config=None, pbx_core=None) -> None:
         """
         Initialize WebRTC signaling server
 
@@ -609,7 +609,7 @@ class WebRTCGateway:
     - Manages RTP/SRTP bridging
     """
 
-    def __init__(self, pbx_core=None):
+    def __init__(self, pbx_core=None) -> None:
         """
         Initialize WebRTC gateway
 

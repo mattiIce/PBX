@@ -24,7 +24,7 @@ class EmergencyContact:
         email: str | None = None,
         priority: int = 1,
         notification_methods: list[str] | None = None,
-    ):
+    ) -> None:
         """
         Initialize emergency contact
 
@@ -44,7 +44,7 @@ class EmergencyContact:
         self.notification_methods = notification_methods or ["call"]
         self.id = f"{name.lower().replace(' ', '_')}_{extension or phone}"
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "id": self.id,
@@ -63,7 +63,7 @@ class EmergencyNotificationSystem:
     during emergency situations (911 calls, panic buttons, etc.)
     """
 
-    def __init__(self, pbx_core, config: dict | None = None, database=None):
+    def __init__(self, pbx_core, config: dict | None = None, database=None) -> None:
         """
         Initialize emergency notification system
 
@@ -110,7 +110,7 @@ class EmergencyNotificationSystem:
         else:
             self.logger.info("Emergency notification system disabled")
 
-    def _load_emergency_contacts(self):
+    def _load_emergency_contacts(self) -> None:
         """Load emergency contacts from configuration or database"""
         # Load from config
         contacts_config = self.config.get("features.emergency_notification.contacts", [])
@@ -134,7 +134,7 @@ class EmergencyNotificationSystem:
         """Get database-agnostic placeholder for SQL queries"""
         return "?" if self.database.db_type == "sqlite" else "%s"
 
-    def _load_contacts_from_db(self):
+    def _load_contacts_from_db(self) -> None:
         """Load emergency contacts from database"""
         try:
             query = """
@@ -220,7 +220,7 @@ class EmergencyNotificationSystem:
 
             return contact
 
-    def _save_contact_to_db(self, contact: EmergencyContact):
+    def _save_contact_to_db(self, contact: EmergencyContact) -> None:
         """Save emergency contact to database"""
         try:
             placeholder = self._get_db_placeholder()
@@ -670,7 +670,7 @@ PBX Emergency Notification System
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending AWS SNS SMS: {e}")
 
-    def _save_notification_to_db(self, notification_record: dict):
+    def _save_notification_to_db(self, notification_record: dict) -> None:
         """Save notification record to database"""
         try:
             # Insert notification record with database-agnostic placeholders

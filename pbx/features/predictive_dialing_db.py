@@ -16,7 +16,7 @@ class PredictiveDialingDatabase:
     Stores campaigns, contacts, call attempts, and statistics
     """
 
-    def __init__(self, db_backend):
+    def __init__(self, db_backend) -> None:
         """
         Initialize database layer
 
@@ -26,7 +26,7 @@ class PredictiveDialingDatabase:
         self.logger = get_logger()
         self.db = db_backend
 
-    def create_tables(self):
+    def create_tables(self) -> bool:
         """Create tables for predictive dialing"""
         try:
             if self.db.db_type == "postgresql":
@@ -323,7 +323,7 @@ class PredictiveDialingDatabase:
         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving attempt: {e}")
 
-    def update_campaign_stats(self, campaign_id: str, stats: dict):
+    def update_campaign_stats(self, campaign_id: str, stats: dict) -> None:
         """Update campaign statistics"""
         try:
             cursor = self.db.connection.cursor()

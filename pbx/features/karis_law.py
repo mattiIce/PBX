@@ -50,7 +50,7 @@ class KarisLawCompliance:
     # Direct 911 pattern (primary)
     DIRECT_911_PATTERN = r"^911$"
 
-    def __init__(self, pbx_core, config: dict | None = None):
+    def __init__(self, pbx_core, config: dict | None = None) -> None:
         """
         Initialize Kari's Law compliance module
 

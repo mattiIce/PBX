@@ -14,7 +14,7 @@ from pbx.utils.logger import get_logger
 class DNDRule:
     """Represents a DND scheduling rule"""
 
-    def __init__(self, rule_id: str, extension: str, rule_type: str, config: dict):
+    def __init__(self, rule_id: str, extension: str, rule_type: str, config: dict) -> None:
         """
         Initialize DND rule
 
@@ -92,7 +92,7 @@ class DNDRule:
 class CalendarMonitor:
     """Monitors calendar events and triggers DND"""
 
-    def __init__(self, outlook_integration=None, check_interval: int = 60):
+    def __init__(self, outlook_integration=None, check_interval: int = 60) -> None:
         """
         Initialize calendar monitor
 
@@ -250,7 +250,7 @@ class DNDScheduler:
     Manages automatic DND scheduling based on calendar and time-based rules
     """
 
-    def __init__(self, presence_system=None, outlook_integration=None, config: dict | None = None):
+    def __init__(self, presence_system=None, outlook_integration=None, config: dict | None = None) -> None:
         """
         Initialize DND scheduler
 
@@ -429,7 +429,7 @@ class DNDScheduler:
 
     def set_manual_override(
         self, extension: str, status: PresenceStatus, duration_minutes: int | None = None
-    ):
+    ) -> None:
         """
         Manually override DND scheduling
 
@@ -450,7 +450,7 @@ class DNDScheduler:
 
         self.logger.info(f"Manual DND override for {extension}: {status.value} until {until_time}")
 
-    def clear_manual_override(self, extension: str):
+    def clear_manual_override(self, extension: str) -> None:
         """
         Clear manual override
 

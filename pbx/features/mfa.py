@@ -31,7 +31,7 @@ class TOTPGenerator:
     Implements RFC 6238 TOTP algorithm
     """
 
-    def __init__(self, secret: bytes | None = None, period: int = 30, digits: int = 6):
+    def __init__(self, secret: bytes | None = None, period: int = 30, digits: int = 6) -> None:
         """
         Initialize TOTP generator
 
@@ -169,7 +169,7 @@ class YubiKeyOTPVerifier:
         "https://api5.yubico.com/wsapi/2.0/verify",
     ]
 
-    def __init__(self, client_id: str | None = None, api_key: str | None = None):
+    def __init__(self, client_id: str | None = None, api_key: str | None = None) -> None:
         """
         Initialize YubiKey OTP verifier
 
@@ -370,7 +370,7 @@ class FIDO2Verifier:
     Supports YubiKey and other FIDO2-compliant devices
     """
 
-    def __init__(self, rp_id: str = "pbx.local", rp_name: str = "Warden Voip"):
+    def __init__(self, rp_id: str = "pbx.local", rp_name: str = "Warden Voip") -> None:
         """
         Initialize FIDO2 verifier
 
@@ -609,7 +609,7 @@ class MFAManager:
     Manages MFA enrollment, verification, and backup codes
     """
 
-    def __init__(self, database=None, config: dict | None = None):
+    def __init__(self, database=None, config: dict | None = None) -> None:
         """
         Initialize MFA manager
 
@@ -657,7 +657,7 @@ class MFAManager:
         if self.database and self.database.enabled:
             self._initialize_schema()
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize MFA database tables"""
         # MFA secrets table
         mfa_secrets_table = (

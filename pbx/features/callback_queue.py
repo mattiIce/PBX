@@ -24,7 +24,7 @@ class CallbackStatus(Enum):
 class CallbackQueue:
     """System for managing callback requests"""
 
-    def __init__(self, config=None, database=None):
+    def __init__(self, config=None, database=None) -> None:
         """Initialize callback queue"""
         self.logger = get_logger()
         self.config = config or {}
@@ -186,7 +186,7 @@ class CallbackQueue:
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading callbacks from database: {e}")
 
-    def _save_callback_to_database(self, callback_id: str):
+    def _save_callback_to_database(self, callback_id: str) -> bool:
         """Save callback to database"""
         if not self.database or not self.database.enabled:
             return False
@@ -517,7 +517,7 @@ class CallbackQueue:
             ),
         }
 
-    def cleanup_old_callbacks(self, days: int = 30):
+    def cleanup_old_callbacks(self, days: int = 30) -> None:
         """Clean up old completed/failed callbacks"""
         cutoff = datetime.now(UTC) - timedelta(days=days)
 

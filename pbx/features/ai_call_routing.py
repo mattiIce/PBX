@@ -23,7 +23,7 @@ except ImportError:
 class AICallRouting:
     """AI-powered call routing using machine learning"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize AI call routing"""
         self.logger = get_logger()
         self.config = config or {}

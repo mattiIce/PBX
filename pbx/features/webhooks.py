@@ -48,7 +48,7 @@ class WebhookEvent:
     CONFERENCE_PARTICIPANT_LEFT = "conference.participant_left"
     CONFERENCE_ENDED = "conference.ended"
 
-    def __init__(self, event_type: str, data: dict):
+    def __init__(self, event_type: str, data: dict) -> None:
         """
         Initialize webhook event
 
@@ -81,7 +81,7 @@ class WebhookSubscription:
         secret: str | None = None,
         headers: dict[str, str] | None = None,
         enabled: bool = True,
-    ):
+    ) -> None:
         """
         Initialize webhook subscription
 
@@ -112,7 +112,7 @@ class WebhookSubscription:
 class WebhookDeliveryQueue:
     """Queue for asynchronous webhook delivery"""
 
-    def __init__(self, max_size: int = 1000):
+    def __init__(self, max_size: int = 1000) -> None:
         """
         Initialize delivery queue
 
@@ -149,7 +149,7 @@ class WebhookSystem:
     - Delivery status tracking
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """
         Initialize webhook system
 
@@ -193,7 +193,7 @@ class WebhookSystem:
             return self.config.get(key, default)
         return default
 
-    def _load_subscriptions(self):
+    def _load_subscriptions(self) -> None:
         """Load webhook subscriptions from configuration"""
         webhooks_config = self._get_config("features.webhooks.subscriptions", [])
 

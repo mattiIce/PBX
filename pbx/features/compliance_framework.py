@@ -271,7 +271,7 @@ class SOC2ComplianceEngine:
     Confidentiality, and Privacy
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict) -> None:
         """
         Initialize SOC 2 type II compliance engine
 
@@ -289,7 +289,7 @@ class SOC2ComplianceEngine:
         # Initialize default SOC 2 type 2 controls
         self._initialize_default_controls()
 
-    def _initialize_default_controls(self):
+    def _initialize_default_controls(self) -> None:
         """Initialize default SOC 2 type 2 controls"""
         default_controls = [
             # Security (Common Criteria)

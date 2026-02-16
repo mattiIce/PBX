@@ -41,7 +41,7 @@ if not is_tts_available():
     sys.exit(1)
 
 
-def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="your company"):
+def generate_auto_attendant_voices(output_dir: str = "auto_attendant", company_name: str = "your company") -> int:
     """
     Generate voice prompts for auto attendant
 

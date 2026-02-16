@@ -210,7 +210,7 @@ F_TABLE = [0, 0, 0, 1, 1, 1, 3, 7]
 class G722State:
     """State information for G.722 encoder/decoder per ITU-T specification"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # QMF filter history
         self.x = [0] * 24  # Input sample history for QMF
 
@@ -269,7 +269,7 @@ class G722Codec:
     MODE_56K = 56000  # 56 kbit/s
     MODE_48K = 48000  # 48 kbit/s
 
-    def __init__(self, bitrate: int = MODE_64K):
+    def __init__(self, bitrate: int = MODE_64K) -> None:
         """
         Initialize G.722 codec
 
@@ -719,7 +719,7 @@ class G722Codec:
 
         return det
 
-    def _update_predictor_lower(self, state: G722State, dql: int):
+    def _update_predictor_lower(self, state: G722State, dql: int) -> None:
         """
         Update adaptive predictor for lower sub-band
 
@@ -733,7 +733,7 @@ class G722Codec:
         # Simplified predictor update
         state.spl = state.sl
 
-    def _update_predictor_higher(self, state: G722State, dqh: int):
+    def _update_predictor_higher(self, state: G722State, dqh: int) -> None:
         """
         Update adaptive predictor for higher sub-band
 
@@ -874,7 +874,7 @@ class G722CodecManager:
     Manager for G.722 codec instances and configuration
     """
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize G.722 codec manager
 

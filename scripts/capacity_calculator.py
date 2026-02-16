@@ -172,7 +172,7 @@ class CapacityCalculator:
             estimated_monthly_cost=round(estimated_monthly_cost, 2),
         )
 
-    def print_report(self, requirements: CapacityRequirements, format: str = "text"):
+    def print_report(self, requirements: CapacityRequirements, format: str = "text") -> None:
         """
         Print capacity planning report.
 
@@ -241,7 +241,7 @@ class CapacityCalculator:
         print()
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Calculate PBX capacity requirements",

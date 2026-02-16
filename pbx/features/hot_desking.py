@@ -12,7 +12,7 @@ from pbx.utils.logger import get_logger
 class HotDeskSession:
     """Represents a hot desk session"""
 
-    def __init__(self, extension: str, device_id: str, ip_address: str):
+    def __init__(self, extension: str, device_id: str, ip_address: str) -> None:
         """
         Initialize hot desk session
 
@@ -28,7 +28,7 @@ class HotDeskSession:
         self.last_activity = datetime.now(UTC)
         self.auto_logout_enabled = True
 
-    def update_activity(self):
+    def update_activity(self) -> None:
         """Update last activity timestamp"""
         self.last_activity = datetime.now(UTC)
 
@@ -56,7 +56,7 @@ class HotDeskingSystem:
     - Extension profile migration
     """
 
-    def __init__(self, config=None, pbx_core=None):
+    def __init__(self, config=None, pbx_core=None) -> None:
         """
         Initialize hot-desking system
 
@@ -333,7 +333,7 @@ class HotDeskingSystem:
                 extension in self.extension_devices and len(self.extension_devices[extension]) > 0
             )
 
-    def update_session_activity(self, device_id: str):
+    def update_session_activity(self, device_id: str) -> None:
         """Update session activity timestamp"""
         with self.lock:
             session = self.sessions.get(device_id)

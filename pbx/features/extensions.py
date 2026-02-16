@@ -11,7 +11,7 @@ from pbx.utils.logger import get_logger
 class Extension:
     """Represents a registered extension"""
 
-    def __init__(self, number, name, config):
+    def __init__(self, number: str, name: str, config: str) -> None:
         """
         Initialize extension
 
@@ -52,7 +52,7 @@ class Extension:
 class ExtensionRegistry:
     """Registry of all extensions"""
 
-    def __init__(self, config, database=None):
+    def __init__(self, config, database=None) -> None:
         """
         Initialize extension registry
 
@@ -160,7 +160,7 @@ class ExtensionRegistry:
         """Alias for reload() - reload extensions from database or configuration"""
         self.reload()
 
-    def get(self, number):
+    def get(self, number: str):
         """
         Get extension by number
 
@@ -172,7 +172,7 @@ class ExtensionRegistry:
         """
         return self.extensions.get(str(number))
 
-    def get_extension(self, number):
+    def get_extension(self, number: str):
         """
         Get extension by number (alias for get() for backward compatibility)
 
@@ -184,7 +184,7 @@ class ExtensionRegistry:
         """
         return self.get(number)
 
-    def register(self, number, address):
+    def register(self, number: str, address) -> bool:
         """
         Register extension
 
@@ -202,7 +202,7 @@ class ExtensionRegistry:
             return True
         return False
 
-    def unregister(self, number):
+    def unregister(self, number: str) -> bool:
         """
         Unregister extension
 
@@ -219,7 +219,7 @@ class ExtensionRegistry:
             return True
         return False
 
-    def is_registered(self, number):
+    def is_registered(self, number: str) -> bool:
         """
         Check if extension is registered
 
@@ -232,7 +232,7 @@ class ExtensionRegistry:
         extension = self.get(number)
         return extension.registered if extension else False
 
-    def get_registered(self):
+    def get_registered(self) -> list:
         """
         Get all registered extensions
 
@@ -249,7 +249,7 @@ class ExtensionRegistry:
         """Get all extensions"""
         return list(self.extensions.values())
 
-    def authenticate(self, number, password):
+    def authenticate(self, number: str, password: str) -> bool:
         """
         Authenticate extension using FIPS-compliant password verification
 
@@ -291,7 +291,7 @@ class ExtensionRegistry:
                 return secrets.compare_digest(password, config_password)
         return False
 
-    def hash_extension_password(self, number, password):
+    def hash_extension_password(self, number: str, password: str) -> bool:
         """
         Hash an extension's password using FIPS-compliant algorithm
 

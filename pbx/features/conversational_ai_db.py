@@ -15,7 +15,7 @@ class ConversationalAIDatabase:
     Stores conversations, messages, intents, and analytics
     """
 
-    def __init__(self, db_backend):
+    def __init__(self, db_backend) -> None:
         """
         Initialize database layer
 
@@ -25,7 +25,7 @@ class ConversationalAIDatabase:
         self.logger = get_logger()
         self.db = db_backend
 
-    def create_tables(self):
+    def create_tables(self) -> bool:
         """Create tables for conversational AI"""
         try:
             # Conversations table

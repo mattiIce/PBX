@@ -28,7 +28,7 @@ class AgentMode(Enum):
 class Agent:
     """Represents an agent"""
 
-    def __init__(self, agent_id: str, extension: str):
+    def __init__(self, agent_id: str, extension: str) -> None:
         """Initialize agent"""
         self.agent_id = agent_id
         self.extension = extension
@@ -52,7 +52,7 @@ class CallBlending:
     - Real-time workload balancing
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize call blending"""
         self.logger = get_logger()
         self.config = config or {}
@@ -212,7 +212,7 @@ class CallBlending:
             self.outbound_queue.append(call)
             self.logger.debug(f"Queued outbound call, queue size: {len(self.outbound_queue)}")
 
-    def set_agent_available(self, agent_id: str, available: bool):
+    def set_agent_available(self, agent_id: str, available: bool) -> bool:
         """set agent availability"""
         if not self.enabled:
             self.logger.error("Cannot set agent availability: Call blending feature is not enabled")

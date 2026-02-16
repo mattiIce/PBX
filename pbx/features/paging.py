@@ -27,7 +27,7 @@ class PagingSystem:
     - Emergency override capabilities
     """
 
-    def __init__(self, config: dict, database=None):
+    def __init__(self, config: dict, database=None) -> None:
         """
         Initialize paging system
 

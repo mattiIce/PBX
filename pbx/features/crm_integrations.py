@@ -14,7 +14,7 @@ class HubSpotIntegration:
     Marketing automation and CRM integration
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict) -> None:
         """
         Initialize HubSpot integration
 
@@ -313,7 +313,7 @@ class HubSpotIntegration:
             self.logger.error(f"HubSpot deal creation error: {e}")
             return False
 
-    def _log_activity(self, integration_type: str, action: str, status: str, details: str):
+    def _log_activity(self, integration_type: str, action: str, status: str, details: str) -> None:
         """Log integration activity"""
         try:
             self.db.execute(
@@ -338,7 +338,7 @@ class ZendeskIntegration:
     Helpdesk ticket creation and management
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict) -> None:
         """
         Initialize Zendesk integration
 
@@ -632,7 +632,7 @@ class ZendeskIntegration:
             self.logger.error(f"Zendesk ticket update error: {e}")
             return False
 
-    def _log_activity(self, integration_type: str, action: str, status: str, details: str):
+    def _log_activity(self, integration_type: str, action: str, status: str, details: str) -> None:
         """Log integration activity"""
         try:
             self.db.execute(

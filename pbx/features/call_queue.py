@@ -31,7 +31,7 @@ class AgentStatus(Enum):
 class QueuedCall:
     """Represents a call in queue"""
 
-    def __init__(self, call_id, caller_extension, queue_number):
+    def __init__(self, call_id: str, caller_extension: str, queue_number: str) -> None:
         """
         Initialize queued call
 
@@ -54,7 +54,7 @@ class QueuedCall:
 class Agent:
     """Represents a call queue agent"""
 
-    def __init__(self, extension, name=""):
+    def __init__(self, extension: str, name: str ="") -> None:
         """
         Initialize agent
 
@@ -69,20 +69,20 @@ class Agent:
         self.last_call_time = None
         self.current_call_id = None
 
-    def set_available(self):
+    def set_available(self) -> None:
         """set agent as available"""
         self.status = AgentStatus.AVAILABLE
 
-    def set_busy(self, call_id=None):
+    def set_busy(self, call_id: str | None =None) -> None:
         """set agent as busy"""
         self.status = AgentStatus.BUSY
         self.current_call_id = call_id
 
-    def set_break(self):
+    def set_break(self) -> None:
         """set agent on break"""
         self.status = AgentStatus.ON_BREAK
 
-    def set_offline(self):
+    def set_offline(self) -> None:
         """set agent offline"""
         self.status = AgentStatus.OFFLINE
 
@@ -93,7 +93,7 @@ class Agent:
         self.current_call_id = None
         self.status = AgentStatus.AVAILABLE
 
-    def is_available(self):
+    def is_available(self) -> bool:
         """Check if agent is available"""
         return self.status == AgentStatus.AVAILABLE
 
@@ -103,12 +103,12 @@ class CallQueue:
 
     def __init__(
         self,
-        queue_number,
-        name,
+        queue_number: str,
+        name: str,
         strategy=QueueStrategy.ROUND_ROBIN,
-        max_wait_time=300,
-        max_queue_size=50,
-    ):
+        max_wait_time: int =300,
+        max_queue_size: int =50,
+    ) -> None:
         """
         Initialize call queue
 
@@ -129,7 +129,7 @@ class CallQueue:
         self.logger = get_logger()
         self.round_robin_index = 0
 
-    def add_agent(self, agent):
+    def add_agent(self, agent) -> None:
         """
         Add agent to queue
 
@@ -139,12 +139,12 @@ class CallQueue:
         self.agents[agent.extension] = agent
         self.logger.info(f"Added agent {agent.extension} to queue {self.queue_number}")
 
-    def remove_agent(self, extension):
+    def remove_agent(self, extension: str) -> None:
         """Remove agent from queue"""
         if extension in self.agents:
             del self.agents[extension]
 
-    def enqueue(self, call_id, caller_extension):
+    def enqueue(self, call_id: str, caller_extension: str):
         """
         Add call to queue
 
@@ -181,7 +181,7 @@ class CallQueue:
             return call
         return None
 
-    def _update_positions(self):
+    def _update_positions(self) -> None:
         """Update position numbers for queued calls"""
         for i, call in enumerate(self.queue):
             call.position = i + 1
@@ -221,7 +221,7 @@ class CallQueue:
 
         return available_agents[0] if available_agents else None
 
-    def process_queue(self):
+    def process_queue(self) -> list:
         """
         Process queued calls and assign to agents
 
@@ -273,12 +273,12 @@ class CallQueue:
 class QueueSystem:
     """Manages all call queues"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize queue system"""
         self.queues = {}
         self.logger = get_logger()
 
-    def create_queue(self, queue_number, name, strategy=QueueStrategy.ROUND_ROBIN):
+    def create_queue(self, queue_number: str, name: str, strategy=QueueStrategy.ROUND_ROBIN):
         """
         Create new queue
 
@@ -295,11 +295,11 @@ class QueueSystem:
         self.logger.info(f"Created queue {queue_number}: {name}")
         return queue
 
-    def get_queue(self, queue_number):
+    def get_queue(self, queue_number: str):
         """Get queue by number"""
         return self.queues.get(queue_number)
 
-    def enqueue_call(self, queue_number, call_id, caller_extension):
+    def enqueue_call(self, queue_number: str, call_id: str, caller_extension: str) -> bool:
         """
         Add call to queue
 

@@ -211,9 +211,9 @@ def text_to_wav_telephony(
     finally:
         # Clean up temp files
         if temp_mp3_path and Path(temp_mp3_path).exists():
-            os.unlink(temp_mp3_path)
+            Path(temp_mp3_path).unlink()
         if temp_wav_path and Path(temp_wav_path).exists():
-            os.unlink(temp_wav_path)
+            Path(temp_wav_path).unlink()
 
 
 def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):

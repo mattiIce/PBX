@@ -11,7 +11,7 @@ from pbx.utils.logger import get_logger
 class ParkedCall:
     """Represents a parked call"""
 
-    def __init__(self, call_id, park_number, from_extension, original_destination):
+    def __init__(self, call_id: str, park_number: str, from_extension: str, original_destination) -> None:
         """
         Initialize parked call
 
@@ -32,7 +32,7 @@ class ParkedCall:
         """Get time parked in seconds"""
         return (datetime.now(UTC) - self.park_time).total_seconds()
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "call_id": self.call_id,
@@ -49,8 +49,8 @@ class CallParkingSystem:
     """Manages call parking"""
 
     def __init__(
-        self, park_range_start=70, park_range_end=79, timeout=120, callback_extension=None
-    ):
+        self, park_range_start: int =70, park_range_end: int =79, timeout: int =120, callback_extension: str | None =None
+    ) -> None:
         """
         Initialize call parking system
 
@@ -79,7 +79,7 @@ class CallParkingSystem:
                 return slot
         return None
 
-    def park_call(self, call_id, from_extension, original_destination=None):
+    def park_call(self, call_id: str, from_extension: str, original_destination=None):
         """
         Park a call
 
@@ -103,7 +103,7 @@ class CallParkingSystem:
         self.logger.info(f"Parked call {call_id} at slot {park_number}")
         return park_number
 
-    def retrieve_call(self, park_number, retrieving_extension):
+    def retrieve_call(self, park_number: str, retrieving_extension: str):
         """
         Retrieve a parked call
 
@@ -125,7 +125,7 @@ class CallParkingSystem:
 
         return None
 
-    def check_timeouts(self):
+    def check_timeouts(self) -> list:
         """
         Check for timed out parked calls
 
@@ -142,7 +142,7 @@ class CallParkingSystem:
 
         return timed_out
 
-    def get_parked_calls(self):
+    def get_parked_calls(self) -> list:
         """
         Get all parked calls
 
@@ -151,7 +151,7 @@ class CallParkingSystem:
         """
         return [call.to_dict() for call in self.parked_calls.values()]
 
-    def get_parked_call(self, park_number):
+    def get_parked_call(self, park_number: str):
         """
         Get specific parked call
 
@@ -163,7 +163,7 @@ class CallParkingSystem:
         """
         return self.parked_calls.get(park_number)
 
-    def is_slot_available(self, park_number):
+    def is_slot_available(self, park_number: str) -> bool:
         """Check if parking slot is available"""
         return park_number not in self.parked_calls
 

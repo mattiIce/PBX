@@ -61,7 +61,7 @@ class STIRSHAKENManager:
     - Verification service integration
     """
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize STIR/SHAKEN manager
 
@@ -109,7 +109,7 @@ class STIRSHAKENManager:
             f"STIR/SHAKEN initialized (signing: {self.enable_signing}, verification: {self.enable_verification})"
         )
 
-    def _load_private_key(self, key_path: str):
+    def _load_private_key(self, key_path: str) -> None:
         """Load private key from file"""
         try:
             with open(key_path, "rb") as f:
@@ -122,7 +122,7 @@ class STIRSHAKENManager:
             self.logger.error(f"Failed to load private key: {e}")
             self.enabled = False
 
-    def _load_certificate(self, cert_path: str):
+    def _load_certificate(self, cert_path: str) -> None:
         """Load certificate from file"""
         try:
             with open(cert_path, "rb") as f:
@@ -133,7 +133,7 @@ class STIRSHAKENManager:
             self.logger.error(f"Failed to load certificate: {e}")
             self.enabled = False
 
-    def _load_ca_bundle(self, ca_path: str):
+    def _load_ca_bundle(self, ca_path: str) -> None:
         """Load CA certificate bundle"""
         try:
             with open(ca_path, "rb") as f:

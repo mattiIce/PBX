@@ -515,7 +515,7 @@ class OutlookIntegration:
                 # Schedule the reminder using threading
                 import threading
 
-                def send_reminder():
+                def send_reminder() -> None:
                     """Execute the reminder call"""
                     try:
                         self.logger.info(

@@ -20,7 +20,7 @@ if TYPE_CHECKING:
 class CallerInfo:
     """Represents caller information"""
 
-    def __init__(self, phone_number: str):
+    def __init__(self, phone_number: str) -> None:
         """
         Initialize caller info
 
@@ -84,7 +84,7 @@ class CallerInfo:
 class CRMLookupProvider:
     """Base class for CRM lookup providers"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize CRM lookup provider
 
@@ -112,7 +112,7 @@ class CRMLookupProvider:
 class PhoneBookLookupProvider(CRMLookupProvider):
     """Phone book lookup provider"""
 
-    def __init__(self, config: dict, phone_book=None):
+    def __init__(self, config: dict, phone_book=None) -> None:
         """
         Initialize phone book lookup provider
 
@@ -151,7 +151,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
 class ActiveDirectoryLookupProvider(CRMLookupProvider):
     """Active Directory lookup provider"""
 
-    def __init__(self, config: dict, ad_integration=None):
+    def __init__(self, config: dict, ad_integration=None) -> None:
         """
         Initialize AD lookup provider
 
@@ -189,7 +189,7 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
 class ExternalCRMLookupProvider(CRMLookupProvider):
     """External CRM API lookup provider"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize external CRM lookup provider
 
@@ -261,7 +261,7 @@ class CRMIntegration:
     - Priority-based lookup (try multiple sources)
     """
 
-    def __init__(self, config=None, pbx_core=None):
+    def __init__(self, config=None, pbx_core=None) -> None:
         """
         Initialize CRM integration
 
@@ -303,7 +303,7 @@ class CRMIntegration:
             return self.config.get(key, default)
         return default
 
-    def _initialize_providers(self):
+    def _initialize_providers(self) -> None:
         """Initialize CRM lookup providers"""
         providers_config = self._get_config("features.crm_integration.providers", [])
 
@@ -417,7 +417,7 @@ class CRMIntegration:
         with self.cache_lock:
             self.cache[phone_number] = (caller_info, datetime.now(UTC))
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear lookup cache"""
         with self.cache_lock:
             self.cache.clear()

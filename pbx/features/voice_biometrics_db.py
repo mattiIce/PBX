@@ -16,7 +16,7 @@ class VoiceBiometricsDatabase:
     Stores voice profiles, enrollment data, and verification history
     """
 
-    def __init__(self, db_backend):
+    def __init__(self, db_backend) -> None:
         """
         Initialize database layer
 
@@ -26,7 +26,7 @@ class VoiceBiometricsDatabase:
         self.logger = get_logger()
         self.db = db_backend
 
-    def create_tables(self):
+    def create_tables(self) -> bool:
         """Create tables for voice biometrics"""
         try:
             # Voice profiles table
@@ -207,7 +207,7 @@ class VoiceBiometricsDatabase:
             self.logger.error(f"Error getting voice profile: {e}")
             return None
 
-    def update_enrollment_progress(self, user_id: str, samples: int):
+    def update_enrollment_progress(self, user_id: str, samples: int) -> None:
         """Update enrollment progress"""
         try:
             cursor = self.db.connection.cursor()

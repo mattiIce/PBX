@@ -15,7 +15,7 @@ from pbx.utils.logger import get_logger
 class QoSMetrics:
     """Container for QoS metrics for a single call"""
 
-    def __init__(self, call_id: str):
+    def __init__(self, call_id: str) -> None:
         """
         Initialize QoS metrics for a call
 
@@ -263,7 +263,7 @@ class QoSMonitor:
     QoS monitoring system for tracking call quality across the PBX
     """
 
-    def __init__(self, pbx):
+    def __init__(self, pbx) -> None:
         """
         Initialize QoS monitor
 

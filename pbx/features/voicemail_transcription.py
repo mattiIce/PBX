@@ -34,7 +34,7 @@ except ImportError:
 class VoicemailTranscriptionService:
     """Service for transcribing voicemail messages to text"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """
         Initialize transcription service
 
@@ -90,7 +90,7 @@ class VoicemailTranscriptionService:
             else:
                 self.logger.debug("Voicemail transcription service disabled in configuration")
 
-    def transcribe(self, audio_file_path, language="en-US"):
+    def transcribe(self, audio_file_path: str, language: str ="en-US") -> dict:
         """
         Transcribe voicemail audio file to text
 
@@ -165,7 +165,7 @@ class VoicemailTranscriptionService:
                 "error": str(e),
             }
 
-    def _create_error_response(self, error_msg, language, provider=None):
+    def _create_error_response(self, error_msg: str, language: str, provider: str | None =None) -> dict:
         """
         Helper method to create error response structure
 
@@ -187,7 +187,7 @@ class VoicemailTranscriptionService:
             "error": error_msg,
         }
 
-    def _transcribe_vosk(self, audio_file_path, language="en-US"):
+    def _transcribe_vosk(self, audio_file_path: str, language: str ="en-US"):
         """
         Transcribe using Vosk (offline, free speech recognition)
 
@@ -272,7 +272,7 @@ class VoicemailTranscriptionService:
             self.logger.error(f"Vosk transcription error: {e}")
             return self._create_error_response(str(e), language, "vosk")
 
-    def _transcribe_google(self, audio_file_path, language="en-US"):
+    def _transcribe_google(self, audio_file_path: str, language: str ="en-US"):
         """
         Transcribe using Google Cloud Speech-to-Text API
 

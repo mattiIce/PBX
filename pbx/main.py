@@ -24,7 +24,7 @@ running = True
 pbx = None
 
 
-def signal_handler(sig, frame):
+def signal_handler(sig: int, frame: object) -> None:
     """Handle shutdown signal."""
     global running
     logger.info("Shutting down PBX system...")

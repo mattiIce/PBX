@@ -22,7 +22,7 @@ except ImportError:
 class MobilePushNotifications:
     """Mobile push notification service using Firebase (free)"""
 
-    def __init__(self, config=None, database=None):
+    def __init__(self, config=None, database=None) -> None:
         """Initialize mobile push notifications"""
         self.logger = get_logger()
         self.config = config or {}
@@ -190,7 +190,7 @@ class MobilePushNotifications:
         except sqlite3.Error as e:
             self.logger.error(f"Error loading mobile devices from database: {e}")
 
-    def _save_device_to_database(self, user_id: str, device_token: str, platform: str):
+    def _save_device_to_database(self, user_id: str, device_token: str, platform: str) -> bool:
         """Save device registration to database"""
         if not self.database or not self.database.enabled:
             return False
@@ -227,7 +227,7 @@ class MobilePushNotifications:
             self.logger.error(f"Error saving device to database: {e}")
             return False
 
-    def _remove_device_from_database(self, user_id: str, device_token: str):
+    def _remove_device_from_database(self, user_id: str, device_token: str) -> bool:
         """Remove device from database (soft delete)"""
         if not self.database or not self.database.enabled:
             return False
@@ -543,7 +543,7 @@ class MobilePushNotifications:
             for d in devices
         ]
 
-    def cleanup_stale_devices(self, days: int = 90):
+    def cleanup_stale_devices(self, days: int = 90) -> None:
         """Remove devices not seen in X days"""
         from datetime import timedelta
 

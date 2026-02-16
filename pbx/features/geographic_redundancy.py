@@ -24,7 +24,7 @@ class RegionStatus(Enum):
 class GeographicRegion:
     """Represents a geographic region"""
 
-    def __init__(self, region_id: str, name: str, location: str):
+    def __init__(self, region_id: str, name: str, location: str) -> None:
         """Initialize region"""
         self.region_id = region_id
         self.name = name
@@ -49,7 +49,7 @@ class GeographicRedundancy:
     - Data replication
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize geographic redundancy"""
         self.logger = get_logger()
         self.config = config or {}

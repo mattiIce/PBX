@@ -45,10 +45,10 @@ export async function loadDashboard(): Promise<void> {
 
         const data: DashboardStatus = await response.json();
 
-        (document.getElementById('stat-extensions') as HTMLElement).textContent = String(data.registered_extensions || 0);
-        (document.getElementById('stat-calls') as HTMLElement).textContent = String(data.active_calls || 0);
-        (document.getElementById('stat-total-calls') as HTMLElement).textContent = String(data.total_calls || 0);
-        (document.getElementById('stat-recordings') as HTMLElement).textContent = String(data.active_recordings || 0);
+        (document.getElementById('stat-extensions') as HTMLElement).textContent = String(data.registered_extensions ?? 0);
+        (document.getElementById('stat-calls') as HTMLElement).textContent = String(data.active_calls ?? 0);
+        (document.getElementById('stat-total-calls') as HTMLElement).textContent = String(data.total_calls ?? 0);
+        (document.getElementById('stat-recordings') as HTMLElement).textContent = String(data.active_recordings ?? 0);
 
         const systemStatus = document.getElementById('system-status') as HTMLElement | null;
         if (systemStatus) {
@@ -60,10 +60,10 @@ export async function loadDashboard(): Promise<void> {
         loadADStatus();
     } catch (error: unknown) {
         console.error('Error loading dashboard:', error);
-        ['stat-extensions', 'stat-calls', 'stat-total-calls', 'stat-recordings'].forEach(id => {
-            const el = document.getElementById(id) as HTMLElement | null;
+        for (const id of ['stat-extensions', 'stat-calls', 'stat-total-calls', 'stat-recordings']) {
+            const el = document.getElementById(id);
             if (el) el.textContent = 'Error';
-        });
+        }
         const message = error instanceof Error ? error.message : String(error);
         showNotification(`Failed to load dashboard: ${message}`, 'error');
     }
@@ -97,13 +97,13 @@ export async function loadADStatus(): Promise<void> {
         }
 
         const el = (id: string): HTMLElement | null => document.getElementById(id);
-        if (el('ad-server')) (el('ad-server') as HTMLElement).textContent = data.server || 'Not configured';
+        if (el('ad-server')) (el('ad-server') as HTMLElement).textContent = data.server ?? 'Not configured';
         if (el('ad-auto-provision')) (el('ad-auto-provision') as HTMLElement).textContent = data.auto_provision ? 'Yes' : 'No';
-        if (el('ad-synced-users')) (el('ad-synced-users') as HTMLElement).textContent = String(data.synced_users || 0);
+        if (el('ad-synced-users')) (el('ad-synced-users') as HTMLElement).textContent = String(data.synced_users ?? 0);
 
         const errorElement = el('ad-error') as HTMLElement | null;
         if (errorElement) {
-            errorElement.textContent = data.error || 'None';
+            errorElement.textContent = data.error ?? 'None';
             errorElement.style.color = data.error ? '#d32f2f' : '#10b981';
         }
 

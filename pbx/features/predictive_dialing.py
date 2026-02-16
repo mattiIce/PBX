@@ -32,7 +32,7 @@ class DialingMode(Enum):
 class Contact:
     """Represents a contact in a campaign"""
 
-    def __init__(self, contact_id: str, phone_number: str, data: dict | None = None):
+    def __init__(self, contact_id: str, phone_number: str, data: dict | None = None) -> None:
         """Initialize contact"""
         self.contact_id = contact_id
         self.phone_number = phone_number
@@ -46,7 +46,7 @@ class Contact:
 class Campaign:
     """Represents a dialing campaign"""
 
-    def __init__(self, campaign_id: str, name: str, dialing_mode: DialingMode):
+    def __init__(self, campaign_id: str, name: str, dialing_mode: DialingMode) -> None:
         """Initialize campaign"""
         self.campaign_id = campaign_id
         self.name = name
@@ -80,7 +80,7 @@ class PredictiveDialer:
     - Compliance with call regulations
     """
 
-    def __init__(self, config=None, db_backend=None):
+    def __init__(self, config=None, db_backend=None) -> None:
         """Initialize predictive dialer"""
         self.logger = get_logger()
         self.config = config or {}

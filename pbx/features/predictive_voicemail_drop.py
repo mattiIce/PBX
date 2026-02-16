@@ -21,7 +21,7 @@ class VoicemailDropSystem:
     - Campaign-specific messages
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize voicemail drop system"""
         self.logger = get_logger()
         self.config = config or {}

@@ -1282,7 +1282,7 @@ class ExtensionDB:
         self.db = db
         self.logger = get_logger()
 
-    def _hash_voicemail_pin(self, pin: str) -> tuple:
+    def _hash_voicemail_pin(self, pin: str) -> tuple[str | None, str | None]:
         """
         Hash a voicemail PIN using FIPS-compliant encryption
 
@@ -1578,7 +1578,7 @@ class ExtensionDB:
         )
         return self.db.fetch_all(query, (search_pattern, search_pattern, search_pattern))
 
-    def get_config(self, key: str, default=None):
+    def get_config(self, key: str, default: object = None) -> object:
         """
         Get a configuration value by key
 
@@ -1618,8 +1618,8 @@ class ExtensionDB:
         return default
 
     def set_config(
-        self, key: str, value, config_type: str = "string", updated_by: str | None = None
-    ):
+        self, key: str, value: object, config_type: str = "string", updated_by: str | None = None
+    ) -> bool:
         """
         set a configuration value
 
@@ -1999,7 +1999,7 @@ class ProvisionedDevicesDB:
 _database = None
 
 
-def get_database(config=None) -> DatabaseBackend:
+def get_database(config: dict | None = None) -> DatabaseBackend:
     """
     Get or create database backend instance.
 

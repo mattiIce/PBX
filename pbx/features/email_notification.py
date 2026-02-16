@@ -18,7 +18,7 @@ from pbx.utils.logger import get_logger
 class EmailNotifier:
     """Handles email notifications for voicemail"""
 
-    def __init__(self, config):
+    def __init__(self, config) -> None:
         """
         Initialize email notifier
 
@@ -73,8 +73,8 @@ class EmailNotifier:
             self.logger.info("Email notifications disabled")
 
     def send_voicemail_notification(
-        self, to_email, extension_number, caller_id, timestamp, audio_file_path=None, duration=None
-    ):
+        self, to_email, extension_number: str, caller_id: str, timestamp, audio_file_path: str | None =None, duration: float | None =None
+    ) -> bool:
         """
         Send voicemail notification email
 
@@ -162,7 +162,7 @@ class EmailNotifier:
             self.logger.error(f"Failed to prepare voicemail notification: {e}")
             return False
 
-    def send_reminder(self, to_email, extension_number, unread_count, messages):
+    def send_reminder(self, to_email, extension_number: str, unread_count: int, messages) -> bool:
         """
         Send daily reminder about unread voicemails
 
@@ -220,7 +220,7 @@ class EmailNotifier:
             self.logger.error(f"Failed to send voicemail reminder: {e}")
             return False
 
-    def _create_email_body(self, extension_number, caller_id, timestamp, duration=None):
+    def _create_email_body(self, extension_number: str, caller_id: str, timestamp, duration: float | None =None):
         """
         Create email body text
 

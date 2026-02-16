@@ -12,7 +12,7 @@ from pbx.utils.logger import get_logger
 class SRVRecord:
     """Represents a DNS SRV record"""
 
-    def __init__(self, priority: int, weight: int, port: int, target: str):
+    def __init__(self, priority: int, weight: int, port: int, target: str) -> None:
         """Initialize SRV record"""
         self.priority = priority
         self.weight = weight
@@ -36,7 +36,7 @@ class DNSSRVFailover:
     - Health monitoring
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize DNS SRV failover"""
         self.logger = get_logger()
         self.config = config or {}
@@ -341,7 +341,7 @@ class DNSSRVFailover:
 
     def clear_cache(
         self, service: str | None = None, protocol: str | None = None, domain: str | None = None
-    ):
+    ) -> None:
         """Clear SRV cache"""
         if service and protocol and domain:
             srv_name = f"_{service}._{protocol}.{domain}"

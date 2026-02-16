@@ -12,7 +12,7 @@ from pbx.utils.logger import get_logger
 class FraudDetectionSystem:
     """System for detecting and alerting on unusual call patterns"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize fraud detection system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -268,7 +268,7 @@ class FraudDetectionSystem:
             ),
         }
 
-    def cleanup_old_data(self, days: int = 30):
+    def cleanup_old_data(self, days: int = 30) -> None:
         """Clean up old call history"""
         cutoff = datetime.now(UTC) - timedelta(days=days)
 

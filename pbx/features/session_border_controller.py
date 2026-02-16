@@ -42,7 +42,7 @@ class SessionBorderController:
     IP_PATTERN = r"(\d+\.\d+\.\d+\.\d+)"
     PACKETS_PER_SECOND = 50  # Assumed packets per second for VoIP bandwidth calculation
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize SBC"""
         self.logger = get_logger()
         self.config = config or {}
@@ -510,7 +510,7 @@ class SessionBorderController:
 
         return True
 
-    def add_to_blacklist(self, ip: str):
+    def add_to_blacklist(self, ip: str) -> bool:
         """Add IP to blacklist"""
         if not self.enabled:
             self.logger.error(
@@ -522,7 +522,7 @@ class SessionBorderController:
         self.logger.warning(f"Added {ip} to blacklist")
         return True
 
-    def add_to_whitelist(self, ip: str):
+    def add_to_whitelist(self, ip: str) -> bool:
         """Add IP to whitelist"""
         if not self.enabled:
             self.logger.error(

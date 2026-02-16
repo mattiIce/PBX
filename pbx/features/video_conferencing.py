@@ -16,7 +16,7 @@ class VideoConferencingEngine:
     Supports HD/4K video, screen sharing, and multi-party conferences
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict) -> None:
         """
         Initialize video conferencing engine
 

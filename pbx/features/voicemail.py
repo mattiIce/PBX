@@ -51,13 +51,13 @@ class VoicemailBox:
 
     def __init__(
         self,
-        extension_number,
-        storage_path="voicemail",
+        extension_number: str,
+        storage_path: str ="voicemail",
         config=None,
         email_notifier=None,
         database=None,
         transcription_service=None,
-    ):
+    ) -> None:
         """
         Initialize voicemail box
 
@@ -125,7 +125,7 @@ class VoicemailBox:
             return "%s"
         return "?"
 
-    def save_message(self, caller_id, audio_data, duration=None):
+    def save_message(self, caller_id: str, audio_data: bytes, duration: float | None =None):
         """
         Save voicemail message
 
@@ -338,7 +338,7 @@ class VoicemailBox:
 
         return message_id
 
-    def get_messages(self, unread_only=False):
+    def get_messages(self, unread_only: bool =False) -> list:
         """
         Get voicemail messages
 
@@ -352,7 +352,7 @@ class VoicemailBox:
             return [msg for msg in self.messages if not msg["listened"]]
         return self.messages
 
-    def mark_listened(self, message_id):
+    def mark_listened(self, message_id: str) -> None:
         """
         Mark message as listened
 
@@ -389,7 +389,7 @@ class VoicemailBox:
 
                 break
 
-    def delete_message(self, message_id):
+    def delete_message(self, message_id: str) -> bool:
         """
         Delete message
 
@@ -563,7 +563,7 @@ class VoicemailBox:
                             f"Could not parse timestamp from voicemail file: {filename}"
                         )
 
-    def set_pin(self, pin):
+    def set_pin(self, pin: str) -> bool:
         """
         set voicemail PIN
 
@@ -581,7 +581,7 @@ class VoicemailBox:
         self.logger.info(f"Updated voicemail PIN for extension {self.extension_number}")
         return True
 
-    def verify_pin(self, pin):
+    def verify_pin(self, pin: str) -> bool:
         """
         Verify voicemail PIN
 
@@ -609,7 +609,7 @@ class VoicemailBox:
         # No PIN configured
         return False
 
-    def has_custom_greeting(self):
+    def has_custom_greeting(self) -> bool:
         """
         Check if a custom greeting has been recorded
 
@@ -623,7 +623,7 @@ class VoicemailBox:
         )
         return exists
 
-    def save_greeting(self, audio_data):
+    def save_greeting(self, audio_data: bytes) -> bool:
         """
         Save custom voicemail greeting
 
@@ -663,7 +663,7 @@ class VoicemailBox:
             self.logger.error(f"Error saving greeting for extension {self.extension_number}: {e}")
             return False
 
-    def get_greeting_path(self):
+    def get_greeting_path(self) -> Path | None:
         """
         Get path to custom greeting file
 
@@ -678,7 +678,7 @@ class VoicemailBox:
         self.logger.debug(f"No custom greeting for extension {self.extension_number}")
         return None
 
-    def delete_greeting(self):
+    def delete_greeting(self) -> bool:
         """
         Delete custom greeting
 
@@ -699,7 +699,7 @@ class VoicemailBox:
 class VoicemailSystem:
     """Manages voicemail for all extensions"""
 
-    def __init__(self, storage_path="voicemail", config=None, database=None):
+    def __init__(self, storage_path: str ="voicemail", config=None, database=None) -> None:
         """
         Initialize voicemail system
 
@@ -724,7 +724,7 @@ class VoicemailSystem:
 
         Path(storage_path).mkdir(parents=True, exist_ok=True)
 
-    def get_mailbox(self, extension_number):
+    def get_mailbox(self, extension_number: str):
         """
         Get or create mailbox for extension
 
@@ -744,7 +744,7 @@ class VoicemailSystem:
             )
         return self.mailboxes[extension_number]
 
-    def save_message(self, extension_number, caller_id, audio_data, duration=None):
+    def save_message(self, extension_number: str, caller_id: str, audio_data: bytes, duration: float | None =None):
         """
         Save voicemail message
 
@@ -784,7 +784,7 @@ class VoicemailSystem:
 
         return count
 
-    def get_message_count(self, extension_number, unread_only=True):
+    def get_message_count(self, extension_number: str, unread_only: bool =True):
         """
         Get message count for extension
 
@@ -816,7 +816,7 @@ class VoicemailIVR:
     STATE_GREETING_REVIEW = "greeting_review"
     STATE_GOODBYE = "goodbye"
 
-    def __init__(self, voicemail_system: VoicemailSystem, extension_number: str):
+    def __init__(self, voicemail_system: VoicemailSystem, extension_number: str) -> None:
         """
         Initialize voicemail IVR for an extension
 
@@ -1214,7 +1214,7 @@ class VoicemailIVR:
             "message": "Invalid option. Press 1 to listen, 2 to re-record, 3 to delete, * to save.",
         }
 
-    def save_recorded_greeting(self, audio_data):
+    def save_recorded_greeting(self, audio_data: bytes) -> bool:
         """
         Save the recorded greeting temporarily for review
 
@@ -1227,7 +1227,7 @@ class VoicemailIVR:
         self.recorded_greeting_data = audio_data
         return True
 
-    def get_recorded_greeting(self):
+    def get_recorded_greeting(self) -> bytes | None:
         """
         Get the temporarily stored greeting for playback
 

@@ -198,7 +198,7 @@ Q2 = [-12, 12, 52]  # Higher sub-band (2-bit)
 class G722State:
     """G.722 encoder/decoder state per ITU-T specification"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # QMF filter history
         self.x = [0] * 24
 
@@ -242,7 +242,7 @@ class G722CodecITU:
     SAMPLE_RATE = 16000
     PAYLOAD_TYPE = 9
 
-    def __init__(self, bitrate: int = 64000):
+    def __init__(self, bitrate: int = 64000) -> None:
         """Initialize G.722 codec"""
         self.logger = get_logger()
         self.bitrate = bitrate
@@ -579,7 +579,7 @@ class G722CodecITU:
 
         return det
 
-    def _update_predictor_lower(self, state: G722State, dq: int):
+    def _update_predictor_lower(self, state: G722State, dq: int) -> None:
         """
         Update adaptive predictor for lower sub-band
 
@@ -591,7 +591,7 @@ class G722CodecITU:
         # Simplified predictor update
         state.sp = state.s
 
-    def _update_predictor_higher(self, state: G722State, dq: int):
+    def _update_predictor_higher(self, state: G722State, dq: int) -> None:
         """
         Update adaptive predictor for higher sub-band
 

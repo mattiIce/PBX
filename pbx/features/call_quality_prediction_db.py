@@ -16,7 +16,7 @@ class CallQualityPredictionDatabase:
     Stores network metrics, predictions, and quality alerts
     """
 
-    def __init__(self, db_backend):
+    def __init__(self, db_backend) -> None:
         """
         Initialize database layer
 
@@ -26,7 +26,7 @@ class CallQualityPredictionDatabase:
         self.logger = get_logger()
         self.db = db_backend
 
-    def create_tables(self):
+    def create_tables(self) -> bool:
         """Create tables for call quality prediction"""
         try:
             if self.db.db_type == "postgresql":
@@ -365,7 +365,7 @@ class CallQualityPredictionDatabase:
         except sqlite3.Error as e:
             self.logger.error(f"Error acknowledging alert: {e}")
 
-    def update_daily_trends(self, endpoint: str, metrics: dict):
+    def update_daily_trends(self, endpoint: str, metrics: dict) -> None:
         """Update daily trend statistics"""
         try:
             cursor = self.db.connection.cursor()

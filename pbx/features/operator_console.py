@@ -14,7 +14,7 @@ from pbx.utils.logger import get_logger
 class OperatorConsole:
     """Operator console for receptionists"""
 
-    def __init__(self, config: dict, pbx_core):
+    def __init__(self, config: dict, pbx_core) -> None:
         """
         Initialize operator console
 
@@ -377,7 +377,7 @@ class OperatorConsole:
                 return {}
         return {}
 
-    def _save_vip_database(self):
+    def _save_vip_database(self) -> bool:
         """Save VIP caller database to JSON file"""
         try:
             with open(self.vip_db_path, "w") as f:
@@ -393,7 +393,7 @@ class OperatorConsole:
         priority_level: int = 1,
         name: str | None = None,
         notes: str | None = None,
-    ):
+    ) -> bool:
         """
         Mark a caller as VIP for priority handling
 

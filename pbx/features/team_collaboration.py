@@ -14,7 +14,7 @@ class TeamMessagingEngine:
     Provides chat channels and direct messaging
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict) -> None:
         """
         Initialize team messaging engine
 
@@ -301,7 +301,7 @@ class FileShareEngine:
     Secure document collaboration
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict) -> None:
         """
         Initialize file share engine
 

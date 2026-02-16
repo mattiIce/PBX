@@ -11,7 +11,7 @@ from pbx.utils.logger import get_logger
 class TimeBasedRouting:
     """Time-based call routing system"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize time-based routing"""
         self.logger = get_logger()
         self.config = config or {}
@@ -27,7 +27,7 @@ class TimeBasedRouting:
             self.logger.info("Time-based routing initialized")
             self._load_rules()
 
-    def _load_rules(self):
+    def _load_rules(self) -> None:
         """Load routing rules from config"""
         rules = self.config.get("features", {}).get("time_based_routing", {}).get("rules", [])
         for rule in rules:

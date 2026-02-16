@@ -76,7 +76,7 @@ class SpeexCodec:
     # Frame sizes (20ms is standard)
     FRAME_DURATION_MS = 20
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         """
         Initialize Speex codec handler
 
@@ -361,12 +361,12 @@ class SpeexCodec:
             self.logger.error(f"Speex decoding failed: {e}")
             return None
 
-    def reset_encoder(self):
+    def reset_encoder(self) -> None:
         """Reset encoder state"""
         if self.encoder:
             self.create_encoder()  # Recreate encoder
 
-    def reset_decoder(self):
+    def reset_decoder(self) -> None:
         """Reset decoder state"""
         if self.decoder:
             self.create_decoder()  # Recreate decoder
@@ -379,7 +379,7 @@ class SpeexCodecManager:
     Manages multiple Speex codec instances for different calls.
     """
 
-    def __init__(self, pbx):
+    def __init__(self, pbx) -> None:
         """
         Initialize Speex codec manager
 
@@ -431,7 +431,7 @@ class SpeexCodecManager:
         """
         return self.codecs.get(call_id)
 
-    def remove_codec(self, call_id: str):
+    def remove_codec(self, call_id: str) -> None:
         """
         Remove codec instance for a call
 

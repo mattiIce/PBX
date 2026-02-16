@@ -37,17 +37,17 @@ class SIPTrunk:
 
     def __init__(
         self,
-        trunk_id,
-        name,
-        host,
-        username,
-        password,
-        port=5060,
+        trunk_id: str,
+        name: str,
+        host: str,
+        username: str,
+        password: str,
+        port: int =5060,
         codec_preferences=None,
-        priority=100,
-        max_channels=10,
-        health_check_interval=60,
-    ):
+        priority: int =100,
+        max_channels: int =10,
+        health_check_interval: int =60,
+    ) -> None:
         """
         Initialize SIP trunk
 
@@ -98,7 +98,7 @@ class SIPTrunk:
         self.failover_count = 0
         self.last_failover_time = None
 
-    def register(self):
+    def register(self) -> bool:
         """
         Register trunk with provider
 
@@ -125,7 +125,7 @@ class SIPTrunk:
         self.status = TrunkStatus.UNREGISTERED
         self.health_status = TrunkHealthStatus.DOWN
 
-    def can_make_call(self):
+    def can_make_call(self) -> bool:
         """Check if trunk can make call"""
         return (
             self.status == TrunkStatus.REGISTERED
@@ -133,7 +133,7 @@ class SIPTrunk:
             and self.channels_in_use < self.channels_available
         )
 
-    def allocate_channel(self):
+    def allocate_channel(self) -> bool:
         """Allocate channel for outbound call"""
         if self.can_make_call():
             self.channels_in_use += 1
@@ -263,7 +263,7 @@ class SIPTrunk:
             "failover_count": self.failover_count,
         }
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "trunk_id": self.trunk_id,
@@ -289,7 +289,7 @@ class SIPTrunk:
 class OutboundRule:
     """Routing rule for outbound calls"""
 
-    def __init__(self, rule_id, pattern, trunk_id, prepend="", strip=0):
+    def __init__(self, rule_id, pattern, trunk_id: str, prepend: str ="", strip: int =0) -> None:
         """
         Initialize outbound rule
 
@@ -306,7 +306,7 @@ class OutboundRule:
         self.prepend = prepend
         self.strip = strip
 
-    def matches(self, number):
+    def matches(self, number) -> bool:
         """
         Check if number matches pattern
 
@@ -344,7 +344,7 @@ class OutboundRule:
 class SIPTrunkSystem:
     """Manages SIP trunks for external calls with health monitoring and failover"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize SIP trunk system
 
         Args:
@@ -379,7 +379,7 @@ class SIPTrunkSystem:
         self.health_check_thread.start()
         self.logger.info("Started SIP trunk health monitoring")
 
-    def stop_health_monitoring(self):
+    def stop_health_monitoring(self) -> None:
         """Stop health monitoring thread"""
         self.monitoring_active = False
         if self.health_check_thread:
@@ -415,7 +415,7 @@ class SIPTrunkSystem:
             except Exception as e:
                 self.logger.error(f"Error checking health of trunk {trunk.name}: {e}")
 
-    def add_trunk(self, trunk):
+    def add_trunk(self, trunk) -> None:
         """
         Add SIP trunk
 
@@ -425,7 +425,7 @@ class SIPTrunkSystem:
         self.trunks[trunk.trunk_id] = trunk
         self.logger.info(f"Added SIP trunk: {trunk.name}")
 
-    def remove_trunk(self, trunk_id):
+    def remove_trunk(self, trunk_id: str) -> None:
         """Remove SIP trunk"""
         if trunk_id in self.trunks:
             trunk = self.trunks[trunk_id]
@@ -433,7 +433,7 @@ class SIPTrunkSystem:
             del self.trunks[trunk_id]
             self.logger.info(f"Removed SIP trunk: {trunk_id}")
 
-    def get_trunk(self, trunk_id):
+    def get_trunk(self, trunk_id: str):
         """Get trunk by ID"""
         return self.trunks.get(trunk_id)
 
@@ -442,7 +442,7 @@ class SIPTrunkSystem:
         for trunk in self.trunks.values():
             trunk.register()
 
-    def add_outbound_rule(self, rule):
+    def add_outbound_rule(self, rule) -> None:
         """
         Add outbound routing rule
 
@@ -452,7 +452,7 @@ class SIPTrunkSystem:
         self.outbound_rules.append(rule)
         self.logger.info(f"Added outbound rule: {rule.pattern} -> trunk {rule.trunk_id}")
 
-    def route_outbound(self, number):
+    def route_outbound(self, number) -> tuple:
         """
         Route outbound call
 
@@ -483,7 +483,7 @@ class SIPTrunkSystem:
         """Get status of all trunks"""
         return [trunk.to_dict() for trunk in self.trunks.values()]
 
-    def make_outbound_call(self, from_extension, to_number):
+    def make_outbound_call(self, from_extension: str, to_number) -> bool:
         """
         Initiate outbound call
 

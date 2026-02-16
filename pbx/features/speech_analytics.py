@@ -15,7 +15,7 @@ class SpeechAnalyticsEngine:
     Framework for transcription, sentiment, and summarization
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend, config: dict) -> None:
         """
         Initialize speech analytics engine
 

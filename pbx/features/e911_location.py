@@ -11,7 +11,7 @@ from pbx.utils.logger import get_logger
 class E911LocationService:
     """Service for managing E911 locations and routing (single site, 3 buildings)"""
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize E911 location service"""
         self.logger = get_logger()
         self.config = config or {}
@@ -27,7 +27,7 @@ class E911LocationService:
             self.logger.info("E911 location service initialized (single site, multi-building)")
             self._load_buildings()
 
-    def _load_buildings(self):
+    def _load_buildings(self) -> None:
         """Load building configurations for the site"""
         # Load from config or create defaults
         buildings_config = self.config.get("features", {}).get("e911", {}).get("buildings", [])

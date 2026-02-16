@@ -13,7 +13,7 @@ from pbx.utils.logger import get_logger
 class FindMeFollowMe:
     """Find Me/Follow Me call routing system"""
 
-    def __init__(self, config=None, database=None):
+    def __init__(self, config=None, database=None) -> None:
         """Initialize Find Me/Follow Me"""
         self.logger = get_logger()
         self.config = config or {}
@@ -62,7 +62,7 @@ class FindMeFollowMe:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing FMFM schema: {e}")
 
-    def _load_configs(self):
+    def _load_configs(self) -> None:
         """Load FMFM configurations from database or config file"""
         # First try to load from database
         if self.database and self.database.enabled:
@@ -118,7 +118,7 @@ class FindMeFollowMe:
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error loading FMFM configs from database: {e}")
 
-    def _save_to_database(self, extension: str):
+    def _save_to_database(self, extension: str) -> bool:
         """
         Save FMFM configuration to database
 
@@ -183,7 +183,7 @@ class FindMeFollowMe:
             self.logger.error(f"Error saving FMFM config to database: {e}")
             return False
 
-    def _delete_from_database(self, extension: str):
+    def _delete_from_database(self, extension: str) -> bool:
         """Delete FMFM configuration from database"""
         if not self.database or not self.database.enabled:
             return False

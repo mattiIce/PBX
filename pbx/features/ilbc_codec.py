@@ -53,7 +53,7 @@ class ILBCCodec:
     ENCODED_SIZE_20MS = 38  # bytes per 20ms frame
     ENCODED_SIZE_30MS = 50  # bytes per 30ms frame
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         """
         Initialize iLBC codec handler
 
@@ -297,12 +297,12 @@ class ILBCCodec:
             self.logger.error(f"iLBC PLC failed: {e}")
             return None
 
-    def reset_encoder(self):
+    def reset_encoder(self) -> None:
         """Reset encoder state"""
         if self.encoder:
             self.create_encoder()  # Recreate encoder
 
-    def reset_decoder(self):
+    def reset_decoder(self) -> None:
         """Reset decoder state"""
         if self.decoder:
             self.create_decoder()  # Recreate decoder
@@ -315,7 +315,7 @@ class ILBCCodecManager:
     Manages multiple iLBC codec instances for different calls.
     """
 
-    def __init__(self, pbx):
+    def __init__(self, pbx) -> None:
         """
         Initialize iLBC codec manager
 
@@ -367,7 +367,7 @@ class ILBCCodecManager:
         """
         return self.codecs.get(call_id)
 
-    def remove_codec(self, call_id: str):
+    def remove_codec(self, call_id: str) -> None:
         """
         Remove codec instance for a call
 

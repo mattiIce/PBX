@@ -45,7 +45,7 @@ def get_auth_token() -> str | None:
     return None
 
 
-def verify_authentication() -> tuple[bool, dict | None]:
+def verify_authentication() -> tuple[bool, dict[str, Any] | None]:
     """Verify authentication token and return payload.
 
     Returns:
@@ -91,12 +91,12 @@ def require_admin(f: Callable[..., Any]) -> Callable[..., Any]:
     return decorated
 
 
-def get_request_body() -> dict:
+def get_request_body() -> dict[str, Any]:
     """Get request body as JSON dict."""
     return request.get_json(silent=True) or {}
 
 
-def get_query_params() -> dict:
+def get_query_params() -> dict[str, Any]:
     """Get query parameters as a dict."""
     return request.args
 

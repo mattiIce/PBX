@@ -14,7 +14,7 @@ from pbx.utils.logger import get_logger
 class DialPattern:
     """Represents a dial pattern for routing"""
 
-    def __init__(self, pattern: str, description: str = ""):
+    def __init__(self, pattern: str, description: str = "") -> None:
         """
         Initialize dial pattern
 
@@ -42,7 +42,7 @@ class RateEntry:
         connection_fee: float = 0.0,
         minimum_seconds: int = 0,
         billing_increment: int = 1,
-    ):
+    ) -> None:
         """
         Initialize rate entry
 
@@ -97,7 +97,7 @@ class TimeBasedRate:
         end_time: time,
         days_of_week: list[int],  # 0=Monday, 6=Sunday
         rate_multiplier: float = 1.0,
-    ):
+    ) -> None:
         """
         Initialize time-based rate
 
@@ -135,7 +135,7 @@ class TimeBasedRate:
 class LeastCostRouting:
     """Least-Cost Routing engine with database persistence"""
 
-    def __init__(self, pbx):
+    def __init__(self, pbx) -> None:
         """
         Initialize LCR engine
 
@@ -173,7 +173,7 @@ class LeastCostRouting:
             f"Least-Cost Routing engine initialized with {len(self.rate_entries)} rates"
         )
 
-    def _init_database(self):
+    def _init_database(self) -> None:
         """Initialize database tables for LCR persistence"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -218,7 +218,7 @@ class LeastCostRouting:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing LCR database: {e}")
 
-    def _load_from_database(self):
+    def _load_from_database(self) -> None:
         """Load rates and time-based rates from database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -283,7 +283,7 @@ class LeastCostRouting:
         connection_fee: float = 0.0,
         minimum_seconds: int = 0,
         billing_increment: int = 1,
-    ):
+    ) -> None:
         """Save a rate entry to database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -322,7 +322,7 @@ class LeastCostRouting:
         end_minute: int,
         days: list[int],
         multiplier: float,
-    ):
+    ) -> None:
         """Save a time-based rate to database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -347,7 +347,7 @@ class LeastCostRouting:
         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Error saving time-based rate to database: {e}")
 
-    def _delete_all_rates_from_db(self):
+    def _delete_all_rates_from_db(self) -> None:
         """Delete all rates from database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -359,7 +359,7 @@ class LeastCostRouting:
         except sqlite3.Error as e:
             self.logger.error(f"Error deleting LCR rates from database: {e}")
 
-    def _delete_all_time_rates_from_db(self):
+    def _delete_all_time_rates_from_db(self) -> None:
         """Delete all time-based rates from database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -380,7 +380,7 @@ class LeastCostRouting:
         connection_fee: float = 0.0,
         minimum_seconds: int = 0,
         billing_increment: int = 1,
-    ):
+    ) -> bool:
         """
         Add a rate entry and persist to database
 
@@ -431,7 +431,7 @@ class LeastCostRouting:
         end_minute: int,
         days: list[int],
         multiplier: float,
-    ):
+    ) -> bool:
         """
         Add time-based rate modifier and persist to database
 
@@ -609,13 +609,13 @@ class LeastCostRouting:
             "quality_weight": self.quality_weight,
         }
 
-    def clear_rates(self):
+    def clear_rates(self) -> None:
         """Clear all rate entries and delete from database"""
         self.rate_entries = []
         self._delete_all_rates_from_db()
         self.logger.info("Cleared all LCR rates from memory and database")
 
-    def clear_time_rates(self):
+    def clear_time_rates(self) -> None:
         """Clear all time-based rates and delete from database"""
         self.time_based_rates = []
         self._delete_all_time_rates_from_db()

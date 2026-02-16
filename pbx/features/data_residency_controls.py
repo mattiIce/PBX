@@ -45,7 +45,7 @@ class DataResidencyControls:
     - Data localization enforcement
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize data residency controls"""
         self.logger = get_logger()
         self.config = config or {}
@@ -73,7 +73,7 @@ class DataResidencyControls:
         self.logger.info(f"  Strict mode: {self.strict_mode}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_default_regions(self):
+    def _initialize_default_regions(self) -> None:
         """Initialize default region configurations"""
         regions = [
             ("us-east", "US East", "/var/pbx/data/us-east"),
@@ -90,7 +90,7 @@ class DataResidencyControls:
                 "compliance_tags": [],
             }
 
-    def configure_region(self, region: str, config: dict):
+    def configure_region(self, region: str, config: dict) -> bool:
         """
         Configure storage region
 
@@ -111,7 +111,7 @@ class DataResidencyControls:
         self.logger.info(f"  Database: {config.get('database_server')}")
         return True
 
-    def set_category_region(self, category: DataCategory, region: StorageRegion):
+    def set_category_region(self, category: DataCategory, region: StorageRegion) -> bool:
         """
         set storage region for data category
 

@@ -12,7 +12,7 @@ from pbx.utils.logger import get_logger
 class Skill:
     """Represents a skill that agents can have"""
 
-    def __init__(self, skill_id: str, name: str, description: str = ""):
+    def __init__(self, skill_id: str, name: str, description: str = "") -> None:
         """
         Initialize skill
 
@@ -33,7 +33,7 @@ class Skill:
 class AgentSkill:
     """Represents an agent's proficiency in a skill"""
 
-    def __init__(self, agent_extension: str, skill_id: str, proficiency: int = 5):
+    def __init__(self, agent_extension: str, skill_id: str, proficiency: int = 5) -> None:
         """
         Initialize agent skill
 
@@ -60,7 +60,7 @@ class AgentSkill:
 class SkillRequirement:
     """Represents a skill requirement for a call or queue"""
 
-    def __init__(self, skill_id: str, min_proficiency: int = 1, required: bool = True):
+    def __init__(self, skill_id: str, min_proficiency: int = 1, required: bool = True) -> None:
         """
         Initialize skill requirement
 
@@ -88,7 +88,7 @@ class SkillsBasedRouter:
     Routes calls to agents based on required skills and agent proficiency
     """
 
-    def __init__(self, database=None, config: dict | None = None):
+    def __init__(self, database=None, config: dict | None = None) -> None:
         """
         Initialize skills-based router
 
@@ -138,7 +138,7 @@ class SkillsBasedRouter:
 
         return value if value is not None else default
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize skills routing database tables"""
         # Skills table
         skills_table = (

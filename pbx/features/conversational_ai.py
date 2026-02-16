@@ -23,7 +23,7 @@ except ImportError:
 class ConversationContext:
     """Represents a conversation context for AI processing"""
 
-    def __init__(self, call_id: str, caller_id: str):
+    def __init__(self, call_id: str, caller_id: str) -> None:
         """
         Initialize conversation context
 
@@ -38,7 +38,7 @@ class ConversationContext:
         self.intent = None
         self.entities = {}
 
-    def add_message(self, role: str, content: str):
+    def add_message(self, role: str, content: str) -> None:
         """Add a message to the conversation"""
         self.messages.append(
             {"role": role, "content": content, "timestamp": datetime.now(UTC).isoformat()}
@@ -57,7 +57,7 @@ class ConversationalAI:
     - Microsoft Azure Bot Service
     """
 
-    def __init__(self, config=None, db_backend=None):
+    def __init__(self, config=None, db_backend=None) -> None:
         """Initialize conversational AI system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -653,7 +653,7 @@ class ConversationalAI:
             return self.db.get_conversation_history(limit)
         return []
 
-    def configure_provider(self, provider: str, api_key: str | None = None, **kwargs):
+    def configure_provider(self, provider: str, api_key: str | None = None, **kwargs) -> bool:
         """
         Configure AI provider with secure API key storage
 

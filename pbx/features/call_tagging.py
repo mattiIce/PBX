@@ -53,7 +53,7 @@ class TagSource(Enum):
 class CallTag:
     """Represents a tag on a call"""
 
-    def __init__(self, tag: str, source: TagSource, confidence: float = 1.0):
+    def __init__(self, tag: str, source: TagSource, confidence: float = 1.0) -> None:
         """Initialize call tag"""
         self.tag = tag
         self.source = source
@@ -74,7 +74,7 @@ class CallTagging:
     - Tag analytics and reporting
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize call tagging system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -120,7 +120,7 @@ class CallTagging:
         self.logger.info(f"  spaCy NLP: {self.nlp_model is not None}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_default_rules(self):
+    def _initialize_default_rules(self) -> None:
         """Initialize default tagging rules"""
         # Keyword-based rules
         self.tagging_rules.extend(
@@ -672,7 +672,7 @@ class CallTagging:
 
     def add_tagging_rule(
         self, name: str, keywords: list[str], tag: str, category: CallCategory = None
-    ):
+    ) -> bool:
         """
         Add custom tagging rule
 

@@ -28,7 +28,7 @@ class MobileDevice:
 
     def __init__(
         self, device_id: str, platform: MobilePlatform, user_id: str, push_token: str | None = None
-    ):
+    ) -> None:
         """Initialize mobile device"""
         self.device_id = device_id
         self.platform = platform
@@ -60,7 +60,7 @@ class MobileAppFramework:
     - Both: SIP client libraries (PJSIP, Linphone, etc.)
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config=None) -> None:
         """Initialize mobile app framework"""
         self.logger = get_logger()
         self.config = config or {}
@@ -401,7 +401,7 @@ class MobileAppFramework:
 
         return self.send_push_notification(device_id, notification)
 
-    def update_device_activity(self, device_id: str):
+    def update_device_activity(self, device_id: str) -> None:
         """Update device last active timestamp"""
         if device_id in self.devices:
             self.devices[device_id].last_active = datetime.now(UTC)

@@ -12,7 +12,7 @@ from pbx.utils.logger import get_logger
 class StatisticsEngine:
     """Advanced statistics and analytics engine"""
 
-    def __init__(self, cdr_system):
+    def __init__(self, cdr_system) -> None:
         """
         Initialize statistics engine
 
@@ -22,7 +22,7 @@ class StatisticsEngine:
         self.cdr_system = cdr_system
         self.logger = get_logger()
 
-    def get_dashboard_statistics(self, days=7):
+    def get_dashboard_statistics(self, days: int =7) -> dict:
         """
         Get comprehensive statistics for dashboard
 
@@ -45,7 +45,7 @@ class StatisticsEngine:
 
         return stats
 
-    def _get_overview_stats(self, days):
+    def _get_overview_stats(self, days: int):
         """Get overview statistics for the period"""
         total_calls = 0
         answered_calls = 0
@@ -73,7 +73,7 @@ class StatisticsEngine:
             "total_duration_hours": round(total_duration / 3600, 2),
         }
 
-    def _get_daily_trends(self, days):
+    def _get_daily_trends(self, days: int):
         """Get daily call trends"""
         trends = []
 
@@ -98,7 +98,7 @@ class StatisticsEngine:
 
         return trends
 
-    def _get_hourly_distribution(self, days):
+    def _get_hourly_distribution(self, days: int):
         """Get call distribution by hour of day"""
         hourly_counts = defaultdict(int)
 
@@ -121,7 +121,7 @@ class StatisticsEngine:
 
         return distribution
 
-    def _get_top_callers(self, days, limit=10):
+    def _get_top_callers(self, days: int, limit: int =10):
         """Get top callers by call volume"""
         caller_stats = defaultdict(lambda: {"calls": 0, "duration": 0})
 
@@ -151,7 +151,7 @@ class StatisticsEngine:
 
         return top_callers
 
-    def _get_call_disposition(self, days):
+    def _get_call_disposition(self, days: int):
         """Get call disposition breakdown"""
         dispositions = defaultdict(int)
 
@@ -174,7 +174,7 @@ class StatisticsEngine:
             for disp, count in dispositions.items()
         ]
 
-    def _get_peak_hours(self, days):
+    def _get_peak_hours(self, days: int):
         """Get peak call hours"""
         hourly_counts = defaultdict(int)
 
@@ -197,7 +197,7 @@ class StatisticsEngine:
 
         return [{"hour": f"{hour:02d}:00", "calls": count} for hour, count in peak_hours]
 
-    def _get_average_metrics(self, days):
+    def _get_average_metrics(self, days: int):
         """Get average daily metrics"""
         total_calls = 0
         total_answered = 0
@@ -218,7 +218,7 @@ class StatisticsEngine:
             "avg_duration_per_day": round(total_duration / days / 60, 2) if days > 0 else 0,
         }
 
-    def get_call_quality_metrics(self, pbx_core=None):
+    def get_call_quality_metrics(self, pbx_core=None) -> dict:
         """
         Get call quality metrics from QoS monitoring
 
@@ -278,7 +278,7 @@ class StatisticsEngine:
             "note": "QoS monitoring not available - no quality data",
         }
 
-    def get_real_time_metrics(self, pbx_core):
+    def get_real_time_metrics(self, pbx_core) -> dict:
         """
         Get real-time system metrics
 
@@ -309,7 +309,7 @@ class StatisticsEngine:
             return round(uptime, 0)
         return 0
 
-    def get_advanced_analytics(self, start_date, end_date, filters=None):
+    def get_advanced_analytics(self, start_date, end_date, filters=None) -> dict:
         """
         Get advanced analytics with date range and filters
 
@@ -382,7 +382,7 @@ class StatisticsEngine:
             "filters_applied": filters or {},
         }
 
-    def get_call_center_metrics(self, days=7, queue_name=None):
+    def get_call_center_metrics(self, days: int =7, queue_name=None) -> dict:
         """
         Get call center performance metrics
 
@@ -451,7 +451,7 @@ class StatisticsEngine:
             "answer_rate": round((answered_count / total_calls * 100) if total_calls > 0 else 0, 2),
         }
 
-    def export_to_csv(self, records, filename):
+    def export_to_csv(self, records, filename: str) -> bool:
         """
         Export call records to CSV file
 
@@ -493,7 +493,7 @@ class StatisticsEngine:
             self.logger.error(f"Failed to export to CSV: {e}")
             return False
 
-    def generate_report(self, report_type, params):
+    def generate_report(self, report_type, params) -> dict:
         """
         Generate custom report
 

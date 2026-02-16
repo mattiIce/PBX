@@ -63,8 +63,8 @@ export async function loadConfig(): Promise<void> {
         // Populate other config sections
         if (config.voicemail) {
             const el = (id: string): HTMLElement | null => document.getElementById(id);
-            if (el('vm-max-duration')) (el('vm-max-duration') as HTMLInputElement).value = String(config.voicemail.max_duration || 120);
-            if (el('vm-max-messages')) (el('vm-max-messages') as HTMLInputElement).value = String(config.voicemail.max_messages || 100);
+            if (el('vm-max-duration')) (el('vm-max-duration') as HTMLInputElement).value = String(config.voicemail.max_duration ?? 120);
+            if (el('vm-max-messages')) (el('vm-max-messages') as HTMLInputElement).value = String(config.voicemail.max_messages ?? 100);
         }
     } catch (error: unknown) {
         console.error('Error loading config:', error);

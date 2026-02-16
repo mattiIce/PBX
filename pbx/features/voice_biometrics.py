@@ -51,7 +51,7 @@ class BiometricStatus(Enum):
 class VoiceProfile:
     """Represents a voice biometric profile"""
 
-    def __init__(self, user_id: str, extension: str):
+    def __init__(self, user_id: str, extension: str) -> None:
         """
         Initialize voice profile
 
@@ -87,7 +87,7 @@ class VoiceBiometrics:
     - Microsoft Azure Speaker Recognition
     """
 
-    def __init__(self, config=None, db_backend=None):
+    def __init__(self, config=None, db_backend=None) -> None:
         """Initialize voice biometrics system"""
         self.logger = get_logger()
         self.config = config or {}
