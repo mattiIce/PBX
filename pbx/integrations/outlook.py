@@ -25,7 +25,7 @@ except ImportError:
 class OutlookIntegration:
     """Microsoft Outlook / Office 365 integration handler"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Outlook integration
 
@@ -62,7 +62,7 @@ class OutlookIntegration:
                 self.logger.info("Outlook integration enabled")
                 self._initialize_msal()
 
-    def _initialize_msal(self):
+    def _initialize_msal(self) -> None:
         """Initialize MSAL confidential client application"""
         if not all([self.tenant_id, self.client_id, self.client_secret]):
             self.logger.error("Outlook credentials not configured properly")
@@ -282,7 +282,7 @@ class OutlookIntegration:
             self.logger.error(f"Error syncing contacts: {e}")
             return []
 
-    def log_call_to_calendar(self, user_email: str, call_details: dict):
+    def log_call_to_calendar(self, user_email: str, call_details: dict) -> bool:
         """
         Log a phone call to user's Outlook calendar
 
@@ -405,7 +405,7 @@ class OutlookIntegration:
         user_email: str,
         meeting_id: str,
         minutes_before: int = 5,
-        pbx_core=None,
+        pbx_core: object | None = None,
         extension_number: str | None = None,
     ):
         """

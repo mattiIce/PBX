@@ -183,7 +183,6 @@ class AutoAttendantHandler:
             call: Call object
             session: Auto attendant session
         """
-        import os
         import tempfile
 
         from pbx.rtp.handler import RTPDTMFListener, RTPPlayer
@@ -265,7 +264,7 @@ class AutoAttendantHandler:
                         )
                 finally:
                     with contextlib.suppress(BaseException):
-                        os.unlink(temp_file_path)
+                        Path(temp_file_path).unlink()
 
             time.sleep(0.5)
 
@@ -297,7 +296,7 @@ class AutoAttendantHandler:
                         pbx.logger.error("[Auto Attendant] ✗ Failed to play generated menu audio")
                 finally:
                     with contextlib.suppress(BaseException):
-                        os.unlink(temp_file_path)
+                        Path(temp_file_path).unlink()
 
             # Main loop - wait for DTMF input
             session_active: bool = True
@@ -352,7 +351,7 @@ class AutoAttendantHandler:
                                 player.play_file(temp_file_path)
                             finally:
                                 with contextlib.suppress(BaseException):
-                                    os.unlink(temp_file_path)
+                                    Path(temp_file_path).unlink()
 
                         time.sleep(0.5)
 

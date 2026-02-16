@@ -4,7 +4,7 @@ Tests for JSON serialization of datetime objects in API responses
 """
 
 import json
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pbx.api.rest_api import DateTimeEncoder
 from pbx.utils.config import Config
@@ -18,8 +18,8 @@ def test_datetime_encoder() -> None:
     test_data = {
         "id": 1,
         "name": "Test",
-        "created_at": datetime(2025, 12, 5, 14, 30, 0),
-        "updated_at": datetime(2025, 12, 5, 15, 45, 30),
+        "created_at": datetime(2025, 12, 5, 14, 30, 0, tzinfo=UTC),
+        "updated_at": datetime(2025, 12, 5, 15, 45, 30, tzinfo=UTC),
     }
 
     # Serialize with custom encoder
@@ -29,8 +29,8 @@ def test_datetime_encoder() -> None:
     parsed = json.loads(json_str)
     assert parsed["id"] == 1, "ID should match"
     assert parsed["name"] == "Test", "Name should match"
-    assert parsed["created_at"] == "2025-12-05T14:30:00", "Created timestamp should be ISO format"
-    assert parsed["updated_at"] == "2025-12-05T15:45:30", "Updated timestamp should be ISO format"
+    assert parsed["created_at"] == "2025-12-05T14:30:00+00:00", "Created timestamp should be ISO format"
+    assert parsed["updated_at"] == "2025-12-05T15:45:30+00:00", "Updated timestamp should be ISO format"
 
 
 def test_registered_phones_json_serialization() -> None:

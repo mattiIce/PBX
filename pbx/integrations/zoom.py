@@ -21,7 +21,7 @@ TOKEN_EXPIRY_BUFFER_SECONDS = 300
 class ZoomIntegration:
     """Zoom integration handler"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Zoom integration
 
@@ -188,7 +188,7 @@ class ZoomIntegration:
         topic = f"Instant Meeting - Extension {host_extension}"
         return self.create_meeting(topic=topic, duration_minutes=60)
 
-    def route_to_zoom_phone(self, from_number: str, to_number: str, pbx_core=None):
+    def route_to_zoom_phone(self, from_number: str, to_number: str, pbx_core: object | None = None) -> bool:
         """
         Route call through Zoom Phone SIP trunking
 
@@ -279,7 +279,7 @@ class ZoomIntegration:
             )
             return False
 
-    def get_phone_user_status(self, user_id: str):
+    def get_phone_user_status(self, user_id: str) -> dict | None:
         """
         Get Zoom Phone user status
 

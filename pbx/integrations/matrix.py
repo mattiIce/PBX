@@ -22,7 +22,7 @@ except ImportError:
 class MatrixIntegration:
     """Matrix integration handler (100% Free & Open Source)"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Matrix integration
 

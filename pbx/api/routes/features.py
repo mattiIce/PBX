@@ -688,7 +688,7 @@ def _regenerate_voice_prompts(
         # Get output directory
         audio_path = aa_config.get("audio_path", "auto_attendant")
         if not Path(audio_path).exists():
-            os.makedirs(audio_path)
+            Path(audio_path).mkdir(parents=True, exist_ok=True)
 
         # Generate each prompt using shared TTS utility
         logger.info("Regenerating voice prompts using gTTS...")

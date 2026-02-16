@@ -1,9 +1,13 @@
+# syntax=docker/dockerfile:1
+
 # Multi-stage Dockerfile for PBX System
 # Stage 1: Builder stage for dependencies
 FROM python:3.13-slim-bookworm AS builder
 
 # Install system dependencies required for building Python packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     gcc \
     g++ \
@@ -12,31 +16,41 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     portaudio19-dev \
     libopus-dev \
     libspeex-dev \
-    libsndfile1-dev \
-    && rm -rf /var/lib/apt/lists/*
+    libsndfile1-dev
 
-RUN pip install uv
+# Install uv for fast dependency resolution
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 
 # Create virtual environment
 RUN python -m venv /opt/venv
-ENV PATH="/opt/venv/bin:$PATH"
+ENV PATH="/opt/venv/bin:$PATH" \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
-# Copy dependency files
-COPY requirements.txt /tmp/
+# Copy dependency files first for layer caching
+COPY pyproject.toml /tmp/
 WORKDIR /tmp
 
-# Install Python dependencies
-RUN uv pip install --system --no-cache -r requirements.txt
+# Install Python dependencies into the venv
+RUN --mount=type=cache,target=/root/.cache/uv \
+    uv pip install --python /opt/venv/bin/python --no-cache -e "."
 
 # Stage 2: Runtime stage
-FROM python:3.13-slim-bookworm
+FROM python:3.13-slim-bookworm AS runtime
+
+# Add OCI image labels
+LABEL org.opencontainers.image.title="Warden VoIP PBX" \
+      org.opencontainers.image.description="Comprehensive VoIP/PBX system built in Python" \
+      org.opencontainers.image.source="https://github.com/mattiIce/PBX" \
+      org.opencontainers.image.licenses="MIT"
 
 # Install runtime system dependencies
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update && apt-get install -y --no-install-recommends \
     # Audio processing libraries
     ffmpeg \
     libportaudio2 \
-    portaudio19-dev \
     espeak \
     libopus0 \
     libspeex1 \
@@ -45,6 +59,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq5 \
     # Network utilities for troubleshooting
     netcat-openbsd \
+    # TLS certificate handling
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy virtual environment from builder
@@ -52,7 +68,7 @@ COPY --from=builder /opt/venv /opt/venv
 ENV PATH="/opt/venv/bin:$PATH"
 
 # Create non-root user for security
-RUN groupadd -r pbx && useradd -r -g pbx -u 1000 pbx && \
+RUN groupadd -r pbx && useradd -r -g pbx -u 1000 -s /usr/sbin/nologin pbx && \
     mkdir -p /app /data/recordings /data/voicemail /data/cdr /data/moh && \
     chown -R pbx:pbx /app /data
 
@@ -84,6 +100,7 @@ EXPOSE 9000/tcp
 # Environment variables
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONFAULTHANDLER=1 \
     PBX_CONFIG=/app/config.yml
 
 # Health check

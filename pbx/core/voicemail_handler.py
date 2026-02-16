@@ -327,7 +327,6 @@ class VoicemailHandler:
             mailbox: VoicemailBox object
             voicemail_ivr: VoicemailIVR object
         """
-        import os
         import tempfile
 
         from pbx.core.call import CallState

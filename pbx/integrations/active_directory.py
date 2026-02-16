@@ -19,7 +19,7 @@ except ImportError:
 class ActiveDirectoryIntegration:
     """Active Directory / LDAP integration handler"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Active Directory integration
 
@@ -172,7 +172,7 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(self, extension_registry=None, extension_db=None, phone_provisioning=None):
+    def sync_users(self, extension_registry: object | None = None, extension_db: object | None = None, phone_provisioning: object | None = None) -> dict | int:
         """
         Synchronize users from Active Directory
 
@@ -587,7 +587,7 @@ class ActiveDirectoryIntegration:
 
         return permissions
 
-    def get_user_groups(self, username: str):
+    def get_user_groups(self, username: str) -> list[str]:
         """
         Get Active Directory groups for a user
 
@@ -718,7 +718,7 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error searching users: {e}")
             return []
 
-    def get_user_photo(self, username: str):
+    def get_user_photo(self, username: str) -> bytes | None:
         """
         Get user's photo from Active Directory
 

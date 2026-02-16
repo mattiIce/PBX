@@ -51,7 +51,7 @@ def test_time_based_rule() -> bool:
 
     # Test wrong day
     # Tuesday 10:00 AM (not in days list)
-    test_time = datetime(2025, 12, 9, 10, 0)
+    test_time = datetime(2025, 12, 9, 10, 0, tzinfo=UTC)
     assert not rule.should_apply(test_time), "Should not apply on wrong day"
 
     return True
@@ -65,15 +65,15 @@ def test_overnight_rule() -> bool:
     rule = DNDRule("rule1", "1001", "time_based", config)
 
     # Test at 23:00 (should apply)
-    test_time = datetime(2025, 12, 8, 23, 0)
+    test_time = datetime(2025, 12, 8, 23, 0, tzinfo=UTC)
     assert rule.should_apply(test_time), "Should apply at 23:00"
 
     # Test at 02:00 (should apply)
-    test_time = datetime(2025, 12, 9, 2, 0)
+    test_time = datetime(2025, 12, 9, 2, 0, tzinfo=UTC)
     assert rule.should_apply(test_time), "Should apply at 02:00"
 
     # Test at 12:00 (should not apply)
-    test_time = datetime(2025, 12, 9, 12, 0)
+    test_time = datetime(2025, 12, 9, 12, 0, tzinfo=UTC)
     assert not rule.should_apply(test_time), "Should not apply at noon"
 
     return True

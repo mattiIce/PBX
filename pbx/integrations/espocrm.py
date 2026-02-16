@@ -18,7 +18,7 @@ except ImportError:
 class EspoCRMIntegration:
     """EspoCRM integration handler (100% Free & Open Source)"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize EspoCRM integration
 

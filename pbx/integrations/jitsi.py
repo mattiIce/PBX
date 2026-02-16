@@ -25,7 +25,7 @@ except ImportError:
 class JitsiIntegration:
     """Jitsi Meet integration handler (100% Free & Open Source)"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Jitsi integration
 

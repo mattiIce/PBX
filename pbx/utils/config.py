@@ -112,7 +112,7 @@ class Config:
     def save(self) -> bool:
         """Save current configuration to YAML file"""
         try:
-            with open(self.config_file, "w") as f:
+            with Path(self.config_file).open("w") as f:
                 yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
             return True
         except PermissionError as e:
@@ -358,7 +358,7 @@ class Config:
         if "relay_enabled" in dtmf:
             dtmf_config["relay_enabled"] = bool(dtmf["relay_enabled"])
 
-    def _validate_dtmf_payload_type(self, payload_type):
+    def _validate_dtmf_payload_type(self, payload_type: int | str) -> int | None:
         """Validate DTMF payload type"""
         payload_type = int(payload_type)
         if payload_type < 96 or payload_type > 127:
@@ -369,7 +369,7 @@ class Config:
             return None
         return payload_type
 
-    def _validate_dtmf_duration(self, duration):
+    def _validate_dtmf_duration(self, duration: int | str) -> int | None:
         """Validate DTMF duration"""
         duration = int(duration)
         if duration < 80 or duration > 500:
@@ -380,7 +380,7 @@ class Config:
             return None
         return duration
 
-    def _validate_dtmf_threshold(self, threshold):
+    def _validate_dtmf_threshold(self, threshold: float | str) -> float | None:
         """Validate DTMF detection threshold"""
         threshold = float(threshold)
         if threshold < 0.1 or threshold > 0.9:
@@ -391,7 +391,7 @@ class Config:
             return None
         return threshold
 
-    def update_dtmf_config(self, config_data):
+    def update_dtmf_config(self, config_data: dict) -> bool:
         """
         Update DTMF configuration
 

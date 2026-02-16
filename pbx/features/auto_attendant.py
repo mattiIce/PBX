@@ -1197,7 +1197,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
 
             # Create output directory if needed
             if not Path(output_dir).exists():
-                os.makedirs(output_dir)
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
 
             output_file = Path(output_dir) / f"{menu_id}.wav"
 
@@ -1232,7 +1232,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
                 )
                 # Clean up temp file
                 if tmp_mp3_path and Path(tmp_mp3_path).exists():
-                    os.unlink(tmp_mp3_path)
+                    Path(tmp_mp3_path).unlink()
                 logger.info(f"Generated submenu prompt: {output_file}")
                 return output_file
             except (FileNotFoundError, subprocess.CalledProcessError):

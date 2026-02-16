@@ -23,7 +23,7 @@ except ImportError:
 class TeamsIntegration:
     """Microsoft Teams integration handler"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Teams integration
 
@@ -69,7 +69,7 @@ class TeamsIntegration:
                 self.logger.info("Microsoft Teams integration enabled")
                 self._initialize_msal()
 
-    def _initialize_msal(self):
+    def _initialize_msal(self) -> None:
         """Initialize MSAL confidential client application"""
         if not all([self.tenant_id, self.client_id, self.client_secret]):
             self.logger.error("Teams credentials not configured properly")
@@ -173,7 +173,7 @@ class TeamsIntegration:
             self.logger.error(f"Error syncing presence: {e}")
             return False
 
-    def route_call_to_teams(self, from_number: str, to_teams_user: str, pbx_core=None):
+    def route_call_to_teams(self, from_number: str, to_teams_user: str, pbx_core: object | None = None) -> bool:
         """
         Route a call from PBX to Microsoft Teams user via SIP Direct Routing
 
@@ -273,7 +273,7 @@ class TeamsIntegration:
             )
             return False
 
-    def send_chat_message(self, to_user: str, message: str):
+    def send_chat_message(self, to_user: str, message: str) -> bool:
         """
         Send a chat message to Teams user
 

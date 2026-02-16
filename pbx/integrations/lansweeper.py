@@ -19,7 +19,7 @@ except ImportError:
 class LansweeperIntegration:
     """Integration with Lansweeper IT asset management"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: dict | None = None) -> None:
         """Initialize Lansweeper integration"""
         self.logger = get_logger()
         self.config = config or {}
@@ -422,7 +422,7 @@ class LansweeperIntegration:
 
         return report
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear asset cache"""
         self.asset_cache.clear()
         self.logger.info("Cleared Lansweeper asset cache")
