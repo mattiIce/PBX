@@ -81,11 +81,7 @@ def test_env_example() -> bool:
         content = f.read()
 
     required_vars = ["MATRIX_BOT_PASSWORD", "ESPOCRM_API_KEY"]
-    missing = []
-
-    for var in required_vars:
-        if var not in content:
-            missing.append(var)
+    missing = [var for var in required_vars if var not in content]
 
     return len(missing) == 0
 
@@ -111,10 +107,7 @@ def test_admin_html() -> bool:
         "espocrm-status-badge",
     ]
 
-    missing = []
-    for element in required_elements:
-        if element not in content:
-            missing.append(element)
+    missing = [element for element in required_elements if element not in content]
 
     return len(missing) == 0
 
@@ -136,10 +129,11 @@ def test_javascript() -> bool:
         "disableIntegration",
     ]
 
-    missing = []
-    for func in required_functions:
-        if f"function {func}" not in content or f"async function {func}" in content:
-            missing.append(func)
+    missing = [
+        func
+        for func in required_functions
+        if f"function {func}" not in content or f"async function {func}" in content
+    ]
 
     # Check for correct API endpoint
     if "/api/config/section" not in content:

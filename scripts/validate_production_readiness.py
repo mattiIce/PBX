@@ -300,6 +300,7 @@ class ProductionValidator:
                     capture_output=True,
                     text=True,
                     timeout=5,
+                    check=False,
                 )
                 if result.returncode == 0 and "enabled" in result.stdout:
                     self.log("PBX service: Enabled for autostart", "pass")
@@ -348,7 +349,7 @@ class ProductionValidator:
 
         # Check for cron jobs
         try:
-            result = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=5)
+            result = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=5, check=False)
             if "backup" in result.stdout.lower() or "pbx" in result.stdout.lower():
                 self.log("Backup cron job: Configured", "pass")
             else:

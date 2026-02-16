@@ -39,10 +39,11 @@ def test_voicemail_access_contact_header_code_review() -> None:
     )
 
     # Find where Contact header is built
-    contact_header_lines = []
-    for line in method_content.split("\n"):
-        if "contact_uri" in line.lower() and "sip:" in line:
-            contact_header_lines.append(line.strip())
+    contact_header_lines = [
+        line.strip()
+        for line in method_content.split("\n")
+        if "contact_uri" in line.lower() and "sip:" in line
+    ]
 
     assert len(contact_header_lines) > 0, "Should have Contact header construction"
 

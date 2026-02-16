@@ -462,31 +462,34 @@ class ActiveDirectoryIntegration:
                     ext_number = ext.get("number")
                     # Only check extensions that could be AD-synced (numeric,
                     # reasonable length)
-                    if ext_number and ext_number.isdigit() and len(ext_number) >= 3:
-                        if ext_number not in ad_extension_numbers:
-                            # Check if extension has AD metadata marker
-                            if ext.get("ad_synced", False):
-                                self.logger.info(
-                                    f"Deactivating extension {ext_number} (user removed from AD)"
-                                )
-                                # Mark as inactive instead of deleting
-                                # Keep ad_synced=True so we know it was
-                                # previously managed by AD
+                    if (
+                        ext_number
+                        and ext_number.isdigit()
+                        and len(ext_number) >= 3
+                        and ext_number not in ad_extension_numbers
+                        and ext.get("ad_synced", False)
+                    ):
+                        self.logger.info(
+                            f"Deactivating extension {ext_number} (user removed from AD)"
+                        )
+                        # Mark as inactive instead of deleting
+                        # Keep ad_synced=True so we know it was
+                        # previously managed by AD
 
-                                if use_database:
-                                    extension_db.update(number=ext_number, allow_external=False)
-                                else:
-                                    pbx_config.update_extension(
-                                        number=ext_number, allow_external=False
-                                    )
+                        if use_database:
+                            extension_db.update(number=ext_number, allow_external=False)
+                        else:
+                            pbx_config.update_extension(
+                                number=ext_number, allow_external=False
+                            )
 
-                                if extension_registry:
-                                    registry_ext = extension_registry.get(ext_number)
-                                    if registry_ext:
-                                        registry_ext.config["allow_external"] = False
-                                        # Keep ad_synced=True to maintain
-                                        # history
-                                deactivated_count += 1
+                        if extension_registry:
+                            registry_ext = extension_registry.get(ext_number)
+                            if registry_ext:
+                                registry_ext.config["allow_external"] = False
+                                # Keep ad_synced=True to maintain
+                                # history
+                        deactivated_count += 1
 
             # Save all changes (only needed for config.yml mode)
             if not use_database:

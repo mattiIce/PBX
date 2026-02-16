@@ -130,6 +130,7 @@ class PerformanceBenchmark:
                         capture_output=True,
                         text=True,
                         timeout=5,
+                        check=False,
                     )
                     if result.returncode == 0:
                         duration = float(result.stdout.strip())
@@ -186,6 +187,7 @@ class PerformanceBenchmark:
                 text=True,
                 timeout=5,
                 env={"PGPASSWORD": db_password},
+                check=False,
             )
             duration = time.time() - start
 

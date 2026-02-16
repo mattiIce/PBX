@@ -145,7 +145,7 @@ class ComplianceReporter:
 
             try:
                 result = subprocess.run(
-                    [sys.executable, str(fips_script)], capture_output=True, timeout=30
+                    [sys.executable, str(fips_script)], capture_output=True, timeout=30, check=False
                 )
                 controls["fips_140_2"] = {
                     "status": "compliant" if result.returncode == 0 else "non_compliant",
@@ -235,7 +235,7 @@ class ComplianceReporter:
 
             try:
                 result = subprocess.run(
-                    [sys.executable, str(health_script), "--json"], capture_output=True, timeout=30
+                    [sys.executable, str(health_script), "--json"], capture_output=True, timeout=30, check=False
                 )
                 if result.returncode == 0:
                     self.report_data["recommendations"].append(

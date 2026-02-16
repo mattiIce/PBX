@@ -133,7 +133,7 @@ class BackupVerifier:
         try:
             # Create temporary database
             result = subprocess.run(
-                ["sudo", "-u", "postgres", "createdb", temp_db], capture_output=True, timeout=30
+                ["sudo", "-u", "postgres", "createdb", temp_db], capture_output=True, timeout=30, check=False
             )
 
             if result.returncode != 0:
@@ -149,6 +149,7 @@ class BackupVerifier:
                     stdin=f,
                     capture_output=True,
                     timeout=300,  # 5 minutes
+                    check=False,
                 )
 
             if result.returncode != 0:
@@ -170,6 +171,7 @@ class BackupVerifier:
                 ],
                 capture_output=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -196,7 +198,7 @@ class BackupVerifier:
             # Clean up temporary database
             try:
                 subprocess.run(
-                    ["sudo", "-u", "postgres", "dropdb", temp_db], capture_output=True, timeout=30
+                    ["sudo", "-u", "postgres", "dropdb", temp_db], capture_output=True, timeout=30, check=False
                 )
                 print(f"  Cleaned up temporary database: {temp_db}")
             except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
@@ -247,7 +249,7 @@ class BackupVerifier:
 
         # Check for cron job
         try:
-            result = subprocess.run(["crontab", "-l"], capture_output=True, timeout=10)
+            result = subprocess.run(["crontab", "-l"], capture_output=True, timeout=10, check=False)
 
             if result.returncode == 0:
                 cron_content = result.stdout.decode()

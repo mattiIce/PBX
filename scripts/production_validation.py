@@ -61,6 +61,7 @@ class ProductionValidator:
                 text=True,
                 timeout=timeout,
                 cwd=self.base_dir,
+                check=False,
             )
             return result.returncode == 0, result.stdout + result.stderr
         except subprocess.TimeoutExpired:

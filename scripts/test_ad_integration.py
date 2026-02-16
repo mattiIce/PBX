@@ -276,7 +276,8 @@ class ADIntegrationTester:
                         str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else ""
                     ),
                 }
-                )
+                for entry in self.ad.connection.entries
+            ]
 
             if len(users) == 0:
                 self.print_test(

@@ -233,9 +233,11 @@ class PresenceSystem:
             subscriber_extension: Extension unsubscribing
             watched_extension: Extension being watched
         """
-        if watched_extension in self.subscribers:
-            if subscriber_extension in self.subscribers[watched_extension]:
-                self.subscribers[watched_extension].remove(subscriber_extension)
+        if (
+            watched_extension in self.subscribers
+            and subscriber_extension in self.subscribers[watched_extension]
+        ):
+            self.subscribers[watched_extension].remove(subscriber_extension)
 
     def _notify_subscribers(self, extension: str) -> None:
         """
@@ -262,16 +264,17 @@ class PresenceSystem:
             idle_time = user.get_idle_time()
 
             # Auto-offline after extended inactivity
-            if idle_time > self.auto_offline_timeout:
-                if user.status != PresenceStatus.OFFLINE:
-                    user.set_status(PresenceStatus.OFFLINE)
-                    self._notify_subscribers(user.extension)
+            if idle_time > self.auto_offline_timeout and user.status != PresenceStatus.OFFLINE:
+                user.set_status(PresenceStatus.OFFLINE)
+                self._notify_subscribers(user.extension)
 
             # Auto-away after shorter inactivity
-            elif idle_time > self.auto_away_timeout:
-                if user.status == PresenceStatus.AVAILABLE:
-                    user.set_status(PresenceStatus.AWAY, "Auto-away")
-                    self._notify_subscribers(user.extension)
+            elif (
+                idle_time > self.auto_away_timeout
+                and user.status == PresenceStatus.AVAILABLE
+            ):
+                user.set_status(PresenceStatus.AWAY, "Auto-away")
+                self._notify_subscribers(user.extension)
 
     def get_all_status(self) -> list:
         """

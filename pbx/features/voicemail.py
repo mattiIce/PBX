@@ -645,8 +645,9 @@ class VoicemailBox:
                 return False
 
             # Check for complete WAV/RIFF header (warn but don't fail for tests)
-            if len(audio_data) >= MIN_WAV_HEADER_SIZE:
-                if not (audio_data.startswith(b"RIFF") and audio_data[8:12] == b"WAVE"):
+            if len(audio_data) >= MIN_WAV_HEADER_SIZE and not (
+                audio_data.startswith(b"RIFF") and audio_data[8:12] == b"WAVE"
+            ):
                     self.logger.warning(
                         "Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
                     )

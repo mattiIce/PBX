@@ -983,9 +983,12 @@ class MFAManager:
                     return True
 
             # Try YubiKey OTP (44 character code)
-            if self.yubikey_enabled and len(code) == 44:
-                if self._verify_yubikey_otp(extension_number, code):
-                    return True
+            if (
+                self.yubikey_enabled
+                and len(code) == 44
+                and self._verify_yubikey_otp(extension_number, code)
+            ):
+                return True
 
             # Try backup code
             return bool(self._verify_backup_code(extension_number, code))
