@@ -16,11 +16,11 @@ class TestSIPSendLineIntegration:
         import tempfile
 
         # Create a unique temporary config file
-        self.temp_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
-        self.temp_config_path = self.temp_config.name
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as self.temp_config:
+            self.temp_config_path = self.temp_config.name
 
-        # Create a minimal test config
-        self.temp_config.write("""
+            # Create a minimal test config
+            self.temp_config.write("""
 server:
   sip_host: 0.0.0.0
   sip_port: 5060
@@ -48,7 +48,6 @@ logging:
   level: ERROR
   console: false
 """)
-        self.temp_config.close()
 
     def teardown_method(self) -> None:
         """Clean up test environment"""

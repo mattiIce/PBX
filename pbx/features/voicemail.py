@@ -168,19 +168,11 @@ class VoicemailBox:
             self.logger.info("Saving voicemail metadata to database...")
             try:
                 placeholder = self._get_db_placeholder()
-                query = """
+                query = f"""
                 INSERT INTO voicemail_messages
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
-                VALUES ({}, {}, {}, {}, {}, {}, {})
-                """.format(  # nosec B608 - placeholder is safely parameterized
-                    placeholder,
-                    placeholder,
-                    placeholder,
-                    placeholder,
-                    placeholder,
-                    placeholder,
-                    placeholder,
-                )
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+                """  # nosec B608 - placeholder is safely parameterized
 
                 params = (
                     message_id,
@@ -237,22 +229,15 @@ class VoicemailBox:
                 if self.database and self.database.enabled:
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = """
+                        query = f"""
                         UPDATE voicemail_messages
-                        SET transcription_text = {},
-                            transcription_confidence = {},
-                            transcription_language = {},
-                            transcription_provider = {},
-                            transcribed_at = {}
-                        WHERE message_id = {}
-                        """.format(  # nosec B608 - placeholder is safely parameterized
-                            placeholder,
-                            placeholder,
-                            placeholder,
-                            placeholder,
-                            placeholder,
-                            placeholder,
-                        )
+                        SET transcription_text = {placeholder},
+                            transcription_confidence = {placeholder},
+                            transcription_language = {placeholder},
+                            transcription_provider = {placeholder},
+                            transcribed_at = {placeholder}
+                        WHERE message_id = {placeholder}
+                        """  # nosec B608 - placeholder is safely parameterized
                         self.database.execute(
                             query,
                             (

@@ -37,11 +37,11 @@ def test_api_serves_audio_by_default() -> None:
 
         # Build minimal WAV file
         # WAV format constants
-        MULAW_FORMAT = 7  # G.711 μ-law audio format
+        mulaw_format = 7  # G.711 μ-law audio format
         sample_rate = 8000
         bits_per_sample = 8
         num_channels = 1
-        audio_format = MULAW_FORMAT
+        audio_format = mulaw_format
 
         data_size = len(audio_data)
         file_size = 4 + 26 + 8 + data_size

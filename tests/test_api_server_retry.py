@@ -63,7 +63,7 @@ def test_retry_on_port_in_use() -> bool:
     """Test that API server retries when port is already in use"""
 
     # Minimum expected time for retry logic (1s + 2s = 3s, with 0.5s margin for processing)
-    MIN_RETRY_TIME = 2.5
+    min_retry_time = 2.5
 
     config = Config("test_config.yml")
     mock_pbx = MockPBXCore(config)
@@ -88,7 +88,7 @@ def test_retry_on_port_in_use() -> bool:
         elapsed = time.time() - start_time
 
         if not result:
-            if elapsed >= MIN_RETRY_TIME:
+            if elapsed >= min_retry_time:
                 pass
             api_server.stop()
             return False

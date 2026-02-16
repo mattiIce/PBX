@@ -17,7 +17,6 @@ class TestDTMFConfigMethods:
     def setup_method(self) -> None:
         """Set up test configuration file"""
         # Create a temporary config file
-        self.temp_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
         config_data = {
             "features": {
                 "webrtc": {
@@ -33,8 +32,8 @@ class TestDTMFConfigMethods:
                 }
             }
         }
-        yaml.dump(config_data, self.temp_config)
-        self.temp_config.close()
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as self.temp_config:
+            yaml.dump(config_data, self.temp_config)
 
         # Create Config instance with test file
         self.config = Config(config_file=self.temp_config.name, load_env=False)
@@ -182,9 +181,8 @@ class TestDTMFConfigMethods:
     def test_get_dtmf_config_with_missing_structure(self) -> None:
         """Test getting DTMF config when structure doesn't exist"""
         # Create a config without the dtmf structure
-        empty_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
-        yaml.dump({}, empty_config)
-        empty_config.close()
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as empty_config:
+            yaml.dump({}, empty_config)
 
         config = Config(config_file=empty_config.name, load_env=False)
         dtmf_config = config.get_dtmf_config()
@@ -198,9 +196,8 @@ class TestDTMFConfigMethods:
     def test_update_dtmf_config_creates_structure(self) -> None:
         """Test that updating DTMF config creates the structure if missing"""
         # Create a config without the dtmf structure
-        empty_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
-        yaml.dump({}, empty_config)
-        empty_config.close()
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as empty_config:
+            yaml.dump({}, empty_config)
 
         config = Config(config_file=empty_config.name, load_env=False)
 

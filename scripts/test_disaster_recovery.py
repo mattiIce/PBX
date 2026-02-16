@@ -25,6 +25,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class DRTestConfig:
@@ -414,7 +416,7 @@ class DisasterRecoveryTester:
 
             # Check config backup
             config_dir = Path(self.config.backup_dir) / "config"
-            if Path(config_dir).exists() and os.listdir(config_dir):
+            if config_dir.exists() and any(config_dir.iterdir()):
                 verification_results["config_backup_exists"] = True
 
             # Check data backup
@@ -641,7 +643,7 @@ def main() -> None:
         print("\n\nTest interrupted by user")
         sys.exit(1)
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
-        logging.error(f"Test failed with error: {e}", exc_info=True)
+        logger.error(f"Test failed with error: {e}", exc_info=True)
         sys.exit(1)
 
 

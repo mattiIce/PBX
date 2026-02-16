@@ -77,8 +77,8 @@ def test_table_already_exists_handling() -> None:
 def test_critical_vs_non_critical_errors() -> None:
     """Test that critical and non-critical errors are handled differently"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")

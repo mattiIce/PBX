@@ -520,7 +520,7 @@ class VoicemailHandler:
                 # ~0.5s of audio at 160 bytes per 20ms RTP packet
                 DTMF_DETECTION_PACKETS: int = 40  # 40 packets * 20ms = 0.8s of audio
                 # Minimum audio data needed for reliable DTMF detection
-                MIN_AUDIO_BYTES_FOR_DTMF: int = 1600
+                min_audio_bytes_for_dtmf: int = 1600
 
                 while ivr_active:
                     # Check if call is still active
@@ -555,7 +555,7 @@ class VoicemailHandler:
                             )
 
                             if (
-                                len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF
+                                len(recent_audio) > min_audio_bytes_for_dtmf
                             ):  # Need sufficient audio for DTMF
                                 try:
                                     # Detect DTMF in audio with error
@@ -751,7 +751,7 @@ class VoicemailHandler:
                                     recent_audio = b"".join(
                                         recorder.recorded_data[-DTMF_DETECTION_PACKETS:]
                                     )
-                                    if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
+                                    if len(recent_audio) > min_audio_bytes_for_dtmf:
                                         try:
                                             stop_digit = dtmf_detector.detect(recent_audio)
                                             if stop_digit:
@@ -931,9 +931,9 @@ class VoicemailHandler:
             dtmf_detector = DTMFDetector(sample_rate=8000)
 
             # Constants for DTMF detection
-            DTMF_DETECTION_PACKETS: int = 40  # 40 packets * 20ms = 0.8s of audio
+            dtmf_detection_packets: int = 40  # 40 packets * 20ms = 0.8s of audio
             # Minimum audio data needed for reliable DTMF detection
-            MIN_AUDIO_BYTES_FOR_DTMF: int = 1600
+            min_audio_bytes_for_dtmf: int = 1600
 
             pbx.logger.info(f"Started DTMF monitoring for voicemail recording on call {call_id}")
 
@@ -948,9 +948,9 @@ class VoicemailHandler:
                     and len(recorder.recorded_data) > 0
                 ):
                     # Collect last portion of audio for DTMF detection
-                    recent_audio = b"".join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
+                    recent_audio = b"".join(recorder.recorded_data[-dtmf_detection_packets:])
 
-                    if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
+                    if len(recent_audio) > min_audio_bytes_for_dtmf:
                         # Convert bytes to audio samples for DTMF detection
                         # G.711 u-law is 8-bit samples, one byte per sample
                         # Use struct.unpack for efficient batch conversion

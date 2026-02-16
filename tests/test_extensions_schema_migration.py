@@ -16,8 +16,8 @@ def test_extensions_columns_migration() -> None:
     """Test that missing voicemail PIN columns are added during migration"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # First, create an old version of the extensions table without
@@ -94,8 +94,8 @@ def test_extensions_columns_already_exist() -> None:
     """Test that migration handles existing columns gracefully"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create a test config for SQLite
@@ -135,8 +135,8 @@ def test_insert_with_voicemail_pin() -> None:
     """Test that we can insert extensions with voicemail PIN after migration"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # First, create old schema without voicemail_pin columns

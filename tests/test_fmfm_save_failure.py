@@ -14,8 +14,8 @@ class TestFMFMSaveFailure:
 
     def setup_method(self) -> None:
         """Set up test database"""
-        self.temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-        self.temp_db.close()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as self.temp_db:
+            pass
 
         self.config = {
             "database.type": "sqlite",

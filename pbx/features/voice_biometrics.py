@@ -624,19 +624,19 @@ class VoiceBiometrics:
 
                     if len(audio_array) >= frame_size:
                         # Extract features - returns (features, feature_names)
-                        stFeatures = audioFeatureExtraction.stFeatureExtraction(
+                        st_features = audioFeatureExtraction.stFeatureExtraction(
                             audio_array, sample_rate, frame_size, frame_step
                         )
 
-                        if stFeatures is not None and len(stFeatures) > 0:
+                        if st_features is not None and len(st_features) > 0:
                             # Average features across all frames
-                            features["mfcc_mean"] = float(np.mean(stFeatures[0:13]))  # MFCCs
+                            features["mfcc_mean"] = float(np.mean(st_features[0:13]))  # MFCCs
                             features["zcr_mean"] = float(
-                                np.mean(stFeatures[0])
+                                np.mean(st_features[0])
                             )  # Zero Crossing Rate
-                            features["energy_mean"] = float(np.mean(stFeatures[1]))  # Energy
-                            features["spectral_centroid"] = float(np.mean(stFeatures[3]))
-                            features["spectral_spread"] = float(np.mean(stFeatures[4]))
+                            features["energy_mean"] = float(np.mean(st_features[1]))  # Energy
+                            features["spectral_centroid"] = float(np.mean(st_features[3]))
+                            features["spectral_spread"] = float(np.mean(st_features[4]))
                             features["spectral_entropy"] = float(np.mean(stFeatures[5]))
                             features["spectral_rollof"] = float(np.mean(stFeatures[7]))
 

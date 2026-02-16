@@ -24,6 +24,8 @@ from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from typing import Any
 
+logger = logging.getLogger(__name__)
+
 
 @dataclass
 class LoadTestConfig:
@@ -454,7 +456,7 @@ async def main() -> None:
         print("\n\nTest interrupted by user")
         sys.exit(1)
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
-        logging.error(f"Test failed with error: {e}", exc_info=True)
+        logger.error(f"Test failed with error: {e}", exc_info=True)
         sys.exit(1)
 
 

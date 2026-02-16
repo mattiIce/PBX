@@ -180,10 +180,10 @@ class TestAPIGracefulDegradation:
         self.pbx_core.config.get_dtmf_config.return_value = None
 
         # Set up handler with admin authentication
-        PBXAPIHandler = self._setup_handler_with_auth(is_admin=True)
+        pbx_api_handler = self._setup_handler_with_auth(is_admin=True)
 
         # Call the method
-        PBXAPIHandler._handle_get_dtmf_config(self.handler)
+        pbx_api_handler._handle_get_dtmf_config(self.handler)
 
         # Should return default configuration, not error
         assert self.response_data is not None
@@ -196,10 +196,10 @@ class TestAPIGracefulDegradation:
     def test_dtmf_config_returns_defaults_when_unauthenticated(self) -> None:
         """Test that /api/config/dtmf returns defaults for unauthenticated users"""
         # Set up handler without authentication
-        PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)
+        pbx_api_handler = self._setup_handler_with_auth(is_admin=False)
 
         # Call the method
-        PBXAPIHandler._handle_get_dtmf_config(self.handler)
+        pbx_api_handler._handle_get_dtmf_config(self.handler)
 
         # Should return default configuration, not 403 error
         assert self.response_data is not None
@@ -212,10 +212,10 @@ class TestAPIGracefulDegradation:
     def test_config_returns_empty_when_unauthenticated(self) -> None:
         """Test that /api/config returns empty config for unauthenticated users"""
         # Set up handler without authentication
-        PBXAPIHandler = self._setup_handler_with_auth(is_admin=False)
+        pbx_api_handler = self._setup_handler_with_auth(is_admin=False)
 
         # Call the method
-        PBXAPIHandler._handle_get_config(self.handler)
+        pbx_api_handler._handle_get_config(self.handler)
 
         # Should return empty config structure, not 403 error
         assert self.response_data is not None

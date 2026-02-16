@@ -163,9 +163,8 @@ def test_with_database() -> bool:
     # Create temporary SQLite database
     import tempfile
 
-    db_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    db_path = db_file.name
-    db_file.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as db_file:
+        db_path = db_file.name
 
     try:
         # Create database config
