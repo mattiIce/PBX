@@ -7,6 +7,7 @@ This script helps diagnose and troubleshoot phone auto-provisioning issues.
 
 import json
 import sys
+from pathlib import Path
 
 import requests
 

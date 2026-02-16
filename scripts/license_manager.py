@@ -16,12 +16,12 @@ import argparse
 import json
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.licensing import LicenseManager, LicenseType
-from pathlib import Path
 
 
 def setup_config():

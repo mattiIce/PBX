@@ -16,7 +16,7 @@ from pathlib import Path
 class EnvSetup:
     """Environment variable setup and validation"""
 
-    def __init__(self, env_file=".env"):
+    def __init__(self, env_file: str = ".env") -> None:
         """
         Initialize environment setup.
 
@@ -27,7 +27,7 @@ class EnvSetup:
         self.env_example = ".env.example"
         self.variables = {}
 
-    def run_interactive_setup(self):
+    def run_interactive_setup(self) -> bool:
         """Run interactive setup to configure environment variables."""
         print("=" * 70)
         print("PBX Environment Variable Setup")
@@ -272,7 +272,7 @@ class EnvSetup:
         password = "".join(secrets.choice(alphabet) for _ in range(length))
         return password
 
-    def _load_env_file(self):
+    def _load_env_file(self) -> None:
         """Load existing environment file."""
         self.variables = {}
 
@@ -291,7 +291,7 @@ class EnvSetup:
                     value = value.strip('"').strip("'")
                     self.variables[key.strip()] = value
 
-    def _write_env_file(self):
+    def _write_env_file(self) -> None:
         """Write environment variables to file."""
         # Set secure permissions first (Unix-like systems)
         try:
@@ -319,7 +319,7 @@ class EnvSetup:
                 f.write(f"{key}={value}\n")
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     setup = EnvSetup()
 

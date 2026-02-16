@@ -3150,7 +3150,7 @@ function displayTemplatesList(templates) {
     tbody.innerHTML = '';
 
     // Create rows safely without XSS vulnerabilities
-    templates.forEach(template => {
+    for (const template of templates) {
         const row = document.createElement('tr');
 
         // Vendor cell
@@ -3173,7 +3173,7 @@ function displayTemplatesList(templates) {
 
         // Size cell
         const sizeCell = document.createElement('td');
-        sizeCell.textContent = (template.size / 1024).toFixed(1) + ' KB';
+        sizeCell.textContent = `${(template.size / 1024).toFixed(1)} KB`;
         row.appendChild(sizeCell);
 
         // Actions cell
@@ -3204,7 +3204,7 @@ function displayTemplatesList(templates) {
 
         row.appendChild(actionsCell);
         tbody.appendChild(row);
-    });
+    }
 }
 
 async function viewTemplate(vendor, model) {
@@ -3284,13 +3284,13 @@ function showTemplateViewModal(vendor, model, content, placeholders, editable) {
     placeholdersDiv.appendChild(strong);
 
     const ul = document.createElement('ul');
-    placeholders.forEach(p => {
+    for (const placeholder of placeholders) {
         const li = document.createElement('li');
         const code = document.createElement('code');
-        code.textContent = p;
+        code.textContent = placeholder;
         li.appendChild(code);
         ul.appendChild(li);
-    });
+    }
     placeholdersDiv.appendChild(ul);
 
     const p = document.createElement('p');
@@ -3401,16 +3401,14 @@ async function loadAnalytics() {
     if (!chartJsAvailable) {
         showNotification('Chart library not available - displaying data in tables only. Charts require internet connection.', 'warning');
         // Hide chart containers
-        const chartContainers = document.querySelectorAll('.chart-box');
-        chartContainers.forEach(container => {
+        for (const container of document.querySelectorAll('.chart-box')) {
             container.style.display = 'none';
-        });
+        }
     } else {
         // Show chart containers if they were hidden
-        const chartContainers = document.querySelectorAll('.chart-box');
-        chartContainers.forEach(container => {
+        for (const container of document.querySelectorAll('.chart-box')) {
             container.style.display = '';
-        });
+        }
     }
 
     try {
@@ -5550,13 +5548,13 @@ function editFMFMConfig(config) {
     container.innerHTML = '';
 
     if (config.destinations && config.destinations.length > 0) {
-        config.destinations.forEach(dest => {
+        for (const dest of config.destinations) {
             addFMFMDestinationRow();
             const rows = container.children;
             const lastRow = rows[rows.length - 1];
             lastRow.querySelector('.fmfm-dest-number').value = dest.number;
-            lastRow.querySelector('.fmfm-dest-ringtime').value = dest.ring_time || 20;
-        });
+            lastRow.querySelector('.fmfm-dest-ringtime').value = dest.ring_time ?? 20;
+        }
     } else {
         addFMFMDestinationRow();
     }
@@ -7209,12 +7207,12 @@ async function loadPagingZones() {
         }
 
         // Add event listeners for delete buttons
-        document.querySelectorAll('.btn-delete-zone').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const extension = this.getAttribute('data-extension');
+        for (const btn of document.querySelectorAll('.btn-delete-zone')) {
+            btn.addEventListener('click', () => {
+                const extension = btn.getAttribute('data-extension');
                 deletePagingZone(extension);
             });
-        });
+        }
     } catch (error) {
         if (suppressErrorNotifications) {
             console.info('Error loading paging zones (expected if paging not enabled):', error.message);

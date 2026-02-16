@@ -48,7 +48,7 @@ class PasswordPolicy:
         "p@ssw0rd",
     }
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize password policy
 
@@ -199,7 +199,7 @@ class PasswordPolicy:
 class RateLimiter:
     """Rate limiting for authentication attempts"""
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize rate limiter
 
@@ -262,7 +262,7 @@ class RateLimiter:
 
         return False, None
 
-    def record_attempt(self, identifier: str, successful: bool = False):
+    def record_attempt(self, identifier: str, successful: bool = False) -> None:
         """
         Record an authentication attempt
 
@@ -285,7 +285,7 @@ class RateLimiter:
             if identifier in self.lockouts:
                 del self.lockouts[identifier]
 
-    def clear_attempts(self, identifier: str):
+    def clear_attempts(self, identifier: str) -> None:
         """Clear all attempts for an identifier"""
         if identifier in self.attempts:
             del self.attempts[identifier]
@@ -306,7 +306,7 @@ class SecurityAuditor:
     EVENT_CONFIG_CHANGE = "config_change"
     EVENT_SUSPICIOUS_ACTIVITY = "suspicious_activity"
 
-    def __init__(self, database=None, config: dict | None = None):
+    def __init__(self, database: object = None, config: dict | None = None) -> None:
         """
         Initialize security auditor
 
@@ -326,7 +326,7 @@ class SecurityAuditor:
         details: dict | None = None,
         success: bool = True,
         ip_address: str | None = None,
-    ):
+    ) -> None:
         """
         Log a security event
 
@@ -369,7 +369,7 @@ class SecurityAuditor:
             except Exception as e:
                 self.logger.error(f"Failed to store audit log: {e}")
 
-    def _store_audit_log(self, log_entry: dict):
+    def _store_audit_log(self, log_entry: dict) -> None:
         """Store audit log in database"""
         import json
 
@@ -400,7 +400,7 @@ class SecurityAuditor:
 class SecurePasswordManager:
     """Secure password storage and verification"""
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize password manager
 
@@ -494,7 +494,7 @@ class ThreatDetector:
     Provides advanced pattern detection, IP blocking, and anomaly detection
     """
 
-    def __init__(self, database=None, config: dict | None = None):
+    def __init__(self, database: object = None, config: dict | None = None) -> None:
         """
         Initialize threat detector
 
@@ -529,7 +529,7 @@ class ThreatDetector:
             self._initialize_schema()
             self._load_blocked_ips_from_database()
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: object = None) -> object:
         """
         Get config value supporting both dot notation and nested dicts
 
@@ -557,7 +557,7 @@ class ThreatDetector:
 
         return value if value is not None else default
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize threat detection database tables"""
         # Blocked IPs table
         blocked_ips_table = (

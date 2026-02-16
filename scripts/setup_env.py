@@ -145,13 +145,13 @@ ENV_VARS = {
 }
 
 
-def get_project_root():
+def get_project_root() -> Path:
     """Get the project root directory"""
     # Script is in scripts/, so parent is project root
     return Path(__file__).parent.parent
 
 
-def read_existing_env():
+def read_existing_env() -> tuple[dict[str, str], Path]:
     """Read existing .env file if it exists"""
     env_file = get_project_root() / ".env"
     env_vars = {}
@@ -176,7 +176,7 @@ def read_existing_env():
     return env_vars, env_file
 
 
-def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
+def prompt_for_value(var_name: str, var_info: dict, current_value: str | None = None, retry_count: int = 0) -> str:
     """Prompt user for an environment variable value"""
     # Prevent infinite recursion
     if retry_count >= 3:
@@ -228,7 +228,7 @@ def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
     return new_value
 
 
-def write_env_file(env_vars, env_file):
+def write_env_file(env_vars: dict[str, str], env_file: Path) -> None:
     """Write environment variables to .env file"""
     with open(env_file, "w") as f:
         f.write("# Warden Voip System Environment Variables\n")
@@ -251,7 +251,7 @@ def write_env_file(env_vars, env_file):
             f.write("\n")
 
 
-def main():
+def main() -> None:
     print("=" * 70)
     print("Warden Voip System - Environment Variable Setup")
     print("=" * 70)
