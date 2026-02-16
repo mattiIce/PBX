@@ -285,12 +285,12 @@ class EnvSetup:
 
         with open(self.env_file) as f:
             for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
+                stripped_line = line.strip()
+                if not stripped_line or stripped_line.startswith("#"):
                     continue
 
-                if "=" in line:
-                    key, value = line.split("=", 1)
+                if "=" in stripped_line:
+                    key, value = stripped_line.split("=", 1)
                     # Remove quotes if present
                     value = value.strip('"').strip("'")
                     self.variables[key.strip()] = value
@@ -316,9 +316,8 @@ class EnvSetup:
 
             for key, value in self.variables.items():
                 # Quote values with spaces
-                if " " in value:
-                    value = f'"{value}"'
-                f.write(f"{key}={value}\n")
+                quoted_value = f'"{value}"' if " " in value else value
+                f.write(f"{key}={quoted_value}\n")
 
 
 def main() -> None:

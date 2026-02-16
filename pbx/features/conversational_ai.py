@@ -228,7 +228,7 @@ class ConversationalAI:
     def _build_response_handlers(self) -> None:
         """Build intent-to-response handler mapping"""
         return {
-            "emergency_request": lambda entities: (
+            "emergency_request": lambda _entities: (
                 "I'm connecting you to emergency services immediately.",
                 1.0,
             ),
@@ -236,31 +236,31 @@ class ConversationalAI:
                 f"I'll transfer you to the {entities.get('departments', ['general'])[0] if entities.get('departments') else 'general'} department right away.",
                 None,
             ),
-            "sales_department": lambda entities: (
+            "sales_department": lambda _entities: (
                 "Let me connect you with our sales team. They'll be happy to help you.",
                 None,
             ),
-            "support_department": lambda entities: (
+            "support_department": lambda _entities: (
                 "I'll transfer you to technical support. They're ready to assist you.",
                 None,
             ),
-            "billing_department": lambda entities: (
+            "billing_department": lambda _entities: (
                 "Connecting you to our billing department now.",
                 None,
             ),
-            "business_hours_inquiry": lambda entities: (
+            "business_hours_inquiry": lambda _entities: (
                 "Our business hours are Monday through Friday, 9 AM to 5 PM. Is there anything else you'd like to know?",
                 None,
             ),
-            "location_inquiry": lambda entities: (
+            "location_inquiry": lambda _entities: (
                 "We're located at our main office. Would you like me to provide the full address?",
                 None,
             ),
-            "pricing_inquiry": lambda entities: (
+            "pricing_inquiry": lambda _entities: (
                 "I can help you with pricing information. Let me connect you with our sales team who can provide detailed quotes.",
                 None,
             ),
-            "voicemail_request": lambda entities: (
+            "voicemail_request": lambda _entities: (
                 "I'll direct you to voicemail where you can leave a detailed message.",
                 None,
             ),
@@ -272,11 +272,11 @@ class ConversationalAI:
                 ),
                 None,
             ),
-            "complaint": lambda entities: (
+            "complaint": lambda _entities: (
                 "I'm sorry to hear about your experience. Let me connect you with a supervisor who can help resolve this.",
                 None,
             ),
-            "cancel_request": lambda entities: (
+            "cancel_request": lambda _entities: (
                 "No problem at all. Is there anything else I can help you with today?",
                 None,
             ),
