@@ -2,7 +2,7 @@
 
 # Multi-stage Dockerfile for PBX System
 # Stage 1: Builder stage for dependencies
-FROM python:3.13-slim-bookworm AS builder
+FROM python:3.14-slim-bookworm AS builder
 
 # Install system dependencies required for building Python packages
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
@@ -36,13 +36,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv pip install --python /opt/venv/bin/python --no-cache -e "."
 
 # Stage 2: Runtime stage
-FROM python:3.13-slim-bookworm AS runtime
-
-# Add OCI image labels
-LABEL org.opencontainers.image.title="Warden VoIP PBX" \
-      org.opencontainers.image.description="Comprehensive VoIP/PBX system built in Python" \
-      org.opencontainers.image.source="https://github.com/mattiIce/PBX" \
-      org.opencontainers.image.licenses="MIT"
+FROM python:3.14-slim-bookworm
 
 # Install runtime system dependencies
 RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
