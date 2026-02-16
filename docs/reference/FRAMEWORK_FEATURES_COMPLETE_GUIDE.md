@@ -288,7 +288,7 @@ These features have basic informational admin panels and complete backend framew
 
 All framework features are accessible via the Admin Panel:
 
-1. Open Admin Panel: `https://your-server:8080/admin/`
+1. Open Admin Panel: `https://your-server:9000/admin/`
 2. Navigate to **Framework Features** section in sidebar
 3. Select the feature you want to configure
 4. View status, configuration, and free integration options
@@ -354,9 +354,6 @@ POST /api/framework/call-tagging/tag
   "call_id": "call-123",
   "tags": ["urgent", "vip-customer"]
 }
-
-# Search by tag
-GET /api/framework/call-tagging/search?tag=urgent
 
 # Get statistics
 GET /api/framework/call-tagging/statistics

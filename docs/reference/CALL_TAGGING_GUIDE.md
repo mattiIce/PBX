@@ -84,7 +84,7 @@ POST /api/framework/call-tagging/tag
 
 #### Categorize a Call
 ```bash
-POST /api/framework/call-tagging/categorize
+POST /api/framework/call-tagging/classify/{call_id}
 {
   "call_id": "call-123",
   "category": "support",
@@ -94,12 +94,7 @@ POST /api/framework/call-tagging/categorize
 
 #### Get Call Tags
 ```bash
-GET /api/framework/call-tagging/call/{call_id}/tags
-```
-
-#### Search by Tag
-```bash
-GET /api/framework/call-tagging/search?tag=urgent
+GET /api/framework/call-tagging/tags
 ```
 
 #### Get Tag Statistics

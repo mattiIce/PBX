@@ -119,7 +119,7 @@ function loadFrameworkOverview() {
                 </div>
                 <p>Device management with statistics (FREE: React Native + WebRTC)</p>
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Device tracking ✓ Push config ⚠ Needs native app development (free frameworks available)</small>
-                <button onclick="switchTab('mobile-apps')" class="btn-primary" style="margin-top: 10px;">Configure</button>
+                <button onclick="switchTab('mobile-push')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
         </div>
 
@@ -194,7 +194,7 @@ function loadFrameworkOverview() {
                 </div>
                 <p>Multi-region trunk registration with failover</p>
                 <small style="color: #666; display: block; margin-top: 8px;">✓ Region management ✓ Health monitoring ⚠ Needs multi-region setup</small>
-                <button onclick="switchTab('geographic-redundancy')" class="btn-primary" style="margin-top: 10px;">Configure</button>
+                <button onclick="switchTab('geo-redundancy')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
                 <div class="stat-icon">🌐</div>
@@ -1576,7 +1576,7 @@ function loadMobileAppsStats() {
     const devicesDiv = document.getElementById('mobile-devices-list');
     devicesDiv.innerHTML = '<p>Loading device statistics...</p>';
 
-    fetch('/api/framework/mobile-apps/devices')
+    fetch('/api/mobile-push/devices')
         .then(r => r.json())
         .then(data => {
             const devices = data.devices || [];
@@ -2087,7 +2087,7 @@ function showCreateRegionDialog() {
             if (result.success) {
                 alert(`✅ Region created successfully!`);
                 // Reload the tab
-                switchTab('geographic-redundancy');
+                switchTab('geo-redundancy');
             } else {
                 alert(`❌ Failed to create region: ${result.error}`);
             }
@@ -2107,7 +2107,7 @@ function triggerFailover(regionId) {
             if (result.success) {
                 alert(`✅ Failover successful!\nFrom: ${result.from_region}\nTo: ${result.to_region}`);
                 // Reload the tab
-                switchTab('geographic-redundancy');
+                switchTab('geo-redundancy');
             } else {
                 alert(`❌ Failover failed: ${result.error}`);
             }

@@ -143,7 +143,7 @@ sudo systemctl status pbx
 
 # Check if process is listening
 sudo netstat -tlnp | grep :5060
-sudo netstat -tlnp | grep :8080
+sudo netstat -tlnp | grep :9000
 
 # Check recent logs
 sudo journalctl -u pbx -n 100 --no-pager
@@ -317,7 +317,7 @@ netstat -s | grep -i error
 netstat -s | grep -i drop
 
 # Check QoS metrics (if monitoring enabled)
-curl -k https://localhost:8080/api/qos/statistics
+curl -k https://localhost:9000/api/qos/statistics
 ```
 
 **Recovery Steps**:
@@ -421,20 +421,20 @@ grep -A 10 "smtp:" config.yml
 ### 6. Admin Panel Unreachable
 
 **Symptoms**:
-- Cannot access https://hostname:8080/admin/
+- Cannot access https://hostname:9000/admin/
 - Connection timeout or refused
 - SSL certificate errors
 
 **Quick Diagnosis**:
 ```bash
 # Check if API service is listening
-sudo netstat -tlnp | grep :8080
+sudo netstat -tlnp | grep :9000
 
 # Check SSL certificate
-openssl s_client -connect localhost:8080 -servername hostname
+openssl s_client -connect localhost:9000 -servername hostname
 
 # Check firewall
-sudo ufw status | grep 8080
+sudo ufw status | grep 9000
 
 # Check nginx/reverse proxy (if used)
 sudo systemctl status nginx
@@ -445,7 +445,7 @@ sudo systemctl status nginx
 1. **Verify service is running**:
    ```bash
    sudo systemctl status pbx
-   sudo netstat -tlnp | grep :8080
+   sudo netstat -tlnp | grep :9000
    ```
 
 2. **Check SSL certificate**:
@@ -456,7 +456,7 @@ sudo systemctl status nginx
 
 3. **Check firewall rules**:
    ```bash
-   sudo ufw allow 8080/tcp
+   sudo ufw allow 9000/tcp
    sudo ufw reload
    ```
 
@@ -843,7 +843,7 @@ sudo kill -9 {PID}
 
 # Network diagnostics
 sudo netstat -tlnp | grep :5060
-sudo netstat -tlnp | grep :8080
+sudo netstat -tlnp | grep :9000
 sudo tcpdump -i any -n port 5060
 sudo lsof -i :5060
 

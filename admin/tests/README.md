@@ -8,7 +8,7 @@ This directory contains JavaScript tests for the PBX admin panel functionality u
 
 ### Prerequisites
 
-- Node.js 14+ and npm installed
+- Node.js 20+ and npm installed
 
 ### Installation
 

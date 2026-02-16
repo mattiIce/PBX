@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (89 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
+Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (76 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
 
 ## Quick Reference
 
@@ -68,12 +68,17 @@ pbx/
 │   ├── routes/       # 22 route modules organized by feature
 │   ├── schemas/      # Request/response validation
 │   ├── app.py        # Flask app factory (create_app)
+│   ├── errors.py     # Error handling
+│   ├── openapi.py    # OpenAPI documentation
 │   └── server.py     # API server initialization
 ├── core/             # Core PBX engine
 │   ├── pbx.py        # PBXCore - central coordinator
 │   ├── call.py       # Call state machine
 │   ├── call_router.py # Routing logic
-│   └── feature_initializer.py # Dynamic feature loading
+│   ├── auto_attendant_handler.py # IVR logic
+│   ├── voicemail_handler.py      # Voicemail processing
+│   ├── emergency_handler.py      # E911 handling
+│   └── feature_initializer.py    # Dynamic feature loading
 ├── sip/              # SIP protocol implementation
 │   ├── server.py     # SIP server (Twisted-based)
 │   ├── message.py    # SIP message parser
@@ -82,9 +87,8 @@ pbx/
 │   ├── handler.py    # RTP relay
 │   ├── jitter_buffer.py
 │   └── rtcp_monitor.py
-├── features/         # 89 feature modules (pluggable)
-│   ├── codec_support/ # Audio codec plugins
-│   └── ...           # Each feature is a self-contained module
+├── features/         # 76 feature modules (pluggable)
+│   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
 ├── utils/            # Cross-cutting concerns
 │   ├── config.py     # YAML config management
@@ -104,8 +108,9 @@ admin/                # Frontend admin interface
 ├── vite.config.js
 └── tsconfig.json
 
-tests/                # Python test suite (100+ files)
+tests/                # Python test suite (126 files)
 ├── conftest.py       # Shared fixtures
+├── integration/      # Integration tests (API, call flow, provisioning)
 └── test_*.py
 ```
 

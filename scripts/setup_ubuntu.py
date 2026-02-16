@@ -6,7 +6,7 @@ This script provides an easy-to-use setup experience for installing
 the Warden VoIP PBX system on Ubuntu 24.04 LTS.
 
 Usage:
-    sudo python3 setup_ubuntu.py
+    sudo python3 scripts/setup_ubuntu.py
 
 Features:
     - System dependency installation
@@ -614,7 +614,7 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         print("   python main.py\n")
 
         print(f"{Colors.OKCYAN}3. Access the Admin Interface:{Colors.ENDC}")
-        print("   Open your browser to: https://localhost:8080")
+        print("   Open your browser to: https://localhost:9000")
         print("   (You'll need to accept the self-signed certificate)\n")
 
         print(f"{Colors.OKCYAN}4. Optional - Install as a system service:{Colors.ENDC}")

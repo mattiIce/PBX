@@ -91,7 +91,7 @@ The PBX includes auto-provisioning templates for popular ATAs:
 
 #### Via Admin Panel (Recommended)
 
-1. Log into the admin panel: `http://your-pbx-ip:8080/admin/`
+1. Log into the admin panel: `http://your-pbx-ip:9000/admin/`
 2. Go to **Phone Provisioning** tab
 3. Click **Register New Device**
 4. Fill in the form:
@@ -105,7 +105,7 @@ The PBX includes auto-provisioning templates for popular ATAs:
 #### Via API
 
 ```bash
-curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
+curl -X POST http://your-pbx-ip:9000/api/provisioning/devices \
   -H "Content-Type: application/json" \
   -d '{
     "mac_address": "000b82123456",
@@ -123,7 +123,7 @@ curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
 2. Log in (default: admin/admin)
 3. Go to **Maintenance** → **Upgrade and Provisioning**
 4. Set:
-   - **Config Server Path**: `http://your-pbx-ip:8080/provision/000b82123456.cfg`
+   - **Config Server Path**: `http://your-pbx-ip:9000/provision/000b82123456.cfg`
    - **Firmware Upgrade**: Disabled (or set to your TFTP server)
 5. Click **Update** and **Reboot**
 
@@ -132,7 +132,7 @@ curl -X POST http://your-pbx-ip:8080/api/provisioning/devices \
 1. Access the ATA admin interface
 2. Go to **Admin Login** → **Advanced**
 3. Under **Provisioning**:
-   - **Profile Rule**: `http://your-pbx-ip:8080/provision/$MA.cfg`
+   - **Profile Rule**: `http://your-pbx-ip:9000/provision/$MA.cfg`
    - **Resync On Reset**: No
    - **Provision Enable**: No (after initial setup)
 4. Click **Submit All Changes**
@@ -220,14 +220,14 @@ You can customize ATA templates:
 
 1. Export the template:
    ```bash
-   curl -X POST http://your-pbx-ip:8080/api/provisioning/templates/grandstream/ht801/export
+   curl -X POST http://your-pbx-ip:9000/api/provisioning/templates/grandstream/ht801/export
    ```
 
 2. Edit `provisioning_templates/grandstream_ht801.template`
 
 3. Reload templates:
    ```bash
-   curl -X POST http://your-pbx-ip:8080/api/provisioning/reload-templates
+   curl -X POST http://your-pbx-ip:9000/api/provisioning/reload-templates
    ```
 
 ### Regional Settings
@@ -300,7 +300,7 @@ Consult your ATA documentation for region-specific values.
 **Solutions**:
 1. Check provisioning URL is accessible:
    ```bash
-   curl http://your-pbx-ip:8080/provision/000b82123456.cfg
+   curl http://your-pbx-ip:9000/provision/000b82123456.cfg
    ```
 2. Verify MAC address format (no colons, lowercase)
 3. Check ATA can reach PBX (ping test)
@@ -327,7 +327,7 @@ Content-Type: application/json
 ### Get ATA Configuration
 
 ```bash
-GET /api/provision/000b82123456.cfg
+GET /provision/000b82123456.cfg
 ```
 
 Returns the fully-configured provisioning file for the ATA.

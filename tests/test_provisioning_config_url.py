@@ -39,7 +39,7 @@ def test_config_url_uses_correct_port() -> None:
 
     # Check that URL uses port 9000
     assert ":9000/" in device.config_url, f"Expected port 9000 in URL, got: {device.config_url}"
-    assert ":8080/" not in device.config_url, f"Should not have port 8080, got: {device.config_url}"
+    assert ":8443/" not in device.config_url, f"Should not have port 8443, got: {device.config_url}"
 
     expected_url = "http://192.168.1.14:9000/provision/aabbccddeeff.cfg"
     assert (
@@ -47,13 +47,13 @@ def test_config_url_uses_correct_port() -> None:
     ), f"Expected URL: {expected_url}, got: {device.config_url}"
 
 
-    # Test with default port 8080
-    config_8080 = TestConfig(api_port=8080)
-    provisioning_8080 = PhoneProvisioning(config_8080, database=None)
+    # Test with alternate port 8443
+    config_8443 = TestConfig(api_port=8443)
+    provisioning_8443 = PhoneProvisioning(config_8443, database=None)
 
-    device2 = provisioning_8080.register_device("11:22:33:44:55:66", "1002", "yealink", "t46s")
+    device2 = provisioning_8443.register_device("11:22:33:44:55:66", "1002", "yealink", "t46s")
 
-    assert ":8080/" in device2.config_url, f"Expected port 8080 in URL, got: {device2.config_url}"
+    assert ":8443/" in device2.config_url, f"Expected port 8443 in URL, got: {device2.config_url}"
 
 
 def test_config_url_regenerated_from_database() -> None:
@@ -67,8 +67,8 @@ def test_config_url_regenerated_from_database() -> None:
             self.vendor = "yealink"
             self.model = "t46s"
             self.device_type = "phone"
-            # Old config URL with wrong port (8080)
-            self.config_url = "http://192.168.1.14:8080/provision/aabbccddeeff.cfg"
+            # Old config URL with wrong port (8443)
+            self.config_url = "http://192.168.1.14:8443/provision/aabbccddeeff.cfg"
             self.created_at = None
             self.last_provisioned = None
 
@@ -81,7 +81,7 @@ def test_config_url_regenerated_from_database() -> None:
                     "vendor": "yealink",
                     "model": "t46s",
                     "device_type": "phone",
-                    "config_url": "http://192.168.1.14:8080/provision/aabbccddeeff.cfg",
+                    "config_url": "http://192.168.1.14:8443/provision/aabbccddeeff.cfg",
                     "created_at": None,
                     "last_provisioned": None,
                 }
@@ -118,8 +118,8 @@ def test_config_url_regenerated_from_database() -> None:
         ":9000/" in device.config_url
     ), f"Config URL should use new port 9000, got: {device.config_url}"
     assert (
-        ":8080/" not in device.config_url
-    ), f"Config URL should not have old port 8080, got: {device.config_url}"
+        ":8443/" not in device.config_url
+    ), f"Config URL should not have old port 8443, got: {device.config_url}"
 
     expected_url = "http://192.168.1.14:9000/provision/aabbccddeeff.cfg"
     assert (

@@ -31,7 +31,7 @@ class LoadTestConfig:
 
     pbx_host: str = "localhost"
     pbx_sip_port: int = 5060
-    pbx_api_port: int = 8080
+    pbx_api_port: int = 9000
     concurrent_calls: int = 10
     total_calls: int = 100
     call_duration: int = 10  # seconds

@@ -19,7 +19,7 @@ The Terraform configuration deploys the following AWS resources:
 - **Network Load Balancer** for SIP/RTP UDP traffic
 
 ### Data Storage
-- **RDS PostgreSQL 16** (Multi-AZ, encrypted, automated backups)
+- **RDS PostgreSQL 17** (Multi-AZ, encrypted, automated backups)
 - **ElastiCache Redis** cluster for session state (2 nodes, multi-AZ)
 
 ### Security & Secrets
@@ -349,7 +349,7 @@ aws elbv2 describe-target-health \
 # SSH to instance and check service
 ssh -i ~/.ssh/pbx-production.pem ubuntu@<instance-ip>
 sudo systemctl status pbx
-curl http://localhost:8080/health
+curl http://localhost:9000/health
 ```
 
 ## Cleanup

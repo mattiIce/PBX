@@ -49,7 +49,7 @@ except ImportError:
 class HealthMonitor:
     """Production health monitoring and reporting."""
 
-    def __init__(self, api_url="https://localhost:8080", verify_ssl=False):
+    def __init__(self, api_url="https://localhost:9000", verify_ssl=False):
         self.api_url = api_url
         self.verify_ssl = verify_ssl
         self.base_dir = Path(__file__).parent.parent
@@ -151,7 +151,7 @@ class HealthMonitor:
                 self.health_data["alerts"].append("CRITICAL: PBX process not running")
 
             # Check if service is listening on expected ports
-            ports_to_check = [(5060, "SIP"), (8080, "API")]
+            ports_to_check = [(5060, "SIP"), (9000, "API")]
             for port, service in ports_to_check:
                 listening = self._is_port_listening(port)
                 checks[f"port_{port}"] = {
@@ -531,7 +531,7 @@ def main():
     )
     parser.add_argument("--output", help="Output file (default: stdout)")
     parser.add_argument("--alert", action="store_true", help="Send alerts for critical issues")
-    parser.add_argument("--api-url", default="https://localhost:8080", help="PBX API URL")
+    parser.add_argument("--api-url", default="https://localhost:9000", help="PBX API URL")
     args = parser.parse_args()
 
     monitor = HealthMonitor(api_url=args.api_url)

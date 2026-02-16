@@ -20,7 +20,7 @@ class MockConfig:
     def __init__(self) -> None:
         self.data = {
             "server": {"sip_host": "192.168.1.10", "sip_port": 5060, "external_ip": "192.168.1.10"},
-            "api": {"port": 8080, "ssl": {"enabled": False}},
+            "api": {"port": 9000, "ssl": {"enabled": False}},
             "provisioning": {
                 "enabled": True,
                 "custom_templates_dir": "provisioning_templates",

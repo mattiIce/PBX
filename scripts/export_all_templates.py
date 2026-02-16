@@ -105,7 +105,7 @@ Examples:
     if exported_count > 0:
         # Get API URL from config
         api_host = config.get("server.external_ip", "localhost")
-        api_port = config.get("api.port", 8080)
+        api_port = config.get("api.port", 9000)
         api_url = f"https://{api_host}:{api_port}"
 
         print("Next steps:")

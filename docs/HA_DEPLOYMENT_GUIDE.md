@@ -142,7 +142,7 @@ This guide describes how to deploy the Warden VoIP PBX system in a high availabi
 ### Software Requirements
 
 - Ubuntu 24.04 LTS on all nodes
-- PostgreSQL 14+ with streaming replication
+- PostgreSQL 17+ with streaming replication
 - HAProxy 2.8+ or Nginx Plus
 - Keepalived 2.2+ for VIP management
 - Redis 7+ for session state
@@ -161,15 +161,15 @@ This guide describes how to deploy the Warden VoIP PBX system in a high availabi
 ```bash
 # Install PostgreSQL
 sudo apt-get update
-sudo apt-get install -y postgresql-14
+sudo apt-get install -y postgresql-17
 
 # Configure for replication
 sudo -u postgres psql << EOF
 CREATE ROLE replicator WITH REPLICATION LOGIN PASSWORD 'repl_password';
 EOF
 
-# Edit /etc/postgresql/14/main/postgresql.conf
-sudo tee -a /etc/postgresql/14/main/postgresql.conf << EOF
+# Edit /etc/postgresql/17/main/postgresql.conf
+sudo tee -a /etc/postgresql/17/main/postgresql.conf << EOF
 # Replication settings
 wal_level = replica
 max_wal_senders = 3
@@ -177,8 +177,8 @@ wal_keep_size = 64
 hot_standby = on
 EOF
 
-# Edit /etc/postgresql/14/main/pg_hba.conf
-sudo tee -a /etc/postgresql/14/main/pg_hba.conf << EOF
+# Edit /etc/postgresql/17/main/pg_hba.conf
+sudo tee -a /etc/postgresql/17/main/pg_hba.conf << EOF
 # Replication connections
 host    replication     replicator      192.168.1.11/32         scram-sha-256
 EOF
@@ -194,10 +194,10 @@ sudo systemctl restart postgresql
 sudo systemctl stop postgresql
 
 # Remove data directory
-sudo rm -rf /var/lib/postgresql/14/main
+sudo rm -rf /var/lib/postgresql/17/main
 
 # Create base backup from primary
-sudo -u postgres pg_basebackup -h 192.168.1.10 -D /var/lib/postgresql/14/main \
+sudo -u postgres pg_basebackup -h 192.168.1.10 -D /var/lib/postgresql/17/main \
   -U replicator -P -v -R -X stream -C -S standby1
 
 # Start PostgreSQL
@@ -250,8 +250,8 @@ bootstrap:
 postgresql:
   listen: 0.0.0.0:5432
   connect_address: 192.168.1.10:5432
-  data_dir: /var/lib/postgresql/14/main
-  bin_dir: /usr/lib/postgresql/14/bin
+  data_dir: /var/lib/postgresql/17/main
+  bin_dir: /usr/lib/postgresql/17/bin
   authentication:
     replication:
       username: replicator
@@ -345,8 +345,8 @@ backend api_backend
     balance roundrobin
     option httpchk GET /health
     http-check expect status 200
-    server pbx1 192.168.1.10:8080 check inter 10s
-    server pbx2 192.168.1.11:8080 check inter 10s
+    server pbx1 192.168.1.10:9000 check inter 10s
+    server pbx2 192.168.1.11:9000 check inter 10s
 
 # Stats page
 listen stats
@@ -597,8 +597,8 @@ sudo -u postgres psql -c "SELECT pg_is_in_recovery();"
 # Should return 'f' (false) on new primary
 
 # Verify PBX nodes reconnected
-curl http://192.168.1.10:8080/health
-curl http://192.168.1.11:8080/health
+curl http://192.168.1.10:9000/health
+curl http://192.168.1.11:9000/health
 ```
 
 **Test PBX Node Failover**:
@@ -806,7 +806,7 @@ nc -zv 192.168.1.11 5060
 for node in node1 node2 node3; do
   ssh $node "cd /opt/PBX && git pull && sudo systemctl restart pbx"
   sleep 60
-  curl http://$node:8080/health || exit 1
+  curl http://$node:9000/health || exit 1
 done
 ```
 

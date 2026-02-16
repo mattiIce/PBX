@@ -33,7 +33,7 @@ class BenchmarkResults:
 class PerformanceBenchmark:
     """Run performance benchmarks on PBX system."""
 
-    def __init__(self, api_url: str = "http://localhost:8080"):
+    def __init__(self, api_url: str = "http://localhost:9000"):
         """
         Initialize benchmark.
 
@@ -445,7 +445,7 @@ class PerformanceBenchmark:
 def main():
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Run PBX performance benchmarks")
-    parser.add_argument("--api-url", default="http://localhost:8080", help="PBX API URL")
+    parser.add_argument("--api-url", default="http://localhost:9000", help="PBX API URL")
     parser.add_argument("--format", choices=["text", "json"], default="text", help="Output format")
     parser.add_argument("--save", help="Save results to file")
 

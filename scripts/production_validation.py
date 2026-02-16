@@ -33,7 +33,7 @@ class ProductionValidator:
         self.skip_integration = skip_integration
         self.results = {"passed": 0, "failed": 0, "skipped": 0, "tests": []}
         self.base_dir = Path(__file__).parent.parent
-        self.api_url = os.getenv("API_URL", "http://localhost:8080")
+        self.api_url = os.getenv("API_URL", "http://localhost:9000")
 
     def log(self, message: str, level: str = "info"):
         """Log a message."""

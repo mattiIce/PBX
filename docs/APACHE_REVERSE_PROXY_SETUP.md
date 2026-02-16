@@ -9,7 +9,7 @@ This guide explains how to configure Apache as a reverse proxy for the Warden Vo
 A reverse proxy provides several critical benefits:
 
 1. **SSL/TLS Encryption** - Secure HTTPS connections with automated certificate management
-2. **Professional URLs** - Use `https://pbx.yourcompany.com` instead of `http://ip-address:8080`
+2. **Professional URLs** - Use `https://pbx.yourcompany.com` instead of `http://ip-address:9000`
 3. **Enhanced Security** - Hide the backend application from direct internet access
 4. **Centralized Access Control** - Manage authentication and authorization in one place
 5. **Load Balancing** - Distribute traffic across multiple backend servers (if needed)
@@ -19,7 +19,7 @@ A reverse proxy provides several critical benefits:
 - Ubuntu 24.04 LTS (or similar Linux distribution with Apache support)
 - Root/sudo access to the server
 - Domain name configured to point to your server's IP address
-- PBX system installed and running (typically on port 8080 or 9000)
+- PBX system installed and running (on port 9000)
 - Firewall configured to allow ports 80 and 443
 
 ## Quick Setup (Recommended)
@@ -48,7 +48,7 @@ The script will:
 The script will ask for:
 - **Domain name** (e.g., `pbx.yourcompany.com`)
 - **Email address** (for SSL certificate notifications)
-- **Backend port** (default: 8080, or 9000 if using the alternative port)
+- **Backend port** (default: 9000)
 
 ## Manual Setup
 
@@ -126,12 +126,12 @@ Copy the example configuration from `apache-pbx.conf.example` in the repository 
     # WebSocket support for WebRTC
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
-    RewriteRule ^/(.*)$ ws://localhost:8080/$1 [P,L]
+    RewriteRule ^/(.*)$ ws://localhost:9000/$1 [P,L]
 
     # Main proxy to PBX backend
     <Location />
-        ProxyPass http://localhost:8080/
-        ProxyPassReverse http://localhost:8080/
+        ProxyPass http://localhost:9000/
+        ProxyPassReverse http://localhost:9000/
         RequestHeader set X-Forwarded-Proto "https"
         RequestHeader set X-Real-IP %{REMOTE_ADDR}s
     </Location>
@@ -144,7 +144,7 @@ Copy the example configuration from `apache-pbx.conf.example` in the repository 
 **Important**: Replace the following placeholders:
 - `pbx.yourcompany.com` - Your actual domain name
 - `admin@yourcompany.com` - Your email address
-- `8080` - Your PBX backend port (use 9000 if that's your configured port)
+- `9000` - Your PBX backend port
 
 ### Step 3: Enable the Site
 
@@ -247,7 +247,7 @@ If you get "404 Not Found" errors when accessing admin pages:
    ```bash
    sudo systemctl status pbx
    # Check if PBX is listening on the backend port
-   sudo netstat -tlnp | grep 8080
+   sudo netstat -tlnp | grep 9000
    ```
 
 2. **Check Apache proxy configuration**:
@@ -268,7 +268,7 @@ If you get "404 Not Found" errors when accessing admin pages:
 
 4. **Test direct access to PBX**:
    ```bash
-   curl http://localhost:8080/admin/status-check.html
+   curl http://localhost:9000/admin/status-check.html
    ```
    If this works but the proxied version doesn't, there's a proxy configuration issue.
 
@@ -286,7 +286,7 @@ If the WebRTC phone in the admin panel doesn't work:
    ```apache
    RewriteEngine On
    RewriteCond %{HTTP:Upgrade} =websocket [NC]
-   RewriteRule ^/(.*)$ ws://localhost:8080/$1 [P,L]
+   RewriteRule ^/(.*)$ ws://localhost:9000/$1 [P,L]
    ```
 
 3. **Check browser console** for WebSocket connection errors
@@ -300,7 +300,7 @@ If the WebRTC phone in the admin panel doesn't work:
 
 2. **Limit Backend Access**
    - Configure PBX to listen only on localhost (127.0.0.1)
-   - Never expose PBX port (8080/9000) directly to the internet
+   - Never expose PBX port (9000) directly to the internet
 
 3. **Enable Rate Limiting**
    - Install `libapache2-mod-qos` for advanced rate limiting

@@ -29,9 +29,9 @@ This guide covers all known issues, solutions, and troubleshooting procedures fo
 | Phones won't register | `sudo ufw allow 5060/udp` | [Registration](#registration--connectivity) |
 | Admin panel login fails | `Ctrl+Shift+R` then check `systemctl status pbx` | [Admin Panel](#admin-panel-issues) |
 | ERR_SSL_PROTOCOL_ERROR | Set `api.ssl.enabled: false` in config.yml | [Admin Panel](#err_ssl_protocol_error-with-reverse-proxy) |
-| Email not sending | `python scripts/test_email.py` | [Integration Problems](#integration-problems) |
+| Email not sending | `python -c "import smtplib; s=smtplib.SMTP('localhost'); s.quit(); print('OK')"` | [Integration Problems](#integration-problems) |
 | Database errors | `python scripts/verify_database.py` | [Database Issues](#database-issues) |
-| Voice prompts missing | `python scripts/generate_voice_prompts.py` | [Audio Issues](#audio-issues) |
+| Voice prompts missing | `python scripts/generate_tts_prompts.py` | [Audio Issues](#audio-issues) |
 | Phone won't provision | Check DHCP Option 66 or manual server | [Phone Provisioning](#phone-provisioning) |
 | High CPU usage | Check active calls, restart service | [Performance](#performance--monitoring) |
 
@@ -122,14 +122,14 @@ All voicemail and auto attendant prompts have been regenerated at the correct 8k
 **If Issues Persist:**
 ```bash
 # Regenerate audio prompts at correct sample rate
-python scripts/generate_voice_prompts.py
+python scripts/generate_tts_prompts.py
 
 # Verify generated files
 file voicemail_prompts/*.wav
 # Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 8 bit, mono 8000 Hz"
 
 # Check auto-attendant prompts
-file auto_attendant/prompts/*.wav
+file auto_attendant/*.wav
 ```
 
 **Additional Verification:**
@@ -157,23 +157,23 @@ sudo systemctl restart pbx
 ```bash
 # Check if prompts exist
 ls -lh voicemail_prompts/
-ls -lh auto_attendant/prompts/
+ls -lh auto_attendant/
 
 # Generate if missing
-python scripts/generate_voice_prompts.py
+python scripts/generate_tts_prompts.py
 
 # Verify files were created
 ls -lh voicemail_prompts/*.wav
-ls -lh auto_attendant/prompts/*.wav
+ls -lh auto_attendant/*.wav
 ```
 
 **2. Incorrect File Permissions:**
 ```bash
 # Fix permissions
 sudo chown -R pbx:pbx voicemail_prompts/
-sudo chown -R pbx:pbx auto_attendant/prompts/
+sudo chown -R pbx:pbx auto_attendant/
 sudo chmod 644 voicemail_prompts/*.wav
-sudo chmod 644 auto_attendant/prompts/*.wav
+sudo chmod 644 auto_attendant/*.wav
 ```
 
 **3. Codec Encoding Issues:**
@@ -282,7 +282,7 @@ ping PBX_IP
 grep "number:" config.yml | sort | uniq -d
 
 # Clear any stale registrations
-curl -k https://localhost:8080/api/extensions
+curl -k https://localhost:9000/api/extensions
 ```
 
 ### Intermittent Registration Drops
@@ -345,7 +345,7 @@ sudo journalctl -u pbx -n 50
 **2. Verify API Accessibility:**
 ```bash
 # Test API endpoint
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 
 # Should return JSON with status information
 ```
@@ -358,16 +358,16 @@ curl -k https://localhost:8080/api/status
 
 **4. Verify Firewall:**
 ```bash
-sudo ufw status | grep 8080
+sudo ufw status | grep 9000
 
 # If not allowed:
-sudo ufw allow 8080/tcp
+sudo ufw allow 9000/tcp
 ```
 
 **5. Check Port Binding:**
 ```bash
 # Verify PBX is listening on correct port
-sudo netstat -tlnp | grep 8080
+sudo netstat -tlnp | grep 9000
 
 # Should show python/pbx process
 ```
@@ -511,7 +511,7 @@ Press Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac) for hard refresh
 
 **Diagnostic Page:**
 ```
-Visit: https://localhost:8080/admin/status-check.html
+Visit: https://localhost:9000/admin/status-check.html
 ```
 
 This page will:
@@ -571,7 +571,7 @@ python scripts/generate_ssl_cert.py --hostname YOUR_IP
 **Symptoms:**
 - Accessing admin pages returns: "Not Found - The requested URL was not found on this server."
 - Error message shows "Apache/2.4.58 (Ubuntu)" or similar
-- Direct access to PBX port works (e.g., http://localhost:8080/admin/)
+- Direct access to PBX port works (e.g., http://localhost:9000/admin/)
 
 **Root Cause:**
 Apache is serving requests directly without proxying to the PBX application. The admin files need to be accessed through a reverse proxy configuration.
@@ -602,8 +602,8 @@ Add minimal configuration:
     ProxyRequests Off
     
     <Location />
-        ProxyPass http://localhost:8080/
-        ProxyPassReverse http://localhost:8080/
+        ProxyPass http://localhost:9000/
+        ProxyPassReverse http://localhost:9000/
     </Location>
     
     ErrorLog ${APACHE_LOG_DIR}/pbx-error.log
@@ -646,7 +646,7 @@ curl http://your-domain.com/admin/status-check.html
 **1. Test SMTP Configuration:**
 ```bash
 # Run email test script
-python scripts/test_email.py
+python -c "import smtplib; s=smtplib.SMTP('localhost'); s.quit(); print('OK')"
 
 # Should show SMTP connection and send test
 ```
@@ -899,7 +899,7 @@ curl http://localhost:8888/provision/1001
 **1. Check Template Variables:**
 ```bash
 # View template
-cat provisioning_templates/yealink/t46s.cfg
+cat provisioning_templates/yealink_t46s.template
 
 # Verify variables are correct:
 # {EXTENSION}, {PASSWORD}, {SIP_SERVER}, etc.
@@ -957,7 +957,7 @@ curl http://localhost:8888/provision/1001?debug=true
 - Direct access to PBX on the correct port works fine
 
 **Root Cause:**
-When `api.port` in `config.yml` is changed from the default (8080), previously registered devices may have cached provisioning URLs with the old port. The phone requests `http://server:8080/provision/...` but the server now listens on port 9000.
+When `api.port` in `config.yml` is changed from a previous value (e.g., 8080), previously registered devices may have cached provisioning URLs with the old port. The phone requests `http://server:8080/provision/...` but the server now listens on port 9000.
 
 **Solution:**
 1. **Restart the PBX service** - URLs are automatically regenerated from current config on startup:
@@ -1046,7 +1046,7 @@ sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx_system TO pbx_use
 **6. Initialize Database:**
 ```bash
 # Run initialization script
-python scripts/init_voicemail_db.py
+python scripts/init_database.py
 
 # Should create tables
 ```
@@ -1074,7 +1074,7 @@ sudo -u postgres pg_dump pbx_system > /backup/pbx_backup.sql
 
 **2. Run Migration:**
 ```bash
-python scripts/migrate_database.py
+alembic upgrade head
 
 # Follow prompts
 ```
@@ -1087,7 +1087,7 @@ sudo -u postgres psql pbx_system -c "SELECT * FROM schema_version;"
 **4. Manual Table Creation:**
 ```bash
 # If specific table missing
-sudo -u postgres psql pbx_system < schema/create_table.sql
+alembic upgrade head
 ```
 
 ### Voicemail Database Issues
@@ -1101,7 +1101,7 @@ sudo -u postgres psql pbx_system < schema/create_table.sql
 
 **1. Initialize Voicemail Tables:**
 ```bash
-python scripts/init_voicemail_db.py
+python scripts/init_database.py
 
 # Creates voicemail_messages table
 ```
@@ -1191,7 +1191,7 @@ python main.py
 **7. Check Port Conflicts:**
 ```bash
 # Verify ports not in use
-sudo netstat -tlnp | grep -E "(5060|8080)"
+sudo netstat -tlnp | grep -E "(5060|9000)"
 
 # If in use, kill conflicting process or change PBX ports
 ```
@@ -1278,7 +1278,7 @@ sudo ufw status verbose
 
 # Should show:
 # 5060/udp ALLOW IN
-# 8080/tcp ALLOW IN
+# 9000/tcp ALLOW IN
 # 10000:20000/udp ALLOW IN
 ```
 
@@ -1288,7 +1288,7 @@ sudo ufw status verbose
 sudo ufw allow 5060/udp
 
 # Admin/API
-sudo ufw allow 8080/tcp
+sudo ufw allow 9000/tcp
 sudo ufw allow 443/tcp
 
 # RTP media
@@ -1300,14 +1300,14 @@ sudo ufw reload
 
 **3. Check IPTables (if using):**
 ```bash
-sudo iptables -L -n -v | grep -E "(5060|8080|10000)"
+sudo iptables -L -n -v | grep -E "(5060|9000|10000)"
 ```
 
 **4. Test Connectivity:**
 ```bash
 # From external host
 nc -u -v PBX_IP 5060  # SIP
-nc -v PBX_IP 8080     # HTTPS
+nc -v PBX_IP 9000     # HTTPS
 
 # Should connect
 ```
@@ -1348,7 +1348,7 @@ stun:
 # On router, forward these ports to PBX:
 # UDP 5060 (SIP)
 # UDP 10000-20000 (RTP)
-# TCP 8080 or 443 (HTTPS)
+# TCP 9000 or 443 (HTTPS)
 ```
 
 **4. Check NAT Type:**
@@ -1401,7 +1401,7 @@ grep -n ">>>>>>" config.yml
 **4. Use Example as Template:**
 ```bash
 # Compare with working example
-diff config.yml config.example.yml
+python -c "import yaml; yaml.safe_load(open('config.yml'))"
 ```
 
 **5. Test Minimal Config:**
@@ -1465,7 +1465,7 @@ sudo chown pbx:pbx .env
 
 **1. Check Active Calls:**
 ```bash
-curl -k https://localhost:8080/api/calls | jq '.'
+curl -k https://localhost:9000/api/calls | jq '.'
 
 # High call volume may be normal
 ```
@@ -1518,7 +1518,7 @@ watch -n 5 'ps aux | grep python | grep main.py'
 **2. Check Call Cleanup:**
 ```bash
 # Verify calls are properly ended
-curl -k https://localhost:8080/api/calls
+curl -k https://localhost:9000/api/calls
 
 # Stale calls indicate cleanup issue
 ```
@@ -1700,17 +1700,17 @@ MAX_QUANTIZATION_RANGE = 32768  # Corrected
 ```bash
 # Full system check
 sudo systemctl status pbx
-curl -k https://localhost:8080/api/status
+curl -k https://localhost:9000/api/status
 sudo ufw status
-sudo netstat -tlnp | grep -E "(5060|8080)"
+sudo netstat -tlnp | grep -E "(5060|9000)"
 python scripts/verify_database.py
 
 # Check logs for errors
 tail -f logs/pbx.log | grep -i error
 
 # Test basic functionality
-curl -k https://localhost:8080/api/extensions
-curl -k https://localhost:8080/api/calls
+curl -k https://localhost:9000/api/extensions
+curl -k https://localhost:9000/api/calls
 
 # Monitor real-time activity
 tail -f logs/pbx.log

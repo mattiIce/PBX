@@ -150,7 +150,7 @@ mobile.send_push_notification(
 
 ### Register Mobile Device
 ```bash
-POST /api/framework/mobile-apps/register
+POST /api/mobile-push/register
 {
   "extension": "1001",
   "platform": "ios",
@@ -165,12 +165,12 @@ POST /api/framework/mobile-apps/register
 
 ### Get SIP Configuration
 ```bash
-GET /api/framework/mobile-apps/sip-config/{device_id}
+GET /api/mobile-push/devices/{user_id}
 ```
 
 ### Send Push Notification
 ```bash
-POST /api/framework/mobile-apps/push
+POST /api/mobile-push/test
 {
   "device_id": "device-123",
   "type": "incoming_call",
@@ -183,12 +183,12 @@ POST /api/framework/mobile-apps/push
 
 ### List Devices for Extension
 ```bash
-GET /api/framework/mobile-apps/devices/{extension}
+GET /api/mobile-push/devices/{user_id}
 ```
 
 ### Unregister Device
 ```bash
-DELETE /api/framework/mobile-apps/device/{device_id}
+DELETE /api/mobile-push/device/{device_id}
 ```
 
 ## iOS App Integration

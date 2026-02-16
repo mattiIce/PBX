@@ -1527,7 +1527,7 @@ async function loadConfig() {
             // Server Info (Read-Only)
             if (config.server) {
                 document.getElementById('config-sip-port').value = config.server.sip_port || 5060;
-                document.getElementById('config-api-port').value = config.api?.port || 8080;
+                document.getElementById('config-api-port').value = config.api?.port || 9000;
                 document.getElementById('config-external-ip').value = config.server.external_ip || '';
                 document.getElementById('config-server-name').value = config.server.server_name || '';
 
@@ -2746,7 +2746,7 @@ async function loadPhonebookSettings() {
         if (response.ok) {
             const data = await response.json();
             const serverIP = data.server_ip || window.location.hostname;
-            const port = data.api_port || '8080';
+            const port = data.api_port || '9000';
             const protocol = window.location.protocol; // Use current protocol (http: or https:)
 
             // Pre-populate remote phonebook URL
@@ -2787,7 +2787,7 @@ function toggleProvisioningEnabled() {
 
 function updateProvisioningUrlFormat() {
     const serverIP = document.getElementById('provisioning-server-ip').value || 'SERVER';
-    const port = document.getElementById('provisioning-port').value || '8080';
+    const port = document.getElementById('provisioning-port').value || '9000';
     const protocol = window.location.protocol; // Use current protocol (http: or https:)
     const urlFormat = `${protocol}//${serverIP}:${port}/provision/{mac}.cfg`;
     document.getElementById('provisioning-url-format').value = urlFormat;
@@ -2831,7 +2831,7 @@ function toggleRemotePhonebookSettings() {
     if (enabled) {
         // Auto-populate remote phonebook URL based on server settings
         const serverIP = document.getElementById('provisioning-server-ip').value || window.location.hostname;
-        const port = document.getElementById('provisioning-port').value || '8080';
+        const port = document.getElementById('provisioning-port').value || '9000';
         const protocol = window.location.protocol; // Use current protocol (http: or https:)
         document.getElementById('remote-phonebook-url').value = `${protocol}//${serverIP}:${port}/api/phone-book/export/xml`;
     }

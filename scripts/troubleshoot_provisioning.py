@@ -80,7 +80,7 @@ def check_config():
         return False
 
 
-def check_api_connectivity(host="localhost", port=8080):
+def check_api_connectivity(host="localhost", port=9000):
     """Check if API server is accessible"""
     print_section("API Connectivity Check")
 
@@ -107,7 +107,7 @@ def check_api_connectivity(host="localhost", port=8080):
         return False
 
 
-def get_diagnostics(host="localhost", port=8080):
+def get_diagnostics(host="localhost", port=9000):
     """Get provisioning diagnostics from API"""
     print_section("Provisioning Diagnostics")
 
@@ -149,7 +149,7 @@ def get_diagnostics(host="localhost", port=8080):
         return None
 
 
-def get_recent_requests(host="localhost", port=8080, limit=10):
+def get_recent_requests(host="localhost", port=9000, limit=10):
     """Get recent provisioning requests"""
     print_section(f"Recent Provisioning Requests (last {limit})")
 
@@ -197,7 +197,7 @@ def get_recent_requests(host="localhost", port=8080, limit=10):
         return []
 
 
-def test_mac_lookup(mac_address, host="localhost", port=8080):
+def test_mac_lookup(mac_address, host="localhost", port=9000):
     """Test if a specific MAC address is registered"""
     print_section(f"Testing MAC Address: {mac_address}")
 
@@ -244,7 +244,7 @@ def test_mac_lookup(mac_address, host="localhost", port=8080):
         return False
 
 
-def test_config_download(mac_address, host="localhost", port=8080):
+def test_config_download(mac_address, host="localhost", port=9000):
     """Test downloading config for a MAC address"""
     print_section(f"Testing Config Download for: {mac_address}")
 
@@ -282,14 +282,14 @@ def print_network_recommendations():
     print("\n1. Check Network Connectivity:")
     print("   - Ensure phones can reach the PBX server IP address")
     print("   - Test with: ping <pbx-server-ip> from phone's network")
-    print("   - Verify firewall allows access to port 8080")
+    print("   - Verify firewall allows access to port 9000")
 
 
 def print_phone_config_recommendations():
     """Print phone configuration recommendations"""
     print("\n2. Verify Phone Configuration:")
     print("   - Check phone's provisioning URL setting")
-    print("   - URL format: https://<pbx-ip>:8080/provision/$mac.cfg")
+    print("   - URL format: https://<pbx-ip>:9000/provision/$mac.cfg")
     print("   - Some phones use $MA instead of $mac")
     print("   - Ensure phone is using DHCP Option 66 OR manual URL")
 
@@ -297,7 +297,7 @@ def print_phone_config_recommendations():
 def print_device_registration_recommendations():
     """Print device registration recommendations"""
     print("\n3. Check Device Registration:")
-    print("   - Use: curl https://localhost:8080/api/provisioning/devices")
+    print("   - Use: curl https://localhost:9000/api/provisioning/devices")
     print("   - Register devices with POST /api/provisioning/devices")
     print("   - Ensure MAC address format matches (phone may use different format)")
     print("   - Note: System automatically triggers phone reboot after registration")
@@ -315,7 +315,7 @@ def print_manual_test_recommendations():
     """Print manual testing recommendations"""
     print("\n5. Test Manually:")
     print("   - Get MAC address from phone (usually in phone menu: Status → Network)")
-    print("   - Test URL: curl https://<pbx-ip>:8080/provision/<mac>.cfg")
+    print("   - Test URL: curl https://<pbx-ip>:9000/provision/<mac>.cfg")
     print("   - If successful, issue is with phone configuration")
     print("   - If failed, issue is with PBX device registration")
 
@@ -325,7 +325,7 @@ def print_common_issues():
     print("\n6. Common Issues:")
     print("   - Wrong MAC address format (use : or - or no separator)")
     print("   - Phone not on same network as PBX")
-    print("   - Firewall blocking port 8080")
+    print("   - Firewall blocking port 9000")
     print("   - server.external_ip set to 127.0.0.1 (should be actual IP)")
     print("   - Device not registered in provisioning system")
     print("   - Wrong vendor/model in device registration")
@@ -359,7 +359,7 @@ def main():
 
     # Parse command line arguments
     host = "localhost"
-    port = 8080
+    port = 9000
     mac_address = None
 
     if len(sys.argv) > 1:
@@ -369,12 +369,12 @@ Usage: python troubleshoot_provisioning.py [OPTIONS]
 
 Options:
   --host HOST          API host (default: localhost)
-  --port PORT          API port (default: 8080)
+  --port PORT          API port (default: 9000)
   --mac MAC_ADDRESS    Test specific MAC address
 
 Examples:
   python troubleshoot_provisioning.py
-  python troubleshoot_provisioning.py --host 192.168.1.100 --port 8080
+  python troubleshoot_provisioning.py --host 192.168.1.100 --port 9000
   python troubleshoot_provisioning.py --mac 00:15:65:12:34:56
 """)
             return

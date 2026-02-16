@@ -185,7 +185,7 @@ def main():
         print()
         print("  2. Test the admin interface:")
         print("     python main.py")
-        print("     Open https://localhost:8080/admin/")
+        print("     Open https://localhost:9000/admin/")
         print()
         print("  3. OPTIONAL: Backup and clean up config.yml")
         print("     - Extensions will now be loaded from database")

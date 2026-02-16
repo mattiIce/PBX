@@ -38,7 +38,7 @@ def _get_provisioning_url_info() -> tuple[str, str, Any, str]:
     """
     pbx_core = get_pbx_core()
     if not pbx_core:
-        return "http", "192.168.1.14", 8080, "http://192.168.1.14:8080"
+        return "http", "192.168.1.14", 9000, "http://192.168.1.14:9000"
 
     ssl_enabled = pbx_core.config.get("api.ssl.enabled", False)
     protocol = "https" if ssl_enabled else "http"

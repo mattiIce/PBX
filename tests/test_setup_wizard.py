@@ -14,7 +14,8 @@ from pathlib import Path
 from unittest.mock import Mock, patch
 
 
-# Import the setup wizard
+# Import the setup wizard from scripts/
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from setup_ubuntu import SetupWizard
 
 

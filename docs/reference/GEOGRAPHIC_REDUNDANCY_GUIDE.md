@@ -124,7 +124,7 @@ history = geo.get_failover_history()
 
 #### Register Region
 ```bash
-POST /api/framework/geographic-redundancy/region
+POST /api/framework/geo-redundancy/region
 {
   "name": "us-east-1",
   "trunk_id": "trunk-us-east",
@@ -137,7 +137,7 @@ POST /api/framework/geographic-redundancy/region
 
 #### Get Active Region
 ```bash
-GET /api/framework/geographic-redundancy/active-region
+GET /api/framework/geo-redundancy/active-region
 
 Response:
 {
@@ -151,7 +151,7 @@ Response:
 
 #### Manual Failover
 ```bash
-POST /api/framework/geographic-redundancy/failover
+POST /api/framework/geo-redundancy/failover
 {
   "target_region": "us-west-1",
   "reason": "Planned maintenance"
@@ -160,7 +160,7 @@ POST /api/framework/geographic-redundancy/failover
 
 #### Get Region Status
 ```bash
-GET /api/framework/geographic-redundancy/regions
+GET /api/framework/geo-redundancy/regions
 
 Response:
 {
@@ -185,7 +185,7 @@ Response:
 
 #### Get Failover History
 ```bash
-GET /api/framework/geographic-redundancy/failover-history?limit=10
+GET /api/framework/geo-redundancy/failover-history?limit=10
 
 Response:
 {
@@ -491,20 +491,20 @@ print(f"Test result: {test_result}")
 
 ```bash
 # 1. Simulate region failure
-POST /api/framework/geographic-redundancy/simulate-failure
+POST /api/framework/geo-redundancy/simulate-failure
 {
   "region": "us-east-1",
   "duration": 300  # 5 minutes
 }
 
 # 2. Observe automatic failover
-GET /api/framework/geographic-redundancy/active-region
+GET /api/framework/geo-redundancy/active-region
 
 # 3. Verify call routing to backup
 GET /api/calls
 
 # 4. End simulation
-POST /api/framework/geographic-redundancy/end-simulation
+POST /api/framework/geo-redundancy/end-simulation
 ```
 
 ## Compliance & Regulations
