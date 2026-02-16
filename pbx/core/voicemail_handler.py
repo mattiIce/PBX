@@ -463,7 +463,7 @@ class VoicemailHandler:
                     )
                 finally:
                     with contextlib.suppress(OSError):
-                        os.unlink(prompt_file)
+                        Path(prompt_file).unlink()
 
                 time.sleep(0.5)
                 pbx.logger.info("[VM IVR] Post-prompt pause complete, checking call state...")
@@ -634,7 +634,7 @@ class VoicemailHandler:
                                 pbx.logger.info(f"[VM IVR] ✓ Prompt '{prompt_type}' played")
                             finally:
                                 try:
-                                    os.unlink(prompt_file)
+                                    Path(prompt_file).unlink()
                                 except OSError:
                                     pass  # File already deleted or doesn't exist
 
@@ -666,7 +666,7 @@ class VoicemailHandler:
                                 player.play_file(prompt_file)
                             finally:
                                 try:
-                                    os.unlink(prompt_file)
+                                    Path(prompt_file).unlink()
                                 except OSError:
                                     pass  # File already deleted or doesn't exist
 
@@ -695,7 +695,7 @@ class VoicemailHandler:
                                 player.play_file(beep_file)
                             finally:
                                 with contextlib.suppress(OSError):
-                                    os.unlink(beep_file)
+                                    Path(beep_file).unlink()
 
                             time.sleep(0.2)
 
@@ -781,7 +781,7 @@ class VoicemailHandler:
                                             player.play_file(prompt_file)
                                         finally:
                                             with contextlib.suppress(OSError):
-                                                os.unlink(prompt_file)
+                                                Path(prompt_file).unlink()
                                     elif action.get("action") == "stop_recording":
                                         # Also valid, just log it
                                         pbx.logger.info(
@@ -819,7 +819,7 @@ class VoicemailHandler:
                                     player.play_file(greeting_file)
                                 finally:
                                     with contextlib.suppress(OSError):
-                                        os.unlink(greeting_file)
+                                        Path(greeting_file).unlink()
 
                                 time.sleep(0.5)
 
@@ -835,7 +835,7 @@ class VoicemailHandler:
                                     player.play_file(prompt_file)
                                 finally:
                                     with contextlib.suppress(OSError):
-                                        os.unlink(prompt_file)
+                                        Path(prompt_file).unlink()
                             else:
                                 pbx.logger.warning(
                                     "No recorded greeting data available for playback"

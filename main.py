@@ -26,8 +26,8 @@ pbx = None
 shutdown_handler = None
 
 
-def signal_handler(sig, frame):
-    """Handle shutdown signal"""
+def signal_handler(sig: int, frame: object) -> None:
+    """Handle shutdown signal."""
     global running
     print("\nShutting down PBX system...")
     running = False

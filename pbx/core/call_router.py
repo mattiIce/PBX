@@ -497,7 +497,6 @@ class CallRouter:
         # Play voicemail greeting and beep tone to caller
         if call.caller_rtp:
             try:
-                import os
                 import tempfile
 
                 # Create RTP player to send audio to caller
@@ -550,7 +549,7 @@ class CallRouter:
                         # Clean up temp file only if we created one
                         if temp_file_created:
                             try:
-                                os.unlink(greeting_file)
+                                Path(greeting_file).unlink()
                             except (OSError, FileNotFoundError) as e:
                                 pbx.logger.debug(f"Could not delete temp greeting file: {e}")
 

@@ -74,7 +74,7 @@ function setupAutoRefresh(tabName: string): void {
                 }
             } catch (error: unknown) {
                 console.error(`Error during auto-refresh of ${tabName}:`, error);
-                if (error instanceof Error && error.message && error.message.includes('401')) {
+                if (error instanceof Error && error.message?.includes('401')) {
                     console.warn('Authentication error during auto-refresh - user may need to re-login');
                 }
             }

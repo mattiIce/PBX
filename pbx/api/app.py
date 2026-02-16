@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from flask import Flask
+from flask import Flask, Response
 
 from pbx.api.errors import register_error_handlers
 from pbx.utils.logger import get_logger
@@ -12,7 +12,7 @@ logger = get_logger()
 ADMIN_DIR = str(Path(__file__).resolve().parent.parent.parent / "admin")
 
 
-def create_app(pbx_core=None):
+def create_app(pbx_core: object | None = None) -> Flask:
     """Create and configure the Flask application.
 
     Args:
@@ -26,7 +26,7 @@ def create_app(pbx_core=None):
     app.config["ADMIN_DIR"] = ADMIN_DIR
 
     @app.after_request
-    def add_security_headers(response):
+    def add_security_headers(response: Response) -> Response:
         response.headers["Access-Control-Allow-Origin"] = "*"
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
         response.headers["Access-Control-Allow-Headers"] = "Content-type, Authorization"
@@ -52,7 +52,7 @@ def create_app(pbx_core=None):
     return app
 
 
-def _register_blueprints(app):
+def _register_blueprints(app: Flask) -> None:
     """Register all route Blueprints."""
     from pbx.api.routes.auth import auth_bp
     from pbx.api.routes.calls import calls_bp

@@ -407,7 +407,7 @@ class OutlookIntegration:
         minutes_before: int = 5,
         pbx_core: object | None = None,
         extension_number: str | None = None,
-    ):
+    ) -> bool:
         """
         Send a phone notification for upcoming meeting
 

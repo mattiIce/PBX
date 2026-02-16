@@ -33,7 +33,7 @@ class DatabaseBackend:
     Provides unified interface for database operations
     """
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize database backend
 
@@ -142,7 +142,7 @@ class DatabaseBackend:
             self.logger.error(f"✗ SQLite connection failed: {e}")
             return False
 
-    def disconnect(self):
+    def disconnect(self) -> None:
         """Disconnect from database"""
         if self.connection:
             self.connection.close()
@@ -407,7 +407,7 @@ class DatabaseBackend:
             result = result.replace(placeholder, value)
         return result
 
-    def create_tables(self):
+    def create_tables(self) -> bool:
         """Create database tables if they don't exist"""
         if not self.enabled:
             return False
@@ -654,7 +654,7 @@ class DatabaseBackend:
 
         return success
 
-    def _migrate_schema(self):
+    def _migrate_schema(self) -> None:
         """
         Migrate database schema to add new columns
         Safe migrations that handle existing columns gracefully
@@ -798,7 +798,7 @@ class DatabaseBackend:
 
         self.logger.info("Schema migration check complete")
 
-    def _apply_framework_migrations(self):
+    def _apply_framework_migrations(self) -> None:
         """Apply framework feature migrations"""
         try:
             from pbx.utils.migrations import MigrationManager, register_all_migrations

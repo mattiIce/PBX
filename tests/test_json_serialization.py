@@ -44,8 +44,8 @@ def test_registered_phones_json_serialization() -> None:
             "extension_number": "1001",
             "user_agent": "Yealink SIP-T46S",
             "ip_address": "192.168.1.100",
-            "first_registered": datetime(2025, 12, 5, 14, 0, 0),
-            "last_registered": datetime(2025, 12, 5, 14, 30, 0),
+            "first_registered": datetime(2025, 12, 5, 14, 0, 0, tzinfo=UTC),
+            "last_registered": datetime(2025, 12, 5, 14, 30, 0, tzinfo=UTC),
             "contact_uri": "<sip:1001@192.168.1.100:5060>",
         },
         {
@@ -54,8 +54,8 @@ def test_registered_phones_json_serialization() -> None:
             "extension_number": "1002",
             "user_agent": "Cisco SPA504G",
             "ip_address": "192.168.1.101",
-            "first_registered": datetime(2025, 12, 5, 13, 0, 0),
-            "last_registered": datetime(2025, 12, 5, 14, 15, 0),
+            "first_registered": datetime(2025, 12, 5, 13, 0, 0, tzinfo=UTC),
+            "last_registered": datetime(2025, 12, 5, 14, 15, 0, tzinfo=UTC),
             "contact_uri": "<sip:1002@192.168.1.101:5060>",
         },
     ]
@@ -67,7 +67,7 @@ def test_registered_phones_json_serialization() -> None:
     parsed = json.loads(json_str)
     assert len(parsed) == 2, "Should have 2 phones"
     assert parsed[0]["extension_number"] == "1001", "First phone extension should match"
-    assert parsed[0]["first_registered"] == "2025-12-05T14:00:00", (
+    assert parsed[0]["first_registered"] == "2025-12-05T14:00:00+00:00", (
         "First phone timestamp should be ISO format"
     )
     assert parsed[1]["extension_number"] == "1002", "Second phone extension should match"

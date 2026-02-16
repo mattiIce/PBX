@@ -51,13 +51,13 @@ export async function loadConfig(): Promise<void> {
             const featureIds = [
                 'call-recording', 'call-transfer', 'call-hold', 'conference',
                 'voicemail', 'call-parking', 'call-queues', 'presence',
-                'music-on-hold', 'auto-attendant'
-            ];
-            featureIds.forEach(id => {
+                'music-on-hold', 'auto-attendant',
+            ] as const;
+            for (const id of featureIds) {
                 const el = document.getElementById(`feature-${id}`) as HTMLInputElement | null;
                 const key = id.replace(/-/g, '_');
-                if (el) el.checked = config.features![key] || false;
-            });
+                if (el) el.checked = config.features[key] ?? false;
+            }
         }
 
         // Populate other config sections
@@ -82,10 +82,10 @@ export async function loadFeaturesStatus(): Promise<void> {
         const data: FeaturesResponse = await response.json();
 
         if (data.features) {
-            Object.entries(data.features).forEach(([key, enabled]) => {
+            for (const [key, enabled] of Object.entries(data.features)) {
                 const el = document.getElementById(`feature-${key.replace(/_/g, '-')}`) as HTMLInputElement | null;
                 if (el) el.checked = enabled;
-            });
+            }
         }
     } catch (error: unknown) {
         console.error('Error loading features status:', error);

@@ -1,5 +1,5 @@
 [build-system]
-requires = ["hatchling>=1.21"]
+requires = ["hatchling>=1.25"]
 build-backend = "hatchling.build"
 
 [project]
@@ -12,7 +12,7 @@ license = {text = "MIT"}
 authors = [
     {name = "Warden VoIP Contributors"}
 ]
-keywords = ["pbx", "voip", "sip", "telephony", "communication"]
+keywords = ["pbx", "voip", "sip", "telephony", "communication", "rtp"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Telecommunications Industry",
@@ -22,6 +22,8 @@ classifiers = [
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
     "Operating System :: POSIX :: Linux",
+    "Typing :: Typed",
+    "Framework :: Flask",
 ]
 
 dependencies = [
@@ -63,21 +65,23 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest>=9.0.2",
-    "pytest-cov>=7.0.0",
+    "pytest>=8.3",
+    "pytest-cov>=6.0",
     "pytest-asyncio>=1.3.0",
     "pytest-timeout>=2.4.0",
     "pytest-mock>=3.15.1",
+    "pytest-xdist>=3.5",
 ]
 dev = [
-    "pbx[test]",
+    "warden-voip[test]",
     "ruff>=0.9",
-    "mypy>=1.19.1",
-    "pre-commit>=4.5.1",
-    "sphinx>=9.0.4",
-    "sphinx-rtd-theme>=3.1.0",
-    "ipython>=9.10.0",
+    "mypy>=1.15",
+    "pre-commit>=4.1",
+    "sphinx>=8.0",
+    "sphinx-rtd-theme>=3.0",
+    "ipython>=8.30",
     "ipdb>=0.13.13",
+    "pip-audit>=2.7",
 ]
 
 [project.scripts]
@@ -88,6 +92,7 @@ Homepage = "https://github.com/mattiIce/PBX"
 Documentation = "https://github.com/mattiIce/PBX/blob/main/README.md"
 Repository = "https://github.com/mattiIce/PBX"
 Issues = "https://github.com/mattiIce/PBX/issues"
+Changelog = "https://github.com/mattiIce/PBX/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["pbx"]
@@ -111,6 +116,7 @@ extend-exclude = [
     "recordings",
     "voicemail",
     "cdr",
+    "node_modules",
 ]
 
 [tool.ruff.lint]
@@ -138,6 +144,8 @@ select = [
     "ERA",    # eradicate (commented-out code)
     "PL",     # pylint rules
     "PERF",   # perflint
+    "FURB",   # refurb - modernization suggestions
+    "LOG",    # flake8-logging
     "RUF",    # ruff-specific rules
 ]
 ignore = [
@@ -177,6 +185,7 @@ indent-style = "space"
 skip-magic-trailing-comma = false
 line-ending = "lf"
 docstring-code-format = true
+docstring-code-line-length = 80
 
 # =============================================================================
 # Mypy
@@ -186,6 +195,7 @@ python_version = "3.13"
 mypy_path = "."
 namespace_packages = true
 explicit_package_bases = true
+enable_error_code = ["ignore-without-code", "redundant-cast", "truthy-bool"]
 
 # Strict typing
 disallow_untyped_calls = true
@@ -243,16 +253,22 @@ ignore_errors = true
 # =============================================================================
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "-ra -q --strict-markers"
+addopts = "-ra -q --strict-markers --strict-config"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+filterwarnings = [
+    "error",
+    "ignore::DeprecationWarning:twisted.*",
+    "ignore::DeprecationWarning:sqlalchemy.*",
+]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "integration: marks tests as integration tests",
     "unit: marks tests as unit tests",
 ]
+xfail_strict = true
 
 # =============================================================================
 # Coverage
@@ -263,6 +279,7 @@ omit = [
     "*/tests/*",
     "*/test_*",
     "*/__pycache__/*",
+    "*/migrations/*",
 ]
 branch = true
 parallel = true
@@ -271,6 +288,7 @@ parallel = true
 precision = 2
 show_missing = true
 skip_covered = false
+fail_under = 70
 exclude_lines = [
     "pragma: no cover",
     "def __repr__",
@@ -279,6 +297,12 @@ exclude_lines = [
     "if __name__ == .__main__.:",
     "if TYPE_CHECKING:",
     "@abstractmethod",
+    "@overload",
+    "\\.\\.\\.",
+]
+exclude_also = [
+    "class .*\\bProtocol\\):",
+    "if sys.version_info",
 ]
 
 [tool.coverage.html]
