@@ -26,7 +26,7 @@ except ImportError as exc:
 class PBXMetricsExporter:
     """Export PBX metrics in Prometheus format."""
 
-    def __init__(self, registry: CollectorRegistry = None):
+    def __init__(self, registry: CollectorRegistry | None = None) -> None:
         """
         Initialize metrics exporter.
 

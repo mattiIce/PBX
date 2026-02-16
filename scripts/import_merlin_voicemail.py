@@ -44,7 +44,7 @@ from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 
 
-def parse_csv_metadata(csv_path):
+def parse_csv_metadata(csv_path: str) -> tuple[list[dict], dict[str, str]]:
     """
     Parse voicemail metadata from CSV file
 
@@ -111,7 +111,7 @@ def parse_csv_metadata(csv_path):
     return messages, pins
 
 
-def parse_json_metadata(json_path):
+def parse_json_metadata(json_path: str) -> tuple[list[dict], dict[str, str]]:
     """
     Parse voicemail metadata from JSON file
 
@@ -166,7 +166,7 @@ def parse_json_metadata(json_path):
     return messages, pins
 
 
-def parse_filename_metadata(audio_dir):
+def parse_filename_metadata(audio_dir: str) -> tuple[list[dict], dict]:
     """
     Parse voicemail metadata from WAV filenames in directory structure
 
@@ -225,7 +225,7 @@ def parse_filename_metadata(audio_dir):
     return messages, {}
 
 
-def parse_pins_csv(csv_path):
+def parse_pins_csv(csv_path: str) -> dict[str, str]:
     """
     Parse voicemail PINs from CSV file
 

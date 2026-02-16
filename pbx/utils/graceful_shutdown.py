@@ -231,7 +231,7 @@ class ConnectionRetry:
                 retry.handle_error(e)
     """
 
-    def __init__(self, max_retries: int = 5, base_delay: float = 1.0, max_delay: float = 60.0):
+    def __init__(self, max_retries: int = 5, base_delay: float = 1.0, max_delay: float = 60.0) -> None:
         """
         Initialize retry handler.
 
@@ -246,12 +246,12 @@ class ConnectionRetry:
         self.attempt = 0
         self.last_error = None
 
-    def __iter__(self):
+    def __iter__(self) -> "ConnectionRetry":
         """Make this object iterable."""
         self.attempt = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> int:
         """Get next retry attempt."""
         if self.attempt >= self.max_retries:
             if self.last_error:
@@ -269,7 +269,7 @@ class ConnectionRetry:
         self.attempt += 1
         return self.attempt
 
-    def handle_error(self, error: Exception):
+    def handle_error(self, error: Exception) -> None:
         """
         Handle an error from a retry attempt.
 
@@ -280,7 +280,7 @@ class ConnectionRetry:
         logger.warning(f"Attempt {self.attempt} failed: {error}")
 
 
-def with_retry(func: Callable, max_retries: int = 3, on_error: Callable | None = None):
+def with_retry(func: Callable, max_retries: int = 3, on_error: Callable | None = None) -> object:
     """
     Decorator or wrapper for retrying a function with exponential backoff.
 

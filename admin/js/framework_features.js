@@ -319,7 +319,7 @@ function loadClickToDialTab() {
         fetch('/api/framework/click-to-dial/configs')
             .then(r => r.json())
             .then(data => {
-                displayClickToDialConfigs(data.configs || []);
+                displayClickToDialConfigs(data.configs ?? []);
             })
             .catch(err => {
                 const errorContainer = document.getElementById('click-to-dial-configs-list');
@@ -381,7 +381,7 @@ function viewClickToDialHistory(extension) {
     fetch(`/api/framework/click-to-dial/history/${extension}`)
         .then(r => r.json())
         .then(data => {
-            const history = data.history || [];
+            const history = data.history ?? [];
             const container = document.getElementById('click-to-dial-history');
 
             if (history.length === 0) {
@@ -495,7 +495,7 @@ function loadVideoRooms() {
     fetch('/api/framework/video-conference/rooms')
         .then(r => r.json())
         .then(data => {
-            displayVideoRooms(data.rooms || []);
+            displayVideoRooms(data.rooms ?? []);
         })
         .catch(err => {
             document.getElementById('video-rooms-list').innerHTML =
@@ -572,7 +572,7 @@ function showCreateRoomDialog() {
                 hideCreateRoomDialog();
                 loadVideoRooms();
             } else {
-                alert('Error creating room: ' + (result.error || 'Unknown error'));
+                alert(`Error creating room: ${result.error ?? 'Unknown error'}`);
             }
         })
         .catch(err => {
@@ -684,7 +684,7 @@ function loadConversationalAIStats() {
     fetch('/api/framework/conversational-ai/stats')
         .then(r => r.json())
         .then(data => {
-            const stats = data.statistics || {};
+            const stats = data.statistics ?? {};
             statsDiv.innerHTML = `
                 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
                     <div class="stat-card">
@@ -809,7 +809,7 @@ function loadPredictiveDialingCampaigns() {
     fetch('/api/framework/predictive-dialing/campaigns')
         .then(r => r.json())
         .then(data => {
-            const campaigns = data.campaigns || [];
+            const campaigns = data.campaigns ?? [];
             const container = document.getElementById('campaigns-list');
 
             if (campaigns.length === 0) {
@@ -861,7 +861,7 @@ function loadPredictiveDialingStats() {
     fetch('/api/framework/predictive-dialing/statistics')
         .then(r => r.json())
         .then(data => {
-            const stats = data.statistics || {};
+            const stats = data.statistics ?? {};
             document.getElementById('total-campaigns').textContent = stats.total_campaigns || 0;
             document.getElementById('active-campaigns').textContent = stats.active_campaigns || 0;
             document.getElementById('calls-today').textContent = stats.calls_today || 0;
@@ -962,7 +962,7 @@ function loadVoiceBiometricProfiles() {
     fetch('/api/framework/voice-biometrics/profiles')
         .then(r => r.json())
         .then(data => {
-            const profiles = data.profiles || [];
+            const profiles = data.profiles ?? [];
             const container = document.getElementById('biometric-profiles-list');
 
             if (profiles.length === 0) {
@@ -1012,10 +1012,10 @@ function loadVoiceBiometricStats() {
     fetch('/api/framework/voice-biometrics/statistics')
         .then(r => r.json())
         .then(data => {
-            const stats = data.statistics || {};
+            const stats = data.statistics ?? {};
             document.getElementById('enrolled-users').textContent = stats.enrolled_users || 0;
             document.getElementById('verifications-today').textContent = stats.verifications_today || 0;
-            document.getElementById('success-rate').textContent = (stats.success_rate || 0) + '%';
+            document.getElementById('success-rate').textContent = `${stats.success_rate ?? 0}%`;
             document.getElementById('fraud-attempts').textContent = stats.fraud_attempts || 0;
         })
         .catch(err => {
@@ -1361,7 +1361,7 @@ function loadCallTags() {
     fetch('/api/framework/call-tagging/tags')
         .then(r => r.json())
         .then(data => {
-            const tags = data.tags || [];
+            const tags = data.tags ?? [];
             const container = document.getElementById('tags-list');
 
             if (tags.length === 0) {
@@ -1394,7 +1394,7 @@ function loadTaggingRules() {
     fetch('/api/framework/call-tagging/rules')
         .then(r => r.json())
         .then(data => {
-            const rules = data.rules || [];
+            const rules = data.rules ?? [];
             const container = document.getElementById('tagging-rules-list');
 
             if (rules.length === 0) {
@@ -1443,7 +1443,7 @@ function loadTagStatistics() {
     fetch('/api/framework/call-tagging/statistics')
         .then(r => r.json())
         .then(data => {
-            const stats = data.statistics || {};
+            const stats = data.statistics ?? {};
             document.getElementById('total-tags').textContent = stats.total_tags || 0;
             document.getElementById('tagged-calls').textContent = stats.tagged_calls || 0;
             document.getElementById('active-rules').textContent = stats.active_rules || 0;
@@ -1579,8 +1579,8 @@ function loadMobileAppsStats() {
     fetch('/api/mobile-push/devices')
         .then(r => r.json())
         .then(data => {
-            const devices = data.devices || [];
-            const stats = data.statistics || {};
+            const devices = data.devices ?? [];
+            const stats = data.statistics ?? {};
 
             let html = `
                 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
@@ -1757,7 +1757,7 @@ function loadCallBlendingTab() {
     fetch('/api/framework/call-blending/agents')
         .then(r => r.json())
         .then(data => {
-            const agents = data.agents || [];
+            const agents = data.agents ?? [];
             const container = document.getElementById('blending-agents-list');
 
             if (agents.length === 0) {

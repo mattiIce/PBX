@@ -132,8 +132,8 @@ class IntegrationInstaller:
                 return "redhat"
         return system
 
-    def check_prerequisites(self):
-        """Check if system meets prerequisites"""
+    def check_prerequisites(self) -> bool:
+        """Check if system meets prerequisites."""
         self.log("Checking prerequisites...", "STEP")
 
         # Check if running as root
@@ -152,8 +152,8 @@ class IntegrationInstaller:
         self.log("Prerequisites check passed", "SUCCESS")
         return True
 
-    def install_ssl_certificates(self):
-        """Install SSL certificates for localhost"""
+    def install_ssl_certificates(self) -> bool:
+        """Install SSL certificates for localhost."""
         self.log("Setting up SSL certificates...", "STEP")
 
         cert_dir = self.base_path / "certs"
@@ -201,8 +201,8 @@ class IntegrationInstaller:
             self.log(f"Failed to generate SSL certificates: {e}", "ERROR")
             return False
 
-    def install_jitsi(self):
-        """Install Jitsi Meet"""
+    def install_jitsi(self) -> bool:
+        """Install Jitsi Meet."""
         self.log("Installing Jitsi Meet...", "STEP")
 
         # Check if already installed
@@ -261,8 +261,8 @@ class IntegrationInstaller:
             )
             return False
 
-    def install_matrix_synapse(self):
-        """Install Matrix Synapse"""
+    def install_matrix_synapse(self) -> bool:
+        """Install Matrix Synapse."""
         self.log("Installing Matrix Synapse...", "STEP")
 
         # Check if already installed
@@ -341,8 +341,8 @@ class IntegrationInstaller:
         )
         return False
 
-    def install_espocrm(self):
-        """Install EspoCRM"""
+    def install_espocrm(self) -> bool:
+        """Install EspoCRM."""
         self.log("Installing EspoCRM...", "STEP")
 
         # Check if already installed
@@ -564,8 +564,8 @@ class IntegrationInstaller:
         )
         return False
 
-    def install_all(self):
-        """Install all integrations"""
+    def install_all(self) -> bool:
+        """Install all integrations."""
         self.log("=" * 60, "INFO")
         self.log("PBX Integration Auto-Installer", "INFO")
         self.log("=" * 60, "INFO")
@@ -615,8 +615,8 @@ class IntegrationInstaller:
         return False
 
 
-def main():
-    """Main entry point"""
+def main() -> None:
+    """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Automatically install PBX integration services",
         formatter_class=argparse.RawDescriptionHelpFormatter,
