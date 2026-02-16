@@ -363,9 +363,10 @@ class CallTagging:
         if transcript:
             ai_tags = self._classify_with_ai(transcript)
             for tag, confidence in ai_tags:
-                if confidence >= self.min_confidence:
-                    if self.tag_call(call_id, tag, TagSource.AUTO, confidence):
-                        tags_added.append(tag)
+                if confidence >= self.min_confidence and self.tag_call(
+                    call_id, tag, TagSource.AUTO, confidence
+                ):
+                    tags_added.append(tag)
 
         # Metadata-based tagging
         if metadata:
@@ -869,9 +870,11 @@ class CallTagging:
                 return True
 
             # Check disposition condition
-            if "disposition" in conditions:
-                if metadata.get("disposition") == conditions["disposition"]:
-                    return True
+            if (
+                "disposition" in conditions
+                and metadata.get("disposition") == conditions["disposition"]
+            ):
+                return True
 
             # Check duration condition (in seconds)
             if "min_duration" in conditions:

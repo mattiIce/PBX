@@ -969,9 +969,7 @@ class MFAManager:
 
         # Check if user has MFA enabled
         if not self.is_enabled_for_user(extension_number):
-            if self.required:
-                return False  # MFA required but not enabled
-            return True  # MFA not required
+            return not self.required  # False if MFA required but not enabled
 
         try:
             # Try TOTP code first (Google Authenticator, Microsoft

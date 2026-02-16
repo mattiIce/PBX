@@ -101,6 +101,7 @@ def _encode_g722_with_ffmpeg(pcm_wav_path: str, output_file: str, sample_rate: i
             capture_output=True,
             text=True,
             timeout=30,
+            check=False,
         )
 
         if result.returncode != 0:

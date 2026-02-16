@@ -1102,10 +1102,9 @@ class AutoAttendant:
         # For submenu, check if there's a custom audio file in the menu record
         if prompt_type not in ["welcome", "main_menu", "invalid", "timeout", "transferring"]:
             menu = self.get_menu(prompt_type)
-            if menu and menu.get("audio_file"):
+            if menu and menu.get("audio_file") and Path(menu["audio_file"]).exists():
                 # Use custom audio file if specified
-                if Path(menu["audio_file"]).exists():
-                    return menu["audio_file"]
+                return menu["audio_file"]
 
         # Try to find recorded audio file first
         wav_file = Path(self.audio_path) / f"{prompt_type}.wav"

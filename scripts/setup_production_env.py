@@ -135,9 +135,11 @@ class EnvSetup:
         # Check required variables for PostgreSQL
         if "DB_HOST" in self.variables:  # Assume PostgreSQL if DB_HOST is set
             required = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"]
-            for var in required:
-                if var not in self.variables or not self.variables[var]:
-                    errors.append(f"Missing required variable: {var}")
+            errors.extend(
+                f"Missing required variable: {var}"
+                for var in required
+                if var not in self.variables or not self.variables[var]
+            )
 
         # Validate formats
         if "DB_PORT" in self.variables:

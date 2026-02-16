@@ -548,45 +548,45 @@ class VoicemailHandler:
                             and recorder.recorded_data
                             and len(recorder.recorded_data) > 0
                         ):
-                                # Collect last portion of audio for DTMF
-                                # detection
-                                recent_audio = b"".join(
-                                    recorder.recorded_data[-DTMF_DETECTION_PACKETS:]
-                                )
+                            # Collect last portion of audio for DTMF
+                            # detection
+                            recent_audio = b"".join(
+                                recorder.recorded_data[-DTMF_DETECTION_PACKETS:]
+                            )
 
-                                if (
-                                    len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF
-                                ):  # Need sufficient audio for DTMF
-                                    try:
-                                        # Detect DTMF in audio with error
-                                        # handling
-                                        digit = dtmf_detector.detect(recent_audio)
-                                    except Exception as e:
-                                        pbx.logger.error(f"Error detecting DTMF: {e}")
-                                        digit = None
+                            if (
+                                len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF
+                            ):  # Need sufficient audio for DTMF
+                                try:
+                                    # Detect DTMF in audio with error
+                                    # handling
+                                    digit = dtmf_detector.detect(recent_audio)
+                                except Exception as e:
+                                    pbx.logger.error(f"Error detecting DTMF: {e}")
+                                    digit = None
 
-                                    if digit:
-                                        # Debounce: ignore duplicate detections
-                                        # of same digit within debounce period
-                                        current_time: float = time.time()
-                                        if (
-                                            digit == last_detected_digit
-                                            and (current_time - last_detection_time)
-                                            < DTMF_DEBOUNCE_SECONDS
-                                        ):
-                                            # Same digit detected too soon,
-                                            # likely echo or lingering tone
-                                            pbx.logger.debug(
-                                                f"[VM IVR] DTMF '{digit}' debounced (duplicate within {DTMF_DEBOUNCE_SECONDS}s)"
-                                            )
-                                            continue
-
-                                        # Update debounce tracking
-                                        last_detected_digit = digit
-                                        last_detection_time = current_time
-                                        pbx.logger.info(
-                                            f"[VM IVR] >>> DTMF RECEIVED (In-band audio): '{digit}' <<<"
+                                if digit:
+                                    # Debounce: ignore duplicate detections
+                                    # of same digit within debounce period
+                                    current_time: float = time.time()
+                                    if (
+                                        digit == last_detected_digit
+                                        and (current_time - last_detection_time)
+                                        < DTMF_DEBOUNCE_SECONDS
+                                    ):
+                                        # Same digit detected too soon,
+                                        # likely echo or lingering tone
+                                        pbx.logger.debug(
+                                            f"[VM IVR] DTMF '{digit}' debounced (duplicate within {DTMF_DEBOUNCE_SECONDS}s)"
                                         )
+                                        continue
+
+                                    # Update debounce tracking
+                                    last_detected_digit = digit
+                                    last_detection_time = current_time
+                                    pbx.logger.info(
+                                        f"[VM IVR] >>> DTMF RECEIVED (In-band audio): '{digit}' <<<"
+                                    )
 
                     # Process detected DTMF digit (from either SIP INFO or
                     # in-band)

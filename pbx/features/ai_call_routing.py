@@ -96,9 +96,11 @@ class AICallRouting:
         )
 
         # Retrain model if we have enough data
-        if len(self.training_data) >= self.min_training_samples:
-            if len(self.training_data) % 50 == 0:  # Retrain every 50 calls
-                self._train_model()
+        if (
+            len(self.training_data) >= self.min_training_samples
+            and len(self.training_data) % 50 == 0  # Retrain every 50 calls
+        ):
+            self._train_model()
 
         return True
 

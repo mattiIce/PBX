@@ -118,7 +118,7 @@ class VideoCodecManager:
         """Check if FFmpeg is available on the system"""
         try:
             result = subprocess.run(
-                ["ffmpeg", "-version"], capture_output=True, text=True, timeout=5
+                ["ffmpeg", "-version"], capture_output=True, text=True, timeout=5, check=False
             )
             return result.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
@@ -132,7 +132,7 @@ class VideoCodecManager:
 
         try:
             result = subprocess.run(
-                ["ffmpeg", "-encoders"], capture_output=True, text=True, timeout=5
+                ["ffmpeg", "-encoders"], capture_output=True, text=True, timeout=5, check=False
             )
             if result.returncode == 0:
                 output = result.stdout
@@ -188,7 +188,7 @@ class VideoCodecManager:
         """Detect x265 encoder"""
         try:
             result = subprocess.run(
-                ["x265", "--version"], capture_output=True, text=True, timeout=5
+                ["x265", "--version"], capture_output=True, text=True, timeout=5, check=False
             )
             if result.returncode == 0:
                 self.logger.info("x265 encoder detected")

@@ -509,10 +509,11 @@ class ActiveDirectoryIntegration:
                 # Find extensions that have provisioned devices and were updated
                 # Use set for O(1) lookup performance with many devices
                 ad_extension_set = set(ad_extension_numbers)
-                devices_to_reboot = []
-                for device in phone_provisioning.get_all_devices():
-                    if device.extension_number in ad_extension_set:
-                        devices_to_reboot.append(device.extension_number)
+                devices_to_reboot = [
+                    device.extension_number
+                    for device in phone_provisioning.get_all_devices()
+                    if device.extension_number in ad_extension_set
+                ]
 
                 if devices_to_reboot:
                     self.logger.info(
@@ -696,24 +697,23 @@ class ActiveDirectoryIntegration:
                 size_limit=max_results,
             )
 
-            results = []
-            for entry in self.connection.entries:
-                results.append(
-                    {
-                        "username": str(entry.sAMAccountName),
-                        "display_name": (
-                            str(entry.displayName)
-                            if hasattr(entry, "displayName")
-                            else str(entry.sAMAccountName)
-                        ),
-                        "email": str(entry.mail) if hasattr(entry, "mail") else None,
-                        "phone": (
-                            str(entry.telephoneNumber)
-                            if hasattr(entry, "telephoneNumber")
-                            else None
-                        ),
-                    }
-                )
+            results = [
+                {
+                    "username": str(entry.sAMAccountName),
+                    "display_name": (
+                        str(entry.displayName)
+                        if hasattr(entry, "displayName")
+                        else str(entry.sAMAccountName)
+                    ),
+                    "email": str(entry.mail) if hasattr(entry, "mail") else None,
+                    "phone": (
+                        str(entry.telephoneNumber)
+                        if hasattr(entry, "telephoneNumber")
+                        else None
+                    ),
+                }
+                for entry in self.connection.entries
+            ]
 
             self.logger.info(f"Found {len(results)} users matching: {query}")
             return results

@@ -263,21 +263,19 @@ class ADIntegrationTester:
                 size_limit=100,
             )
 
-            users = []
-            for entry in self.ad.connection.entries:
-                users.append(
-                    {
-                        "username": (
-                            str(entry.sAMAccountName) if hasattr(entry, "sAMAccountName") else ""
-                        ),
-                        "display_name": (
-                            str(entry.displayName) if hasattr(entry, "displayName") else ""
-                        ),
-                        "email": str(entry.mail) if hasattr(entry, "mail") else "",
-                        "phone": (
-                            str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else ""
-                        ),
-                    }
+            users = [
+                {
+                    "username": (
+                        str(entry.sAMAccountName) if hasattr(entry, "sAMAccountName") else ""
+                    ),
+                    "display_name": (
+                        str(entry.displayName) if hasattr(entry, "displayName") else ""
+                    ),
+                    "email": str(entry.mail) if hasattr(entry, "mail") else "",
+                    "phone": (
+                        str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else ""
+                    ),
+                }
                 )
 
             if len(users) == 0:

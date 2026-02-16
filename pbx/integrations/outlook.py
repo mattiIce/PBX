@@ -156,21 +156,20 @@ class OutlookIntegration:
 
             if response.status_code == 200:
                 data = response.json()
-                events = []
-                for event in data.get("value", []):
-                    events.append(
-                        {
-                            "subject": event.get("subject"),
-                            "start": event.get("start", {}).get("dateTime"),
-                            "end": event.get("end", {}).get("dateTime"),
-                            "location": event.get("location", {}).get("displayName"),
-                            "organizer": event.get("organizer", {})
-                            .get("emailAddress", {})
-                            .get("name"),
-                            "is_all_day": event.get("isAllDay", False),
-                            "is_cancelled": event.get("isCancelled", False),
-                        }
-                    )
+                events = [
+                    {
+                        "subject": event.get("subject"),
+                        "start": event.get("start", {}).get("dateTime"),
+                        "end": event.get("end", {}).get("dateTime"),
+                        "location": event.get("location", {}).get("displayName"),
+                        "organizer": event.get("organizer", {})
+                        .get("emailAddress", {})
+                        .get("name"),
+                        "is_all_day": event.get("isAllDay", False),
+                        "is_cancelled": event.get("isCancelled", False),
+                    }
+                    for event in data.get("value", [])
+                ]
 
                 self.logger.info(f"Found {len(events)} calendar events for {user_email}")
                 return events

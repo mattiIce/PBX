@@ -492,11 +492,8 @@ class G726Codec:
         bitrate_kbps = bitrate // 1000
 
         # G.726-32 is fully supported via the pure-Python ADPCM implementation
-        if bitrate_kbps == 32:
-            return True
-
         # Other bitrates would need a specialised library
-        return False
+        return bitrate_kbps == 32
 
     @staticmethod
     def get_capabilities() -> dict:

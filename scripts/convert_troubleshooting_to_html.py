@@ -135,8 +135,7 @@ def convert_table(table_lines: list[str]) -> str:
     header = table_lines[0]
     cells = [cell.strip() for cell in header.split("|")[1:-1]]
     html.append("<thead><tr>")
-    for cell in cells:
-        html.append(f"<th>{cell}</th>")
+    html.extend(f"<th>{cell}</th>" for cell in cells)
     html.append("</tr></thead>")
 
     # Data rows (skip separator line)
@@ -144,8 +143,7 @@ def convert_table(table_lines: list[str]) -> str:
     for row in table_lines[2:]:
         cells = [cell.strip() for cell in row.split("|")[1:-1]]
         html.append("<tr>")
-        for cell in cells:
-            html.append(f"<td>{cell}</td>")
+        html.extend(f"<td>{cell}</td>" for cell in cells)
         html.append("</tr>")
     html.append("</tbody>")
 

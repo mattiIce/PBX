@@ -204,11 +204,9 @@ class EnvironmentLoader:
         Returns:
             tuple of (all_present, missing_vars)
         """
-        missing = []
-
-        for var_name in required_vars:
-            if var_name not in os.environ:
-                missing.append(var_name)
+        missing = [
+            var_name for var_name in required_vars if var_name not in os.environ
+        ]
 
         return len(missing) == 0, missing
 

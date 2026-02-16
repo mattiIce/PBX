@@ -153,8 +153,7 @@ class SDPSession:
                 lines.append(f"c={c['network_type']} {c['address_type']} {c['address']}")
 
             # Attributes
-            for attr in media.get("attributes", []):
-                lines.append(f"a={attr}")
+            lines.extend(f"a={attr}" for attr in media.get("attributes", []))
 
         return "\r\n".join(lines) + "\r\n"
 

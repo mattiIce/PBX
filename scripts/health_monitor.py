@@ -409,8 +409,7 @@ class HealthMonitor:
         # Alerts
         if self.health_data["alerts"]:
             lines.append("ALERTS:")
-            for alert in self.health_data["alerts"]:
-                lines.append(f"  • {alert}")
+            lines.extend(f"  • {alert}" for alert in self.health_data["alerts"])
             lines.append("")
 
         # Detailed checks
