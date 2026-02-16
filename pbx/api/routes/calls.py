@@ -1,7 +1,7 @@
 """Flask Blueprint for call management and analytics routes."""
 
-import os
 import tempfile
+from pathlib import Path
 
 from flask import Blueprint, Response, current_app, request
 
@@ -141,7 +141,7 @@ def export_analytics() -> Response | tuple[Response, int]:
                     csv_data = f.read()
 
                 # Clean up temp file
-                os.unlink(temp_file.name)
+                Path(temp_file.name).unlink()
 
                 response = current_app.response_class(
                     response=csv_data,

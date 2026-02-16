@@ -3,7 +3,6 @@
 Test to verify emergency notification system initializes without database errors
 """
 
-import os
 import shutil
 import tempfile
 from pathlib import Path

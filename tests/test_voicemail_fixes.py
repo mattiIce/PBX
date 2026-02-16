@@ -6,7 +6,6 @@ Test voicemail fixes for:
 3. Email notification with database extensions
 """
 
-import os
 import shutil
 import tempfile
 from pathlib import Path

@@ -3,7 +3,6 @@
 Test newly implemented PBX features
 """
 
-import os
 import struct
 import tempfile
 from pathlib import Path
@@ -59,7 +58,7 @@ def test_wav_file_playback() -> bool:
         player.stop()
 
         # Clean up
-        os.unlink(wav_file)
+        Path(wav_file).unlink(missing_ok=True)
 
         return True
 
@@ -68,7 +67,7 @@ def test_wav_file_playback() -> bool:
 
         traceback.print_exc()
         if Path(wav_file).exists():
-            os.unlink(wav_file)
+            Path(wav_file).unlink(missing_ok=True)
         return False
 
 

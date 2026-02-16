@@ -1,7 +1,7 @@
 codecov:
   require_ci_to_pass: false
   notify:
-    wait_for_ci: false
+    wait_for_ci: true
 
 coverage:
   precision: 2
@@ -11,15 +11,54 @@ coverage:
     project:
       default:
         target: 70%
-        threshold: 10%
+        threshold: 5%
         if_ci_failed: error
+        informational: false
     patch:
       default:
-        target: 50%
+        target: 60%
         threshold: 10%
         if_ci_failed: error
 
 comment:
-  layout: "reach,diff,flags,tree,footer"
+  layout: "condensed_header,diff,flags,components,tree,footer"
   behavior: default
-  require_changes: false
+  require_changes: true
+  require_base: false
+  require_head: true
+
+ignore:
+  - "tests/**"
+  - "scripts/**"
+  - "docs/**"
+  - "admin/tests/**"
+  - "**/__init__.py"
+
+flags:
+  unittests:
+    paths:
+      - pbx/
+    carryforward: true
+
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+  individual_components:
+    - component_id: core
+      name: Core PBX
+      paths:
+        - pbx/core/**
+    - component_id: api
+      name: REST API
+      paths:
+        - pbx/api/**
+    - component_id: sip
+      name: SIP Protocol
+      paths:
+        - pbx/sip/**
+    - component_id: features
+      name: Feature Modules
+      paths:
+        - pbx/features/**

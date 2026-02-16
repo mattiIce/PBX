@@ -2,7 +2,6 @@
 Test PCM to G.722 conversion functionality
 """
 
-import os
 import struct
 import tempfile
 from pathlib import Path
@@ -76,7 +75,7 @@ def test_pcm_wav_to_g722_with_rtp() -> None:
     finally:
         # Clean up temporary file
         if Path(temp_path).exists():
-            os.remove(temp_path)
+            Path(temp_path).unlink(missing_ok=True)
 
 
 def test_ulaw_wav_still_works() -> None:
@@ -140,4 +139,4 @@ def test_ulaw_wav_still_works() -> None:
     finally:
         # Clean up temporary file
         if Path(temp_path).exists():
-            os.remove(temp_path)
+            Path(temp_path).unlink(missing_ok=True)

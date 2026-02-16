@@ -2,7 +2,6 @@
 Test Find Me/Follow Me database save failure handling
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -32,7 +31,7 @@ class TestFMFMSaveFailure:
         if hasattr(self, "database") and self.database.connection:
             self.database.connection.close()
         if Path(self.temp_db.name).exists():
-            os.unlink(self.temp_db.name)
+            Path(self.temp_db.name).unlink()
 
     def test_set_config_with_database_failure(self) -> None:
         """Test that set_config returns False if database save fails"""

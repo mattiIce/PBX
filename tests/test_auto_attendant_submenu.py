@@ -2,7 +2,6 @@
 Test suite for Auto Attendant Submenu functionality
 """
 
-import os
 import shutil
 import tempfile
 from pathlib import Path

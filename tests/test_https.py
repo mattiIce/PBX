@@ -5,7 +5,6 @@ Tests SSL configuration, certificate validation, and HTTPS connections
 """
 
 import json
-import os
 import ssl
 import time
 import urllib.request

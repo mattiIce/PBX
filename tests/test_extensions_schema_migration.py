@@ -4,7 +4,6 @@ Tests for extensions table schema migration
 Tests that voicemail_pin_hash and voicemail_pin_salt columns are added during migration
 """
 
-import os
 import sqlite3
 import tempfile
 from pathlib import Path
@@ -88,7 +87,7 @@ def test_extensions_columns_migration() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_extensions_columns_already_exist() -> None:
@@ -129,7 +128,7 @@ def test_extensions_columns_already_exist() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_insert_with_voicemail_pin() -> None:
@@ -202,4 +201,4 @@ def test_insert_with_voicemail_pin() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)

@@ -8,8 +8,9 @@ Protected by license administrator authentication.
 import logging
 import os
 from pathlib import Path
+from typing import Any
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, Flask, Response, jsonify, request
 
 from pbx.utils.license_admin import require_license_admin, verify_license_admin_session
 from pbx.utils.licensing import LicenseType, get_license_manager
@@ -21,7 +22,7 @@ license_api = Blueprint("license_api", __name__)
 
 
 @license_api.route("/api/license/status", methods=["GET"])
-def get_license_status():
+def get_license_status() -> tuple[Response, int]:
     """
     Get current license status and information.
 
@@ -42,7 +43,7 @@ def get_license_status():
 
 
 @license_api.route("/api/license/features", methods=["GET"])
-def list_available_features():
+def list_available_features() -> tuple[Response, int]:
     """
     list all available features for current license.
 
@@ -70,8 +71,8 @@ def list_available_features():
             features = license_manager.current_license.get("custom_features", [])
 
         # Separate features and limits
-        feature_list = []
-        limits = {}
+        feature_list: list[str] = []
+        limits: dict[str, int | None] = {}
 
         for feature in features:
             if ":" in feature and any(
@@ -102,7 +103,7 @@ def list_available_features():
 
 
 @license_api.route("/api/license/check", methods=["POST"])
-def check_feature():
+def check_feature() -> tuple[Response, int]:
     """
     Check if a specific feature is available.
 
@@ -115,7 +116,7 @@ def check_feature():
         JSON with availability status
     """
     try:
-        data = request.get_json()
+        data: dict[str, Any] = request.get_json()
         feature_name = data.get("feature")
 
         if not feature_name:
@@ -133,7 +134,7 @@ def check_feature():
 
 @license_api.route("/api/license/generate", methods=["POST"])
 @require_license_admin
-def generate_license():
+def generate_license() -> tuple[Response, int]:
     """
     Generate a new license key (license admin only).
 
@@ -154,7 +155,7 @@ def generate_license():
     """
     try:
         # Authentication handled by @require_license_admin decorator
-        data = request.get_json()
+        data: dict[str, Any] = request.get_json()
 
         # Validate required fields
         license_type_str = data.get("type")
@@ -201,7 +202,7 @@ def generate_license():
 
 @license_api.route("/api/license/install", methods=["POST"])
 @require_license_admin
-def install_license():
+def install_license() -> tuple[Response, int]:
     """
     Install a license key (license admin only).
 
@@ -223,7 +224,7 @@ def install_license():
         JSON with installation status
     """
     try:
-        data = request.get_json()
+        data: dict[str, Any] = request.get_json()
         license_data = data.get("license_data") or data
         enforce_licensing = data.get("enforce_licensing", False)
 
@@ -260,7 +261,7 @@ def install_license():
 
 @license_api.route("/api/license/revoke", methods=["POST"])
 @require_license_admin
-def revoke_license():
+def revoke_license() -> tuple[Response, int]:
     """
     Revoke current license (license admin only).
 
@@ -284,7 +285,7 @@ def revoke_license():
 
 @license_api.route("/api/license/toggle", methods=["POST"])
 @require_license_admin
-def toggle_licensing():
+def toggle_licensing() -> tuple[Response, int]:
     """
     Enable or disable licensing enforcement (license admin only).
 
@@ -299,7 +300,7 @@ def toggle_licensing():
         JSON with new licensing status
     """
     try:
-        data = request.get_json()
+        data: dict[str, Any] = request.get_json()
         enabled = data.get("enabled")
 
         if enabled is None:
@@ -310,18 +311,16 @@ def toggle_licensing():
         license_manager = get_license_manager()
 
         # Update .env file for persistence
-        # NOTE: PBX restart required for change to take full effect
-        env_file = str(Path(__file__).parent.parent / ".." / ".env")
+        env_path = Path(__file__).resolve().parent.parent / ".." / ".env"
 
         # Read existing .env
-        env_lines = []
-        if Path(env_file).exists():
-            with open(env_file) as f:
-                env_lines = f.readlines()
+        env_lines: list[str] = []
+        if env_path.exists():
+            env_lines = env_path.read_text().splitlines(keepends=True)
 
         # Check if license lock exists
-        lock_path = str(Path(__file__).parent.parent / ".." / ".license_lock")
-        if Path(lock_path).exists():
+        lock_path = Path(__file__).resolve().parent.parent / ".." / ".license_lock"
+        if lock_path.exists():
             return (
                 jsonify(
                     {
@@ -347,8 +346,7 @@ def toggle_licensing():
             )
 
         # Write back
-        with open(env_file, "w") as f:
-            f.writelines(env_lines)
+        env_path.write_text("".join(env_lines))
 
         # Also update runtime environment for immediate effect
         os.environ["PBX_LICENSING_ENABLED"] = "true" if enabled else "false"
@@ -376,7 +374,7 @@ def toggle_licensing():
 
 @license_api.route("/api/license/remove_lock", methods=["POST"])
 @require_license_admin
-def remove_license_lock():
+def remove_license_lock() -> tuple[Response, int]:
     """
     Remove license lock file to allow disabling licensing (license admin only).
 
@@ -416,7 +414,7 @@ def remove_license_lock():
 
 
 @license_api.route("/api/license/verify_admin", methods=["GET"])
-def verify_admin():
+def verify_admin() -> tuple[Response, int]:
     """Verify if the current session belongs to the license administrator.
 
     Returns:
@@ -437,7 +435,7 @@ def verify_admin():
 
 
 @license_api.route("/api/license/admin_login", methods=["POST"])
-def admin_login():
+def admin_login() -> tuple[Response, int]:
     """
     Authenticate as the license administrator.
 
@@ -456,7 +454,7 @@ def admin_login():
     from pbx.utils.license_admin import verify_license_admin_credentials
 
     try:
-        data = request.get_json()
+        data: dict[str, Any] = request.get_json()
         extension = data.get("extension", "").strip()
         username = data.get("username", "").strip()
         pin = data.get("pin", "").strip()
@@ -497,7 +495,7 @@ def admin_login():
         return jsonify({"success": False, "error": "Authentication failed"}), 500
 
 
-def register_license_routes(app):
+def register_license_routes(app: Flask) -> None:
     """
     Register license API routes with Flask app.
 

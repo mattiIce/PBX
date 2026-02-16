@@ -3,7 +3,6 @@
 Tests for emergency tables in database
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -60,7 +59,7 @@ def test_emergency_contacts_table_creation() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_emergency_notifications_table_creation() -> None:
@@ -110,7 +109,7 @@ def test_emergency_notifications_table_creation() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_emergency_indexes_creation() -> None:
@@ -152,4 +151,4 @@ def test_emergency_indexes_creation() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)

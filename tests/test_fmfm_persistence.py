@@ -2,7 +2,6 @@
 Test Find Me/Follow Me database persistence
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -32,7 +31,7 @@ class TestFMFMPersistence:
         if hasattr(self, "database") and self.database.connection:
             self.database.connection.close()
         if Path(self.temp_db.name).exists():
-            os.unlink(self.temp_db.name)
+            Path(self.temp_db.name).unlink(missing_ok=True)
 
     def test_database_persistence(self) -> None:
         """Test that FMFM configs are saved and loaded from database"""

@@ -4,10 +4,12 @@
 
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
+.SHELLFLAGS := -eu -o pipefail -c
 
 # Project paths
 SRC_DIR := pbx
 TEST_DIR := tests
+ADMIN_DIR := admin
 
 # Python interpreter
 PYTHON := python3
@@ -28,6 +30,7 @@ COLOR_BOLD := \033[1m
 COLOR_GREEN := \033[32m
 COLOR_YELLOW := \033[33m
 COLOR_BLUE := \033[34m
+COLOR_RED := \033[31m
 
 # =============================================================================
 # Help
@@ -57,11 +60,21 @@ install-prod: ## Install production dependencies only
 	uv pip install -e .
 	@echo -e "$(COLOR_GREEN)Done.$(COLOR_RESET)"
 
+.PHONY: install-test
+install-test: ## Install test dependencies only
+	@echo -e "$(COLOR_BOLD)Installing test dependencies...$(COLOR_RESET)"
+	uv pip install -e ".[test]"
+	@echo -e "$(COLOR_GREEN)Done.$(COLOR_RESET)"
+
 .PHONY: install-constraints
 install-constraints: ## Install with constraints.txt for reproducible builds
 	@echo -e "$(COLOR_BOLD)Installing with constraints...$(COLOR_RESET)"
 	uv pip install -e . -c constraints.txt
 	@echo -e "$(COLOR_GREEN)Done.$(COLOR_RESET)"
+
+.PHONY: setup
+setup: install pre-commit-install ## Full development setup (install + pre-commit hooks)
+	@echo -e "$(COLOR_GREEN)Development environment ready.$(COLOR_RESET)"
 
 # =============================================================================
 # Code Quality (Ruff + mypy)
@@ -139,12 +152,45 @@ test-integration: ## Run integration tests only
 
 .PHONY: test-cov
 test-cov: ## Run tests with coverage report
-	$(PYTHON) -m pytest $(TEST_DIR) --cov=$(SRC_DIR) --cov-report=term-missing --cov-report=html
+	$(PYTHON) -m pytest $(TEST_DIR) \
+		--cov=$(SRC_DIR) \
+		--cov-report=term-missing \
+		--cov-report=html \
+		--cov-report=xml \
+		--cov-fail-under=$(COV_MIN)
 
 .PHONY: test-cov-html
-test-cov-html: ## Generate HTML coverage report
+test-cov-html: ## Generate HTML coverage report and open it
 	$(PYTHON) -m pytest $(TEST_DIR) --cov=$(SRC_DIR) --cov-report=html
 	@echo -e "$(COLOR_GREEN)Coverage report: $(COV_REPORT)/index.html$(COLOR_RESET)"
+
+.PHONY: test-parallel
+test-parallel: ## Run tests in parallel with pytest-xdist
+	$(PYTHON) -m pytest $(TEST_DIR) -v -n auto
+
+.PHONY: test-failed
+test-failed: ## Re-run only previously failed tests
+	$(PYTHON) -m pytest $(TEST_DIR) -v --lf
+
+.PHONY: test-watch
+test-watch: ## Run tests in watch mode (requires pytest-watch)
+	$(PYTHON) -m pytest_watch -- $(TEST_DIR) -v
+
+# =============================================================================
+# Security
+# =============================================================================
+
+.PHONY: security
+security: ## Run all security checks
+	@echo -e "$(COLOR_BOLD)Running security checks...$(COLOR_RESET)"
+	$(PYTHON) -m bandit -r $(SRC_DIR) -c pyproject.toml
+	pip-audit
+	@echo -e "$(COLOR_GREEN)Security checks passed.$(COLOR_RESET)"
+
+.PHONY: audit
+audit: ## Audit Python dependencies for vulnerabilities
+	@echo -e "$(COLOR_BOLD)Auditing dependencies...$(COLOR_RESET)"
+	pip-audit
 
 # =============================================================================
 # Docker
@@ -163,18 +209,55 @@ docker-up: ## Start services with docker compose
 docker-down: ## Stop services
 	$(DOCKER_COMPOSE) down
 
+.PHONY: docker-restart
+docker-restart: docker-down docker-up ## Restart all services
+
 .PHONY: docker-logs
 docker-logs: ## View service logs
 	$(DOCKER_COMPOSE) logs -f
+
+.PHONY: docker-logs-pbx
+docker-logs-pbx: ## View PBX service logs only
+	$(DOCKER_COMPOSE) logs -f pbx
 
 .PHONY: docker-shell
 docker-shell: ## Open shell in PBX container
 	$(DOCKER_COMPOSE) exec pbx /bin/bash
 
+.PHONY: docker-ps
+docker-ps: ## Show running containers status
+	$(DOCKER_COMPOSE) ps
+
 .PHONY: docker-clean
 docker-clean: ## Clean up Docker resources
 	$(DOCKER_COMPOSE) down -v --remove-orphans
 	docker system prune -f
+
+# =============================================================================
+# Database
+# =============================================================================
+
+.PHONY: db-migrate
+db-migrate: ## Run database migrations
+	@echo -e "$(COLOR_BOLD)Running database migrations...$(COLOR_RESET)"
+	alembic upgrade head
+
+.PHONY: db-revision
+db-revision: ## Create a new migration revision (usage: make db-revision MSG="description")
+	@echo -e "$(COLOR_BOLD)Creating new migration...$(COLOR_RESET)"
+	alembic revision --autogenerate -m "$(MSG)"
+
+.PHONY: db-downgrade
+db-downgrade: ## Downgrade database by one revision
+	alembic downgrade -1
+
+.PHONY: db-history
+db-history: ## Show migration history
+	alembic history --verbose
+
+.PHONY: db-current
+db-current: ## Show current database revision
+	alembic current
 
 # =============================================================================
 # Cleanup
@@ -192,8 +275,13 @@ clean: ## Remove build artifacts, __pycache__, .pyc files
 clean-all: clean ## Deep clean including .venv, .pytest_cache, etc.
 	rm -rf .venv/ venv/ env/
 	rm -rf .pytest_cache/ .mypy_cache/ .ruff_cache/ .tox/
-	rm -rf $(COV_REPORT)/ .coverage
+	rm -rf $(COV_REPORT)/ .coverage .coverage.* coverage.xml
 	rm -rf logs/ recordings/ voicemail/ cdr/
+	rm -rf node_modules/
+
+.PHONY: clean-docker
+clean-docker: ## Remove all Docker resources for this project
+	$(DOCKER_COMPOSE) down -v --remove-orphans --rmi local
 
 # =============================================================================
 # Development
@@ -211,6 +299,10 @@ dev-backend: ## Run backend only with Flask debug mode
 dev-frontend: ## Run frontend dev server only
 	npm run dev
 
+.PHONY: typecheck-js
+typecheck-js: ## Run TypeScript type checking
+	npm run typecheck
+
 # =============================================================================
 # Dependency Management
 # =============================================================================
@@ -223,6 +315,14 @@ lock: ## Generate requirements.lock from pyproject.toml
 sync: ## Install dependencies from requirements.lock
 	uv pip sync requirements.lock
 
+.PHONY: outdated
+outdated: ## Show outdated Python dependencies
+	@echo -e "$(COLOR_BOLD)Checking for outdated Python packages...$(COLOR_RESET)"
+	uv pip list --outdated 2>/dev/null || pip list --outdated
+	@echo ""
+	@echo -e "$(COLOR_BOLD)Checking for outdated Node.js packages...$(COLOR_RESET)"
+	npm outdated || true
+
 # =============================================================================
 # Utilities
 # =============================================================================
@@ -234,10 +334,29 @@ run: ## Run the PBX server locally
 .PHONY: pre-commit-install
 pre-commit-install: ## Install pre-commit hooks
 	$(PYTHON) -m pre_commit install
+	$(PYTHON) -m pre_commit install --hook-type commit-msg
 
 .PHONY: pre-commit-run
 pre-commit-run: ## Run pre-commit on all files
 	$(PYTHON) -m pre_commit run --all-files
 
+.PHONY: pre-commit-update
+pre-commit-update: ## Update pre-commit hooks to latest versions
+	$(PYTHON) -m pre_commit autoupdate
+
 .PHONY: check
 check: format-check lint test ## Run all checks (format, lint, test)
+
+.PHONY: ci
+ci: format-check lint security test-cov ## Run full CI pipeline locally
+
+.PHONY: info
+info: ## Show project and environment information
+	@echo -e "$(COLOR_BOLD)Project Info$(COLOR_RESET)"
+	@echo "  Python: $$($(PYTHON) --version)"
+	@echo "  Node:   $$(node --version 2>/dev/null || echo 'not installed')"
+	@echo "  npm:    $$(npm --version 2>/dev/null || echo 'not installed')"
+	@echo "  uv:     $$(uv --version 2>/dev/null || echo 'not installed')"
+	@echo "  Docker: $$(docker --version 2>/dev/null || echo 'not installed')"
+	@echo "  Ruff:   $$(ruff --version 2>/dev/null || echo 'not installed')"
+	@echo "  mypy:   $$(mypy --version 2>/dev/null || echo 'not installed')"

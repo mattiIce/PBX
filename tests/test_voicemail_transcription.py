@@ -2,7 +2,6 @@
 Tests for voicemail transcription functionality
 """
 
-import os
 import struct
 import sys
 import tempfile
@@ -36,8 +35,8 @@ class TestVoicemailTranscription:
         """Clean up test fixtures"""
         # Remove test files
         if Path(self.test_audio_path).exists():
-            os.remove(self.test_audio_path)
-        os.rmdir(self.temp_dir)
+            Path(self.test_audio_path).unlink(missing_ok=True)
+        Path(self.temp_dir).rmdir()
 
     def _create_test_wav(
         self, filepath: str, duration: float = 1.0, sample_rate: int = 8000

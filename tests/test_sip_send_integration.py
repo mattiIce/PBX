@@ -55,7 +55,7 @@ logging:
         import os
 
         if Path(self.temp_config_path).exists():
-            os.remove(self.temp_config_path)
+            Path(self.temp_config_path).unlink(missing_ok=True)
 
     def test_invite_includes_caller_id_headers(self) -> None:
         """Test that INVITE messages include P-Asserted-Identity and Remote-Party-ID"""

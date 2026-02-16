@@ -3,7 +3,6 @@
 Tests for database permission error handling
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -46,7 +45,7 @@ def test_index_creation_with_permission_error() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_table_already_exists_handling() -> None:
@@ -72,7 +71,7 @@ def test_table_already_exists_handling() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_critical_vs_non_critical_errors() -> None:
@@ -107,4 +106,4 @@ def test_critical_vs_non_critical_errors() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)

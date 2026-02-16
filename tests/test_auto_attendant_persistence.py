@@ -9,6 +9,7 @@ import tempfile
 from typing import Any
 
 from pbx.features.auto_attendant import AutoAttendant
+from pathlib import Path
 
 
 class MockConfig:
@@ -48,7 +49,7 @@ class TestAutoAttendantPersistence:
         """Clean up test environment"""
         # Close and remove temporary database
         os.close(self.db_fd)
-        os.unlink(self.db_path)
+        Path(self.db_path).unlink(missing_ok=True)
 
     def test_initial_config_saved_to_db(self) -> None:
         """Test that initial configuration is saved to database"""

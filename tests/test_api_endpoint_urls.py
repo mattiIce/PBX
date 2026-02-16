@@ -3,7 +3,6 @@ Test API Endpoint URL Correctness
 Tests that the REST API endpoints match the URLs expected by the admin UI.
 """
 
-import os
 from pathlib import Path
 
 

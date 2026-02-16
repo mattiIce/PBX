@@ -1,6 +1,5 @@
 """Shared pytest fixtures for PBX test suite."""
 
-import os
 from collections.abc import Callable, Generator
 from typing import Any
 from unittest.mock import MagicMock, patch

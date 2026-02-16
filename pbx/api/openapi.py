@@ -4,8 +4,10 @@ Provides a complete API specification documenting all endpoints,
 request/response schemas, and authentication requirements.
 """
 
+from typing import Any
 
-def get_openapi_spec():
+
+def get_openapi_spec() -> dict[str, Any]:
     """Return the OpenAPI 3.0 specification as a dictionary.
 
     Returns:

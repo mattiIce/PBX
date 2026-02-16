@@ -3,7 +3,6 @@
 Tests for phone provisioning persistence in database
 """
 
-import os
 import shutil
 import tempfile
 from pathlib import Path

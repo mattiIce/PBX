@@ -4,7 +4,6 @@ Tests for Enhanced Threat Detection
 """
 
 import contextlib
-import os
 import time
 from pathlib import Path
 
@@ -207,7 +206,7 @@ def test_with_database() -> bool:
 
         # Clean up
         db.connection.close()
-        os.unlink(db_path)
+        Path(db_path).unlink(missing_ok=True)
 
         return True
 
@@ -215,5 +214,5 @@ def test_with_database() -> bool:
         # Clean up on error
         if Path(db_path).exists():
             with contextlib.suppress(BaseException):
-                os.unlink(db_path)
+                Path(db_path).unlink(missing_ok=True)
         raise e

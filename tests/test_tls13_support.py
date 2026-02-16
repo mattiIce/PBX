@@ -4,7 +4,6 @@ Test TLS 1.3 Support
 Verifies that the PBX system supports TLS 1.3 for secure communications
 """
 
-import os
 import ssl
 import tempfile
 import time
@@ -15,6 +14,7 @@ from typing import Any
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 from pbx.utils.tls_support import TLSManager
+from pathlib import Path
 
 
 def generate_test_certificate() -> tuple[str | None, str | None]:
@@ -137,9 +137,9 @@ def test_tls_manager_context() -> bool:
     finally:
         # Clean up temporary files
         if cert_file:
-            os.unlink(cert_file)
+            Path(cert_file).unlink(missing_ok=True)
         if key_file:
-            os.unlink(key_file)
+            Path(key_file).unlink(missing_ok=True)
 
     return True
 
@@ -202,9 +202,9 @@ def test_api_server_tls13_support() -> bool:
     finally:
         # Clean up temporary files
         if cert_file:
-            os.unlink(cert_file)
+            Path(cert_file).unlink(missing_ok=True)
         if key_file:
-            os.unlink(key_file)
+            Path(key_file).unlink(missing_ok=True)
 
     return True
 
@@ -252,9 +252,9 @@ def test_ssl_context_security_options() -> bool:
     finally:
         # Clean up temporary files
         if cert_file:
-            os.unlink(cert_file)
+            Path(cert_file).unlink(missing_ok=True)
         if key_file:
-            os.unlink(key_file)
+            Path(key_file).unlink(missing_ok=True)
 
     return True
 

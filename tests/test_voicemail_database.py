@@ -3,7 +3,6 @@
 Tests for voicemail database integration
 """
 
-import os
 import shutil
 import tempfile
 from pathlib import Path
@@ -62,7 +61,7 @@ def test_database_backend_initialization() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_voicemail_database_integration() -> None:
@@ -125,7 +124,7 @@ def test_voicemail_database_integration() -> None:
         # Cleanup
         shutil.rmtree(temp_dir)
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_voicemail_without_database() -> None:

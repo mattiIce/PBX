@@ -3,7 +3,6 @@ Test DTMF Configuration API
 Tests the DTMF configuration GET and POST endpoints
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -43,7 +42,7 @@ class TestDTMFConfigMethods:
     def teardown_method(self) -> None:
         """Clean up temporary config file"""
         if Path(self.temp_config.name).exists():
-            os.unlink(self.temp_config.name)
+            Path(self.temp_config.name).unlink()
 
     def test_get_dtmf_config_default(self) -> None:
         """Test getting DTMF configuration with default values"""
@@ -194,7 +193,7 @@ class TestDTMFConfigMethods:
         assert dtmf_config is not None
         assert dtmf_config["mode"] == "RFC2833"
         assert dtmf_config["payload_type"] == 101
-        os.unlink(empty_config.name)
+        Path(empty_config.name).unlink(missing_ok=True)
 
     def test_update_dtmf_config_creates_structure(self) -> None:
         """Test that updating DTMF config creates the structure if missing"""
@@ -214,7 +213,7 @@ class TestDTMFConfigMethods:
         dtmf_config = config.get_dtmf_config()
         assert dtmf_config["mode"] == "SIP_INFO"
         assert dtmf_config["payload_type"] == 100
-        os.unlink(empty_config.name)
+        Path(empty_config.name).unlink(missing_ok=True)
 
     def test_update_dtmf_config_without_dtmf_wrapper(self) -> None:
         """Test updating DTMF config with data not wrapped in 'dtmf' key"""

@@ -5,7 +5,6 @@ Validates that failed transactions are properly rolled back to prevent
 "current transaction is aborted" errors
 """
 
-import os
 import tempfile
 from pathlib import Path
 
@@ -53,7 +52,7 @@ def test_transaction_rollback_on_error() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_fetch_one_rollback_on_error() -> None:
@@ -84,7 +83,7 @@ def test_fetch_one_rollback_on_error() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_fetch_all_rollback_on_error() -> None:
@@ -115,7 +114,7 @@ def test_fetch_all_rollback_on_error() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_schema_migration_rollback() -> None:
@@ -147,7 +146,7 @@ def test_schema_migration_rollback() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_permission_error_rollback() -> None:
@@ -181,4 +180,4 @@ def test_permission_error_rollback() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)

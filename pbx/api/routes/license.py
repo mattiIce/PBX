@@ -342,7 +342,7 @@ def handle_license_toggle() -> tuple[Response, int]:
             # Best-effort cleanup of temporary file
             try:
                 if Path(tmp_path).exists():
-                    os.remove(tmp_path)
+                    Path(tmp_path).unlink()
             except OSError:
                 pass
             logger.error("Failed to update .env file for licensing: %s", write_err, exc_info=True)

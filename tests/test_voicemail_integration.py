@@ -4,7 +4,6 @@ Integration test for voicemail recording and playback
 Tests the complete voicemail flow: recording -> storage -> retrieval -> playback
 """
 
-import os
 import shutil
 import tempfile
 import time

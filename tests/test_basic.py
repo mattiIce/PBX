@@ -3,7 +3,6 @@
 Basic tests for PBX system
 """
 
-import os
 from pathlib import Path
 
 from pbx.core.call import CallManager, CallState

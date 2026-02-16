@@ -8,13 +8,12 @@ All files are in telephony format: 8000 Hz, 16-bit, mono WAV.
 
 import argparse
 import math
-import os
 import struct
 import wave
 from pathlib import Path
 
 
-def generate_tone(frequency, duration, sample_rate=8000, amplitude=0.3):
+def generate_tone(frequency: float, duration: float, sample_rate: int = 8000, amplitude: float = 0.3) -> list[int]:
     """
     Generate a sine wave tone.
 
@@ -41,7 +40,7 @@ def generate_tone(frequency, duration, sample_rate=8000, amplitude=0.3):
     return samples
 
 
-def generate_chord(frequencies, duration, sample_rate=8000, amplitude=0.2):
+def generate_chord(frequencies: list[float], duration: float, sample_rate: int = 8000, amplitude: float = 0.2) -> list[int]:
     """
     Generate a chord (multiple frequencies played together).
 
@@ -75,7 +74,7 @@ def generate_chord(frequencies, duration, sample_rate=8000, amplitude=0.2):
     return samples
 
 
-def add_fade(samples, fade_duration=0.1, sample_rate=8000):
+def add_fade(samples: list[int], fade_duration: float = 0.1, sample_rate: int = 8000) -> list[int]:
     """
     Add fade in/out to samples to prevent clicks.
 
@@ -104,7 +103,7 @@ def add_fade(samples, fade_duration=0.1, sample_rate=8000):
     return result
 
 
-def write_wav_file(filename, samples, sample_rate=8000):
+def write_wav_file(filename: str, samples: list[int], sample_rate: int = 8000) -> None:
     """
     Write samples to WAV file.
 
@@ -124,7 +123,7 @@ def write_wav_file(filename, samples, sample_rate=8000):
             wav_file.writeframes(struct.pack("<h", sample))
 
 
-def generate_simple_melody(output_file, duration=30):
+def generate_simple_melody(output_file: str | Path, duration: int = 30) -> None:
     """
     Generate a simple, pleasant melody.
 
@@ -168,7 +167,7 @@ def generate_simple_melody(output_file, duration=30):
     print(f"✓ Generated {output_file}")
 
 
-def generate_ambient_tones(output_file, duration=30):
+def generate_ambient_tones(output_file: str | Path, duration: int = 30) -> None:
     """
     Generate ambient, soothing tones.
 
@@ -193,7 +192,7 @@ def generate_ambient_tones(output_file, duration=30):
     print(f"✓ Generated {output_file}")
 
 
-def generate_arpeggio(output_file, duration=30):
+def generate_arpeggio(output_file: str | Path, duration: int = 30) -> None:
     """
     Generate an arpeggio pattern.
 
@@ -228,7 +227,7 @@ def generate_arpeggio(output_file, duration=30):
     print(f"✓ Generated {output_file}")
 
 
-def generate_soft_pad(output_file, duration=30):
+def generate_soft_pad(output_file: str | Path, duration: int = 30) -> None:
     """
     Generate a soft, sustained pad sound.
 

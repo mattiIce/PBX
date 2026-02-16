@@ -3,7 +3,6 @@
 Test voicemail greeting recording functionality
 """
 
-import os
 import tempfile
 from pathlib import Path
 

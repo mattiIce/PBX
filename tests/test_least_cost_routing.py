@@ -9,6 +9,7 @@ from datetime import time
 from typing import Any
 
 from pbx.features.least_cost_routing import DialPattern, LeastCostRouting, RateEntry, TimeBasedRate
+from pathlib import Path
 
 
 class MockPBX:
@@ -170,7 +171,7 @@ class TestLeastCostRouting:
         """Clean up test environment"""
         # Close and remove temporary database
         os.close(self.db_fd)
-        os.unlink(self.db_path)
+        Path(self.db_path).unlink(missing_ok=True)
 
     def test_add_rate(self) -> None:
         """Test adding a rate"""

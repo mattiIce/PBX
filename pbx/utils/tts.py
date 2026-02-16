@@ -3,7 +3,6 @@ Text-to-Speech utilities for PBX voice prompt generation
 Uses gTTS (Google Text-to-Speech) for natural American English voices
 """
 
-import os
 import subprocess
 import tempfile
 

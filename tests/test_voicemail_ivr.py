@@ -631,6 +631,6 @@ def test_voicemail_pin_from_database() -> None:
         # Cleanup - use try-except to handle potential issues
         try:
             if Path(temp_db.name).exists():
-                os.unlink(temp_db.name)
+                Path(temp_db.name).unlink(missing_ok=True)
         except (OSError, PermissionError):
             pass  # Don't fail the test on cleanup errors

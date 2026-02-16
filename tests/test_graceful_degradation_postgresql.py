@@ -5,7 +5,6 @@ These tests verify the PBX system degrades gracefully when the
 PostgreSQL backend is not available, falling back to SQLite.
 """
 
-import os
 import sys
 from datetime import datetime, timezone
 from unittest import TestCase, mock

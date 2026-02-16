@@ -109,6 +109,6 @@ def test_pcm_to_pcmu_conversion() -> bool:
     finally:
         # Clean up
         if Path(pcm_file_8k).exists():
-            os.remove(pcm_file_8k)
+            Path(pcm_file_8k).unlink(missing_ok=True)
         if Path(pcm_file_16k).exists():
-            os.remove(pcm_file_16k)
+            Path(pcm_file_16k).unlink(missing_ok=True)

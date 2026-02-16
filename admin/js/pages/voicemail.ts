@@ -55,14 +55,14 @@ export async function loadVoicemailForExtension(): Promise<void> {
         for (const id of ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview']) {
             const el = document.getElementById(id) as HTMLElement | null;
             if (el) el.style.display = 'none';
-        });
+        }
         return;
     }
 
-    ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview'].forEach(id => {
+    for (const id of ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview']) {
         const el = document.getElementById(id) as HTMLElement | null;
         if (el) el.style.display = 'block';
-    });
+    }
 
     const currentExt = document.getElementById('vm-current-extension') as HTMLElement | null;
     if (currentExt) currentExt.textContent = extension;

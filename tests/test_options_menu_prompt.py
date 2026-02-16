@@ -4,7 +4,6 @@ Test that the options menu prompt is available and working correctly
 This test validates the fix for the missing options menu voice prompt issue
 """
 
-import os
 from pathlib import Path
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem

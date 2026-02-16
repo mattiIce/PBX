@@ -115,7 +115,7 @@ def generate_auto_attendant_voices(output_dir: str = "auto_attendant", company_n
     return success_count
 
 
-def generate_voicemail_voices(output_dir="voicemail_prompts"):
+def generate_voicemail_voices(output_dir: str = "voicemail_prompts") -> int:
     """
     Generate voice prompts for voicemail system
 
@@ -217,8 +217,8 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
     return success_count
 
 
-def main():
-    """Main function"""
+def main() -> None:
+    """Main function."""
     import argparse
 
     parser = argparse.ArgumentParser(
