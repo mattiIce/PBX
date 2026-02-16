@@ -285,7 +285,7 @@
 </tr>
 <tr>
 <td>Email not sending</td>
-<td><code>python scripts/test_email.py</code></td>
+<td><code>python -c "import smtplib; s=smtplib.SMTP('localhost', 25); print(s.ehlo()); s.quit()"</code></td>
 <td><a href="#integration-problems">Integration Problems</a></td>
 </tr>
 <tr>
@@ -295,7 +295,7 @@
 </tr>
 <tr>
 <td>Voice prompts missing</td>
-<td><code>python scripts/generate_voice_prompts.py</code></td>
+<td><code>python scripts/generate_tts_prompts.py</code></td>
 <td><a href="#audio-issues">Audio Issues</a></td>
 </tr>
 <tr>
@@ -404,14 +404,14 @@
 <strong>If Issues Persist:</strong>
 </code>`<code>bash
 <h1 id="regenerate-audio-prompts-at-correct-sample-rate">Regenerate audio prompts at correct sample rate</h1>
-<p>python scripts/generate_voice_prompts.py</p>
+<p>python scripts/generate_tts_prompts.py</p>
 
 <h1 id="verify-generated-files">Verify generated files</h1>
 <p>file voicemail_prompts/*.wav</p>
 <h1 id="should-show-riff-little-endian-data-wave-audio-microsoft-pcm-8-bit-mono-8000-hz">Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 8 bit, mono 8000 Hz"</h1>
 
 <h1 id="check-auto-attendant-prompts">Check auto-attendant prompts</h1>
-<p>file auto_attendant/prompts/*.wav</p>
+<p>file auto_attendant/*.wav</p>
 </code>`<code>
 
 <strong>Additional Verification:</strong>
@@ -441,23 +441,23 @@
 </code>`<code>bash
 <h1 id="check-if-prompts-exist">Check if prompts exist</h1>
 <p>ls -lh voicemail_prompts/</p>
-<p>ls -lh auto_attendant/prompts/</p>
+<p>ls -lh auto_attendant/</p>
 
 <h1 id="generate-if-missing">Generate if missing</h1>
-<p>python scripts/generate_voice_prompts.py</p>
+<p>python scripts/generate_tts_prompts.py</p>
 
 <h1 id="verify-files-were-created">Verify files were created</h1>
 <p>ls -lh voicemail_prompts/*.wav</p>
-<p>ls -lh auto_attendant/prompts/*.wav</p>
+<p>ls -lh auto_attendant/*.wav</p>
 </code>`<code>
 
 <strong>2. Incorrect File Permissions:</strong>
 </code>`<code>bash
 <h1 id="fix-permissions">Fix permissions</h1>
 <p>sudo chown -R pbx:pbx voicemail_prompts/</p>
-<p>sudo chown -R pbx:pbx auto_attendant/prompts/</p>
+<p>sudo chown -R pbx:pbx auto_attendant/</p>
 <p>sudo chmod 644 voicemail_prompts/*.wav</p>
-<p>sudo chmod 644 auto_attendant/prompts/*.wav</p>
+<p>sudo chmod 644 auto_attendant/*.wav</p>
 </code>`<code>
 
 <strong>3. Codec Encoding Issues:</strong>
@@ -574,7 +574,7 @@
 <p>grep "number:" config.yml | sort | uniq -d</p>
 
 <h1 id="clear-any-stale-registrations">Clear any stale registrations</h1>
-<p>curl -k https://localhost:8080/api/extensions</p>
+<p>curl -k https://localhost:9000/api/extensions</p>
 </code>`<code>
 
 <h3 id="intermittent-registration-drops">Intermittent Registration Drops</h3>
@@ -643,7 +643,7 @@
 <strong>2. Verify API Accessibility:</strong>
 </code>`<code>bash
 <h1 id="test-api-endpoint">Test API endpoint</h1>
-<p>curl -k https://localhost:8080/api/status</p>
+<p>curl -k https://localhost:9000/api/status</p>
 
 <h1 id="should-return-json-with-status-information">Should return JSON with status information</h1>
 </code>`<code>
@@ -658,16 +658,16 @@
 
 <strong>4. Verify Firewall:</strong>
 </code>`<code>bash
-<p>sudo ufw status | grep 8080</p>
+<p>sudo ufw status | grep 9000</p>
 
 <h1 id="if-not-allowed">If not allowed:</h1>
-<p>sudo ufw allow 8080/tcp</p>
+<p>sudo ufw allow 9000/tcp</p>
 </code>`<code>
 
 <strong>5. Check Port Binding:</strong>
 </code>`<code>bash
 <h1 id="verify-pbx-is-listening-on-correct-port">Verify PBX is listening on correct port</h1>
-<p>sudo netstat -tlnp | grep 8080</p>
+<p>sudo netstat -tlnp | grep 9000</p>
 
 <h1 id="should-show-pythonpbx-process">Should show python/pbx process</h1>
 </code>`<code>
@@ -823,7 +823,7 @@
 
 <strong>Diagnostic Page:</strong>
 </code>`<code>
-<p>Visit: https://localhost:8080/admin/status-check.html</p>
+<p>Visit: https://localhost:9000/admin/status-check.html</p>
 </code>`<code>
 
 <p>This page will:</p>
@@ -890,7 +890,7 @@
 <ul>
 <li>Accessing admin pages returns: "Not Found - The requested URL was not found on this server."</li>
 <li>Error message shows "Apache/2.4.58 (Ubuntu)" or similar</li>
-<li>Direct access to PBX port works (e.g., http://localhost:8080/admin/)</li>
+<li>Direct access to PBX port works (e.g., http://localhost:9000/admin/)</li>
 </ul>
 
 <strong>Root Cause:</strong>
@@ -922,8 +922,8 @@
 <p>    ProxyRequests Off</p>
     
     <Location />
-<p>        ProxyPass http://localhost:8080/</p>
-<p>        ProxyPassReverse http://localhost:8080/</p>
+<p>        ProxyPass http://localhost:9000/</p>
+<p>        ProxyPassReverse http://localhost:9000/</p>
     </Location>
     
 <p>    ErrorLog ${APACHE_LOG_DIR}/pbx-error.log</p>
@@ -971,7 +971,7 @@
 <strong>1. Test SMTP Configuration:</strong>
 </code>`<code>bash
 <h1 id="run-email-test-script">Run email test script</h1>
-<p>python scripts/test_email.py</p>
+<p>python -c "import smtplib; s=smtplib.SMTP('localhost', 25); print(s.ehlo()); s.quit()"</p>
 
 <h1 id="should-show-smtp-connection-and-send-test">Should show SMTP connection and send test</h1>
 </code>`<code>
@@ -1240,7 +1240,7 @@
 <strong>1. Check Template Variables:</strong>
 </code>`<code>bash
 <h1 id="view-template">View template</h1>
-<p>cat provisioning_templates/yealink/t46s.cfg</p>
+<p>cat provisioning_templates/yealink_t46s.template</p>
 
 <h1 id="verify-variables-are-correct">Verify variables are correct:</h1>
 <h1 id="extension-password-sip_server-etc">{EXTENSION}, {PASSWORD}, {SIP_SERVER}, etc.</h1>
@@ -1353,7 +1353,7 @@
 <strong>6. Initialize Database:</strong>
 </code>`<code>bash
 <h1 id="run-initialization-script">Run initialization script</h1>
-<p>python scripts/init_voicemail_db.py</p>
+<p>python scripts/init_database.py</p>
 
 <h1 id="should-create-tables">Should create tables</h1>
 </code>`<code>
@@ -1383,9 +1383,9 @@
 
 <strong>2. Run Migration:</strong>
 </code>`<code>bash
-<p>python scripts/migrate_database.py</p>
+<p>alembic upgrade head</p>
 
-<h1 id="follow-prompts">Follow prompts</h1>
+<h1 id="follow-prompts">Applies all pending migrations</h1>
 </code>`<code>
 
 <strong>3. Check Schema Version:</strong>
@@ -1412,7 +1412,7 @@
 
 <strong>1. Initialize Voicemail Tables:</strong>
 </code>`<code>bash
-<p>python scripts/init_voicemail_db.py</p>
+<p>python scripts/init_database.py</p>
 
 <h1 id="creates-voicemail_messages-table">Creates voicemail_messages table</h1>
 </code>`<code>
@@ -1504,7 +1504,7 @@
 <strong>7. Check Port Conflicts:</strong>
 </code>`<code>bash
 <h1 id="verify-ports-not-in-use">Verify ports not in use</h1>
-<p>sudo netstat -tlnp | grep -E "(5060|8080)"</p>
+<p>sudo netstat -tlnp | grep -E "(5060|9000)"</p>
 
 <h1 id="if-in-use-kill-conflicting-process-or-change-pbx-ports">If in use, kill conflicting process or change PBX ports</h1>
 </code>`<code>
@@ -1595,7 +1595,7 @@
 
 <h1 id="should-show">Should show:</h1>
 <h1 id="5060udp-allow-in">5060/udp ALLOW IN</h1>
-<h1 id="8080tcp-allow-in">8080/tcp ALLOW IN</h1>
+<h1 id="9000tcp-allow-in">9000/tcp ALLOW IN</h1>
 <h1 id="1000020000udp-allow-in">10000:20000/udp ALLOW IN</h1>
 </code>`<code>
 
@@ -1605,7 +1605,7 @@
 <p>sudo ufw allow 5060/udp</p>
 
 <h1 id="adminapi">Admin/API</h1>
-<p>sudo ufw allow 8080/tcp</p>
+<p>sudo ufw allow 9000/tcp</p>
 <p>sudo ufw allow 443/tcp</p>
 
 <h1 id="rtp-media">RTP media</h1>
@@ -1617,14 +1617,14 @@
 
 <strong>3. Check IPTables (if using):</strong>
 </code>`<code>bash
-<p>sudo iptables -L -n -v | grep -E "(5060|8080|10000)"</p>
+<p>sudo iptables -L -n -v | grep -E "(5060|9000|10000)"</p>
 </code>`<code>
 
 <strong>4. Test Connectivity:</strong>
 </code>`<code>bash
 <h1 id="from-external-host">From external host</h1>
 <p>nc -u -v PBX_IP 5060  # SIP</p>
-<p>nc -v PBX_IP 8080     # HTTPS</p>
+<p>nc -v PBX_IP 9000     # HTTPS</p>
 
 <h1 id="should-connect">Should connect</h1>
 </code>`<code>
@@ -1667,7 +1667,7 @@
 <h1 id="on-router-forward-these-ports-to-pbx">On router, forward these ports to PBX:</h1>
 <h1 id="udp-5060-sip">UDP 5060 (SIP)</h1>
 <h1 id="udp-10000-20000-rtp">UDP 10000-20000 (RTP)</h1>
-<h1 id="tcp-8080-or-443-https">TCP 8080 or 443 (HTTPS)</h1>
+<h1 id="tcp-9000-or-443-https">TCP 9000 or 443 (HTTPS)</h1>
 </code>`<code>
 
 <strong>4. Check NAT Type:</strong>
@@ -1724,7 +1724,7 @@
 <strong>4. Use Example as Template:</strong>
 </code>`<code>bash
 <h1 id="compare-with-working-example">Compare with working example</h1>
-<p>diff config.yml config.example.yml</p>
+<p>python -c "import yaml; yaml.safe_load(open('config.yml'))"</p>
 </code>`<code>
 
 <strong>5. Test Minimal Config:</strong>
@@ -1792,7 +1792,7 @@
 
 <strong>1. Check Active Calls:</strong>
 </code>`<code>bash
-<p>curl -k https://localhost:8080/api/calls | jq '.'</p>
+<p>curl -k https://localhost:9000/api/calls | jq '.'</p>
 
 <h1 id="high-call-volume-may-be-normal">High call volume may be normal</h1>
 </code>`<code>
@@ -1847,7 +1847,7 @@
 <strong>2. Check Call Cleanup:</strong>
 </code>`<code>bash
 <h1 id="verify-calls-are-properly-ended">Verify calls are properly ended</h1>
-<p>curl -k https://localhost:8080/api/calls</p>
+<p>curl -k https://localhost:9000/api/calls</p>
 
 <h1 id="stale-calls-indicate-cleanup-issue">Stale calls indicate cleanup issue</h1>
 </code>`<code>
@@ -2049,17 +2049,17 @@
 </code>`<code>bash
 <h1 id="full-system-check">Full system check</h1>
 <p>sudo systemctl status pbx</p>
-<p>curl -k https://localhost:8080/api/status</p>
+<p>curl -k https://localhost:9000/api/status</p>
 <p>sudo ufw status</p>
-<p>sudo netstat -tlnp | grep -E "(5060|8080)"</p>
+<p>sudo netstat -tlnp | grep -E "(5060|9000)"</p>
 <p>python scripts/verify_database.py</p>
 
 <h1 id="check-logs-for-errors">Check logs for errors</h1>
 <p>tail -f logs/pbx.log | grep -i error</p>
 
 <h1 id="test-basic-functionality">Test basic functionality</h1>
-<p>curl -k https://localhost:8080/api/extensions</p>
-<p>curl -k https://localhost:8080/api/calls</p>
+<p>curl -k https://localhost:9000/api/extensions</p>
+<p>curl -k https://localhost:9000/api/calls</p>
 
 <h1 id="monitor-real-time-activity">Monitor real-time activity</h1>
 <p>tail -f logs/pbx.log</p>

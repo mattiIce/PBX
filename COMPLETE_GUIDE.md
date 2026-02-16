@@ -2266,7 +2266,7 @@ POST   /api/calls/{call_id}/transfer
 DELETE /api/calls/{call_id}
 
 # Call Detail Records
-GET /api/cdr?start_date=2025-01-01&end_date=2025-01-31
+GET /api/analytics/advanced?start_date=2025-01-01&end_date=2025-01-31
 GET /api/statistics
 
 # Configuration

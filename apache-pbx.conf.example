@@ -12,12 +12,12 @@
 #   2. Edit the file and replace the following placeholders:
 #      ⚠️  YOUR_DOMAIN_NAME  → Your actual domain (e.g., abps.albl.com)
 #      ⚠️  YOUR_EMAIL        → Your email for SSL notifications
-#      ⚠️  BACKEND_PORT      → PBX backend port (usually 8080 or 9000)
+#      ⚠️  BACKEND_PORT      → PBX backend port (default: 9000)
 #
 #      Find and replace all occurrences:
 #      sed -i 's/YOUR_DOMAIN_NAME/abps.albl.com/g' /etc/apache2/sites-available/pbx.conf
 #      sed -i 's/YOUR_EMAIL/admin@example.com/g' /etc/apache2/sites-available/pbx.conf
-#      sed -i 's/BACKEND_PORT/8080/g' /etc/apache2/sites-available/pbx.conf
+#      sed -i 's/BACKEND_PORT/9000/g' /etc/apache2/sites-available/pbx.conf
 #
 #   3. Enable required Apache modules:
 #      sudo a2enmod proxy proxy_http proxy_wstunnel headers rewrite ssl

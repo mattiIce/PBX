@@ -957,7 +957,7 @@ curl http://localhost:8888/provision/1001?debug=true
 - Direct access to PBX on the correct port works fine
 
 **Root Cause:**
-When `api.port` in `config.yml` is changed from the default (8080), previously registered devices may have cached provisioning URLs with the old port. The phone requests `http://server:8080/provision/...` but the server now listens on port 9000.
+When `api.port` in `config.yml` is changed from a previous value (e.g., 8080), previously registered devices may have cached provisioning URLs with the old port. The phone requests `http://server:8080/provision/...` but the server now listens on port 9000.
 
 **Solution:**
 1. **Restart the PBX service** - URLs are automatically regenerated from current config on startup:

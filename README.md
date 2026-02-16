@@ -175,7 +175,7 @@ Access at `https://localhost:9000/admin/` for system management.
 curl http://localhost:9000/api/status              # System status
 curl http://localhost:9000/api/extensions           # List extensions
 curl http://localhost:9000/api/calls                # Active calls
-curl http://localhost:9000/api/cdr                  # Call records
+curl http://localhost:9000/api/analytics/advanced    # Call records
 curl http://localhost:9000/api/config               # Configuration
 ```
 
@@ -185,7 +185,7 @@ See [COMPLETE_GUIDE.md - Section 9.2](COMPLETE_GUIDE.md#92-rest-api-reference) f
 
 - **System logs**: `logs/pbx.log` (configurable level in `config.yml`)
 - **CDR files**: `cdr/cdr_YYYY-MM-DD.jsonl`
-- **API endpoints**: `/api/cdr`, `/api/statistics`
+- **API endpoints**: `/api/analytics/advanced`, `/api/statistics`
 - **Grafana dashboards**: See [grafana/dashboards/](grafana/dashboards/)
 
 ## Known Issues
