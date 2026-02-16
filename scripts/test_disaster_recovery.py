@@ -14,7 +14,6 @@ Usage:
 import argparse
 import json
 import logging
-import os
 import shutil
 import sqlite3
 import subprocess
