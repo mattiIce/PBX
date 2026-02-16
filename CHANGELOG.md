@@ -11,9 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Full SIP protocol stack (REGISTER, INVITE, ACK, BYE, CANCEL, OPTIONS, SUBSCRIBE, NOTIFY, PUBLISH, REFER, UPDATE, PRACK, INFO, MESSAGE)
 - RTP media handling with multi-codec support (G.711, G.722, G.729, Opus)
-- 77 pluggable feature modules loaded dynamically via FeatureInitializer
+- 76 pluggable feature modules loaded dynamically via FeatureInitializer
 - Modern admin web interface built with TypeScript and Vite
-- 23 REST API route modules organized by feature domain
+- 22 REST API route modules organized by feature domain
 - Flask app factory pattern with blueprint-based routing
 - SQLAlchemy 2.0 ORM with PostgreSQL (production) and SQLite (development fallback)
 - Alembic database migrations

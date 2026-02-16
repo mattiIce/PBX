@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (77 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
+Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (76 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
 
 ## Quick Reference
 
@@ -65,7 +65,7 @@ make pre-commit-run
 ```
 pbx/
 ├── api/              # REST API layer (Flask)
-│   ├── routes/       # 23 route modules organized by feature
+│   ├── routes/       # 22 route modules organized by feature
 │   ├── schemas/      # Request/response validation
 │   ├── app.py        # Flask app factory (create_app)
 │   ├── errors.py     # Error handling
@@ -87,7 +87,7 @@ pbx/
 │   ├── handler.py    # RTP relay
 │   ├── jitter_buffer.py
 │   └── rtcp_monitor.py
-├── features/         # 77 feature modules (pluggable)
+├── features/         # 76 feature modules (pluggable)
 │   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
 ├── utils/            # Cross-cutting concerns
@@ -233,7 +233,7 @@ Configured in `.pre-commit-config.yaml`:
 | `Makefile` | All development commands |
 | `config.yml` | Runtime configuration |
 | `docker-compose.yml` | Container orchestration |
-| `Dockerfile` | Multi-stage build (python:3.13-slim-bookworm) |
+| `Dockerfile` | Multi-stage build (python:3.14-slim-bookworm) |
 
 ## Ruff Rules Summary
 
