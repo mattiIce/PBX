@@ -514,11 +514,11 @@ class VoicemailHandler:
                 # prevent duplicates
                 last_detected_digit: str | None = None
                 last_detection_time: float = 0.0
-                DTMF_DEBOUNCE_SECONDS: float = 0.5  # Ignore same digit within 500ms
+                dtmf_debounce_seconds: float = 0.5  # Ignore same digit within 500ms
 
                 # Constants for DTMF detection
                 # ~0.5s of audio at 160 bytes per 20ms RTP packet
-                DTMF_DETECTION_PACKETS: int = 40  # 40 packets * 20ms = 0.8s of audio
+                dtmf_detection_packets: int = 40  # 40 packets * 20ms = 0.8s of audio
                 # Minimum audio data needed for reliable DTMF detection
                 min_audio_bytes_for_dtmf: int = 1600
 
@@ -551,7 +551,7 @@ class VoicemailHandler:
                             # Collect last portion of audio for DTMF
                             # detection
                             recent_audio = b"".join(
-                                recorder.recorded_data[-DTMF_DETECTION_PACKETS:]
+                                recorder.recorded_data[-dtmf_detection_packets:]
                             )
 
                             if (
@@ -572,12 +572,12 @@ class VoicemailHandler:
                                     if (
                                         digit == last_detected_digit
                                         and (current_time - last_detection_time)
-                                        < DTMF_DEBOUNCE_SECONDS
+                                        < dtmf_debounce_seconds
                                     ):
                                         # Same digit detected too soon,
                                         # likely echo or lingering tone
                                         pbx.logger.debug(
-                                            f"[VM IVR] DTMF '{digit}' debounced (duplicate within {DTMF_DEBOUNCE_SECONDS}s)"
+                                            f"[VM IVR] DTMF '{digit}' debounced (duplicate within {dtmf_debounce_seconds}s)"
                                         )
                                         continue
 
@@ -749,7 +749,7 @@ class VoicemailHandler:
                                 # Priority 2: Check in-band audio
                                 elif hasattr(recorder, "recorded_data") and recorder.recorded_data:
                                     recent_audio = b"".join(
-                                        recorder.recorded_data[-DTMF_DETECTION_PACKETS:]
+                                        recorder.recorded_data[-dtmf_detection_packets:]
                                     )
                                     if len(recent_audio) > min_audio_bytes_for_dtmf:
                                         try:

@@ -89,9 +89,11 @@ class IntegrationSetup:
         if not self.env_path.exists():
             if self.env_example_path.exists():
                 # Copy from example
-                with open(self.env_example_path) as src:
-                    with open(self.env_path, "w") as dst:
-                        dst.write(src.read())
+                with (
+                    open(self.env_example_path) as src,
+                    open(self.env_path, "w") as dst,
+                ):
+                    dst.write(src.read())
                 print("✅ Created .env file from .env.example")
             else:
                 # Create minimal .env

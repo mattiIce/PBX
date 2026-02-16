@@ -62,20 +62,17 @@ def generate_test_certificate() -> tuple[str | None, str | None]:
     )
 
     # Write to temporary files
-    cert_file = tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".crt")
-    key_file = tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".key")
+    with tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".crt") as cert_file:
+        cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
 
-    cert_file.write(cert.public_bytes(serialization.Encoding.PEM))
-    cert_file.close()
-
-    key_file.write(
-        private_key.private_bytes(
-            encoding=serialization.Encoding.PEM,
-            format=serialization.PrivateFormat.TraditionalOpenSSL,
-            encryption_algorithm=serialization.NoEncryption(),
+    with tempfile.NamedTemporaryFile(mode="wb", delete=False, suffix=".key") as key_file:
+        key_file.write(
+            private_key.private_bytes(
+                encoding=serialization.Encoding.PEM,
+                format=serialization.PrivateFormat.TraditionalOpenSSL,
+                encryption_algorithm=serialization.NoEncryption(),
+            )
         )
-    )
-    key_file.close()
 
     return cert_file.name, key_file.name
 

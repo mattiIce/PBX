@@ -349,21 +349,23 @@ class BIIntegration:
             # Create Hyper file
             extract_path = f"{self.export_path}/{dataset_name}.hyper"
 
-            with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hyper:
-                with Connection(
+            with (
+                HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hyper,
+                Connection(
                     endpoint=hyper.endpoint,
                     database=extract_path,
                     create_mode=CreateMode.CREATE_AND_REPLACE,
-                ) as connection:
-                    # Create table definition from data structure
-                    table_def = self._create_tableau_table_definition(dataset_name, data[0])
-                    connection.catalog.create_table(table_def)
+                ) as connection,
+            ):
+                # Create table definition from data structure
+                table_def = self._create_tableau_table_definition(dataset_name, data[0])
+                connection.catalog.create_table(table_def)
 
-                    # Insert data
-                    with Inserter(connection, table_def) as inserter:
-                        for row in data:
-                            inserter.add_row([row.get(col) for col in row])
-                        inserter.execute()
+                # Insert data
+                with Inserter(connection, table_def) as inserter:
+                    for row in data:
+                        inserter.add_row([row.get(col) for col in row])
+                    inserter.execute()
 
             self.logger.info(f"Created Tableau extract: {extract_path}")
             return extract_path

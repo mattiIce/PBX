@@ -33,8 +33,8 @@ def test_database_backend_initialization() -> None:
     """Test database backend initialization with SQLite fallback"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create a test config for SQLite
@@ -69,8 +69,8 @@ def test_voicemail_database_integration() -> None:
 
     # Create temporary directories for test
     temp_dir = tempfile.mkdtemp()
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create test config with SQLite

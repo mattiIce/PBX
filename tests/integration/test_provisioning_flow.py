@@ -121,12 +121,14 @@ class TestProvisioningTemplateCRUD:
         provisioning.add_template("acme", "rocket", "original content")
 
         # update_template writes to disk -- mock the filesystem part
-        with patch("builtins.open", MagicMock()):
-            with patch("os.path.exists", return_value=True):
-                with patch("os.makedirs"):
-                    success, _msg = provisioning.update_template(
-                        "acme", "rocket", "updated content"
-                    )
+        with (
+            patch("builtins.open", MagicMock()),
+            patch("os.path.exists", return_value=True),
+            patch("os.makedirs"),
+        ):
+            success, _msg = provisioning.update_template(
+                "acme", "rocket", "updated content"
+            )
 
         assert success is True
         template = provisioning.get_template("acme", "rocket")

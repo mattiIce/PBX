@@ -172,7 +172,7 @@ class DisasterRecoveryTester:
             for pattern in config_files:
                 # Handle glob patterns
                 if "*" in pattern:
-                    files = list(Path(".").glob(pattern))
+                    files = list(Path().glob(pattern))
                     for file in files:
                         if file.exists():
                             dest = Path(config_backup_dir) / file.name

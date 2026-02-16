@@ -558,8 +558,8 @@ def test_voicemail_pin_from_database() -> None:
     """Test that voicemail PIN is loaded from database and verified correctly"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create test config with SQLite

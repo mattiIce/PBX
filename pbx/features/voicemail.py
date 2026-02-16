@@ -355,13 +355,11 @@ class VoicemailBox:
                     self.logger.info("Updating voicemail listened status in database...")
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = """
+                        query = f"""
                         UPDATE voicemail_messages
-                        SET listened = {}
-                        WHERE message_id = {}
-                        """.format(  # nosec B608 - placeholder is safely parameterized
-                            placeholder, placeholder
-                        )
+                        SET listened = {placeholder}
+                        WHERE message_id = {placeholder}
+                        """  # nosec B608 - placeholder is safely parameterized
                         self.database.execute(query, (True, message_id))
                         self.logger.info(
                             f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database"
@@ -399,12 +397,10 @@ class VoicemailBox:
                     self.logger.info("Deleting voicemail from database...")
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = """
+                        query = f"""
                         DELETE FROM voicemail_messages
-                        WHERE message_id = {}
-                        """.format(  # nosec B608 - placeholder is safely parameterized
-                            placeholder
-                        )
+                        WHERE message_id = {placeholder}
+                        """  # nosec B608 - placeholder is safely parameterized
                         self.database.execute(query, (message_id,))
                         self.logger.info(
                             f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database"
@@ -431,16 +427,14 @@ class VoicemailBox:
                 placeholder = self._get_db_placeholder()
                 # Build query safely - placeholder is only '%s' or '?' from
                 # internal method
-                query = """
+                query = f"""
                 SELECT message_id, caller_id, file_path, duration, listened, created_at,
                        transcription_text, transcription_confidence, transcription_language,
                        transcription_provider, transcribed_at
                 FROM voicemail_messages
-                WHERE extension_number = {}
+                WHERE extension_number = {placeholder}
                 ORDER BY created_at DESC
-                """.format(  # nosec B608 - placeholder is safely parameterized
-                    placeholder
-                )
+                """  # nosec B608 - placeholder is safely parameterized
                 self.logger.debug(  # nosec B608 - log statement only
                     f"  Query: SELECT from voicemail_messages WHERE extension_number = {self.extension_number}"
                 )

@@ -16,8 +16,8 @@ def test_transaction_rollback_on_error() -> None:
     """Test that transactions are rolled back after errors"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create a test config for SQLite
@@ -58,8 +58,8 @@ def test_transaction_rollback_on_error() -> None:
 def test_fetch_one_rollback_on_error() -> None:
     """Test that fetch_one rolls back transaction on error"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")
@@ -89,8 +89,8 @@ def test_fetch_one_rollback_on_error() -> None:
 def test_fetch_all_rollback_on_error() -> None:
     """Test that fetch_all rolls back transaction on error"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")
@@ -120,8 +120,8 @@ def test_fetch_all_rollback_on_error() -> None:
 def test_schema_migration_rollback() -> None:
     """Test that schema migration errors don't leave transactions open"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")
@@ -152,8 +152,8 @@ def test_schema_migration_rollback() -> None:
 def test_permission_error_rollback() -> None:
     """Test that permission errors properly rollback transactions"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")
