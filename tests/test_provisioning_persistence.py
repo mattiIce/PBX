@@ -26,7 +26,7 @@ def test_provisioning_persistence() -> None:
         config.config["database"] = {"type": "sqlite", "path": db_path}
         config.config["provisioning"] = {"enabled": True}
         config.config["server"] = {"external_ip": "192.168.1.14", "sip_port": 5060}
-        config.config["api"] = {"port": 8080}
+        config.config["api"] = {"port": 9000}
 
         # Initialize database
         db1 = DatabaseBackend(config)
@@ -94,7 +94,7 @@ def test_static_ip_assignment() -> None:
         config.config["database"] = {"type": "sqlite", "path": db_path}
         config.config["provisioning"] = {"enabled": True}
         config.config["server"] = {"external_ip": "192.168.1.14", "sip_port": 5060}
-        config.config["api"] = {"port": 8080}
+        config.config["api"] = {"port": 9000}
 
         # Initialize database
         db = DatabaseBackend(config)
@@ -137,7 +137,7 @@ def test_device_unregister_removes_from_db() -> None:
         config.config["database"] = {"type": "sqlite", "path": db_path}
         config.config["provisioning"] = {"enabled": True}
         config.config["server"] = {"external_ip": "192.168.1.14", "sip_port": 5060}
-        config.config["api"] = {"port": 8080}
+        config.config["api"] = {"port": 9000}
 
         # Initialize database
         db1 = DatabaseBackend(config)

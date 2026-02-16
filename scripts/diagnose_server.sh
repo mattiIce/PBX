@@ -98,9 +98,9 @@ echo ""
 echo "8. LISTENING PORTS"
 echo "─────────────────────────────────────────────────────────────────"
 if command -v netstat >/dev/null 2>&1; then
-    netstat -tlnp 2>/dev/null | grep -E ":(80|443|5060|8080)" || echo "No PBX ports listening"
+    netstat -tlnp 2>/dev/null | grep -E ":(80|443|5060|9000)" || echo "No PBX ports listening"
 elif command -v ss >/dev/null 2>&1; then
-    ss -tlnp 2>/dev/null | grep -E ":(80|443|5060|8080)" || echo "No PBX ports listening"
+    ss -tlnp 2>/dev/null | grep -E ":(80|443|5060|9000)" || echo "No PBX ports listening"
 else
     echo "Cannot check listening ports (netstat/ss not available)"
 fi

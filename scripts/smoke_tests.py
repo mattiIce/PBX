@@ -17,7 +17,7 @@ from typing import Any
 class SmokeTestRunner:
     """Run smoke tests against a deployed PBX system."""
 
-    def __init__(self, api_url: str = "http://localhost:8080"):
+    def __init__(self, api_url: str = "http://localhost:9000"):
         """
         Initialize smoke test runner.
 
@@ -339,7 +339,7 @@ class SmokeTestRunner:
 def main():
     """Main entry point."""
     # Check if API URL is provided
-    api_url = os.environ.get("PBX_API_URL", "http://localhost:8080")
+    api_url = os.environ.get("PBX_API_URL", "http://localhost:9000")
 
     if len(sys.argv) > 1:
         api_url = sys.argv[1]

@@ -210,7 +210,7 @@ def main():
         print("     python main.py")
         print()
         print("  3. Test webphone:")
-        print("     Open https://localhost:8080/admin/")
+        print("     Open https://localhost:9000/admin/")
         print("     Login with extension 1001")
     else:
         print("✓ All extensions already exist in database")

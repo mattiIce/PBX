@@ -96,7 +96,7 @@ class HealthCheck:
 
         ports = [
             ("SIP Server", 5060, "critical"),
-            ("HTTP API", 8080, "critical"),
+            ("HTTP API", 9000, "critical"),
             ("HTTPS API", 8443, "warning"),
         ]
 

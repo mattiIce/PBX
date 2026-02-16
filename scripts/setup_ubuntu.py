@@ -614,7 +614,7 @@ DB_PASSWORD={self.db_config['DB_PASSWORD']}
         print("   python main.py\n")
 
         print(f"{Colors.OKCYAN}3. Access the Admin Interface:{Colors.ENDC}")
-        print("   Open your browser to: https://localhost:8080")
+        print("   Open your browser to: https://localhost:9000")
         print("   (You'll need to accept the self-signed certificate)\n")
 
         print(f"{Colors.OKCYAN}4. Optional - Install as a system service:{Colors.ENDC}")

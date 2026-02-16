@@ -167,7 +167,7 @@ configure_postgresql() {
 
     if [ "$DRY_RUN" = true ]; then
         log_info "[DRY RUN] Would configure PostgreSQL with:"
-        log_info "  - Create pbx database and user"
+        log_info "  - Create pbx_system database and pbx_user user"
         log_info "  - Enable replication"
         log_info "  - Configure backup"
         return 0
@@ -178,15 +178,15 @@ configure_postgresql() {
     systemctl enable postgresql
 
     # Create database and user
-    sudo -u postgres psql -c "CREATE DATABASE pbx;" 2>/dev/null || log_warning "Database may already exist"
+    sudo -u postgres psql -c "CREATE DATABASE pbx_system;" 2>/dev/null || log_warning "Database may already exist"
 
     # Generate a random password if not in dry-run mode
     DB_PASSWORD=$(openssl rand -base64 32)
     log_info "Database password generated. It will be shown once below; store it securely."
-    echo "PBX database password for user 'pbxuser': $DB_PASSWORD"
+    echo "PBX database password for user 'pbx_user': $DB_PASSWORD"
 
-    sudo -u postgres psql -c "CREATE USER pbxuser WITH PASSWORD '$DB_PASSWORD';" 2>/dev/null || log_warning "User may already exist"
-    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx TO pbxuser;"
+    sudo -u postgres psql -c "CREATE USER pbx_user WITH PASSWORD '$DB_PASSWORD';" 2>/dev/null || log_warning "User may already exist"
+    sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE pbx_system TO pbx_user;"
 
     log_warning "⚠️  IMPORTANT: Update database password in config.yml with the password shown above. It is not stored in the log file."
 
@@ -284,7 +284,7 @@ setup_backup_system() {
 #!/bin/bash
 BACKUP_DIR="/var/backups/pbx"
 TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
-DATABASE="pbx"
+DATABASE="pbx_system"
 
 # Database backup
 sudo -u postgres pg_dump \$DATABASE | gzip > "\$BACKUP_DIR/db_\$TIMESTAMP.sql.gz"
@@ -292,8 +292,8 @@ sudo -u postgres pg_dump \$DATABASE | gzip > "\$BACKUP_DIR/db_\$TIMESTAMP.sql.gz
 # Configuration backup
 tar -czf "\$BACKUP_DIR/config_\$TIMESTAMP.tar.gz" "$PROJECT_ROOT/config.yml"
 
-# Keep only last 7 days of backups
-find "\$BACKUP_DIR" -name "*.gz" -mtime +7 -delete
+# Keep only last 30 days of backups
+find "\$BACKUP_DIR" -name "*.gz" -mtime +30 -delete
 
 echo "Backup completed: \$TIMESTAMP"
 EOF
@@ -407,7 +407,7 @@ server {
     server_name _;
 
     location / {
-        proxy_pass http://127.0.0.1:8080;
+        proxy_pass http://127.0.0.1:9000;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -516,7 +516,7 @@ BACKUP LOCATIONS:
 -----------------
 - Database backups: $BACKUP_DIR/db_*.sql.gz
 - Config backups: $BACKUP_DIR/config_*.tar.gz
-- Retention: 7 days
+- Retention: 30 days
 
 USEFUL COMMANDS:
 ----------------
@@ -533,7 +533,7 @@ sudo /usr/local/bin/pbx-backup.sh
 sudo ufw status
 
 # Test database connection
-sudo -u postgres psql -d pbx
+sudo -u postgres psql -d pbx_system
 
 ================================================================================
 EOF

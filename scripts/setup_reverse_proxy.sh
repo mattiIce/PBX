@@ -336,8 +336,8 @@ if [ -z "$EMAIL" ]; then
 fi
 
 # Get PBX backend port
-read -p "Enter PBX backend port [default: 8080]: " BACKEND_PORT
-BACKEND_PORT=${BACKEND_PORT:-8080}
+read -p "Enter PBX backend port [default: 9000]: " BACKEND_PORT
+BACKEND_PORT=${BACKEND_PORT:-9000}
 
 # Confirm configuration
 echo ""

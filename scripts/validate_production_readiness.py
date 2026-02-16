@@ -258,7 +258,7 @@ class ProductionValidator:
         # Check if ports are available
         ports_to_check = [
             (5060, "SIP", "udp"),
-            (8080, "HTTPS API", "tcp"),
+            (9000, "HTTPS API", "tcp"),
         ]
 
         for port, service, protocol in ports_to_check:

@@ -512,7 +512,7 @@ provisioning:
   # Useful as a fallback if LDAP is unreliable or unavailable
   # Note: This URL is also auto-configured in the Admin Panel based on your server settings
   remote_phonebook:
-    url: http://192.168.1.14:8080/api/phone-book/export/xml  # URL to XML phone book (using HTTP for phone compatibility)
+    url: http://192.168.1.14:9000/api/phone-book/export/xml  # URL to XML phone book (using HTTP for phone compatibility)
     refresh_interval: 60  # Refresh interval in minutes
 trunks: null
 integrations:
