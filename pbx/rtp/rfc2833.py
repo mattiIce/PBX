@@ -5,20 +5,29 @@ Implements RFC 2833 (RTP Payload for DTMF Digits, Telephony Tones and Signals)
 using configurable payload type (default 101) for out-of-band DTMF transmission over RTP.
 """
 
+from __future__ import annotations
+
 import contextlib
 import socket
 import struct
 import threading
 import time
+from typing import TYPE_CHECKING
 
 from pbx.utils.logger import get_logger
 
+if TYPE_CHECKING:
+    from pbx.core.pbx import PBXCore
+
+# Type alias for network address tuples
+type AddrTuple = tuple[str, int]
+
 # Constants
-SAMPLE_RATE_8KHZ = 8000  # Standard sample rate for telephony
-PAYLOAD_TYPE_TELEPHONE_EVENT = 101  # RFC 2833 default payload type (can be configured)
+SAMPLE_RATE_8KHZ: int = 8000  # Standard sample rate for telephony
+PAYLOAD_TYPE_TELEPHONE_EVENT: int = 101  # RFC 2833 default payload type (can be configured)
 
 # RFC 2833 Event Codes for DTMF digits
-RFC2833_EVENT_CODES = {
+RFC2833_EVENT_CODES: dict[str, int] = {
     "0": 0,
     "1": 1,
     "2": 2,
@@ -38,12 +47,12 @@ RFC2833_EVENT_CODES = {
 }
 
 # Reverse mapping
-RFC2833_CODE_TO_DIGIT = {v: k for k, v in RFC2833_EVENT_CODES.items()}
+RFC2833_CODE_TO_DIGIT: dict[int, str] = {v: k for k, v in RFC2833_EVENT_CODES.items()}
 
 
 class RFC2833EventPacket:
     """
-    RFC 2833 RTP Event Packet
+    RFC 2833 RTP Event Packet.
 
     Packet format (4 bytes payload):
     0                   1                   2                   3
@@ -59,32 +68,38 @@ class RFC2833EventPacket:
     duration: Duration in timestamp units (160 for 20ms at 8kHz)
     """
 
-    def __init__(self, event=None, end=False, volume=10, duration=160):
+    def __init__(
+        self,
+        event: int | str | None = None,
+        end: bool = False,
+        volume: int = 10,
+        duration: int = 160,
+    ) -> None:
         """
-        Initialize RFC 2833 event packet
+        Initialize RFC 2833 event packet.
 
         Args:
-            event: Event code (0-15) or DTMF digit ('0'-'9', '*', '#', 'A'-'D')
-            end: End bit (True for final packet)
-            volume: Power level (0-63, default 10)
-            duration: Duration in timestamp units (default 160 = 20ms at 8kHz)
+            event: Event code (0-15) or DTMF digit ('0'-'9', '*', '#', 'A'-'D').
+            end: End bit (True for final packet).
+            volume: Power level (0-63, default 10).
+            duration: Duration in timestamp units (default 160 = 20ms at 8kHz).
         """
         # Convert digit to event code if string
         if isinstance(event, str):
-            self.event = RFC2833_EVENT_CODES.get(event.upper(), 0)
+            self.event: int = RFC2833_EVENT_CODES.get(event.upper(), 0)
         else:
             self.event = event if event is not None else 0
 
-        self.end = end
-        self.volume = volume
-        self.duration = duration
+        self.end: bool = end
+        self.volume: int = volume
+        self.duration: int = duration
 
-    def pack(self):
+    def pack(self) -> bytes:
         """
-        Pack event into 4-byte payload
+        Pack event into 4-byte payload.
 
         Returns:
-            bytes: 4-byte RFC 2833 event payload
+            4-byte RFC 2833 event payload.
         """
         # Build second byte: E(1) R(1) volume(6)
         byte2 = (int(self.end) << 7) | (self.volume & 0x3F)
@@ -93,15 +108,15 @@ class RFC2833EventPacket:
         return struct.pack("!BBH", self.event, byte2, self.duration)
 
     @staticmethod
-    def unpack(data):
+    def unpack(data: bytes) -> RFC2833EventPacket | None:
         """
-        Unpack 4-byte payload into RFC2833EventPacket
+        Unpack 4-byte payload into RFC2833EventPacket.
 
         Args:
-            data: 4-byte payload data
+            data: 4-byte payload data.
 
         Returns:
-            RFC2833EventPacket or None if invalid
+            RFC2833EventPacket or None if invalid.
         """
         if len(data) < 4:
             return None
@@ -116,46 +131,57 @@ class RFC2833EventPacket:
         except (KeyError, TypeError, ValueError, struct.error):
             return None
 
-    def get_digit(self):
+    def get_digit(self) -> str | None:
         """
-        Get DTMF digit from event code
+        Get DTMF digit from event code.
 
         Returns:
-            str: DTMF digit or None if not a valid DTMF event
+            DTMF digit or None if not a valid DTMF event.
         """
         return RFC2833_CODE_TO_DIGIT.get(self.event)
 
 
 class RFC2833Receiver:
     """
-    RFC 2833 RTP Event Receiver
+    RFC 2833 RTP Event Receiver.
 
     Listens for RTP packets with configurable payload type (default 101) and extracts DTMF events.
     """
 
-    def __init__(self, local_port, pbx_core=None, call_id=None, payload_type=101):
+    def __init__(
+        self,
+        local_port: int,
+        pbx_core: PBXCore | None = None,
+        call_id: str | None = None,
+        payload_type: int = 101,
+    ) -> None:
         """
-        Initialize RFC 2833 receiver
+        Initialize RFC 2833 receiver.
 
         Args:
-            local_port: Local UDP port to listen on
-            pbx_core: Reference to PBX core for DTMF delivery
-            call_id: Call identifier for this receiver
-            payload_type: RTP payload type for telephone-event (default: 101)
+            local_port: Local UDP port to listen on.
+            pbx_core: Reference to PBX core for DTMF delivery.
+            call_id: Call identifier for this receiver.
+            payload_type: RTP payload type for telephone-event (default: 101).
         """
-        self.local_port = local_port
-        self.pbx_core = pbx_core
-        self.call_id = call_id
-        self.payload_type = payload_type
+        self.local_port: int = local_port
+        self.pbx_core: PBXCore | None = pbx_core
+        self.call_id: str | None = call_id
+        self.payload_type: int = payload_type
         self.logger = get_logger()
-        self.socket = None
-        self.running = False
-        self.last_event = None
-        self.last_seq = None
-        self.event_start_time = None
+        self.socket: socket.socket | None = None
+        self.running: bool = False
+        self.last_event: str | None = None
+        self.last_seq: int | None = None
+        self.event_start_time: float | None = None
 
-    def start(self):
-        """Start RFC 2833 receiver"""
+    def start(self) -> bool:
+        """
+        Start RFC 2833 receiver.
+
+        Returns:
+            True if started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -177,16 +203,16 @@ class RFC2833Receiver:
             self.logger.error(f"Failed to start RFC 2833 receiver: {e}")
             return False
 
-    def stop(self):
-        """Stop RFC 2833 receiver"""
+    def stop(self) -> None:
+        """Stop RFC 2833 receiver."""
         self.running = False
         if self.socket:
             with contextlib.suppress(BaseException):
                 self.socket.close()
         self.logger.info(f"RFC 2833 receiver stopped on port {self.local_port}")
 
-    def _receive_loop(self):
-        """Main receive loop for RFC 2833 events"""
+    def _receive_loop(self) -> None:
+        """Main receive loop for RFC 2833 events."""
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
@@ -197,16 +223,16 @@ class RFC2833Receiver:
                 if self.running:
                     self.logger.error(f"Error receiving RFC 2833 packet: {e}")
 
-    def handle_rtp_packet(self, data, addr):
+    def handle_rtp_packet(self, data: bytes, addr: AddrTuple) -> None:
         """
-        Handle incoming RTP packet (public interface)
+        Handle incoming RTP packet (public interface).
 
         This is the public method that should be called by external code
         to process RTP packets for RFC 2833 events.
 
         Args:
-            data: Packet data
-            addr: Source address
+            data: Packet data.
+            addr: Source address.
         """
         if len(data) < 12:
             return
@@ -272,33 +298,44 @@ class RFC2833Receiver:
 
 class RFC2833Sender:
     """
-    RFC 2833 RTP Event Sender
+    RFC 2833 RTP Event Sender.
 
     Sends DTMF digits as RFC 2833 RTP events with configurable payload type (default 101).
     """
 
-    def __init__(self, local_port, remote_host, remote_port, payload_type=101):
+    def __init__(
+        self,
+        local_port: int,
+        remote_host: str,
+        remote_port: int,
+        payload_type: int = 101,
+    ) -> None:
         """
-        Initialize RFC 2833 sender
+        Initialize RFC 2833 sender.
 
         Args:
-            local_port: Local UDP port to send from
-            remote_host: Remote host to send to
-            remote_port: Remote port to send to
-            payload_type: RTP payload type for telephone-event (default: 101)
+            local_port: Local UDP port to send from.
+            remote_host: Remote host to send to.
+            remote_port: Remote port to send to.
+            payload_type: RTP payload type for telephone-event (default: 101).
         """
-        self.local_port = local_port
-        self.remote_host = remote_host
-        self.remote_port = remote_port
-        self.payload_type = payload_type
+        self.local_port: int = local_port
+        self.remote_host: str = remote_host
+        self.remote_port: int = remote_port
+        self.payload_type: int = payload_type
         self.logger = get_logger()
-        self.socket = None
-        self.sequence_number = 0
-        self.timestamp = 0
-        self.ssrc = 0x87654321  # Synchronization source identifier
+        self.socket: socket.socket | None = None
+        self.sequence_number: int = 0
+        self.timestamp: int = 0
+        self.ssrc: int = 0x87654321  # Synchronization source identifier
 
-    def start(self):
-        """Start RFC 2833 sender"""
+    def start(self) -> bool:
+        """
+        Start RFC 2833 sender.
+
+        Returns:
+            True if started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -312,23 +349,23 @@ class RFC2833Sender:
             self.logger.error(f"Failed to start RFC 2833 sender: {e}")
             return False
 
-    def stop(self):
-        """Stop RFC 2833 sender"""
+    def stop(self) -> None:
+        """Stop RFC 2833 sender."""
         if self.socket:
             with contextlib.suppress(BaseException):
                 self.socket.close()
         self.logger.info(f"RFC 2833 sender stopped on port {self.local_port}")
 
-    def send_dtmf(self, digit, duration_ms=160):
+    def send_dtmf(self, digit: str, duration_ms: int = 160) -> bool:
         """
-        Send DTMF digit as RFC 2833 event
+        Send DTMF digit as RFC 2833 event.
 
         Args:
-            digit: DTMF digit ('0'-'9', '*', '#', 'A'-'D')
-            duration_ms: Duration in milliseconds (default 160ms)
+            digit: DTMF digit ('0'-'9', '*', '#', 'A'-'D').
+            duration_ms: Duration in milliseconds (default 160ms).
 
         Returns:
-            bool: True if sent successfully
+            True if sent successfully.
         """
         if digit not in RFC2833_EVENT_CODES:
             self.logger.warning(f"Invalid DTMF digit for RFC 2833: {digit}")
@@ -372,14 +409,16 @@ class RFC2833Sender:
             self.logger.error(f"Error sending RFC 2833 DTMF: {e}")
             return False
 
-    def _send_rtp_packet(self, payload, payload_type=None, marker=False):
+    def _send_rtp_packet(
+        self, payload: bytes, payload_type: int | None = None, marker: bool = False
+    ) -> None:
         """
-        Send RTP packet with RFC 2833 payload
+        Send RTP packet with RFC 2833 payload.
 
         Args:
-            payload: RFC 2833 event payload
-            payload_type: RTP payload type (defaults to instance payload_type)
-            marker: Marker bit
+            payload: RFC 2833 event payload.
+            payload_type: RTP payload type (defaults to instance payload_type).
+            marker: Marker bit.
         """
         # Use instance payload_type if not specified
         pt = payload_type if payload_type is not None else self.payload_type

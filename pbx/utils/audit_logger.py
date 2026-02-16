@@ -263,7 +263,7 @@ def get_audit_logger() -> AuditLogger:
     return _audit_logger
 
 
-def configure_audit_logger(log_file: str):
+def configure_audit_logger(log_file: str) -> None:
     """Configure global audit logger.
 
     Args:

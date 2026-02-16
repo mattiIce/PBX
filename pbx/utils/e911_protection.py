@@ -28,7 +28,7 @@ class E911Protection:
         r"^\*911$",  # Asterisk prefix (e.g., *911)
     ]
 
-    def __init__(self, config=None):
+    def __init__(self, config: object = None) -> None:
         """
         Initialize E911 protection
 
@@ -44,7 +44,7 @@ class E911Protection:
                 "E911 Protection: TEST MODE DETECTED - All emergency calls will be blocked"
             )
 
-    def _detect_test_mode(self):
+    def _detect_test_mode(self) -> bool:
         """
         Detect if running in test mode
 
@@ -71,7 +71,7 @@ class E911Protection:
 
         return False
 
-    def is_e911_number(self, number):
+    def is_e911_number(self, number: str | int | None) -> bool:
         """
         Check if a number is an E911/emergency number
 
@@ -90,7 +90,7 @@ class E911Protection:
         # Check against all E911 patterns
         return any(re.match(pattern, number_str) for pattern in self.E911_PATTERNS)
 
-    def block_if_e911(self, number, context=""):
+    def block_if_e911(self, number: str | int | None, context: str = "") -> bool:
         """
         Block call if number is E911 and in test mode
 

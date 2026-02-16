@@ -132,7 +132,7 @@ class CalendarMonitor:
         if extension in self.active_meetings:
             del self.active_meetings[extension]
 
-    def start(self) -> Path | None:
+    def start(self) -> None:
         """Start calendar monitoring thread"""
         if self.running:
             return
@@ -316,7 +316,7 @@ class DNDScheduler:
 
         return value if value is not None else default
 
-    def start(self) -> Path | None:
+    def start(self) -> None:
         """Start DND scheduler"""
         if not self.enabled:
             self.logger.info("DND Scheduler is disabled")

@@ -239,7 +239,7 @@ async function quickSetupIntegration(integration) {
     const config = defaults[integration];
 
     if (!config) {
-        showQuickSetupNotification('Unknown integration: ' + integration, 'error');
+        showQuickSetupNotification(`Unknown integration: ${integration}`, 'error');
         return;
     }
 
@@ -266,17 +266,15 @@ async function quickSetupIntegration(integration) {
             updateQuickSetupStatus();
 
             // Show success message
-            let message = `✅ ${INTEGRATION_NAMES[integration]} enabled with default settings! The integration is now active.`;
+            const basePart = `✅ ${INTEGRATION_NAMES[integration]} enabled with default settings! The integration is now active.`;
 
             // Show additional info for specific integrations
             if (integration === 'matrix') {
-                message += ' Note: You need to set MATRIX_BOT_PASSWORD in your .env file for Matrix to work.';
-                showQuickSetupNotification(message, 'warning', 8000);
+                showQuickSetupNotification(`${basePart} Note: You need to set MATRIX_BOT_PASSWORD in your .env file for Matrix to work.`, 'warning', 8000);
             } else if (integration === 'espocrm') {
-                message += ' Note: You need to set ESPOCRM_API_KEY and api_url in the configuration tab.';
-                showQuickSetupNotification(message, 'warning', 8000);
+                showQuickSetupNotification(`${basePart} Note: You need to set ESPOCRM_API_KEY and api_url in the configuration tab.`, 'warning', 8000);
             } else {
-                showQuickSetupNotification(message, 'success');
+                showQuickSetupNotification(basePart, 'success');
             }
 
             // Reload the detailed config if on that tab
@@ -296,7 +294,7 @@ async function quickSetupIntegration(integration) {
             }
         }
     } catch (error) {
-        showQuickSetupNotification('Error enabling integration: ' + error.message, 'error');
+        showQuickSetupNotification(`Error enabling integration: ${error.message}`, 'error');
         // Revert checkbox
         const checkbox = document.getElementById(`quick-${integration}-enabled`);
         if (checkbox) {
@@ -313,7 +311,7 @@ async function disableIntegration(integration) {
         // First, get current config
         const response = await fetch('/api/config');
         const data = await response.json();
-        const currentConfig = data.integrations?.[integration] || {};
+        const currentConfig = data.integrations?.[integration] ?? {};
 
         // Set enabled to false
         currentConfig.enabled = false;
@@ -345,7 +343,7 @@ async function disableIntegration(integration) {
                 loadEspoCRMConfig();
             }
         } else {
-            showQuickSetupNotification('Failed to disable ' + INTEGRATION_NAMES[integration], 'error');
+            showQuickSetupNotification(`Failed to disable ${INTEGRATION_NAMES[integration]}`, 'error');
             // Revert checkbox
             const checkbox = document.getElementById(`quick-${integration}-enabled`);
             if (checkbox) {
@@ -353,7 +351,7 @@ async function disableIntegration(integration) {
             }
         }
     } catch (error) {
-        showQuickSetupNotification('Error disabling integration: ' + error.message, 'error');
+        showQuickSetupNotification(`Error disabling integration: ${error.message}`, 'error');
         // Revert checkbox
         const checkbox = document.getElementById(`quick-${integration}-enabled`);
         if (checkbox) {

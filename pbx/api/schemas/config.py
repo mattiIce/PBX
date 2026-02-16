@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 
 class ConfigUpdate(BaseModel):
@@ -32,7 +32,7 @@ class NetworkConfig(BaseModel):
 
     @field_validator("rtp_port_end")
     @classmethod
-    def validate_port_range(cls, v: int, info) -> int:
+    def validate_port_range(cls, v: int, info: ValidationInfo) -> int:
         start = info.data.get("rtp_port_start", 10000)
         if v <= start:
             raise ValueError("rtp_port_end must be greater than rtp_port_start")

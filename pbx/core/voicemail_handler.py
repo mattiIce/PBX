@@ -637,7 +637,7 @@ class VoicemailHandler:
                             pbx.logger.info(f"[VM IVR] Playing prompt: {prompt_type}")
                             # Try to load from voicemail_prompts/ directory,
                             # fallback to tone generation
-                            prompt_audio = get_prompt_audio(prompt_type)
+                            prompt_audio: bytes = get_prompt_audio(prompt_type)
 
                             with tempfile.NamedTemporaryFile(
                                 suffix=".wav", delete=False
@@ -671,7 +671,7 @@ class VoicemailHandler:
                             # Play goodbye and end call
                             # Try to load from voicemail_prompts/ directory,
                             # fallback to tone generation
-                            goodbye_prompt = get_prompt_audio("goodbye")
+                            goodbye_prompt: bytes = get_prompt_audio("goodbye")
                             with tempfile.NamedTemporaryFile(
                                 suffix=".wav", delete=False
                             ) as temp_file:
@@ -700,12 +700,12 @@ class VoicemailHandler:
                             )
 
                             # Play beep tone
-                            beep_prompt = get_prompt_audio("beep")
+                            beep_prompt: bytes = get_prompt_audio("beep")
                             with tempfile.NamedTemporaryFile(
                                 suffix=".wav", delete=False
                             ) as temp_file:
                                 temp_file.write(beep_prompt)
-                                beep_file = temp_file.name
+                                beep_file: str = temp_file.name
 
                             try:
                                 player.play_file(beep_file)
@@ -717,11 +717,11 @@ class VoicemailHandler:
 
                             # Start recording
                             recorder.recorded_data = []  # Clear previous recording
-                            recording_start_time = time.time()
-                            max_recording_time = 120  # 2 minutes max
+                            recording_start_time: float = time.time()
+                            max_recording_time: int = 120  # 2 minutes max
 
                             # Wait for # to stop recording or timeout
-                            recording = True
+                            recording: bool = True
                             while recording and ivr_active:
                                 if call.state == CallState.ENDED:
                                     pbx.logger.info(f"Call {call_id} ended during recording")
@@ -740,7 +740,7 @@ class VoicemailHandler:
 
                                 # Check for DTMF # to stop recording (SIP INFO
                                 # or in-band)
-                                stop_digit = None
+                                stop_digit: str | None = None
 
                                 # Priority 1: Check SIP INFO queue
                                 if hasattr(call, "dtmf_info_queue") and call.dtmf_info_queue:
@@ -776,9 +776,9 @@ class VoicemailHandler:
                                         hasattr(recorder, "recorded_data")
                                         and recorder.recorded_data
                                     ):
-                                        greeting_audio_raw = b"".join(recorder.recorded_data)
+                                        greeting_audio_raw: bytes = b"".join(recorder.recorded_data)
                                         # Convert raw audio to WAV format before saving
-                                        greeting_audio_wav = pbx._build_wav_file(greeting_audio_raw)
+                                        greeting_audio_wav: bytes = pbx._build_wav_file(greeting_audio_raw)
                                         voicemail_ivr.save_recorded_greeting(greeting_audio_wav)
                                         pbx.logger.info(
                                             f"Saved recorded greeting as WAV ({len(greeting_audio_wav)} bytes, {len(greeting_audio_raw)} bytes raw audio)"
@@ -818,7 +818,7 @@ class VoicemailHandler:
                                 pbx.logger.info(f"Call {call_id} ended, cannot play greeting")
                                 break
 
-                            greeting_data = voicemail_ivr.get_recorded_greeting()
+                            greeting_data: bytes | None = voicemail_ivr.get_recorded_greeting()
                             if greeting_data:
                                 pbx.logger.info(
                                     f"Playing recorded greeting for review ({len(greeting_data)} bytes)"
@@ -829,7 +829,7 @@ class VoicemailHandler:
                                     suffix=".wav", delete=False
                                 ) as temp_file:
                                     temp_file.write(greeting_data)
-                                    greeting_file = temp_file.name
+                                    greeting_file: str = temp_file.name
 
                                 try:
                                     player.play_file(greeting_file)
@@ -840,7 +840,7 @@ class VoicemailHandler:
                                 time.sleep(0.5)
 
                                 # Play review menu again
-                                review_prompt = get_prompt_audio("greeting_review_menu")
+                                review_prompt: bytes = get_prompt_audio("greeting_review_menu")
                                 with tempfile.NamedTemporaryFile(
                                     suffix=".wav", delete=False
                                 ) as temp_file:
@@ -912,7 +912,7 @@ class VoicemailHandler:
             except Exception as e:
                 pbx.logger.error(f"[VM IVR] Error ending call during cleanup: {e}")
 
-    def monitor_voicemail_dtmf(self, call_id, call, recorder):
+    def monitor_voicemail_dtmf(self, call_id: str, call: Any, recorder: Any) -> None:
         """
         Monitor for DTMF # key press during voicemail recording
         When # is detected, complete the voicemail recording early
@@ -931,9 +931,9 @@ class VoicemailHandler:
             dtmf_detector = DTMFDetector(sample_rate=8000)
 
             # Constants for DTMF detection
-            DTMF_DETECTION_PACKETS = 40  # 40 packets * 20ms = 0.8s of audio
+            DTMF_DETECTION_PACKETS: int = 40  # 40 packets * 20ms = 0.8s of audio
             # Minimum audio data needed for reliable DTMF detection
-            MIN_AUDIO_BYTES_FOR_DTMF = 1600
+            MIN_AUDIO_BYTES_FOR_DTMF: int = 1600
 
             pbx.logger.info(f"Started DTMF monitoring for voicemail recording on call {call_id}")
 

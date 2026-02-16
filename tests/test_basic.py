@@ -111,8 +111,6 @@ def test_extension() -> None:
 def test_config() -> None:
     """Test configuration loading"""
 
-    import os
-
     from pbx.utils.config import Config
 
     if not Path("config.yml").exists():

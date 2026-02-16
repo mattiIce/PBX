@@ -804,10 +804,10 @@ function renderMenuTree(menu, level) {
     html += `<strong>${escapeHtml(menu.menu_name || menu.menu_id)}</strong>`;
     
     if (menu.items && menu.items.length > 0) {
-        menu.items.forEach(item => {
+        for (const item of menu.items) {
             html += `<div style="margin-left: ${(level + 1) * 20}px; margin-top: 3px;">`;
-            html += `📌 ${escapeHtml(item.digit)}: ${escapeHtml(item.description || 'No description')} `;
-            
+            html += `📌 ${escapeHtml(item.digit)}: ${escapeHtml(item.description ?? 'No description')} `;
+
             if (item.destination_type === 'submenu' && item.submenu) {
                 html += `<span style="color: #4CAF50;">[Submenu]</span>`;
                 html += '</div>';
@@ -816,7 +816,7 @@ function renderMenuTree(menu, level) {
                 html += `<span style="color: #666;">(${escapeHtml(item.destination_type)}: ${escapeHtml(item.destination_value)})</span>`;
                 html += '</div>';
             }
-        });
+        }
     }
     
     html += '</div>';

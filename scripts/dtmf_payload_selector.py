@@ -195,8 +195,8 @@ def show_configuration_example(payload_type: str) -> None:
     print(f"{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}\n")
 
 
-def main():
-    """Main entry point"""
+def main() -> None:
+    """Main entry point."""
     if len(sys.argv) > 1 and sys.argv[1] in ["--help", "-h"]:
         print_header()
         print("Usage: python dtmf_payload_selector.py [--list]")
