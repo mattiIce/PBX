@@ -3,13 +3,14 @@ Auto Attendant (IVR) System for PBX
 Provides automated call answering and menu navigation
 """
 
+import contextlib
 import os
 import sqlite3
 import time
 from enum import Enum
+from pathlib import Path
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class AAState(Enum):
@@ -105,13 +106,9 @@ class AutoAttendant:
         # Create audio directory if it doesn't exist
         if not Path(self.audio_path).exists():
             os.makedirs(self.audio_path)
-            self.logger.info(
-                f"Created auto attendant audio directory: {self.audio_path}"
-            )
+            self.logger.info(f"Created auto attendant audio directory: {self.audio_path}")
 
-        self.logger.info(
-            f"Auto Attendant initialized on extension {self.extension}"
-        )
+        self.logger.info(f"Auto Attendant initialized on extension {self.extension}")
         self.logger.info(f"Menu options: {len(self.menu_options)}")
 
     def _init_database(self):
@@ -459,7 +456,7 @@ class AutoAttendant:
             # Field names are hardcoded constants; all values use parameterized placeholders in params list
             cursor.execute(
                 f"UPDATE auto_attendant_menus SET {', '.join(updates)} WHERE menu_id = ?",  # nosec B608
-                params
+                params,
             )
 
             conn.commit()
@@ -612,10 +609,9 @@ class AutoAttendant:
                 return False
 
             # If submenu, verify it exists
-            if destination_type == "submenu":
-                if not self.get_menu(destination_value):
-                    self.logger.error(f"Submenu '{destination_value}' does not exist")
-                    return False
+            if destination_type == "submenu" and not self.get_menu(destination_value):
+                self.logger.error(f"Submenu '{destination_value}' does not exist")
+                return False
 
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -835,7 +831,7 @@ class AutoAttendant:
         session["last_input_time"] = time.time()
 
         # Special digits for navigation (only if not configured as menu options)
-        if current_state == AAState.MAIN_MENU or current_state == AAState.SUBMENU:
+        if current_state in (AAState.MAIN_MENU, AAState.SUBMENU):
             # Check if digit is a configured menu option first
             current_menu_id = session.get("current_menu_id", "main")
             menu_items = self.get_menu_items(current_menu_id)
@@ -847,17 +843,17 @@ class AutoAttendant:
 
             # If not a menu option, check for special navigation keys
             if not is_menu_option:
-                if digit == "*" or digit == "9":
+                if digit in {"*", "9"}:
                     # Go back to previous menu
                     return self._handle_go_back(session)
-                elif digit == "#":
+                if digit == "#":
                     # Repeat current menu
                     return self._handle_repeat_menu(session)
 
             # Handle menu input
             return self._handle_menu_input(session, digit)
 
-        elif current_state == AAState.INVALID:
+        if current_state == AAState.INVALID:
             # After invalid input, any key returns to menu
             current_menu_id = session.get("current_menu_id", "main")
             session["state"] = AAState.MAIN_MENU if current_menu_id == "main" else AAState.SUBMENU
@@ -881,9 +877,7 @@ class AutoAttendant:
         Returns:
             dict: Action to take
         """
-        self.logger.warning(
-            f"Auto attendant timeout for call {session.get('call_id')}"
-        )
+        self.logger.warning(f"Auto attendant timeout for call {session.get('call_id')}")
 
         session["retry_count"] += 1
 
@@ -933,12 +927,12 @@ class AutoAttendant:
                     # Navigate to submenu
                     return self._navigate_to_submenu(session, dest_value)
 
-                elif dest_type in ["extension", "queue", "operator"]:
+                if dest_type in ["extension", "queue", "operator"]:
                     # Transfer to destination
                     session["state"] = AAState.TRANSFERRING
                     return {"action": "transfer", "destination": dest_value, "session": session}
 
-                elif dest_type == "voicemail":
+                if dest_type == "voicemail":
                     # Transfer to voicemail
                     session["state"] = AAState.TRANSFERRING
                     return {
@@ -1258,10 +1252,8 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
     except (OSError, subprocess.SubprocessError) as e:
         # Clean up temp file on error
         if tmp_mp3_path and Path(tmp_mp3_path).exists():
-            try:
+            with contextlib.suppress(OSError):
                 os.unlink(tmp_mp3_path)
-            except OSError:
-                pass
         logger = get_logger()
         logger.error(f"Error generating submenu prompt: {e}")
         return None

@@ -7,7 +7,6 @@ This test validates that when a BYE request is received during voicemail IVR
 call termination without continuing to play audio.
 """
 
-
 from pbx.core.call import Call, CallState
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config

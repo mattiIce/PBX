@@ -3,7 +3,7 @@ EspoCRM Integration (Free, Open-Source Alternative to Salesforce/HubSpot)
 Enables contact management, deal tracking, and call logging
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
@@ -59,7 +59,7 @@ class EspoCRMIntegration:
                 self.logger.info(f"EspoCRM integration enabled (Server: {self.api_url})")
 
     def _make_request(
-        self, method: str, endpoint: str, data: dict = None, params: dict = None
+        self, method: str, endpoint: str, data: dict | None = None, params: dict | None = None
     ) -> dict | None:
         """
         Make authenticated API request to EspoCRM
@@ -87,9 +87,8 @@ class EspoCRMIntegration:
 
             if response.status_code in [200, 201]:
                 return response.json()
-            else:
-                self.logger.error(f"EspoCRM API error: {response.status_code} - {response.text}")
-                return None
+            self.logger.error(f"EspoCRM API error: {response.status_code} - {response.text}")
+            return None
 
         except requests.RequestException as e:
             self.logger.error(f"EspoCRM API request failed: {e}")
@@ -144,7 +143,12 @@ class EspoCRMIntegration:
             return None
 
     def create_contact(
-        self, name: str, phone: str, email: str = None, company: str = None, title: str = None
+        self,
+        name: str,
+        phone: str,
+        email: str | None = None,
+        company: str | None = None,
+        title: str | None = None,
     ) -> dict | None:
         """
         Create new contact in EspoCRM
@@ -190,7 +194,12 @@ class EspoCRMIntegration:
             return None
 
     def log_call(
-        self, contact_id: str, direction: str, duration: int, status: str, description: str = None
+        self,
+        contact_id: str,
+        direction: str,
+        duration: int,
+        status: str,
+        description: str | None = None,
     ) -> dict | None:
         """
         Log call activity in EspoCRM
@@ -215,7 +224,7 @@ class EspoCRMIntegration:
                 "direction": direction,
                 "duration": duration,
                 "contactsIds": [contact_id],
-                "dateStart": datetime.now(timezone.utc).isoformat(),
+                "dateStart": datetime.now(UTC).isoformat(),
             }
 
             if description:
@@ -324,10 +333,10 @@ class EspoCRMIntegration:
         self,
         name: str,
         amount: float,
-        contact_id: str = None,
-        account_id: str = None,
+        contact_id: str | None = None,
+        account_id: str | None = None,
         stage: str = "Prospecting",
-        close_date: str = None,
+        close_date: str | None = None,
     ) -> dict | None:
         """
         Create sales opportunity/deal

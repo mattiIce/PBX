@@ -25,14 +25,13 @@ Requirements:
 
 import argparse
 import datetime
-from datetime import timezone
 import json
 import os
 import socket
+import sqlite3
 import subprocess
 import sys
 from pathlib import Path
-import sqlite3
 
 try:
     import psutil
@@ -54,7 +53,7 @@ class HealthMonitor:
         self.verify_ssl = verify_ssl
         self.base_dir = Path(__file__).parent.parent
         self.health_data = {
-            "timestamp": datetime.datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.datetime.now(datetime.UTC).isoformat(),
             "hostname": socket.gethostname(),
             "checks": {},
             "alerts": [],
@@ -318,7 +317,7 @@ class HealthMonitor:
                     # Parse expiration date
                     expiry_str = result.stdout.strip().split("=")[1]
                     expiry_date = datetime.datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
-                    days_until_expiry = (expiry_date - datetime.datetime.now(timezone.utc)).days
+                    days_until_expiry = (expiry_date - datetime.datetime.now(datetime.UTC)).days
 
                     if days_until_expiry < 7:
                         status = "critical"
@@ -361,10 +360,9 @@ class HealthMonitor:
         """Determine status based on thresholds."""
         if value >= critical_threshold:
             return "critical"
-        elif value >= warning_threshold:
+        if value >= warning_threshold:
             return "warning"
-        else:
-            return "healthy"
+        return "healthy"
 
     def _update_summary(self, checks):
         """Update summary counts."""

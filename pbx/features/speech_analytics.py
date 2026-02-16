@@ -3,10 +3,10 @@ Real-Time Speech Analytics Framework
 Provides live transcription, sentiment analysis, and call summarization
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class SpeechAnalyticsEngine:
@@ -104,7 +104,7 @@ class SpeechAnalyticsEngine:
                         config.get("summarization_enabled", True),
                         config.get("keywords", ""),
                         config.get("alert_threshold", 0.7),
-                        datetime.now(timezone.utc),
+                        datetime.now(UTC),
                         extension,
                     ),
                 )
@@ -158,7 +158,7 @@ class SpeechAnalyticsEngine:
             "sentiment": "neutral",
             "sentiment_score": 0.0,
             "keywords_detected": [],
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Get configuration for this call
@@ -221,10 +221,9 @@ class SpeechAnalyticsEngine:
             if self._vosk_recognizer.AcceptWaveform(audio_chunk):
                 result = json.loads(self._vosk_recognizer.Result())
                 return result.get("text", "")
-            else:
-                # Partial result
-                result = json.loads(self._vosk_recognizer.PartialResult())
-                return result.get("partial", "")
+            # Partial result
+            result = json.loads(self._vosk_recognizer.PartialResult())
+            return result.get("partial", "")
 
         except ImportError:
             self.logger.warning("Vosk library not available, transcription disabled")

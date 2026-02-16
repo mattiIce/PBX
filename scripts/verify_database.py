@@ -7,16 +7,15 @@ and accessible. It provides detailed diagnostic information to help
 troubleshoot database connectivity issues.
 """
 
-import os
 import sys
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import sqlite3
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-import sqlite3
-from pathlib import Path
 
 
 def print_header(text):
@@ -129,10 +128,9 @@ def check_connection(config):
 
             db.disconnect()
             return True
-        else:
-            print("✗ Failed to connect to database")
-            print(f"  Database enabled: {db.enabled}")
-            return False
+        print("✗ Failed to connect to database")
+        print(f"  Database enabled: {db.enabled}")
+        return False
 
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         print(f"✗ Connection error: {e}")
@@ -199,7 +197,7 @@ def main():
 
     # Run checks
     psycopg2_ok = check_psycopg2()
-    config, db_config = check_config()
+    config, _db_config = check_config()
     config_ok = config is not None
 
     connection_ok = False

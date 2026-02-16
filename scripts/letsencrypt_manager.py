@@ -9,7 +9,7 @@ import argparse
 import logging
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Set up logging
@@ -168,7 +168,7 @@ class CertificateManager:
         if not expiry:
             return False
 
-        days_remaining = (expiry - datetime.now(timezone.utc)).days
+        days_remaining = (expiry - datetime.now(UTC)).days
         logger.info(f"Certificate expires in {days_remaining} days")
 
         return days_remaining >= min_days
@@ -422,7 +422,7 @@ def main():
     parser.add_argument("--reload-only", action="store_true", help="Only reload PBX service")
 
     # Parse args first to check reload-only mode
-    args, remaining = parser.parse_known_args()
+    args, _remaining = parser.parse_known_args()
 
     # Handle reload-only mode early (doesn't need domain/email)
     if args.reload_only:
@@ -496,23 +496,22 @@ def main():
             manager.reload_pbx_service()
         return 0 if success else 1
 
-    elif args.renew:
+    if args.renew:
         success = manager.renew_certificate()
         if success:
             manager.reload_pbx_service()
         return 0 if success else 1
 
-    elif args.check:
+    if args.check:
         success = manager.check_and_renew(min_days=args.min_days)
         return 0 if success else 1
 
-    elif args.setup_auto_renewal:
+    if args.setup_auto_renewal:
         success = manager.setup_auto_renewal()
         return 0 if success else 1
 
-    else:
-        parser.print_help()
-        return 1
+    parser.print_help()
+    return 1
 
 
 if __name__ == "__main__":

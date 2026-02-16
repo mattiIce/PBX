@@ -4,10 +4,10 @@ Provides persistence for quality metrics, predictions, and alerts
 """
 
 import json
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class CallQualityPredictionDatabase:
@@ -188,7 +188,7 @@ class CallQualityPredictionDatabase:
 
             params = (
                 call_id,
-                metrics.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                metrics.get("timestamp", datetime.now(UTC).isoformat()),
                 metrics.get("latency"),
                 metrics.get("jitter"),
                 metrics.get("packet_loss"),
@@ -225,7 +225,7 @@ class CallQualityPredictionDatabase:
                     prediction.get("alert", False),
                     json.dumps(prediction.get("alert_reasons", [])),
                     json.dumps(prediction.get("recommendations", [])),
-                    prediction.get("timestamp", datetime.now(timezone.utc)),
+                    prediction.get("timestamp", datetime.now(UTC)),
                 )
             else:
                 sql = """
@@ -245,7 +245,7 @@ class CallQualityPredictionDatabase:
                     1 if prediction.get("alert", False) else 0,
                     json.dumps(prediction.get("alert_reasons", [])),
                     json.dumps(prediction.get("recommendations", [])),
-                    prediction.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                    prediction.get("timestamp", datetime.now(UTC).isoformat()),
                 )
 
             cursor.execute(sql, params)
@@ -287,7 +287,7 @@ class CallQualityPredictionDatabase:
                 message,
                 metric_value,
                 threshold_value,
-                datetime.now(timezone.utc).isoformat(),
+                datetime.now(UTC).isoformat(),
             )
             cursor.execute(sql, params)
             self.db.connection.commit()
@@ -316,7 +316,7 @@ class CallQualityPredictionDatabase:
             cursor.execute(sql, (limit,))
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
-            return [dict(zip(columns, row)) for row in rows]
+            return [dict(zip(columns, row, strict=False)) for row in rows]
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting predictions: {e}")
@@ -343,7 +343,7 @@ class CallQualityPredictionDatabase:
             cursor.execute(sql)
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
-            return [dict(zip(columns, row)) for row in rows]
+            return [dict(zip(columns, row, strict=False)) for row in rows]
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting active alerts: {e}")
@@ -369,7 +369,7 @@ class CallQualityPredictionDatabase:
         """Update daily trend statistics"""
         try:
             cursor = self.db.connection.cursor()
-            today = datetime.now(timezone.utc).date().isoformat()
+            today = datetime.now(UTC).date().isoformat()
 
             if self.db.db_type == "postgresql":
                 sql = """

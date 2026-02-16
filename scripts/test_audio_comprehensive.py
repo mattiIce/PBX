@@ -128,9 +128,9 @@ class AudioTester:
                 return True, None
 
         except wave.Error as e:
-            return False, f"WAV file error: {str(e)}"
+            return False, f"WAV file error: {e!s}"
         except (KeyError, OSError, TypeError, ValueError) as e:
-            return False, f"Unexpected error: {str(e)}"
+            return False, f"Unexpected error: {e!s}"
 
     def test_voicemail_prompts(self):
         """Test all voicemail prompt files"""
@@ -203,19 +203,18 @@ class AudioTester:
                 self.log(f"  Output: {len(ulaw_data)} bytes μ-law", "DEBUG")
                 self.test_results["passed"] += 1
                 return True
-            else:
-                self.log(
-                    f"Conversion size mismatch: expected {len(pcm_samples)} μ-law samples, "
-                    f"got {len(ulaw_data)}",
-                    "FAIL",
-                )
-                self.test_results["failed"] += 1
-                return False
+            self.log(
+                f"Conversion size mismatch: expected {len(pcm_samples)} μ-law samples, "
+                f"got {len(ulaw_data)}",
+                "FAIL",
+            )
+            self.test_results["failed"] += 1
+            return False
 
         except (KeyError, TypeError, ValueError, struct.error) as e:
-            self.log(f"Audio conversion failed: {str(e)}", "FAIL")
+            self.log(f"Audio conversion failed: {e!s}", "FAIL")
             self.test_results["failed"] += 1
-            self.test_results["errors"].append(f"Conversion error: {str(e)}")
+            self.test_results["errors"].append(f"Conversion error: {e!s}")
             return False
 
     def test_codec_compatibility(self, codec="G.711"):
@@ -248,10 +247,9 @@ class AudioTester:
             self.log(f"  Bitrate: {info['bitrate']}", "DEBUG")
             self.test_results["passed"] += 1
             return True
-        else:
-            self.log(f"Unknown codec: {codec}", "WARN")
-            self.test_results["warnings"] += 1
-            return False
+        self.log(f"Unknown codec: {codec}", "WARN")
+        self.test_results["warnings"] += 1
+        return False
 
     def test_ivr_integration(self):
         """Test IVR audio integration"""
@@ -271,9 +269,9 @@ class AudioTester:
             return True
 
         except ImportError as e:
-            self.log(f"Module import failed: {str(e)}", "FAIL")
+            self.log(f"Module import failed: {e!s}", "FAIL")
             self.test_results["failed"] += 1
-            self.test_results["errors"].append(f"Import error: {str(e)}")
+            self.test_results["errors"].append(f"Import error: {e!s}")
             return False
 
     def test_audio_file_permissions(self):
@@ -307,8 +305,7 @@ class AudioTester:
             self.log("All audio files are readable", "PASS")
             self.test_results["passed"] += 1
             return True
-        else:
-            return False
+        return False
 
     def run_all_tests(self, codec="G.711"):
         """Run all audio tests"""
@@ -354,7 +351,7 @@ class AudioTester:
             self.log("\n✓ ALL TESTS PASSED - Audio system is working correctly!", "PASS")
         else:
             self.log(
-                f"\n✗ {self.test_results['failed']} TEST(S) FAILED - " "Please review errors above",
+                f"\n✗ {self.test_results['failed']} TEST(S) FAILED - Please review errors above",
                 "FAIL",
             )
 

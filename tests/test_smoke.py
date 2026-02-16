@@ -128,9 +128,8 @@ class SmokeTestRunner:
         # Print summary
 
         if self.errors:
-            for name, error in self.errors:
+            for _name, _error in self.errors:
                 pass
-
 
         return self.failed == 0
 

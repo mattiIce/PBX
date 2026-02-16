@@ -75,7 +75,7 @@ class IntegrationSetup:
             print(f"❌ Error: Config file not found at {self.config_path}")
             return None
 
-        with open(self.config_path, "r") as f:
+        with open(self.config_path) as f:
             return yaml.safe_load(f)
 
     def save_config(self, config):
@@ -89,7 +89,7 @@ class IntegrationSetup:
         if not self.env_path.exists():
             if self.env_example_path.exists():
                 # Copy from example
-                with open(self.env_example_path, "r") as src:
+                with open(self.env_example_path) as src:
                     with open(self.env_path, "w") as dst:
                         dst.write(src.read())
                 print("✅ Created .env file from .env.example")
@@ -105,7 +105,7 @@ class IntegrationSetup:
         self.ensure_env_file()
 
         # Read existing content
-        with open(self.env_path, "r") as f:
+        with open(self.env_path) as f:
             lines = f.readlines()
 
         # Check if key exists
@@ -167,7 +167,7 @@ class IntegrationSetup:
             else:
                 # Add to .env if not exists (with default placeholder)
                 self.ensure_env_file()
-                with open(self.env_path, "r") as f:
+                with open(self.env_path) as f:
                     content = f.read()
                 if env_key not in content:
                     self.update_env_file(env_key, env_default)

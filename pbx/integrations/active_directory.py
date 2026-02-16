@@ -68,9 +68,7 @@ class ActiveDirectoryIntegration:
             return False
 
         try:
-            self.logger.info(
-                f"Connecting to Active Directory: {self.ldap_server}"
-            )
+            self.logger.info(f"Connecting to Active Directory: {self.ldap_server}")
 
             # Create server object
             self.server = Server(self.ldap_server, get_info=ALL, use_ssl=self.use_ssl)
@@ -87,9 +85,8 @@ class ActiveDirectoryIntegration:
             if self.connection.bound:
                 self.logger.info("Successfully connected to Active Directory")
                 return True
-            else:
-                self.logger.error("Failed to bind to Active Directory")
-                return False
+            self.logger.error("Failed to bind to Active Directory")
+            return False
 
         except (OSError, ValueError) as e:
             self.logger.error(f"Error connecting to Active Directory: {e}")
@@ -168,9 +165,8 @@ class ActiveDirectoryIntegration:
                         else []
                     ),
                 }
-            else:
-                self.logger.warning(f"Authentication failed for user: {username}")
-                return None
+            self.logger.warning(f"Authentication failed for user: {username}")
+            return None
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error authenticating user {username}: {e}")
@@ -522,10 +518,9 @@ class ActiveDirectoryIntegration:
                     # This will be picked up by the sync caller to trigger
                     # actual reboots
                     return {"synced_count": synced_count, "extensions_to_reboot": devices_to_reboot}
-                else:
-                    self.logger.info(
-                        "Auto-provisioning: No provisioned devices found for updated extensions"
-                    )
+                self.logger.info(
+                    "Auto-provisioning: No provisioned devices found for updated extensions"
+                )
 
             return {"synced_count": synced_count, "extensions_to_reboot": []}
 
@@ -767,13 +762,10 @@ class ActiveDirectoryIntegration:
             # Return photo bytes if available
             if hasattr(user_entry, "thumbnailPhoto") and user_entry.thumbnailPhoto.value:
                 photo_data = user_entry.thumbnailPhoto.value
-                self.logger.info(
-                    f"Retrieved photo for user {username} ({len(photo_data)} bytes)"
-                )
+                self.logger.info(f"Retrieved photo for user {username} ({len(photo_data)} bytes)")
                 return photo_data
-            else:
-                self.logger.info(f"No photo available for user {username}")
-                return None
+            self.logger.info(f"No photo available for user {username}")
+            return None
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error getting photo for user {username}: {e}")

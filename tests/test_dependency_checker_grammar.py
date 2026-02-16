@@ -8,7 +8,6 @@ import io
 import sys
 from collections.abc import Callable
 
-
 from pbx.utils.dependency_checker import print_dependency_report
 
 
@@ -37,10 +36,9 @@ def test_singular_dependency() -> bool:
     # Check that it uses "dependency" (singular) not "dependencies"
     if "1 optional dependency missing" in output:
         return True
-    elif "1 optional dependencies missing" in output:
+    if "1 optional dependencies missing" in output:
         return False
-    else:
-        return False
+    return False
 
 
 def test_plural_dependencies() -> bool:
@@ -60,10 +58,9 @@ def test_plural_dependencies() -> bool:
     # Check that it uses "dependencies" (plural)
     if "2 optional dependencies missing" in output:
         return True
-    elif "2 optional dependency missing" in output:
+    if "2 optional dependency missing" in output:
         return False
-    else:
-        return False
+    return False
 
 
 def test_zero_dependencies() -> bool:
@@ -74,10 +71,7 @@ def test_zero_dependencies() -> bool:
     output = capture_output(lambda: print_dependency_report(report, verbose=False))
 
     # Should not show any warning about missing optional dependencies
-    if "optional" not in output.lower() or "missing" not in output.lower():
-        return True
-    else:
-        return False
+    return bool("optional" not in output.lower() or "missing" not in output.lower())
 
 
 def main() -> bool:
@@ -98,11 +92,10 @@ def main() -> bool:
                 passed += 1
             else:
                 failed += 1
-        except Exception as e:
+        except Exception:
             import traceback
 
             traceback.print_exc()
             failed += 1
-
 
     return failed == 0

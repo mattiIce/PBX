@@ -3,7 +3,6 @@
 Tests for phone provisioning system
 """
 
-
 from pbx.features.extensions import ExtensionRegistry
 from pbx.features.phone_provisioning import (
     PhoneProvisioning,
@@ -24,18 +23,10 @@ def test_device_mac_normalization() -> None:
 
     # All should normalize to the same format
     expected = "001565123456"
-    assert (
-        device1.mac_address == expected
-    ), f"Expected {expected}, got {device1.mac_address}"
-    assert (
-        device2.mac_address == expected
-    ), f"Expected {expected}, got {device2.mac_address}"
-    assert (
-        device3.mac_address == expected
-    ), f"Expected {expected}, got {device3.mac_address}"
-    assert (
-        device4.mac_address == expected
-    ), f"Expected {expected}, got {device4.mac_address}"
+    assert device1.mac_address == expected, f"Expected {expected}, got {device1.mac_address}"
+    assert device2.mac_address == expected, f"Expected {expected}, got {device2.mac_address}"
+    assert device3.mac_address == expected, f"Expected {expected}, got {device3.mac_address}"
+    assert device4.mac_address == expected, f"Expected {expected}, got {device4.mac_address}"
 
 
 def test_phone_template() -> None:
@@ -75,12 +66,8 @@ def test_provisioning_device_registration() -> None:
     device = provisioning.register_device("00:15:65:12:34:56", "1001", "zultys", "zip33g")
 
     assert device is not None, "Device registration failed"
-    assert (
-        device.mac_address == "001565123456"
-    ), f"Unexpected MAC: {device.mac_address}"
-    assert (
-        device.extension_number == "1001"
-    ), f"Unexpected extension: {device.extension_number}"
+    assert device.mac_address == "001565123456", f"Unexpected MAC: {device.mac_address}"
+    assert device.extension_number == "1001", f"Unexpected extension: {device.extension_number}"
     assert device.vendor == "zultys", f"Unexpected vendor: {device.vendor}"
     assert device.model == "zip33g", f"Unexpected model: {device.model}"
 
@@ -123,9 +110,9 @@ def test_supported_vendors_and_models() -> None:
     all_models = provisioning.get_supported_models()
     assert isinstance(all_models, dict), "Expected dict for all models"
     assert "zultys" in all_models, "Zultys not in all models"
-    assert (
-        len(all_models["zultys"]) == 2
-    ), f"Expected 2 Zultys models, got {len(all_models['zultys'])}"
+    assert len(all_models["zultys"]) == 2, (
+        f"Expected 2 Zultys models, got {len(all_models['zultys'])}"
+    )
 
 
 def test_builtin_templates() -> None:
@@ -203,7 +190,8 @@ def test_unregistered_device_error_message() -> None:
 
     # Try to generate config for unregistered device
     config_content, content_type = provisioning.generate_config(
-        "00:0B:EA:85:F5:54", extension_registry  # Different MAC
+        "00:0B:EA:85:F5:54",
+        extension_registry,  # Different MAC
     )
 
     # Should return None for unregistered device
@@ -229,8 +217,9 @@ def test_similar_mac_detection() -> None:
     provisioning.register_device("00:0B:EA:85:F5:54", "1002", "zultys", "zip33g")
 
     # Try to generate config for device with same OUI but wrong MAC (typo)
-    config_content, content_type = provisioning.generate_config(
-        "00:0B:EA:85:ED:69", extension_registry  # Last digit is 9 instead of 8 (typo)
+    config_content, _content_type = provisioning.generate_config(
+        "00:0B:EA:85:ED:69",
+        extension_registry,  # Last digit is 9 instead of 8 (typo)
     )
 
     # Should return None for unregistered device
@@ -255,27 +244,27 @@ def test_mac_placeholder_detection() -> None:
 
     # Verify that correct MAC variables are NOT in the placeholder list
     assert "$mac" not in MAC_ADDRESS_PLACEHOLDERS, "$mac is a valid MAC variable, not a placeholder"
-    assert (
-        "$MA" not in MAC_ADDRESS_PLACEHOLDERS
-    ), "$MA is a valid MAC variable (Cisco), not a placeholder"
+    assert "$MA" not in MAC_ADDRESS_PLACEHOLDERS, (
+        "$MA is a valid MAC variable (Cisco), not a placeholder"
+    )
 
     # Test that actual MAC addresses are NOT in the placeholder list
     real_macs = ["00:15:65:12:34:56", "00-15-65-12-34-56", "0015.6512.3456", "001565123456"]
 
     for mac in real_macs:
         # Verify real MACs are not mistaken for placeholders
-        assert (
-            mac not in MAC_ADDRESS_PLACEHOLDERS
-        ), f"Real MAC {mac} should not be in placeholder list"
+        assert mac not in MAC_ADDRESS_PLACEHOLDERS, (
+            f"Real MAC {mac} should not be in placeholder list"
+        )
 
         # Verify normalized MACs are also not placeholders
         normalized = normalize_mac_address(mac)
-        assert (
-            normalized == "001565123456"
-        ), f"MAC {mac} should normalize to 001565123456, got {normalized}"
-        assert (
-            normalized not in MAC_ADDRESS_PLACEHOLDERS
-        ), f"Normalized MAC {normalized} should not be in placeholder list"
+        assert normalized == "001565123456", (
+            f"MAC {mac} should normalize to 001565123456, got {normalized}"
+        )
+        assert normalized not in MAC_ADDRESS_PLACEHOLDERS, (
+            f"Normalized MAC {normalized} should not be in placeholder list"
+        )
 
     # Test that placeholder detection works correctly for common cases
     # This simulates what happens in the API endpoint
@@ -291,6 +280,6 @@ def test_mac_placeholder_detection() -> None:
 
     for mac_value, should_be_placeholder, description in test_cases:
         is_placeholder = mac_value in MAC_ADDRESS_PLACEHOLDERS
-        assert (
-            is_placeholder == should_be_placeholder
-        ), f"Failed for {description}: {mac_value} (expected placeholder={should_be_placeholder}, got {is_placeholder})"
+        assert is_placeholder == should_be_placeholder, (
+            f"Failed for {description}: {mac_value} (expected placeholder={should_be_placeholder}, got {is_placeholder})"
+        )

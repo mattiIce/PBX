@@ -84,9 +84,7 @@ class OpusCodec:
             self.sample_rate = self.DEFAULT_SAMPLE_RATE
 
         if not 6000 <= self.bitrate <= 510000:
-            self.logger.warning(
-                f"Invalid bitrate {self.bitrate}, using {self.DEFAULT_BITRATE}"
-            )
+            self.logger.warning(f"Invalid bitrate {self.bitrate}, using {self.DEFAULT_BITRATE}")
             self.bitrate = self.DEFAULT_BITRATE
 
         if self.complexity < 0 or self.complexity > 10:
@@ -192,9 +190,7 @@ class OpusCodec:
             self.encoder.fec = 1 if self.fec_enabled else 0
             self.encoder.dtx = 1 if self.dtx_enabled else 0
 
-            self.logger.info(
-                f"Opus encoder created: {self.sample_rate}Hz, {self.bitrate}bps"
-            )
+            self.logger.info(f"Opus encoder created: {self.sample_rate}Hz, {self.bitrate}bps")
             return self.encoder
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create Opus encoder: {e}")
@@ -311,9 +307,7 @@ class OpusCodec:
             self.logger.error(f"Opus PLC error: {e}")
             return None
 
-    def decode_with_fec(
-        self, opus_data: bytes, frame_size: int | None = None
-    ) -> bytes | None:
+    def decode_with_fec(self, opus_data: bytes, frame_size: int | None = None) -> bytes | None:
         """
         Decode Opus data with Forward Error Correction
 
@@ -387,10 +381,9 @@ class OpusCodec:
         """Get application type name"""
         if self.application == self.APP_AUDIO:
             return "audio"
-        elif self.application == self.APP_LOWDELAY:
+        if self.application == self.APP_LOWDELAY:
             return "lowdelay"
-        else:
-            return "voip"
+        return "voip"
 
 
 class OpusCodecManager:
@@ -474,8 +467,6 @@ class OpusCodecManager:
             True if opuslib is installed
         """
         try:
-            pass
-
             return True
         except ImportError:
             return False

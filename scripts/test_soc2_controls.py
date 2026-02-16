@@ -14,19 +14,19 @@ Usage:
 
 import argparse
 import json
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from pathlib import Path
 
 from pbx.features.compliance_framework import SOC2ComplianceEngine
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 from pbx.utils.migrations import MigrationManager, register_all_migrations
-from pathlib import Path
 
 
 class SOC2ControlTester:
@@ -46,7 +46,7 @@ class SOC2ControlTester:
         self.db = DatabaseBackend(self.config)
         self.engine = None
         self.test_results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "total_controls": 0,
             "passed": 0,
             "failed": 0,
@@ -116,10 +116,9 @@ class SOC2ControlTester:
 
         if require_auth and enforce_fips:
             return True, "Authentication and FIPS enforcement demonstrate integrity commitment"
-        elif require_auth:
+        if require_auth:
             return True, "Authentication required demonstrates basic integrity controls"
-        else:
-            return False, "Authentication not required - integrity controls not enforced"
+        return False, "Authentication not required - integrity controls not enforced"
 
     def test_control_cc1_2(self) -> tuple[bool, str]:
         """
@@ -133,8 +132,7 @@ class SOC2ControlTester:
 
         if api_auth:
             return True, "API authentication enables role-based access control and oversight"
-        else:
-            return True, "Basic oversight controls in place via configuration management"
+        return True, "Basic oversight controls in place via configuration management"
 
     def test_control_cc2_1(self) -> tuple[bool, str]:
         """
@@ -151,8 +149,7 @@ class SOC2ControlTester:
                 True,
                 f"Strong password policy ({min_password_length} chars) demonstrates competent security practices",
             )
-        else:
-            return False, f"Weak password policy ({min_password_length} chars) - should be >= 12"
+        return False, f"Weak password policy ({min_password_length} chars) - should be >= 12"
 
     def test_control_cc3_1(self) -> tuple[bool, str]:
         """
@@ -167,8 +164,7 @@ class SOC2ControlTester:
 
         if fips_mode or enable_tls:
             return True, "Clear security objectives defined (FIPS/TLS compliance)"
-        else:
-            return True, "Basic security objectives specified in configuration"
+        return True, "Basic security objectives specified in configuration"
 
     def test_control_cc5_1(self) -> tuple[bool, str]:
         """
@@ -182,8 +178,7 @@ class SOC2ControlTester:
 
         if max_failed_attempts <= 10:
             return True, f"Account lockout control active ({max_failed_attempts} max attempts)"
-        else:
-            return True, "Basic security controls configured"
+        return True, "Basic security controls configured"
 
     def test_control_cc6_1(self) -> tuple[bool, str]:
         """
@@ -198,10 +193,9 @@ class SOC2ControlTester:
 
         if require_auth and api_auth:
             return True, "Access controls enforced for both SIP and API interfaces"
-        elif require_auth or api_auth:
+        if require_auth or api_auth:
             return True, "Access controls enforced for primary interface"
-        else:
-            return False, "Access controls not enforced - security risk"
+        return False, "Access controls not enforced - security risk"
 
     def test_control_cc6_2(self) -> tuple[bool, str]:
         """
@@ -216,10 +210,9 @@ class SOC2ControlTester:
 
         if require_auth and min_password_length >= 12:
             return True, "Strong authentication controls in place"
-        elif require_auth:
+        if require_auth:
             return True, "Basic authentication controls active"
-        else:
-            return False, "Authentication not required"
+        return False, "Authentication not required"
 
     def test_control_cc6_6(self) -> tuple[bool, str]:
         """
@@ -243,10 +236,9 @@ class SOC2ControlTester:
 
         if len(encryption_methods) >= 2:
             return True, f"Strong encryption: {', '.join(encryption_methods)}"
-        elif len(encryption_methods) >= 1:
+        if len(encryption_methods) >= 1:
             return True, f"Encryption enabled: {', '.join(encryption_methods)}"
-        else:
-            return False, "No encryption configured - data not protected"
+        return False, "No encryption configured - data not protected"
 
     def test_control_cc7_1(self) -> tuple[bool, str]:
         """
@@ -260,8 +252,7 @@ class SOC2ControlTester:
 
         if max_failed_attempts <= 10:
             return True, "Failed login detection configured for incident detection"
-        else:
-            return True, "Basic logging capabilities enable incident detection"
+        return True, "Basic logging capabilities enable incident detection"
 
     def test_control_cc7_2(self) -> tuple[bool, str]:
         """
@@ -278,8 +269,7 @@ class SOC2ControlTester:
                 True,
                 f"Automated incident response via account lockout (after {max_failed_attempts} failures)",
             )
-        else:
-            return True, "Manual incident response procedures in place"
+        return True, "Manual incident response procedures in place"
 
     def test_control_a1_1(self) -> tuple[bool, str]:
         """
@@ -294,8 +284,7 @@ class SOC2ControlTester:
 
         if healthcheck_exists:
             return True, "Health monitoring system available (healthcheck.py)"
-        else:
-            return True, "Basic monitoring capabilities via system logs"
+        return True, "Basic monitoring capabilities via system logs"
 
     def test_control_a1_2(self) -> tuple[bool, str]:
         """
@@ -309,10 +298,9 @@ class SOC2ControlTester:
 
         if db_type == "postgresql":
             return True, "PostgreSQL backend supports automated backup and recovery"
-        elif db_type == "sqlite":
+        if db_type == "sqlite":
             return True, "SQLite database supports file-based backup procedures"
-        else:
-            return True, "Database backend supports backup operations"
+        return True, "Database backend supports backup operations"
 
     def test_control_pi1_1(self) -> tuple[bool, str]:
         """
@@ -326,8 +314,7 @@ class SOC2ControlTester:
 
         if fips_mode:
             return True, "FIPS mode ensures cryptographic integrity of processed data"
-        else:
-            return True, "Database constraints and validation ensure data integrity"
+        return True, "Database constraints and validation ensure data integrity"
 
     def test_control_pi1_2(self) -> tuple[bool, str]:
         """
@@ -354,8 +341,7 @@ class SOC2ControlTester:
 
         if require_auth:
             return True, "Authentication protects confidential information access"
-        else:
-            return False, "No authentication - confidential data not protected"
+        return False, "No authentication - confidential data not protected"
 
     def test_control_c1_2(self) -> tuple[bool, str]:
         """
@@ -369,8 +355,7 @@ class SOC2ControlTester:
 
         if fips_mode:
             return True, "FIPS-compliant encryption ensures secure data disposal"
-        else:
-            return True, "Database deletion procedures support secure information disposal"
+        return True, "Database deletion procedures support secure information disposal"
 
     def test_control(self, control_id: str) -> tuple[bool, str]:
         """
@@ -424,7 +409,7 @@ class SOC2ControlTester:
             return False
 
         self.print_status(
-            f"Testing SOC 2 Type 2 Controls - {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')}",
+            f"Testing SOC 2 Type 2 Controls - {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')}",
             "INFO",
         )
         print()
@@ -461,13 +446,13 @@ class SOC2ControlTester:
                 "passed": passed,
                 "details": details,
                 "category": category,
-                "tested_at": datetime.now(timezone.utc).isoformat(),
+                "tested_at": datetime.now(UTC).isoformat(),
             }
 
             self.print_status(f"  {details}", status)
 
             # Update database with test results
-            test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')})"
+            test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')})"
             self.engine.update_control_test(control_id, test_result_text)
 
             print()
@@ -506,13 +491,13 @@ class SOC2ControlTester:
         self.test_results["controls"][control_id] = {
             "passed": passed,
             "details": details,
-            "tested_at": datetime.now(timezone.utc).isoformat(),
+            "tested_at": datetime.now(UTC).isoformat(),
         }
 
         self.print_status(f"{details}", status)
 
         # Update database
-        test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M:%S')})"
+        test_result_text = f"{'PASSED' if passed else 'FAILED'} - {details} (Tested: {datetime.now(UTC).strftime('%Y-%m-%d %H:%M:%S')})"
         self.engine.update_control_test(control_id, test_result_text)
 
         return passed

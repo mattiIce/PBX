@@ -3,7 +3,6 @@
 Tests for phone MAC-to-IP correlation feature
 """
 
-
 from pbx.features.phone_provisioning import PhoneProvisioning, normalize_mac_address
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB

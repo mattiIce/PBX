@@ -73,7 +73,6 @@ def test_pcm_wav_to_g722_with_rtp() -> None:
         # The conversion should succeed
         assert result is True, "Playing PCM WAV file should succeed after conversion to G.722"
 
-
     finally:
         # Clean up temporary file
         if Path(temp_path).exists():
@@ -137,7 +136,6 @@ def test_ulaw_wav_still_works() -> None:
 
         # Should succeed without conversion
         assert result is True, "Playing μ-law WAV file should succeed without conversion"
-
 
     finally:
         # Clean up temporary file

@@ -10,7 +10,6 @@ Examples:
     python scripts/diagnose_qos.py 600703453@192.168.10.135
 """
 
-import os
 import sys
 from pathlib import Path
 

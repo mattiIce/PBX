@@ -5,13 +5,12 @@ Uses current_app.config['ADMIN_DIR'] for the admin directory path.
 """
 
 import mimetypes
-import os
+from pathlib import Path
 
 from flask import Blueprint, Response, current_app, redirect
 
 from pbx.api.utils import send_json
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger()
 

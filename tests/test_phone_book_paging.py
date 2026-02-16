@@ -3,7 +3,6 @@
 Tests for Phone Book and Paging features
 """
 
-
 from pbx.features.paging import PagingSystem
 from pbx.features.phone_book import PhoneBook
 
@@ -71,12 +70,12 @@ def test_phone_book_export() -> None:
 
     # Test JSON export
     json_output = phone_book.export_json()
-    assert (
-        '"extension": "1001"' in json_output or '"extension":"1001"' in json_output
-    ), "Extension not in JSON"
-    assert (
-        '"name": "Alice Smith"' in json_output or '"name":"Alice Smith"' in json_output
-    ), "Name not in JSON"
+    assert '"extension": "1001"' in json_output or '"extension":"1001"' in json_output, (
+        "Extension not in JSON"
+    )
+    assert '"name": "Alice Smith"' in json_output or '"name":"Alice Smith"' in json_output, (
+        "Name not in JSON"
+    )
 
 
 def test_paging_system_basic() -> None:

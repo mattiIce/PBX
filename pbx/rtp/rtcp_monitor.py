@@ -317,14 +317,13 @@ class RTCPMonitor:
 
         if mos >= 4.3:
             return "Excellent"
-        elif mos >= 4.0:
+        if mos >= 4.0:
             return "Good"
-        elif mos >= 3.6:
+        if mos >= 3.6:
             return "Fair"
-        elif mos >= 3.1:
+        if mos >= 3.1:
             return "Poor"
-        else:
-            return "Bad"
+        return "Bad"
 
     def check_quality_alerts(self) -> list[str]:
         """

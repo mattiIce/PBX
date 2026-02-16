@@ -90,7 +90,7 @@ def markdown_to_html(markdown_content):
     table_lines = []
     result_lines = []
 
-    for i, line in enumerate(lines):
+    for _i, line in enumerate(lines):
         if "|" in line and line.strip().startswith("|"):
             if not in_table:
                 in_table = True
@@ -455,7 +455,7 @@ def main():
     print(f"Reading {md_file}...")
 
     # Read markdown file
-    with open(md_file, "r", encoding="utf-8") as f:
+    with open(md_file, encoding="utf-8") as f:
         markdown_content = f.read()
 
     print("Converting to HTML...")

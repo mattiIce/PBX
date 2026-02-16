@@ -9,11 +9,11 @@ system resource monitoring.
 import logging
 import os
 import socket
+import sqlite3
 import time
 from typing import Any
 
 import psutil
-import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -331,9 +331,9 @@ def format_health_check_response(
 
         return status_code, "\n".join(lines)
 
-    elif format_type == "plain":
+    if format_type == "plain":
         # Simple text format
         return status_code, "OK" if is_healthy else "UNHEALTHY"
 
-    else:  # json (default)
-        return status_code, json.dumps(details, indent=2)
+    # json (default)
+    return status_code, json.dumps(details, indent=2)

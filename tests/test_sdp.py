@@ -3,7 +3,6 @@
 Test SDP parsing and building
 """
 
-
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
@@ -26,19 +25,13 @@ a=sendrecv
     sdp.parse(sdp_text)
 
     assert sdp.version == 0, f"Expected version 0, got {sdp.version}"
-    assert (
-        sdp.origin["username"] == "user1"
-    ), f"Expected user1, got {sdp.origin['username']}"
-    assert (
-        sdp.origin["address"] == "192.168.1.100"
-    ), f"Expected 192.168.1.100, got {sdp.origin['address']}"
+    assert sdp.origin["username"] == "user1", f"Expected user1, got {sdp.origin['username']}"
+    assert sdp.origin["address"] == "192.168.1.100", (
+        f"Expected 192.168.1.100, got {sdp.origin['address']}"
+    )
     assert len(sdp.media) == 1, f"Expected 1 media, got {len(sdp.media)}"
-    assert (
-        sdp.media[0]["type"] == "audio"
-    ), f"Expected audio, got {sdp.media[0]['type']}"
-    assert (
-        sdp.media[0]["port"] == 10000
-    ), f"Expected port 10000, got {sdp.media[0]['port']}"
+    assert sdp.media[0]["type"] == "audio", f"Expected audio, got {sdp.media[0]['type']}"
+    assert sdp.media[0]["port"] == 10000, f"Expected port 10000, got {sdp.media[0]['port']}"
 
 
 def test_sdp_audio_info() -> None:
@@ -60,12 +53,10 @@ a=rtpmap:8 PCMA/8000
     audio_info = sdp.get_audio_info()
 
     assert audio_info is not None, "Audio info should not be None"
-    assert (
-        audio_info["address"] == "192.168.1.100"
-    ), f"Expected 192.168.1.100, got {audio_info['address']}"
-    assert (
-        audio_info["port"] == 10000
-    ), f"Expected port 10000, got {audio_info['port']}"
+    assert audio_info["address"] == "192.168.1.100", (
+        f"Expected 192.168.1.100, got {audio_info['address']}"
+    )
+    assert audio_info["port"] == 10000, f"Expected port 10000, got {audio_info['port']}"
     assert "0" in audio_info["formats"], "Expected codec 0 (PCMU) in formats"
 
 
@@ -82,7 +73,6 @@ def test_sdp_building() -> None:
     assert "RTP/AVP" in sdp_body, "SDP should contain RTP/AVP protocol"
     assert "PCMU" in sdp_body, "SDP should contain PCMU codec"
     assert "PCMA" in sdp_body, "SDP should contain PCMA codec"
-
 
     # Verify the built SDP can be parsed back
     sdp = SDPSession()
@@ -112,9 +102,9 @@ a=rtpmap:0 PCMU/8000
     audio_info = sdp.get_audio_info()
 
     # Should use media-level connection, not session-level
-    assert (
-        audio_info["address"] == "192.168.1.200"
-    ), f"Expected media-level IP 192.168.1.200, got {audio_info['address']}"
+    assert audio_info["address"] == "192.168.1.200", (
+        f"Expected media-level IP 192.168.1.200, got {audio_info['address']}"
+    )
 
 
 def test_ilbc_mode_configuration() -> None:
@@ -131,7 +121,6 @@ def test_ilbc_mode_configuration() -> None:
 
     assert "rtpmap:97 iLBC/8000" in sdp_body_30, "SDP should contain iLBC codec"
     assert "fmtp:97 mode=30" in sdp_body_30, "SDP should contain mode=30 for iLBC"
-
 
     # Test with 20ms mode
     sdp_body_20 = SDPBuilder.build_audio_sdp(

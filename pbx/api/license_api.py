@@ -7,12 +7,12 @@ Protected by license administrator authentication.
 
 import logging
 import os
+from pathlib import Path
 
 from flask import Blueprint, jsonify, request
 
 from pbx.utils.license_admin import require_license_admin, verify_license_admin_session
 from pbx.utils.licensing import LicenseType, get_license_manager
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -223,7 +223,6 @@ def install_license():
         JSON with installation status
     """
     try:
-
         data = request.get_json()
         license_data = data.get("license_data") or data
         enforce_licensing = data.get("enforce_licensing", False)
@@ -252,8 +251,7 @@ def install_license():
                 ),
                 200,
             )
-        else:
-            return jsonify({"success": False, "error": "Failed to install license"}), 500
+        return jsonify({"success": False, "error": "Failed to install license"}), 500
 
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error installing license: {e}")
@@ -277,8 +275,7 @@ def revoke_license():
 
         if success:
             return jsonify({"success": True, "message": "License revoked successfully"}), 200
-        else:
-            return jsonify({"success": False, "error": "Failed to revoke license"}), 500
+        return jsonify({"success": False, "error": "Failed to revoke license"}), 500
 
     except Exception as e:
         logger.error(f"Error revoking license: {e}")
@@ -319,7 +316,7 @@ def toggle_licensing():
         # Read existing .env
         env_lines = []
         if Path(env_file).exists():
-            with open(env_file, "r") as f:
+            with open(env_file) as f:
                 env_lines = f.readlines()
 
         # Check if license lock exists
@@ -346,7 +343,7 @@ def toggle_licensing():
 
         if not found:
             env_lines.append(
-                f'\n# Licensing\nPBX_LICENSING_ENABLED={"true" if enabled else "false"}\n'
+                f"\n# Licensing\nPBX_LICENSING_ENABLED={'true' if enabled else 'false'}\n"
             )
 
         # Write back
@@ -366,7 +363,7 @@ def toggle_licensing():
                 {
                     "success": True,
                     "licensing_enabled": license_manager.enabled,
-                    "message": f'Licensing {"enabled" if enabled else "disabled"} successfully',
+                    "message": f"Licensing {'enabled' if enabled else 'disabled'} successfully",
                 }
             ),
             200,
@@ -403,16 +400,15 @@ def remove_license_lock():
                 ),
                 200,
             )
-        else:
-            return (
-                jsonify(
-                    {
-                        "success": False,
-                        "error": "License lock file does not exist or could not be removed",
-                    }
-                ),
-                404,
-            )
+        return (
+            jsonify(
+                {
+                    "success": False,
+                    "error": "License lock file does not exist or could not be removed",
+                }
+            ),
+            404,
+        )
 
     except Exception as e:
         logger.error(f"Error removing license lock: {e}")
@@ -493,9 +489,8 @@ def admin_login():
                 ),
                 200,
             )
-        else:
-            logger.warning(f"Failed license admin login attempt: {extension}/{username}")
-            return jsonify({"success": False, "error": "Invalid credentials"}), 401
+        logger.warning(f"Failed license admin login attempt: {extension}/{username}")
+        return jsonify({"success": False, "error": "Invalid credentials"}), 401
 
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error during license admin login: {e}")

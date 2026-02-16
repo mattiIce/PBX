@@ -28,15 +28,14 @@ Exit codes:
 """
 
 import argparse
-import os
 import sys
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 class Colors:
@@ -229,13 +228,12 @@ class ADIntegrationTester:
                 "Connect to AD server", "PASS", "Successfully connected and authenticated"
             )
             return True
-        else:
-            self.print_test(
-                "Connect to AD server",
-                "FAIL",
-                "Check server address, credentials, and network connectivity",
-            )
-            return False
+        self.print_test(
+            "Connect to AD server",
+            "FAIL",
+            "Check server address, credentials, and network connectivity",
+        )
+        return False
 
     def test_user_search(self) -> tuple[bool, list[dict]]:
         """Test 4: Test user search functionality"""
@@ -286,11 +284,10 @@ class ADIntegrationTester:
                     "Search for users", "WARN", "No users found with telephoneNumber attribute"
                 )
                 return True, []
-            else:
-                self.print_test(
-                    "Search for users", "PASS", f"Found {len(users)} users with phone numbers"
-                )
-                return True, users
+            self.print_test(
+                "Search for users", "PASS", f"Found {len(users)} users with phone numbers"
+            )
+            return True, users
 
         except (KeyError, TypeError, ValueError) as e:
             self.print_test("Search for users", "FAIL", f"Error: {e}")
@@ -471,7 +468,7 @@ class ADIntegrationTester:
         ]
 
         # Run initial tests
-        for test_name, test_func in tests:
+        for _test_name, test_func in tests:
             if not test_func():
                 self.print_summary(success=False)
                 return False

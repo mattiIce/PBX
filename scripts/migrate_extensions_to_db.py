@@ -14,15 +14,14 @@ Options:
 """
 
 import argparse
-import os
 import sys
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
-from pathlib import Path
 
 
 def main():

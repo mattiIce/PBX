@@ -6,7 +6,6 @@ This script helps configure environment variables required for production,
 validates their format, and checks for security issues.
 """
 
-import os
 import re
 import secrets
 import subprocess
@@ -203,10 +202,9 @@ class EnvSetup:
 
             value = input(prompt).strip() or default
 
-            if validator:
-                if not validator(value):
-                    print(f"Invalid value for {name}")
-                    continue
+            if validator and not validator(value):
+                print(f"Invalid value for {name}")
+                continue
 
             return value
 
@@ -281,7 +279,7 @@ class EnvSetup:
         if not Path(self.env_file).exists():
             return
 
-        with open(self.env_file, "r") as f:
+        with open(self.env_file) as f:
             for line in f:
                 line = line.strip()
                 if not line or line.startswith("#"):
@@ -304,7 +302,9 @@ class EnvSetup:
 
         with open(self.env_file, "w") as f:
             f.write("# PBX Environment Configuration\n")
-            f.write(f"# Generated on: {subprocess.run(['date'], capture_output=True, text=True, check=False).stdout.strip()}\n")
+            f.write(
+                f"# Generated on: {subprocess.run(['date'], capture_output=True, text=True, check=False).stdout.strip()}\n"
+            )
             f.write("#\n")
             f.write("# SECURITY: Keep this file secure!\n")
             f.write("# - Never commit to version control\n")
@@ -340,10 +340,9 @@ def main():
             print("  python scripts/setup_production_env.py interactive   # Interactive setup")
             print("  python scripts/setup_production_env.py validate      # Validate existing .env")
             sys.exit(1)
-    else:
-        # Default: interactive setup
-        if not setup.run_interactive_setup():
-            sys.exit(1)
+    # Default: interactive setup
+    elif not setup.run_interactive_setup():
+        sys.exit(1)
 
 
 if __name__ == "__main__":

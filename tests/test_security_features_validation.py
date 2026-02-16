@@ -4,7 +4,6 @@ Comprehensive security feature validation tests
 Verifies all security features are functional and properly enforced
 """
 
-
 from pbx.utils.config import Config
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 from pbx.utils.security import (
@@ -76,7 +75,6 @@ def test_password_policy_enforcement() -> None:
         assert is_valid is False, f"Weak password '{weak_pw}' should be rejected"
         assert expected_error_part in error, f"Error message should contain '{expected_error_part}'"
 
-
     # Test password generation
     generated = policy.generate_strong_password()
     is_valid, error = policy.validate(generated)
@@ -97,7 +95,7 @@ def test_rate_limiting_enforcement() -> None:
 
     # Record failed attempts up to limit
     max_attempts = config.get("security.rate_limit.max_attempts", 5)
-    for i in range(max_attempts):
+    for _i in range(max_attempts):
         limiter.record_attempt(test_user, successful=False)
 
     # Check if now limited
@@ -146,8 +144,7 @@ def test_threat_detection_functional() -> None:
     """Test threat detection is functional"""
 
     config = Config("config.yml")
-    threat_enabled = config.get("security.threat_detection.enabled", True)
-
+    config.get("security.threat_detection.enabled", True)
 
     detector = ThreatDetector(database=None, config=config)
 
@@ -246,9 +243,9 @@ def test_all_security_defaults() -> None:
     window_seconds = config.get("security.rate_limit.window_seconds", 0)
     lockout_duration = config.get("security.rate_limit.lockout_duration", 0)
 
-    assert (
-        max_attempts > 0 and max_attempts <= 10
-    ), f"Max attempts should be 1-10, got {max_attempts}"
+    assert max_attempts > 0 and max_attempts <= 10, (
+        f"Max attempts should be 1-10, got {max_attempts}"
+    )
     assert window_seconds > 0, f"Window should be > 0, got {window_seconds}"
     assert lockout_duration > 0, f"Lockout should be > 0, got {lockout_duration}"
 
@@ -260,7 +257,7 @@ def test_all_security_defaults() -> None:
     assert log_to_database is True, "Database logging should be enabled"
 
     # Check threat detection defaults
-    threat_enabled = config.get("security.threat_detection.enabled", False)
+    config.get("security.threat_detection.enabled", False)
 
 
 def test_security_features_cannot_be_bypassed() -> None:
@@ -285,7 +282,7 @@ def test_security_features_cannot_be_bypassed() -> None:
 
     # Try to exceed limit
     max_attempts = config.get("security.rate_limit.max_attempts", 5)
-    for i in range(max_attempts + 1):
+    for _i in range(max_attempts + 1):
         limiter.record_attempt(test_user, successful=False)
 
     is_limited, _ = limiter.is_rate_limited(test_user)

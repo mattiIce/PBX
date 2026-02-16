@@ -3,7 +3,7 @@ Predictive Voicemail Drop
 Auto-leave message on voicemail detection
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
@@ -83,10 +83,10 @@ class VoicemailDropSystem:
                 "beep_detected": False,
                 "detection_time": 0.0,
                 "detection_method": "insufficient_data",
-                "detected_at": datetime.now(timezone.utc).isoformat(),
+                "detected_at": datetime.now(UTC).isoformat(),
             }
 
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
 
         # Convert audio bytes to samples (assuming 16-bit PCM)
         try:
@@ -133,7 +133,7 @@ class VoicemailDropSystem:
         # Determine if voicemail based on threshold
         is_voicemail = confidence >= self.detection_threshold
 
-        detection_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        detection_time = (datetime.now(UTC) - start_time).total_seconds()
 
         detection_result = {
             "call_id": call_id,
@@ -142,7 +142,7 @@ class VoicemailDropSystem:
             "beep_detected": beep_detected,
             "detection_time": round(detection_time, 3),
             "detection_method": detection_method,
-            "detected_at": datetime.now(timezone.utc).isoformat(),
+            "detected_at": datetime.now(UTC).isoformat(),
         }
 
         self.logger.info(
@@ -256,11 +256,11 @@ class VoicemailDropSystem:
             "message_id": message_id,
             "message_name": message["name"],
             "duration": message["duration"],
-            "dropped_at": datetime.now(timezone.utc).isoformat(),
+            "dropped_at": datetime.now(UTC).isoformat(),
         }
 
     def add_message(
-        self, message_id: str, name: str, audio_path: str, duration: float = None
+        self, message_id: str, name: str, audio_path: str, duration: float | None = None
     ) -> dict:
         """
         Add pre-recorded message
@@ -279,7 +279,7 @@ class VoicemailDropSystem:
             "name": name,
             "audio_path": audio_path,
             "duration": duration or 0.0,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "use_count": 0,
         }
 

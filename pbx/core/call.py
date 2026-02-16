@@ -2,7 +2,7 @@
 Call management and session handling
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 
@@ -66,7 +66,7 @@ class Call:
     def start(self):
         """Start the call"""
         self.state = CallState.CALLING
-        self.start_time = datetime.now(timezone.utc)
+        self.start_time = datetime.now(UTC)
 
     def ring(self):
         """set call state to ringing"""
@@ -75,7 +75,7 @@ class Call:
     def connect(self):
         """Connect the call"""
         self.state = CallState.CONNECTED
-        self.answer_time = datetime.now(timezone.utc)
+        self.answer_time = datetime.now(UTC)
 
     def hold(self):
         """Put call on hold"""
@@ -90,14 +90,14 @@ class Call:
     def end(self):
         """End the call"""
         self.state = CallState.ENDED
-        self.end_time = datetime.now(timezone.utc)
+        self.end_time = datetime.now(UTC)
 
     def get_duration(self):
         """Get call duration in seconds"""
         if not self.start_time:
             return 0
 
-        end = self.end_time or datetime.now(timezone.utc)
+        end = self.end_time or datetime.now(UTC)
         return (end - self.start_time).total_seconds()
 
     def __str__(self):
@@ -174,6 +174,6 @@ class CallManager:
         """
         calls = []
         for call in self.active_calls.values():
-            if call.from_extension == extension or call.to_extension == extension:
+            if extension in (call.from_extension, call.to_extension):
                 calls.append(call)
         return calls

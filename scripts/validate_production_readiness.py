@@ -145,7 +145,7 @@ class ProductionValidator:
             if ssl_key.exists():
                 stat_info = ssl_key.stat()
                 mode = oct(stat_info.st_mode)[-3:]
-                if mode == "600" or mode == "400":
+                if mode in {"600", "400"}:
                     self.log("SSL private key permissions: Secure", "pass")
                 else:
                     self.log(f"SSL private key permissions: {mode} (should be 600 or 400)", "warn")
@@ -246,8 +246,7 @@ class ProductionValidator:
                 self.log(f"{description} directory ({dir_name}): Exists", "pass")
             else:
                 self.log(
-                    f"{description} directory ({dir_name}): "
-                    f"Not found (will be created on startup)",
+                    f"{description} directory ({dir_name}): Not found (will be created on startup)",
                     "warn",
                 )
 
@@ -382,9 +381,9 @@ class ProductionValidator:
 
     def run_all_checks(self):
         """Run all validation checks."""
-        print(f"\n{BLUE}{'='*60}{RESET}")
+        print(f"\n{BLUE}{'=' * 60}{RESET}")
         print(f"{BLUE}PBX Production Readiness Validation{RESET}")
-        print(f"{BLUE}{'='*60}{RESET}")
+        print(f"{BLUE}{'=' * 60}{RESET}")
 
         self.check_system_requirements()
         self.check_configuration()
@@ -398,9 +397,9 @@ class ProductionValidator:
         self.check_backups()
 
         # Summary
-        print(f"\n{BLUE}{'='*60}{RESET}")
+        print(f"\n{BLUE}{'=' * 60}{RESET}")
         print(f"{BLUE}Summary{RESET}")
-        print(f"{BLUE}{'='*60}{RESET}")
+        print(f"{BLUE}{'=' * 60}{RESET}")
         print(f"{GREEN}Passed:{RESET} {len(self.results['passed'])}")
         print(f"{RED}Failed:{RESET} {len(self.results['failed'])}")
         print(f"{YELLOW}Warnings:{RESET} {len(self.results['warnings'])}")
@@ -410,10 +409,9 @@ class ProductionValidator:
             if len(self.results["warnings"]) > 0:
                 print(f"{YELLOW}⚠ Please review warnings before production deployment{RESET}")
             return 0
-        else:
-            print(f"\n{RED}✗ {len(self.results['failed'])} critical issues found{RESET}")
-            print(f"{RED}Please fix these issues before production deployment{RESET}")
-            return 1
+        print(f"\n{RED}✗ {len(self.results['failed'])} critical issues found{RESET}")
+        print(f"{RED}Please fix these issues before production deployment{RESET}")
+        return 1
 
     def output_json(self):
         """Output results in JSON format."""

@@ -3,17 +3,14 @@ Call Recording Analytics
 AI analysis of recorded calls using FREE open-source libraries
 """
 
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from pathlib import Path
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 # Import Vosk for FREE offline transcription (already integrated)
 try:
-    pass
-
     from vosk import Model
 
     VOSK_AVAILABLE = True
@@ -125,7 +122,7 @@ class RecordingAnalytics:
                 self.logger.info("Download with: python -m spacy download en_core_web_sm")
 
     def analyze_recording(
-        self, recording_id: str, audio_path: str, analysis_types: list[str] = None
+        self, recording_id: str, audio_path: str, analysis_types: list[str] | None = None
     ) -> dict:
         """
         Analyze a call recording
@@ -142,7 +139,7 @@ class RecordingAnalytics:
 
         results = {
             "recording_id": recording_id,
-            "analyzed_at": datetime.now(timezone.utc).isoformat(),
+            "analyzed_at": datetime.now(UTC).isoformat(),
             "analyses": {},
         }
 
@@ -181,9 +178,8 @@ class RecordingAnalytics:
         try:
             if Path(model_path).exists():
                 return Model(model_path)
-            else:
-                self.logger.warning(f"Vosk model not found at {model_path}")
-                self.logger.info("Download from: https://alphacephei.com/vosk/models")
+            self.logger.warning(f"Vosk model not found at {model_path}")
+            self.logger.info("Download from: https://alphacephei.com/vosk/models")
         except OSError as e:
             self.logger.warning(f"Could not load Vosk model: {e}")
 

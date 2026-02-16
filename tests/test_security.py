@@ -3,14 +3,12 @@
 Tests for security features
 """
 
-import os
 import tempfile
 import time
-
+from pathlib import Path
 
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import (
-from pathlib import Path
     PasswordPolicy,
     RateLimiter,
     SecurityAuditor,
@@ -231,13 +229,13 @@ def test_password_migration_compatibility() -> None:
     # Verify all passwords can be authenticated
     for ext_num, password in plaintext_passwords.items():
         data = migrated_data[ext_num]
-        assert mgr.verify_password(
-            password, data["hash"], data["salt"]
-        ), f"Migrated password for {ext_num} failed verification"
+        assert mgr.verify_password(password, data["hash"], data["salt"]), (
+            f"Migrated password for {ext_num} failed verification"
+        )
 
     # Verify wrong passwords don't authenticate
     for ext_num in plaintext_passwords.keys():
         data = migrated_data[ext_num]
-        assert not mgr.verify_password(
-            "wrong_password", data["hash"], data["salt"]
-        ), f"Wrong password verified for {ext_num}"
+        assert not mgr.verify_password("wrong_password", data["hash"], data["salt"]), (
+            f"Wrong password verified for {ext_num}"
+        )

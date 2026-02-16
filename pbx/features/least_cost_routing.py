@@ -6,7 +6,7 @@ based on destination, time of day, and carrier rates
 
 import re
 import sqlite3
-from datetime import datetime, time, timezone
+from datetime import UTC, datetime, time
 
 from pbx.utils.logger import get_logger
 
@@ -116,7 +116,7 @@ class TimeBasedRate:
 
     def applies_now(self) -> bool:
         """Check if this time period applies now"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         current_time = now.time()
         current_day = now.weekday()
 
@@ -128,9 +128,8 @@ class TimeBasedRate:
         if self.start_time <= self.end_time:
             # Normal case (e.g., 9:00 AM - 5:00 PM)
             return self.start_time <= current_time <= self.end_time
-        else:
-            # Crosses midnight (e.g., 11:00 PM - 3:00 AM)
-            return current_time >= self.start_time or current_time <= self.end_time
+        # Crosses midnight (e.g., 11:00 PM - 3:00 AM)
+        return current_time >= self.start_time or current_time <= self.end_time
 
 
 class LeastCostRouting:
@@ -539,7 +538,7 @@ class LeastCostRouting:
 
         # Record decision
         decision = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "number": dialed_number,
             "selected_trunk": selected_trunk,
             "estimated_cost": available_rates[0][1],

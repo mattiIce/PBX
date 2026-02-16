@@ -4,7 +4,6 @@ Provides audio generation and processing functions
 """
 
 import math
-import os
 import struct
 import warnings
 from pathlib import Path
@@ -52,8 +51,7 @@ def pcm16_to_ulaw(pcm_data: bytes) -> bytes:
         sample = abs(sample)
 
         # Clip the sample
-        if sample > _ULAW_CLIP:
-            sample = _ULAW_CLIP
+        sample = min(sample, _ULAW_CLIP)
 
         # Add bias
         sample = sample + _ULAW_BIAS
@@ -231,7 +229,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
             return True
 
     except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
-        warnings.warn(f"Failed to convert WAV to G.722: {e}")
+        warnings.warn(f"Failed to convert WAV to G.722: {e}", stacklevel=2)
         return False
 
 
@@ -571,7 +569,7 @@ def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
             # In production, consider logging this error for debugging
             import warnings
 
-            warnings.warn(f"Failed to read prompt file {prompt_file}: {e}")
+            warnings.warn(f"Failed to read prompt file {prompt_file}: {e}", stacklevel=2)
             return None
 
     return None

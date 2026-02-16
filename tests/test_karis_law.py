@@ -11,7 +11,6 @@ Kari's Law requires multi-line telephone systems (MLTS) to:
 from typing import Any
 from unittest.mock import MagicMock
 
-
 from pbx.features.karis_law import KarisLawCompliance
 
 
@@ -99,9 +98,9 @@ def test_emergency_number_normalization() -> None:
     assert karis_law.normalize_emergency_number("9-911") == "911", "9-911 should normalize to 911"
 
     # Non-emergency numbers should remain unchanged
-    assert (
-        karis_law.normalize_emergency_number("1001") == "1001"
-    ), "Regular number should not change"
+    assert karis_law.normalize_emergency_number("1001") == "1001", (
+        "Regular number should not change"
+    )
 
 
 def test_direct_911_dialing() -> None:
@@ -133,9 +132,9 @@ def test_direct_911_dialing() -> None:
     assert routing_info["destination"] == "911", "Destination should be 911"
 
     # Verify emergency notification was triggered
-    assert (
-        pbx.emergency_notification.on_911_call.called
-    ), "Emergency notification should be triggered"
+    assert pbx.emergency_notification.on_911_call.called, (
+        "Emergency notification should be triggered"
+    )
 
 
 def test_legacy_prefix_support() -> None:
@@ -176,7 +175,7 @@ def test_automatic_notification() -> None:
     karis_law = KarisLawCompliance(pbx, config)
 
     # Make emergency call
-    success, routing_info = karis_law.handle_emergency_call(
+    success, _routing_info = karis_law.handle_emergency_call(
         caller_extension="1001",
         dialed_number="911",
         call_id="test-call-4",
@@ -382,7 +381,7 @@ def test_multi_site_e911_routing() -> None:
         # Return location for first query, site for second and third
         if "nomadic_e911_locations" in query:
             return [mock_location_row]
-        elif "multi_site_e911_configs" in query:
+        if "multi_site_e911_configs" in query:
             return [mock_site_row]
         return []
 
@@ -420,9 +419,9 @@ def test_multi_site_e911_routing() -> None:
 
     assert success, "Emergency call should succeed"
     assert routing_info["success"], "Routing should succeed"
-    assert (
-        routing_info["trunk_id"] == "site_a_emergency_trunk"
-    ), "Should use site-specific emergency trunk"
+    assert routing_info["trunk_id"] == "site_a_emergency_trunk", (
+        "Should use site-specific emergency trunk"
+    )
     assert routing_info.get("site_specific"), "Should be marked as site-specific routing"
     assert routing_info.get("psap_number") == "911", "Should include PSAP number"
     assert routing_info.get("elin") == "+13135551234", "Should include ELIN"

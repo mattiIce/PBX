@@ -3,15 +3,15 @@
 Test that PCM audio files are correctly converted to PCMU (G.711 μ-law)
 This test verifies the fix for the G.722 codec issue where phones couldn't hear audio
 """
+
 import math
 import os
 import struct
 import tempfile
-
+from pathlib import Path
 
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import WAV_FORMAT_PCM, pcm16_to_ulaw
-from pathlib import Path
 
 
 def create_test_pcm_wav(sample_rate: int = 8000, duration_samples: int = 800) -> str:
@@ -104,10 +104,7 @@ def test_pcm_to_pcmu_conversion() -> bool:
         ulaw_data = pcm16_to_ulaw(bytes(test_pcm_data))
 
         # Should be half the size (16-bit PCM -> 8-bit u-law)
-        if len(ulaw_data) != 100:
-            return False
-
-        return True
+        return len(ulaw_data) == 100
 
     finally:
         # Clean up

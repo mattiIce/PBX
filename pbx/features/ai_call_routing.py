@@ -5,7 +5,7 @@ Intelligent routing using free machine learning (scikit-learn)
 
 import json
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pbx.utils.logger import get_logger
 
@@ -76,7 +76,7 @@ class AICallRouting:
             return False
 
         # Extract features
-        timestamp = call_data.get("timestamp", datetime.now(timezone.utc))
+        timestamp = call_data.get("timestamp", datetime.now(UTC))
         features = {
             "hour": timestamp.hour,
             "day_of_week": timestamp.weekday(),
@@ -165,7 +165,7 @@ class AICallRouting:
 
         try:
             # Extract features
-            timestamp = call_info.get("timestamp", datetime.now(timezone.utc))
+            timestamp = call_info.get("timestamp", datetime.now(UTC))
             features = [
                 [
                     timestamp.hour,
@@ -195,7 +195,9 @@ class AICallRouting:
                 "confidence": confidence,
                 "method": "ml_prediction",
                 "all_probabilities": dict(
-                    zip(self.label_encoder.classes_, [float(p) for p in probabilities])
+                    zip(
+                        self.label_encoder.classes_, [float(p) for p in probabilities], strict=False
+                    )
                 ),
             }
 
@@ -216,7 +218,7 @@ class AICallRouting:
             outcomes = self.routing_decisions.get(dest, [])
             if outcomes:
                 # Calculate success rate
-                recent = [o for o in outcomes[-100:]]  # Last 100 calls
+                recent = list(outcomes[-100:])  # Last 100 calls
                 if recent:
                     success_rate = sum(1 for o in recent if o["outcome"] == "answered") / len(
                         recent
@@ -229,7 +231,7 @@ class AICallRouting:
 
     def get_destination_performance(self, destination: str, days: int = 7) -> dict:
         """Get performance metrics for a destination"""
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
 
         outcomes = self.routing_decisions.get(destination, [])
         recent = [o for o in outcomes if o["timestamp"] > cutoff]
@@ -274,7 +276,7 @@ class AICallRouting:
     def import_training_data(self, filename: str) -> bool:
         """Import training data from JSON file"""
         try:
-            with open(filename, "r") as f:
+            with open(filename) as f:
                 import_data = json.load(f)
 
             for item in import_data:

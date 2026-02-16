@@ -3,9 +3,9 @@ Database migration system for PBX features
 Manages schema versioning and migrations
 """
 
+import sqlite3
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class MigrationManager:

@@ -16,13 +16,12 @@ Options:
 """
 
 import argparse
-import os
 import shutil
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
 import yaml
-from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -59,7 +58,7 @@ def main():
         sys.exit(1)
 
     # Load current config
-    with open(config_file, "r") as f:
+    with open(config_file) as f:
         config = yaml.safe_load(f)
 
     # Check if extensions exist
@@ -88,7 +87,7 @@ def main():
 
     # Create backup if requested
     if args.backup:
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         backup_file = f"{config_file}.backup_{timestamp}"
         shutil.copy2(config_file, backup_file)
         print(f"✓ Created backup: {backup_file}")

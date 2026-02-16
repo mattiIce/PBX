@@ -143,9 +143,8 @@ def verify_license_admin_credentials(extension: str, username: str, pin: str) ->
         if match1 and match2 and match3:
             logger.info(f"License admin authenticated successfully: {extension}/{username}")
             return True
-        else:
-            logger.warning(f"License admin login attempt with invalid PIN: {extension}/{username}")
-            return False
+        logger.warning(f"License admin login attempt with invalid PIN: {extension}/{username}")
+        return False
 
     except Exception as e:
         logger.error(f"Error verifying license admin credentials: {e}")

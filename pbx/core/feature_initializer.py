@@ -5,8 +5,6 @@ Extracts the feature subsystem initialization logic from PBXCore.__init__
 into a dedicated class for better modularity and maintainability.
 """
 
-import uuid
-
 from pbx.features.call_parking import CallParkingSystem
 from pbx.features.call_queue import QueueSystem
 from pbx.features.call_recording import CallRecordingSystem
@@ -100,9 +98,7 @@ class FeatureInitializer:
         if config.get("features.phone_book.enabled", False):
             from pbx.features.phone_book import PhoneBook
 
-            pbx_core.phone_book = PhoneBook(
-                config, database=database if database.enabled else None
-            )
+            pbx_core.phone_book = PhoneBook(config, database=database if database.enabled else None)
             logger.info("Phone book feature initialized")
         else:
             pbx_core.phone_book = None
@@ -221,9 +217,7 @@ class FeatureInitializer:
         # Initialize Recording Announcements
         from pbx.features.recording_announcements import RecordingAnnouncements
 
-        pbx_core.recording_announcements = RecordingAnnouncements(
-            config=config, database=database
-        )
+        pbx_core.recording_announcements = RecordingAnnouncements(config=config, database=database)
         if pbx_core.recording_announcements.enabled:
             logger.info("Recording announcements initialized")
 
@@ -232,9 +226,7 @@ class FeatureInitializer:
             from pbx.features.mfa import MFAManager
 
             pbx_core.mfa_manager = MFAManager(
-                database=(
-                    database if hasattr(pbx_core, "database") and database.enabled else None
-                ),
+                database=(database if hasattr(pbx_core, "database") and database.enabled else None),
                 config=config,
             )
             logger.info("Multi-Factor Authentication (MFA) initialized")
@@ -246,9 +238,7 @@ class FeatureInitializer:
             from pbx.utils.security import get_threat_detector
 
             pbx_core.threat_detector = get_threat_detector(
-                database=(
-                    database if hasattr(pbx_core, "database") and database.enabled else None
-                ),
+                database=(database if hasattr(pbx_core, "database") and database.enabled else None),
                 config=config,
             )
             logger.info("Enhanced threat detection initialized")
@@ -270,13 +260,13 @@ class FeatureInitializer:
 
             # Get Outlook integration if available
             outlook = None
-            if (
-                hasattr(pbx_core, "integrations") and "outlook" in pbx_core.integrations
-            ):
+            if hasattr(pbx_core, "integrations") and "outlook" in pbx_core.integrations:
                 outlook = pbx_core.integrations["outlook"]
 
             pbx_core.dnd_scheduler = get_dnd_scheduler(
-                presence_system=pbx_core.presence_system if hasattr(pbx_core, "presence_system") else None,
+                presence_system=pbx_core.presence_system
+                if hasattr(pbx_core, "presence_system")
+                else None,
                 outlook_integration=outlook,
                 config=config,
             )
@@ -289,9 +279,7 @@ class FeatureInitializer:
             from pbx.features.skills_routing import get_skills_router
 
             pbx_core.skills_router = get_skills_router(
-                database=(
-                    database if hasattr(pbx_core, "database") and database.enabled else None
-                ),
+                database=(database if hasattr(pbx_core, "database") and database.enabled else None),
                 config=config,
             )
             logger.info("Skills-Based Routing initialized")

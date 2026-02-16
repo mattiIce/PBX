@@ -4,7 +4,7 @@ Extension ORM model for PBX users/extensions.
 
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, Index, Integer, String, func
+from sqlalchemy import Boolean, DateTime, Index, Integer, String
 from sqlalchemy.orm import Mapped, mapped_column
 
 from pbx.models.base import Base, TimestampMixin

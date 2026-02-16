@@ -7,7 +7,7 @@ import re
 import socket
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -144,9 +144,7 @@ class SessionBorderController:
 
         # Get SBC public IP (use configured or detect)
         sbc_public_ip = (
-            self.config.get("features", {})
-            .get("sbc", {})
-            .get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
+            self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
         )
 
         # Create a copy to avoid modifying original
@@ -326,9 +324,7 @@ class SessionBorderController:
             if octets[0] == 172 and 16 <= octets[1] <= 31:
                 return True
             # 192.168.0.0/16
-            if octets[0] == 192 and octets[1] == 168:
-                return True
-            return False
+            return bool(octets[0] == 192 and octets[1] == 168)
         except (ValueError, IndexError):
             return False
 
@@ -362,9 +358,7 @@ class SessionBorderController:
 
         # Get SBC public IP
         relay_ip = (
-            self.config.get("features", {})
-            .get("sbc", {})
-            .get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
+            self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
         )
 
         relay_info = {
@@ -374,7 +368,7 @@ class SessionBorderController:
             "rtcp_port": rtcp_port,
             "relay_ip": relay_ip,
             "codec": codec,
-            "allocated_at": datetime.now(timezone.utc).isoformat(),
+            "allocated_at": datetime.now(UTC).isoformat(),
         }
 
         self.relay_sessions[call_id] = relay_info

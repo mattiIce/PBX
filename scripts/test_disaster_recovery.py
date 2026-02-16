@@ -100,8 +100,8 @@ class DisasterRecoveryTester:
             os.makedirs(self.config.backup_dir, exist_ok=True)
 
             # Backup filename with timestamp
-            backup_file = Path(self.config.backup_dir) / f"pbx_db_backup_{datetime.now(timezone.utc.strftime('%Y%m%d_%H%M%S')}.sql",
-            )
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            backup_file = Path(self.config.backup_dir) / f"pbx_db_backup_{timestamp}.sql"
 
             # Run pg_dump
             cmd = [

@@ -4,10 +4,10 @@ Ring multiple devices sequentially or simultaneously
 """
 
 import json
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class FindMeFollowMe:
@@ -236,7 +236,7 @@ class FindMeFollowMe:
 
         # Add timestamp only if no database (otherwise database generates it)
         if not (self.database and self.database.enabled):
-            self.user_configs[extension]["updated_at"] = datetime.now(timezone.utc)
+            self.user_configs[extension]["updated_at"] = datetime.now(UTC)
 
         # Save to database if one is configured
         if self.database and self.database.enabled:
@@ -296,7 +296,7 @@ class FindMeFollowMe:
                 "call_id": call_id,
             }
 
-        elif mode == "simultaneous":
+        if mode == "simultaneous":
             # Ring all destinations at once
             ring_plan = []
             max_ring_time = 0

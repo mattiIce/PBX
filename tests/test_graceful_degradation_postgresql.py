@@ -7,13 +7,14 @@ PostgreSQL backend is not available, falling back to SQLite.
 
 import os
 import sys
-from unittest import TestCase, mock
 from datetime import datetime, timezone
+from unittest import TestCase, mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from pbx.utils.database import DatabaseBackend, POSTGRES_AVAILABLE
 from pathlib import Path
+
+from pbx.utils.database import POSTGRES_AVAILABLE, DatabaseBackend
 
 
 class TestPostgreSQLGracefulDegradation(TestCase):
@@ -67,6 +68,7 @@ class TestPostgreSQLGracefulDegradation(TestCase):
     def test_postgresql_import_error_graceful(self):
         """ImportError for psycopg2 should not crash the system."""
         from pbx.utils.database import POSTGRES_AVAILABLE
+
         self.assertIsInstance(POSTGRES_AVAILABLE, bool)
 
     def test_database_reconnection_after_degradation(self):

@@ -4,7 +4,6 @@ Test codec negotiation between caller and callee
 Verifies that PBX correctly negotiates codecs to prevent "488 Not Acceptable Here" errors
 """
 
-
 from pbx.sip.sdp import SDPBuilder, SDPSession
 
 
@@ -70,9 +69,9 @@ def test_default_codecs_when_none_provided() -> None:
     )
 
     # Should contain default codecs (PCMU, PCMA, G722, G729, G726-32, DTMF)
-    assert (
-        "m=audio 10000 RTP/AVP 0 8 9 18 2 101" in pbx_sdp
-    ), "SDP should contain default codec order"
+    assert "m=audio 10000 RTP/AVP 0 8 9 18 2 101" in pbx_sdp, (
+        "SDP should contain default codec order"
+    )
 
 
 def test_codec_negotiation_scenario() -> None:
@@ -97,7 +96,6 @@ a=sendrecv
     phone_audio = phone_sdp.get_audio_info()
     phone_codecs = phone_audio["formats"]
 
-
     # Step 3: PBX builds response SDP using phone's codecs
     pbx_sdp = SDPBuilder.build_audio_sdp(
         local_ip="192.168.1.14",
@@ -112,10 +110,9 @@ a=sendrecv
     pbx_audio = pbx_sdp_parsed.get_audio_info()
     pbx_codecs = pbx_audio["formats"]
 
-
-    assert (
-        pbx_codecs == phone_codecs
-    ), f"PBX codecs {pbx_codecs} should match phone codecs {phone_codecs}"
+    assert pbx_codecs == phone_codecs, (
+        f"PBX codecs {pbx_codecs} should match phone codecs {phone_codecs}"
+    )
 
 
 def test_partial_codec_support() -> None:

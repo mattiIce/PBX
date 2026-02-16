@@ -8,7 +8,6 @@ import sqlite3
 import tempfile
 from typing import Any
 
-
 from pbx.features.auto_attendant import AutoAttendant
 
 
@@ -21,7 +20,7 @@ class MockConfig:
     def get(self, key: str, default: Any = None) -> Any:
         if key == "database":
             return {"path": self.db_path}
-        elif key == "auto_attendant":
+        if key == "auto_attendant":
             return {
                 "enabled": True,
                 "extension": "0",
@@ -103,7 +102,7 @@ class TestAutoAttendantPersistence:
         aa2 = AutoAttendant(config=self.config)
 
         # Verify configuration persisted
-        assert aa2.enabled == False
+        assert not aa2.enabled
         assert aa2.extension == "9"
         assert aa2.timeout == 20
         assert aa2.max_retries == 5

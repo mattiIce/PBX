@@ -5,19 +5,15 @@ ICE candidate handling, call initiation/hangup, DTMF, and
 phone configuration.
 """
 
-import json
 import traceback
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
-    require_auth,
-    require_admin,
     get_request_body,
-    DateTimeEncoder,
+    require_auth,
+    send_json,
 )
 from pbx.utils.logger import get_logger
 
@@ -56,9 +52,7 @@ def handle_create_webrtc_session() -> Response:
         # Verify extension exists (allow virtual extensions starting with
         # 'webrtc-' for browser-based calling)
         is_virtual_extension = extension.startswith("webrtc-")
-        if not is_virtual_extension and not pbx_core.extension_registry.get_extension(
-            extension
-        ):
+        if not is_virtual_extension and not pbx_core.extension_registry.get_extension(extension):
             if verbose_logging:
                 logger.warning(f"[VERBOSE] Extension not found in registry: {extension}")
             return send_json({"error": "Extension not found"}, 404)
@@ -116,10 +110,9 @@ def handle_webrtc_offer() -> Response:
             if verbose_logging:
                 logger.info("[VERBOSE] Offer handled successfully")
             return send_json({"success": True, "message": "Offer received"})
-        else:
-            if verbose_logging:
-                logger.warning("[VERBOSE] Session not found for offer")
-            return send_json({"error": "Session not found"}, 404)
+        if verbose_logging:
+            logger.warning("[VERBOSE] Session not found for offer")
+        return send_json({"error": "Session not found"}, 404)
     except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Error handling WebRTC offer: {e}")
@@ -147,8 +140,7 @@ def handle_webrtc_answer() -> Response:
 
         if success:
             return send_json({"success": True, "message": "Answer received"})
-        else:
-            return send_json({"error": "Session not found"}, 404)
+        return send_json({"error": "Session not found"}, 404)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -172,9 +164,7 @@ def handle_webrtc_ice_candidate() -> Response:
             logger.info("[VERBOSE] ICE candidate received:")
             logger.info(f"  Session ID: {session_id}")
             if candidate:
-                logger.info(
-                    f"  Candidate: {candidate.get('candidate', 'N/A')}"
-                )
+                logger.info(f"  Candidate: {candidate.get('candidate', 'N/A')}")
 
         if not session_id or not candidate:
             return send_json({"error": "session_id and candidate are required"}, 400)
@@ -183,10 +173,9 @@ def handle_webrtc_ice_candidate() -> Response:
 
         if success:
             return send_json({"success": True, "message": "ICE candidate added"})
-        else:
-            if verbose_logging:
-                logger.warning("[VERBOSE] Session not found for ICE candidate")
-            return send_json({"error": "Session not found"}, 404)
+        if verbose_logging:
+            logger.warning("[VERBOSE] Session not found for ICE candidate")
+        return send_json({"error": "Session not found"}, 404)
     except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Error handling ICE candidate: {e}")
@@ -223,9 +212,7 @@ def handle_webrtc_call() -> Response:
             session_id,
             target_extension,
             webrtc_signaling=(
-                pbx_core.webrtc_signaling
-                if hasattr(pbx_core, "webrtc_signaling")
-                else None
+                pbx_core.webrtc_signaling if hasattr(pbx_core, "webrtc_signaling") else None
             ),
         )
 
@@ -240,10 +227,9 @@ def handle_webrtc_call() -> Response:
                     "message": f"Call initiated to {target_extension}",
                 }
             )
-        else:
-            if verbose_logging:
-                logger.error("[VERBOSE] Call initiation failed - no call ID returned")
-            return send_json({"error": "Failed to initiate call"}, 500)
+        if verbose_logging:
+            logger.error("[VERBOSE] Call initiation failed - no call ID returned")
+        return send_json({"error": "Failed to initiate call"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Exception in call handler: {e}")
@@ -289,9 +275,8 @@ def handle_webrtc_hangup() -> Response:
 
                 if verbose_logging:
                     logger.info(f"[VERBOSE] Call {call_id} terminated successfully")
-            else:
-                if verbose_logging:
-                    logger.warning(f"[VERBOSE] Call {call_id} not found in call manager")
+            elif verbose_logging:
+                logger.warning(f"[VERBOSE] Call {call_id} not found in call manager")
 
         # Clean up WebRTC session
         if hasattr(pbx_core, "webrtc_signaling"):
@@ -367,9 +352,7 @@ def handle_webrtc_dtmf() -> Response:
             return send_json({"error": "Call not found"}, 404)
 
         if verbose_logging:
-            logger.info(
-                f"[VERBOSE] Found call object for {session.call_id}"
-            )
+            logger.info(f"[VERBOSE] Found call object for {session.call_id}")
             logger.info(f"  Caller: {call.caller_extension}")
             logger.info(f"  Callee: {call.callee_extension}")
 
@@ -402,20 +385,15 @@ def handle_webrtc_dtmf() -> Response:
                             "duration": duration,
                         }
                     )
-                else:
-                    if verbose_logging:
-                        logger.error(f"[VERBOSE] Failed to send DTMF '{digit}'")
-                    return send_json({"error": f'Failed to send DTMF tone "{digit}"'}, 500)
-            else:
                 if verbose_logging:
-                    logger.warning("[VERBOSE] No RFC2833 sender available for DTMF")
-                return send_json({"error": "DTMF sending not available for this call"}, 500)
-        else:
+                    logger.error(f"[VERBOSE] Failed to send DTMF '{digit}'")
+                return send_json({"error": f'Failed to send DTMF tone "{digit}"'}, 500)
             if verbose_logging:
-                logger.warning(
-                    f"[VERBOSE] No RTP handlers found for call {session.call_id}"
-                )
-            return send_json({"error": "No RTP handlers available for this call"}, 500)
+                logger.warning("[VERBOSE] No RFC2833 sender available for DTMF")
+            return send_json({"error": "DTMF sending not available for this call"}, 500)
+        if verbose_logging:
+            logger.warning(f"[VERBOSE] No RTP handlers found for call {session.call_id}")
+        return send_json({"error": "No RTP handlers available for this call"}, 500)
 
     except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
@@ -482,13 +460,12 @@ def handle_get_webrtc_session(subpath: str) -> Response:
         return send_json({"error": "WebRTC not available"}, 500)
 
     try:
-        session_id = subpath.split("/")[-1]
+        session_id = subpath.rsplit("/", maxsplit=1)[-1]
         session = pbx_core.webrtc_signaling.get_session(session_id)
 
         if session:
             return send_json(session.to_dict())
-        else:
-            return send_json({"error": "Session not found"}, 404)
+        return send_json({"error": "Session not found"}, 404)
     except Exception as e:
         return send_json({"error": str(e)}, 500)
 
@@ -516,14 +493,11 @@ def handle_set_webrtc_phone_config() -> Response:
                 return send_json({"error": "Extension not found"}, 404)
 
         # Save the configuration
-        success = pbx_core.extension_db.set_config(
-            "webrtc_phone_extension", extension, "string"
-        )
+        success = pbx_core.extension_db.set_config("webrtc_phone_extension", extension, "string")
 
         if success:
             return send_json({"success": True, "extension": extension})
-        else:
-            return send_json({"error": "Failed to save configuration"}, 500)
+        return send_json({"error": "Failed to save configuration"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error setting WebRTC phone config: {e}")
         return send_json({"error": str(e)}, 500)

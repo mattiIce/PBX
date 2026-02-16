@@ -8,7 +8,6 @@ import socket
 import time
 from http.client import HTTPConnection
 
-
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
@@ -46,7 +45,6 @@ def test_admin_static_files() -> bool:
     if not api_server.start():
         return False
 
-
     # Give server a moment to be ready
     time.sleep(0.5)
 
@@ -73,7 +71,6 @@ def test_admin_static_files() -> bool:
         response = conn.getresponse()
 
         if response.status == 200:
-
             # Check Content-Type header
             content_type = response.getheader("Content-Type")
             if content_type and "text/html" not in content_type:
@@ -107,7 +104,7 @@ def test_admin_static_files() -> bool:
 
         result = True
 
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError):
         import traceback
 
         traceback.print_exc()

@@ -5,7 +5,6 @@ This test verifies the fix for the bug where play_beep was sending
 raw PCM data with PCMU payload type, causing incorrect audio playback.
 """
 
-
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.audio import generate_beep_tone, pcm16_to_ulaw
 
@@ -65,10 +64,7 @@ def test_beep_generation() -> bool:
     duration_sec = total_samples / 8000
     expected_duration = 0.5
 
-    if abs(duration_sec - expected_duration) >= 0.01:
-        return False
-
-    return True
+    return not abs(duration_sec - expected_duration) >= 0.01
 
 
 def test_bug_scenario() -> bool:
@@ -91,7 +87,4 @@ def test_bug_scenario() -> bool:
     # Right way (after fix)
     right_packets = (len(ulaw_data) + samples_per_packet - 1) // samples_per_packet
 
-    if right_packets == 25 and wrong_packets == 50:
-        return True
-    else:
-        return False
+    return bool(right_packets == 25 and wrong_packets == 50)

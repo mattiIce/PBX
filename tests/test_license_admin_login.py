@@ -12,7 +12,6 @@ These are not secret credentials but system defaults that can be verified
 through the triple-layer encryption system (SHA256, PBKDF2, HMAC).
 """
 
-
 from pbx.utils.license_admin import (
     is_license_admin_extension,
     verify_license_admin_credentials,

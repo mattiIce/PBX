@@ -2,7 +2,7 @@
 Extension management and registry
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
@@ -36,7 +36,7 @@ class Extension:
         """
         self.registered = True
         self.address = address
-        self.registration_time = datetime.now(timezone.utc)
+        self.registration_time = datetime.now(UTC)
 
     def unregister(self):
         """Unregister extension"""
@@ -125,9 +125,7 @@ class ExtensionRegistry:
             db_extensions = ext_db.get_all()
 
             if db_extensions:
-                self.logger.info(
-                    f"Loading {len(db_extensions)} extensions from database"
-                )
+                self.logger.info(f"Loading {len(db_extensions)} extensions from database")
                 for ext_data in db_extensions:
                     number = ext_data["number"]
                     name = ext_data["name"]

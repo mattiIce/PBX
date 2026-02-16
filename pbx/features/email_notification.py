@@ -2,18 +2,17 @@
 Email notification system for voicemail
 """
 
-import os
 import smtplib
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.mime.audio import MIMEAudio
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from pathlib import Path
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class EmailNotifier:
@@ -297,7 +296,7 @@ class EmailNotifier:
             while self.reminders_enabled:
                 try:
                     # Check if it's time to send reminders
-                    now = datetime.now(timezone.utc)
+                    now = datetime.now(UTC)
                     reminder_hour, reminder_min = map(int, self.reminder_time.split(":"))
 
                     if now.hour == reminder_hour and now.minute == reminder_min:

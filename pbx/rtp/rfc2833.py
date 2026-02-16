@@ -5,6 +5,7 @@ Implements RFC 2833 (RTP Payload for DTMF Digits, Telephony Tones and Signals)
 using configurable payload type (default 101) for out-of-band DTMF transmission over RTP.
 """
 
+import contextlib
 import socket
 import struct
 import threading
@@ -164,9 +165,7 @@ class RFC2833Receiver:
             self.socket.settimeout(0.1)  # Non-blocking with timeout
             self.running = True
 
-            self.logger.info(
-                f"RFC 2833 receiver started on port {self.local_port}"
-            )
+            self.logger.info(f"RFC 2833 receiver started on port {self.local_port}")
 
             # Start receiving thread
             receive_thread = threading.Thread(target=self._receive_loop)
@@ -182,13 +181,9 @@ class RFC2833Receiver:
         """Stop RFC 2833 receiver"""
         self.running = False
         if self.socket:
-            try:
+            with contextlib.suppress(BaseException):
                 self.socket.close()
-            except BaseException:
-                pass
-        self.logger.info(
-            f"RFC 2833 receiver stopped on port {self.local_port}"
-        )
+        self.logger.info(f"RFC 2833 receiver stopped on port {self.local_port}")
 
     def _receive_loop(self):
         """Main receive loop for RFC 2833 events"""
@@ -196,7 +191,7 @@ class RFC2833Receiver:
             try:
                 data, addr = self.socket.recvfrom(2048)
                 self.handle_rtp_packet(data, addr)
-            except socket.timeout:
+            except TimeoutError:
                 continue
             except OSError as e:
                 if self.running:
@@ -311,9 +306,7 @@ class RFC2833Sender:
                 ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
             )
 
-            self.logger.info(
-                f"RFC 2833 sender started on port {self.local_port}"
-            )
+            self.logger.info(f"RFC 2833 sender started on port {self.local_port}")
             return True
         except OSError as e:
             self.logger.error(f"Failed to start RFC 2833 sender: {e}")
@@ -322,10 +315,8 @@ class RFC2833Sender:
     def stop(self):
         """Stop RFC 2833 sender"""
         if self.socket:
-            try:
+            with contextlib.suppress(BaseException):
                 self.socket.close()
-            except BaseException:
-                pass
         self.logger.info(f"RFC 2833 sender stopped on port {self.local_port}")
 
     def send_dtmf(self, digit, duration_ms=160):

@@ -4,25 +4,21 @@ Handles voicemail message management, voicemail box operations,
 greeting management, and voicemail export functionality.
 """
 
-import os
 import shutil
 import tempfile
 import zipfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, current_app, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
-    require_auth,
-    require_admin,
     get_request_body,
-    DateTimeEncoder,
+    require_auth,
+    send_json,
 )
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger()
 
@@ -66,7 +62,7 @@ def handle_get_voicemail(subpath: str) -> Response:
                     }
                 )
             return send_json({"messages": data})
-        elif len(parts) == 2:
+        if len(parts) == 2:
             # Get specific message or download audio
             message_id = parts[1]
 
@@ -96,19 +92,17 @@ def handle_get_voicemail(subpath: str) -> Response:
                         "file_path": message["file_path"],
                     }
                 )
-            else:
-                # Default: Serve audio file for playback in admin panel
-                if Path(message["file_path"]).exists():
-                    with open(message["file_path"], "rb") as f:
-                        audio_data = f.read()
-                    response = current_app.response_class(
-                        response=audio_data,
-                        status=200,
-                        mimetype="audio/wav",
-                    )
-                    return response
-                else:
-                    return send_json({"error": "Audio file not found"}, 404)
+            # Default: Serve audio file for playback in admin panel
+            if Path(message["file_path"]).exists():
+                with open(message["file_path"], "rb") as f:
+                    audio_data = f.read()
+                response = current_app.response_class(
+                    response=audio_data,
+                    status=200,
+                    mimetype="audio/wav",
+                )
+                return response
+            return send_json({"error": "Audio file not found"}, 404)
     except (KeyError, OSError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -143,15 +137,13 @@ def handle_update_voicemail(subpath: str) -> Response:
                 # Also update in config
                 pbx_core.config.update_voicemail_pin(extension, pin)
                 return send_json({"success": True, "message": "PIN updated successfully"})
-            else:
-                return send_json({"error": "Invalid PIN format. Must be 4 digits."}, 400)
-        elif len(parts) == 3 and parts[2] == "mark-read":
+            return send_json({"error": "Invalid PIN format. Must be 4 digits."}, 400)
+        if len(parts) == 3 and parts[2] == "mark-read":
             # Mark message as read
             message_id = parts[1]
             mailbox.mark_listened(message_id)
             return send_json({"success": True, "message": "Message marked as read"})
-        else:
-            return send_json({"error": "Invalid operation"}, 400)
+        return send_json({"error": "Invalid operation"}, 400)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -179,8 +171,7 @@ def handle_delete_voicemail(subpath: str) -> Response:
         # Delete message
         if mailbox.delete_message(message_id):
             return send_json({"success": True, "message": "Message deleted successfully"})
-        else:
-            return send_json({"error": "Message not found"}, 404)
+        return send_json({"error": "Message not found"}, 404)
     except Exception as e:
         return send_json({"error": str(e)}, 500)
 
@@ -232,12 +223,11 @@ def handle_get_voicemail_box(subpath: str) -> Response:
 
     if len(parts) == 2 and parts[1] == "greeting":
         return _handle_get_voicemail_greeting(subpath)
-    elif len(parts) == 2 and parts[1] == "export":
+    if len(parts) == 2 and parts[1] == "export":
         # GET with /export suffix - redirect to POST handler conceptually,
         # but return method not allowed
         return send_json({"error": "Use POST method for export"}, 405)
-    else:
-        return _handle_get_voicemail_box_details(subpath)
+    return _handle_get_voicemail_box_details(subpath)
 
 
 def _handle_get_voicemail_box_details(subpath: str) -> Response:
@@ -336,7 +326,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
         return send_json({"error": "Voicemail system not available"}, 500)
 
     try:
-        extension = subpath.split("/")[0] if subpath else None
+        extension = subpath.split("/", maxsplit=1)[0] if subpath else None
 
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
@@ -350,7 +340,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
 
         # Create temporary directory for ZIP creation
         temp_dir = tempfile.mkdtemp()
-        zip_filename = f"voicemail_{extension}_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}.zip"
+        zip_filename = f"voicemail_{extension}_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}.zip"
         zip_path = Path(temp_dir) / zip_filename
 
         try:
@@ -358,12 +348,8 @@ def handle_export_voicemail_box(subpath: str) -> Response:
                 # Add a manifest file with message details
                 manifest_lines = ["Voicemail Export Manifest\n"]
                 manifest_lines.append(f"Extension: {extension}\n")
-                manifest_lines.append(
-                    f"Export Date: {datetime.now(timezone.utc).isoformat()}\n"
-                )
-                manifest_lines.append(
-                    f"Total Messages: {len(messages)}\n\n"
-                )
+                manifest_lines.append(f"Export Date: {datetime.now(UTC).isoformat()}\n")
+                manifest_lines.append(f"Total Messages: {len(messages)}\n\n")
                 manifest_lines.append("Message Details:\n")
                 manifest_lines.append("-" * 80 + "\n")
 
@@ -377,9 +363,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
                         manifest_lines.append(f"\nFile: {arcname}\n")
                         manifest_lines.append(f"Caller ID: {msg['caller_id']}\n")
                         manifest_lines.append(f"Timestamp: {msg['timestamp']}\n")
-                        manifest_lines.append(
-                            f"Duration: {msg.get('duration', 'Unknown')}s\n"
-                        )
+                        manifest_lines.append(f"Duration: {msg.get('duration', 'Unknown')}s\n")
                         manifest_lines.append(
                             f"Status: {'Read' if msg['listened'] else 'Unread'}\n"
                         )
@@ -420,7 +404,7 @@ def handle_upload_voicemail_greeting(subpath: str) -> Response:
 
     try:
         # Extract extension from subpath
-        extension = subpath.split("/")[0] if subpath else None
+        extension = subpath.split("/", maxsplit=1)[0] if subpath else None
 
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
@@ -440,8 +424,7 @@ def handle_upload_voicemail_greeting(subpath: str) -> Response:
                     "message": f"Custom greeting uploaded for extension {extension}",
                 }
             )
-        else:
-            return send_json({"error": "Failed to save greeting"}, 500)
+        return send_json({"error": "Failed to save greeting"}, 500)
 
     except Exception as e:
         return send_json({"error": str(e)}, 500)
@@ -456,7 +439,7 @@ def handle_clear_voicemail_box(subpath: str) -> Response:
         return send_json({"error": "Voicemail system not available"}, 500)
 
     try:
-        extension = subpath.split("/")[0] if subpath else None
+        extension = subpath.split("/", maxsplit=1)[0] if subpath else None
 
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
@@ -491,7 +474,7 @@ def handle_delete_voicemail_greeting(subpath: str) -> Response:
 
     try:
         # Extract extension from subpath
-        extension = subpath.split("/")[0] if subpath else None
+        extension = subpath.split("/", maxsplit=1)[0] if subpath else None
 
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
@@ -506,8 +489,7 @@ def handle_delete_voicemail_greeting(subpath: str) -> Response:
                     "message": f"Custom greeting deleted for extension {extension}",
                 }
             )
-        else:
-            return send_json({"error": "No custom greeting found"}, 404)
+        return send_json({"error": "No custom greeting found"}, 404)
 
     except Exception as e:
         return send_json({"error": str(e)}, 500)

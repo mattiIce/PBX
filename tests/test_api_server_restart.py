@@ -6,7 +6,6 @@ Tests that the server can be stopped and restarted quickly without "Address alre
 
 import time
 
-
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
@@ -30,7 +29,6 @@ def test_api_server_restart() -> bool:
 
     # Use a unique port for testing
     test_port = 18080
-
 
     # First start
     api_server1 = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)
@@ -69,7 +67,6 @@ def test_failed_start_cleanup() -> bool:
 
     # Use a unique port for testing
     test_port = 18081
-
 
     # Start a server successfully first
     api_server1 = PBXAPIServer(mock_pbx, host="127.0.0.1", port=test_port)

@@ -75,10 +75,9 @@ class IntegrationInstaller:
                     cmd, shell=use_shell, check=check, capture_output=True, text=True
                 )
                 return result.stdout.strip()
-            else:
-                # Let output flow to terminal in real-time
-                subprocess.run(cmd, shell=use_shell, check=check)
-                return True
+            # Let output flow to terminal in real-time
+            subprocess.run(cmd, shell=use_shell, check=check)
+            return True
         except subprocess.CalledProcessError as e:
             self.log(f"Command failed: {cmd_str}", "ERROR")
             if self.verbose:
@@ -108,10 +107,9 @@ class IntegrationInstaller:
                     cmd, shell=True, check=check, capture_output=True, text=True
                 )
                 return result.stdout.strip()
-            else:
-                # Let output flow to terminal in real-time
-                subprocess.run(cmd, shell=True, check=check)
-                return True
+            # Let output flow to terminal in real-time
+            subprocess.run(cmd, shell=True, check=check)
+            return True
         except subprocess.CalledProcessError as e:
             self.log(f"Command failed: {cmd}", "ERROR")
             if self.verbose:
@@ -130,7 +128,7 @@ class IntegrationInstaller:
             # Try to detect specific distro
             if Path("/etc/debian_version").exists():
                 return "debian"
-            elif Path("/etc/redhat-release").exists():
+            if Path("/etc/redhat-release").exists():
                 return "redhat"
         return system
 
@@ -334,16 +332,14 @@ class IntegrationInstaller:
                         self.log(f"Failed to configure Matrix: {e}", "WARNING")
 
                 return True
-            else:
-                self.log("Failed to install Matrix Synapse", "ERROR")
-                return False
-        else:
-            self.log("Automatic Matrix installation only supported on Debian/Ubuntu", "ERROR")
-            self.log(
-                "Please install manually: https://matrix-org.github.io/synapse/latest/setup/installation.html",
-                "INFO",
-            )
+            self.log("Failed to install Matrix Synapse", "ERROR")
             return False
+        self.log("Automatic Matrix installation only supported on Debian/Ubuntu", "ERROR")
+        self.log(
+            "Please install manually: https://matrix-org.github.io/synapse/latest/setup/installation.html",
+            "INFO",
+        )
+        return False
 
     def install_espocrm(self):
         """Install EspoCRM"""
@@ -523,14 +519,14 @@ class IntegrationInstaller:
 
                     # Execute SQL file - password is in file, not command line or process args
                     self.log("Setting up database and user with secure password...", "STEP")
-                    with open(mysql_sql_path, "r") as sql_input:
+                    with open(mysql_sql_path) as sql_input:
                         subprocess.run(
                             ["mysql", f"--defaults-file={mysql_config_path}"],
                             stdin=sql_input,
                             check=True,
                         )
                 except subprocess.CalledProcessError as e:
-                    self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
+                    self.log(f"Failed to setup MySQL database: {e!s}", "ERROR")
                     return False
                 finally:
                     # Critical cleanup: Remove temp files containing sensitive data
@@ -561,13 +557,12 @@ class IntegrationInstaller:
             )
 
             return True
-        else:
-            self.log("Automatic EspoCRM installation only supported on Debian/Ubuntu", "ERROR")
-            self.log(
-                "Please install manually: https://docs.espocrm.com/administration/installation/",
-                "INFO",
-            )
-            return False
+        self.log("Automatic EspoCRM installation only supported on Debian/Ubuntu", "ERROR")
+        self.log(
+            "Please install manually: https://docs.espocrm.com/administration/installation/",
+            "INFO",
+        )
+        return False
 
     def install_all(self):
         """Install all integrations"""
@@ -616,9 +611,8 @@ class IntegrationInstaller:
             )
             self.log("4. Complete EspoCRM setup at http://localhost/espocrm", "INFO")
             return True
-        else:
-            self.log("Some installations failed. Check logs above.", "WARNING")
-            return False
+        self.log("Some installations failed. Check logs above.", "WARNING")
+        return False
 
 
 def main():

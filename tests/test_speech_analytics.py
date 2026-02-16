@@ -4,8 +4,8 @@ Tests for Speech Analytics Framework
 
 import sqlite3
 from typing import Any
-import pytest
 
+import pytest
 
 from pbx.features.speech_analytics import SpeechAnalyticsEngine
 

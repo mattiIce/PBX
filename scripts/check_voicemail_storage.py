@@ -6,15 +6,14 @@ This script checks the current PBX configuration and reports whether
 voicemails are being saved to the database or file system only.
 """
 
-import os
 import sys
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import sqlite3
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-import sqlite3
-from pathlib import Path
 
 
 def main():
@@ -58,7 +57,7 @@ def main():
                 table_check = db.fetch_one(
                     "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'voicemail_messages')"
                 )
-                table_exists = list(table_check.values())[0] if table_check else False
+                table_exists = next(iter(table_check.values())) if table_check else False
             else:
                 table_check = db.fetch_one(
                     "SELECT name FROM sqlite_master WHERE type='table' AND name='voicemail_messages'"

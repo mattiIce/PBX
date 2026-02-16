@@ -12,10 +12,9 @@ This script provides:
 """
 
 import json
-import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path
@@ -36,7 +35,7 @@ class SecurityComplianceChecker:
         self.verbose = verbose
         self.json_output = json_output
         self.results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "fips": {},
             "soc2": {},
             "security": {},
@@ -74,7 +73,7 @@ class SecurityComplianceChecker:
 
         # Check 1: Kernel FIPS mode
         try:
-            with open("/proc/sys/crypto/fips_enabled", "r") as f:
+            with open("/proc/sys/crypto/fips_enabled") as f:
                 kernel_fips = f.read().strip() == "1"
                 fips_results["checks"]["kernel_fips"] = kernel_fips
                 self.print_status(
@@ -189,7 +188,7 @@ class SecurityComplianceChecker:
             # Test AES-256-GCM (if crypto available)
             if CRYPTO_AVAILABLE:
                 try:
-                    key, key_salt = enc.derive_key("encryption_password", key_length=32)
+                    key, _key_salt = enc.derive_key("encryption_password", key_length=32)
                     encrypted, nonce, tag = enc.encrypt_data("test data", key)
                     decrypted = enc.decrypt_data(encrypted, nonce, tag, key)
                     aes_ok = decrypted.decode() == "test data"
@@ -289,7 +288,7 @@ class SecurityComplianceChecker:
             self.print_status(
                 "Implementation Status",
                 implemented == total,
-                f"Implemented: {implemented}/{total} ({implemented/total*100 if total > 0 else 0:.1f}%)",
+                f"Implemented: {implemented}/{total} ({implemented / total * 100 if total > 0 else 0:.1f}%)",
             )
 
             self.print_status(

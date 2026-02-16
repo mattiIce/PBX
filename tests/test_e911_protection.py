@@ -6,7 +6,6 @@ Ensures that emergency (911) calls are never placed during testing
 
 import os
 
-
 from pbx.features.sip_trunk import OutboundRule, SIPTrunk, SIPTrunkSystem
 from pbx.utils.e911_protection import E911Protection
 
@@ -43,17 +42,17 @@ def test_e911_blocking_in_test_mode() -> None:
 
     # Test that 911 is blocked
     assert protection.block_if_e911("911", "test context"), "Should block 911 in test mode"
-    assert protection.block_if_e911(
-        "1911", "test context"
-    ), "Should block enhanced 911 in test mode"
+    assert protection.block_if_e911("1911", "test context"), (
+        "Should block enhanced 911 in test mode"
+    )
 
     # Test that non-emergency numbers are not blocked
-    assert not protection.block_if_e911(
-        "1001", "test context"
-    ), "Should not block internal extension"
-    assert not protection.block_if_e911(
-        "5551234567", "test context"
-    ), "Should not block regular number"
+    assert not protection.block_if_e911("1001", "test context"), (
+        "Should not block internal extension"
+    )
+    assert not protection.block_if_e911("5551234567", "test context"), (
+        "Should not block regular number"
+    )
 
     # Clean up
     del os.environ["TEST_MODE"]
@@ -73,12 +72,12 @@ def test_e911_warning_in_production_mode() -> None:
     assert not protection.is_test_mode(), "Should not be in test mode"
 
     # Test that 911 is NOT blocked in production (only warned)
-    assert not protection.block_if_e911(
-        "911", "production context"
-    ), "Should NOT block 911 in production"
-    assert not protection.block_if_e911(
-        "1911", "production context"
-    ), "Should NOT block enhanced 911 in production"
+    assert not protection.block_if_e911("911", "production context"), (
+        "Should NOT block 911 in production"
+    )
+    assert not protection.block_if_e911("1911", "production context"), (
+        "Should NOT block enhanced 911 in production"
+    )
 
 
 def test_sip_trunk_e911_blocking() -> None:

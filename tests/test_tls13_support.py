@@ -9,8 +9,8 @@ import ssl
 import tempfile
 import time
 import traceback
+from datetime import UTC
 from typing import Any
-
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
@@ -52,8 +52,8 @@ def generate_test_certificate() -> tuple[str | None, str | None]:
         .issuer_name(issuer)
         .public_key(private_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.now(timezone.utc))
-        .not_valid_after(datetime.now(timezone.utc) + timedelta(days=365))
+        .not_valid_before(datetime.now(UTC))
+        .not_valid_after(datetime.now(UTC) + timedelta(days=365))
         .add_extension(
             x509.SubjectAlternativeName([x509.DNSName("localhost")]),
             critical=False,
@@ -90,7 +90,7 @@ def test_tls_version_availability() -> bool:
         return False
 
     # List all available TLS versions
-    tls_versions = [attr for attr in dir(ssl.TLSVersion) if attr.startswith("TLS")]
+    [attr for attr in dir(ssl.TLSVersion) if attr.startswith("TLS")]
 
     return True
 
@@ -117,7 +117,6 @@ def test_tls_manager_context() -> bool:
         if ctx.minimum_version < ssl.TLSVersion.TLSv1_2:
             return False
 
-
         # Check that no maximum version is set (allows TLS 1.3)
         max_version = getattr(ctx, "maximum_version", ssl.TLSVersion.MAXIMUM_SUPPORTED)
 
@@ -134,7 +133,6 @@ def test_tls_manager_context() -> bool:
 
         if ctx_fips.minimum_version < ssl.TLSVersion.TLSv1_2:
             return False
-
 
     finally:
         # Clean up temporary files
@@ -189,20 +187,17 @@ def test_api_server_tls13_support() -> bool:
         if api_server.ssl_context is None:
             return False
 
-
         # Check SSL context configuration
         ctx = api_server.ssl_context
 
         if ctx.minimum_version < ssl.TLSVersion.TLSv1_2:
             return False
 
-
         # Check that TLS 1.3 is allowed
         max_version = getattr(ctx, "maximum_version", ssl.TLSVersion.MAXIMUM_SUPPORTED)
 
         if max_version != ssl.TLSVersion.MAXIMUM_SUPPORTED:
             pass
-
 
     finally:
         # Clean up temporary files
@@ -243,18 +238,16 @@ def test_ssl_context_security_options() -> bool:
         ]
 
         all_set = True
-        for option, name in required_options:
+        for option, _name in required_options:
             if not options & option:
                 all_set = False
 
         # Check OP_NO_SSLv2 separately as it may not be set in modern OpenSSL
-        if hasattr(ssl, "OP_NO_SSLv2"):
-            if not options & ssl.OP_NO_SSLv2:
-                pass  # Not a failure - modern OpenSSL may not have SSLv2
+        if hasattr(ssl, "OP_NO_SSLv2") and not options & ssl.OP_NO_SSLv2:
+            pass  # Not a failure - modern OpenSSL may not have SSLv2
 
         if not all_set:
             return False
-
 
     finally:
         # Clean up temporary files
@@ -279,15 +272,14 @@ def main() -> bool:
     passed = 0
     failed = 0
 
-    for test_name, test_func in tests:
+    for _test_name, test_func in tests:
         try:
             if test_func():
                 passed += 1
             else:
                 failed += 1
-        except Exception as e:
+        except Exception:
             failed += 1
             traceback.print_exc()
-
 
     return failed == 0

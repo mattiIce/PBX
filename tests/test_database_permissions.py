@@ -5,11 +5,10 @@ Tests for database permission error handling
 
 import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_index_creation_with_permission_error() -> None:

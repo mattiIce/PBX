@@ -4,9 +4,9 @@ Location-based emergency routing for remote workers
 """
 
 import ipaddress
+import sqlite3
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class NomadicE911Engine:

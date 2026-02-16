@@ -6,10 +6,9 @@ Test newly implemented PBX features
 import os
 import struct
 import tempfile
-
+from pathlib import Path
 
 from pbx.rtp.handler import RTPPlayer
-from pathlib import Path
 
 
 def test_wav_file_playback() -> bool:
@@ -54,7 +53,7 @@ def test_wav_file_playback() -> bool:
         # Note: This will log a warning about play_file not working because
         # we're not actually connected to anything, but it tests the parsing
         # The actual RTP sending will fail gracefully
-        result = player.play_file(wav_file)
+        player.play_file(wav_file)
 
         # Stop player
         player.stop()
@@ -64,7 +63,7 @@ def test_wav_file_playback() -> bool:
 
         return True
 
-    except OSError as e:
+    except OSError:
         import traceback
 
         traceback.print_exc()
@@ -103,10 +102,9 @@ def test_call_transfer_message_building() -> bool:
         assert "Referred-By" in message_text, "Should contain Referred-By header"
         assert "sip:1003@192.168.1.1" in message_text, "Should contain transfer destination"
 
-
         return True
 
-    except Exception as e:
+    except Exception:
         import traceback
 
         traceback.print_exc()

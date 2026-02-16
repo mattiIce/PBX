@@ -8,13 +8,13 @@ Measures and records baseline performance metrics for comparison.
 import argparse
 import json
 import os
+import sqlite3
 import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
-import sqlite3
 
 
 @dataclass
@@ -54,7 +54,7 @@ class PerformanceBenchmark:
 
         # Get CPU info
         try:
-            with open("/proc/cpuinfo", "r") as f:
+            with open("/proc/cpuinfo") as f:
                 cpu_lines = [line for line in f.readlines() if "model name" in line.lower()]
                 if cpu_lines:
                     info["cpu_model"] = cpu_lines[0].split(":")[1].strip()
@@ -67,7 +67,7 @@ class PerformanceBenchmark:
 
         # Get memory info
         try:
-            with open("/proc/meminfo", "r") as f:
+            with open("/proc/meminfo") as f:
                 for line in f:
                     if "MemTotal" in line:
                         mem_kb = int(line.split()[1])
@@ -90,7 +90,7 @@ class PerformanceBenchmark:
 
         # Get OS info
         try:
-            with open("/etc/os-release", "r") as f:
+            with open("/etc/os-release") as f:
                 for line in f:
                     if line.startswith("PRETTY_NAME"):
                         info["os"] = line.split("=")[1].strip().strip('"')
@@ -134,7 +134,13 @@ class PerformanceBenchmark:
                     if result.returncode == 0:
                         duration = float(result.stdout.strip())
                         times.append(duration)
-                except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError) as exc:
+                except (
+                    KeyError,
+                    OSError,
+                    TypeError,
+                    ValueError,
+                    subprocess.SubprocessError,
+                ) as exc:
                     # Ignore individual request failures but log for diagnostic purposes
                     print(f"Warning: API benchmark request to {url} failed: {exc}", file=sys.stderr)
 
@@ -190,7 +196,14 @@ class PerformanceBenchmark:
             metrics["simple_query_ms"] = 5.0  # Placeholder
             metrics["complex_query_ms"] = 50.0  # Placeholder
 
-        except (KeyError, OSError, TypeError, ValueError, sqlite3.Error, subprocess.SubprocessError):
+        except (
+            KeyError,
+            OSError,
+            TypeError,
+            ValueError,
+            sqlite3.Error,
+            subprocess.SubprocessError,
+        ):
             metrics["connection_time_ms"] = -1
             metrics["error"] = "Database connection failed"
 
@@ -248,7 +261,7 @@ class PerformanceBenchmark:
 
         # Memory usage
         try:
-            with open("/proc/meminfo", "r") as f:
+            with open("/proc/meminfo") as f:
                 mem_total = 0
                 mem_available = 0
                 for line in f:
@@ -301,7 +314,7 @@ class PerformanceBenchmark:
 
         # API performance (30% of score)
         # Deduct points for slow API responses
-        for endpoint, time_ms in api_perf.items():
+        for time_ms in api_perf.values():
             if time_ms > 500:  # > 500ms is slow
                 score -= min(10, (time_ms - 500) / 100)
 
@@ -357,7 +370,7 @@ class PerformanceBenchmark:
         )
 
         return BenchmarkResults(
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             system_info=system_info,
             api_performance=api_perf,
             database_performance=db_perf,

@@ -14,15 +14,15 @@ Usage:
 """
 
 import argparse
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from pbx.features.webrtc import WebRTCSignalingServer
 from pathlib import Path
+
+from pbx.features.webrtc import WebRTCSignalingServer
 
 
 class WebRTCAudioTester:
@@ -73,15 +73,14 @@ class WebRTCAudioTester:
         self.log("\n=== Testing WebRTC Module Imports ===")
 
         try:
-
             self.log("WebRTC modules imported successfully", "PASS")
             self.test_results["passed"] += 1
             return True
 
         except ImportError as e:
-            self.log(f"Failed to import WebRTC modules: {str(e)}", "FAIL")
+            self.log(f"Failed to import WebRTC modules: {e!s}", "FAIL")
             self.test_results["failed"] += 1
-            self.test_results["errors"].append(f"Import error: {str(e)}")
+            self.test_results["errors"].append(f"Import error: {e!s}")
             return False
 
     def test_webrtc_configuration(self):
@@ -109,7 +108,7 @@ class WebRTCAudioTester:
                 config = MockConfig()
                 signaling = WebRTCSignalingServer(config)
             except (OSError, ValueError) as e:
-                self.log(f"WebRTC signaling initialization failed: {str(e)}", "WARN")
+                self.log(f"WebRTC signaling initialization failed: {e!s}", "WARN")
                 self.log("This is expected if WebRTC module requires different config", "WARN")
                 self.test_results["warnings"] += 1
                 return False
@@ -142,9 +141,9 @@ class WebRTCAudioTester:
             return len(issues) == 0
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.log(f"Configuration test failed: {str(e)}", "FAIL")
+            self.log(f"Configuration test failed: {e!s}", "FAIL")
             self.test_results["failed"] += 1
-            self.test_results["errors"].append(f"Config error: {str(e)}")
+            self.test_results["errors"].append(f"Config error: {e!s}")
             return False
 
     def test_codec_negotiation(self, preferred_codec="opus"):
@@ -205,10 +204,9 @@ class WebRTCAudioTester:
                 )
 
             return True
-        else:
-            self.log(f"Unknown codec: {preferred_codec}", "FAIL")
-            self.test_results["failed"] += 1
-            return False
+        self.log(f"Unknown codec: {preferred_codec}", "FAIL")
+        self.test_results["failed"] += 1
+        return False
 
     def test_browser_compatibility(self, browser="Chrome"):
         """Test browser compatibility"""
@@ -234,16 +232,14 @@ class WebRTCAudioTester:
 
         if len(supported_codecs) > 0:
             self.log(
-                f"{browser} supports {len(supported_codecs)} codecs: "
-                f"{', '.join(supported_codecs)}",
+                f"{browser} supports {len(supported_codecs)} codecs: {', '.join(supported_codecs)}",
                 "PASS",
             )
             self.test_results["passed"] += 1
             return True
-        else:
-            self.log(f"{browser} has limited codec support", "WARN")
-            self.test_results["warnings"] += 1
-            return False
+        self.log(f"{browser} has limited codec support", "WARN")
+        self.test_results["warnings"] += 1
+        return False
 
     def test_network_conditions(self):
         """Test considerations for different network conditions"""
@@ -427,7 +423,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
         try:
             with open(guide_path, "w") as f:
                 f.write("# WebRTC Audio Troubleshooting Guide\n\n")
-                f.write(f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n")
+                f.write(f"Generated: {datetime.now(UTC).isoformat()}\n\n")
                 f.write(guide)
                 f.write("\n\n## Test Results\n\n")
                 f.write(f"- Passed: {self.test_results['passed']}\n")
@@ -444,7 +440,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.log(f"Failed to save guide: {str(e)}", "WARN")
+            self.log(f"Failed to save guide: {e!s}", "WARN")
             self.test_results["warnings"] += 1
             return False
 
@@ -501,7 +497,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
                 self.log("  Note: Check warnings above for optimization opportunities", "WARN")
         else:
             self.log(
-                f"\n✗ {self.test_results['failed']} TEST(S) FAILED - " "Please review errors above",
+                f"\n✗ {self.test_results['failed']} TEST(S) FAILED - Please review errors above",
                 "FAIL",
             )
 

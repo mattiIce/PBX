@@ -3,7 +3,7 @@ Mobile Apps Framework
 iOS and Android mobile client support
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -27,15 +27,15 @@ class MobileDevice:
     """Represents a registered mobile device"""
 
     def __init__(
-        self, device_id: str, platform: MobilePlatform, user_id: str, push_token: str = None
+        self, device_id: str, platform: MobilePlatform, user_id: str, push_token: str | None = None
     ):
         """Initialize mobile device"""
         self.device_id = device_id
         self.platform = platform
         self.user_id = user_id
         self.push_token = push_token
-        self.registered_at = datetime.now(timezone.utc)
-        self.last_active = datetime.now(timezone.utc)
+        self.registered_at = datetime.now(UTC)
+        self.last_active = datetime.now(UTC)
         self.app_version = None
         self.os_version = None
         self.device_model = None
@@ -89,7 +89,7 @@ class MobileAppFramework:
         self.logger.info(f"  Enabled: {self.enabled}")
 
     def register_device(
-        self, device_id: str, platform: str, user_id: str, device_info: dict = None
+        self, device_id: str, platform: str, user_id: str, device_info: dict | None = None
     ) -> dict:
         """
         Register a mobile device
@@ -302,7 +302,7 @@ class MobileAppFramework:
             }
 
         except (KeyError, TypeError, ValueError) as e:
-            self.logger.error(f"Failed to send push notification: {str(e)}")
+            self.logger.error(f"Failed to send push notification: {e!s}")
             return {"success": False, "error": str(e)}
 
     def configure_sip_for_mobile(self, device_id: str, extension: str) -> dict:
@@ -390,7 +390,7 @@ class MobileAppFramework:
             "call_id": call_info.get("call_id"),
             "caller_id": call_info.get("caller_id"),
             "caller_name": call_info.get("caller_name"),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Use CallKit (iOS) or ConnectionService (Android) integration
@@ -404,7 +404,7 @@ class MobileAppFramework:
     def update_device_activity(self, device_id: str):
         """Update device last active timestamp"""
         if device_id in self.devices:
-            self.devices[device_id].last_active = datetime.now(timezone.utc)
+            self.devices[device_id].last_active = datetime.now(UTC)
 
     def unregister_device(self, device_id: str) -> bool:
         """Unregister a mobile device"""
@@ -441,7 +441,7 @@ class MobileAppFramework:
     def get_statistics(self) -> dict:
         """Get mobile app statistics"""
         # Calculate active devices (active in last 24 hours)
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         active_count = sum(
             1 for d in self.devices.values() if (now - d.last_active).total_seconds() < 86400
         )

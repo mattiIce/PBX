@@ -2,15 +2,15 @@
 """
 Tests for phone provisioning persistence in database
 """
+
 import os
 import shutil
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_provisioning_persistence() -> None:
@@ -41,9 +41,9 @@ def test_provisioning_persistence() -> None:
         provisioning1.register_device("00:15:65:12:34:57", "1002", "polycom", "vvx450")
 
         # Verify devices were registered
-        assert (
-            len(provisioning1.devices) == 2
-        ), f"Expected 2 devices, got {len(provisioning1.devices)}"
+        assert len(provisioning1.devices) == 2, (
+            f"Expected 2 devices, got {len(provisioning1.devices)}"
+        )
 
         # Disconnect database
         db1.disconnect()
@@ -56,9 +56,9 @@ def test_provisioning_persistence() -> None:
         provisioning2 = PhoneProvisioning(config, database=db2)
 
         # Verify devices were loaded from database
-        assert (
-            len(provisioning2.devices) == 2
-        ), f"Expected 2 devices after reload, got {len(provisioning2.devices)}"
+        assert len(provisioning2.devices) == 2, (
+            f"Expected 2 devices after reload, got {len(provisioning2.devices)}"
+        )
 
         # Verify device details
         device1_reloaded = provisioning2.get_device("00:15:65:12:34:56")
@@ -71,10 +71,8 @@ def test_provisioning_persistence() -> None:
         assert device2_reloaded.extension_number == "1002", "Wrong extension for device 2"
         assert device2_reloaded.vendor == "polycom", "Wrong vendor for device 2"
 
-
         # Clean up
         db2.disconnect()
-
 
     finally:
         # Clean up
@@ -117,7 +115,6 @@ def test_static_ip_assignment() -> None:
 
         # Clean up
         db.disconnect()
-
 
     finally:
         # Clean up
@@ -172,7 +169,6 @@ def test_device_unregister_removes_from_db() -> None:
 
         # Clean up
         db2.disconnect()
-
 
     finally:
         # Clean up

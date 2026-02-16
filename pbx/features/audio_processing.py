@@ -3,15 +3,12 @@ Advanced Audio Processing
 Noise suppression and echo cancellation using free libraries
 """
 
-
 import numpy as np
 
 from pbx.utils.logger import get_logger
 
 # Try to import WebRTC Audio Processing (free)
 try:
-    pass
-
     WEBRTC_AUDIO_AVAILABLE = True
 except ImportError:
     WEBRTC_AUDIO_AVAILABLE = False

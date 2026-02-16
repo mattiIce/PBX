@@ -64,9 +64,7 @@ class PagingHandler:
             caller_sdp = caller_sdp_obj.get_audio_info()
 
             if caller_sdp:
-                pbx.logger.info(
-                    f"Paging caller RTP: {caller_sdp['address']}:{caller_sdp['port']}"
-                )
+                pbx.logger.info(f"Paging caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
                 # Extract caller's codec list for negotiation
                 caller_codecs = caller_sdp.get("formats", None)
 
@@ -104,9 +102,7 @@ class PagingHandler:
         dac_device_id = zone.get("dac_device")
 
         if not dac_device_id:
-            pbx.logger.warning(
-                f"No DAC device configured for zone {zone.get('name')}"
-            )
+            pbx.logger.warning(f"No DAC device configured for zone {zone.get('name')}")
             # Continue anyway - this allows testing without hardware
 
         # Find the DAC device configuration

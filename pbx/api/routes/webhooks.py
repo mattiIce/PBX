@@ -98,7 +98,7 @@ def handle_delete_webhook(url: str) -> Response:
 
     # Validate the URL parameter
     decoded_url = unquote(url)
-    if not decoded_url or not (decoded_url.startswith("http://") or decoded_url.startswith("https://")):
+    if not decoded_url or not (decoded_url.startswith(("http://", "https://"))):
         return send_json({"error": "Invalid webhook URL"}, 400)
 
     try:
@@ -108,7 +108,6 @@ def handle_delete_webhook(url: str) -> Response:
             return send_json(
                 {"success": True, "message": f"Webhook subscription deleted: {decoded_url}"}
             )
-        else:
-            return send_json({"error": "Webhook subscription not found"}, 404)
+        return send_json({"error": "Webhook subscription not found"}, 404)
     except Exception as e:
         return send_json({"error": str(e)}, 500)

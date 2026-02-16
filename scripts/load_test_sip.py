@@ -21,7 +21,7 @@ import sys
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -114,10 +114,9 @@ class SIPLoadTester:
                 # Check if registration was successful (200 OK)
                 if "200 OK" in response or "SIP/2.0 200" in response:
                     return True, response_time
-                else:
-                    self.logger.debug(f"Registration failed for user {user_id}: {response[:100]}")
-                    return False, response_time
-            except socket.timeout:
+                self.logger.debug(f"Registration failed for user {user_id}: {response[:100]}")
+                return False, response_time
+            except TimeoutError:
                 self.logger.warning(f"Registration timeout for user {user_id}")
                 return False, time.time() - start
             finally:
@@ -169,7 +168,7 @@ class SIPLoadTester:
 
                 response_time = time.time() - start
                 return success, response_time
-            except socket.timeout:
+            except TimeoutError:
                 return False, time.time() - start
             finally:
                 sock.close()
@@ -235,8 +234,9 @@ class SIPLoadTester:
 
                 # Update peak concurrent
                 self.results["concurrent_active"] = len(active_tasks)
-                if self.results["concurrent_active"] > self.results["peak_concurrent"]:
-                    self.results["peak_concurrent"] = self.results["concurrent_active"]
+                self.results["peak_concurrent"] = max(
+                    self.results["peak_concurrent"], self.results["concurrent_active"]
+                )
 
             # Wait for at least one call to complete
             if active_tasks:
@@ -294,7 +294,7 @@ class SIPLoadTester:
 
         return LoadTestResults(
             test_type=self.config.test_type,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             duration=duration,
             total_attempts=total_attempts,
             successful=self.results["successful"],
@@ -325,9 +325,9 @@ def print_results(results: LoadTestResults):
     print("Performance Metrics:")
     print(f"  Total Attempts: {results.total_attempts}")
     print(
-        f"  Successful: {results.successful} ({results.successful/results.total_attempts*100:.1f}%)"
+        f"  Successful: {results.successful} ({results.successful / results.total_attempts * 100:.1f}%)"
     )
-    print(f"  Failed: {results.failed} ({results.failed/results.total_attempts*100:.1f}%)")
+    print(f"  Failed: {results.failed} ({results.failed / results.total_attempts * 100:.1f}%)")
     print(f"  Timeouts: {results.timeouts}")
     print(f"  Requests/sec: {results.requests_per_second:.2f}")
     print(f"  Peak Concurrent: {results.concurrent_peak}")

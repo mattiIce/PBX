@@ -4,11 +4,10 @@ Test Find Me/Follow Me database persistence
 
 import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.find_me_follow_me import FindMeFollowMe
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 class TestFMFMPersistence:

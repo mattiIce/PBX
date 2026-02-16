@@ -76,7 +76,9 @@ def cmd_generate(args):
     import re
 
     safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", args.org).lower()
-    output_file = args.output or f"license_{safe_org}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
+    output_file = (
+        args.output or f"license_{safe_org}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
+    )
 
     with open(output_file, "w") as f:
         json.dump(license_data, f, indent=2)
@@ -424,8 +426,8 @@ def cmd_batch_generate(args):
             import re
 
             safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", issued_to).lower()
-            output_file = Path(output_dir) / f"license_{safe_org}_{datetime.now(timezone.utc.strftime('%Y%m%d_%H%M%S')}_{i}.json",
-            )
+            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            output_file = Path(output_dir) / f"license_{safe_org}_{timestamp}_{i}.json"
 
             with open(output_file, "w") as f:
                 json.dump(license_data, f, indent=2)

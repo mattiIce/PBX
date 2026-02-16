@@ -7,13 +7,11 @@ and voicemail fallback routing.
 """
 
 import re
-import struct
 import threading
 import time
-import traceback
+from pathlib import Path
 
 from pbx.features.webhooks import WebhookEvent
-from pathlib import Path
 
 
 class CallRouter:
@@ -64,11 +62,15 @@ class CallRouter:
         # Check if this is an emergency call (911) - Kari's Law compliance
         # Must be handled first for immediate routing
         if pbx.karis_law and pbx.karis_law.is_emergency_number(to_ext):
-            return pbx._emergency_handler.handle_emergency_call(from_ext, to_ext, call_id, message, from_addr)
+            return pbx._emergency_handler.handle_emergency_call(
+                from_ext, to_ext, call_id, message, from_addr
+            )
 
         # Check if this is an auto attendant call (extension 0)
         if pbx.auto_attendant and to_ext == pbx.auto_attendant.get_extension():
-            return pbx._auto_attendant_handler.handle_auto_attendant(from_ext, to_ext, call_id, message, from_addr)
+            return pbx._auto_attendant_handler.handle_auto_attendant(
+                from_ext, to_ext, call_id, message, from_addr
+            )
 
         # Check if this is a voicemail access call (*xxxx pattern)
         # Validate format: must be * followed by exactly 3 or 4 digits
@@ -78,7 +80,9 @@ class CallRouter:
             and len(to_ext) <= 5
             and to_ext[1:].isdigit()
         ):
-            return pbx._voicemail_handler.handle_voicemail_access(from_ext, to_ext, call_id, message, from_addr)
+            return pbx._voicemail_handler.handle_voicemail_access(
+                from_ext, to_ext, call_id, message, from_addr
+            )
 
         # Check if this is a paging call (7xx pattern or all-call)
         if pbx.paging_system and pbx.paging_system.is_paging_extension(to_ext):
@@ -103,9 +107,7 @@ class CallRouter:
             caller_sdp = caller_sdp_obj.get_audio_info()
 
             if caller_sdp:
-                pbx.logger.info(
-                    f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}"
-                )
+                pbx.logger.info(f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
                 # Extract caller's codec list to maintain codec compatibility
                 caller_codecs = caller_sdp.get("formats", None)
                 if caller_codecs:
@@ -194,12 +196,10 @@ class CallRouter:
                     # Note: The WebRTC client will be notified via the signaling channel
                     # and should send an answer when the user accepts the call
                     return True
-                else:
-                    pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
-                    return False
-            else:
-                pbx.logger.error("WebRTC gateway not available for routing call")
+                pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
                 return False
+            pbx.logger.error("WebRTC gateway not available for routing call")
+            return False
 
         # Build SDP for forwarding INVITE to callee
         # Use the server's external IP address for SDP
@@ -308,9 +308,7 @@ class CallRouter:
             call.callee_addr = dest_ext_obj.address
             call.callee_invite = invite_to_callee  # Store the INVITE for CANCEL reference
 
-            pbx.logger.info(
-                f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}"
-            )
+            pbx.logger.info(f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}")
             pbx.logger.info(
                 f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}"
             )
@@ -370,10 +368,7 @@ class CallRouter:
 
         # Check queue pattern
         queue_pattern = dialplan.get("queue_pattern", "^8[0-9]{3}$")
-        if re.match(queue_pattern, extension):
-            return True
-
-        return False
+        return bool(re.match(queue_pattern, extension))
 
     def _send_cancel_to_callee(self, call, call_id):
         """Send CANCEL to callee to stop their phone from ringing"""
@@ -536,9 +531,7 @@ class CallRouter:
                             temp_file.write(greeting_prompt)
                             greeting_file = temp_file.name
                             temp_file_created = True
-                        pbx.logger.info(
-                            f"Using default greeting for extension {call.to_extension}"
-                        )
+                        pbx.logger.info(f"Using default greeting for extension {call.to_extension}")
 
                     try:
                         player.play_file(greeting_file)
@@ -556,9 +549,7 @@ class CallRouter:
                     player.stop()
                     pbx.logger.info(f"Played voicemail greeting and beep for call {call_id}")
                 else:
-                    pbx.logger.warning(
-                        f"Failed to start RTP player for greeting on call {call_id}"
-                    )
+                    pbx.logger.warning(f"Failed to start RTP player for greeting on call {call_id}")
             except OSError as e:
                 pbx.logger.error(f"Error playing voicemail greeting: {e}")
 
@@ -573,14 +564,17 @@ class CallRouter:
 
                 # Schedule voicemail completion after max duration
                 voicemail_timer = threading.Timer(
-                    max_duration, pbx._voicemail_handler.complete_voicemail_recording, args=(call_id,)
+                    max_duration,
+                    pbx._voicemail_handler.complete_voicemail_recording,
+                    args=(call_id,),
                 )
                 voicemail_timer.start()
                 call.voicemail_timer = voicemail_timer
 
                 # Start DTMF monitoring thread to detect # key press
                 dtmf_monitor_thread = threading.Thread(
-                    target=pbx._voicemail_handler.monitor_voicemail_dtmf, args=(call_id, call, recorder)
+                    target=pbx._voicemail_handler.monitor_voicemail_dtmf,
+                    args=(call_id, call, recorder),
                 )
                 dtmf_monitor_thread.daemon = True
                 dtmf_monitor_thread.start()

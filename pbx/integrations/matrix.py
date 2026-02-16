@@ -3,14 +3,13 @@ Matrix Integration (Free, Open-Source Alternative to Slack/Teams Chat)
 Enables team messaging, file sharing, and real-time notifications
 """
 
-import os
 import re
 import time
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 try:
     import requests
@@ -58,7 +57,7 @@ class MatrixIntegration:
                 self.enabled = False
             elif not all([self.homeserver_url, self.bot_username, self.bot_password]):
                 self.logger.error(
-                    "Matrix integration requires homeserver_url, " "bot_username, and bot_password"
+                    "Matrix integration requires homeserver_url, bot_username, and bot_password"
                 )
                 self.enabled = False
             else:
@@ -92,16 +91,15 @@ class MatrixIntegration:
                 self.bot_access_token = result.get("access_token")
                 self.logger.info("Matrix bot authenticated successfully")
                 return True
-            else:
-                self.logger.error(f"Matrix authentication failed: {response.status_code}")
-                return False
+            self.logger.error(f"Matrix authentication failed: {response.status_code}")
+            return False
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Matrix authentication error: {e}")
             return False
 
     def _make_request(
-        self, method: str, endpoint: str, data: dict = None, params: dict = None
+        self, method: str, endpoint: str, data: dict | None = None, params: dict | None = None
     ) -> dict | None:
         """
         Make authenticated API request to Matrix
@@ -132,9 +130,8 @@ class MatrixIntegration:
 
             if response.status_code in [200, 201]:
                 return response.json()
-            else:
-                self.logger.error(f"Matrix API error: {response.status_code} - {response.text}")
-                return None
+            self.logger.error(f"Matrix API error: {response.status_code} - {response.text}")
+            return None
 
         except requests.RequestException as e:
             self.logger.error(f"Matrix API request failed: {e}")
@@ -179,7 +176,7 @@ class MatrixIntegration:
             self.logger.error(f"Failed to send Matrix message: {e}")
             return None
 
-    def send_notification(self, message: str, room_id: str = None) -> bool:
+    def send_notification(self, message: str, room_id: str | None = None) -> bool:
         """
         Send notification to default room
 
@@ -224,7 +221,7 @@ class MatrixIntegration:
         return self.send_notification(message)
 
     def send_voicemail_notification(
-        self, extension: str, caller_id: str, duration: int, transcription: str = None
+        self, extension: str, caller_id: str, duration: int, transcription: str | None = None
     ) -> bool:
         """
         Send voicemail notification to Matrix
@@ -259,7 +256,7 @@ class MatrixIntegration:
         return self.send_notification(message, room_id=room)
 
     def create_room(
-        self, name: str, topic: str = None, invite_users: list[str] = None
+        self, name: str, topic: str | None = None, invite_users: list[str] | None = None
     ) -> str | None:
         """
         Create new Matrix room
@@ -339,7 +336,6 @@ class MatrixIntegration:
             return None
 
         try:
-
             if not Path(file_path).exists():
                 self.logger.error(f"File not found: {file_path}")
                 return None
@@ -357,9 +353,8 @@ class MatrixIntegration:
             if response.status_code == 200:
                 result = response.json()
                 return result.get("content_uri")
-            else:
-                self.logger.error(f"File upload failed: {response.status_code}")
-                return None
+            self.logger.error(f"File upload failed: {response.status_code}")
+            return None
 
         except (KeyError, OSError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Failed to upload file: {e}")
@@ -369,7 +364,7 @@ class MatrixIntegration:
         self,
         room_id: str,
         file_path: str,
-        filename: str = None,
+        filename: str | None = None,
         content_type: str = "application/octet-stream",
     ) -> str | None:
         """
@@ -388,7 +383,6 @@ class MatrixIntegration:
             return None
 
         try:
-
             # Upload file
             mxc_uri = self.upload_file(file_path, content_type)
 

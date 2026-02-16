@@ -3,7 +3,6 @@ Test DTMF Payload Type Configuration
 Tests configurable DTMF payload type functionality
 """
 
-
 from pbx.features.phone_provisioning import PhoneTemplate
 from pbx.rtp.rfc2833 import RFC2833EventPacket, RFC2833Receiver, RFC2833Sender
 from pbx.sip.sdp import SDPBuilder, SDPSession
@@ -156,6 +155,7 @@ a=fmtp:100 0-16
         audio_info = session.get_audio_info()
         assert audio_info is not None
         assert "100" in audio_info["formats"]
+
 
 class TestDTMFPayloadTypeValidation:
     """Test DTMF payload type validation"""

@@ -3,6 +3,7 @@
 Test phone book auto-sync from Active Directory
 Tests that phone book automatically syncs after AD user sync completes
 """
+
 from typing import Any
 
 
@@ -34,7 +35,7 @@ def test_phone_book_auto_sync_after_ad_sync() -> bool:
                         "ad_synced": True,
                     },
                 ]
-            elif "phone_book" in query:
+            if "phone_book" in query:
                 # Return existing phone book entries
                 return []
             return []
@@ -43,7 +44,9 @@ def test_phone_book_auto_sync_after_ad_sync() -> bool:
             """Mock execute for INSERT/UPDATE"""
             return True
 
-        def _execute_with_context(self, query: str, context: str, params: Any = None, critical: bool = True) -> bool:
+        def _execute_with_context(
+            self, query: str, context: str, params: Any = None, critical: bool = True
+        ) -> bool:
             """Mock execute with context"""
             return True
 
@@ -85,9 +88,9 @@ def test_phone_book_auto_sync_after_ad_sync() -> bool:
 
     # Verify that phone book synced entries
     assert synced_count == 2, f"Should have synced 2 entries, got {synced_count}"
-    assert (
-        len(phone_book.entries) == 2
-    ), f"Should have 2 entries in phone book, got {len(phone_book.entries)}"
+    assert len(phone_book.entries) == 2, (
+        f"Should have 2 entries in phone book, got {len(phone_book.entries)}"
+    )
 
     # Verify the entries are correct
     assert "1001" in phone_book.entries, "Extension 1001 should be in phone book"
@@ -112,7 +115,9 @@ def test_phone_book_sync_disabled() -> bool:
         def execute(self, query: str, params: Any = None) -> bool:
             return True
 
-        def _execute_with_context(self, query: str, context: str, params: Any = None, critical: bool = True) -> bool:
+        def _execute_with_context(
+            self, query: str, context: str, params: Any = None, critical: bool = True
+        ) -> bool:
             return True
 
     class MockConfig:

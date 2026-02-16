@@ -10,7 +10,6 @@ from io import BytesIO
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-
 from pbx.api.rest_api import PBXAPIHandler
 
 

@@ -3,11 +3,11 @@ Voicemail system
 """
 
 import os
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
-import sqlite3
-from pathlib import Path
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -17,8 +17,6 @@ except ImportError:
     EMAIL_NOTIFIER_AVAILABLE = False
 
 try:
-    pass
-
     TRANSCRIPTION_AVAILABLE = True
 except ImportError:
     TRANSCRIPTION_AVAILABLE = False
@@ -138,7 +136,7 @@ class VoicemailBox:
         Returns:
             Message ID
         """
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         timestamp_str = timestamp.strftime("%Y%m%d_%H%M%S")
         message_id = f"{caller_id}_{timestamp_str}"
 
@@ -157,9 +155,7 @@ class VoicemailBox:
         }
 
         self.messages.append(message)
-        self.logger.info(
-            f"Voicemail saved to file system for extension {self.extension_number}"
-        )
+        self.logger.info(f"Voicemail saved to file system for extension {self.extension_number}")
         self.logger.info(f"  Message ID: {message_id}")
         self.logger.info(f"  Caller ID: {caller_id}")
         self.logger.info(f"  File path: {file_path}")
@@ -175,8 +171,13 @@ class VoicemailBox:
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
                 VALUES ({}, {}, {}, {}, {}, {}, {})
                 """.format(  # nosec B608 - placeholder is safely parameterized
-                    placeholder, placeholder, placeholder, placeholder,
-                    placeholder, placeholder, placeholder
+                    placeholder,
+                    placeholder,
+                    placeholder,
+                    placeholder,
+                    placeholder,
+                    placeholder,
+                    placeholder,
                 )
 
                 params = (
@@ -220,9 +221,7 @@ class VoicemailBox:
 
             if transcription_result["success"]:
                 self.logger.info("✓ Voicemail transcribed successfully")
-                self.logger.info(
-                    f"  Confidence: {transcription_result['confidence']:.2%}"
-                )
+                self.logger.info(f"  Confidence: {transcription_result['confidence']:.2%}")
                 self.logger.debug(f"  Text: {transcription_result['text'][:100]}...")
 
                 # Add transcription to message
@@ -245,8 +244,12 @@ class VoicemailBox:
                             transcribed_at = {}
                         WHERE message_id = {}
                         """.format(  # nosec B608 - placeholder is safely parameterized
-                            placeholder, placeholder, placeholder,
-                            placeholder, placeholder, placeholder
+                            placeholder,
+                            placeholder,
+                            placeholder,
+                            placeholder,
+                            placeholder,
+                            placeholder,
                         )
                         self.database.execute(
                             query,
@@ -402,9 +405,7 @@ class VoicemailBox:
                 # Delete file
                 if Path(msg["file_path"]).exists():
                     os.remove(msg["file_path"])
-                    self.logger.info(
-                        f"  ✓ Deleted audio file: {msg['file_path']}"
-                    )
+                    self.logger.info(f"  ✓ Deleted audio file: {msg['file_path']}")
 
                 # Delete from database if available
                 if self.database and self.database.enabled:
@@ -481,12 +482,12 @@ class VoicemailBox:
                                     self.logger.warning(
                                         f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time"
                                     )
-                                    timestamp = datetime.now(timezone.utc)
+                                    timestamp = datetime.now(UTC)
                         except ValueError:
                             self.logger.warning(
                                 f"Invalid timestamp format for voicemail {row['message_id']}, using current time"
                             )
-                            timestamp = datetime.now(timezone.utc)
+                            timestamp = datetime.now(UTC)
 
                     message = {
                         "id": row["message_id"],
@@ -571,15 +572,11 @@ class VoicemailBox:
             True if PIN was set successfully
         """
         if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
-            self.logger.warning(
-                f"Invalid PIN format for extension {self.extension_number}"
-            )
+            self.logger.warning(f"Invalid PIN format for extension {self.extension_number}")
             return False
 
         self.pin = str(pin)
-        self.logger.info(
-            f"Updated voicemail PIN for extension {self.extension_number}"
-        )
+        self.logger.info(f"Updated voicemail PIN for extension {self.extension_number}")
         return True
 
     def verify_pin(self, pin):
@@ -658,13 +655,10 @@ class VoicemailBox:
                 file_size = Path(self.greeting_path).stat().st_size
                 self.logger.info(f"Verified greeting file exists on disk ({file_size} bytes)")
                 return True
-            else:
-                self.logger.error(f"Greeting file was not created at {self.greeting_path}")
-                return False
+            self.logger.error(f"Greeting file was not created at {self.greeting_path}")
+            return False
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.logger.error(
-                f"Error saving greeting for extension {self.extension_number}: {e}"
-            )
+            self.logger.error(f"Error saving greeting for extension {self.extension_number}: {e}")
             return False
 
     def get_greeting_path(self):
@@ -692,15 +686,11 @@ class VoicemailBox:
         try:
             if Path(self.greeting_path).exists():
                 os.remove(self.greeting_path)
-                self.logger.info(
-                    f"Deleted custom greeting for extension {self.extension_number}"
-                )
+                self.logger.info(f"Deleted custom greeting for extension {self.extension_number}")
                 return True
             return False
         except OSError as e:
-            self.logger.error(
-                f"Error deleting greeting for extension {self.extension_number}: {e}"
-            )
+            self.logger.error(f"Error deleting greeting for extension {self.extension_number}: {e}")
             return False
 
 
@@ -785,11 +775,10 @@ class VoicemailSystem:
                 extension_config = self.config.get_extension(extension_number)
                 if extension_config:
                     email_address = extension_config.get("email")
-                    if email_address:
-                        if self.email_notifier.send_reminder(
-                            email_address, extension_number, len(unread_messages), unread_messages
-                        ):
-                            count += 1
+                    if email_address and self.email_notifier.send_reminder(
+                        email_address, extension_number, len(unread_messages), unread_messages
+                    ):
+                        count += 1
 
         return count
 
@@ -874,22 +863,21 @@ class VoicemailIVR:
 
         if self.state == self.STATE_WELCOME:
             return self._handle_welcome(digit)
-        elif self.state == self.STATE_PIN_ENTRY:
+        if self.state == self.STATE_PIN_ENTRY:
             return self._handle_pin_entry(digit)
-        elif self.state == self.STATE_MAIN_MENU:
+        if self.state == self.STATE_MAIN_MENU:
             return self._handle_main_menu(digit)
-        elif self.state == self.STATE_PLAYING_MESSAGE:
+        if self.state == self.STATE_PLAYING_MESSAGE:
             return self._handle_playing_message(digit)
-        elif self.state == self.STATE_MESSAGE_MENU:
+        if self.state == self.STATE_MESSAGE_MENU:
             return self._handle_message_menu(digit)
-        elif self.state == self.STATE_OPTIONS_MENU:
+        if self.state == self.STATE_OPTIONS_MENU:
             return self._handle_options_menu(digit)
-        elif self.state == self.STATE_RECORDING_GREETING:
+        if self.state == self.STATE_RECORDING_GREETING:
             return self._handle_recording_greeting(digit)
-        elif self.state == self.STATE_GREETING_REVIEW:
+        if self.state == self.STATE_GREETING_REVIEW:
             return self._handle_greeting_review(digit)
-        else:
-            return {"action": "unknown_state", "prompt": "goodbye"}
+        return {"action": "unknown_state", "prompt": "goodbye"}
 
     def _handle_welcome(self, digit: str) -> dict:
         """Handle welcome state"""
@@ -944,25 +932,24 @@ class VoicemailIVR:
                     "prompt": "main_menu",
                     "message": f"You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit",
                 }
-            else:
-                self.pin_attempts += 1
-                self.logger.warning(
-                    f"[VM IVR PIN] ✗ Invalid PIN attempt {self.pin_attempts}/{self.max_pin_attempts}"
-                )
-                if self.pin_attempts >= self.max_pin_attempts:
-                    self.state = self.STATE_GOODBYE
-                    self.logger.warning("[VM IVR PIN] Maximum PIN attempts reached, hanging up")
-                    return {
-                        "action": "hangup",
-                        "prompt": "goodbye",
-                        "message": "Too many failed attempts. Goodbye.",
-                    }
+            self.pin_attempts += 1
+            self.logger.warning(
+                f"[VM IVR PIN] ✗ Invalid PIN attempt {self.pin_attempts}/{self.max_pin_attempts}"
+            )
+            if self.pin_attempts >= self.max_pin_attempts:
+                self.state = self.STATE_GOODBYE
+                self.logger.warning("[VM IVR PIN] Maximum PIN attempts reached, hanging up")
                 return {
-                    "action": "play_prompt",
-                    "prompt": "invalid_pin",
-                    "message": "Invalid PIN. Please try again.",
+                    "action": "hangup",
+                    "prompt": "goodbye",
+                    "message": "Too many failed attempts. Goodbye.",
                 }
-        elif digit in "0123456789":
+            return {
+                "action": "play_prompt",
+                "prompt": "invalid_pin",
+                "message": "Invalid PIN. Please try again.",
+            }
+        if digit in "0123456789":
             # Collect PIN digit (limit length to prevent abuse)
             if len(self.entered_pin) < 10:  # Max 10 digits
                 self.entered_pin += digit
@@ -976,10 +963,9 @@ class VoicemailIVR:
                         f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '{digit}' collected, current PIN buffer: '{self.entered_pin}'"
                     )
             return {"action": "collect_digit", "prompt": "continue"}
-        else:
-            # Invalid input, ignore
-            self.logger.debug(f"[VM IVR PIN] Ignoring invalid digit: {digit}")
-            return {"action": "collect_digit", "prompt": "continue"}
+        # Invalid input, ignore
+        self.logger.debug(f"[VM IVR PIN] Ignoring invalid digit: {digit}")
+        return {"action": "collect_digit", "prompt": "continue"}
 
     def _handle_main_menu(self, digit: str) -> dict:
         """Handle main menu state"""
@@ -999,14 +985,13 @@ class VoicemailIVR:
                     "file_path": msg["file_path"],
                     "caller_id": msg["caller_id"],
                 }
-            else:
-                return {
-                    "action": "play_prompt",
-                    "prompt": "no_messages",
-                    "message": "You have no messages",
-                }
+            return {
+                "action": "play_prompt",
+                "prompt": "no_messages",
+                "message": "You have no messages",
+            }
 
-        elif digit == "2":
+        if digit == "2":
             # Options menu
             self.state = self.STATE_OPTIONS_MENU
             return {
@@ -1015,7 +1000,7 @@ class VoicemailIVR:
                 "message": "Press 1 to record greeting, * to return to main menu",
             }
 
-        elif digit == "*":
+        if digit == "*":
             # Exit
             self.state = self.STATE_GOODBYE
             return {"action": "hangup", "prompt": "goodbye", "message": "Goodbye"}
@@ -1049,7 +1034,7 @@ class VoicemailIVR:
                 "caller_id": msg["caller_id"],
             }
 
-        elif digit == "2":
+        if digit == "2":
             # Next message
             self.current_message_index += 1
             if self.current_message_index < len(self.current_messages):
@@ -1061,15 +1046,14 @@ class VoicemailIVR:
                     "file_path": msg["file_path"],
                     "caller_id": msg["caller_id"],
                 }
-            else:
-                self.state = self.STATE_MAIN_MENU
-                return {
-                    "action": "play_prompt",
-                    "prompt": "no_more_messages",
-                    "message": "No more messages. Returning to main menu.",
-                }
+            self.state = self.STATE_MAIN_MENU
+            return {
+                "action": "play_prompt",
+                "prompt": "no_more_messages",
+                "message": "No more messages. Returning to main menu.",
+            }
 
-        elif digit == "3":
+        if digit == "3":
             # Delete current message
             msg = self.current_messages[self.current_message_index]
             self.mailbox.delete_message(msg["id"])
@@ -1085,15 +1069,14 @@ class VoicemailIVR:
                     "file_path": msg["file_path"],
                     "caller_id": msg["caller_id"],
                 }
-            else:
-                self.state = self.STATE_MAIN_MENU
-                return {
-                    "action": "play_prompt",
-                    "prompt": "message_deleted",
-                    "message": "Message deleted. Returning to main menu.",
-                }
+            self.state = self.STATE_MAIN_MENU
+            return {
+                "action": "play_prompt",
+                "prompt": "message_deleted",
+                "message": "Message deleted. Returning to main menu.",
+            }
 
-        elif digit == "*":
+        if digit == "*":
             # Return to main menu
             self.state = self.STATE_MAIN_MENU
             unread_count = len(self.mailbox.get_messages(unread_only=True))
@@ -1121,7 +1104,7 @@ class VoicemailIVR:
                 "message": "Record your greeting after the tone. Press # when finished.",
             }
 
-        elif digit == "*":
+        if digit == "*":
             # Return to main menu
             self.state = self.STATE_MAIN_MENU
             unread_count = len(self.mailbox.get_messages(unread_only=True))
@@ -1162,7 +1145,7 @@ class VoicemailIVR:
                 "message": "Playing your greeting...",
             }
 
-        elif digit == "2":
+        if digit == "2":
             # Re-record the greeting
             self.recorded_greeting_data = None  # Clear previous recording
             self.state = self.STATE_RECORDING_GREETING
@@ -1173,7 +1156,7 @@ class VoicemailIVR:
                 "message": "Record your greeting after the tone. Press # when finished.",
             }
 
-        elif digit == "3":
+        if digit == "3":
             # Delete greeting and use default
             self.recorded_greeting_data = None
             if self.mailbox.has_custom_greeting():
@@ -1186,7 +1169,7 @@ class VoicemailIVR:
                 "message": f"Custom greeting deleted, using default. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit",
             }
 
-        elif digit == "*":
+        if digit == "*":
             # Save the greeting and return to main menu
             if self.recorded_greeting_data:
                 try:
@@ -1200,15 +1183,14 @@ class VoicemailIVR:
                             "prompt": "greeting_saved",
                             "message": f"Greeting saved. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit",
                         }
-                    else:
-                        self.logger.error(
-                            f"Failed to save greeting for extension {self.extension_number}"
-                        )
-                        return {
-                            "action": "play_prompt",
-                            "prompt": "error",
-                            "message": "Error saving greeting. Press 2 to try again or 3 to cancel.",
-                        }
+                    self.logger.error(
+                        f"Failed to save greeting for extension {self.extension_number}"
+                    )
+                    return {
+                        "action": "play_prompt",
+                        "prompt": "error",
+                        "message": "Error saving greeting. Press 2 to try again or 3 to cancel.",
+                    }
                 except Exception as e:
                     self.logger.error(f"Error saving greeting: {e}")
                     return {

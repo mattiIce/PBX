@@ -5,12 +5,11 @@ Tests the DTMF configuration GET and POST endpoints
 
 import os
 import tempfile
+from pathlib import Path
 
 import yaml
 
-
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 class TestDTMFConfigMethods:

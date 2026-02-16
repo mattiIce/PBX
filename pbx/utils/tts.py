@@ -248,8 +248,8 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
         if company_name and "{company_name}" in text:
             text = text.replace("{company_name}", company_name)
 
-        output_file = Path(output_dir) / filename if filename.endswith(".wav" else f"{filename}.wav"
-        )
+        wav_name = filename if filename.endswith(".wav") else f"{filename}.wav"
+        output_file = Path(output_dir) / wav_name
 
         try:
             if text_to_wav_telephony(text, output_file, sample_rate=sample_rate):

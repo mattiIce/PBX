@@ -10,7 +10,7 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 try:
@@ -61,7 +61,7 @@ class STIRSHAKENManager:
     - Verification service integration
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize STIR/SHAKEN manager
 
@@ -154,7 +154,7 @@ class STIRSHAKENManager:
         originating_tn: str,
         destination_tn: str,
         attestation: AttestationLevel = AttestationLevel.FULL,
-        orig_id: str = None,
+        orig_id: str | None = None,
     ) -> str | None:
         """
         Create a PASSporT token (RFC 8225)
@@ -301,7 +301,7 @@ class STIRSHAKENManager:
         originating_tn: str,
         destination_tn: str,
         attestation: AttestationLevel = AttestationLevel.FULL,
-        orig_id: str = None,
+        orig_id: str | None = None,
     ) -> str | None:
         """
         Create SIP Identity header with PASSporT (RFC 8588)
@@ -344,7 +344,7 @@ class STIRSHAKENManager:
                 passport = identity_header[start:end]
             else:
                 # No quotes, take first part before semicolon
-                passport = identity_header.split(";")[0]
+                passport = identity_header.split(";", maxsplit=1)[0]
 
             # Parse parameters
             params = {}
@@ -472,7 +472,7 @@ class STIRSHAKENManager:
             if len(digits) == 10:
                 return f"+1{digits}"
             # Add + to 11+ digit numbers
-            elif len(digits) >= 11:
+            if len(digits) >= 11:
                 return f"+{digits}"
 
         return tn
@@ -495,7 +495,7 @@ class STIRSHAKENManager:
             data += "=" * padding
         return base64.urlsafe_b64decode(data)
 
-    def generate_test_certificate(self, output_dir: str = None) -> tuple[str, str]:
+    def generate_test_certificate(self, output_dir: str | None = None) -> tuple[str, str]:
         """
         Generate self-signed certificate for testing
 
@@ -532,8 +532,8 @@ class STIRSHAKENManager:
             .issuer_name(issuer)
             .public_key(private_key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.now(timezone.utc))
-            .not_valid_after(datetime.now(timezone.utc) + timedelta(days=365))
+            .not_valid_before(datetime.now(UTC))
+            .not_valid_after(datetime.now(UTC) + timedelta(days=365))
             .sign(private_key, hashes.SHA256(), default_backend())
         )
 

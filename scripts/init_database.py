@@ -4,10 +4,10 @@ Database initialization script for PBX system
 """
 
 import os
+import sqlite3
 import sys
 
 import psycopg2
-import sqlite3
 
 
 # Database configuration

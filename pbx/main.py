@@ -24,9 +24,9 @@ running = True
 pbx = None
 
 
-def signal_handler(sig, frame):  # noqa: ARG001
+def signal_handler(sig, frame):
     """Handle shutdown signal."""
-    global running  # noqa: PLW0603
+    global running
     logger.info("Shutting down PBX system...")
     running = False
     if pbx:
@@ -35,7 +35,7 @@ def signal_handler(sig, frame):  # noqa: ARG001
 
 def main() -> None:
     """Main entry point for the PBX server."""
-    global running, pbx  # noqa: PLW0603
+    global running, pbx
 
     logger.info("=" * 60)
     logger.info("Warden VoIP System v1.0.0")

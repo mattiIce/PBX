@@ -103,7 +103,7 @@ class PhoneProvisioningSetup:
     def load_config(self):
         """Load the PBX configuration file"""
         try:
-            with open(self.config_path, "r") as f:
+            with open(self.config_path) as f:
                 self.config = yaml.safe_load(f)
             return True
         except FileNotFoundError:
@@ -465,15 +465,14 @@ class PhoneProvisioningSetup:
                         device["mac"], device["extension"], device["vendor"], device["model"]
                     ):
                         print("   → Added to config.yml as fallback")
+            elif self.add_device_to_config(
+                device["mac"], device["extension"], device["vendor"], device["model"]
+            ):
+                print("✅")
+                success_count += 1
             else:
-                if self.add_device_to_config(
-                    device["mac"], device["extension"], device["vendor"], device["model"]
-                ):
-                    print("✅")
-                    success_count += 1
-                else:
-                    print("❌")
-                    fail_count += 1
+                print("❌")
+                fail_count += 1
 
         print(f"\n📊 Results: {success_count} succeeded, {fail_count} failed")
 

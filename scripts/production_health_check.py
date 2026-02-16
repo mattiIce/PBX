@@ -25,10 +25,10 @@ import argparse
 import json
 import os
 import socket
-import sys
-from datetime import datetime, timezone
-from pathlib import Path
 import sqlite3
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
 
 try:
     import psycopg2
@@ -55,7 +55,7 @@ class HealthCheck:
         self.json_output = json_output
         self.critical_only = critical_only
         self.results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "checks": [],
             "summary": {"passed": 0, "failed": 0, "warnings": 0},
         }
@@ -135,7 +135,7 @@ class HealthCheck:
             if not self.critical_only and not self.json_output:
                 print(f"  Version: {version[:50]}")
         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
-            self.log(f"Database connection failed: {str(e)}", "fail", "critical")
+            self.log(f"Database connection failed: {e!s}", "fail", "critical")
 
     def check_redis(self):
         """Check Redis connectivity."""
@@ -161,7 +161,7 @@ class HealthCheck:
             r.ping()
             self.log("Redis connectivity", "pass", "warning")
         except Exception as e:
-            self.log(f"Redis connection failed: {str(e)}", "warn", "warning")
+            self.log(f"Redis connection failed: {e!s}", "warn", "warning")
 
     def check_disk_space(self):
         """Check available disk space."""
@@ -171,7 +171,7 @@ class HealthCheck:
         try:
             import shutil
 
-            total, used, free = shutil.disk_usage("/")
+            total, _used, free = shutil.disk_usage("/")
             free_percent = (free / total) * 100
 
             if free_percent < 10:
@@ -181,7 +181,7 @@ class HealthCheck:
             else:
                 self.log(f"Disk space: {free_percent:.1f}% free", "pass", "info")
         except OSError as e:
-            self.log(f"Could not check disk space: {str(e)}", "warn", "warning")
+            self.log(f"Could not check disk space: {e!s}", "warn", "warning")
 
     def check_memory(self):
         """Check available memory."""
@@ -190,9 +190,9 @@ class HealthCheck:
 
         try:
             with open("/proc/meminfo") as f:
-                meminfo = dict(
-                    (line.split()[0].rstrip(":"), int(line.split()[1])) for line in f.readlines()
-                )
+                meminfo = {
+                    line.split()[0].rstrip(":"): int(line.split()[1]) for line in f.readlines()
+                }
 
             mem_total = meminfo.get("MemTotal", 0)
             mem_available = meminfo.get("MemAvailable", 0)
@@ -211,7 +211,7 @@ class HealthCheck:
                 else:
                     self.log(f"Memory: {available_percent:.1f}% available", "pass", "info")
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.log(f"Could not check memory: {str(e)}", "warn", "warning")
+            self.log(f"Could not check memory: {e!s}", "warn", "warning")
 
     def check_ssl_certificate(self):
         """Check SSL certificate validity."""
@@ -236,7 +236,7 @@ class HealthCheck:
                     self.log(f"SSL certificate found at {cert_path}", "pass", "warning")
                     break
                 except OSError as e:
-                    self.log(f"Could not validate certificate: {str(e)}", "warn", "warning")
+                    self.log(f"Could not validate certificate: {e!s}", "warn", "warning")
                     break
 
         if not cert_found:
@@ -258,7 +258,7 @@ class HealthCheck:
                     yaml.safe_load(f)
                 self.log("config.yml is valid YAML", "pass", "critical")
             except OSError as e:
-                self.log(f"config.yml is invalid: {str(e)}", "fail", "critical")
+                self.log(f"config.yml is invalid: {e!s}", "fail", "critical")
         else:
             self.log("config.yml not found", "fail", "critical")
 
@@ -292,17 +292,16 @@ class HealthCheck:
             if self.results["summary"]["failed"] > 0:
                 print(f"\n{RED}Status: UNHEALTHY (critical failures detected){RESET}")
                 return 1
-            elif self.results["summary"]["warnings"] > 0:
+            if self.results["summary"]["warnings"] > 0:
                 print(f"\n{YELLOW}Status: DEGRADED (warnings detected){RESET}")
                 return 2
-            else:
-                print(f"\n{GREEN}Status: HEALTHY{RESET}")
-                return 0
+            print(f"\n{GREEN}Status: HEALTHY{RESET}")
+            return 0
 
         # Return exit code based on failures
         if self.results["summary"]["failed"] > 0:
             return 1
-        elif self.results["summary"]["warnings"] > 0:
+        if self.results["summary"]["warnings"] > 0:
             return 2
         return 0
 

@@ -6,7 +6,6 @@ This script helps diagnose and troubleshoot phone auto-provisioning issues.
 """
 
 import json
-import os
 import sys
 
 import requests
@@ -14,9 +13,9 @@ import requests
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 def print_header(text):
@@ -62,7 +61,7 @@ def check_config():
 
         # Check for issues
         issues = []
-        if external_ip == "Not set" or external_ip == "127.0.0.1":
+        if external_ip in {"Not set", "127.0.0.1"}:
             issues.append("server.external_ip should be set to the PBX server's actual IP address")
         if url_format == "Not set":
             issues.append("provisioning.url_format is not configured")
@@ -94,9 +93,8 @@ def check_api_connectivity(host="localhost", port=9000):
             print("✓ API server is accessible")
             print(f"  Status: {json.dumps(status, indent=2)}")
             return True
-        else:
-            print(f"✗ API returned status code: {response.status_code}")
-            return False
+        print(f"✗ API returned status code: {response.status_code}")
+        return False
 
     except requests.exceptions.ConnectionError:
         print(f"✗ Cannot connect to API server at {host}:{port}")
@@ -140,9 +138,8 @@ def get_diagnostics(host="localhost", port=9000):
                     print(f"  - {warning}")
 
             return diagnostics
-        else:
-            print(f"✗ API returned status code: {response.status_code}")
-            return None
+        print(f"✗ API returned status code: {response.status_code}")
+        return None
 
     except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error fetching diagnostics: {e}")
@@ -188,9 +185,8 @@ def get_recent_requests(host="localhost", port=9000, limit=10):
                 print()
 
             return requests_list
-        else:
-            print(f"✗ API returned status code: {response.status_code}")
-            return []
+        print(f"✗ API returned status code: {response.status_code}")
+        return []
 
     except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error fetching request history: {e}")
@@ -235,9 +231,8 @@ def test_mac_lookup(mac_address, host="localhost", port=9000):
                 )
 
             return found
-        else:
-            print(f"✗ API returned status code: {response.status_code}")
-            return False
+        print(f"✗ API returned status code: {response.status_code}")
+        return False
 
     except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error checking device: {e}")
@@ -267,10 +262,9 @@ def test_config_download(mac_address, host="localhost", port=9000):
                 print("  ... (truncated)")
             print("  " + "-" * 60)
             return True
-        else:
-            print(f"✗ Download failed with status code: {response.status_code}")
-            print(f"  Response: {response.text}")
-            return False
+        print(f"✗ Download failed with status code: {response.status_code}")
+        print(f"  Response: {response.text}")
+        return False
 
     except (KeyError, TypeError, ValueError, requests.RequestException) as e:
         print(f"✗ Error downloading config: {e}")

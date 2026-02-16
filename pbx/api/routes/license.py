@@ -1,22 +1,18 @@
 """License management Blueprint routes."""
 
-import json
 import os
 import tempfile
+from pathlib import Path
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response
 
 from pbx.api.utils import (
-    get_pbx_core,
+    get_request_body,
+    require_auth,
     send_json,
     verify_authentication,
-    require_auth,
-    require_admin,
-    get_request_body,
-    DateTimeEncoder,
 )
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger()
 
@@ -78,9 +74,7 @@ def handle_license_features() -> tuple[Response, int]:
 
         # If licensing is disabled, all features available
         if not license_manager.enabled:
-            return send_json(
-                {"success": True, "features": "all", "licensing_enabled": False}
-            ), 200
+            return send_json({"success": True, "features": "all", "licensing_enabled": False}), 200
 
         # Get license type
         if license_manager.current_license:
@@ -223,9 +217,7 @@ def handle_license_install() -> tuple[Response, int]:
 
         # Save license with optional enforcement
         license_manager = get_license_manager()
-        success = license_manager.save_license(
-            license_data, enforce_licensing=enforce_licensing
-        )
+        success = license_manager.save_license(license_data, enforce_licensing=enforce_licensing)
 
         message = "License installed successfully"
         if enforce_licensing:
@@ -240,8 +232,7 @@ def handle_license_install() -> tuple[Response, int]:
                     "enforcement_locked": enforce_licensing,
                 }
             ), 200
-        else:
-            return send_json({"success": False, "error": "Failed to install license"}, 500), 500
+        return send_json({"success": False, "error": "Failed to install license"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error installing license: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500
@@ -269,8 +260,7 @@ def handle_license_revoke() -> tuple[Response, int]:
 
         if success:
             return send_json({"success": True, "message": "License revoked successfully"}), 200
-        else:
-            return send_json({"success": False, "error": "Failed to revoke license"}, 500), 500
+        return send_json({"success": False, "error": "Failed to revoke license"}, 500), 500
     except Exception as e:
         logger.error(f"Error revoking license: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500
@@ -285,9 +275,7 @@ def handle_license_toggle() -> tuple[Response, int]:
         # Determine appropriate status code:
         # - 401 for authentication failures
         # - 403 for authenticated users lacking license-admin privileges
-        status_code = (
-            auth_status.get("status_code", 401) if isinstance(auth_status, dict) else 401
-        )
+        status_code = auth_status.get("status_code", 401) if isinstance(auth_status, dict) else 401
         return send_json(
             {
                 "success": False,
@@ -314,7 +302,7 @@ def handle_license_toggle() -> tuple[Response, int]:
         # Read existing .env
         env_lines = []
         if Path(env_file).exists():
-            with open(env_file, "r") as f:
+            with open(env_file) as f:
                 env_lines = f.readlines()
 
         # Check if license lock exists
@@ -339,7 +327,7 @@ def handle_license_toggle() -> tuple[Response, int]:
 
         if not found:
             env_lines.append(
-                f'\n# Licensing\nPBX_LICENSING_ENABLED={"true" if enabled else "false"}\n'
+                f"\n# Licensing\nPBX_LICENSING_ENABLED={'true' if enabled else 'false'}\n"
             )
 
         # Write back atomically to avoid corrupting .env on partial failures
@@ -357,9 +345,7 @@ def handle_license_toggle() -> tuple[Response, int]:
                     os.remove(tmp_path)
             except OSError:
                 pass
-            logger.error(
-                "Failed to update .env file for licensing: %s", write_err, exc_info=True
-            )
+            logger.error("Failed to update .env file for licensing: %s", write_err, exc_info=True)
             return send_json(
                 {"success": False, "error": "Failed to persist licensing configuration"}, 500
             ), 500
@@ -374,7 +360,7 @@ def handle_license_toggle() -> tuple[Response, int]:
             {
                 "success": True,
                 "licensing_enabled": license_manager.enabled,
-                "message": f'Licensing {"enabled" if enabled else "disabled"} successfully',
+                "message": f"Licensing {'enabled' if enabled else 'disabled'} successfully",
             }
         ), 200
     except (KeyError, OSError, TypeError, ValueError) as e:
@@ -410,14 +396,13 @@ def handle_license_remove_lock() -> tuple[Response, int]:
                     "message": "License lock removed - licensing can now be disabled",
                 }
             ), 200
-        else:
-            return send_json(
-                {
-                    "success": False,
-                    "error": "License lock file does not exist or could not be removed",
-                },
-                404,
-            ), 404
+        return send_json(
+            {
+                "success": False,
+                "error": "License lock file does not exist or could not be removed",
+            },
+            404,
+        ), 404
     except Exception as e:
         logger.error(f"Error removing license lock: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500
@@ -439,9 +424,7 @@ def handle_license_check_feature() -> tuple[Response, int]:
         license_manager = get_license_manager()
         available = license_manager.has_feature(feature_name)
 
-        return send_json(
-            {"success": True, "feature": feature_name, "available": available}
-        ), 200
+        return send_json({"success": True, "feature": feature_name, "available": available}), 200
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error checking feature: {e}")
         return send_json({"success": False, "error": str(e)}, 500), 500

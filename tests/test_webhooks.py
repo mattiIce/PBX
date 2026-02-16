@@ -11,11 +11,10 @@ import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from typing import Any
 
-
 from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSystem
 
-
 # Mock webhook receiver server
+
 
 class MockWebhookReceiver(BaseHTTPRequestHandler):
     """Mock HTTP server to receive webhooks"""
@@ -108,9 +107,9 @@ def test_webhook_subscription() -> bool:
 
     # Test disabled subscription
     subscription.enabled = False
-    assert (
-        subscription.matches_event("call.started") is False
-    ), "Disabled subscription should not match"
+    assert subscription.matches_event("call.started") is False, (
+        "Disabled subscription should not match"
+    )
 
     return True
 

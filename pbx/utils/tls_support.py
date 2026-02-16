@@ -79,7 +79,7 @@ class TLSManager:
             self.ssl_context.options |= ssl.OP_NO_TLSv1_1
 
             self.logger.info(
-                f"TLS context created (FIPS mode: {self.fips_mode}, " f"TLS 1.2-1.3 supported)"
+                f"TLS context created (FIPS mode: {self.fips_mode}, TLS 1.2-1.3 supported)"
             )
 
         except (OSError, ssl.SSLError) as e:
@@ -134,7 +134,7 @@ class SRTPManager:
 
         if not CRYPTO_AVAILABLE:
             self.logger.warning(
-                "SRTP requires cryptography library. " "Install with: pip install cryptography"
+                "SRTP requires cryptography library. Install with: pip install cryptography"
             )
 
     def create_session(self, call_id, master_key, master_salt):

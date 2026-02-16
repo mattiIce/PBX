@@ -7,13 +7,12 @@ Tests phone cleanup on boot, registration preservation, and incomplete registrat
 import os
 import shutil
 import tempfile
+from pathlib import Path
 from unittest.mock import Mock
-
 
 from pbx.core.pbx import PBXCore
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
-from pathlib import Path
 
 # ============================================================================
 # Phone Clear Functionality Tests
@@ -138,7 +137,7 @@ api:
 logging:
   level: INFO
   console: false
-  file: {Path(temp_dir) / 'test.log'}
+  file: {Path(temp_dir) / "test.log"}
 
 extensions: []
 """
@@ -178,7 +177,6 @@ extensions: []
 
         # Stop the PBX
         pbx2.stop()
-
 
     finally:
         # Clean up

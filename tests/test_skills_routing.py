@@ -3,7 +3,6 @@
 Tests for Skills-Based Routing
 """
 
-
 from pbx.features.skills_routing import (
     AgentSkill,
     Skill,

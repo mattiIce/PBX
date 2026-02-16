@@ -60,7 +60,9 @@ class DNSSRVFailover:
         self.logger.info(f"  Max failures: {self.max_failures}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def lookup_srv(self, service: str, protocol: str = "tcp", domain: str = None) -> list[dict]:
+    def lookup_srv(
+        self, service: str, protocol: str = "tcp", domain: str | None = None
+    ) -> list[dict]:
         """
         Lookup DNS SRV records
 
@@ -165,7 +167,7 @@ class DNSSRVFailover:
         ]
 
     def select_server(
-        self, service: str, protocol: str = "tcp", domain: str = None
+        self, service: str, protocol: str = "tcp", domain: str | None = None
     ) -> dict | None:
         """
         Select best available server from SRV records
@@ -269,10 +271,9 @@ class DNSSRVFailover:
                 # Connection successful
                 self.logger.debug(f"Health check passed: {target}:{port}")
                 return True
-            else:
-                # Connection failed
-                self.logger.warning(f"Health check failed: {target}:{port} (error {result})")
-                return False
+            # Connection failed
+            self.logger.warning(f"Health check failed: {target}:{port} (error {result})")
+            return False
         except socket.gaierror:
             # DNS resolution failed
             self.logger.error(f"Cannot resolve hostname: {target}")
@@ -338,7 +339,9 @@ class DNSSRVFailover:
                 self.logger.info(f"Server recovered: {target}:{port}")
                 break
 
-    def clear_cache(self, service: str = None, protocol: str = None, domain: str = None):
+    def clear_cache(
+        self, service: str | None = None, protocol: str | None = None, domain: str | None = None
+    ):
         """Clear SRV cache"""
         if service and protocol and domain:
             srv_name = f"_{service}._{protocol}.{domain}"

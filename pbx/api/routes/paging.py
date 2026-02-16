@@ -112,8 +112,7 @@ def handle_add_paging_zone() -> Response:
 
         if success:
             return send_json({"success": True, "message": f"Paging zone added: {extension}"})
-        else:
-            return send_json({"error": "Failed to add paging zone"}, 500)
+        return send_json({"error": "Failed to add paging zone"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -147,8 +146,7 @@ def handle_configure_paging_device() -> Response:
 
         if success:
             return send_json({"success": True, "message": f"DAC device configured: {device_id}"})
-        else:
-            return send_json({"error": "Failed to configure DAC device"}, 500)
+        return send_json({"error": "Failed to configure DAC device"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -169,7 +167,6 @@ def handle_delete_paging_zone(extension: str) -> Response:
 
         if success:
             return send_json({"success": True, "message": f"Paging zone deleted: {extension}"})
-        else:
-            return send_json({"error": "Failed to delete paging zone"}, 500)
+        return send_json({"error": "Failed to delete paging zone"}, 500)
     except Exception as e:
         return send_json({"error": str(e)}, 500)

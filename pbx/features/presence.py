@@ -3,7 +3,7 @@ Presence and status system
 Allows users to see availability of other extensions in real-time
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -36,8 +36,8 @@ class UserPresence:
         self.name = name
         self.status = PresenceStatus.OFFLINE
         self.custom_message = ""
-        self.last_activity = datetime.now(timezone.utc)
-        self.last_status_change = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(UTC)
+        self.last_status_change = datetime.now(UTC)
         self.in_call = False
         self.call_id = None
 
@@ -51,8 +51,8 @@ class UserPresence:
         """
         self.status = status
         self.custom_message = custom_message
-        self.last_status_change = datetime.now(timezone.utc)
-        self.last_activity = datetime.now(timezone.utc)
+        self.last_status_change = datetime.now(UTC)
+        self.last_activity = datetime.now(UTC)
 
     def set_in_call(self, call_id):
         """
@@ -64,7 +64,7 @@ class UserPresence:
         self.in_call = True
         self.call_id = call_id
         self.status = PresenceStatus.IN_CALL
-        self.last_activity = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(UTC)
 
     def clear_call(self):
         """Mark user as not in call"""
@@ -75,11 +75,11 @@ class UserPresence:
 
     def update_activity(self):
         """Update last activity timestamp"""
-        self.last_activity = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(UTC)
 
     def get_idle_time(self):
         """Get time since last activity in seconds"""
-        return (datetime.now(timezone.utc) - self.last_activity).total_seconds()
+        return (datetime.now(UTC) - self.last_activity).total_seconds()
 
     def to_dict(self):
         """Convert to dictionary"""

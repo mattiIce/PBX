@@ -33,9 +33,7 @@ class SecurityHeaders:
             "frame-ancestors 'none';"
         ),
         # Permissions policy (formerly Feature-Policy)
-        "Permissions-Policy": (
-            "geolocation=(), " "microphone=(), " "camera=(), " "payment=(), " "usb=()"
-        ),
+        "Permissions-Policy": ("geolocation=(), microphone=(), camera=(), payment=(), usb=()"),
         # HSTS (only for HTTPS)
         # "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
     }

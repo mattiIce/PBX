@@ -4,12 +4,11 @@ Central coordinator for all PBX functionality
 """
 
 import re
+import sqlite3
 import struct
-import threading
-import time
 import traceback
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from pbx.api.server import PBXFlaskServer
@@ -27,7 +26,6 @@ from pbx.sip.server import SIPServer
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 from pbx.utils.logger import PBXLogger, get_logger
-import sqlite3
 
 
 class PBXCore:
@@ -56,7 +54,7 @@ class PBXCore:
         self.quiet_startup = self.config.get("logging.quiet_startup", False)
 
         # Track system start time for uptime calculation
-        self.start_time = datetime.now(timezone.utc)
+        self.start_time = datetime.now(UTC)
 
         # Initialize database backend
         self.database = DatabaseBackend(self.config)
@@ -111,9 +109,7 @@ class PBXCore:
 
         # Initialize SIP server
         self.sip_server = SIPServer(
-            host=self.config.get(
-                "server.sip_host", "0.0.0.0"
-            ),  # nosec B104 - SIP server needs to bind to all interfaces
+            host=self.config.get("server.sip_host", "0.0.0.0"),  # nosec B104 - SIP server needs to bind to all interfaces
             port=self.config.get("server.sip_port", 5060),
             pbx_core=self,
         )
@@ -122,9 +118,7 @@ class PBXCore:
         FeatureInitializer.initialize(self)
 
         # Initialize API server
-        api_host = self.config.get(
-            "api.host", "0.0.0.0"
-        )  # nosec B104 - API server needs to bind to all interfaces
+        api_host = self.config.get("api.host", "0.0.0.0")  # nosec B104 - API server needs to bind to all interfaces
         api_port = self.config.get("api.port", 9000)
         self.api_server = PBXFlaskServer(self, api_host, api_port)
 
@@ -238,12 +232,8 @@ class PBXCore:
                         self.logger.warning("FIRST-TIME SETUP - EXTENSION 1001 CREDENTIALS")
                         self.logger.warning("=" * 70)
                         self.logger.warning("Extension: 1001")
-                        self.logger.warning(
-                            f"Password:  {ext_config['password']}"
-                        )
-                        self.logger.warning(
-                            f"Voicemail PIN: {ext_config['voicemail_pin']}"
-                        )
+                        self.logger.warning(f"Password:  {ext_config['password']}")
+                        self.logger.warning(f"Voicemail PIN: {ext_config['voicemail_pin']}")
                         self.logger.warning("")
                         self.logger.warning("⚠️  CHANGE THIS PASSWORD IMMEDIATELY via admin panel!")
                         self.logger.warning(
@@ -343,7 +333,13 @@ class PBXCore:
 
         self.logger.info("PBX system stopped")
 
-    def register_extension(self, from_header: str, addr: tuple[str, int], user_agent: str | None = None, contact: str | None = None) -> bool:
+    def register_extension(
+        self,
+        from_header: str,
+        addr: tuple[str, int],
+        user_agent: str | None = None,
+        contact: str | None = None,
+    ) -> bool:
         """
         Register extension and store phone information
 
@@ -433,9 +429,7 @@ class PBXCore:
                         self.logger.error(f"  MAC Address: {mac_address}")
                         self.logger.error(f"  User Agent: {user_agent}")
                         self.logger.error(f"  Contact URI: {contact}")
-                        self.logger.error(
-                            f"  Traceback: {traceback.format_exc()}"
-                        )
+                        self.logger.error(f"  Traceback: {traceback.format_exc()}")
 
                 # Trigger webhook event
                 self.webhook_system.trigger_event(
@@ -445,14 +439,13 @@ class PBXCore:
                         "ip_address": addr[0],
                         "port": addr[1],
                         "user_agent": user_agent,
-                        "timestamp": datetime.now(timezone.utc).isoformat(),
+                        "timestamp": datetime.now(UTC).isoformat(),
                     },
                 )
 
                 return True
-            else:
-                self.logger.warning(f"Unknown extension {extension_number} attempted registration")
-                return False
+            self.logger.warning(f"Unknown extension {extension_number} attempted registration")
+            return False
 
         self.logger.warning(f"Could not parse extension from {from_header}")
         return False
@@ -531,7 +524,9 @@ class PBXCore:
 
         return None
 
-    def _get_codecs_for_phone_model(self, phone_model: str | None, default_codecs: list[str] | None = None) -> list[str]:
+    def _get_codecs_for_phone_model(
+        self, phone_model: str | None, default_codecs: list[str] | None = None
+    ) -> list[str]:
         """
         Get appropriate codec list for a specific phone model
 
@@ -553,7 +548,7 @@ class PBXCore:
             self.logger.debug(f"Using ZIP37G codec set: PCMU/PCMA ({codecs})")
             return codecs
 
-        elif phone_model == "ZIP33G":
+        if phone_model == "ZIP33G":
             # ZIP33G: Use G726, G729, G722
             # Payload types: 2=G726-32, 18=G729, 9=G722
             # Also include G726 variants: 112=G726-16, 113=G726-24, 114=G726-40
@@ -626,7 +621,14 @@ class PBXCore:
         """
         return self.config.get("codecs.ilbc.mode", 30)
 
-    def route_call(self, from_header: str, to_header: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
+    def route_call(
+        self,
+        from_header: str,
+        to_header: str,
+        call_id: str,
+        message: Any,
+        from_addr: tuple[str, int],
+    ) -> bool:
         """
         Route call from one extension to another
 
@@ -667,7 +669,9 @@ class PBXCore:
         except OSError:
             return "127.0.0.1"  # Last resort fallback
 
-    def handle_callee_answer(self, call_id: str, response_message: Any, callee_addr: tuple[str, int]) -> None:
+    def handle_callee_answer(
+        self, call_id: str, response_message: Any, callee_addr: tuple[str, int]
+    ) -> None:
         """
         Handle when callee answers the call
 
@@ -692,9 +696,7 @@ class PBXCore:
             callee_sdp = callee_sdp_obj.get_audio_info()
 
             if callee_sdp:
-                self.logger.info(
-                    f"Callee RTP: {callee_sdp['address']}:{callee_sdp['port']}"
-                )
+                self.logger.info(f"Callee RTP: {callee_sdp['address']}:{callee_sdp['port']}")
                 call.callee_rtp = callee_sdp
                 call.callee_addr = callee_addr
 
@@ -1002,37 +1004,57 @@ class PBXCore:
         """Complete voicemail recording and save the message"""
         return self._voicemail_handler.complete_voicemail_recording(call_id)
 
-    def _handle_auto_attendant(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
+    def _handle_auto_attendant(
+        self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]
+    ) -> bool:
         """Handle auto attendant calls (extension 0)"""
-        return self._auto_attendant_handler.handle_auto_attendant(from_ext, to_ext, call_id, message, from_addr)
+        return self._auto_attendant_handler.handle_auto_attendant(
+            from_ext, to_ext, call_id, message, from_addr
+        )
 
     def _auto_attendant_session(self, call_id: str, call: Any, session: Any) -> None:
         """Handle auto attendant session with menu and DTMF input"""
         return self._auto_attendant_handler._auto_attendant_session(call_id, call, session)
 
-    def _handle_voicemail_access(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
+    def _handle_voicemail_access(
+        self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]
+    ) -> bool:
         """Handle voicemail access calls (*xxxx pattern)"""
-        return self._voicemail_handler.handle_voicemail_access(from_ext, to_ext, call_id, message, from_addr)
+        return self._voicemail_handler.handle_voicemail_access(
+            from_ext, to_ext, call_id, message, from_addr
+        )
 
-    def _handle_paging(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
+    def _handle_paging(
+        self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]
+    ) -> bool:
         """Handle paging system calls (7xx pattern or all-call)"""
         return self._paging_handler.handle_paging(from_ext, to_ext, call_id, message, from_addr)
 
-    def _paging_session(self, call_id: str, call: Any, dac_device: dict[str, Any], page_info: dict[str, Any]) -> None:
+    def _paging_session(
+        self, call_id: str, call: Any, dac_device: dict[str, Any], page_info: dict[str, Any]
+    ) -> None:
         """Handle paging session with audio routing to DAC device"""
         return self._paging_handler._paging_session(call_id, call, dac_device, page_info)
 
-    def _playback_voicemails(self, call_id: str, call: Any, mailbox: Any, messages: list[dict[str, Any]]) -> None:
+    def _playback_voicemails(
+        self, call_id: str, call: Any, mailbox: Any, messages: list[dict[str, Any]]
+    ) -> None:
         """Play voicemail messages to caller"""
         return self._voicemail_handler._playback_voicemails(call_id, call, mailbox, messages)
 
-    def _voicemail_ivr_session(self, call_id: str, call: Any, mailbox: Any, voicemail_ivr: Any) -> None:
+    def _voicemail_ivr_session(
+        self, call_id: str, call: Any, mailbox: Any, voicemail_ivr: Any
+    ) -> None:
         """Interactive voicemail management session with IVR menu"""
         return self._voicemail_handler._voicemail_ivr_session(call_id, call, mailbox, voicemail_ivr)
 
-    def _handle_emergency_call(self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]) -> bool:
+    def _handle_emergency_call(
+        self, from_ext: str, to_ext: str, call_id: str, message: Any, from_addr: tuple[str, int]
+    ) -> bool:
         """Handle emergency call (911) according to Kari's Law"""
-        return self._emergency_handler.handle_emergency_call(from_ext, to_ext, call_id, message, from_addr)
+        return self._emergency_handler.handle_emergency_call(
+            from_ext, to_ext, call_id, message, from_addr
+        )
 
     def _build_wav_file(self, audio_data: bytes) -> bytes:
         """

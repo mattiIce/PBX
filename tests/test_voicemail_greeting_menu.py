@@ -8,7 +8,6 @@ This test validates:
 3. Proper state transitions during greeting management
 """
 
-
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
 
@@ -54,9 +53,9 @@ def test_start_greeting_recording() -> None:
     # Press 1 to record greeting
     result = ivr.handle_dtmf("1")
 
-    assert (
-        ivr.state == VoicemailIVR.STATE_RECORDING_GREETING
-    ), "Should be in recording greeting state"
+    assert ivr.state == VoicemailIVR.STATE_RECORDING_GREETING, (
+        "Should be in recording greeting state"
+    )
     assert result["action"] == "start_recording", "Should start recording"
     assert result["recording_type"] == "greeting", "Recording type should be greeting"
 

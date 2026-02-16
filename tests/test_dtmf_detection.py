@@ -4,8 +4,8 @@ Tests that DTMF detector properly filters noise and only detects real tones
 """
 
 import math
-import pytest
 
+import pytest
 
 from pbx.utils.dtmf import DTMF_FREQUENCIES, DTMFDetector, DTMFGenerator
 
@@ -145,6 +145,7 @@ class TestDTMFDetection:
         # Detector should detect this (DTMF is dominant over noise)
         digit = self.detector.detect_tone(samples)
         assert digit == "1", "DTMF tone should be detected when dominant over noise"
+
 
 class TestDTMFGenerator:
     """Test DTMF tone generation"""

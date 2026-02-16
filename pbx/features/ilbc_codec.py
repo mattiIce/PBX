@@ -93,8 +93,6 @@ class ILBCCodec:
 
         # Check if ilbc library is available
         try:
-            pass
-
             self.ilbc_available = True
             self.logger.info(
                 f"iLBC codec initialized (mode: {self.mode}ms, "
@@ -236,7 +234,7 @@ class ILBCCodec:
         expected_bytes = self.frame_size * 2  # 16-bit samples
         if len(pcm_data) != expected_bytes:
             self.logger.error(
-                f"Invalid PCM data size: got {len(pcm_data)}, " f"expected {expected_bytes} bytes"
+                f"Invalid PCM data size: got {len(pcm_data)}, expected {expected_bytes} bytes"
             )
             return None
 
@@ -265,8 +263,7 @@ class ILBCCodec:
         # Verify input size
         if len(ilbc_data) != self.encoded_size:
             self.logger.error(
-                f"Invalid iLBC data size: got {len(ilbc_data)}, "
-                f"expected {self.encoded_size} bytes"
+                f"Invalid iLBC data size: got {len(ilbc_data)}, expected {self.encoded_size} bytes"
             )
             return None
 
@@ -398,8 +395,6 @@ class ILBCCodecManager:
             bool: True if pyilbc library is available
         """
         try:
-            pass
-
             return True
         except ImportError:
             return False

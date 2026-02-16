@@ -8,7 +8,6 @@ import time
 from http.client import HTTPConnection
 from pathlib import Path
 
-
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
@@ -37,7 +36,6 @@ def test_root_redirect() -> bool:
     if not api_server.start():
         return False
 
-
     # Give server a moment to be ready
     time.sleep(0.5)
 
@@ -49,7 +47,6 @@ def test_root_redirect() -> bool:
 
         # Check for redirect (302)
         if response.status == 302:
-
             # Check Location header
             location = response.getheader("Location")
             if location == "/admin":
@@ -61,7 +58,7 @@ def test_root_redirect() -> bool:
 
         conn.close()
 
-    except (OSError, ValueError) as e:
+    except (OSError, ValueError):
         import traceback
 
         traceback.print_exc()

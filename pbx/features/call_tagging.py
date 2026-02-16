@@ -3,7 +3,7 @@ Call Tagging & Categorization
 AI-powered call classification and tagging
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -58,7 +58,7 @@ class CallTag:
         self.tag = tag
         self.source = source
         self.confidence = confidence
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
 
 
 class CallTagging:
@@ -336,7 +336,7 @@ class CallTagging:
         return True
 
     def auto_tag_call(
-        self, call_id: str, transcript: str = None, metadata: dict = None
+        self, call_id: str, transcript: str | None = None, metadata: dict | None = None
     ) -> list[str]:
         """
         Automatically tag a call based on content
@@ -605,7 +605,7 @@ class CallTagging:
                 category_scores[category] = confidence
 
         # Convert to results list sorted by confidence
-        results = [(category, confidence) for category, confidence in category_scores.items()]
+        results = list(category_scores.items())
         results.sort(key=lambda x: x[1], reverse=True)
 
         # Return top classifications with confidence > 0.3
@@ -782,7 +782,7 @@ class CallTagging:
         return rule_id
 
     def classify_call(
-        self, call_id: str, transcript: str = None, metadata: dict = None
+        self, call_id: str, transcript: str | None = None, metadata: dict | None = None
     ) -> list[str]:
         """
         Classify a call and return applicable tags
@@ -860,9 +860,8 @@ class CallTagging:
             conditions = rule["conditions"]
 
             # Check queue condition
-            if "queue" in conditions:
-                if metadata.get("queue") == conditions["queue"]:
-                    return True
+            if "queue" in conditions and metadata.get("queue") == conditions["queue"]:
+                return True
 
             # Check disposition condition
             if "disposition" in conditions:

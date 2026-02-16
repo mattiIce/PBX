@@ -1,13 +1,12 @@
 """Configuration management for PBX system."""
 
 import logging
-import os
 import re
+from pathlib import Path
 
 import yaml
 
 from pbx.utils.env_loader import get_env_loader, load_env_file
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -57,16 +56,14 @@ class Config:
     def load(self):
         """Load configuration from YAML file and resolve environment variables"""
         if Path(self.config_file).exists():
-            with open(self.config_file, "r") as f:
+            with open(self.config_file) as f:
                 self.config = yaml.safe_load(f) or {}
 
             # Resolve environment variables in configuration
             if self.env_enabled and self.env_loader:
                 self.config = self.env_loader.resolve_config(self.config)
         else:
-            raise FileNotFoundError(
-                f"Configuration file not found: {self.config_file}"
-            )
+            raise FileNotFoundError(f"Configuration file not found: {self.config_file}")
 
     def get(self, key, default=None):
         """

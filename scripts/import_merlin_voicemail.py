@@ -31,9 +31,8 @@ Usage:
 import argparse
 import csv
 import json
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path
@@ -65,11 +64,11 @@ def parse_csv_metadata(csv_path):
     messages = []
     pins = {}
 
-    with open(csv_path, "r") as f:
+    with open(csv_path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Extract voicemail PIN if present
-            if "voicemail_pin" in row and row["voicemail_pin"]:
+            if row.get("voicemail_pin"):
                 pins[row["extension"]] = row["voicemail_pin"]
 
             # Parse timestamp
@@ -86,9 +85,9 @@ def parse_csv_metadata(csv_path):
                         except ValueError:
                             continue
                     else:
-                        timestamp = datetime.now(timezone.utc)
+                        timestamp = datetime.now(UTC)
                 except (ValueError, TypeError):
-                    timestamp = datetime.now(timezone.utc)
+                    timestamp = datetime.now(UTC)
 
             # Parse listened status
             listened = row.get("listened", "false").lower() in ("true", "1", "yes", "y")
@@ -140,7 +139,7 @@ def parse_json_metadata(json_path):
     Returns:
         tuple: (list of messages, dict of pins)
     """
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
 
     messages = []
@@ -150,7 +149,7 @@ def parse_json_metadata(json_path):
         try:
             timestamp = datetime.fromisoformat(timestamp_str)
         except (ValueError, AttributeError, TypeError):
-            timestamp = datetime.now(timezone.utc)
+            timestamp = datetime.now(UTC)
 
         message = {
             "extension": msg["extension"],
@@ -211,7 +210,7 @@ def parse_filename_metadata(audio_dir):
                 try:
                     timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
                 except (ValueError, TypeError):
-                    timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime, tz=timezone.utc)
+                    timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime, tz=UTC)
 
                 message = {
                     "extension": extension,
@@ -243,7 +242,7 @@ def parse_pins_csv(csv_path):
     """
     pins = {}
 
-    with open(csv_path, "r") as f:
+    with open(csv_path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             extension = row["extension"]

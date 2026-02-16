@@ -4,10 +4,10 @@ SOC 2 type 2 compliance features
 Note: GDPR and PCI DSS engines are commented out as they are not required for US-based operations
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # GDPR Compliance Engine - COMMENTED OUT (Not required for US-based operations)
 # Preserved for potential future international use
@@ -492,7 +492,7 @@ class SOC2ComplianceEngine:
                    SET test_results = %s, last_tested = %s
                    WHERE control_id = %s"""
                 ),
-                (test_results, datetime.now(timezone.utc), control_id),
+                (test_results, datetime.now(UTC), control_id),
             )
 
             self.logger.info(f"Updated test results for control {control_id}")

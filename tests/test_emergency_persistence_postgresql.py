@@ -4,7 +4,6 @@ Test to verify emergency contacts persist across restarts with PostgreSQL
 This test requires PostgreSQL to be available and configured
 """
 
-
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
@@ -81,15 +80,13 @@ def test_emergency_contact_persistence_postgresql() -> bool:
 
         # Verify contact was added
         contacts = emergency_system.get_emergency_contacts()
-        assert (
-            len(contacts) == initial_count + 1
-        ), f"Expected {initial_count + 1} contacts, got {len(contacts)}"
+        assert len(contacts) == initial_count + 1, (
+            f"Expected {initial_count + 1} contacts, got {len(contacts)}"
+        )
 
         # Find the test contact
         test_contact = [c for c in contacts if c["name"] == test_contact_name]
-        assert (
-            len(test_contact) == 1
-        ), f"Expected 1 test contact, found {len(test_contact)}"
+        assert len(test_contact) == 1, f"Expected 1 test contact, found {len(test_contact)}"
 
         # Clean up - disconnect database
         db.disconnect()
@@ -139,7 +136,7 @@ def test_emergency_contact_persistence_postgresql() -> bool:
 
         return True
 
-    except (KeyError, TypeError, ValueError) as e:
+    except (KeyError, TypeError, ValueError):
         import traceback
 
         traceback.print_exc()

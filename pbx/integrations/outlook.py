@@ -3,7 +3,7 @@ Microsoft Outlook Integration
 Provides calendar sync, contact sync, and presence integration
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pbx.utils.logger import get_logger
 
@@ -101,18 +101,17 @@ class OutlookIntegration:
                 self.access_token = result["access_token"]
                 self.logger.info("Microsoft Graph authentication successful")
                 return True
-            else:
-                error = result.get("error", "Unknown error")
-                error_desc = result.get("error_description", "")
-                self.logger.error(f"Authentication failed: {error} - {error_desc}")
-                return False
+            error = result.get("error", "Unknown error")
+            error_desc = result.get("error_description", "")
+            self.logger.error(f"Authentication failed: {error} - {error_desc}")
+            return False
 
         except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Error authenticating with Microsoft Graph: {e}")
             return False
 
     def get_calendar_events(
-        self, user_email: str, start_time: str = None, end_time: str = None
+        self, user_email: str, start_time: str | None = None, end_time: str | None = None
     ) -> list[dict]:
         """
         Get calendar events for a user
@@ -133,9 +132,9 @@ class OutlookIntegration:
 
         # Default to today's events if not specified
         if not start_time:
-            start_time = datetime.now(timezone.utc).replace(hour=0, minute=0, second=0).isoformat() + "Z"
+            start_time = datetime.now(UTC).replace(hour=0, minute=0, second=0).isoformat() + "Z"
         if not end_time:
-            end_time = (datetime.now(timezone.utc) + timedelta(days=1)).replace(
+            end_time = (datetime.now(UTC) + timedelta(days=1)).replace(
                 hour=0, minute=0, second=0
             ).isoformat() + "Z"
 
@@ -173,15 +172,12 @@ class OutlookIntegration:
                         }
                     )
 
-                self.logger.info(
-                    f"Found {len(events)} calendar events for {user_email}"
-                )
+                self.logger.info(f"Found {len(events)} calendar events for {user_email}")
                 return events
-            else:
-                self.logger.error(
-                    f"Failed to fetch calendar events: {response.status_code} - {response.text}"
-                )
-                return []
+            self.logger.error(
+                f"Failed to fetch calendar events: {response.status_code} - {response.text}"
+            )
+            return []
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error fetching calendar events: {e}")
@@ -201,7 +197,7 @@ class OutlookIntegration:
             return "unknown"
 
         # Use timezone-aware datetime
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         start_time = now.isoformat()
         end_time = (now + timedelta(hours=1)).isoformat()
 
@@ -277,15 +273,10 @@ class OutlookIntegration:
                         }
                     )
 
-                self.logger.info(
-                    f"Synced {len(contacts)} contacts for {user_email}"
-                )
+                self.logger.info(f"Synced {len(contacts)} contacts for {user_email}")
                 return contacts
-            else:
-                self.logger.error(
-                    f"Failed to sync contacts: {response.status_code} - {response.text}"
-                )
-                return []
+            self.logger.error(f"Failed to sync contacts: {response.status_code} - {response.text}")
+            return []
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error syncing contacts: {e}")
@@ -321,21 +312,21 @@ class OutlookIntegration:
             from_number = call_details.get("from", "Unknown")
             to_number = call_details.get("to", "Unknown")
             duration = call_details.get("duration", 0)
-            timestamp = call_details.get("timestamp", datetime.now(timezone.utc).isoformat())
+            timestamp = call_details.get("timestamp", datetime.now(UTC).isoformat())
             direction = call_details.get("direction", "inbound")
 
             # Parse timestamp
             if isinstance(timestamp, str):
                 start_time = datetime.fromisoformat(timestamp.replace("Z", "+00:00"))
             else:
-                start_time = datetime.now(timezone.utc)
+                start_time = datetime.now(UTC)
 
             # Calculate end time based on duration
             end_time = start_time + timedelta(seconds=duration)
 
             # Create event body
             event_body = {
-                "subject": f'Phone Call - {from_number if direction == "inbound" else to_number}',
+                "subject": f"Phone Call - {from_number if direction == 'inbound' else to_number}",
                 "body": {
                     "contentType": "text",
                     "content": "Phone call details:\n"
@@ -356,11 +347,10 @@ class OutlookIntegration:
             if response.status_code == 201:
                 self.logger.info(f"Successfully logged call to calendar for {user_email}")
                 return True
-            else:
-                self.logger.warning(
-                    f"Failed to log call to calendar: {response.status_code} - {response.text}"
-                )
-                return False
+            self.logger.warning(
+                f"Failed to log call to calendar: {response.status_code} - {response.text}"
+            )
+            return False
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error logging call to calendar: {e}")
@@ -383,7 +373,9 @@ class OutlookIntegration:
             return None
 
         try:
-            url = f"{self.graph_endpoint}/users/{user_email}/mailboxSettings/automaticRepliesSetting"
+            url = (
+                f"{self.graph_endpoint}/users/{user_email}/mailboxSettings/automaticRepliesSetting"
+            )
             headers = {
                 "Authorization": f"Bearer {self.access_token}",
                 "Content-type": "application/json",
@@ -401,11 +393,8 @@ class OutlookIntegration:
                     "scheduled_start": data.get("scheduledStartDateTime", {}).get("dateTime"),
                     "scheduled_end": data.get("scheduledEndDateTime", {}).get("dateTime"),
                 }
-            else:
-                self.logger.error(
-                    f"Failed to get OOO status: {response.status_code}"
-                )
-                return None
+            self.logger.error(f"Failed to get OOO status: {response.status_code}")
+            return None
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error getting OOO status: {e}")
@@ -417,7 +406,7 @@ class OutlookIntegration:
         meeting_id: str,
         minutes_before: int = 5,
         pbx_core=None,
-        extension_number: str = None,
+        extension_number: str | None = None,
     ):
         """
         Send a phone notification for upcoming meeting
@@ -462,9 +451,7 @@ class OutlookIntegration:
             response = requests.get(url, headers=headers, timeout=10)
 
             if response.status_code != 200:
-                self.logger.warning(
-                    f"Failed to fetch meeting details: {response.status_code}"
-                )
+                self.logger.warning(f"Failed to fetch meeting details: {response.status_code}")
                 return False
 
             meeting = response.json()
@@ -485,13 +472,13 @@ class OutlookIntegration:
                     start_time = datetime.fromisoformat(start_time_str)
                 else:
                     # Assume UTC if no timezone specified
-                    start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=timezone.utc)
+                    start_time = datetime.fromisoformat(start_time_str).replace(tzinfo=UTC)
             except ValueError as e:
                 self.logger.error(f"Failed to parse meeting start time '{start_time_str}': {e}")
                 return False
 
             reminder_time = start_time - timedelta(minutes=minutes_before)
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             # Calculate delay until reminder should be sent
             delay_seconds = (reminder_time - now).total_seconds()
@@ -568,17 +555,16 @@ class OutlookIntegration:
 
                 self.logger.info(f"Meeting reminder scheduled successfully for {extension_number}")
                 return True
-            else:
-                # No PBX core - just log the intent
-                self.logger.warning(
-                    "Meeting reminder scheduling requires PBX core for call origination.\n"
-                    "To enable reminders:\n"
-                    "1. Pass pbx_core parameter to this method\n"
-                    "2. Ensure extension has email configured in database/config\n"
-                    "3. PBX will call extension and play reminder message\n"
-                    f"Meeting: '{subject}' at {start_time.strftime('%Y-%m-%d %H:%M %Z')}"
-                )
-                return False
+            # No PBX core - just log the intent
+            self.logger.warning(
+                "Meeting reminder scheduling requires PBX core for call origination.\n"
+                "To enable reminders:\n"
+                "1. Pass pbx_core parameter to this method\n"
+                "2. Ensure extension has email configured in database/config\n"
+                "3. PBX will call extension and play reminder message\n"
+                f"Meeting: '{subject}' at {start_time.strftime('%Y-%m-%d %H:%M %Z')}"
+            )
+            return False
 
         except Exception as e:
             self.logger.error(f"Error scheduling meeting reminder: {e}")

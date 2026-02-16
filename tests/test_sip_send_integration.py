@@ -3,9 +3,9 @@ Integration test for SIP Send Line and Send MAC in PBX Core
 Tests that headers are properly added during call routing
 """
 
+from pathlib import Path
 
 from pbx.sip.message import SIPMessage
-from pathlib import Path
 
 
 class TestSIPSendLineIntegration:

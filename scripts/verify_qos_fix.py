@@ -9,13 +9,12 @@ Usage:
     python scripts/verify_qos_fix.py
 """
 
-import os
 import sys
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+
 from pbx.features.qos_monitoring import QoSMetrics
-from pathlib import Path
 
 
 def verify_fix():
@@ -99,22 +98,21 @@ def verify_fix():
         print("  - Proper jitter calculations")
         print()
         return 0
-    else:
-        print("=" * 70)
-        print("❌ TESTS FAILED - QoS FIX NOT WORKING")
-        print("=" * 70)
-        print()
-        print("Possible causes:")
-        print("  1. PBX was not restarted after applying the fix")
-        print("  2. Code changes were not properly saved")
-        print("  3. Running old cached Python bytecode (.pyc files)")
-        print()
-        print("Try:")
-        print("  1. Restart the PBX service")
-        print("  2. Delete .pyc files: find . -name '*.pyc' -delete")
-        print("  3. Run this verification script again")
-        print()
-        return 1
+    print("=" * 70)
+    print("❌ TESTS FAILED - QoS FIX NOT WORKING")
+    print("=" * 70)
+    print()
+    print("Possible causes:")
+    print("  1. PBX was not restarted after applying the fix")
+    print("  2. Code changes were not properly saved")
+    print("  3. Running old cached Python bytecode (.pyc files)")
+    print()
+    print("Try:")
+    print("  1. Restart the PBX service")
+    print("  2. Delete .pyc files: find . -name '*.pyc' -delete")
+    print("  3. Run this verification script again")
+    print()
+    return 1
 
 
 if __name__ == "__main__":

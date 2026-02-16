@@ -8,7 +8,6 @@ import time
 from http.client import HTTPConnection
 from pathlib import Path
 
-
 from pbx.api.rest_api import PBXAPIServer
 from pbx.features.extensions import Extension, ExtensionRegistry
 from pbx.features.phone_provisioning import PhoneProvisioning
@@ -61,15 +60,14 @@ def test_provisioning_endpoints_require_auth() -> bool:
         conn = HTTPConnection("localhost", test_port, timeout=5)
 
         for endpoint in endpoints:
-
             # Test without authentication - should return 401
             conn.request("GET", endpoint)
             response = conn.getresponse()
             response.read()  # Read the response to clear the buffer
 
-            assert (
-                response.status == 401
-            ), f"{endpoint} should require authentication but returned {response.status}"
+            assert response.status == 401, (
+                f"{endpoint} should require authentication but returned {response.status}"
+            )
 
         return True
 

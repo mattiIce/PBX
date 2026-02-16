@@ -6,7 +6,6 @@ This script exports all built-in phone provisioning templates to the
 provisioning_templates directory for customization.
 """
 
-import os
 import sys
 from pathlib import Path
 

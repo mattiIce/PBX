@@ -3,9 +3,9 @@ Team Messaging Framework
 Built-in chat platform for team collaboration
 """
 
+import sqlite3
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class TeamMessagingEngine:

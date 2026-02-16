@@ -25,7 +25,7 @@ class SessionToken:
     # Token expiration time (24 hours in seconds)
     TOKEN_EXPIRATION = 24 * 60 * 60
 
-    def __init__(self, secret_key: str = None):
+    def __init__(self, secret_key: str | None = None):
         """
         Initialize session token manager
 
@@ -67,7 +67,7 @@ class SessionToken:
         return self._base64_encode(signature)
 
     def generate_token(
-        self, extension: str, is_admin: bool, name: str = None, email: str = None
+        self, extension: str, is_admin: bool, name: str | None = None, email: str | None = None
     ) -> str:
         """
         Generate authentication token
@@ -183,7 +183,7 @@ class SessionToken:
 _session_token_manager = None
 
 
-def get_session_token_manager(secret_key: str = None) -> SessionToken:
+def get_session_token_manager(secret_key: str | None = None) -> SessionToken:
     """
     Get or create global session token manager
 

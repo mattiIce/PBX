@@ -16,7 +16,7 @@ References:
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
@@ -50,7 +50,7 @@ class KarisLawCompliance:
     # Direct 911 pattern (primary)
     DIRECT_911_PATTERN = r"^911$"
 
-    def __init__(self, pbx_core, config: dict = None):
+    def __init__(self, pbx_core, config: dict | None = None):
         """
         Initialize Kari's Law compliance module
 
@@ -105,11 +105,7 @@ class KarisLawCompliance:
 
         number_str = str(number).strip()
 
-        for pattern in self.EMERGENCY_PATTERNS:
-            if re.match(pattern, number_str):
-                return True
-
-        return False
+        return any(re.match(pattern, number_str) for pattern in self.EMERGENCY_PATTERNS)
 
     def is_direct_911(self, number: str) -> bool:
         """
@@ -146,9 +142,7 @@ class KarisLawCompliance:
         number_str = str(number).strip()
 
         # Remove prefix (9 or 9-)
-        if number_str.startswith("9-"):
-            return "911"
-        elif number_str.startswith("9") and len(number_str) == 4:
+        if number_str.startswith("9-") or (number_str.startswith("9") and len(number_str) == 4):
             return "911"
 
         return "911"
@@ -184,7 +178,7 @@ class KarisLawCompliance:
         self.logger.critical(f"Dialed Number: {dialed_number}")
         self.logger.critical(f"Normalized: {normalized_number}")
         self.logger.critical(f"Call ID: {call_id}")
-        self.logger.critical(f"Time: {datetime.now(timezone.utc).isoformat()}")
+        self.logger.critical(f"Time: {datetime.now(UTC).isoformat()}")
 
         # Get location information (Ray Baum's Act)
         location_info = self._get_location_info(caller_extension)
@@ -231,7 +225,7 @@ class KarisLawCompliance:
             "dialed_number": dialed_number,
             "normalized_number": normalized_number,
             "location": location_info,
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
             "routing": routing_info,
         }
 
@@ -373,7 +367,7 @@ class KarisLawCompliance:
             "success": False,
             "trunk_id": None,
             "destination": normalized_number,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Get trunk system
@@ -406,8 +400,7 @@ class KarisLawCompliance:
                     routing_info["elin"] = site_info.get("elin")
 
                 return routing_info
-            else:
-                self.logger.warning(f"Site-specific emergency trunk {site_trunk_id} not available")
+            self.logger.warning(f"Site-specific emergency trunk {site_trunk_id} not available")
 
         # Try to route via global emergency trunk if configured
         if self.emergency_trunk_id:
@@ -420,13 +413,10 @@ class KarisLawCompliance:
                 routing_info["trunk_id"] = self.emergency_trunk_id
                 routing_info["trunk_name"] = trunk.name
                 return routing_info
-            else:
-                self.logger.warning(
-                    f"Global emergency trunk {self.emergency_trunk_id} not available"
-                )
+            self.logger.warning(f"Global emergency trunk {self.emergency_trunk_id} not available")
 
         # Fallback: try to route via any available trunk
-        routed_trunk, transformed_number = trunk_system.route_outbound(normalized_number)
+        routed_trunk, _transformed_number = trunk_system.route_outbound(normalized_number)
 
         if routed_trunk:
             self.logger.critical(
@@ -545,7 +535,7 @@ class KarisLawCompliance:
             "caller_extension": caller_extension,
             "caller_name": caller_info.get("name", "Unknown"),
             "call_id": call_id,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "compliance": "Karis Law",
         }
 

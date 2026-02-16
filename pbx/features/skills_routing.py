@@ -3,10 +3,10 @@ Skills-Based Routing (SBR) System
 Routes calls to agents based on their skills and expertise
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class Skill:
@@ -45,7 +45,7 @@ class AgentSkill:
         self.agent_extension = agent_extension
         self.skill_id = skill_id
         self.proficiency = max(1, min(10, proficiency))  # Clamp to 1-10
-        self.assigned_at = datetime.now(timezone.utc)
+        self.assigned_at = datetime.now(UTC)
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
@@ -88,7 +88,7 @@ class SkillsBasedRouter:
     Routes calls to agents based on required skills and agent proficiency
     """
 
-    def __init__(self, database=None, config: dict = None):
+    def __init__(self, database=None, config: dict | None = None):
         """
         Initialize skills-based router
 
@@ -408,9 +408,7 @@ class SkillsBasedRouter:
             except sqlite3.Error as e:
                 self.logger.error(f"Failed to store queue requirements in database: {e}")
 
-        self.logger.info(
-            f"set {len(skill_reqs)} skill requirements for queue {queue_number}"
-        )
+        self.logger.info(f"set {len(skill_reqs)} skill requirements for queue {queue_number}")
         return True
 
     def find_best_agents(
@@ -565,6 +563,6 @@ class SkillsBasedRouter:
         return reqs
 
 
-def get_skills_router(database=None, config: dict = None) -> SkillsBasedRouter:
+def get_skills_router(database=None, config: dict | None = None) -> SkillsBasedRouter:
     """Get skills-based router instance"""
     return SkillsBasedRouter(database, config)

@@ -29,9 +29,9 @@ def test_compliance_checker_help() -> None:
     )
 
     assert result.returncode == 0, "Help command should succeed"
-    assert (
-        "FIPS" in result.stdout or "compliance" in result.stdout.lower()
-    ), "Help should mention FIPS or compliance"
+    assert "FIPS" in result.stdout or "compliance" in result.stdout.lower(), (
+        "Help should mention FIPS or compliance"
+    )
 
 
 def test_compliance_checker_json_output() -> None:
@@ -58,7 +58,7 @@ def test_compliance_checker_json_output() -> None:
     # Parse JSON
     try:
         data = json.loads(json_output)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         raise
 
     # Validate structure
@@ -172,9 +172,8 @@ def main() -> None:
         try:
             test_func()
             passed += 1
-        except Exception as e:
+        except Exception:
             failed += 1
-
 
     if failed > 0:
         sys.exit(1)

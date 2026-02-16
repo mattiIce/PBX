@@ -7,6 +7,7 @@ import socket
 import struct
 import threading
 import time
+from pathlib import Path
 
 from pbx.utils.audio import (
     WAV_FORMAT_ALAW,
@@ -15,7 +16,6 @@ from pbx.utils.audio import (
     WAV_FORMAT_ULAW,
 )
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class RTPHandler:
@@ -208,9 +208,8 @@ class RTPRelay:
                 f"Allocated RTP relay for call {call_id}: ports {rtp_port}/{rtcp_port}"
             )
             return (rtp_port, rtcp_port)
-        else:
-            self.port_pool.insert(0, rtp_port)
-            return None
+        self.port_pool.insert(0, rtp_port)
+        return None
 
     def set_endpoints(self, call_id, endpoint_a, endpoint_b):
         """
@@ -341,9 +340,7 @@ class RTPRelayHandler:
             if self.qos_metrics_b_to_a:
                 self.qos_monitor.stop_monitoring(f"{self.call_id}_b_to_a")
 
-        self.logger.info(
-            f"RTP relay handler stopped on port {self.local_port}"
-        )
+        self.logger.info(f"RTP relay handler stopped on port {self.local_port}")
 
     def _relay_loop(self):
         """Relay RTP packets between endpoints with symmetric RTP support"""
@@ -627,7 +624,7 @@ class RTPRecorder:
                         f"Recorded {len(payload)} bytes (PT {payload_type}) from call {self.call_id}"
                     )
 
-            except socket.timeout:
+            except TimeoutError:
                 # Timeout is normal, just continue
                 continue
             except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
@@ -778,9 +775,7 @@ class RTPPlayer:
                 # Small delay to pace packets (20ms for 160 samples at 8kHz)
                 time.sleep(0.020)
 
-            self.logger.info(
-                f"Sent {num_packets} RTP packets for call {self.call_id}"
-            )
+            self.logger.info(f"Sent {num_packets} RTP packets for call {self.call_id}")
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
@@ -853,7 +848,6 @@ class RTPPlayer:
         Returns:
             bool: True if successful
         """
-        import os
         import struct
 
         if not Path(file_path).exists():
@@ -946,13 +940,12 @@ class RTPPlayer:
                         )
                         break
 
-                    elif chunk_id == b"data":
+                    if chunk_id == b"data":
                         # Found data before fmt - invalid
                         self.logger.error("Invalid WAV structure")
                         return False
-                    else:
-                        # Skip unknown chunk
-                        f.read(chunk_size)
+                    # Skip unknown chunk
+                    f.read(chunk_size)
 
                 # Find data chunk
                 while True:
@@ -1051,14 +1044,13 @@ class RTPPlayer:
                         )
                         return self.send_audio(audio_data, payload_type, samples_per_packet)
 
-                    else:
-                        # Skip this chunk (with size validation)
-                        if chunk_size > 100 * 1024 * 1024:  # 100MB limit
-                            self.logger.error(
-                                f"Chunk size too large ({chunk_size} bytes) in WAV file: {file_path}"
-                            )
-                            return False
-                        f.read(chunk_size)
+                    # Skip this chunk (with size validation)
+                    if chunk_size > 100 * 1024 * 1024:  # 100MB limit
+                        self.logger.error(
+                            f"Chunk size too large ({chunk_size} bytes) in WAV file: {file_path}"
+                        )
+                        return False
+                    f.read(chunk_size)
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error playing audio file {file_path}: {e}")
@@ -1148,7 +1140,7 @@ class RTPDTMFListener:
 
         while self.running:
             try:
-                data, addr = self.socket.recvfrom(2048)
+                data, _addr = self.socket.recvfrom(2048)
 
                 # Extract audio payload from RTP packet
                 if len(data) >= 12:
@@ -1187,7 +1179,7 @@ class RTPDTMFListener:
                                 # Keep a sliding window of audio
                                 self.audio_buffer = self.audio_buffer[self.dtmf_slide_size :]
 
-            except socket.timeout:
+            except TimeoutError:
                 # Timeout is normal, just continue
                 continue
             except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
@@ -1242,8 +1234,7 @@ class RTPDTMFListener:
 
         if sign:
             return -linear
-        else:
-            return linear
+        return linear
 
     def _alaw_to_linear(self, alaw_byte):
         """
@@ -1269,8 +1260,7 @@ class RTPDTMFListener:
 
         if sign:
             return -linear
-        else:
-            return linear
+        return linear
 
     def get_digit(self, timeout=1.0):
         """

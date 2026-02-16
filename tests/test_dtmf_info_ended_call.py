@@ -6,7 +6,6 @@ This test validates that DTMF INFO messages received for calls that have
 already ended are handled gracefully without producing warnings.
 """
 
-
 from pbx.core.call import CallState
 from pbx.core.pbx import PBXCore
 

@@ -4,7 +4,7 @@ Allows users to log in from any phone and retain their settings
 """
 
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
@@ -24,13 +24,13 @@ class HotDeskSession:
         self.extension = extension
         self.device_id = device_id
         self.ip_address = ip_address
-        self.logged_in_at = datetime.now(timezone.utc)
-        self.last_activity = datetime.now(timezone.utc)
+        self.logged_in_at = datetime.now(UTC)
+        self.last_activity = datetime.now(UTC)
         self.auto_logout_enabled = True
 
     def update_activity(self):
         """Update last activity timestamp"""
-        self.last_activity = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(UTC)
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
@@ -128,7 +128,7 @@ class HotDeskingSystem:
     def _auto_logout_inactive_sessions(self):
         """Automatically log out inactive sessions"""
         with self.lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             sessions_to_logout = []
 
             for device_id, session in self.sessions.items():
@@ -200,17 +200,15 @@ class HotDeskingSystem:
                     self._logout_internal(device_id)
 
             # Check if extension is already logged in elsewhere
-            if not self.allow_concurrent_logins:
-                if (
-                    extension in self.extension_devices
-                    and len(self.extension_devices[extension]) > 0
-                ):
-                    existing_devices = self.extension_devices[extension]
-                    self.logger.info(
-                        f"Extension {extension} already logged in at {existing_devices}, logging out..."
-                    )
-                    for dev_id in existing_devices.copy():
-                        self._logout_internal(dev_id)
+            if not self.allow_concurrent_logins and (
+                extension in self.extension_devices and len(self.extension_devices[extension]) > 0
+            ):
+                existing_devices = self.extension_devices[extension]
+                self.logger.info(
+                    f"Extension {extension} already logged in at {existing_devices}, logging out..."
+                )
+                for dev_id in existing_devices.copy():
+                    self._logout_internal(dev_id)
 
             # Create new session
             session = HotDeskSession(extension, device_id, ip_address)
@@ -281,7 +279,7 @@ class HotDeskingSystem:
                 {
                     "extension": extension,
                     "device_id": device_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
 

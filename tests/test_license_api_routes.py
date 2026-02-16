@@ -8,7 +8,6 @@ import http.client
 import json
 import time
 
-
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 

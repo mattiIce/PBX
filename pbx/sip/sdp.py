@@ -131,9 +131,7 @@ class SDPSession:
         # Connection (session-level)
         if self.connection:
             c = self.connection
-            lines.append(
-                f"c={c['network_type']} {c['address_type']} {c['address']}"
-            )
+            lines.append(f"c={c['network_type']} {c['address_type']} {c['address']}")
 
         # Time (required by SDP spec)
         lines.append("t=0 0")
@@ -142,16 +140,12 @@ class SDPSession:
         for media in self.media:
             # Media line
             formats = " ".join(media["formats"])
-            lines.append(
-                f"m={media['type']} {media['port']} {media['protocol']} {formats}"
-            )
+            lines.append(f"m={media['type']} {media['port']} {media['protocol']} {formats}")
 
             # Media-level connection
             if "connection" in media:
                 c = media["connection"]
-                lines.append(
-                    f"c={c['network_type']} {c['address_type']} {c['address']}"
-                )
+                lines.append(f"c={c['network_type']} {c['address_type']} {c['address']}")
 
             # Attributes
             for attr in media.get("attributes", []):

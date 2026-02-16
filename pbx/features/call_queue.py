@@ -3,7 +3,7 @@ Call Queue and ACD (Automatic Call Distribution) system
 Manages incoming calls and distributes them to available agents
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -43,12 +43,12 @@ class QueuedCall:
         self.call_id = call_id
         self.caller_extension = caller_extension
         self.queue_number = queue_number
-        self.enqueue_time = datetime.now(timezone.utc)
+        self.enqueue_time = datetime.now(UTC)
         self.position = 0
 
     def get_wait_time(self):
         """Get time spent in queue (seconds)"""
-        return (datetime.now(timezone.utc) - self.enqueue_time).total_seconds()
+        return (datetime.now(UTC) - self.enqueue_time).total_seconds()
 
 
 class Agent:
@@ -89,7 +89,7 @@ class Agent:
     def complete_call(self):
         """Mark call as completed"""
         self.calls_taken += 1
-        self.last_call_time = datetime.now(timezone.utc)
+        self.last_call_time = datetime.now(UTC)
         self.current_call_id = None
         self.status = AgentStatus.AVAILABLE
 
@@ -137,9 +137,7 @@ class CallQueue:
             agent: Agent object
         """
         self.agents[agent.extension] = agent
-        self.logger.info(
-            f"Added agent {agent.extension} to queue {self.queue_number}"
-        )
+        self.logger.info(f"Added agent {agent.extension} to queue {self.queue_number}")
 
     def remove_agent(self, extension):
         """Remove agent from queue"""
@@ -204,7 +202,7 @@ class CallQueue:
             # Return all available agents
             return available_agents
 
-        elif self.strategy == QueueStrategy.ROUND_ROBIN:
+        if self.strategy == QueueStrategy.ROUND_ROBIN:
             # Round robin distribution
             if available_agents:
                 agent = available_agents[self.round_robin_index % len(available_agents)]
@@ -248,9 +246,7 @@ class CallQueue:
             if call:
                 agent.set_busy(call.call_id)
                 assignments.append((call, agent))
-                self.logger.info(
-                    f"Assigned call {call.call_id} to agent {agent.extension}"
-                )
+                self.logger.info(f"Assigned call {call.call_id} to agent {agent.extension}")
 
         return assignments
 

@@ -8,8 +8,8 @@ to catch issues before the PBX starts, preventing runtime errors.
 import logging
 import os
 import re
-from typing import Any
 from pathlib import Path
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -177,7 +177,7 @@ class ConfigValidator:
 
         # Check for duplicate extension numbers
         extension_numbers = [ext.get("number") for ext in extensions]
-        duplicates = set([x for x in extension_numbers if extension_numbers.count(x) > 1])
+        duplicates = {x for x in extension_numbers if extension_numbers.count(x) > 1}
         if duplicates:
             self.errors.append(f"Duplicate extension numbers found: {duplicates}")
 
@@ -219,8 +219,7 @@ class ConfigValidator:
         # Check for G.711 (PCMU/PCMA) which should always be available
         if not any(name.startswith("g711") or name in ["pcmu", "pcma"] for name in enabled_codecs):
             self.warnings.append(
-                "G.711 (PCMU/PCMA) codec not explicitly enabled. "
-                "This is the most compatible codec."
+                "G.711 (PCMU/PCMA) codec not explicitly enabled. This is the most compatible codec."
             )
 
     def _validate_production_readiness(self):

@@ -3,10 +3,10 @@ Conversational AI Assistant
 Auto-responses and smart call handling using AI
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # NLTK for natural language processing
 try:
@@ -33,7 +33,7 @@ class ConversationContext:
         """
         self.call_id = call_id
         self.caller_id = caller_id
-        self.started_at = datetime.now(timezone.utc)
+        self.started_at = datetime.now(UTC)
         self.messages = []
         self.intent = None
         self.entities = {}
@@ -41,7 +41,7 @@ class ConversationContext:
     def add_message(self, role: str, content: str):
         """Add a message to the conversation"""
         self.messages.append(
-            {"role": role, "content": content, "timestamp": datetime.now(timezone.utc).isoformat()}
+            {"role": role, "content": content, "timestamp": datetime.now(UTC).isoformat()}
         )
 
 
@@ -203,8 +203,10 @@ class ConversationalAI:
         if self.db and call_id in self.conversation_ids:
             conversation_id = self.conversation_ids[call_id]
             # Save messages
-            self.db.save_message(conversation_id, "user", user_input, datetime.now(timezone.utc))
-            self.db.save_message(conversation_id, "assistant", response["response"], datetime.now(timezone.utc))
+            self.db.save_message(conversation_id, "user", user_input, datetime.now(UTC))
+            self.db.save_message(
+                conversation_id, "assistant", response["response"], datetime.now(UTC)
+            )
             # Save intent
             if response["intent"] and response["intent"] != "general_inquiry":
                 confidence = response.get("confidence", 0.9)
@@ -213,7 +215,7 @@ class ConversationalAI:
                     response["intent"],
                     confidence,
                     response["entities"],
-                    datetime.now(timezone.utc),
+                    datetime.now(UTC),
                 )
 
         # Track intents
@@ -344,12 +346,11 @@ class ConversationalAI:
             else:
                 response = "I understand. What would you like me to do instead?"
 
-        else:  # general_inquiry
-            # Provide helpful fallback based on conversation stage
-            if message_count <= 2:
-                response = "I'm here to help! You can ask about our hours, location, or I can connect you with sales, support, or billing."
-            else:
-                response = "I understand. How else can I assist you today?"
+        # Provide helpful fallback based on conversation stage
+        elif message_count <= 2:
+            response = "I'm here to help! You can ask about our hours, location, or I can connect you with sales, support, or billing."
+        else:
+            response = "I understand. How else can I assist you today?"
 
         return {
             "response": response,
@@ -600,7 +601,7 @@ class ConversationalAI:
         """
         if call_id in self.active_conversations:
             context = self.active_conversations[call_id]
-            duration = (datetime.now(timezone.utc) - context.started_at).total_seconds()
+            duration = (datetime.now(UTC) - context.started_at).total_seconds()
 
             # Save to database
             if self.db:
@@ -652,7 +653,7 @@ class ConversationalAI:
             return self.db.get_conversation_history(limit)
         return []
 
-    def configure_provider(self, provider: str, api_key: str = None, **kwargs):
+    def configure_provider(self, provider: str, api_key: str | None = None, **kwargs):
         """
         Configure AI provider with secure API key storage
 

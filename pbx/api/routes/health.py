@@ -5,10 +5,9 @@ readiness/liveness probes, Prometheus metrics, and status endpoints.
 """
 
 import json
-
 from typing import Any
 
-from flask import Blueprint, Response, current_app, redirect, request
+from flask import Blueprint, Response, current_app, redirect
 
 from pbx.api.utils import get_pbx_core, send_json
 from pbx.utils.logger import get_logger
@@ -32,9 +31,7 @@ def _get_health_checker() -> Any:
         if pbx_core and hasattr(pbx_core, "config"):
             config = pbx_core.config
 
-        _health_checker = ProductionHealthChecker(
-            pbx_core=pbx_core, config=config
-        )
+        _health_checker = ProductionHealthChecker(pbx_core=pbx_core, config=config)
 
     return _health_checker
 
@@ -138,7 +135,7 @@ def handle_prometheus_metrics() -> Response:
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Metrics endpoint error: {e}")
         response = current_app.response_class(
-            response=f"# ERROR: {str(e)}\n",
+            response=f"# ERROR: {e!s}\n",
             status=500,
             mimetype="text/plain",
         )
@@ -152,5 +149,4 @@ def handle_status() -> Response:
     if pbx_core:
         status = pbx_core.get_status()
         return send_json(status)
-    else:
-        return send_json({"error": "PBX not initialized"}, 500)
+    return send_json({"error": "PBX not initialized"}, 500)

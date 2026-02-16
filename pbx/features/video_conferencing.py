@@ -4,10 +4,10 @@ HD video calls, screen sharing, and 4K video support
 """
 
 import hashlib
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class VideoConferencingEngine:
@@ -152,7 +152,7 @@ class VideoConferencingEngine:
                    SET left_at = %s
                    WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
                 ),
-                (datetime.now(timezone.utc), room_id, extension),
+                (datetime.now(UTC), room_id, extension),
             )
 
             self.logger.info(f"Participant {extension} left room {room_id}")

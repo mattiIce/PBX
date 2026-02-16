@@ -13,11 +13,11 @@ Manual reboot options if needed:
 """
 
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class PhoneTemplate:
@@ -143,7 +143,7 @@ class ProvisioningDevice:
         else:
             self.device_type = device_type
         self.config_url = config_url
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.last_provisioned = None
 
     def _detect_device_type(self, vendor: str, model: str) -> str:
@@ -165,7 +165,7 @@ class ProvisioningDevice:
 
     def mark_provisioned(self):
         """Mark device as provisioned"""
-        self.last_provisioned = datetime.now(timezone.utc)
+        self.last_provisioned = datetime.now(UTC)
 
     def to_dict(self):
         """Convert to dictionary"""
@@ -228,9 +228,7 @@ class PhoneProvisioning:
         self.logger.info(
             f"Server external IP: {self.config.get('server.external_ip', 'Not configured')}"
         )
-        self.logger.info(
-            f"API port: {self.config.get('api.port', 'Not configured')}"
-        )
+        self.logger.info(f"API port: {self.config.get('api.port', 'Not configured')}")
 
         # Check SSL status for provisioning URL generation
         ssl_enabled = self.config.get("api.ssl.enabled", False)
@@ -260,12 +258,12 @@ class PhoneProvisioning:
                     model=db_device["model"],
                     device_type=db_device.get("device_type"),  # Load device_type from DB
                 )
-                
+
                 # Regenerate config_url to reflect current configuration
                 # This ensures the URL uses the current api.port and server.external_ip
                 # even if they changed since the device was originally registered
                 device.config_url = self._generate_config_url(device.mac_address)
-                
+
                 # Restore timestamps if available
                 if db_device.get("created_at"):
                     device.created_at = db_device["created_at"]
@@ -274,9 +272,7 @@ class PhoneProvisioning:
 
                 self.devices[device.mac_address] = device
 
-            self.logger.info(
-                f"Loaded {len(db_devices)} provisioned devices from database"
-            )
+            self.logger.info(f"Loaded {len(db_devices)} provisioned devices from database")
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading devices from database: {e}")
 
@@ -1055,7 +1051,7 @@ P2351 = 1
                             vendor = parts[0]
                             model = "_".join(parts[1:])
 
-                            with open(filepath, "r") as f:
+                            with open(filepath) as f:
                                 template_content = f.read()
 
                             self.add_template(vendor, model, template_content)
@@ -1345,7 +1341,7 @@ P2351 = 1
         """
         # Log the provisioning request for troubleshooting
         request_log = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "mac_address": mac_address,
             "normalized_mac": normalize_mac_address(mac_address),
             "ip_address": request_info.get("ip") if request_info else None,
@@ -1356,9 +1352,7 @@ P2351 = 1
 
         self.logger.info(f"Provisioning request received for MAC: {mac_address}")
         if request_info:
-            self.logger.info(
-                f"  Request from IP: {request_info.get('ip', 'Unknown')}"
-            )
+            self.logger.info(f"  Request from IP: {request_info.get('ip', 'Unknown')}")
             self.logger.info(f"  User-Agent: {request_info.get('user_agent', 'Unknown')}")
 
         device = self.get_device(mac_address)
@@ -1367,9 +1361,7 @@ P2351 = 1
             error_msg = f"Device {mac_address} not registered in provisioning system"
             self.logger.warning(error_msg)
             self.logger.warning(f"  Normalized MAC: {normalized}")
-            self.logger.warning(
-                f"  Registered devices: {list(self.devices.keys())}"
-            )
+            self.logger.warning(f"  Registered devices: {list(self.devices.keys())}")
 
             # Provide helpful guidance
             # Determine protocol based on actual API configuration
@@ -1396,7 +1388,7 @@ P2351 = 1
 
             # Check if there are similar MACs (might be a format issue)
             mac_prefix = normalized[:6]  # First 6 chars (OUI)
-            similar_macs = [m for m in self.devices.keys() if m.startswith(mac_prefix)]
+            similar_macs = [m for m in self.devices if m.startswith(mac_prefix)]
             if similar_macs:
                 self.logger.warning(f"  → Similar MACs found (same vendor): {similar_macs}")
                 self.logger.warning("     This might be a typo in the MAC address")
@@ -1414,9 +1406,7 @@ P2351 = 1
         if not template:
             error_msg = f"Template not found for {device.vendor} {device.model}"
             self.logger.warning(error_msg)
-            self.logger.warning(
-                f"  Available templates: {list(self.templates.keys())}"
-            )
+            self.logger.warning(f"  Available templates: {list(self.templates.keys())}")
             request_log["error"] = error_msg
             self._add_request_log(request_log)
             return None, None
@@ -1433,9 +1423,7 @@ P2351 = 1
             self._add_request_log(request_log)
             return None, None
 
-        self.logger.info(
-            f"  Extension found: {extension.number} ({extension.name})"
-        )
+        self.logger.info(f"  Extension found: {extension.number} ({extension.name})")
 
         # Build extension config dict
         extension_config = {
@@ -1554,9 +1542,9 @@ P2351 = 1
             list of vendor names
         """
         vendors = set()
-        for vendor, model in self.templates.keys():
+        for vendor, _model in self.templates:
             vendors.add(vendor)
-        return sorted(list(vendors))
+        return sorted(vendors)
 
     def get_supported_models(self, vendor=None):
         """
@@ -1571,21 +1559,20 @@ P2351 = 1
         if vendor:
             models = []
             vendor = vendor.lower()
-            for v, m in self.templates.keys():
+            for v, m in self.templates:
                 if v == vendor:
                     models.append(m)
             return sorted(models)
-        else:
-            # Return dict of vendor -> models
-            result = {}
-            for v, m in self.templates.keys():
-                if v not in result:
-                    result[v] = []
-                result[v].append(m)
-            # Sort each vendor's models
-            for v in result:
-                result[v] = sorted(result[v])
-            return result
+        # Return dict of vendor -> models
+        result = {}
+        for v, m in self.templates:
+            if v not in result:
+                result[v] = []
+            result[v].append(m)
+        # Sort each vendor's models
+        for v in result:
+            result[v] = sorted(result[v])
+        return result
 
     def reboot_phone(self, extension_number, sip_server):
         """
@@ -1617,7 +1604,7 @@ P2351 = 1
                 uri=f"sip:{extension_number}@{extension.address[0]}:{extension.address[1]}",
                 from_addr=f"<sip:{server_ip}:{sip_port}>",
                 to_addr=f"<sip:{extension_number}@{server_ip}>",
-                call_id=f"notify-reboot-{extension_number}-{datetime.now(timezone.utc).timestamp()}",
+                call_id=f"notify-reboot-{extension_number}-{datetime.now(UTC).timestamp()}",
                 cseq=1,
             )
 
@@ -1842,8 +1829,7 @@ P2351 = 1
                 if success:
                     self.logger.info(f"set static IP {static_ip} for device {mac_address}")
                     return True, f"Static IP {static_ip} set for device {mac_address}"
-                else:
-                    return False, "Failed to update static IP in database"
+                return False, "Failed to update static IP in database"
             except Exception as e:
                 self.logger.error(f"Failed to set static IP: {e}")
                 return False, f"Failed to set static IP: {e}"

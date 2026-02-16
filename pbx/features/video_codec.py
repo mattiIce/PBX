@@ -4,23 +4,19 @@ Video codec support for video calling using FREE open-source FFmpeg
 """
 
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
 
 # Try to import PyAV (Python binding for FFmpeg)
 try:
-    pass
-
     PYAV_AVAILABLE = True
 except ImportError:
     PYAV_AVAILABLE = False
 
 # Try to import imageio-ffmpeg (simpler FFmpeg wrapper)
 try:
-    pass
-
     IMAGEIO_FFMPEG_AVAILABLE = True
 except ImportError:
     IMAGEIO_FFMPEG_AVAILABLE = False
@@ -228,7 +224,11 @@ class VideoCodecManager:
         return available
 
     def encode_frame(
-        self, frame_data: bytes, codec: str = None, resolution: tuple = None, bitrate: int = None
+        self,
+        frame_data: bytes,
+        codec: str | None = None,
+        resolution: tuple | None = None,
+        bitrate: int | None = None,
     ) -> bytes | None:
         """
         Encode video frame using FFmpeg/PyAV
@@ -305,7 +305,7 @@ class VideoCodecManager:
         # Placeholder return (in production, return actual encoded data)
         return frame_data
 
-    def decode_frame(self, encoded_data: bytes, codec: str = None) -> bytes | None:
+    def decode_frame(self, encoded_data: bytes, codec: str | None = None) -> bytes | None:
         """
         Decode video frame
 
@@ -396,7 +396,7 @@ class VideoCodecManager:
             "bitrate": bitrate,
             "gop_size": framerate * 2,  # GOP size (keyframe interval)
             "b_frames": 2,  # B-frames for better compression
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         }
 
         # Initialize actual encoder with FFmpeg or PyAV library
@@ -450,7 +450,7 @@ class VideoCodecManager:
         decoder_config = {
             "codec": codec.value,
             "threads": 4,  # Multi-threaded decoding
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
         }
 
         # Initialize actual decoder with FFmpeg or PyAV library

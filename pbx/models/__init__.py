@@ -12,9 +12,9 @@ from pbx.models.voicemail import Voicemail
 
 __all__ = [
     "Base",
-    "TimestampMixin",
     "CallRecord",
     "Extension",
     "RegisteredPhone",
+    "TimestampMixin",
     "Voicemail",
 ]

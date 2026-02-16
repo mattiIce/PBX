@@ -4,7 +4,7 @@ Provides comprehensive analytics for dashboard visualization
 """
 
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pbx.utils.logger import get_logger
 
@@ -32,7 +32,7 @@ class StatisticsEngine:
         Returns:
             Dictionary with comprehensive statistics
         """
-        datetime.now(timezone.utc)
+        datetime.now(UTC)
         stats = {
             "overview": self._get_overview_stats(days),
             "daily_trends": self._get_daily_trends(days),
@@ -53,7 +53,7 @@ class StatisticsEngine:
         total_duration = 0
 
         for i in range(days):
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
 
             total_calls += len(records)
@@ -78,7 +78,7 @@ class StatisticsEngine:
         trends = []
 
         for i in range(days - 1, -1, -1):  # Reverse order for chronological
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
 
             total = len(records)
@@ -103,7 +103,7 @@ class StatisticsEngine:
         hourly_counts = defaultdict(int)
 
         for i in range(days):
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
 
             for record in records:
@@ -126,7 +126,7 @@ class StatisticsEngine:
         caller_stats = defaultdict(lambda: {"calls": 0, "duration": 0})
 
         for i in range(days):
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
 
             for record in records:
@@ -156,7 +156,7 @@ class StatisticsEngine:
         dispositions = defaultdict(int)
 
         for i in range(days):
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
 
             for record in records:
@@ -179,7 +179,7 @@ class StatisticsEngine:
         hourly_counts = defaultdict(int)
 
         for i in range(days):
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
 
             for record in records:
@@ -204,7 +204,7 @@ class StatisticsEngine:
         total_duration = 0
 
         for i in range(days):
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
 
             total_calls += len(records)
@@ -299,13 +299,13 @@ class StatisticsEngine:
             "active_calls": active_calls,
             "registered_extensions": registered_extensions,
             "system_uptime": self._get_system_uptime(pbx_core),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
     def _get_system_uptime(self, pbx_core):
         """Get system uptime in seconds"""
         if hasattr(pbx_core, "start_time"):
-            uptime = (datetime.now(timezone.utc) - pbx_core.start_time).total_seconds()
+            uptime = (datetime.now(UTC) - pbx_core.start_time).total_seconds()
             return round(uptime, 0)
         return 0
 
@@ -337,7 +337,7 @@ class StatisticsEngine:
         if filters:
             filtered_records = all_records
 
-            if "extension" in filters and filters["extension"]:
+            if filters.get("extension"):
                 filtered_records = [
                     r
                     for r in filtered_records
@@ -345,12 +345,12 @@ class StatisticsEngine:
                     or r.get("to_ext") == filters["extension"]
                 ]
 
-            if "disposition" in filters and filters["disposition"]:
+            if filters.get("disposition"):
                 filtered_records = [
                     r for r in filtered_records if r.get("disposition") == filters["disposition"]
                 ]
 
-            if "min_duration" in filters and filters["min_duration"]:
+            if filters.get("min_duration"):
                 min_dur = filters["min_duration"]
                 filtered_records = [r for r in filtered_records if r.get("duration", 0) >= min_dur]
 
@@ -395,7 +395,7 @@ class StatisticsEngine:
         """
         all_records = []
         for i in range(days):
-            date = (datetime.now(timezone.utc) - timedelta(days=i)).strftime("%Y-%m-%d")
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
             records = self.cdr_system.get_records(date, limit=10000)
             all_records.extend(records)
 
@@ -505,7 +505,7 @@ class StatisticsEngine:
             Dictionary with report data
         """
         if report_type == "daily":
-            date = params.get("date", datetime.now(timezone.utc).strftime("%Y-%m-%d"))
+            date = params.get("date", datetime.now(UTC).strftime("%Y-%m-%d"))
             records = self.cdr_system.get_records(date, limit=100000)
 
             return {
@@ -516,8 +516,8 @@ class StatisticsEngine:
                 "records": records,
             }
 
-        elif report_type == "weekly":
-            end_date = datetime.now(timezone.utc)
+        if report_type == "weekly":
+            end_date = datetime.now(UTC)
             start_date = end_date - timedelta(days=7)
             return self.get_advanced_analytics(
                 start_date.strftime("%Y-%m-%d"),
@@ -525,8 +525,8 @@ class StatisticsEngine:
                 params.get("filters"),
             )
 
-        elif report_type == "monthly":
-            end_date = datetime.now(timezone.utc)
+        if report_type == "monthly":
+            end_date = datetime.now(UTC)
             start_date = end_date - timedelta(days=30)
             return self.get_advanced_analytics(
                 start_date.strftime("%Y-%m-%d"),
@@ -534,10 +534,9 @@ class StatisticsEngine:
                 params.get("filters"),
             )
 
-        elif report_type == "custom":
+        if report_type == "custom":
             return self.get_advanced_analytics(
                 params["start_date"], params["end_date"], params.get("filters")
             )
 
-        else:
-            return {"error": "Invalid report type"}
+        return {"error": "Invalid report type"}

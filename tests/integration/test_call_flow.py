@@ -7,7 +7,7 @@ including dialplan matching, internal call routing, and no-answer fallback.
 import re
 import threading
 from typing import Any
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
 
@@ -16,7 +16,6 @@ from pbx.core.call_router import CallRouter
 
 
 @pytest.mark.integration
-
 class TestCallRouterInternalRouting:
     """Test that CallRouter correctly routes internal calls."""
 
@@ -47,9 +46,7 @@ class TestCallRouterInternalRouting:
 
         pbx.extension_registry = MagicMock()
         pbx.extension_registry.get.side_effect = get_ext
-        pbx.extension_registry.is_registered.side_effect = (
-            lambda n: n in ("1001", "1002")
-        )
+        pbx.extension_registry.is_registered.side_effect = lambda n: n in ("1001", "1002")
         pbx.extension_registry.get_all.return_value = [caller_ext, callee_ext]
 
         # RTP relay
@@ -89,7 +86,9 @@ class TestCallRouterInternalRouting:
         }.get(h, "")
         return msg
 
-    def test_internal_call_creates_call_object(self, mock_config: MagicMock, mock_database: MagicMock) -> None:
+    def test_internal_call_creates_call_object(
+        self, mock_config: MagicMock, mock_database: MagicMock
+    ) -> None:
         """Route an internal call and verify a Call object is created."""
         pbx = self._make_pbx_core(mock_config, mock_database)
         router = CallRouter(pbx)
@@ -109,7 +108,9 @@ class TestCallRouterInternalRouting:
         assert call.to_extension == "1002"
         assert call.state == CallState.CALLING
 
-    def test_internal_call_starts_cdr_record(self, mock_config: MagicMock, mock_database: MagicMock) -> None:
+    def test_internal_call_starts_cdr_record(
+        self, mock_config: MagicMock, mock_database: MagicMock
+    ) -> None:
         """Verify that a CDR record is started when routing a call."""
         pbx = self._make_pbx_core(mock_config, mock_database)
         router = CallRouter(pbx)
@@ -124,7 +125,9 @@ class TestCallRouterInternalRouting:
 
         pbx.cdr_system.start_record.assert_called_once_with(call_id, "1001", "1002")
 
-    def test_routing_to_unregistered_extension_fails(self, mock_config: MagicMock, mock_database: MagicMock) -> None:
+    def test_routing_to_unregistered_extension_fails(
+        self, mock_config: MagicMock, mock_database: MagicMock
+    ) -> None:
         """Calls to unregistered extensions should fail."""
         pbx = self._make_pbx_core(mock_config, mock_database)
         router = CallRouter(pbx)
@@ -139,7 +142,9 @@ class TestCallRouterInternalRouting:
 
         assert result is False
 
-    def test_unparseable_headers_return_false(self, mock_config: MagicMock, mock_database: MagicMock) -> None:
+    def test_unparseable_headers_return_false(
+        self, mock_config: MagicMock, mock_database: MagicMock
+    ) -> None:
         """If from/to headers cannot be parsed, routing should fail."""
         pbx = self._make_pbx_core(mock_config, mock_database)
         router = CallRouter(pbx)
@@ -152,12 +157,10 @@ class TestCallRouterInternalRouting:
 
 
 @pytest.mark.integration
-
 class TestDialplanMatching:
     """Test that the dialplan checker accepts and rejects patterns correctly."""
 
     @pytest.fixture
-
     def router(self, mock_config: MagicMock) -> CallRouter:
         """Create a CallRouter with default dialplan config."""
         pbx = MagicMock()
@@ -167,28 +170,25 @@ class TestDialplanMatching:
     @pytest.mark.parametrize(
         "extension,expected",
         [
-            ("1001", True),   # internal 4-digit
-            ("1999", True),   # internal 4-digit
-            ("2001", True),   # conference
-            ("911", True),    # emergency
-            ("9911", True),   # legacy emergency
+            ("1001", True),  # internal 4-digit
+            ("1999", True),  # internal 4-digit
+            ("2001", True),  # conference
+            ("911", True),  # emergency
+            ("9911", True),  # legacy emergency
             ("*1001", True),  # voicemail
-            ("*123", True),   # voicemail short
-            ("0", True),      # auto attendant
-            ("70", True),     # parking
-            ("8001", True),   # queue
+            ("*123", True),  # voicemail short
+            ("0", True),  # auto attendant
+            ("70", True),  # parking
+            ("8001", True),  # queue
             ("5555", False),  # not matching any pattern
             ("3001", False),  # not matching any pattern
-            ("12", False),    # too short for internal
+            ("12", False),  # too short for internal
         ],
     )
-
     def test_dialplan_patterns(self, router: CallRouter, extension: str, expected: bool) -> None:
         """Verify dialplan matching for various extension patterns."""
         result = router._check_dialplan(extension)
-        assert result is expected, (
-            f"Extension {extension!r}: expected {expected}, got {result}"
-        )
+        assert result is expected, f"Extension {extension!r}: expected {expected}, got {result}"
 
     def test_custom_internal_pattern(self, mock_config: MagicMock) -> None:
         """Dialplan should honour a custom internal_pattern from config."""
@@ -203,11 +203,12 @@ class TestDialplanMatching:
 
 
 @pytest.mark.integration
-
 class TestNoAnswerHandling:
     """Test that the no-answer timer fires and routes to voicemail."""
 
-    def test_no_answer_sets_voicemail_flag(self, mock_config: MagicMock, mock_database: MagicMock) -> None:
+    def test_no_answer_sets_voicemail_flag(
+        self, mock_config: MagicMock, mock_database: MagicMock
+    ) -> None:
         """When _handle_no_answer is called, the call should be flagged for voicemail."""
         pbx = MagicMock()
         pbx.config = mock_config
@@ -224,7 +225,9 @@ class TestNoAnswerHandling:
 
         assert call.routed_to_voicemail is True
 
-    def test_no_answer_skips_already_connected_call(self, mock_config: MagicMock, mock_database: MagicMock) -> None:
+    def test_no_answer_skips_already_connected_call(
+        self, mock_config: MagicMock, mock_database: MagicMock
+    ) -> None:
         """If the call was already answered, no-answer handler should be a no-op."""
         pbx = MagicMock()
         pbx.config = mock_config
@@ -240,7 +243,9 @@ class TestNoAnswerHandling:
         # Should NOT be routed to voicemail since it was already connected
         assert call.routed_to_voicemail is False
 
-    def test_no_answer_skips_nonexistent_call(self, mock_config: MagicMock, mock_database: MagicMock) -> None:
+    def test_no_answer_skips_nonexistent_call(
+        self, mock_config: MagicMock, mock_database: MagicMock
+    ) -> None:
         """_handle_no_answer for a non-existent call should not raise."""
         pbx = MagicMock()
         pbx.config = mock_config

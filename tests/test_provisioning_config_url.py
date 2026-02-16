@@ -6,7 +6,6 @@ Tests the fix for connection error when API port differs from default
 
 from typing import Any
 
-
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 
@@ -22,11 +21,11 @@ def test_config_url_uses_correct_port() -> None:
         def get(self, key: str, default: Any = None) -> Any:
             if key == "api.port":
                 return self._api_port
-            elif key == "server.external_ip":
+            if key == "server.external_ip":
                 return "192.168.1.14"
-            elif key == "provisioning.url_format":
+            if key == "provisioning.url_format":
                 return None  # Force auto-generation
-            elif key == "api.ssl.enabled":
+            if key == "api.ssl.enabled":
                 return False
             return default
 
@@ -42,10 +41,9 @@ def test_config_url_uses_correct_port() -> None:
     assert ":8443/" not in device.config_url, f"Should not have port 8443, got: {device.config_url}"
 
     expected_url = "http://192.168.1.14:9000/provision/aabbccddeeff.cfg"
-    assert (
-        device.config_url == expected_url
-    ), f"Expected URL: {expected_url}, got: {device.config_url}"
-
+    assert device.config_url == expected_url, (
+        f"Expected URL: {expected_url}, got: {device.config_url}"
+    )
 
     # Test with alternate port 8443
     config_8443 = TestConfig(api_port=8443)
@@ -91,11 +89,11 @@ def test_config_url_regenerated_from_database() -> None:
         def get(self, key: str, default: Any = None) -> Any:
             if key == "api.port":
                 return 9000  # New correct port
-            elif key == "server.external_ip":
+            if key == "server.external_ip":
                 return "192.168.1.14"
-            elif key == "provisioning.url_format":
+            if key == "provisioning.url_format":
                 return None
-            elif key == "api.ssl.enabled":
+            if key == "api.ssl.enabled":
                 return False
             return default
 
@@ -114,17 +112,17 @@ def test_config_url_regenerated_from_database() -> None:
     assert device is not None, "Device should be loaded from database"
 
     # Check that config_url was regenerated with correct port
-    assert (
-        ":9000/" in device.config_url
-    ), f"Config URL should use new port 9000, got: {device.config_url}"
-    assert (
-        ":8443/" not in device.config_url
-    ), f"Config URL should not have old port 8443, got: {device.config_url}"
+    assert ":9000/" in device.config_url, (
+        f"Config URL should use new port 9000, got: {device.config_url}"
+    )
+    assert ":8443/" not in device.config_url, (
+        f"Config URL should not have old port 8443, got: {device.config_url}"
+    )
 
     expected_url = "http://192.168.1.14:9000/provision/aabbccddeeff.cfg"
-    assert (
-        device.config_url == expected_url
-    ), f"Expected regenerated URL: {expected_url}, got: {device.config_url}"
+    assert device.config_url == expected_url, (
+        f"Expected regenerated URL: {expected_url}, got: {device.config_url}"
+    )
 
 
 def test_generate_config_url_helper() -> None:
@@ -134,11 +132,11 @@ def test_generate_config_url_helper() -> None:
         def get(self, key: str, default: Any = None) -> Any:
             if key == "api.port":
                 return 9000
-            elif key == "server.external_ip":
+            if key == "server.external_ip":
                 return "10.0.0.5"
-            elif key == "provisioning.url_format":
+            if key == "provisioning.url_format":
                 return "http://{{SERVER_IP}}:{{PORT}}/provision/{mac}.cfg"
-            elif key == "api.ssl.enabled":
+            if key == "api.ssl.enabled":
                 return False
             return default
 

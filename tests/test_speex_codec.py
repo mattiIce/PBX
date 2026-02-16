@@ -5,7 +5,6 @@ Tests codec initialization, SDP negotiation, and encoding/decoding
 
 from unittest.mock import Mock
 
-
 from pbx.features.speex_codec import SpeexCodec, SpeexCodecManager
 
 
@@ -239,6 +238,7 @@ class TestSpeexCodec:
 
         assert codec is not None
 
+
 class TestSpeexCodecManager:
     """Test Speex codec manager functionality"""
 
@@ -344,6 +344,7 @@ class TestSpeexCodecManager:
         available = manager.is_speex_available()
 
         assert isinstance(available, bool)
+
 
 class TestSpeexSDP:
     """Test Speex SDP integration"""

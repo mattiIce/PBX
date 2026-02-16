@@ -3,12 +3,11 @@ Call Recording Announcements
 Auto-play recording disclosure before recording starts
 """
 
-import os
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
 
 from pbx.utils.logger import get_logger
-import sqlite3
-from pathlib import Path
 
 
 class RecordingAnnouncements:
@@ -130,7 +129,7 @@ class RecordingAnnouncements:
                         consent_required,
                         consent_given,
                         consent_timeout,
-                        datetime.now(timezone.utc),
+                        datetime.now(UTC),
                     ),
                 )
             else:
@@ -146,7 +145,7 @@ class RecordingAnnouncements:
                         1 if consent_required else 0,
                         1 if consent_given else (0 if consent_given is False else None),
                         1 if consent_timeout else 0,
-                        datetime.now(timezone.utc),
+                        datetime.now(UTC),
                     ),
                 )
 
@@ -182,14 +181,11 @@ class RecordingAnnouncements:
             return True
 
         # Check announcement type
-        if self.announcement_type == "both":
+        if self.announcement_type == "both" or (
+            self.announcement_type == "caller" and call_direction == "inbound"
+        ):
             return True
-        elif self.announcement_type == "caller" and call_direction == "inbound":
-            return True
-        elif self.announcement_type == "callee" and call_direction == "outbound":
-            return True
-
-        return False
+        return bool(self.announcement_type == "callee" and call_direction == "outbound")
 
     def play_announcement(self, call_id: str, party: str = "both") -> dict:
         """
@@ -214,7 +210,7 @@ class RecordingAnnouncements:
             "audio_file": self.audio_path if Path(self.audio_path).exists() else None,
             "text": self.announcement_text,
             "party": party,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         self.announcements_played += 1
@@ -250,7 +246,7 @@ class RecordingAnnouncements:
             "announcement": announcement,
             "timeout_seconds": self.consent_timeout,
             "instructions": "Press 1 to accept recording, 2 to decline",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         return result
@@ -370,7 +366,7 @@ class RecordingAnnouncements:
                 "notification_required": True,
                 "penalty": "Criminal and civil penalties may apply",
             }
-        elif state in one_party_states:
+        if state in one_party_states:
             return {
                 "state": state,
                 "consent_type": "one_party",
@@ -378,13 +374,12 @@ class RecordingAnnouncements:
                 "notification_required": False,
                 "recommendation": "Notification recommended for transparency",
             }
-        else:
-            return {
-                "state": state,
-                "consent_type": "unknown",
-                "description": "Check local laws",
-                "notification_required": True,  # Be safe
-            }
+        return {
+            "state": state,
+            "consent_type": "unknown",
+            "description": "Check local laws",
+            "notification_required": True,  # Be safe
+        }
 
     def get_statistics(self) -> dict:
         """Get recording announcement statistics"""

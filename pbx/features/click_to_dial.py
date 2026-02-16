@@ -3,11 +3,11 @@ Click-to-Dial Framework
 Web and application-based dialing with WebRTC integration
 """
 
+import sqlite3
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class ClickToDialEngine:
@@ -145,7 +145,7 @@ class ClickToDialEngine:
         Returns:
             Call ID or None
         """
-        call_id = f"c2d-{extension}-{int(datetime.now(timezone.utc).timestamp())}"
+        call_id = f"c2d-{extension}-{int(datetime.now(UTC).timestamp())}"
 
         try:
             # Log call initiation in database

@@ -8,16 +8,14 @@ import re
 import traceback
 from typing import Any
 
-from flask import Blueprint, Response, current_app, jsonify, request
+from flask import Blueprint, Response, current_app, request
 
 from pbx.api.utils import (
-    DateTimeEncoder,
     get_pbx_core,
     get_request_body,
     require_admin,
     require_auth,
     send_json,
-    verify_authentication,
 )
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.logger import get_logger
@@ -63,8 +61,7 @@ def handle_get_provisioning_devices() -> Response:
         devices = pbx_core.phone_provisioning.get_all_devices()
         data = [d.to_dict() for d in devices]
         return send_json(data)
-    else:
-        return send_json({"error": "Phone provisioning not enabled"}, 500)
+    return send_json({"error": "Phone provisioning not enabled"}, 500)
 
 
 @provisioning_bp.route("/api/provisioning/atas", methods=["GET"])
@@ -76,8 +73,7 @@ def handle_get_provisioning_atas() -> Response:
         atas = pbx_core.phone_provisioning.get_atas()
         data = [d.to_dict() for d in atas]
         return send_json(data)
-    else:
-        return send_json({"error": "Phone provisioning not enabled"}, 500)
+    return send_json({"error": "Phone provisioning not enabled"}, 500)
 
 
 @provisioning_bp.route("/api/provisioning/phones", methods=["GET"])
@@ -89,8 +85,7 @@ def handle_get_provisioning_phones() -> Response:
         phones = pbx_core.phone_provisioning.get_phones()
         data = [d.to_dict() for d in phones]
         return send_json(data)
-    else:
-        return send_json({"error": "Phone provisioning not enabled"}, 500)
+    return send_json({"error": "Phone provisioning not enabled"}, 500)
 
 
 @provisioning_bp.route("/api/registered-atas", methods=["GET"])
@@ -98,11 +93,7 @@ def handle_get_provisioning_phones() -> Response:
 def handle_get_registered_atas() -> Response:
     """Get all registered ATA devices from database."""
     pbx_core = get_pbx_core()
-    if (
-        pbx_core
-        and hasattr(pbx_core, "registered_phones_db")
-        and pbx_core.registered_phones_db
-    ):
+    if pbx_core and hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
         try:
             # Get all registered phones
             all_phones = pbx_core.registered_phones_db.list_all()
@@ -146,8 +137,7 @@ def handle_get_provisioning_vendors() -> Response:
             models = pbx_core.phone_provisioning.get_supported_models()
             data = {"vendors": vendors, "models": models}
             return send_json(data)
-        else:
-            return send_json({"error": "Phone provisioning not enabled"}, 500)
+        return send_json({"error": "Phone provisioning not enabled"}, 500)
     except Exception as e:
         logger.error(f"Error getting provisioning vendors: {e}")
         return send_json({"error": "Failed to retrieve provisioning vendors"}, 500)
@@ -194,8 +184,7 @@ def handle_get_template_content(vendor: str, model: str) -> Response:
                 ],
             }
         )
-    else:
-        return send_json({"error": f"Template not found for {vendor} {model}"}, 404)
+    return send_json({"error": f"Template not found for {vendor} {model}"}, 404)
 
 
 @provisioning_bp.route("/api/provisioning/diagnostics", methods=["GET"])
@@ -283,11 +272,7 @@ def handle_get_provisioning_requests() -> Response:
 def handle_get_registered_phones() -> Response:
     """Get all registered phones from database."""
     pbx_core = get_pbx_core()
-    if (
-        pbx_core
-        and hasattr(pbx_core, "registered_phones_db")
-        and pbx_core.registered_phones_db
-    ):
+    if pbx_core and hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
         try:
             phones = pbx_core.registered_phones_db.list_all()
             return send_json(phones)
@@ -370,11 +355,7 @@ def handle_get_registered_phones_with_mac() -> Response:
 def handle_get_registered_phones_by_extension(number: str) -> Response:
     """Get registered phones for a specific extension."""
     pbx_core = get_pbx_core()
-    if (
-        pbx_core
-        and hasattr(pbx_core, "registered_phones_db")
-        and pbx_core.registered_phones_db
-    ):
+    if pbx_core and hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
         try:
             phones = pbx_core.registered_phones_db.get_by_extension(number)
             return send_json(phones)
@@ -420,7 +401,7 @@ def handle_provisioning_request(path: str) -> Response:
 
     try:
         # Extract MAC address from path: /provision/{mac}.cfg
-        filename = path.split("/")[-1]
+        filename = path.rsplit("/", maxsplit=1)[-1]
         mac = filename
 
         # Gather request information for logging
@@ -430,9 +411,7 @@ def handle_provisioning_request(path: str) -> Response:
             "path": path,
         }
 
-        logger.info(
-            f"Provisioning config request: path={path}, IP={request_info['ip']}"
-        )
+        logger.info(f"Provisioning config request: path={path}, IP={request_info['ip']}")
 
         # Detect if MAC is a literal placeholder (misconfiguration)
         if mac in MAC_ADDRESS_PLACEHOLDERS:
@@ -442,7 +421,9 @@ def handle_provisioning_request(path: str) -> Response:
             logger.error(f"  Request from IP: {request_info['ip']}")
             logger.error(f"  User-Agent: {request_info['user_agent']}")
             logger.error("")
-            logger.error("  WARNING: ROOT CAUSE: Phone is configured with wrong MAC variable format")
+            logger.error(
+                "  WARNING: ROOT CAUSE: Phone is configured with wrong MAC variable format"
+            )
             logger.error("")
             logger.error(
                 "  SOLUTION: Update provisioning URL to use correct MAC variable for your phone:"
@@ -492,9 +473,7 @@ def handle_provisioning_request(path: str) -> Response:
                 logger.error("    Zultys, Yealink, Polycom, Grandstream: $mac")
                 logger.error("    Cisco: $MA")
             logger.error("")
-            logger.error(
-                "  See PHONE_PROVISIONING.md for detailed vendor-specific instructions"
-            )
+            logger.error("  See PHONE_PROVISIONING.md for detailed vendor-specific instructions")
 
             return send_json(
                 {
@@ -551,23 +530,20 @@ def handle_provisioning_request(path: str) -> Response:
                 mimetype=content_type,
             )
             return response
-        else:
-            logger.warning(
-                f"Provisioning failed for MAC {mac} from IP {request_info['ip']}"
-            )
-            logger.warning("  Reason: Device not registered or template not found")
-            logger.warning("  See detailed error messages above for troubleshooting guidance")
+        logger.warning(f"Provisioning failed for MAC {mac} from IP {request_info['ip']}")
+        logger.warning("  Reason: Device not registered or template not found")
+        logger.warning("  See detailed error messages above for troubleshooting guidance")
 
-            # Get provisioning URL information
-            protocol, server_ip, port, base_url = _get_provisioning_url_info()
+        # Get provisioning URL information
+        protocol, server_ip, port, base_url = _get_provisioning_url_info()
 
-            logger.warning("  To register this device:")
-            logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
-            logger.warning("      -H 'Content-type: application/json' \\")
-            logger.warning(
-                '      -d \'{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}\''
-            )
-            return send_json({"error": "Device or template not found"}, 404)
+        logger.warning("  To register this device:")
+        logger.warning(f"    curl -X POST {base_url}/api/provisioning/devices \\")
+        logger.warning("      -H 'Content-type: application/json' \\")
+        logger.warning(
+            '      -d \'{"mac_address":"{mac}","extension_number":"XXXX","vendor":"VENDOR","model":"MODEL"}\''
+        )
+        return send_json({"error": "Device or template not found"}, 404)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error handling provisioning request: {e}")
         logger.error(f"  Path: {path}")
@@ -655,9 +631,7 @@ def handle_export_template(vendor: str, model: str) -> Response:
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
         return send_json({"error": "Phone provisioning not enabled"}, 500)
 
-    success, message, filepath = pbx_core.phone_provisioning.export_template_to_file(
-        vendor, model
-    )
+    success, message, filepath = pbx_core.phone_provisioning.export_template_to_file(vendor, model)
     if success:
         return send_json(
             {
@@ -668,8 +642,7 @@ def handle_export_template(vendor: str, model: str) -> Response:
                 "model": model,
             }
         )
-    else:
-        return send_json({"error": message}, 404)
+    return send_json({"error": message}, 404)
 
 
 @provisioning_bp.route("/api/provisioning/reload-templates", methods=["POST"])
@@ -683,8 +656,7 @@ def handle_reload_templates() -> Response:
     success, message, stats = pbx_core.phone_provisioning.reload_templates()
     if success:
         return send_json({"success": True, "message": message, "statistics": stats})
-    else:
-        return send_json({"error": message}, 500)
+    return send_json({"error": message}, 500)
 
 
 @provisioning_bp.route("/api/provisioning/devices/<mac>/static-ip", methods=["POST"])
@@ -705,8 +677,7 @@ def handle_set_static_ip(mac: str) -> Response:
         success, message = pbx_core.phone_provisioning.set_static_ip(mac, static_ip)
         if success:
             return send_json({"success": True, "message": message})
-        else:
-            return send_json({"error": message}, 400)
+        return send_json({"error": message}, 400)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -735,15 +706,12 @@ def handle_update_template(vendor: str, model: str) -> Response:
         if not content:
             return send_json({"error": "Missing template content"}, 400)
 
-        success, message = pbx_core.phone_provisioning.update_template(
-            vendor, model, content
-        )
+        success, message = pbx_core.phone_provisioning.update_template(vendor, model, content)
         if success:
             return send_json(
                 {"success": True, "message": message, "vendor": vendor, "model": model}
             )
-        else:
-            return send_json({"error": message}, 500)
+        return send_json({"error": message}, 500)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -765,7 +733,6 @@ def handle_unregister_device(mac: str) -> Response:
         success = pbx_core.phone_provisioning.unregister_device(mac)
         if success:
             return send_json({"success": True, "message": "Device unregistered"})
-        else:
-            return send_json({"error": "Device not found"}, 404)
+        return send_json({"error": "Device not found"}, 404)
     except Exception as e:
         return send_json({"error": str(e)}, 500)

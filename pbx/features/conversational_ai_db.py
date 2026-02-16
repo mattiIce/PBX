@@ -3,10 +3,10 @@ Database layer for Conversational AI Assistant
 Provides persistence for conversations, intents, and statistics
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class ConversationalAIDatabase:
@@ -146,9 +146,7 @@ class ConversationalAIDatabase:
             self.logger.error(f"Error creating Conversational AI tables: {e}")
             return False
 
-    def save_conversation(
-        self, call_id: str, caller_id: str, started_at: datetime
-    ) -> int | None:
+    def save_conversation(self, call_id: str, caller_id: str, started_at: datetime) -> int | None:
         """
         Save a new conversation
 
@@ -278,7 +276,7 @@ class ConversationalAIDatabase:
                 WHERE call_id = ?
                 """
 
-            params = (datetime.now(timezone.utc).isoformat(), final_intent, message_count, call_id)
+            params = (datetime.now(UTC).isoformat(), final_intent, message_count, call_id)
             cursor.execute(sql, params)
             self.db.connection.commit()
 
@@ -314,11 +312,10 @@ class ConversationalAIDatabase:
             if self.db.db_type == "postgresql":
                 columns = [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
-                return [dict(zip(columns, row)) for row in rows]
-            else:
-                rows = cursor.fetchall()
-                columns = [desc[0] for desc in cursor.description]
-                return [dict(zip(columns, row)) for row in rows]
+                return [dict(zip(columns, row, strict=False)) for row in rows]
+            rows = cursor.fetchall()
+            columns = [desc[0] for desc in cursor.description]
+            return [dict(zip(columns, row, strict=False)) for row in rows]
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting conversation history: {e}")
@@ -342,9 +339,8 @@ class ConversationalAIDatabase:
                 [desc[0] for desc in cursor.description]
                 rows = cursor.fetchall()
                 return {row[0]: row[1] for row in rows}
-            else:
-                rows = cursor.fetchall()
-                return {row[0]: row[1] for row in rows}
+            rows = cursor.fetchall()
+            return {row[0]: row[1] for row in rows}
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting intent statistics: {e}")

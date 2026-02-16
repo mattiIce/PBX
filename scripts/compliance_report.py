@@ -12,7 +12,7 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
@@ -22,7 +22,7 @@ class ComplianceReporter:
     def __init__(self):
         self.base_dir = Path(__file__).parent.parent
         self.report_data = {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "version": self._get_version(),
             "compliance_status": {},
             "audit_summary": {},
@@ -325,13 +325,13 @@ class ComplianceReporter:
 </head>
 <body>
     <h1>PBX System Compliance Report</h1>
-    <p>Generated: {self.report_data['generated_at']}</p>
-    <p>Version: {self.report_data['version']}</p>
+    <p>Generated: {self.report_data["generated_at"]}</p>
+    <p>Version: {self.report_data["version"]}</p>
 
     <h2>Compliance Status</h2>
-    <div class="score">{self.report_data['compliance_status'].get('overall_score', 0)}%</div>
-    <p>Status: <span class="status-{self.report_data['compliance_status'].get('status', 'unknown')}">{self.report_data['compliance_status'].get('status', 'unknown').upper()}</span></p>
-    <p>{self.report_data['compliance_status'].get('compliant_controls', 0)} of {self.report_data['compliance_status'].get('total_controls', 0)} controls compliant</p>
+    <div class="score">{self.report_data["compliance_status"].get("overall_score", 0)}%</div>
+    <p>Status: <span class="status-{self.report_data["compliance_status"].get("status", "unknown")}">{self.report_data["compliance_status"].get("status", "unknown").upper()}</span></p>
+    <p>{self.report_data["compliance_status"].get("compliant_controls", 0)} of {self.report_data["compliance_status"].get("total_controls", 0)} controls compliant</p>
 
     <h2>Security Controls</h2>
     <table>
@@ -347,8 +347,8 @@ class ComplianceReporter:
             html += f"""
         <tr>
             <td>{control_name}</td>
-            <td class="{status_class}">{control['status'].upper()}</td>
-            <td>{control['description']}</td>
+            <td class="{status_class}">{control["status"].upper()}</td>
+            <td>{control["description"]}</td>
         </tr>
 """
 
@@ -359,10 +359,10 @@ class ComplianceReporter:
 """
         audit = self.report_data.get("audit_summary", {})
         html += f"""
-    <p>Total Events: {audit.get('total_events', 0)}</p>
-    <p>Unique Users: {audit.get('users', 0)}</p>
-    <p>Failed Actions: {audit.get('failed_actions', 0)}</p>
-    <p>Security Events: {audit.get('security_events', 0)}</p>
+    <p>Total Events: {audit.get("total_events", 0)}</p>
+    <p>Unique Users: {audit.get("users", 0)}</p>
+    <p>Failed Actions: {audit.get("failed_actions", 0)}</p>
+    <p>Security Events: {audit.get("security_events", 0)}</p>
 """
 
         if self.report_data.get("findings"):
@@ -380,10 +380,10 @@ class ComplianceReporter:
                 severity_class = f"severity-{finding['severity']}"
                 html += f"""
         <tr>
-            <td class="{severity_class}">{finding['severity'].upper()}</td>
-            <td>{finding['category']}</td>
-            <td>{finding['finding']}</td>
-            <td>{finding['recommendation']}</td>
+            <td class="{severity_class}">{finding["severity"].upper()}</td>
+            <td>{finding["category"]}</td>
+            <td>{finding["finding"]}</td>
+            <td>{finding["recommendation"]}</td>
         </tr>
 """
             html += """
@@ -405,7 +405,7 @@ class ComplianceReporter:
         with open(output_file, "w") as f:
             json.dump(self.report_data, f, indent=2)
 
-    def run_full_report(self, output_format: str = "html", output_file: str = None):
+    def run_full_report(self, output_format: str = "html", output_file: str | None = None):
         """Run full compliance report."""
         print("=" * 70)
         print("PBX Compliance Report Generator")
@@ -419,7 +419,7 @@ class ComplianceReporter:
 
         # Generate output
         if output_file is None:
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             output_file = f"compliance_report_{timestamp}.{output_format}"
 
         if output_format == "html":

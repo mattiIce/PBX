@@ -88,11 +88,7 @@ class E911Protection:
         number_str = str(number).strip()
 
         # Check against all E911 patterns
-        for pattern in self.E911_PATTERNS:
-            if re.match(pattern, number_str):
-                return True
-
-        return False
+        return any(re.match(pattern, number_str) for pattern in self.E911_PATTERNS)
 
     def block_if_e911(self, number, context=""):
         """

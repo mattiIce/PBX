@@ -101,7 +101,7 @@ class SIPServer:
                 handler_thread.daemon = True
                 handler_thread.start()
 
-            except socket.timeout:
+            except TimeoutError:
                 # Timeout allows us to check running flag periodically
                 continue
             except OSError as e:
@@ -121,9 +121,7 @@ class SIPServer:
         try:
             message = SIPMessage(raw_message)
 
-            self.logger.debug(
-                f"Received {message.method or message.status_code} from {addr}"
-            )
+            self.logger.debug(f"Received {message.method or message.status_code} from {addr}")
 
             if message.is_request():
                 self._handle_request(message, addr)
@@ -252,9 +250,7 @@ class SIPServer:
                 )
                 self.logger.info(f"  Call State: {call.state}")
                 if hasattr(call, "voicemail_extension"):
-                    self.logger.info(
-                        f"  Voicemail Extension: {call.voicemail_extension}"
-                    )
+                    self.logger.info(f"  Voicemail Extension: {call.voicemail_extension}")
                 # Determine which party sent BYE and forward to the other
                 other_party_addr = None
 
@@ -371,9 +367,7 @@ class SIPServer:
 
             # Only process DTMF-related content types (handle charset and other
             # parameters)
-            if content_type_lower.startswith(
-                "application/dtmf-relay"
-            ) or content_type_lower.startswith("application/dtm"):
+            if content_type_lower.startswith(("application/dtmf-relay", "application/dtm")):
                 # Parse DTMF from body
                 # Format can be:
                 # Signal=1
@@ -392,14 +386,13 @@ class SIPServer:
                                 break
                             # Check if it's an RFC 2833 event code (some phones
                             # send "11" for "#")
-                            elif digit in RFC2833_EVENT_TO_DTMF:
+                            if digit in RFC2833_EVENT_TO_DTMF:
                                 dtmf_digit = RFC2833_EVENT_TO_DTMF[digit]
                                 self.logger.debug(
                                     f"Converted RFC 2833 event code {digit} to DTMF digit {dtmf_digit}"
                                 )
                                 break
-                            else:
-                                self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
+                            self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
                         break
 
                 if dtmf_digit:
@@ -536,9 +529,7 @@ class SIPServer:
 
     def _handle_response(self, message, addr):
         """Handle SIP response"""
-        self.logger.debug(
-            f"Received response {message.status_code} from {addr}"
-        )
+        self.logger.debug(f"Received response {message.status_code} from {addr}")
 
         # Handle responses from callee
         if self.pbx_core and message.status_code:

@@ -8,21 +8,19 @@ Recording Analytics, Voicemail Drop, DNS SRV, SBC, and Data Residency.
 """
 
 import base64
-from datetime import datetime, timedelta, timezone
+import sqlite3
+from datetime import UTC, datetime, timedelta
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
-    require_auth,
-    require_admin,
     get_request_body,
-    DateTimeEncoder,
+    require_admin,
+    require_auth,
+    send_json,
 )
 from pbx.utils.logger import get_logger
-import sqlite3
 
 logger = get_logger()
 
@@ -66,8 +64,7 @@ def get_speech_analytics_config(extension: str) -> tuple[Response, int]:
             config = engine.get_config(extension)
             if config:
                 return send_json(config), 200
-            else:
-                return send_json({"error": "Config not found"}, 404), 404
+            return send_json({"error": "Config not found"}, 404), 404
         except Exception as e:
             logger.error(f"Error getting speech analytics config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -88,8 +85,7 @@ def get_call_summary(call_id: str) -> tuple[Response, int]:
             summary = engine.get_call_summary(call_id)
             if summary:
                 return send_json(summary), 200
-            else:
-                return send_json({"error": "Summary not found"}, 404), 404
+            return send_json({"error": "Summary not found"}, 404), 404
         except Exception as e:
             logger.error(f"Error getting call summary: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -110,8 +106,7 @@ def update_speech_analytics_config(extension: str) -> tuple[Response, int]:
             engine = SpeechAnalyticsEngine(pbx_core.database, pbx_core.config)
             if engine.update_config(extension, body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to update config"}, 500), 500
+            return send_json({"error": "Failed to update config"}, 500), 500
         except Exception as e:
             logger.error(f"Error updating speech analytics config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -206,8 +201,7 @@ def get_video_room(room_id: str) -> tuple[Response, int]:
                 participants = engine.get_room_participants(int(room_id))
                 room["participants"] = participants
                 return send_json(room), 200
-            else:
-                return send_json({"error": "Room not found"}, 404), 404
+            return send_json({"error": "Room not found"}, 404), 404
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting video room: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -229,8 +223,7 @@ def create_video_room() -> tuple[Response, int]:
             room_id = engine.create_room(body)
             if room_id:
                 return send_json({"room_id": room_id, "success": True}), 200
-            else:
-                return send_json({"error": "Failed to create room"}, 500), 500
+            return send_json({"error": "Failed to create room"}, 500), 500
         except Exception as e:
             logger.error(f"Error creating video room: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -251,8 +244,7 @@ def join_video_room(room_id: str) -> tuple[Response, int]:
             engine = VideoConferencingEngine(pbx_core.database, pbx_core.config)
             if engine.join_room(int(room_id), body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to join room"}, 500), 500
+            return send_json({"error": "Failed to join room"}, 500), 500
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error joining video room: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -274,9 +266,7 @@ def get_click_to_dial_configs() -> tuple[Response, int]:
         try:
             from pbx.features.click_to_dial import ClickToDialEngine
 
-            engine = ClickToDialEngine(
-                pbx_core.database, pbx_core.config, pbx_core
-            )
+            engine = ClickToDialEngine(pbx_core.database, pbx_core.config, pbx_core)
             configs = engine.get_all_configs()
             return send_json({"configs": configs}), 200
         except Exception as e:
@@ -295,22 +285,19 @@ def get_click_to_dial_config(extension: str) -> tuple[Response, int]:
         try:
             from pbx.features.click_to_dial import ClickToDialEngine
 
-            engine = ClickToDialEngine(
-                pbx_core.database, pbx_core.config, pbx_core
-            )
+            engine = ClickToDialEngine(pbx_core.database, pbx_core.config, pbx_core)
             config = engine.get_config(extension)
             if config:
                 return send_json(config), 200
-            else:
-                # Return default config
-                return send_json(
-                    {
-                        "extension": extension,
-                        "enabled": True,
-                        "auto_answer": False,
-                        "browser_notification": True,
-                    }
-                ), 200
+            # Return default config
+            return send_json(
+                {
+                    "extension": extension,
+                    "enabled": True,
+                    "auto_answer": False,
+                    "browser_notification": True,
+                }
+            ), 200
         except Exception as e:
             logger.error(f"Error getting click-to-dial config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -327,9 +314,7 @@ def get_click_to_dial_history(extension: str) -> tuple[Response, int]:
         try:
             from pbx.features.click_to_dial import ClickToDialEngine
 
-            engine = ClickToDialEngine(
-                pbx_core.database, pbx_core.config, pbx_core
-            )
+            engine = ClickToDialEngine(pbx_core.database, pbx_core.config, pbx_core)
             history = engine.get_call_history(extension)
             return send_json({"history": history}), 200
         except Exception as e:
@@ -352,15 +337,12 @@ def click_to_dial_call(extension: str) -> tuple[Response, int]:
 
             from pbx.features.click_to_dial import ClickToDialEngine
 
-            engine = ClickToDialEngine(
-                pbx_core.database, pbx_core.config, pbx_core
-            )
+            engine = ClickToDialEngine(pbx_core.database, pbx_core.config, pbx_core)
             call_id = engine.initiate_call(extension, destination, source)
 
             if call_id:
                 return send_json({"call_id": call_id, "success": True}), 200
-            else:
-                return send_json({"error": "Failed to initiate call"}, 500), 500
+            return send_json({"error": "Failed to initiate call"}, 500), 500
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error initiating click-to-dial call: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -378,13 +360,10 @@ def update_click_to_dial_config(extension: str) -> tuple[Response, int]:
             body = get_request_body()
             from pbx.features.click_to_dial import ClickToDialEngine
 
-            engine = ClickToDialEngine(
-                pbx_core.database, pbx_core.config, pbx_core
-            )
+            engine = ClickToDialEngine(pbx_core.database, pbx_core.config, pbx_core)
             if engine.update_config(extension, body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to update config"}, 500), 500
+            return send_json({"error": "Failed to update config"}, 500), 500
         except Exception as e:
             logger.error(f"Error updating click-to-dial config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -449,8 +428,7 @@ def create_team_channel() -> tuple[Response, int]:
             channel_id = engine.create_channel(body)
             if channel_id:
                 return send_json({"channel_id": channel_id, "success": True}), 200
-            else:
-                return send_json({"error": "Failed to create channel"}, 500), 500
+            return send_json({"error": "Failed to create channel"}, 500), 500
         except Exception as e:
             logger.error(f"Error creating team channel: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -472,8 +450,7 @@ def send_team_message() -> tuple[Response, int]:
             message_id = engine.send_message(body)
             if message_id:
                 return send_json({"message_id": message_id, "success": True}), 200
-            else:
-                return send_json({"error": "Failed to send message"}, 500), 500
+            return send_json({"error": "Failed to send message"}, 500), 500
         except Exception as e:
             logger.error(f"Error sending team message: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -518,8 +495,7 @@ def get_e911_location(extension: str) -> tuple[Response, int]:
             location = engine.get_location(extension)
             if location:
                 return send_json(location), 200
-            else:
-                return send_json({"error": "Location not found"}, 404), 404
+            return send_json({"error": "Location not found"}, 404), 404
         except Exception as e:
             logger.error(f"Error getting E911 location: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -559,8 +535,7 @@ def update_e911_location(extension: str) -> tuple[Response, int]:
             engine = NomadicE911Engine(pbx_core.database, pbx_core.config)
             if engine.update_location(extension, body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to update location"}, 500), 500
+            return send_json({"error": "Failed to update location"}, 500), 500
         except Exception as e:
             logger.error(f"Error updating E911 location: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -586,8 +561,7 @@ def detect_e911_location(extension: str) -> tuple[Response, int]:
             location = engine.detect_location_by_ip(extension, ip_address)
             if location:
                 return send_json(location), 200
-            else:
-                return send_json({"error": "Location could not be detected"}, 404), 404
+            return send_json({"error": "Location could not be detected"}, 404), 404
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error detecting E911 location: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -608,8 +582,7 @@ def create_e911_site() -> tuple[Response, int]:
             engine = NomadicE911Engine(pbx_core.database, pbx_core.config)
             if engine.create_site_config(body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to create site"}, 500), 500
+            return send_json({"error": "Failed to create site"}, 500), 500
         except Exception as e:
             logger.error(f"Error creating E911 site: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -635,8 +608,7 @@ def get_hubspot_config() -> tuple[Response, int]:
             config = integration.get_config()
             if config:
                 return send_json(config), 200
-            else:
-                return send_json({"enabled": False}), 200
+            return send_json({"enabled": False}), 200
         except Exception as e:
             logger.error(f"Error getting HubSpot config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -657,8 +629,7 @@ def get_zendesk_config() -> tuple[Response, int]:
             config = integration.get_config()
             if config:
                 return send_json(config), 200
-            else:
-                return send_json({"enabled": False}), 200
+            return send_json({"enabled": False}), 200
         except Exception as e:
             logger.error(f"Error getting Zendesk config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -714,8 +685,7 @@ def update_hubspot_config() -> tuple[Response, int]:
             integration = HubSpotIntegration(pbx_core.database, pbx_core.config)
             if integration.update_config(body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to update config"}, 500), 500
+            return send_json({"error": "Failed to update config"}, 500), 500
         except Exception as e:
             logger.error(f"Error updating HubSpot config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -736,8 +706,7 @@ def update_zendesk_config() -> tuple[Response, int]:
             integration = ZendeskIntegration(pbx_core.database, pbx_core.config)
             if integration.update_config(body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to update config"}, 500), 500
+            return send_json({"error": "Failed to update config"}, 500), 500
         except Exception as e:
             logger.error(f"Error updating Zendesk config: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -753,7 +722,7 @@ def clear_integration_activity() -> tuple[Response, int]:
     if pbx_core and pbx_core.database.enabled:
         try:
             # Delete entries older than 30 days
-            cutoff_date = datetime.now(timezone.utc) - timedelta(days=30)
+            cutoff_date = datetime.now(UTC) - timedelta(days=30)
             delete_query = (
                 """DELETE FROM integration_activity_log
                    WHERE created_at < ?"""
@@ -889,8 +858,7 @@ def record_gdpr_consent() -> tuple[Response, int]:
             engine = GDPRComplianceEngine(pbx_core.database, pbx_core.config)
             if engine.record_consent(body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to record consent"}, 500), 500
+            return send_json({"error": "Failed to record consent"}, 500), 500
         except Exception as e:
             logger.error(f"Error recording GDPR consent: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -911,8 +879,7 @@ def withdraw_gdpr_consent() -> tuple[Response, int]:
             engine = GDPRComplianceEngine(pbx_core.database, pbx_core.config)
             if engine.withdraw_consent(body.get("extension"), body.get("consent_type")):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to withdraw consent"}, 500), 500
+            return send_json({"error": "Failed to withdraw consent"}, 500), 500
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error withdrawing GDPR consent: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -934,8 +901,7 @@ def create_gdpr_request() -> tuple[Response, int]:
             request_id = engine.create_data_request(body)
             if request_id:
                 return send_json({"request_id": request_id, "success": True}), 200
-            else:
-                return send_json({"error": "Failed to create request"}, 500), 500
+            return send_json({"error": "Failed to create request"}, 500), 500
         except Exception as e:
             logger.error(f"Error creating GDPR request: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -956,8 +922,7 @@ def register_soc2_control() -> tuple[Response, int]:
             engine = SOC2ComplianceEngine(pbx_core.database, pbx_core.config)
             if engine.register_control(body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to register control"}, 500), 500
+            return send_json({"error": "Failed to register control"}, 500), 500
         except Exception as e:
             logger.error(f"Error registering SOC2 control: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -978,8 +943,7 @@ def log_pci_event() -> tuple[Response, int]:
             engine = PCIDSSComplianceEngine(pbx_core.database, pbx_core.config)
             if engine.log_audit_event(body):
                 return send_json({"success": True}), 200
-            else:
-                return send_json({"error": "Failed to log event"}, 500), 500
+            return send_json({"error": "Failed to log event"}, 500), 500
         except Exception as e:
             logger.error(f"Error logging PCI event: {e}")
             return send_json({"error": str(e)}, 500), 500
@@ -1037,8 +1001,7 @@ def get_bi_export_status(dataset_name: str) -> tuple[Response, int]:
         dataset = next((d for d in datasets if d["name"] == dataset_name), None)
         if dataset:
             return send_json(dataset), 200
-        else:
-            return send_json({"error": "Dataset not found"}, 404), 404
+        return send_json({"error": "Dataset not found"}, 404), 404
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting export status: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -1292,8 +1255,7 @@ def get_blending_agent_status(agent_id: str) -> tuple[Response, int]:
         status = blending.get_agent_status(agent_id)
         if status:
             return send_json(status), 200
-        else:
-            return send_json({"error": "Agent not found"}, 404), 404
+        return send_json({"error": "Agent not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting agent status: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -1390,8 +1352,7 @@ def get_geo_region_status(region_id: str) -> tuple[Response, int]:
         status = geo.get_region_status(region_id)
         if status:
             return send_json(status), 200
-        else:
-            return send_json({"error": "Region not found"}, 404), 404
+        return send_json({"error": "Region not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting region status: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -1689,8 +1650,7 @@ def get_campaign_details(campaign_id: str) -> tuple[Response, int]:
         stats = dialer.get_campaign_statistics(campaign_id)
         if stats:
             return send_json(stats), 200
-        else:
-            return send_json({"error": "Campaign not found"}, 404), 404
+        return send_json({"error": "Campaign not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting campaign details: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -1893,8 +1853,7 @@ def get_voice_profile(user_id: str) -> tuple[Response, int]:
                     "fraud_attempts": profile.fraud_attempts,
                 }
             ), 200
-        else:
-            return send_json({"error": "Profile not found"}, 404), 404
+        return send_json({"error": "Profile not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting voice profile: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -1979,7 +1938,7 @@ def verify_speaker() -> tuple[Response, int]:
             try:
                 audio_data = base64.b64decode(audio_data_str)
             except ValueError as e:
-                return send_json({"error": f"Invalid base64 audio data: {str(e)}"}, 400), 400
+                return send_json({"error": f"Invalid base64 audio data: {e!s}"}, 400), 400
         else:
             audio_data = b""
 
@@ -2012,8 +1971,7 @@ def delete_voice_profile(user_id: str) -> tuple[Response, int]:
         success = vb.delete_profile(user_id)
         if success:
             return send_json({"success": True}), 200
-        else:
-            return send_json({"error": "Profile not found"}, 404), 404
+        return send_json({"error": "Profile not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error deleting voice profile: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -2036,7 +1994,7 @@ def get_quality_predictions() -> tuple[Response, int]:
             pbx_core.config if pbx_core else None,
             getattr(pbx_core, "db", None) if pbx_core else None,
         )
-        predictions = {call_id: pred for call_id, pred in qp.active_predictions.items()}
+        predictions = dict(qp.active_predictions.items())
         return send_json({"predictions": predictions}), 200
     except Exception as e:
         logger.error(f"Error getting quality predictions: {e}")
@@ -2076,8 +2034,7 @@ def get_quality_alerts() -> tuple[Response, int]:
         if qp.db:
             alerts = qp.db.get_active_alerts()
             return send_json({"alerts": alerts}), 200
-        else:
-            return send_json({"alerts": [], "message": "Database not configured"}), 200
+        return send_json({"alerts": [], "message": "Database not configured"}), 200
     except Exception as e:
         logger.error(f"Error getting quality alerts: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -2098,8 +2055,7 @@ def get_call_prediction(call_id: str) -> tuple[Response, int]:
         prediction = qp.get_prediction(call_id)
         if prediction:
             return send_json(prediction), 200
-        else:
-            return send_json({"error": "Prediction not found"}, 404), 404
+        return send_json({"error": "Prediction not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting call prediction: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -2294,8 +2250,7 @@ def get_mobile_mapping(business_number: str) -> tuple[Response, int]:
         mapping = mnp.get_mapping(business_number)
         if mapping:
             return send_json(mapping), 200
-        else:
-            return send_json({"error": "Mapping not found"}, 404), 404
+        return send_json({"error": "Mapping not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting mobile mapping: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -2346,8 +2301,7 @@ def toggle_mobile_mapping(business_number: str) -> tuple[Response, int]:
 
         if success:
             return send_json({"success": True, "active": active}), 200
-        else:
-            return send_json({"error": "Mapping not found"}, 404), 404
+        return send_json({"error": "Mapping not found"}, 404), 404
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error toggling mobile mapping: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -2366,8 +2320,7 @@ def delete_mobile_mapping(business_number: str) -> tuple[Response, int]:
 
         if success:
             return send_json({"success": True}), 200
-        else:
-            return send_json({"error": "Mapping not found"}, 404), 404
+        return send_json({"error": "Mapping not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error deleting mobile mapping: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -2387,7 +2340,7 @@ def get_recording_analyses() -> tuple[Response, int]:
         from pbx.features.call_recording_analytics import get_recording_analytics
 
         ra = get_recording_analytics(pbx_core.config if pbx_core else None)
-        analyses = {rec_id: analysis for rec_id, analysis in ra.analyses.items()}
+        analyses = dict(ra.analyses.items())
         return send_json({"analyses": analyses}), 200
     except Exception as e:
         logger.error(f"Error getting recording analyses: {e}")
@@ -2422,8 +2375,7 @@ def get_recording_analysis(recording_id: str) -> tuple[Response, int]:
         analysis = ra.get_analysis(recording_id)
         if analysis:
             return send_json(analysis), 200
-        else:
-            return send_json({"error": "Analysis not found"}, 404), 404
+        return send_json({"error": "Analysis not found"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting recording analysis: {e}")
         return send_json({"error": str(e)}, 500), 500
@@ -2659,7 +2611,7 @@ def get_sbc_relays() -> tuple[Response, int]:
         from pbx.features.session_border_controller import get_sbc
 
         sbc = get_sbc(pbx_core.config if pbx_core else None)
-        relays = {call_id: relay for call_id, relay in sbc.relay_sessions.items()}
+        relays = dict(sbc.relay_sessions.items())
         return send_json({"relays": relays}), 200
     except Exception as e:
         logger.error(f"Error getting SBC relays: {e}")

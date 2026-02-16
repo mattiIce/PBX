@@ -3,11 +3,11 @@ Predictive Dialing
 AI-optimized outbound campaign management
 """
 
-from datetime import datetime, timedelta, timezone
+import sqlite3
+from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class CampaignStatus(Enum):
@@ -32,7 +32,7 @@ class DialingMode(Enum):
 class Contact:
     """Represents a contact in a campaign"""
 
-    def __init__(self, contact_id: str, phone_number: str, data: dict = None):
+    def __init__(self, contact_id: str, phone_number: str, data: dict | None = None):
         """Initialize contact"""
         self.contact_id = contact_id
         self.phone_number = phone_number
@@ -52,7 +52,7 @@ class Campaign:
         self.name = name
         self.dialing_mode = dialing_mode
         self.status = CampaignStatus.PENDING
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.started_at = None
         self.ended_at = None
         self.contacts: list[Contact] = []
@@ -200,7 +200,7 @@ class PredictiveDialer:
 
         campaign = self.campaigns[campaign_id]
         campaign.status = CampaignStatus.RUNNING
-        campaign.started_at = datetime.now(timezone.utc)
+        campaign.started_at = datetime.now(UTC)
 
         self.logger.info(f"Started campaign {campaign_id}")
         self.logger.info(f"  Mode: {campaign.dialing_mode.value}")
@@ -251,7 +251,7 @@ class PredictiveDialer:
 
         campaign = self.campaigns[campaign_id]
         campaign.status = CampaignStatus.COMPLETED
-        campaign.ended_at = datetime.now(timezone.utc)
+        campaign.ended_at = datetime.now(UTC)
 
         # Calculate campaign statistics
         duration = (
@@ -381,16 +381,15 @@ class PredictiveDialer:
             return None
 
         campaign = self.campaigns[campaign_id]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for contact in campaign.contacts:
             if contact.status == "pending":
                 return contact
-            elif contact.status == "retry":
-                if contact.last_attempt:
-                    retry_time = contact.last_attempt + timedelta(seconds=campaign.retry_interval)
-                    if now >= retry_time:
-                        return contact
+            if contact.status == "retry" and contact.last_attempt:
+                retry_time = contact.last_attempt + timedelta(seconds=campaign.retry_interval)
+                if now >= retry_time:
+                    return contact
 
         return None
 
@@ -439,7 +438,7 @@ class PredictiveDialer:
         #     call_manager.queue_for_agent(call_id, queue='outbound')
 
         contact.attempts += 1
-        contact.last_attempt = datetime.now(timezone.utc)
+        contact.last_attempt = datetime.now(UTC)
         self.total_calls_made += 1
 
         self.logger.info(f"Dialing contact {contact.contact_id}: {contact.phone_number}")

@@ -60,9 +60,8 @@ class FIPSEncryption:
                     "FIPS mode enforcement failed: cryptography library not available. "
                     "Install with: pip install cryptography"
                 )
-            else:
-                self.logger.warning(error_msg)
-                self.logger.warning("Falling back to standard library (non-FIPS compliant)")
+            self.logger.warning(error_msg)
+            self.logger.warning("Falling back to standard library (non-FIPS compliant)")
 
         if fips_mode and CRYPTO_AVAILABLE:
             self.logger.info("FIPS 140-2 compliant encryption ENABLED")
@@ -171,8 +170,7 @@ class FIPSEncryption:
         """
         if not CRYPTO_AVAILABLE:
             raise ImportError(
-                "Encryption requires cryptography library. "
-                "Install with: pip install cryptography"
+                "Encryption requires cryptography library. Install with: pip install cryptography"
             )
 
         if isinstance(data, str):
@@ -223,8 +221,7 @@ class FIPSEncryption:
         """
         if not CRYPTO_AVAILABLE:
             raise ImportError(
-                "Decryption requires cryptography library. "
-                "Install with: pip install cryptography"
+                "Decryption requires cryptography library. Install with: pip install cryptography"
             )
 
         # Decode from base64
@@ -320,9 +317,8 @@ class FIPSEncryption:
             digest = hashes.Hash(hashes.SHA256())
             digest.update(data)
             return digest.finalize().hex()
-        else:
-            # Fallback to hashlib
-            return hashlib.sha256(data).hexdigest()
+        # Fallback to hashlib
+        return hashlib.sha256(data).hexdigest()
 
 
 # Global instance

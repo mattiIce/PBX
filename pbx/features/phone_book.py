@@ -5,10 +5,10 @@ and can be pushed to IP phones
 """
 
 import json
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # Import ExtensionDB for database-based AD sync
 try:
@@ -138,10 +138,10 @@ class PhoneBook:
         self,
         extension: str,
         name: str,
-        department: str = None,
-        email: str = None,
-        mobile: str = None,
-        office_location: str = None,
+        department: str | None = None,
+        email: str | None = None,
+        mobile: str | None = None,
+        office_location: str | None = None,
         ad_synced: bool = False,
     ) -> bool:
         """
@@ -170,7 +170,7 @@ class PhoneBook:
             "mobile": mobile,
             "office_location": office_location,
             "ad_synced": ad_synced,
-            "updated_at": datetime.now(timezone.utc),
+            "updated_at": datetime.now(UTC),
         }
 
         # Update in-memory cache
@@ -209,7 +209,7 @@ class PhoneBook:
                     mobile,
                     office_location,
                     ad_synced,
-                    datetime.now(timezone.utc),
+                    datetime.now(UTC),
                 )
                 success = self.database.execute(query, params)
 
@@ -339,9 +339,7 @@ class PhoneBook:
                 # table
                 ad_extensions = ext_db.get_ad_synced()
 
-                self.logger.info(
-                    f"Found {len(ad_extensions)} AD-synced extensions in database"
-                )
+                self.logger.info(f"Found {len(ad_extensions)} AD-synced extensions in database")
 
                 for ext_data in ad_extensions:
                     success = self.add_entry(
@@ -403,12 +401,8 @@ class PhoneBook:
 
         for entry in sorted(self.entries.values(), key=lambda x: x["name"]):
             xml_lines.append("  <DirectoryEntry>")
-            xml_lines.append(
-                f'    <Name>{self._xml_escape(entry["name"])}</Name>'
-            )
-            xml_lines.append(
-                f'    <Telephone>{self._xml_escape(entry["extension"])}</Telephone>'
-            )
+            xml_lines.append(f"    <Name>{self._xml_escape(entry['name'])}</Name>")
+            xml_lines.append(f"    <Telephone>{self._xml_escape(entry['extension'])}</Telephone>")
             xml_lines.append("  </DirectoryEntry>")
 
         xml_lines.append("</YealinkIPPhoneDirectory>")
@@ -431,12 +425,8 @@ class PhoneBook:
 
         for entry in sorted(self.entries.values(), key=lambda x: x["name"]):
             xml_lines.append("  <DirectoryEntry>")
-            xml_lines.append(
-                f'    <Name>{self._xml_escape(entry["name"])}</Name>'
-            )
-            xml_lines.append(
-                f'    <Telephone>{self._xml_escape(entry["extension"])}</Telephone>'
-            )
+            xml_lines.append(f"    <Name>{self._xml_escape(entry['name'])}</Name>")
+            xml_lines.append(f"    <Telephone>{self._xml_escape(entry['extension'])}</Telephone>")
             xml_lines.append("  </DirectoryEntry>")
 
         xml_lines.append("</CiscoIPPhoneDirectory>")

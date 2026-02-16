@@ -575,25 +575,25 @@ class TestDatabaseLayerMethods:
         """Test that list_atas method exists in ProvisionedDevicesDB"""
         from pbx.utils.database import ProvisionedDevicesDB
 
-        assert hasattr(
-            ProvisionedDevicesDB, "list_atas"
-        ), "ProvisionedDevicesDB should have list_atas method"
+        assert hasattr(ProvisionedDevicesDB, "list_atas"), (
+            "ProvisionedDevicesDB should have list_atas method"
+        )
 
     def test_list_phones_method_exists(self) -> None:
         """Test that list_phones method exists in ProvisionedDevicesDB"""
         from pbx.utils.database import ProvisionedDevicesDB
 
-        assert hasattr(
-            ProvisionedDevicesDB, "list_phones"
-        ), "ProvisionedDevicesDB should have list_phones method"
+        assert hasattr(ProvisionedDevicesDB, "list_phones"), (
+            "ProvisionedDevicesDB should have list_phones method"
+        )
 
     def test_list_by_type_method_exists(self) -> None:
         """Test that list_by_type method exists in ProvisionedDevicesDB"""
         from pbx.utils.database import ProvisionedDevicesDB
 
-        assert hasattr(
-            ProvisionedDevicesDB, "list_by_type"
-        ), "ProvisionedDevicesDB should have list_by_type method"
+        assert hasattr(ProvisionedDevicesDB, "list_by_type"), (
+            "ProvisionedDevicesDB should have list_by_type method"
+        )
 
     def test_detect_device_type_method_uses_utility(self) -> None:
         """Test that _detect_device_type method uses shared utility"""
@@ -602,9 +602,9 @@ class TestDatabaseLayerMethods:
         from pbx.utils.database import ProvisionedDevicesDB
 
         source = inspect.getsource(ProvisionedDevicesDB._detect_device_type)
-        assert (
-            "detect_device_type" in source
-        ), "_detect_device_type should call shared utility function"
+        assert "detect_device_type" in source, (
+            "_detect_device_type should call shared utility function"
+        )
 
 
 class TestAPIEndpoints:
@@ -614,25 +614,25 @@ class TestAPIEndpoints:
         """Test that /api/provisioning/atas endpoint handler exists"""
         from pbx.api.rest_api import PBXAPIHandler
 
-        assert hasattr(
-            PBXAPIHandler, "_handle_get_provisioning_atas"
-        ), "API should have _handle_get_provisioning_atas method"
+        assert hasattr(PBXAPIHandler, "_handle_get_provisioning_atas"), (
+            "API should have _handle_get_provisioning_atas method"
+        )
 
     def test_get_provisioning_phones_endpoint_exists(self) -> None:
         """Test that /api/provisioning/phones endpoint handler exists"""
         from pbx.api.rest_api import PBXAPIHandler
 
-        assert hasattr(
-            PBXAPIHandler, "_handle_get_provisioning_phones"
-        ), "API should have _handle_get_provisioning_phones method"
+        assert hasattr(PBXAPIHandler, "_handle_get_provisioning_phones"), (
+            "API should have _handle_get_provisioning_phones method"
+        )
 
     def test_get_registered_atas_endpoint_exists(self) -> None:
         """Test that /api/registered-atas endpoint handler exists"""
         from pbx.api.rest_api import PBXAPIHandler
 
-        assert hasattr(
-            PBXAPIHandler, "_handle_get_registered_atas"
-        ), "API should have _handle_get_registered_atas method"
+        assert hasattr(PBXAPIHandler, "_handle_get_registered_atas"), (
+            "API should have _handle_get_registered_atas method"
+        )
 
     def test_get_provisioning_atas_requires_auth(self) -> None:
         """Test that /api/provisioning/atas requires authentication"""
@@ -641,12 +641,12 @@ class TestAPIEndpoints:
         from pbx.api.rest_api import PBXAPIHandler
 
         source = inspect.getsource(PBXAPIHandler._handle_get_provisioning_atas)
-        assert (
-            "_verify_authentication" in source
-        ), "_handle_get_provisioning_atas should verify authentication"
-        assert (
-            "401" in source or "Authentication required" in source
-        ), "Should return 401 for unauthenticated requests"
+        assert "_verify_authentication" in source, (
+            "_handle_get_provisioning_atas should verify authentication"
+        )
+        assert "401" in source or "Authentication required" in source, (
+            "Should return 401 for unauthenticated requests"
+        )
 
     def test_get_provisioning_phones_requires_auth(self) -> None:
         """Test that /api/provisioning/phones requires authentication"""
@@ -655,12 +655,12 @@ class TestAPIEndpoints:
         from pbx.api.rest_api import PBXAPIHandler
 
         source = inspect.getsource(PBXAPIHandler._handle_get_provisioning_phones)
-        assert (
-            "_verify_authentication" in source
-        ), "_handle_get_provisioning_phones should verify authentication"
-        assert (
-            "401" in source or "Authentication required" in source
-        ), "Should return 401 for unauthenticated requests"
+        assert "_verify_authentication" in source, (
+            "_handle_get_provisioning_phones should verify authentication"
+        )
+        assert "401" in source or "Authentication required" in source, (
+            "Should return 401 for unauthenticated requests"
+        )
 
     def test_get_registered_atas_requires_auth(self) -> None:
         """Test that /api/registered-atas requires authentication"""
@@ -669,12 +669,12 @@ class TestAPIEndpoints:
         from pbx.api.rest_api import PBXAPIHandler
 
         source = inspect.getsource(PBXAPIHandler._handle_get_registered_atas)
-        assert (
-            "_verify_authentication" in source
-        ), "_handle_get_registered_atas should verify authentication"
-        assert (
-            "401" in source or "Authentication required" in source
-        ), "Should return 401 for unauthenticated requests"
+        assert "_verify_authentication" in source, (
+            "_handle_get_registered_atas should verify authentication"
+        )
+        assert "401" in source or "Authentication required" in source, (
+            "Should return 401 for unauthenticated requests"
+        )
 
     def test_get_registered_atas_requires_admin(self) -> None:
         """Test that /api/registered-atas requires admin privileges"""
@@ -683,6 +683,6 @@ class TestAPIEndpoints:
         from pbx.api.rest_api import PBXAPIHandler
 
         source = inspect.getsource(PBXAPIHandler._handle_get_registered_atas)
-        assert (
-            "admin" in source.lower() and "403" in source
-        ), "_handle_get_registered_atas should require admin privileges"
+        assert "admin" in source.lower() and "403" in source, (
+            "_handle_get_registered_atas should require admin privileges"
+        )

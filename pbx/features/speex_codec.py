@@ -129,8 +129,6 @@ class SpeexCodec:
 
         # Check if speex library is available
         try:
-            pass
-
             self.speex_available = True
             self.logger.info(
                 f"Speex codec initialized (mode: {self.mode}, "
@@ -329,7 +327,7 @@ class SpeexCodec:
         expected_bytes = self.frame_size * 2  # 16-bit samples
         if len(pcm_data) != expected_bytes:
             self.logger.error(
-                f"Invalid PCM data size: got {len(pcm_data)}, " f"expected {expected_bytes} bytes"
+                f"Invalid PCM data size: got {len(pcm_data)}, expected {expected_bytes} bytes"
             )
             return None
 
@@ -461,8 +459,6 @@ class SpeexCodecManager:
             bool: True if speex library is available
         """
         try:
-            pass
-
             return True
         except ImportError:
             return False

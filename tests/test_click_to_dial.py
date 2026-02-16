@@ -6,7 +6,6 @@ Test Click-to-Dial functionality
 import sqlite3
 from typing import Any
 
-
 from pbx.features.click_to_dial import ClickToDialEngine
 
 
@@ -198,6 +197,6 @@ def test_click_to_dial_all_configs() -> None:
     # Get all configs
     all_configs = engine.get_all_configs()
     assert len(all_configs) == 3
-    assert all([c["extension"] in ["1001", "1002", "1003"] for c in all_configs])
+    assert all(c["extension"] in ["1001", "1002", "1003"] for c in all_configs)
 
     db.close()

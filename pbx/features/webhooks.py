@@ -9,7 +9,7 @@ import json
 import queue
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -58,7 +58,7 @@ class WebhookEvent:
         """
         self.event_type = event_type
         self.data = data
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
         self.event_id = f"{event_type}-{int(time.time() * 1000)}"
 
     def to_dict(self) -> dict:
@@ -97,7 +97,7 @@ class WebhookSubscription:
         self.secret = secret
         self.headers = headers or {}
         self.enabled = enabled
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.last_sent = None
         self.success_count = 0
         self.failure_count = 0
@@ -220,9 +220,7 @@ class WebhookSystem:
             )
             worker.start()
             self.workers.append(worker)
-        self.logger.info(
-            f"Started {self.worker_threads} webhook delivery workers"
-        )
+        self.logger.info(f"Started {self.worker_threads} webhook delivery workers")
 
     def stop(self):
         """Stop the webhook system"""
@@ -275,12 +273,10 @@ class WebhookSystem:
                 request = Request(subscription.url, data=payload, headers=headers, method="POST")
 
                 # Send request
-                response = urlopen(
-                    request, timeout=self.timeout
-                )  # nosec B310 - URL is from configured webhook subscription
+                response = urlopen(request, timeout=self.timeout)  # nosec B310 - URL is from configured webhook subscription
 
                 # Success
-                subscription.last_sent = datetime.now(timezone.utc)
+                subscription.last_sent = datetime.now(UTC)
                 subscription.success_count += 1
                 self.logger.info(
                     f"Webhook delivered: {event.event_type} -> {subscription.url} (status: {response.status})"

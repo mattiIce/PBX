@@ -6,7 +6,6 @@ Verifies continuous security compliance monitoring
 
 import time
 
-
 from pbx.utils.config import Config
 from pbx.utils.security_monitor import SecurityMonitor, get_security_monitor
 

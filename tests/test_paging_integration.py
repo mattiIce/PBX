@@ -5,7 +5,6 @@ Test paging system integration with PBX core
 
 from typing import Any
 
-
 from pbx.features.paging import PagingSystem
 
 

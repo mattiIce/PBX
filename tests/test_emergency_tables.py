@@ -5,11 +5,10 @@ Tests for emergency tables in database
 
 import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_emergency_contacts_table_creation() -> None:

@@ -11,7 +11,6 @@ import threading
 import time
 from unittest.mock import MagicMock, patch
 
-
 from pbx.core.call import Call, CallState
 
 
@@ -41,7 +40,6 @@ class TestVoicemailIVREarlyTermination:
             patch("pbx.rtp.handler.RTPPlayer") as MockRTPPlayer,
             patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder,
         ):
-
             # Set up mocks
             mock_vm_system = MagicMock()
             MockVoicemailSystem.return_value = mock_vm_system
@@ -79,7 +77,6 @@ class TestVoicemailIVREarlyTermination:
 
             # Patch the logger to capture log messages
             with patch.object(pbx_core, "logger") as mock_logger:
-
                 # Simulate call ending before IVR loop starts
                 def end_call_after_setup() -> None:
                     """End call after a short delay to simulate BYE during setup"""
@@ -137,7 +134,6 @@ class TestVoicemailIVREarlyTermination:
             patch("pbx.rtp.handler.RTPPlayer") as MockRTPPlayer,
             patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder,
         ):
-
             # Set up mocks
             mock_vm_system = MagicMock()
             MockVoicemailSystem.return_value = mock_vm_system

@@ -52,7 +52,7 @@ class DTMFDetector:
         for freq in DTMF_LOW_FREQS + DTMF_HIGH_FREQS:
             # Calculate the nearest DFT bin for this frequency
             # 0.5 added for proper rounding to nearest integer
-            k = int(round(samples_per_frame * freq / sample_rate))
+            k = round(samples_per_frame * freq / sample_rate)
             omega = (2.0 * math.pi * k) / samples_per_frame
             self.coefficients[freq] = 2.0 * math.cos(omega)
 
@@ -303,7 +303,5 @@ class DTMFGenerator:
             samples.extend(tone_samples)
             samples.extend(gap_samples)
 
-        self.logger.info(
-            f"Generated DTMF sequence: {digits} ({len(samples)} samples)"
-        )
+        self.logger.info(f"Generated DTMF sequence: {digits} ({len(samples)} samples)")
         return samples

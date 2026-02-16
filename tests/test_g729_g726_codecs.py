@@ -62,6 +62,7 @@ class TestG729Codec:
         assert caps["bitrate"] == 8000
         assert caps["channels"] == 1
 
+
 class TestG729CodecManager:
     """Test G.729 codec manager"""
 
@@ -114,6 +115,7 @@ class TestG729CodecManager:
         caps = manager.get_sdp_capabilities()
         assert len(caps) > 0
         assert any("rtpmap:18" in cap for cap in caps)
+
 
 class TestG726Codec:
     """Test G.726 codec functionality"""
@@ -179,6 +181,7 @@ class TestG726Codec:
         # but we can check the method works
         assert isinstance(supported_32, bool)
 
+
 class TestG726CodecManager:
     """Test G.726 codec manager"""
 
@@ -221,6 +224,7 @@ class TestG726CodecManager:
         assert stats["default_bitrate"] == 32000
         assert stats["active_encoders"] == 1
         assert stats["active_decoders"] == 1
+
 
 class TestSDPWithNewCodecs:
     """Test SDP generation with G.729 and G.726"""

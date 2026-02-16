@@ -3,7 +3,7 @@ E911 Support for Single Site with Multiple Buildings
 Simplified location-based emergency routing for one site with 3 buildings
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
@@ -75,7 +75,7 @@ class E911LocationService:
             "building_id": building_id,
             "floor": floor,
             "room": room,
-            "registered_at": datetime.now(timezone.utc),
+            "registered_at": datetime.now(UTC),
         }
 
         self.logger.info(
@@ -135,7 +135,7 @@ class E911LocationService:
             "device_id": device_id,
             "caller_info": caller_info,
             "location": full_location,
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
         self.emergency_calls.append(call_record)
 

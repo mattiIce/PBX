@@ -5,6 +5,7 @@ Extracts auto-attendant logic from PBXCore into a dedicated class,
 including session management, DTMF input handling, and menu navigation.
 """
 
+import contextlib
 import time
 from pathlib import Path
 
@@ -253,10 +254,8 @@ class AutoAttendantHandler:
                             "[Auto Attendant] ✗ Failed to play generated welcome audio"
                         )
                 finally:
-                    try:
+                    with contextlib.suppress(BaseException):
                         os.unlink(temp_file_path)
-                    except BaseException:
-                        pass
 
             time.sleep(0.5)
 
@@ -287,10 +286,8 @@ class AutoAttendantHandler:
                     else:
                         pbx.logger.error("[Auto Attendant] ✗ Failed to play generated menu audio")
                 finally:
-                    try:
+                    with contextlib.suppress(BaseException):
                         os.unlink(temp_file_path)
-                    except BaseException:
-                        pass
 
             # Main loop - wait for DTMF input
             session_active = True
@@ -309,9 +306,7 @@ class AutoAttendantHandler:
                     # Priority 2: Check in-band DTMF
                     digit = dtmf_listener.get_digit(timeout=1.0)
                     if digit:
-                        pbx.logger.info(
-                            f"Auto attendant received DTMF from in-band audio: {digit}"
-                        )
+                        pbx.logger.info(f"Auto attendant received DTMF from in-band audio: {digit}")
 
                 if digit:
                     pbx.logger.info(f"Auto attendant received DTMF: {digit}")
@@ -342,10 +337,8 @@ class AutoAttendantHandler:
                             try:
                                 player.play_file(temp_file_path)
                             finally:
-                                try:
+                                with contextlib.suppress(BaseException):
                                     os.unlink(temp_file_path)
-                                except BaseException:
-                                    pass
 
                         time.sleep(0.5)
 
@@ -396,9 +389,7 @@ class AutoAttendantHandler:
             if hasattr(call, "aa_rtp_port"):
                 pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
                 pbx.rtp_relay.port_pool.sort()
-                pbx.logger.info(
-                    f"Returned RTP port {call.aa_rtp_port} to pool"
-                )
+                pbx.logger.info(f"Returned RTP port {call.aa_rtp_port} to pool")
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             pbx.logger.error(f"Error in auto attendant session: {e}")

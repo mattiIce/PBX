@@ -8,22 +8,18 @@ Recording Announcements, and Skills-Based Routing.
 import json
 import os
 import re
-
+from pathlib import Path
 from typing import Any
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
-    require_auth,
-    require_admin,
     get_request_body,
-    DateTimeEncoder,
+    require_auth,
+    send_json,
 )
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger()
 
@@ -174,7 +170,7 @@ def update_auto_attendant_menu_option(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "Auto attendant not available"}, 500), 500
 
     try:
-        digit = subpath.split("/")[-1]
+        digit = subpath.rsplit("/", maxsplit=1)[-1]
         data = get_request_body()
 
         aa = pbx_core.auto_attendant
@@ -236,8 +232,7 @@ def delete_auto_attendant_menu_option(digit: str) -> tuple[Response, int]:
                     "message": f"Menu option {digit} deleted and removed from database",
                 }
             ), 200
-        else:
-            return send_json({"error": f"Menu option {digit} not found"}, 404), 404
+        return send_json({"error": f"Menu option {digit} not found"}, 404), 404
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -451,7 +446,9 @@ def update_menu(menu_id: str) -> tuple[Response, int]:
             except Exception as e:
                 logger.warning(f"Failed to regenerate voice prompt: {e}")
 
-        return send_json({"success": True, "message": f"Menu '{menu_id}' updated successfully"}), 200
+        return send_json(
+            {"success": True, "message": f"Menu '{menu_id}' updated successfully"}
+        ), 200
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -476,7 +473,9 @@ def delete_menu(menu_id: str) -> tuple[Response, int]:
                 400,
             ), 400
 
-        return send_json({"success": True, "message": f"Menu '{menu_id}' deleted successfully"}), 200
+        return send_json(
+            {"success": True, "message": f"Menu '{menu_id}' deleted successfully"}
+        ), 200
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -528,9 +527,7 @@ def add_menu_item(menu_id: str) -> tuple[Response, int]:
         if not aa.get_menu(menu_id):
             return send_json({"error": f"Menu '{menu_id}' not found"}, 404), 404
 
-        success = aa.add_menu_item(
-            menu_id, digit, destination_type, destination_value, description
-        )
+        success = aa.add_menu_item(menu_id, digit, destination_type, destination_value, description)
 
         if not success:
             return send_json(
@@ -571,15 +568,15 @@ def update_menu_item(menu_id: str, digit: str) -> tuple[Response, int]:
         item_exists = any(item["digit"] == digit for item in current_items)
 
         if not item_exists:
-            return send_json({"error": f"Menu item {digit} not found in menu '{menu_id}'"}, 404), 404
+            return send_json(
+                {"error": f"Menu item {digit} not found in menu '{menu_id}'"}, 404
+            ), 404
 
         # Get current values if not provided
         current_item = next(item for item in current_items if item["digit"] == digit)
         final_dest_type = destination_type or current_item["destination_type"]
         final_dest_value = destination_value or current_item["destination_value"]
-        final_description = (
-            description if description is not None else current_item["description"]
-        )
+        final_description = description if description is not None else current_item["description"]
 
         # Update (add_menu_item handles both insert and update)
         success = aa.add_menu_item(
@@ -646,7 +643,9 @@ def get_menu_tree() -> tuple[Response, int]:
         return send_json({"error": str(e)}, 500), 500
 
 
-def _regenerate_voice_prompts(pbx_core: Any, custom_prompts: dict[str, str] | None = None, company_name: str | None = None) -> None:
+def _regenerate_voice_prompts(
+    pbx_core: Any, custom_prompts: dict[str, str] | None = None, company_name: str | None = None
+) -> None:
     """Regenerate voice prompts using gTTS.
 
     Args:
@@ -728,7 +727,7 @@ def get_sip_trunks() -> tuple[Response, int]:
             return send_json({"trunks": trunks, "count": len(trunks)}), 200
         except Exception as e:
             logger.error(f"Error getting SIP trunks: {e}")
-            return send_json({"error": f"Error getting SIP trunks: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting SIP trunks: {e!s}"}, 500), 500
     else:
         return send_json({"error": "SIP trunk system not initialized"}, 500), 500
 
@@ -756,7 +755,7 @@ def get_trunk_health() -> tuple[Response, int]:
             ), 200
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting trunk health: {e}")
-            return send_json({"error": f"Error getting trunk health: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting trunk health: {e!s}"}, 500), 500
     else:
         return send_json({"error": "SIP trunk system not initialized"}, 500), 500
 
@@ -798,7 +797,7 @@ def add_sip_trunk() -> tuple[Response, int]:
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error adding SIP trunk: {e}")
-            return send_json({"error": f"Error adding SIP trunk: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error adding SIP trunk: {e!s}"}, 500), 500
     else:
         return send_json({"error": "SIP trunk system not initialized"}, 500), 500
 
@@ -827,12 +826,11 @@ def test_sip_trunk() -> tuple[Response, int]:
                         "metrics": trunk.get_health_metrics(),
                     }
                 ), 200
-            else:
-                return send_json({"error": "Trunk not found"}, 404), 404
+            return send_json({"error": "Trunk not found"}, 404), 404
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error testing SIP trunk: {e}")
-            return send_json({"error": f"Error testing SIP trunk: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error testing SIP trunk: {e!s}"}, 500), 500
     else:
         return send_json({"error": "SIP trunk system not initialized"}, 500), 500
 
@@ -850,12 +848,11 @@ def delete_sip_trunk(trunk_id: str) -> tuple[Response, int]:
                 return send_json(
                     {"success": True, "message": f"Trunk {trunk_id} removed successfully"}
                 ), 200
-            else:
-                return send_json({"error": "Trunk not found"}, 404), 404
+            return send_json({"error": "Trunk not found"}, 404), 404
 
         except Exception as e:
             logger.error(f"Error deleting SIP trunk: {e}")
-            return send_json({"error": f"Error deleting SIP trunk: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error deleting SIP trunk: {e!s}"}, 500), 500
     else:
         return send_json({"error": "SIP trunk system not initialized"}, 500), 500
 
@@ -922,20 +919,14 @@ def get_lcr_statistics() -> tuple[Response, int]:
         except Exception as e:
             logger.error(f"Error getting LCR statistics: {e}")
             # Return empty statistics instead of error to prevent UI errors
-            return send_json({
-                "total_calls": 0,
-                "total_cost": 0.0,
-                "total_savings": 0.0,
-                "routes_by_trunk": {}
-            }), 200
+            return send_json(
+                {"total_calls": 0, "total_cost": 0.0, "total_savings": 0.0, "routes_by_trunk": {}}
+            ), 200
     else:
         # Return empty statistics when LCR is not initialized
-        return send_json({
-            "total_calls": 0,
-            "total_cost": 0.0,
-            "total_savings": 0.0,
-            "routes_by_trunk": {}
-        }), 200
+        return send_json(
+            {"total_calls": 0, "total_cost": 0.0, "total_savings": 0.0, "routes_by_trunk": {}}
+        ), 200
 
 
 @features_bp.route("/api/lcr/rate", methods=["POST"])
@@ -961,7 +952,7 @@ def add_lcr_rate() -> tuple[Response, int]:
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error adding LCR rate: {e}")
-            return send_json({"error": f"Error adding LCR rate: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error adding LCR rate: {e!s}"}, 500), 500
     else:
         return send_json({"error": "LCR system not initialized"}, 500), 500
 
@@ -985,11 +976,13 @@ def add_lcr_time_rate() -> tuple[Response, int]:
                 multiplier=float(data["multiplier"]),
             )
 
-            return send_json({"success": True, "message": "Time-based rate added successfully"}), 200
+            return send_json(
+                {"success": True, "message": "Time-based rate added successfully"}
+            ), 200
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error adding time-based rate: {e}")
-            return send_json({"error": f"Error adding time-based rate: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error adding time-based rate: {e!s}"}, 500), 500
     else:
         return send_json({"error": "LCR system not initialized"}, 500), 500
 
@@ -1002,11 +995,13 @@ def clear_lcr_rates() -> tuple[Response, int]:
     if pbx_core and hasattr(pbx_core, "lcr"):
         try:
             pbx_core.lcr.clear_rates()
-            return send_json({"success": True, "message": "All LCR rates cleared successfully"}), 200
+            return send_json(
+                {"success": True, "message": "All LCR rates cleared successfully"}
+            ), 200
 
         except Exception as e:
             logger.error(f"Error clearing LCR rates: {e}")
-            return send_json({"error": f"Error clearing LCR rates: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error clearing LCR rates: {e!s}"}, 500), 500
     else:
         return send_json({"error": "LCR system not initialized"}, 500), 500
 
@@ -1025,7 +1020,7 @@ def clear_lcr_time_rates() -> tuple[Response, int]:
 
         except Exception as e:
             logger.error(f"Error clearing time-based rates: {e}")
-            return send_json({"error": f"Error clearing time-based rates: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error clearing time-based rates: {e!s}"}, 500), 500
     else:
         return send_json({"error": "LCR system not initialized"}, 500), 500
 
@@ -1052,7 +1047,7 @@ def get_fmfm_extensions() -> tuple[Response, int]:
             return send_json({"extensions": configs, "count": len(configs)}), 200
         except Exception as e:
             logger.error(f"Error getting FMFM extensions: {e}")
-            return send_json({"error": f"Error getting FMFM extensions: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting FMFM extensions: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Find Me/Follow Me not initialized"}, 500), 500
 
@@ -1067,17 +1062,16 @@ def get_fmfm_config(extension: str) -> tuple[Response, int]:
             config = pbx_core.find_me_follow_me.get_config(extension)
             if config:
                 return send_json(config), 200
-            else:
-                return send_json(
-                    {
-                        "extension": extension,
-                        "enabled": False,
-                        "message": "No FMFM configuration found",
-                    }
-                ), 200
+            return send_json(
+                {
+                    "extension": extension,
+                    "enabled": False,
+                    "message": "No FMFM configuration found",
+                }
+            ), 200
         except Exception as e:
             logger.error(f"Error getting FMFM config for {extension}: {e}")
-            return send_json({"error": f"Error getting FMFM config: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting FMFM config: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Find Me/Follow Me not initialized"}, 500), 500
 
@@ -1093,7 +1087,7 @@ def get_fmfm_statistics() -> tuple[Response, int]:
             return send_json(stats), 200
         except Exception as e:
             logger.error(f"Error getting FMFM statistics: {e}")
-            return send_json({"error": f"Error getting FMFM statistics: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting FMFM statistics: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Find Me/Follow Me not initialized"}, 500), 500
 
@@ -1127,13 +1121,12 @@ def set_fmfm_config() -> tuple[Response, int]:
                         "config": pbx_core.find_me_follow_me.get_config(extension),
                     }
                 ), 200
-            else:
-                logger.error(f"Failed to set FMFM configuration for extension {extension}")
-                return send_json({"error": "Failed to set FMFM configuration"}, 500), 500
+            logger.error(f"Failed to set FMFM configuration for extension {extension}")
+            return send_json({"error": "Failed to set FMFM configuration"}, 500), 500
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error setting FMFM config: {e}")
-            return send_json({"error": f"Error setting FMFM config: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error setting FMFM config: {e!s}"}, 500), 500
     else:
         logger.error("Find Me/Follow Me not initialized")
         return send_json({"error": "Find Me/Follow Me not initialized"}, 500), 500
@@ -1155,9 +1148,7 @@ def add_fmfm_destination() -> tuple[Response, int]:
             if not extension or not number:
                 return send_json({"error": "Extension and number required"}, 400), 400
 
-            success = pbx_core.find_me_follow_me.add_destination(
-                extension, number, ring_time
-            )
+            success = pbx_core.find_me_follow_me.add_destination(extension, number, ring_time)
 
             if success:
                 return send_json(
@@ -1167,12 +1158,11 @@ def add_fmfm_destination() -> tuple[Response, int]:
                         "config": pbx_core.find_me_follow_me.get_config(extension),
                     }
                 ), 200
-            else:
-                return send_json({"error": "Failed to add destination"}, 500), 500
+            return send_json({"error": "Failed to add destination"}, 500), 500
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error adding FMFM destination: {e}")
-            return send_json({"error": f"Error adding FMFM destination: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error adding FMFM destination: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Find Me/Follow Me not initialized"}, 500), 500
 
@@ -1193,12 +1183,11 @@ def remove_fmfm_destination(extension: str, number: str) -> tuple[Response, int]
                         "message": f"Destination {number} removed from {extension}",
                     }
                 ), 200
-            else:
-                return send_json({"error": "Failed to remove destination"}, 404), 404
+            return send_json({"error": "Failed to remove destination"}, 404), 404
 
         except Exception as e:
             logger.error(f"Error removing FMFM destination: {e}")
-            return send_json({"error": f"Error removing FMFM destination: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error removing FMFM destination: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Find Me/Follow Me not initialized"}, 500), 500
 
@@ -1219,12 +1208,11 @@ def disable_fmfm(extension: str) -> tuple[Response, int]:
                         "message": f"FMFM configuration deleted for extension {extension}",
                     }
                 ), 200
-            else:
-                return send_json({"error": "FMFM configuration not found"}, 404), 404
+            return send_json({"error": "FMFM configuration not found"}, 404), 404
 
         except Exception as e:
             logger.error(f"Error deleting FMFM config: {e}")
-            return send_json({"error": f"Error deleting FMFM config: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error deleting FMFM config: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Find Me/Follow Me not initialized"}, 500), 500
 
@@ -1248,7 +1236,7 @@ def get_time_routing_rules() -> tuple[Response, int]:
             return send_json({"rules": rules, "count": len(rules)}), 200
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting time routing rules: {e}")
-            return send_json({"error": f"Error getting time routing rules: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting time routing rules: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Time-based routing not initialized"}, 500), 500
 
@@ -1264,7 +1252,7 @@ def get_time_routing_statistics() -> tuple[Response, int]:
             return send_json(stats), 200
         except Exception as e:
             logger.error(f"Error getting time routing statistics: {e}")
-            return send_json({"error": f"Error getting time routing statistics: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting time routing statistics: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Time-based routing not initialized"}, 500), 500
 
@@ -1293,12 +1281,11 @@ def add_time_routing_rule() -> tuple[Response, int]:
                         "message": f'Time routing rule "{data["name"]}" added successfully',
                     }
                 ), 200
-            else:
-                return send_json({"error": "Failed to add time routing rule"}, 500), 500
+            return send_json({"error": "Failed to add time routing rule"}, 500), 500
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error adding time routing rule: {e}")
-            return send_json({"error": f"Error adding time routing rule: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error adding time routing rule: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Time-based routing not initialized"}, 500), 500
 
@@ -1316,12 +1303,11 @@ def delete_time_routing_rule(rule_id: str) -> tuple[Response, int]:
                 return send_json(
                     {"success": True, "message": f"Time routing rule {rule_id} deleted"}
                 ), 200
-            else:
-                return send_json({"error": "Rule not found"}, 404), 404
+            return send_json({"error": "Rule not found"}, 404), 404
 
         except Exception as e:
             logger.error(f"Error deleting time routing rule: {e}")
-            return send_json({"error": f"Error deleting time routing rule: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error deleting time routing rule: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Time-based routing not initialized"}, 500), 500
 
@@ -1404,13 +1390,17 @@ def add_retention_policy() -> tuple[Response, int]:
             # Validate required fields
             required_fields = ["name", "retention_days"]
             if not all(field in data for field in required_fields):
-                return send_json({"error": "Missing required fields: name, retention_days"}, 400), 400
+                return send_json(
+                    {"error": "Missing required fields: name, retention_days"}, 400
+                ), 400
 
             # Validate retention_days is a positive integer
             try:
                 retention_days = int(data["retention_days"])
                 if retention_days < 1 or retention_days > 3650:  # Max 10 years
-                    return send_json({"error": "retention_days must be between 1 and 3650"}, 400), 400
+                    return send_json(
+                        {"error": "retention_days must be between 1 and 3650"}, 400
+                    ), 400
             except (ValueError, TypeError):
                 return send_json({"error": "retention_days must be a valid integer"}, 400), 400
 
@@ -1428,8 +1418,7 @@ def add_retention_policy() -> tuple[Response, int]:
                         "message": f'Retention policy "{data["name"]}" added successfully',
                     }
                 ), 200
-            else:
-                return send_json({"error": "Failed to add retention policy"}, 500), 500
+            return send_json({"error": "Failed to add retention policy"}, 500), 500
 
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
@@ -1452,8 +1441,7 @@ def delete_retention_policy(policy_id: str) -> tuple[Response, int]:
                 return send_json(
                     {"success": True, "message": f"Retention policy {policy_id} deleted"}
                 ), 200
-            else:
-                return send_json({"error": "Policy not found"}, 404), 404
+            return send_json({"error": "Policy not found"}, 404), 404
 
         except Exception as e:
             logger.error(f"Error deleting retention policy: {e}")
@@ -1505,9 +1493,7 @@ def get_fraud_statistics() -> tuple[Response, int]:
             result = {
                 "total_alerts": stats.get("total_alerts", 0),
                 "high_risk_alerts": sum(
-                    1
-                    for a in pbx_core.fraud_detection.alerts
-                    if a.get("fraud_score", 0) > 0.7
+                    1 for a in pbx_core.fraud_detection.alerts if a.get("fraud_score", 0) > 0.7
                 ),
                 "blocked_patterns_count": stats.get("blocked_patterns", 0),
                 "extensions_flagged": stats.get("total_extensions_tracked", 0),
@@ -1571,8 +1557,7 @@ def add_blocked_pattern() -> tuple[Response, int]:
                 return send_json(
                     {"success": True, "message": "Blocked pattern added successfully"}
                 ), 200
-            else:
-                return send_json({"error": "Failed to add blocked pattern"}, 500), 500
+            return send_json({"error": "Failed to add blocked pattern"}, 500), 500
 
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
@@ -1596,8 +1581,7 @@ def delete_blocked_pattern(pattern_id: str) -> tuple[Response, int]:
                 if 0 <= index < len(pbx_core.fraud_detection.blocked_patterns):
                     del pbx_core.fraud_detection.blocked_patterns[index]
                     return send_json({"success": True, "message": "Blocked pattern deleted"}), 200
-                else:
-                    return send_json({"error": "Pattern not found"}, 404), 404
+                return send_json({"error": "Pattern not found"}, 404), 404
             except (ValueError, IndexError):
                 return send_json({"error": "Invalid pattern ID"}, 400), 400
 
@@ -1667,7 +1651,9 @@ def get_queue_callbacks(queue_id: str) -> tuple[Response, int]:
             callbacks = pbx_core.callback_queue.list_queue_callbacks(queue_id)
             stats = pbx_core.callback_queue.get_queue_statistics(queue_id)
 
-            return send_json({"queue_id": queue_id, "callbacks": callbacks, "statistics": stats}), 200
+            return send_json(
+                {"queue_id": queue_id, "callbacks": callbacks, "statistics": stats}
+            ), 200
         except Exception as e:
             logger.error(f"Error getting queue callbacks: {e}")
             return send_json({"error": "Error getting queue callbacks"}, 500), 500
@@ -1690,8 +1676,7 @@ def get_callback_info(callback_id: str) -> tuple[Response, int]:
 
             if info:
                 return send_json(info), 200
-            else:
-                return send_json({"error": "Callback not found"}, 404), 404
+            return send_json({"error": "Callback not found"}, 404), 404
         except Exception as e:
             logger.error(f"Error getting callback info: {e}")
             return send_json({"error": "Error getting callback info"}, 500), 500
@@ -1739,8 +1724,7 @@ def request_callback() -> tuple[Response, int]:
 
             if "error" in result:
                 return send_json(result, 400), 400
-            else:
-                return send_json({"success": True, **result}), 200
+            return send_json({"success": True, **result}), 200
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
         except (KeyError, TypeError, ValueError) as e:
@@ -1771,8 +1755,7 @@ def start_callback() -> tuple[Response, int]:
 
             if "error" in result:
                 return send_json(result, 404), 404
-            else:
-                return send_json({"success": True, **result}), 200
+            return send_json({"success": True, **result}), 200
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
         except (KeyError, TypeError, ValueError) as e:
@@ -1792,7 +1775,9 @@ def complete_callback() -> tuple[Response, int]:
             data = get_request_body()
 
             if "callback_id" not in data or "success" not in data:
-                return send_json({"error": "Missing required fields: callback_id, success"}, 400), 400
+                return send_json(
+                    {"error": "Missing required fields: callback_id, success"}, 400
+                ), 400
 
             callback_id = str(data["callback_id"])[:100]
             success = bool(data["success"])
@@ -1802,8 +1787,7 @@ def complete_callback() -> tuple[Response, int]:
 
             if result:
                 return send_json({"success": True, "message": "Callback completed"}), 200
-            else:
-                return send_json({"error": "Callback not found"}, 404), 404
+            return send_json({"error": "Callback not found"}, 404), 404
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
         except (KeyError, TypeError, ValueError) as e:
@@ -1831,8 +1815,7 @@ def cancel_callback() -> tuple[Response, int]:
 
             if result:
                 return send_json({"success": True, "message": "Callback cancelled"}), 200
-            else:
-                return send_json({"error": "Callback not found"}, 404), 404
+            return send_json({"error": "Callback not found"}, 404), 404
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
         except (KeyError, TypeError, ValueError) as e:
@@ -1988,9 +1971,10 @@ def register_mobile_device() -> tuple[Response, int]:
             success = pbx_core.mobile_push.register_device(user_id, device_token, platform)
 
             if success:
-                return send_json({"success": True, "message": "Device registered successfully"}), 200
-            else:
-                return send_json({"error": "Failed to register device"}, 500), 500
+                return send_json(
+                    {"success": True, "message": "Device registered successfully"}
+                ), 200
+            return send_json({"error": "Failed to register device"}, 500), 500
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
         except (KeyError, TypeError, ValueError) as e:
@@ -2023,8 +2007,7 @@ def unregister_mobile_device() -> tuple[Response, int]:
                 return send_json(
                     {"success": True, "message": "Device unregistered successfully"}
                 ), 200
-            else:
-                return send_json({"error": "Device not found"}, 404), 404
+            return send_json({"error": "Device not found"}, 404), 404
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
         except (KeyError, TypeError, ValueError) as e:
@@ -2052,8 +2035,7 @@ def test_push_notification() -> tuple[Response, int]:
 
             if "error" in result:
                 return send_json(result, 400), 400
-            else:
-                return send_json({"success": True, **result}), 200
+            return send_json({"success": True, **result}), 200
         except json.JSONDecodeError:
             return send_json({"error": "Invalid JSON"}, 400), 400
         except (KeyError, TypeError, ValueError) as e:
@@ -2136,7 +2118,7 @@ def get_agent_skills(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "Skills routing not available"}, 500), 500
 
     try:
-        agent_extension = subpath.split("/")[-1]
+        agent_extension = subpath.rsplit("/", maxsplit=1)[-1]
         skills = pbx_core.skills_router.get_agent_skills(agent_extension)
 
         return send_json({"agent_extension": agent_extension, "skills": skills}), 200
@@ -2153,7 +2135,7 @@ def get_queue_requirements(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "Skills routing not available"}, 500), 500
 
     try:
-        queue_number = subpath.split("/")[-1]
+        queue_number = subpath.rsplit("/", maxsplit=1)[-1]
         requirements = pbx_core.skills_router.get_queue_requirements(queue_number)
 
         return send_json({"queue_number": queue_number, "requirements": requirements}), 200
@@ -2184,8 +2166,7 @@ def add_skill() -> tuple[Response, int]:
             return send_json(
                 {"success": True, "skill_id": skill_id, "message": "Skill added successfully"}
             ), 200
-        else:
-            return send_json({"error": "Skill already exists"}, 409), 409
+        return send_json({"error": "Skill already exists"}, 409), 409
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -2215,8 +2196,7 @@ def assign_skill() -> tuple[Response, int]:
             return send_json(
                 {"success": True, "message": f"Skill assigned to agent {agent_extension}"}
             ), 200
-        else:
-            return send_json({"error": "Failed to assign skill"}, 500), 500
+        return send_json({"error": "Failed to assign skill"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -2243,8 +2223,7 @@ def set_queue_requirements() -> tuple[Response, int]:
             return send_json(
                 {"success": True, "message": f"Requirements set for queue {queue_number}"}
             ), 200
-        else:
-            return send_json({"error": "Failed to set requirements"}, 500), 500
+        return send_json({"error": "Failed to set requirements"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -2264,7 +2243,6 @@ def remove_skill_from_agent(agent_extension: str, skill_id: str) -> tuple[Respon
             return send_json(
                 {"success": True, "message": f"Skill removed from agent {agent_extension}"}
             ), 200
-        else:
-            return send_json({"error": "Skill not found for agent"}, 404), 404
+        return send_json({"error": "Skill not found for agent"}, 404), 404
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500

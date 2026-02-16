@@ -369,7 +369,7 @@ class G722Codec:
 
         # Apply QMF (Quadrature Mirror Filter) to split into sub-bands
         # Update filter history
-        state.x = [sample1, sample2] + state.x[:22]
+        state.x = [sample1, sample2, *state.x[:22]]
 
         # Compute lower sub-band signal (decimated to 8kHz)
         xlow = self._qmf_rx_filter(state.x, 0)
@@ -508,8 +508,7 @@ class G722Codec:
 
         # Quantize difference using logarithmic quantizer
         # Use detl (quantizer scale factor)
-        if state.detl < 0:
-            state.detl = 0
+        state.detl = max(state.detl, 0)
 
         # Normalize difference by scale factor
         if state.detl >= 32:
@@ -563,8 +562,7 @@ class G722Codec:
         d_h = xh - sz_h
 
         # Quantize difference
-        if state.deth < 0:
-            state.deth = 0
+        state.deth = max(state.deth, 0)
 
         if state.deth >= 8:
             dqm = abs(d_h) * 8 // state.deth
@@ -609,8 +607,7 @@ class G722Codec:
             Reconstructed quantized difference signal
         """
         # Get quantized magnitude
-        if il > 63:
-            il = 63
+        il = min(il, 63)
 
         # Apply sign
         if il >= 32:
@@ -679,8 +676,7 @@ class G722Codec:
             Updated scale factor
         """
         # Limit index
-        if il > 63:
-            il = 63
+        il = min(il, 63)
 
         # Adapt det using WL_TABLE
         nbl = det + WL_TABLE[il]
@@ -693,8 +689,7 @@ class G722Codec:
 
         # Convert to linear scale
         det = nbl >> 11
-        if det < 1:
-            det = 1
+        det = max(det, 1)
 
         return det
 
@@ -720,8 +715,7 @@ class G722Codec:
 
         # Convert to linear
         det = nbh >> 11
-        if det < 1:
-            det = 1
+        det = max(det, 1)
 
         return det
 
@@ -811,7 +805,7 @@ class G722Codec:
         """Saturate value to range"""
         if value < min_val:
             return min_val
-        elif value > max_val:
+        if value > max_val:
             return max_val
         return value
 
@@ -880,7 +874,7 @@ class G722CodecManager:
     Manager for G.722 codec instances and configuration
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize G.722 codec manager
 
@@ -902,7 +896,7 @@ class G722CodecManager:
         else:
             self.logger.info("G.722 codec disabled in configuration")
 
-    def create_encoder(self, call_id: str, bitrate: int = None) -> G722Codec | None:
+    def create_encoder(self, call_id: str, bitrate: int | None = None) -> G722Codec | None:
         """
         Create encoder for a call
 
@@ -924,7 +918,7 @@ class G722CodecManager:
 
         return encoder
 
-    def create_decoder(self, call_id: str, bitrate: int = None) -> G722Codec | None:
+    def create_decoder(self, call_id: str, bitrate: int | None = None) -> G722Codec | None:
         """
         Create decoder for a call
 

@@ -4,7 +4,6 @@ Tests for G.722 HD Audio Codec
 
 import struct
 
-
 from pbx.features.g722_codec import G722Codec, G722CodecManager
 
 

@@ -10,16 +10,15 @@ Usage:
 """
 
 import argparse
-import os
 import sys
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
 from pbx.utils.encryption import get_encryption
-from pathlib import Path
 
 
 def main():
@@ -159,7 +158,7 @@ def main():
 
         try:
             # Hash the password using FIPS-compliant encryption
-            password_hash, password_salt = encryption.hash_password(ext["password"])
+            password_hash, _password_salt = encryption.hash_password(ext["password"])
 
             # Add extension to database with hashed password
             success = ext_db.add(

@@ -2,13 +2,13 @@
 """
 Basic tests for PBX system
 """
-import os
 
+import os
+from pathlib import Path
 
 from pbx.core.call import CallManager, CallState
 from pbx.features.extensions import Extension
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
-from pathlib import Path
 
 
 def test_sip_message_parsing() -> None:
@@ -28,12 +28,10 @@ def test_sip_message_parsing() -> None:
     msg = SIPMessage(raw_message)
 
     assert msg.method == "INVITE", f"Expected INVITE, got {msg.method}"
-    assert (
-        msg.uri == "sip:1002@pbx.local"
-    ), f"Expected sip:1002@pbx.local, got {msg.uri}"
-    assert (
-        msg.get_header("Call-ID") == "test-call-123"
-    ), f"Expected test-call-123, got {msg.get_header('Call-ID')}"
+    assert msg.uri == "sip:1002@pbx.local", f"Expected sip:1002@pbx.local, got {msg.uri}"
+    assert msg.get_header("Call-ID") == "test-call-123", (
+        f"Expected test-call-123, got {msg.get_header('Call-ID')}"
+    )
     assert msg.is_request(), "Expected message to be a request"
 
 

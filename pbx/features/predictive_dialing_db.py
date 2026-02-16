@@ -4,10 +4,10 @@ Provides persistence for campaigns, contacts, and call results
 """
 
 import json
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class PredictiveDialingDatabase:
@@ -281,7 +281,7 @@ class PredictiveDialingDatabase:
                 contact_id,
                 attempt_data.get("call_id"),
                 attempt_data.get("attempt_number"),
-                attempt_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                attempt_data.get("timestamp", datetime.now(UTC).isoformat()),
                 attempt_data.get("result"),
                 attempt_data.get("duration"),
                 attempt_data.get("agent_id"),
@@ -310,7 +310,7 @@ class PredictiveDialingDatabase:
                 """
 
             update_params = (
-                attempt_data.get("timestamp", datetime.now(timezone.utc).isoformat()),
+                attempt_data.get("timestamp", datetime.now(UTC).isoformat()),
                 attempt_data.get("status", "attempted"),
                 attempt_data.get("result"),
                 campaign_id,
@@ -376,7 +376,7 @@ class PredictiveDialingDatabase:
 
             if row:
                 columns = [desc[0] for desc in cursor.description]
-                return dict(zip(columns, row))
+                return dict(zip(columns, row, strict=False))
             return None
 
         except sqlite3.Error as e:
@@ -391,7 +391,7 @@ class PredictiveDialingDatabase:
 
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
-            return [dict(zip(columns, row)) for row in rows]
+            return [dict(zip(columns, row, strict=False)) for row in rows]
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting campaigns: {e}")
@@ -411,7 +411,7 @@ class PredictiveDialingDatabase:
 
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
-            return [dict(zip(columns, row)) for row in rows]
+            return [dict(zip(columns, row, strict=False)) for row in rows]
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting campaign contacts: {e}")
@@ -434,11 +434,10 @@ class PredictiveDialingDatabase:
 
                 if row:
                     columns = [desc[0] for desc in cursor.description]
-                    return dict(zip(columns, row))
+                    return dict(zip(columns, row, strict=False))
                 return {}
-            else:
-                # Global stats
-                sql = """
+            # Global stats
+            sql = """
                 SELECT
                     COUNT(*) as total_campaigns,
                     SUM(total_contacts) as total_contacts,
@@ -446,17 +445,17 @@ class PredictiveDialingDatabase:
                     SUM(failed_calls) as failed_calls
                 FROM dialing_campaigns
                 """
-                cursor.execute(sql)
-                row = cursor.fetchone()
+            cursor.execute(sql)
+            row = cursor.fetchone()
 
-                if row:
-                    return {
-                        "total_campaigns": row[0] or 0,
-                        "total_contacts": row[1] or 0,
-                        "successful_calls": row[2] or 0,
-                        "failed_calls": row[3] or 0,
-                    }
-                return {}
+            if row:
+                return {
+                    "total_campaigns": row[0] or 0,
+                    "total_contacts": row[1] or 0,
+                    "successful_calls": row[2] or 0,
+                    "failed_calls": row[3] or 0,
+                }
+            return {}
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting statistics: {e}")

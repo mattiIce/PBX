@@ -3,14 +3,18 @@ CRM Integration and Screen Pop Support
 Provides caller information lookup and CRM integration capabilities
 """
 
+import contextlib
 import json
 import threading
-from datetime import datetime, timezone
-from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from pbx.utils.logger import get_logger
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class CallerInfo:
@@ -71,10 +75,8 @@ class CallerInfo:
         caller_info.source = data.get("source")
 
         if data.get("last_contact"):
-            try:
+            with contextlib.suppress(BaseException):
                 caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
-            except BaseException:
-                pass
 
         return caller_info
 
@@ -216,9 +218,7 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
             request = Request(url, headers=headers, method="GET")
 
             # Send request
-            response = urlopen(
-                request, timeout=self.timeout
-            )  # nosec B310 - URL is constructed from validated CRM API endpoint
+            response = urlopen(request, timeout=self.timeout)  # nosec B310 - URL is constructed from validated CRM API endpoint
             data = json.loads(response.read().decode("utf-8"))
 
             # Parse response
@@ -235,10 +235,8 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
                 caller_info.source = self.name.lower()
 
                 if data.get("last_contact"):
-                    try:
+                    with contextlib.suppress(BaseException):
                         caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
-                    except BaseException:
-                        pass
 
                 if data.get("contact_count"):
                     caller_info.contact_count = int(data["contact_count"])
@@ -405,20 +403,19 @@ class CRMIntegration:
         with self.cache_lock:
             if phone_number in self.cache:
                 caller_info, timestamp = self.cache[phone_number]
-                age = (datetime.now(timezone.utc) - timestamp).total_seconds()
+                age = (datetime.now(UTC) - timestamp).total_seconds()
 
                 if age < self.cache_timeout:
                     return caller_info
-                else:
-                    # Cache expired
-                    del self.cache[phone_number]
+                # Cache expired
+                del self.cache[phone_number]
 
         return None
 
     def _add_to_cache(self, phone_number: str, caller_info: CallerInfo):
         """Add caller info to cache"""
         with self.cache_lock:
-            self.cache[phone_number] = (caller_info, datetime.now(timezone.utc))
+            self.cache[phone_number] = (caller_info, datetime.now(UTC))
 
     def clear_cache(self):
         """Clear lookup cache"""
@@ -446,7 +443,7 @@ class CRMIntegration:
             "call_id": call_id,
             "phone_number": phone_number,
             "extension": extension,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "caller_info": caller_info.to_dict() if caller_info else None,
         }
 

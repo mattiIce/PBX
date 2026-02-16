@@ -3,7 +3,6 @@ Test SIP Send Line and Send MAC functionality
 Tests P-Asserted-Identity, Remote-Party-ID, and X-MAC-Address headers
 """
 
-
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 
 
@@ -50,6 +49,7 @@ class TestSIPCallerIDHeaders:
         rpid = message.get_header("Remote-Party-ID")
         # Should have proper parameters
         assert '"Sales Department" <sip:2001@10.0.0.1>' in rpid
+
 
 class TestSIPMACAddressHeader:
     """Test SIP MAC address header functionality"""
@@ -127,6 +127,7 @@ class TestSIPMACAddressHeader:
         # Should not add header for invalid MAC
         assert x_mac is None
 
+
 class TestSIPMessageParsing:
     """Test parsing SIP messages with new headers"""
 
@@ -175,6 +176,7 @@ class TestSIPMessageParsing:
         x_mac = message.get_header("X-MAC-Address")
         assert x_mac is not None
         assert x_mac == "00:11:22:33:44:55"
+
 
 class TestSIPMessageBuilding:
     """Test building complete SIP messages with all headers"""

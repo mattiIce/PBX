@@ -3,7 +3,6 @@ Microsoft Teams Integration
 Enables SIP Direct Routing, presence sync, and collaboration features with Microsoft Teams
 """
 
-
 from pbx.utils.logger import get_logger
 
 try:
@@ -109,11 +108,10 @@ class TeamsIntegration:
                 self.access_token = result["access_token"]
                 self.logger.info("Microsoft Teams authentication successful")
                 return True
-            else:
-                error = result.get("error", "Unknown error")
-                error_desc = result.get("error_description", "")
-                self.logger.error(f"Authentication failed: {error} - {error_desc}")
-                return False
+            error = result.get("error", "Unknown error")
+            error_desc = result.get("error_description", "")
+            self.logger.error(f"Authentication failed: {error} - {error_desc}")
+            return False
 
         except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Error authenticating with Microsoft Teams: {e}")
@@ -168,11 +166,8 @@ class TeamsIntegration:
             if response.status_code in [200, 204]:
                 self.logger.info(f"Presence synced successfully for {user_id}")
                 return True
-            else:
-                self.logger.error(
-                    f"Failed to sync presence: {response.status_code} - {response.text}"
-                )
-                return False
+            self.logger.error(f"Failed to sync presence: {response.status_code} - {response.text}")
+            return False
 
         except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Error syncing presence: {e}")
@@ -233,15 +228,11 @@ class TeamsIntegration:
                         break
 
                 if trunk and trunk.can_make_call():
-                    self.logger.info(
-                        f"Using SIP trunk '{trunk.name}' for Teams call"
-                    )
+                    self.logger.info(f"Using SIP trunk '{trunk.name}' for Teams call")
 
                     # Allocate channel
                     if trunk.allocate_channel():
-                        self.logger.info(
-                            f"Initiating SIP call to {sip_uri} via trunk {trunk.name}"
-                        )
+                        self.logger.info(f"Initiating SIP call to {sip_uri} via trunk {trunk.name}")
 
                         # In production, this would:
                         # 1. Build SIP INVITE with proper headers for Teams
@@ -253,15 +244,13 @@ class TeamsIntegration:
                         # For now, log the action and return success indicator
                         self.logger.info(f"Call routed to Teams: {from_number} -> {sip_uri}")
                         return True
-                    else:
-                        self.logger.error("Failed to allocate channel on Teams trunk")
-                        return False
-                else:
-                    self.logger.warning(
-                        "No Teams SIP trunk found. Configure a trunk with Teams Direct Routing domain "
-                        f"'{self.direct_routing_domain}' in config.yml"
-                    )
+                    self.logger.error("Failed to allocate channel on Teams trunk")
                     return False
+                self.logger.warning(
+                    "No Teams SIP trunk found. Configure a trunk with Teams Direct Routing domain "
+                    f"'{self.direct_routing_domain}' in config.yml"
+                )
+                return False
 
             except Exception as e:
                 self.logger.error(f"Error routing call to Teams: {e}")
@@ -368,18 +357,17 @@ class TeamsIntegration:
             if message_response.status_code == 201:
                 self.logger.info(f"Successfully sent Teams chat message to {to_user}")
                 return True
-            else:
-                self.logger.warning(
-                    f"Failed to send Teams chat message: {message_response.status_code} - {message_response.text}"
-                )
-                return False
+            self.logger.warning(
+                f"Failed to send Teams chat message: {message_response.status_code} - {message_response.text}"
+            )
+            return False
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error sending Teams chat message: {e}")
             return False
 
     def create_meeting_from_call(
-        self, call_id: str, subject: str = None, participants: list[str] = None
+        self, call_id: str, subject: str | None = None, participants: list[str] | None = None
     ) -> dict | None:
         """
         Escalate a phone call to a Teams meeting
@@ -420,9 +408,7 @@ class TeamsIntegration:
 
             if response.status_code in [200, 201]:
                 meeting_data = response.json()
-                self.logger.info(
-                    f"Teams meeting created: {meeting_data.get('id')}"
-                )
+                self.logger.info(f"Teams meeting created: {meeting_data.get('id')}")
 
                 return {
                     "meeting_id": meeting_data.get("id"),
@@ -431,11 +417,10 @@ class TeamsIntegration:
                     "start_time": meeting_data.get("startDateTime"),
                     "end_time": meeting_data.get("endDateTime"),
                 }
-            else:
-                self.logger.error(
-                    f"Failed to create Teams meeting: {response.status_code} - {response.text}"
-                )
-                return None
+            self.logger.error(
+                f"Failed to create Teams meeting: {response.status_code} - {response.text}"
+            )
+            return None
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error creating Teams meeting: {e}")

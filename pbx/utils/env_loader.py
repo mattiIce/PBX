@@ -5,10 +5,10 @@ Securely loads sensitive configuration from environment variables
 
 import os
 import re
+from pathlib import Path
 from typing import Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class EnvironmentLoader:
@@ -232,7 +232,7 @@ class EnvironmentLoader:
         loaded_count = 0
 
         try:
-            with open(env_file, "r") as f:
+            with open(env_file) as f:
                 for line_num, line in enumerate(f, 1):
                     # Skip empty lines and comments
                     line = line.strip()
@@ -249,9 +249,9 @@ class EnvironmentLoader:
                     value = value.strip()
 
                     # Remove quotes from value if present
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
+                    if (value.startswith('"') and value.endswith('"')) or (
+                        value.startswith("'") and value.endswith("'")
+                    ):
                         value = value[1:-1]
 
                     # Only set if not already in environment

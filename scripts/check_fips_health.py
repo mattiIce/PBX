@@ -6,9 +6,8 @@ Can be run as a cron job or service health check
 """
 
 import json
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path
@@ -18,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 def check_kernel_fips():
     """Check if kernel FIPS mode is enabled"""
     try:
-        with open("/proc/sys/crypto/fips_enabled", "r") as f:
+        with open("/proc/sys/crypto/fips_enabled") as f:
             return f.read().strip() == "1"
     except FileNotFoundError:
         return False
@@ -81,7 +80,7 @@ def check_encryption_operations():
 
 def generate_health_report():
     """Generate health check report"""
-    timestamp = datetime.now(timezone.utc).isoformat()
+    timestamp = datetime.now(UTC).isoformat()
 
     # Perform all checks
     kernel_fips = check_kernel_fips()

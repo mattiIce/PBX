@@ -3,7 +3,7 @@ Mobile Number Portability
 Use business number on mobile device
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
@@ -51,7 +51,11 @@ class MobileNumberPortability:
         self.logger.info(f"  Enabled: {self.enabled}")
 
     def map_number_to_mobile(
-        self, business_number: str, extension: str, mobile_device_id: str, settings: dict = None
+        self,
+        business_number: str,
+        extension: str,
+        mobile_device_id: str,
+        settings: dict | None = None,
     ) -> dict:
         """
         Map business number to mobile device
@@ -74,7 +78,7 @@ class MobileNumberPortability:
             "simultaneous_ring": settings.get("simultaneous_ring", self.sim_ring_enabled),
             "mobile_first": settings.get("mobile_first", self.mobile_first),
             "business_hours_only": settings.get("business_hours_only", False),
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "active": True,
         }
 
@@ -107,9 +111,8 @@ class MobileNumberPortability:
             return {"route_to": "desk_phone", "reason": "Mapping inactive"}
 
         # Check business hours if required
-        if mapping["business_hours_only"]:
-            if not self._is_business_hours():
-                return {"route_to": "desk_phone", "reason": "Outside business hours"}
+        if mapping["business_hours_only"] and not self._is_business_hours():
+            return {"route_to": "desk_phone", "reason": "Outside business hours"}
 
         # Determine routing
         if mapping["simultaneous_ring"]:
@@ -123,7 +126,7 @@ class MobileNumberPortability:
                 ],
                 "strategy": "first_answer",
             }
-        elif mapping["mobile_first"]:
+        if mapping["mobile_first"]:
             self.calls_to_mobile += 1
             return {
                 "route_to": "mobile",
@@ -131,14 +134,13 @@ class MobileNumberPortability:
                 "failover_to": "desk_phone",
                 "failover_extension": mapping["extension"],
             }
-        else:
-            self.calls_to_desk += 1
-            return {"route_to": "desk_phone", "extension": mapping["extension"]}
+        self.calls_to_desk += 1
+        return {"route_to": "desk_phone", "extension": mapping["extension"]}
 
     def _is_business_hours(self) -> bool:
         """Check if current time is within business hours"""
         # Check against configured business hours
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         hour = now.hour
         minute = now.minute
         weekday = now.weekday()  # 0 = Monday, 6 = Sunday
@@ -164,10 +166,9 @@ class MobileNumberPortability:
         end_time_minutes = end_hour * 60 + end_minute
 
         # Check if current time is within business hours
-        if current_time_minutes < start_time_minutes or current_time_minutes >= end_time_minutes:
-            return False
-
-        return True
+        return not (
+            current_time_minutes < start_time_minutes or current_time_minutes >= end_time_minutes
+        )
 
     def toggle_mapping(self, business_number: str, active: bool) -> bool:
         """

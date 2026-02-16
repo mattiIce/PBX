@@ -125,14 +125,14 @@ def recommend_payload_type():
         print("If 100 doesn't work, try: 101 → 102 → 96")
         return "100"
 
-    elif equipment == 1:  # Polycom
+    if equipment == 1:  # Polycom
         print(f"\n{GREEN}✓ Recommendation: Try payload type 121 or 100{RESET}\n")
         print_payload_info("121", PAYLOAD_TYPES["121"], is_recommended=True)
         print("Polycom phones sometimes need payload type 121.")
         print("If 121 doesn't work, try: 100 → 101 → 102")
         return "121"
 
-    elif equipment == 3:  # Carrier
+    if equipment == 3:  # Carrier
         print(f"\n{GREEN}✓ Recommendation: Try payload type 102 or 100{RESET}\n")
         print_payload_info("102", PAYLOAD_TYPES["102"], is_recommended=True)
         print("Major carriers often require payload type 102 or 100.")
@@ -140,14 +140,14 @@ def recommend_payload_type():
         print(f"\n{YELLOW}TIP: Check your carrier's documentation for required payload type{RESET}")
         return "102"
 
-    else:  # Yealink/Zultys/Other
-        print(f"\n{GREEN}✓ Recommendation: Try alternatives in this order{RESET}\n")
-        print("Recommended testing order:")
-        print("  1. Payload type 100 (most common alternative)")
-        print("  2. Payload type 102 (carrier alternative)")
-        print("  3. Payload type 96 (generic fallback)")
-        print("  4. Payload type 101 (standard)")
-        return "100"
+    # Yealink/Zultys/Other
+    print(f"\n{GREEN}✓ Recommendation: Try alternatives in this order{RESET}\n")
+    print("Recommended testing order:")
+    print("  1. Payload type 100 (most common alternative)")
+    print("  2. Payload type 102 (carrier alternative)")
+    print("  3. Payload type 96 (generic fallback)")
+    print("  4. Payload type 101 (standard)")
+    return "100"
 
 
 def show_all_options():

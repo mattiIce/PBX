@@ -4,15 +4,14 @@ Replaces the legacy BaseHTTPRequestHandler-based server with Flask.
 """
 
 import os
-import ssl
 import socket
+import ssl
 import threading
-import time
 import traceback
+from pathlib import Path
 
 from pbx.api.app import create_app
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger()
 
@@ -104,6 +103,7 @@ class PBXFlaskServer:
         """Request certificate from in-house CA."""
         try:
             import requests
+
             ca_url = ca_config.get("url")
             ca_token = ca_config.get("token")
             hostname = ca_config.get("hostname", socket.gethostname())
@@ -117,7 +117,7 @@ class PBXFlaskServer:
                 json={"hostname": hostname, "type": "server"},
                 headers={"Authorization": f"Bearer {ca_token}"} if ca_token else {},
                 timeout=30,
-                verify=ca_config.get("verify_ssl", True)
+                verify=ca_config.get("verify_ssl", True),
             )
 
             if response.status_code == 200:

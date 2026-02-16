@@ -6,6 +6,7 @@ including voicemail access, message playback, IVR session management,
 DTMF monitoring during recording, and voicemail recording completion.
 """
 
+import contextlib
 import struct
 import threading
 import time
@@ -108,9 +109,7 @@ class VoicemailHandler:
         call.caller_rtp = caller_sdp
         call.voicemail_access = True
         call.voicemail_extension = target_ext
-        pbx.logger.info(
-            f"[VM Access] ✓ Call object created with state: {call.state}"
-        )
+        pbx.logger.info(f"[VM Access] ✓ Call object created with state: {call.state}")
 
         # Start CDR record for analytics
         pbx.logger.info("[VM Access] Step 5: Starting CDR record for analytics")
@@ -164,9 +163,7 @@ class VoicemailHandler:
             dtmf_payload_type=dtmf_payload_type,
             ilbc_mode=ilbc_mode,
         )
-        pbx.logger.info(
-            f"[VM Access] ✓ SDP built for response (RTP port: {call.rtp_ports[0]})"
-        )
+        pbx.logger.info(f"[VM Access] ✓ SDP built for response (RTP port: {call.rtp_ports[0]})")
 
         # Send 200 OK to answer the call
         pbx.logger.info("[VM Access] Step 8: Building and sending 200 OK response")
@@ -270,9 +267,7 @@ class VoicemailHandler:
                 # Play each voicemail message
                 if not messages:
                     # No messages - play short beep and hang up
-                    pbx.logger.info(
-                        f"No voicemail messages for {call.voicemail_extension}"
-                    )
+                    pbx.logger.info(f"No voicemail messages for {call.voicemail_extension}")
                     player.play_beep(frequency=400, duration_ms=500)
                     time.sleep(2)
                 else:
@@ -290,16 +285,12 @@ class VoicemailHandler:
 
                         # Play the voicemail message
                         file_path = message["file_path"]
-                        pbx.logger.info(
-                            f"Playing voicemail {idx + 1}/{len(messages)}: {file_path}"
-                        )
+                        pbx.logger.info(f"Playing voicemail {idx + 1}/{len(messages)}: {file_path}")
 
                         if player.play_file(file_path):
                             # Mark message as listened
                             mailbox.mark_listened(message["id"])
-                            pbx.logger.info(
-                                f"Marked voicemail {message['id']} as listened"
-                            )
+                            pbx.logger.info(f"Marked voicemail {message['id']} as listened")
                         else:
                             pbx.logger.warning(f"Failed to play voicemail: {file_path}")
 
@@ -457,9 +448,7 @@ class VoicemailHandler:
                 # tone generation
                 pbx.logger.info(f"[VM IVR] Loading audio prompt: {prompt_type}")
                 pin_prompt = get_prompt_audio(prompt_type)
-                pbx.logger.info(
-                    f"[VM IVR] ✓ Prompt audio loaded ({len(pin_prompt)} bytes)"
-                )
+                pbx.logger.info(f"[VM IVR] ✓ Prompt audio loaded ({len(pin_prompt)} bytes)")
 
                 with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as temp_file:
                     temp_file.write(pin_prompt)
@@ -474,10 +463,8 @@ class VoicemailHandler:
                         f"[VM IVR] ✓ Finished playing PIN entry prompt (call state: {call.state})"
                     )
                 finally:
-                    try:
+                    with contextlib.suppress(OSError):
                         os.unlink(prompt_file)
-                    except OSError:
-                        pass
 
                 time.sleep(0.5)
                 pbx.logger.info("[VM IVR] Post-prompt pause complete, checking call state...")
@@ -491,9 +478,7 @@ class VoicemailHandler:
                 if call.state == CallState.ENDED:
                     pbx.logger.info("")
                     pbx.logger.info("[VM IVR] ✗ call ended before IVR could start")
-                    pbx.logger.info(
-                        f"[VM IVR] Extension: {call.voicemail_extension}"
-                    )
+                    pbx.logger.info(f"[VM IVR] Extension: {call.voicemail_extension}")
                     pbx.logger.info(f"[VM IVR] State: {call.state}")
                     pbx.logger.info("[VM IVR] Exiting IVR session")
                     pbx.logger.info("")
@@ -501,9 +486,7 @@ class VoicemailHandler:
 
                 pbx.logger.info("")
                 pbx.logger.info("[VM IVR] ✓ IVR fully started and ready for user input")
-                pbx.logger.info(
-                    f"[VM IVR] Extension: {call.voicemail_extension}"
-                )
+                pbx.logger.info(f"[VM IVR] Extension: {call.voicemail_extension}")
                 pbx.logger.info(f"[VM IVR] State: {call.state}")
                 pbx.logger.info("[VM IVR] Waiting for PIN entry...")
                 pbx.logger.info("")
@@ -595,16 +578,10 @@ class VoicemailHandler:
                         pbx.logger.info(
                             f"[VM IVR] Processing DTMF '{digit}' through IVR state machine..."
                         )
-                        pbx.logger.info(
-                            f"[VM IVR] Current IVR state: {voicemail_ivr.state}"
-                        )
+                        pbx.logger.info(f"[VM IVR] Current IVR state: {voicemail_ivr.state}")
                         action = voicemail_ivr.handle_dtmf(digit)
-                        pbx.logger.info(
-                            f"[VM IVR] IVR returned action: {action.get('action')}"
-                        )
-                        pbx.logger.info(
-                            f"[VM IVR] New IVR state: {voicemail_ivr.state}"
-                        )
+                        pbx.logger.info(f"[VM IVR] IVR returned action: {action.get('action')}")
+                        pbx.logger.info(f"[VM IVR] New IVR state: {voicemail_ivr.state}")
 
                         # Process IVR action
                         if action["action"] == "play_message":
@@ -718,10 +695,8 @@ class VoicemailHandler:
                             try:
                                 player.play_file(beep_file)
                             finally:
-                                try:
+                                with contextlib.suppress(OSError):
                                     os.unlink(beep_file)
-                                except OSError:
-                                    pass
 
                             time.sleep(0.2)
 
@@ -788,9 +763,7 @@ class VoicemailHandler:
                                     ):
                                         greeting_audio_raw = b"".join(recorder.recorded_data)
                                         # Convert raw audio to WAV format before saving
-                                        greeting_audio_wav = pbx._build_wav_file(
-                                            greeting_audio_raw
-                                        )
+                                        greeting_audio_wav = pbx._build_wav_file(greeting_audio_raw)
                                         voicemail_ivr.save_recorded_greeting(greeting_audio_wav)
                                         pbx.logger.info(
                                             f"Saved recorded greeting as WAV ({len(greeting_audio_wav)} bytes, {len(greeting_audio_raw)} bytes raw audio)"
@@ -808,10 +781,8 @@ class VoicemailHandler:
                                         try:
                                             player.play_file(prompt_file)
                                         finally:
-                                            try:
+                                            with contextlib.suppress(OSError):
                                                 os.unlink(prompt_file)
-                                            except OSError:
-                                                pass
                                     elif action.get("action") == "stop_recording":
                                         # Also valid, just log it
                                         pbx.logger.info(
@@ -848,10 +819,8 @@ class VoicemailHandler:
                                 try:
                                     player.play_file(greeting_file)
                                 finally:
-                                    try:
+                                    with contextlib.suppress(OSError):
                                         os.unlink(greeting_file)
-                                    except OSError:
-                                        pass
 
                                 time.sleep(0.5)
 
@@ -866,10 +835,8 @@ class VoicemailHandler:
                                 try:
                                     player.play_file(prompt_file)
                                 finally:
-                                    try:
+                                    with contextlib.suppress(OSError):
                                         os.unlink(prompt_file)
-                                    except OSError:
-                                        pass
                             else:
                                 pbx.logger.warning(
                                     "No recorded greeting data available for playback"
@@ -879,9 +846,7 @@ class VoicemailHandler:
                             # Digit is being collected (e.g., PIN entry)
                             # No additional action needed - digit is already stored in IVR state
                             # Just continue the loop to wait for more digits
-                            pbx.logger.debug(
-                                "[VM IVR] Collecting digit, waiting for more input..."
-                            )
+                            pbx.logger.debug("[VM IVR] Collecting digit, waiting for more input...")
 
                         else:
                             # Unknown action type
@@ -897,9 +862,7 @@ class VoicemailHandler:
 
                     # Timeout after 60 seconds of no activity
                     if time.time() - last_audio_check > 60:
-                        pbx.logger.info(
-                            f"Voicemail IVR timeout for {call.voicemail_extension}"
-                        )
+                        pbx.logger.info(f"Voicemail IVR timeout for {call.voicemail_extension}")
                         ivr_active = False
 
                 pbx.logger.info("")

@@ -5,7 +5,6 @@ Tests for Do Not Disturb (DND) Scheduling
 
 from datetime import datetime
 
-
 from pbx.features.dnd_scheduling import CalendarMonitor, DNDRule, DNDScheduler
 from pbx.features.presence import PresenceStatus, PresenceSystem
 
@@ -205,7 +204,7 @@ def test_rule_priority() -> bool:
         "start_time": "09:00",
         "end_time": "17:00",
     }
-    rule_id_low = scheduler.add_rule("1001", "time_based", rule_config_low)
+    scheduler.add_rule("1001", "time_based", rule_config_low)
 
     # Add high priority rule
     rule_config_high = {
@@ -215,7 +214,7 @@ def test_rule_priority() -> bool:
         "start_time": "12:00",
         "end_time": "13:00",
     }
-    rule_id_high = scheduler.add_rule("1001", "time_based", rule_config_high)
+    scheduler.add_rule("1001", "time_based", rule_config_high)
 
     # Get rules
     rules = scheduler.get_rules("1001")

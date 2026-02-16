@@ -116,7 +116,7 @@ class JitterBuffer:
                 if seq_diff < -10:  # Very old packet
                     self.packets_late += 1
                     self.logger.debug(
-                        f"Dropping late packet: seq={sequence}, " f"last_seq={self.last_sequence}"
+                        f"Dropping late packet: seq={sequence}, last_seq={self.last_sequence}"
                     )
                     return False
 
@@ -397,5 +397,4 @@ class JitterBufferManager:
             if buffer:
                 return {call_id: buffer.get_statistics()}
             return {}
-        else:
-            return {cid: buf.get_statistics() for cid, buf in self.buffers.items()}
+        return {cid: buf.get_statistics() for cid, buf in self.buffers.items()}

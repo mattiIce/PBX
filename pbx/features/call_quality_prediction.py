@@ -3,11 +3,11 @@ Call Quality Prediction
 Proactive network issue detection using ML
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # ML libraries for improved prediction
 try:
@@ -36,7 +36,7 @@ class NetworkMetrics:
 
     def __init__(self):
         """Initialize network metrics"""
-        self.timestamp = datetime.now(timezone.utc)
+        self.timestamp = datetime.now(UTC)
         self.latency = 0  # milliseconds
         self.jitter = 0  # milliseconds
         self.packet_loss = 0.0  # percentage
@@ -191,7 +191,7 @@ class CallQualityPrediction:
                     current.jitter,
                     current.packet_loss,
                     current.bandwidth,
-                    datetime.now(timezone.utc).hour / 24.0,  # Normalized time of day
+                    datetime.now(UTC).hour / 24.0,  # Normalized time of day
                     0.0,
                     0.0,
                     0.0,  # Codec features (would need to be passed in)
@@ -218,7 +218,9 @@ class CallQualityPrediction:
         if predicted_mos is None:
             # Apply exponential weighted moving average for smoothing
             weights = [2**i for i in range(len(recent))]
-            weighted_mos = sum(m.mos_score * w for m, w in zip(recent, weights)) / sum(weights)
+            weighted_mos = sum(
+                m.mos_score * w for m, w in zip(recent, weights, strict=False)
+            ) / sum(weights)
 
             # Combine weighted average with trend for prediction
             prediction_intervals = 3  # Predict 3 intervals ahead
@@ -229,7 +231,9 @@ class CallQualityPrediction:
 
         # Predict future packet loss using similar approach
         weights_pl = [2**i for i in range(len(recent))]
-        weighted_pl = sum(m.packet_loss * w for m, w in zip(recent, weights_pl)) / sum(weights_pl)
+        weighted_pl = sum(
+            m.packet_loss * w for m, w in zip(recent, weights_pl, strict=False)
+        ) / sum(weights_pl)
         predicted_packet_loss = weighted_pl + (packet_loss_trend * prediction_intervals)
         predicted_packet_loss = max(0.0, min(100.0, predicted_packet_loss))
 
@@ -267,7 +271,7 @@ class CallQualityPrediction:
             "alert": alert,
             "alert_reasons": alert_reasons,
             "recommendations": self._generate_recommendations(predicted_mos, predicted_packet_loss),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         self.active_predictions[call_id] = prediction
@@ -343,14 +347,13 @@ class CallQualityPrediction:
         """Convert MOS score to quality level"""
         if mos >= 4.3:
             return QualityLevel.EXCELLENT
-        elif mos >= 4.0:
+        if mos >= 4.0:
             return QualityLevel.GOOD
-        elif mos >= 3.6:
+        if mos >= 3.6:
             return QualityLevel.FAIR
-        elif mos >= 3.1:
+        if mos >= 3.1:
             return QualityLevel.POOR
-        else:
-            return QualityLevel.CRITICAL
+        return QualityLevel.CRITICAL
 
     def _generate_recommendations(
         self, predicted_mos: float, predicted_packet_loss: float
@@ -489,7 +492,13 @@ class CallQualityPrediction:
                 self.logger.info(f"  Training R-squared: {r_squared:.3f}")
                 self.logger.info(f"  Features: {X.shape[1]}")
                 self.logger.info(
-                    f"  Top features: {sorted(zip(feature_names[:len(importance)], importance), key=lambda x: x[1], reverse=True)[:3]}"
+                    f"  Top features: {
+                        sorted(
+                            zip(feature_names[: len(importance)], importance, strict=False),
+                            key=lambda x: x[1],
+                            reverse=True,
+                        )[:3]
+                    }"
                 )
 
                 return

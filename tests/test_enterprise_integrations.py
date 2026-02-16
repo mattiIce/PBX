@@ -4,10 +4,9 @@ Tests for enterprise integration implementations
 Tests the newly implemented features in Zoom, Teams, Outlook, and Active Directory integrations
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
 from typing import Any
 from unittest.mock import MagicMock, patch
-
 
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.integrations.outlook import OutlookIntegration
@@ -190,7 +189,7 @@ def test_outlook_meeting_reminder() -> None:
     pbx_core.extension_registry.extensions = {"1001": mock_extension}
 
     # Mock the requests.get to return meeting details
-    future_time = datetime.now(timezone.utc) + timedelta(minutes=10)
+    future_time = datetime.now(UTC) + timedelta(minutes=10)
     mock_meeting = {"subject": "Test Meeting", "start": {"dateTime": future_time.isoformat()}}
 
     with patch("pbx.integrations.outlook.requests.get") as mock_get:

@@ -7,6 +7,7 @@ For development and testing purposes only
 import ipaddress
 import os
 import sys
+from datetime import UTC
 from pathlib import Path
 
 try:
@@ -64,8 +65,8 @@ def generate_self_signed_cert(cert_dir="certs", hostname="localhost", days_valid
         .issuer_name(issuer)
         .public_key(private_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.now(tz=timezone.utc))
-        .not_valid_after(datetime.now(tz=timezone.utc) + timedelta(days=days_valid))
+        .not_valid_before(datetime.now(tz=UTC))
+        .not_valid_after(datetime.now(tz=UTC) + timedelta(days=days_valid))
         .add_extension(
             x509.SubjectAlternativeName(
                 [

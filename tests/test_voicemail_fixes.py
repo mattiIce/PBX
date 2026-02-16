@@ -9,13 +9,12 @@ Test voicemail fixes for:
 import os
 import shutil
 import tempfile
-
+from pathlib import Path
 
 from pbx.core.pbx import PBXCore
 from pbx.features.email_notification import EmailNotifier
 from pbx.features.voicemail import VoicemailBox, VoicemailSystem
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 def test_api_serves_audio_by_default() -> None:
@@ -80,7 +79,6 @@ def test_api_serves_audio_by_default() -> None:
         assert len(saved_data) == len(wav_data)
         assert saved_data == wav_data
 
-
     finally:
         shutil.rmtree(temp_dir)
 
@@ -103,7 +101,6 @@ def test_voicemail_access_checks_registry() -> None:
         ext = pbx.extension_registry.get(test_ext)
         assert ext is not None, f"Extension {test_ext} should exist in registry"
 
-
         # Test the voicemail pattern matching
         voicemail_ext = f"*{test_ext}"
 
@@ -118,9 +115,9 @@ def test_voicemail_access_checks_registry() -> None:
         # Pattern typically supports 3-4 digit extensions as per config
         if len(test_ext) >= 3 and len(test_ext) <= 4 and test_ext.isdigit():
             pattern_matches = re.match(voicemail_pattern, voicemail_ext)
-            assert (
-                pattern_matches
-            ), f"Voicemail pattern '{voicemail_pattern}' should match {voicemail_ext}"
+            assert pattern_matches, (
+                f"Voicemail pattern '{voicemail_pattern}' should match {voicemail_ext}"
+            )
         else:
             # Extension is non-standard length, pattern check informational only
             pattern_matches = re.match(voicemail_pattern, voicemail_ext)
@@ -162,7 +159,6 @@ def test_email_notification_checks_database() -> None:
         # Check if the code includes database checking logic for email
         if "ExtensionDB" not in source and "database" in source.lower():
             pass
-
 
     finally:
         shutil.rmtree(temp_dir)

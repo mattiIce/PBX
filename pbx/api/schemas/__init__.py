@@ -5,12 +5,12 @@ from pbx.api.schemas.common import ErrorResponse, PaginatedResponse, SuccessResp
 from pbx.api.schemas.extensions import ExtensionCreate, ExtensionResponse, ExtensionUpdate
 
 __all__ = [
+    "ErrorResponse",
+    "ExtensionCreate",
+    "ExtensionResponse",
+    "ExtensionUpdate",
     "LoginRequest",
     "LoginResponse",
-    "ExtensionCreate",
-    "ExtensionUpdate",
-    "ExtensionResponse",
-    "ErrorResponse",
     "PaginatedResponse",
     "SuccessResponse",
 ]

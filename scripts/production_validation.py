@@ -119,7 +119,7 @@ class ProductionValidator:
         print(f"\n{BLUE}=== Security Tests ==={RESET}")
 
         # Check for secrets validation
-        success, output = self.run_command(
+        success, _output = self.run_command(
             [sys.executable, str(self.base_dir / "scripts" / "verify_fips.py")]
         )
         if success:
@@ -319,12 +319,11 @@ class ProductionValidator:
         if self.results["failed"] == 0:
             print(f"\n{GREEN}✓ PRODUCTION READY{RESET}")
             return 0
-        elif self.results["failed"] <= 2:
+        if self.results["failed"] <= 2:
             print(f"\n{YELLOW}⚠ MOSTLY READY (review {self.results['failed']} failures){RESET}")
             return 1
-        else:
-            print(f"\n{RED}✗ NOT PRODUCTION READY ({self.results['failed']} failures){RESET}")
-            return 2
+        print(f"\n{RED}✗ NOT PRODUCTION READY ({self.results['failed']} failures){RESET}")
+        return 2
 
 
 def main():

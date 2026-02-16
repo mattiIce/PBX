@@ -158,16 +158,16 @@ def read_existing_env():
 
     if env_file.exists():
         print(f"✓ Found existing .env file at: {env_file}")
-        with open(env_file, "r") as f:
+        with open(env_file) as f:
             for line in f:
                 line = line.strip()
                 if line and not line.startswith("#") and "=" in line:
                     key, value = line.split("=", 1)
                     # Remove quotes if present
                     value = value.strip()
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
+                    if (value.startswith('"') and value.endswith('"')) or (
+                        value.startswith("'") and value.endswith("'")
+                    ):
                         value = value[1:-1]
                     env_vars[key.strip()] = value
     else:
@@ -219,9 +219,9 @@ def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
     if not new_value:
         if current_value:
             return current_value
-        elif default:
+        if default:
             return default
-        elif required:
+        if required:
             print("  ⚠ This value is required!")
             return prompt_for_value(var_name, var_info, current_value, retry_count + 1)
 
@@ -238,7 +238,7 @@ def write_env_file(env_vars, env_file):
 
         for category, vars_dict in ENV_VARS.items():
             f.write(f"# {category}\n")
-            for var_name in vars_dict.keys():
+            for var_name in vars_dict:
                 value = env_vars.get(var_name, "")
                 # Quote values that contain spaces or special characters
                 # When wrapping in double quotes, only double quotes need escaping
@@ -276,7 +276,7 @@ def main():
         if choice == "4":
             print("Cancelled.")
             return
-        elif choice == "3":
+        if choice == "3":
             update_mode = "required"
         elif choice == "2":
             update_mode = "specific"
@@ -292,7 +292,7 @@ def main():
         if choice == "3":
             print("Cancelled.")
             return
-        elif choice == "2":
+        if choice == "2":
             update_mode = "required"
         else:
             update_mode = "all"

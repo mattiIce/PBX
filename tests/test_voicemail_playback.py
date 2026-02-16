@@ -8,14 +8,13 @@ import os
 import shutil
 import tempfile
 import time
-
+from pathlib import Path
 
 from pbx.core.call import Call
 from pbx.core.pbx import PBXCore
 from pbx.features.voicemail import VoicemailSystem
 from pbx.rtp.handler import RTPPlayer
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 def test_rtp_player_play_file() -> None:
@@ -85,7 +84,6 @@ def test_rtp_player_play_file() -> None:
         # Test should succeed if file was parsed correctly
         assert result or result is False  # Either outcome is acceptable for this test
 
-
     finally:
         shutil.rmtree(temp_dir)
 
@@ -122,7 +120,6 @@ def test_voicemail_access_plays_messages() -> None:
         assert messages[0]["caller_id"] == "1002"
         assert messages[0]["listened"] is False
 
-
         # Now test the playback functionality
         # We can't fully test playback without a SIP client, but we can verify
         # the message is marked as listened after access
@@ -133,7 +130,6 @@ def test_voicemail_access_plays_messages() -> None:
         # Verify message is marked as listened
         messages = mailbox.get_messages()
         assert messages[0]["listened"]
-
 
     finally:
         shutil.rmtree(temp_dir)

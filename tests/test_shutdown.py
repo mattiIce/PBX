@@ -6,12 +6,11 @@ Test PBX shutdown functionality
 import os
 import tempfile
 import time
+from pathlib import Path
 
 import yaml
 
-
 from pbx.core.pbx import PBXCore
-from pathlib import Path
 
 
 def test_pbx_shutdown() -> None:

@@ -7,11 +7,10 @@ Validates that failed transactions are properly rolled back to prevent
 
 import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_transaction_rollback_on_error() -> None:

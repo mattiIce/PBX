@@ -6,7 +6,6 @@ Tests for JSON serialization of datetime objects in API responses
 import json
 from datetime import datetime
 
-
 from pbx.api.rest_api import DateTimeEncoder
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
@@ -68,9 +67,9 @@ def test_registered_phones_json_serialization() -> None:
     parsed = json.loads(json_str)
     assert len(parsed) == 2, "Should have 2 phones"
     assert parsed[0]["extension_number"] == "1001", "First phone extension should match"
-    assert (
-        parsed[0]["first_registered"] == "2025-12-05T14:00:00"
-    ), "First phone timestamp should be ISO format"
+    assert parsed[0]["first_registered"] == "2025-12-05T14:00:00", (
+        "First phone timestamp should be ISO format"
+    )
     assert parsed[1]["extension_number"] == "1002", "Second phone extension should match"
 
 

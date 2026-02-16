@@ -9,7 +9,6 @@ requires a licensed library (e.g., Intel IPP, Broadcom, or open-source implement
 For production use, integrate with a G.729 codec library.
 """
 
-
 from pbx.utils.logger import get_logger
 
 
@@ -186,7 +185,7 @@ class G729CodecManager:
     Manager for G.729 codec instances and configuration
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None):
         """
         Initialize G.729 codec manager
 
@@ -212,7 +211,7 @@ class G729CodecManager:
         else:
             self.logger.info("G.729 codec disabled in configuration")
 
-    def create_encoder(self, call_id: str, variant: str = None) -> G729Codec | None:
+    def create_encoder(self, call_id: str, variant: str | None = None) -> G729Codec | None:
         """
         Create encoder for a call
 
@@ -233,7 +232,7 @@ class G729CodecManager:
         self.logger.debug(f"Created G.729 encoder for call {call_id}")
         return encoder
 
-    def create_decoder(self, call_id: str, variant: str = None) -> G729Codec | None:
+    def create_decoder(self, call_id: str, variant: str | None = None) -> G729Codec | None:
         """
         Create decoder for a call
 

@@ -3,7 +3,7 @@ Zoom Integration
 Enables Zoom Phone, video meetings, and collaboration features
 """
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from pbx.utils.logger import get_logger
 
@@ -59,7 +59,7 @@ class ZoomIntegration:
             return False
 
         # Check if token is still valid
-        if self.access_token and self.token_expiry and datetime.now(timezone.utc) < self.token_expiry:
+        if self.access_token and self.token_expiry and datetime.now(UTC) < self.token_expiry:
             return True
 
         if not all([self.account_id, self.client_id, self.client_secret]):
@@ -81,24 +81,23 @@ class ZoomIntegration:
                 data = response.json()
                 self.access_token = data.get("access_token")
                 expires_in = data.get("expires_in", 3600)
-                self.token_expiry = datetime.now(timezone.utc) + timedelta(
+                self.token_expiry = datetime.now(UTC) + timedelta(
                     seconds=expires_in - TOKEN_EXPIRY_BUFFER_SECONDS
                 )
 
                 self.logger.info("Zoom authentication successful")
                 return True
-            else:
-                self.logger.error(
-                    f"Zoom authentication failed: {response.status_code} - {response.text}"
-                )
-                return False
+            self.logger.error(
+                f"Zoom authentication failed: {response.status_code} - {response.text}"
+            )
+            return False
 
         except (requests.RequestException, KeyError, ValueError) as e:
             self.logger.error(f"Zoom authentication error: {e}")
             return False
 
     def create_meeting(
-        self, topic: str, start_time: str = None, duration_minutes: int = 60, **kwargs
+        self, topic: str, start_time: str | None = None, duration_minutes: int = 60, **kwargs
     ) -> dict | None:
         """
         Create a Zoom meeting
@@ -150,9 +149,7 @@ class ZoomIntegration:
 
             if response.status_code in [200, 201]:
                 meeting_data = response.json()
-                self.logger.info(
-                    f"Zoom meeting created: {meeting_data.get('id')}"
-                )
+                self.logger.info(f"Zoom meeting created: {meeting_data.get('id')}")
 
                 return {
                     "meeting_id": meeting_data.get("id"),
@@ -163,11 +160,10 @@ class ZoomIntegration:
                     "start_time": meeting_data.get("start_time"),
                     "duration": meeting_data.get("duration"),
                 }
-            else:
-                self.logger.error(
-                    f"Failed to create Zoom meeting: {response.status_code} - {response.text}"
-                )
-                return None
+            self.logger.error(
+                f"Failed to create Zoom meeting: {response.status_code} - {response.text}"
+            )
+            return None
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error creating Zoom meeting: {e}")
@@ -238,15 +234,11 @@ class ZoomIntegration:
                         break
 
                 if trunk and trunk.can_make_call():
-                    self.logger.info(
-                        f"Using SIP trunk '{trunk.name}' for Zoom Phone call"
-                    )
+                    self.logger.info(f"Using SIP trunk '{trunk.name}' for Zoom Phone call")
 
                     # Allocate channel
                     if trunk.allocate_channel():
-                        self.logger.info(
-                            f"Initiating SIP call to {sip_uri} via trunk {trunk.name}"
-                        )
+                        self.logger.info(f"Initiating SIP call to {sip_uri} via trunk {trunk.name}")
 
                         # In production, this would:
                         # 1. Build SIP INVITE with Zoom Phone-specific headers
@@ -258,21 +250,19 @@ class ZoomIntegration:
                         # For now, log the action and return success indicator
                         self.logger.info(f"Call routed to Zoom Phone: {from_number} -> {to_number}")
                         return True
-                    else:
-                        self.logger.error("Failed to allocate channel on Zoom Phone trunk")
-                        return False
-                else:
-                    self.logger.warning(
-                        "No Zoom Phone SIP trunk found. Configure a trunk in config.yml:\n"
-                        "sip_trunks:\n"
-                        "  - id: zoom_phone\n"
-                        "    name: Zoom Phone Trunk\n"
-                        f"    host: {zoom_phone_domain}\n"
-                        "    port: 5060\n"
-                        "    username: your_zoom_sip_username\n"
-                        "    password: your_zoom_sip_password"
-                    )
+                    self.logger.error("Failed to allocate channel on Zoom Phone trunk")
                     return False
+                self.logger.warning(
+                    "No Zoom Phone SIP trunk found. Configure a trunk in config.yml:\n"
+                    "sip_trunks:\n"
+                    "  - id: zoom_phone\n"
+                    "    name: Zoom Phone Trunk\n"
+                    f"    host: {zoom_phone_domain}\n"
+                    "    port: 5060\n"
+                    "    username: your_zoom_sip_username\n"
+                    "    password: your_zoom_sip_password"
+                )
+                return False
 
             except Exception as e:
                 self.logger.error(f"Error routing call to Zoom Phone: {e}")
@@ -331,11 +321,10 @@ class ZoomIntegration:
                     "phone_numbers": data.get("phone_numbers", []),
                     "raw_data": data,
                 }
-            else:
-                self.logger.warning(
-                    f"Failed to get Zoom Phone status: {response.status_code} - {response.text}"
-                )
-                return None
+            self.logger.warning(
+                f"Failed to get Zoom Phone status: {response.status_code} - {response.text}"
+            )
+            return None
 
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
             self.logger.error(f"Error getting Zoom Phone status: {e}")

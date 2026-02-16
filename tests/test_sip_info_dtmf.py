@@ -3,7 +3,6 @@ Test suite for SIP INFO DTMF functionality
 Validates that SIP INFO messages are properly handled for DTMF signaling
 """
 
-
 from pbx.core.call import Call
 from pbx.sip.message import SIPMessage
 from pbx.sip.server import VALID_DTMF_DIGITS, SIPServer
@@ -68,7 +67,7 @@ class TestSIPInfoDTMF:
             "C",
             "D",
         ]
-        assert VALID_DTMF_DIGITS == expected_digits
+        assert expected_digits == VALID_DTMF_DIGITS
 
     def test_sip_info_message_parsing_dtmf_relay(self) -> None:
         """Test parsing of SIP INFO message with application/dtmf-relay"""
@@ -171,7 +170,7 @@ class TestSIPInfoDTMF:
             self.sip_server._handle_info(message, addr)
 
             # Verify digit was extracted correctly
-            call_id, digit = self.mock_pbx.dtmf_calls[initial_count + idx]
+            _call_id, digit = self.mock_pbx.dtmf_calls[initial_count + idx]
             assert digit == test_digit
 
     def test_handle_info_invalid_digit(self) -> None:
@@ -223,7 +222,7 @@ class TestSIPInfoDTMF:
 
         # Verify that digit was still extracted despite charset parameter
         assert len(self.mock_pbx.dtmf_calls) > 0
-        call_id, digit = self.mock_pbx.dtmf_calls[-1]
+        _call_id, digit = self.mock_pbx.dtmf_calls[-1]
         assert digit == "9"
 
     def test_pbx_core_dtmf_queue_creation(self) -> None:
@@ -278,6 +277,7 @@ class TestSIPInfoDTMF:
 
         # Verify FIFO order
         assert processed == digits
+
 
 class TestSIPInfoIntegration:
     """Integration tests for SIP INFO queue operations with IVR systems"""

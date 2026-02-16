@@ -3,7 +3,7 @@ Data Residency Controls
 Geographic data storage options for compliance
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
@@ -130,7 +130,7 @@ class DataResidencyControls:
         self.logger.info(f"set {category.value} to store in {region.value}")
         return True
 
-    def get_storage_location(self, category: str, user_region: str = None) -> dict:
+    def get_storage_location(self, category: str, user_region: str | None = None) -> dict:
         """
         Get storage location for data
 
@@ -161,7 +161,7 @@ class DataResidencyControls:
         }
 
     def validate_storage_operation(
-        self, category: str, target_region: str, user_region: str = None
+        self, category: str, target_region: str, user_region: str | None = None
     ) -> dict:
         """
         Validate if storage operation is allowed
@@ -177,13 +177,12 @@ class DataResidencyControls:
         self.total_storage_operations += 1
 
         # In strict mode, enforce data residency
-        if self.strict_mode and user_region:
-            if target_region != user_region:
-                self.blocked_operations += 1
-                return {
-                    "allowed": False,
-                    "reason": "Cross-region storage not allowed in strict mode",
-                }
+        if self.strict_mode and user_region and target_region != user_region:
+            self.blocked_operations += 1
+            return {
+                "allowed": False,
+                "reason": "Cross-region storage not allowed in strict mode",
+            }
 
         # Check for EU data protection rules
         if user_region in ["eu-west", "eu-central", "uk"]:
@@ -199,7 +198,7 @@ class DataResidencyControls:
         category: str,
         from_region: str,
         to_region: str,
-        justification: str = None,
+        justification: str | None = None,
     ) -> dict:
         """
         Transfer data between regions
@@ -260,7 +259,7 @@ class DataResidencyControls:
             "from_region": from_region,
             "to_region": to_region,
             "justification": justification,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "status": "completed",
         }
 

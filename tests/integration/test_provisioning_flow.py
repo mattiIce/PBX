@@ -19,19 +19,23 @@ from pbx.features.phone_provisioning import (
     normalize_mac_address,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
-def _post_json(client: FlaskClient, url: str, data: dict[str, Any], headers: dict[str, str] | None = None) -> TestResponse:
+
+def _post_json(
+    client: FlaskClient, url: str, data: dict[str, Any], headers: dict[str, str] | None = None
+) -> TestResponse:
     all_headers = {"Content-Type": "application/json"}
     if headers:
         all_headers.update(headers)
     return client.post(url, data=json.dumps(data), headers=all_headers)
 
 
-def _put_json(client: FlaskClient, url: str, data: dict[str, Any], headers: dict[str, str] | None = None) -> TestResponse:
+def _put_json(
+    client: FlaskClient, url: str, data: dict[str, Any], headers: dict[str, str] | None = None
+) -> TestResponse:
     all_headers = {"Content-Type": "application/json"}
     if headers:
         all_headers.update(headers)
@@ -48,10 +52,14 @@ def _admin_token(client: FlaskClient, mock_pbx_core: MagicMock) -> dict[str, str
         "voicemail_pin_hash": "admin-pin",
         "voicemail_pin_salt": None,
     }
-    resp = _post_json(client, "/api/auth/login", {
-        "extension": "1001",
-        "password": "admin-pin",
-    })
+    resp = _post_json(
+        client,
+        "/api/auth/login",
+        {
+            "extension": "1001",
+            "password": "admin-pin",
+        },
+    )
     token = json.loads(resp.data)["token"]
     return {"Authorization": f"Bearer {token}"}
 
@@ -60,13 +68,12 @@ def _admin_token(client: FlaskClient, mock_pbx_core: MagicMock) -> dict[str, str
 # Template CRUD (unit-level, exercising PhoneProvisioning directly)
 # =========================================================================
 
-@pytest.mark.integration
 
+@pytest.mark.integration
 class TestProvisioningTemplateCRUD:
     """Test provisioning template create / read / update / delete operations."""
 
     @pytest.fixture
-
     def provisioning(self, mock_config: MagicMock) -> PhoneProvisioning:
         """Create a PhoneProvisioning instance with no database."""
         return PhoneProvisioning(mock_config, database=None)
@@ -117,7 +124,7 @@ class TestProvisioningTemplateCRUD:
         with patch("builtins.open", MagicMock()):
             with patch("os.path.exists", return_value=True):
                 with patch("os.makedirs"):
-                    success, msg = provisioning.update_template(
+                    success, _msg = provisioning.update_template(
                         "acme", "rocket", "updated content"
                     )
 
@@ -136,14 +143,16 @@ class TestProvisioningTemplateCRUD:
         assert len(provisioning.templates) == original_count + 1
 
         # Reload -- custom template (in-memory only) is gone
-        success, msg, stats = provisioning.reload_templates()
+        success, _msg, _stats = provisioning.reload_templates()
         assert success is True
         assert provisioning.get_template("acme", "rocket") is None
         assert len(provisioning.templates) == original_count
 
     # -- Template generate_config -----------------------------------------
 
-    def test_template_generates_config_with_placeholders(self, provisioning: PhoneProvisioning) -> None:
+    def test_template_generates_config_with_placeholders(
+        self, provisioning: PhoneProvisioning
+    ) -> None:
         """PhoneTemplate.generate_config should replace placeholders."""
         template = provisioning.get_template("yealink", "t46s")
         ext_config = {"number": "1001", "name": "Alice", "password": "s3cret"}
@@ -167,13 +176,12 @@ class TestProvisioningTemplateCRUD:
 # Phone registration flow (unit-level)
 # =========================================================================
 
-@pytest.mark.integration
 
+@pytest.mark.integration
 class TestPhoneRegistrationFlow:
     """Test registering, querying, and unregistering phone devices."""
 
     @pytest.fixture
-
     def provisioning(self, mock_config: MagicMock) -> PhoneProvisioning:
         """Create a PhoneProvisioning instance with no database."""
         return PhoneProvisioning(mock_config, database=None)
@@ -244,23 +252,25 @@ class TestPhoneRegistrationFlow:
         registry.get.return_value = ext
         registry.get_all.return_value = [ext]
 
-        config_content, content_type = provisioning.generate_config(
-            "AA:BB:CC:DD:EE:FF", registry
-        )
+        config_content, content_type = provisioning.generate_config("AA:BB:CC:DD:EE:FF", registry)
 
         assert config_content is not None
         assert "1001" in config_content
         assert "Alice" in config_content
         assert content_type == "text/plain"
 
-    def test_generate_config_missing_device_returns_none(self, provisioning: PhoneProvisioning) -> None:
+    def test_generate_config_missing_device_returns_none(
+        self, provisioning: PhoneProvisioning
+    ) -> None:
         """Generating config for an unregistered MAC returns (None, None)."""
         registry = MagicMock()
         config, ctype = provisioning.generate_config("00:00:00:00:00:00", registry)
         assert config is None
         assert ctype is None
 
-    def test_device_marked_provisioned_after_config_generation(self, provisioning: PhoneProvisioning) -> None:
+    def test_device_marked_provisioned_after_config_generation(
+        self, provisioning: PhoneProvisioning
+    ) -> None:
         """After generate_config the device should have last_provisioned set."""
         provisioning.register_device("AA:BB:CC:DD:EE:FF", "1001", "yealink", "t46s")
 
@@ -282,26 +292,31 @@ class TestPhoneRegistrationFlow:
 # API-level provisioning tests (via Flask test client)
 # =========================================================================
 
-@pytest.mark.integration
 
+@pytest.mark.integration
 class TestProvisioningAPI:
     """Test provisioning endpoints through the Flask test client."""
 
-    def test_register_device_via_api(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+    def test_register_device_via_api(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
         """POST /api/provisioning/devices should register a device."""
         # Set up phone_provisioning on the mock
-        mock_pbx_core.phone_provisioning = PhoneProvisioning(
-            mock_pbx_core.config, database=None
-        )
+        mock_pbx_core.phone_provisioning = PhoneProvisioning(mock_pbx_core.config, database=None)
 
         headers = _admin_token(api_client, mock_pbx_core)
 
-        resp = _post_json(api_client, "/api/provisioning/devices", {
-            "mac_address": "11:22:33:44:55:66",
-            "extension_number": "1001",
-            "vendor": "yealink",
-            "model": "t46s",
-        }, headers=headers)
+        resp = _post_json(
+            api_client,
+            "/api/provisioning/devices",
+            {
+                "mac_address": "11:22:33:44:55:66",
+                "extension_number": "1001",
+                "vendor": "yealink",
+                "model": "t46s",
+            },
+            headers=headers,
+        )
 
         data = json.loads(resp.data)
         assert resp.status_code == 200
@@ -310,9 +325,7 @@ class TestProvisioningAPI:
 
     def test_get_templates_via_api(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         """GET /api/provisioning/templates should list templates."""
-        mock_pbx_core.phone_provisioning = PhoneProvisioning(
-            mock_pbx_core.config, database=None
-        )
+        mock_pbx_core.phone_provisioning = PhoneProvisioning(mock_pbx_core.config, database=None)
 
         headers = _admin_token(api_client, mock_pbx_core)
 

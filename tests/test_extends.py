@@ -6,25 +6,24 @@ codebase, ensuring that broad except clauses are narrowed to specific,
 meaningful exception types.
 """
 
-import os
-import sys
 import json
-import time
 import signal
 import sqlite3
+import sys
 import threading
-from unittest import TestCase, mock
+import time
 from datetime import datetime, timezone
+from pathlib import Path
+from unittest import TestCase, mock
 
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from pbx.api.errors import (
-from pathlib import Path
     APIError,
+    ForbiddenError,
     NotFoundError,
     UnauthorizedError,
-    ForbiddenError,
     ValidationError,
 )
 
@@ -331,6 +330,7 @@ class TestEncryptionExceptions(TestCase):
         """Encryption module should handle ImportError for crypto libraries."""
         try:
             from pbx.utils.encryption import get_encryption
+
             enc = get_encryption()
             # Should not raise - either works or gracefully degrades
             self.assertIsNotNone(enc)
@@ -342,6 +342,7 @@ class TestEncryptionExceptions(TestCase):
         """Password hashing should catch specific ValueError/TypeError."""
         try:
             from pbx.utils.encryption import get_encryption
+
             enc = get_encryption()
             # Empty password should raise ValueError, not generic exception
             with self.assertRaises((ValueError, TypeError)):
@@ -444,14 +445,15 @@ class TestVoicemailExceptions(TestCase):
         # Test that _build_wav_file handles edge cases
         # Empty audio data
         pbx_core = mock.MagicMock(spec=PBXCore)
-        if hasattr(PBXCore, '_build_wav_file'):
+        if hasattr(PBXCore, "_build_wav_file"):
             import struct
+
             # Valid audio data should produce valid WAV
-            audio_data = b'\x00' * 160  # 20ms of silence at 8kHz/8bit
+            audio_data = b"\x00" * 160  # 20ms of silence at 8kHz/8bit
             result = PBXCore._build_wav_file(pbx_core, audio_data)
             self.assertIsInstance(result, bytes)
             # Should start with RIFF header
-            self.assertTrue(result.startswith(b'RIFF'))
+            self.assertTrue(result.startswith(b"RIFF"))
 
 
 class TestExceptionSpecificity(TestCase):
@@ -466,15 +468,13 @@ class TestExceptionSpecificity(TestCase):
         bare_except_files = []
 
         for filepath in route_files:
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 try:
                     tree = ast.parse(f.read())
                     for node in ast.walk(tree):
                         if isinstance(node, ast.ExceptHandler):
                             if node.type is None:
-                                bare_except_files.append(
-                                    f"{Path(filepath).name}:{node.lineno}"
-                                )
+                                bare_except_files.append(f"{Path(filepath).name}:{node.lineno}")
                 except SyntaxError:
                     pass  # Skip files with syntax errors
 
@@ -493,7 +493,7 @@ class TestExceptionSpecificity(TestCase):
         total_except_count = 0
 
         for filepath in core_files:
-            with open(filepath, 'r') as f:
+            with open(filepath, "r") as f:
                 try:
                     tree = ast.parse(f.read())
                     for node in ast.walk(tree):
@@ -522,7 +522,7 @@ class TestExceptionSpecificity(TestCase):
         import ast
 
         filepath = "/home/user/PBX/pbx/utils/database.py"
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             tree = ast.parse(f.read())
 
         specific_exception_types = set()
@@ -549,7 +549,7 @@ class TestExceptionSpecificity(TestCase):
         import ast
 
         filepath = "/home/user/PBX/pbx/utils/database.py"
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             tree = ast.parse(f.read())
 
         has_import_error_handler = False
@@ -569,7 +569,7 @@ class TestExceptionSpecificity(TestCase):
         import ast
 
         filepath = "/home/user/PBX/pbx/utils/graceful_shutdown.py"
-        with open(filepath, 'r') as f:
+        with open(filepath, "r") as f:
             tree = ast.parse(f.read())
 
         exception_types = set()

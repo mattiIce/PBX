@@ -4,7 +4,6 @@ Tests for phone provisioning AD integration
 Tests that AD credentials from .env are properly used for LDAP phonebook configuration
 """
 
-
 from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 
@@ -20,9 +19,7 @@ def test_ldap_config_from_ad_credentials() -> None:
     ldap_config = provisioning._build_ldap_phonebook_config()
 
     # Verify that ldap_config is a dict
-    assert isinstance(
-        ldap_config, dict
-    ), f"Expected dict, got {type(ldap_config)}"
+    assert isinstance(ldap_config, dict), f"Expected dict, got {type(ldap_config)}"
 
     # Check for required fields
     required_fields = [
@@ -43,7 +40,6 @@ def test_ldap_config_from_ad_credentials() -> None:
 
     for field in required_fields:
         assert field in ldap_config, f"Missing required field: {field}"
-
 
     # Check if AD is enabled
     ad_enabled = config.get("integrations.active_directory.enabled", False)
@@ -67,9 +63,9 @@ def test_server_config_includes_ldap() -> None:
     provisioning = PhoneProvisioning(config)
 
     # Verify that the method exists
-    assert hasattr(
-        provisioning, "_build_ldap_phonebook_config"
-    ), "Missing _build_ldap_phonebook_config method"
+    assert hasattr(provisioning, "_build_ldap_phonebook_config"), (
+        "Missing _build_ldap_phonebook_config method"
+    )
 
     # Call it to ensure it doesn't raise exceptions
     ldap_config = provisioning._build_ldap_phonebook_config()

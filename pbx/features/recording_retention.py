@@ -3,7 +3,7 @@ Recording Retention Policies
 Automated management of call recording retention and cleanup
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
@@ -69,7 +69,7 @@ class RecordingRetentionManager:
             return ""
 
         policy_id = policy.get("name", f"policy_{len(self.retention_policies)}")
-        self.retention_policies[policy_id] = {**policy, "created_at": datetime.now(timezone.utc)}
+        self.retention_policies[policy_id] = {**policy, "created_at": datetime.now(UTC)}
 
         self.logger.info(f"Added retention policy: {policy_id} ({policy['retention_days']} days)")
         return policy_id
@@ -127,7 +127,7 @@ class RecordingRetentionManager:
             return self.critical_retention
 
         # Check policies
-        for policy_id, policy in self.retention_policies.items():
+        for policy in self.retention_policies.values():
             # Check extension match
             if "extensions" in policy and extension in policy["extensions"]:
                 return policy["retention_days"]
@@ -158,13 +158,13 @@ class RecordingRetentionManager:
 
         summary = {"total": 0, "to_keep": 0, "to_delete": 0, "to_archive": 0, "by_age": {}}
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for recording_file in recording_dir.glob("**/*.wav"):
             summary["total"] += 1
 
             # Get file age
-            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=timezone.utc)
+            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=UTC)
             age_days = (now - file_mtime).days
 
             # Categorize by age
@@ -203,11 +203,11 @@ class RecordingRetentionManager:
 
         deleted_files = []
         deleted_size = 0
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for recording_file in recording_dir.glob("**/*.wav"):
             # Get file age
-            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=timezone.utc)
+            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=UTC)
             age_days = (now - file_mtime).days
 
             # Get retention period
@@ -277,10 +277,10 @@ class RecordingRetentionManager:
 
         archived_files = []
         archived_size = 0
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for recording_file in recording_dir.glob("**/*.wav"):
-            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=timezone.utc)
+            file_mtime = datetime.fromtimestamp(recording_file.stat().st_mtime, tz=UTC)
             file_age = (now - file_mtime).days
 
             if file_age > age_days:
