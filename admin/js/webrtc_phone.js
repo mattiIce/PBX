@@ -333,7 +333,7 @@ class WebRTCPhone {
 
     async makeCall() {
         try {
-            const targetExt = this.targetExtension ? this.targetExtension.value : '1001';
+            const targetExt = this.targetExtension?.value ?? '1001';
 
             verboseLog('makeCall() called:', {
                 targetExtension: targetExt
@@ -399,7 +399,7 @@ class WebRTCPhone {
 
             // Add local stream to peer connection
             verboseLog('Adding local tracks to peer connection...');
-            this.localStream.getTracks().forEach(track => {
+            for (const track of this.localStream.getTracks()) {
                 this.peerConnection.addTrack(track, this.localStream);
                 console.log('Added local track to peer connection');
                 verboseLog('Track added:', {
@@ -407,7 +407,7 @@ class WebRTCPhone {
                     kind: track.kind,
                     label: track.label
                 });
-            });
+            }
 
             // Create and send offer
             this.updateStatus('Creating call offer...', 'info');
@@ -495,7 +495,7 @@ class WebRTCPhone {
                 });
             } else {
                 verboseLog('Call initiation failed:', callData);
-                throw new Error(callData.error || 'Failed to initiate call');
+                throw new Error(callData.error ?? 'Failed to initiate call');
             }
 
         } catch (error) {
@@ -646,7 +646,9 @@ class WebRTCPhone {
 
         // Stop local stream
         if (this.localStream) {
-            this.localStream.getTracks().forEach(track => track.stop());
+            for (const track of this.localStream.getTracks()) {
+                track.stop();
+            }
             this.localStream = null;
         }
 

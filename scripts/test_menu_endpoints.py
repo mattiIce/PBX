@@ -14,7 +14,7 @@ import urllib.error
 import urllib.request
 
 
-def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=200, timeout=10):
+def test_endpoint(base_url: str, endpoint: str, method: str = "GET", data: dict | None = None, expected_status: int = 200, timeout: int = 10) -> bool:
     """Test a single API endpoint."""
     url = f"{base_url}{endpoint}"
 
@@ -70,7 +70,7 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
         return False
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description="Test auto-attendant menu API endpoints")
     parser.add_argument("--host", default="localhost", help="API server host (default: localhost)")
     parser.add_argument("--port", default="9000", help="API server port (default: 9000)")

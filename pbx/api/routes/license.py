@@ -91,8 +91,8 @@ def handle_license_features() -> tuple[Response, int]:
             features = license_manager.current_license.get("custom_features", [])
 
         # Separate features and limits
-        feature_list = []
-        limits = {}
+        feature_list: list[str] = []
+        limits: dict[str, int | None] = {}
 
         for feature in features:
             if ":" in feature and any(

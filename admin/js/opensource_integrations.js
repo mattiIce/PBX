@@ -921,7 +921,7 @@ async function sendMatrixTestNotification() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                message: '🧪 Test notification from PBX Admin Panel - ' + new Date().toLocaleString()
+                message: `🧪 Test notification from PBX Admin Panel - ${new Date().toLocaleString()}`
             })
         });
 
@@ -932,7 +932,7 @@ async function sendMatrixTestNotification() {
 
         showMatrixMessageResult('✅ Test notification sent successfully!', 'success');
     } catch (error) {
-        showMatrixMessageResult('❌ Failed to send notification: ' + error.message, 'error');
+        showMatrixMessageResult(`❌ Failed to send notification: ${error.message}`, 'error');
     }
 }
 
@@ -971,7 +971,7 @@ async function createMatrixRoom() {
         document.getElementById('matrix-new-room-name').value = '';
         document.getElementById('matrix-new-room-topic').value = '';
     } catch (error) {
-        showQuickSetupNotification('Failed to create room: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to create room: ${error.message}`, 'error');
     }
 }
 
@@ -1039,7 +1039,7 @@ async function searchEspoCRMContact() {
         const data = await response.json();
         displayEspoCRMSearchResults(data);
     } catch (error) {
-        showQuickSetupNotification('Failed to search contact: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to search contact: ${error.message}`, 'error');
     }
 }
 
@@ -1114,7 +1114,7 @@ async function createEspoCRMContact() {
         }
 
         const data = await response.json();
-        showEspoCRMCreateResult('✅ Contact created successfully! CRM ID: ' + (data.contact?.id || 'unknown'));
+        showEspoCRMCreateResult(`✅ Contact created successfully! CRM ID: ${data.contact?.id ?? 'unknown'}`);
 
         // Clear form
         document.getElementById('espocrm-new-firstname').value = '';
@@ -1124,7 +1124,7 @@ async function createEspoCRMContact() {
         document.getElementById('espocrm-new-company').value = '';
         document.getElementById('espocrm-new-title').value = '';
     } catch (error) {
-        showEspoCRMCreateResult('❌ Failed to create contact: ' + error.message);
+        showEspoCRMCreateResult(`❌ Failed to create contact: ${error.message}`);
     }
 }
 

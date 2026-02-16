@@ -56,8 +56,8 @@ def test_connection() -> bool:
         return False
 
 
-def verify_tables():
-    """Verify all tables exist"""
+def verify_tables() -> bool:
+    """Verify all tables exist."""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
@@ -89,8 +89,8 @@ def verify_tables():
         return False
 
 
-def add_sample_data():
-    """Add sample VIP caller data for testing"""
+def add_sample_data() -> bool:
+    """Add sample VIP caller data for testing."""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()

@@ -350,7 +350,7 @@ def generate_ring_tone(rings: int = 1) -> bytes:
     return header + pcm_data
 
 
-def generate_busy_tone():
+def generate_busy_tone() -> bytes:
     """
     Generate a busy tone (500 Hz, pulsed)
 
@@ -380,7 +380,7 @@ def generate_busy_tone():
     return header + pcm_data
 
 
-def generate_voice_prompt(prompt_type, sample_rate=8000):
+def generate_voice_prompt(prompt_type: str, sample_rate: int = 8000) -> bytes:
     """
     Generate a voice-like prompt using tone sequences
 
@@ -541,7 +541,7 @@ def generate_voice_prompt(prompt_type, sample_rate=8000):
     return header + pcm_data
 
 
-def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
+def load_prompt_file(prompt_type: str, prompt_dir: str = "voicemail_prompts") -> bytes | None:
     """
     Load a voice prompt WAV file from disk
 
@@ -559,9 +559,9 @@ def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
     prompt_file = Path(prompt_dir) / f"{prompt_type}.wav"
 
     # Check if file exists
-    if Path(prompt_file).exists():
+    if prompt_file.exists():
         try:
-            with open(prompt_file, "rb") as f:
+            with prompt_file.open("rb") as f:
                 return f.read()
         except OSError as e:
             # If we can't read the file (permission issues, disk errors, etc.),
@@ -575,7 +575,7 @@ def load_prompt_file(prompt_type, prompt_dir="voicemail_prompts"):
     return None
 
 
-def get_prompt_audio(prompt_type, prompt_dir="voicemail_prompts", sample_rate=8000):
+def get_prompt_audio(prompt_type: str, prompt_dir: str = "voicemail_prompts", sample_rate: int = 8000) -> bytes:
     """
     Get voice prompt audio, trying to load from file first, then generating tones as fallback
 

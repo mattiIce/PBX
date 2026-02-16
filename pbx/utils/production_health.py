@@ -26,7 +26,7 @@ class ProductionHealthChecker:
     (is the service ready to handle requests?) checks.
     """
 
-    def __init__(self, pbx_core=None, config=None):
+    def __init__(self, pbx_core: object = None, config: dict | None = None) -> None:
         """
         Initialize health checker.
 

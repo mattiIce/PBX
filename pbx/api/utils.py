@@ -39,9 +39,9 @@ def send_json(data: Any, status: int = 200) -> Response:
 
 def get_auth_token() -> str | None:
     """Extract authentication token from request headers."""
-    auth_header = request.headers.get("Authorization", "")
+    auth_header: str = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
-        return auth_header[7:]
+        return str(auth_header[7:])
     return None
 
 
@@ -58,7 +58,8 @@ def verify_authentication() -> tuple[bool, dict[str, Any] | None]:
     from pbx.utils.session_token import get_session_token_manager
 
     token_manager = get_session_token_manager()
-    return token_manager.verify_token(token)
+    result: tuple[bool, dict[str, Any] | None] = token_manager.verify_token(token)
+    return result
 
 
 def require_auth(f: Callable[..., Any]) -> Callable[..., Any]:
@@ -83,7 +84,7 @@ def require_admin(f: Callable[..., Any]) -> Callable[..., Any]:
         is_authenticated, payload = verify_authentication()
         if not is_authenticated:
             return jsonify({"error": "Authentication required"}), 401
-        if not payload.get("is_admin", False):
+        if not payload or not payload.get("is_admin", False):
             return jsonify({"error": "Admin privileges required"}), 403
         request.auth_payload = payload
         return f(*args, **kwargs)
@@ -98,7 +99,7 @@ def get_request_body() -> dict[str, Any]:
 
 def get_query_params() -> dict[str, Any]:
     """Get query parameters as a dict."""
-    return request.args
+    return dict(request.args)
 
 
 def validate_limit_param(default: int = 50, max_value: int = 1000) -> int | None:
