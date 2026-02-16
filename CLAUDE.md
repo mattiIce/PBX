@@ -159,7 +159,7 @@ make test-python       # Run all Python tests
 make test-js           # Run all JavaScript tests
 make test-unit         # Only unit tests: pytest -m unit
 make test-integration  # Only integration tests: pytest -m integration
-make test-cov          # With coverage (70% minimum)
+make test-cov          # With coverage (80% minimum)
 ```
 
 ### Test Conventions
