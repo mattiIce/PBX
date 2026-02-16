@@ -68,7 +68,7 @@ class RateLimiter:
         burst_size: int = 10,
         cleanup_interval: int = 300,
         max_tracked_ips: int = 10000,
-    ):
+    ) -> None:
         """Initialize rate limiter.
 
         Args:
@@ -160,7 +160,7 @@ class RateLimiter:
 
             return False, retry_after
 
-    def get_stats(self, client_ip: str) -> dict:
+    def get_stats(self, client_ip: str) -> dict[str, int]:
         """Get rate limit stats for client.
 
         Args:
@@ -275,7 +275,7 @@ class SecretValidator:
     ]
 
     @staticmethod
-    def validate_secrets(config: dict) -> tuple[bool, list]:
+    def validate_secrets(config: dict) -> tuple[bool, list[str]]:
         """Validate secrets configuration.
 
         Args:
@@ -284,19 +284,19 @@ class SecretValidator:
         Returns:
             tuple of (all_valid, missing_secrets)
         """
-        import os
+        from os import getenv
 
         missing = []
 
         for secret in SecretValidator.REQUIRED_SECRETS:
-            value = os.getenv(secret, "").strip()
+            value = getenv(secret, "").strip()
             if not value or value == "changeme" or len(value) < 16:
                 missing.append(secret)
 
         return len(missing) == 0, missing
 
     @staticmethod
-    def check_weak_secrets(config: dict) -> list:
+    def check_weak_secrets(config: dict) -> list[str]:
         """Check for weak or default secrets.
 
         Args:
@@ -305,13 +305,13 @@ class SecretValidator:
         Returns:
             list of weak secrets found
         """
-        import os
+        from os import getenv
 
         weak = []
         weak_patterns = ["password", "changeme", "admin", "test", "123456"]
 
         for secret in SecretValidator.REQUIRED_SECRETS + SecretValidator.OPTIONAL_SECRETS:
-            value = os.getenv(secret, "").strip().lower()
+            value = getenv(secret, "").strip().lower()
             if any(pattern in value for pattern in weak_patterns):
                 weak.append(secret)
 
@@ -330,7 +330,7 @@ def get_rate_limiter() -> RateLimiter:
     return _rate_limiter
 
 
-def configure_rate_limiter(requests_per_minute: int = 60, burst_size: int = 10):
+def configure_rate_limiter(requests_per_minute: int = 60, burst_size: int = 10) -> None:
     """Configure global rate limiter.
 
     Args:

@@ -52,7 +52,7 @@ class Colors:
 class SetupWizard:
     """Interactive setup wizard for Warden VoIP PBX"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize the setup wizard"""
         self.project_root = Path(__file__).parent.absolute()
         self.venv_path = self.project_root / "venv"
@@ -62,27 +62,27 @@ class SetupWizard:
         self.warnings = []
         self.db_config = {}
 
-    def print_header(self, text: str):
+    def print_header(self, text: str) -> None:
         """Print a formatted header"""
         print(f"\n{Colors.BOLD}{Colors.HEADER}{'=' * 80}{Colors.ENDC}")
         print(f"{Colors.BOLD}{Colors.HEADER}{text.center(80)}{Colors.ENDC}")
         print(f"{Colors.BOLD}{Colors.HEADER}{'=' * 80}{Colors.ENDC}\n")
 
-    def print_success(self, text: str):
+    def print_success(self, text: str) -> None:
         """Print a success message"""
         print(f"{Colors.OKGREEN}✓ {text}{Colors.ENDC}")
 
-    def print_error(self, text: str):
+    def print_error(self, text: str) -> None:
         """Print an error message"""
         print(f"{Colors.FAIL}✗ {text}{Colors.ENDC}")
         self.errors.append(text)
 
-    def print_warning(self, text: str):
+    def print_warning(self, text: str) -> None:
         """Print a warning message"""
         print(f"{Colors.WARNING}⚠ {text}{Colors.ENDC}")
         self.warnings.append(text)
 
-    def print_info(self, text: str):
+    def print_info(self, text: str) -> None:
         """Print an info message"""
         print(f"{Colors.OKBLUE}ℹ {text}{Colors.ENDC}")
 
@@ -592,7 +592,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         # Allow non-critical checks to fail (5 out of 6 total)
         return checks_passed >= 5
 
-    def print_next_steps(self):
+    def print_next_steps(self) -> None:
         """Print next steps after setup"""
         self.print_header("Setup Complete!")
 
@@ -636,7 +636,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
                 print(f"  ✗ {error}")
             print()
 
-    def run(self):
+    def run(self) -> int:
         """Run the setup wizard"""
         # Print welcome message
         print(f"\n{Colors.BOLD}{Colors.HEADER}")
@@ -705,7 +705,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         return 0
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     wizard = SetupWizard()
     try:

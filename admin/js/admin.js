@@ -423,16 +423,16 @@ function applyRoleBasedUI() {
 
     if (!isAdmin) {
         // Hide admin-only tabs for regular users
-        adminOnlyTabs.forEach(tabName => {
+        for (const tabName of adminOnlyTabs) {
             const tabButton = document.querySelector(`[data-tab="${tabName}"]`);
             if (tabButton) {
                 tabButton.style.display = 'none';
             }
-        });
+        }
 
         // Hide admin-only sidebar sections
         const sidebarSections = document.querySelectorAll('.sidebar-section');
-        sidebarSections.forEach(section => {
+        for (const section of sidebarSections) {
             const sectionTitle = section.querySelector('.sidebar-section-title');
             // Hide sections that only contain admin tabs
             const buttons = section.querySelectorAll('.tab-button');
@@ -3355,7 +3355,7 @@ async function reloadTemplates() {
         }
     } catch (error) {
         console.error('Error reloading templates:', error);
-        showNotification('Error reloading templates: ' + error.message, 'error');
+        showNotification(`Error reloading templates: ${error.message}`, 'error');
     }
 }
 
@@ -3445,7 +3445,7 @@ async function loadAnalytics() {
         }
     } catch (error) {
         console.error('Error loading analytics:', error);
-        showNotification('Failed to load analytics: ' + error.message, 'error');
+        showNotification(`Failed to load analytics: ${error.message}`, 'error');
     }
 }
 
@@ -3692,9 +3692,10 @@ function updatePeakHours(peakHours) {
         return;
     }
 
-    const html = '<ul>' + peakHours.map((peak, index) =>
+    const items = peakHours.map((peak, index) =>
         `<li><strong>#${index + 1}:</strong> ${peak.hour} with ${peak.calls} calls</li>`
-    ).join('') + '</ul>';
+    ).join('');
+    const html = `<ul>${items}</ul>`;
 
     display.innerHTML = html;
 }
@@ -6197,7 +6198,7 @@ function addBlockedPattern(event) {
     try {
         new RegExp(pattern);
     } catch (e) {
-        showNotification('Invalid regex pattern: ' + e.message, 'error');
+        showNotification(`Invalid regex pattern: ${e.message}`, 'error');
         return;
     }
 
@@ -7786,11 +7787,11 @@ async function saveWebRTCPhoneConfig(event) {
                 initWebRTCPhone();
             }
         } else {
-            alert('Error: ' + (data.error || 'Failed to save phone extension'));
+            alert(`Error: ${data.error ?? 'Failed to save phone extension'}`);
         }
     } catch (error) {
         console.error('Error saving WebRTC phone config:', error);
-        alert('Error: ' + error.message);
+        alert(`Error: ${error.message}`);
     }
 }
 

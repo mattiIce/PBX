@@ -312,7 +312,7 @@ class SIPLoadTester:
         )
 
 
-def print_results(results: LoadTestResults):
+def print_results(results: LoadTestResults) -> None:
     """Print formatted test results"""
     print("\n" + "=" * 70)
     print("LOAD TEST RESULTS")
@@ -365,7 +365,7 @@ def print_results(results: LoadTestResults):
     print("=" * 70 + "\n")
 
 
-async def main():
+async def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="Load testing tool for Warden VoIP PBX System")
     parser.add_argument(

@@ -27,7 +27,7 @@ from pbx.features.webrtc import WebRTCSignalingServer
 class WebRTCAudioTester:
     """WebRTC audio testing and troubleshooting"""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         self.verbose = verbose
         self.test_results = {
             "passed": 0,
@@ -55,7 +55,7 @@ class WebRTCAudioTester:
             },
         }
 
-    def log(self, message, level="INFO"):
+    def log(self, message: str, level: str = "INFO") -> None:
         """Log a message"""
         if self.verbose or level != "DEBUG":
             prefix = {
@@ -67,7 +67,7 @@ class WebRTCAudioTester:
             }.get(level, "•")
             print(f"{prefix} {message}")
 
-    def test_webrtc_module_imports(self):
+    def test_webrtc_module_imports(self) -> bool:
         """Test that WebRTC modules can be imported"""
         self.log("\n=== Testing WebRTC Module Imports ===")
 
@@ -82,7 +82,7 @@ class WebRTCAudioTester:
             self.test_results["errors"].append(f"Import error: {e!s}")
             return False
 
-    def test_webrtc_configuration(self):
+    def test_webrtc_configuration(self) -> bool:
         """Test WebRTC configuration"""
         self.log("\n=== Testing WebRTC Configuration ===")
 
@@ -145,7 +145,7 @@ class WebRTCAudioTester:
             self.test_results["errors"].append(f"Config error: {e!s}")
             return False
 
-    def test_codec_negotiation(self, preferred_codec="opus"):
+    def test_codec_negotiation(self, preferred_codec: str = "opus") -> bool:
         """Test codec negotiation"""
         self.log(f"\n=== Testing Codec Negotiation ({preferred_codec}) ===")
 
@@ -207,7 +207,7 @@ class WebRTCAudioTester:
         self.test_results["failed"] += 1
         return False
 
-    def test_browser_compatibility(self, browser="Chrome"):
+    def test_browser_compatibility(self, browser: str = "Chrome") -> bool:
         """Test browser compatibility"""
         self.log(f"\n=== Testing Browser Compatibility ({browser}) ===")
 
@@ -240,7 +240,7 @@ class WebRTCAudioTester:
         self.test_results["warnings"] += 1
         return False
 
-    def test_network_conditions(self):
+    def test_network_conditions(self) -> bool:
         """Test considerations for different network conditions"""
         self.log("\n=== Testing Network Conditions Considerations ===")
 
@@ -292,7 +292,7 @@ class WebRTCAudioTester:
         self.test_results["passed"] += 1
         return True
 
-    def test_common_audio_issues(self):
+    def test_common_audio_issues(self) -> bool:
         """Test for common WebRTC audio issues"""
         self.log("\n=== Common WebRTC Audio Issues & Solutions ===")
 
@@ -363,7 +363,7 @@ class WebRTCAudioTester:
         self.test_results["passed"] += 1
         return True
 
-    def generate_troubleshooting_guide(self):
+    def generate_troubleshooting_guide(self) -> bool:
         """Generate troubleshooting guide"""
         self.log("\n=== WebRTC Audio Troubleshooting Guide ===")
 
@@ -443,7 +443,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
             self.test_results["warnings"] += 1
             return False
 
-    def run_all_tests(self, browser="Chrome", codec="opus"):
+    def run_all_tests(self, browser: str = "Chrome", codec: str = "opus") -> bool:
         """Run all WebRTC audio tests"""
         self.log("=" * 60)
         self.log("WebRTC Audio Validation & Troubleshooting")
@@ -465,7 +465,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
         # Return True if all tests passed (warnings are OK)
         return self.test_results["failed"] == 0
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print test summary"""
         self.log("\n" + "=" * 60)
         self.log("TEST SUMMARY")
@@ -501,7 +501,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
             )
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="WebRTC audio validation and troubleshooting")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")

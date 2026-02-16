@@ -291,7 +291,7 @@ class PhoneProvisioningSetup:
         print("\n✅ Provisioning settings configured")
         return True
 
-    def add_phone_device(self):
+    def add_phone_device(self) -> dict | None:
         """Add a phone device interactively"""
         self.print_section("Add Phone Device")
 
@@ -384,7 +384,7 @@ class PhoneProvisioningSetup:
 
         return {"mac": mac, "extension": extension, "vendor": vendor, "model": model}
 
-    def display_device_summary(self):
+    def display_device_summary(self) -> None:
         """Display summary of devices to be registered"""
         if not self.devices_to_register:
             return
@@ -398,7 +398,7 @@ class PhoneProvisioningSetup:
             print(f"   Phone: {device['vendor'].upper()} {device['model'].upper()}")
             print()
 
-    def batch_add_devices(self):
+    def batch_add_devices(self) -> bool:
         """Add multiple phone devices"""
         self.print_section("Step 2: Add Phone Devices")
 
@@ -426,7 +426,7 @@ class PhoneProvisioningSetup:
 
         return len(self.devices_to_register) > 0
 
-    def register_devices(self):
+    def register_devices(self) -> bool:
         """Register all devices"""
         if not self.devices_to_register:
             print("ℹ️  No devices to register")
@@ -486,7 +486,7 @@ class PhoneProvisioningSetup:
 
         return success_count > 0
 
-    def show_next_steps(self):
+    def show_next_steps(self) -> None:
         """Show next steps after setup"""
         self.print_section("Next Steps")
 
@@ -519,7 +519,7 @@ class PhoneProvisioningSetup:
         print()
         print("📚 For more information, see PHONE_PROVISIONING.md")
 
-    def run(self):
+    def run(self) -> bool:
         """Run the interactive setup"""
         self.clear_screen()
         self.print_header("Phone Auto-Provisioning Setup Wizard")
@@ -577,7 +577,7 @@ class PhoneProvisioningSetup:
         return True
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     import argparse
 

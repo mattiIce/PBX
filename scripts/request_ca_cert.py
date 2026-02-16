@@ -22,7 +22,7 @@ except ImportError as e:
     sys.exit(1)
 
 
-def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="certs", ca_cert=None):
+def request_certificate_from_ca(ca_server: str, ca_endpoint: str, hostname: str, cert_dir: str = "certs", ca_cert: str | None = None) -> bool:
     """
     Request certificate from in-house CA
 
@@ -180,7 +180,7 @@ def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="cert
         return False
 
 
-def load_ca_config_from_yml(config_file="config.yml"):
+def load_ca_config_from_yml(config_file: str = "config.yml") -> dict:
     """Load CA configuration from config.yml"""
     try:
         with open(config_file) as f:
