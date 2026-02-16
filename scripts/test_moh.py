@@ -4,17 +4,16 @@ Test script to verify Music on Hold (MOH) files are properly loaded and function
 """
 
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from pathlib import Path
-
 from pbx.features.music_on_hold import MusicOnHold
 
 
-def test_moh_system():
-    """Test the MOH system"""
+def test_moh_system() -> bool:
+    """Test the MOH system."""
     print("=" * 70)
     print("Music on Hold (MOH) System Test")
     print("=" * 70)

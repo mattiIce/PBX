@@ -1953,7 +1953,7 @@ function loadGeographicRedundancyTab() {
     fetch('/api/framework/geo-redundancy/regions')
         .then(r => r.json())
         .then(data => {
-            const regions = data.regions || [];
+            const regions = data.regions ?? [];
             const container = document.getElementById('geo-regions-list');
 
             if (regions.length === 0) {

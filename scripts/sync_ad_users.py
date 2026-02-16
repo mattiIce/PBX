@@ -26,6 +26,7 @@ Configuration:
 
 import argparse
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -36,7 +37,7 @@ from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Synchronize users from Active Directory to PBX")
     parser.add_argument(
         "--dry-run", action="store_true", help="Show what would be synced without making changes"

@@ -260,7 +260,7 @@ class PBXMetricsExporter:
             registry=self.registry,
         )
 
-    def record_call_start(self, direction: str = "inbound"):
+    def record_call_start(self, direction: str = "inbound") -> None:
         """
         Record a call start.
 
@@ -272,7 +272,7 @@ class PBXMetricsExporter:
 
     def record_call_end(
         self, duration: float, status: str = "completed", direction: str = "inbound"
-    ):
+    ) -> None:
         """
         Record a call end.
 
@@ -285,7 +285,7 @@ class PBXMetricsExporter:
         self.active_calls.dec()
         self.call_duration.labels(status=status).observe(duration)
 
-    def record_call_setup(self, setup_time: float):
+    def record_call_setup(self, setup_time: float) -> None:
         """
         Record call setup time.
 
@@ -296,7 +296,7 @@ class PBXMetricsExporter:
 
     def update_call_quality(
         self, extension: str, mos: float, packet_loss: float, jitter: float, rtt: float
-    ):
+    ) -> None:
         """
         Update call quality metrics.
 
@@ -312,7 +312,7 @@ class PBXMetricsExporter:
         self.jitter_ms.labels(extension=extension).set(jitter)
         self.rtt_ms.labels(extension=extension).set(rtt)
 
-    def update_extensions(self, registered_count: int):
+    def update_extensions(self, registered_count: int) -> None:
         """
         Update registered extensions count.
 
@@ -321,7 +321,7 @@ class PBXMetricsExporter:
         """
         self.registered_extensions.set(registered_count)
 
-    def record_extension_registration(self, status: str = "success"):
+    def record_extension_registration(self, status: str = "success") -> None:
         """
         Record extension registration attempt.
 
@@ -330,7 +330,7 @@ class PBXMetricsExporter:
         """
         self.extension_registrations_total.labels(status=status).inc()
 
-    def record_api_request(self, method: str, endpoint: str, status_code: int, duration: float):
+    def record_api_request(self, method: str, endpoint: str, status_code: int, duration: float) -> None:
         """
         Record API request.
 
@@ -345,7 +345,7 @@ class PBXMetricsExporter:
         ).inc()
         self.api_request_duration.labels(method=method, endpoint=endpoint).observe(duration)
 
-    def update_system_resources(self, cpu_percent: float, memory_bytes: int):
+    def update_system_resources(self, cpu_percent: float, memory_bytes: int) -> None:
         """
         Update system resource metrics.
 
@@ -356,7 +356,7 @@ class PBXMetricsExporter:
         self.cpu_usage_percent.set(cpu_percent)
         self.memory_usage_bytes.set(memory_bytes)
 
-    def update_queue_metrics(self, queue_name: str, waiting_calls: int, avg_wait_time: float):
+    def update_queue_metrics(self, queue_name: str, waiting_calls: int, avg_wait_time: float) -> None:
         """
         Update call queue metrics.
 
@@ -368,7 +368,7 @@ class PBXMetricsExporter:
         self.queue_waiting_calls.labels(queue_name=queue_name).set(waiting_calls)
         self.queue_average_wait_time.labels(queue_name=queue_name).set(avg_wait_time)
 
-    def record_queue_abandoned(self, queue_name: str):
+    def record_queue_abandoned(self, queue_name: str) -> None:
         """
         Record abandoned call in queue.
 
@@ -377,7 +377,7 @@ class PBXMetricsExporter:
         """
         self.queue_abandoned_calls.labels(queue_name=queue_name).inc()
 
-    def update_trunk_status(self, trunk_name: str, is_up: bool, active_calls: int = 0):
+    def update_trunk_status(self, trunk_name: str, is_up: bool, active_calls: int = 0) -> None:
         """
         Update SIP trunk status.
 
@@ -389,7 +389,7 @@ class PBXMetricsExporter:
         self.trunk_status.labels(trunk_name=trunk_name).set(1 if is_up else 0)
         self.trunk_calls_active.labels(trunk_name=trunk_name).set(active_calls)
 
-    def record_error(self, error_type: str, component: str):
+    def record_error(self, error_type: str, component: str) -> None:
         """
         Record an error.
 

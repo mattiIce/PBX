@@ -253,7 +253,7 @@ def parse_pins_csv(csv_path: str) -> dict[str, str]:
     return pins
 
 
-def import_voicemail_messages(messages, audio_dir, config, database, dry_run=False):
+def import_voicemail_messages(messages: list[dict], audio_dir: str | None, config: object, database: object, dry_run: bool = False) -> tuple[int, int, int]:
     """
     Import voicemail messages into the PBX system
 
@@ -356,7 +356,7 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
     return imported, skipped, errors
 
 
-def import_voicemail_pins(pins, config, database, dry_run=False):
+def import_voicemail_pins(pins: dict[str, str], config: object, database: object, dry_run: bool = False) -> tuple[int, int, int]:
     """
     Import voicemail PINs
 
@@ -404,7 +404,7 @@ def import_voicemail_pins(pins, config, database, dry_run=False):
     return imported, skipped, errors
 
 
-def import_greetings(greetings_dir, config, database, dry_run=False):
+def import_greetings(greetings_dir: str, config: object, database: object, dry_run: bool = False) -> tuple[int, int]:
     """
     Import custom voicemail greetings
 
@@ -470,7 +470,7 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
     return imported, errors
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Import voicemail data from AT&T Merlin Legend system",
         formatter_class=argparse.RawDescriptionHelpFormatter,
