@@ -188,7 +188,7 @@ def provide_recommendations(psycopg2_ok: bool, config_ok: bool, connection_ok: b
     return False
 
 
-def main():
+def main() -> None:
     """Main execution"""
     print_header("PBX DATABASE VERIFICATION TOOL")
     print("\nThis tool verifies that your database is properly configured")

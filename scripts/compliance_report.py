@@ -19,7 +19,7 @@ from pathlib import Path
 class ComplianceReporter:
     """Generate compliance reports."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_dir = Path(__file__).parent.parent
         self.report_data = {
             "generated_at": datetime.now(UTC).isoformat(),
@@ -38,7 +38,7 @@ class ComplianceReporter:
             return version_file.read_text().strip()
         return "unknown"
 
-    def analyze_audit_logs(self, days: int = 30):
+    def analyze_audit_logs(self, days: int = 30) -> None:
         """Analyze audit logs for compliance."""
         print(f"Analyzing audit logs (last {days} days)...")
 
@@ -115,7 +115,7 @@ class ComplianceReporter:
         security_actions = ["login", "logout", "password_change", "permission_change"]
         return sum(1 for event in events if event.get("action") in security_actions)
 
-    def _check_suspicious_activity(self, events: list[dict]):
+    def _check_suspicious_activity(self, events: list[dict]) -> None:
         """Check for suspicious activity in audit logs."""
         # Check for multiple failed logins
         failed_logins = [
@@ -132,7 +132,7 @@ class ComplianceReporter:
                 }
             )
 
-    def check_security_controls(self):
+    def check_security_controls(self) -> None:
         """Check security controls."""
         print("Checking security controls...")
 
@@ -224,7 +224,7 @@ class ComplianceReporter:
             "status": "compliant" if compliance_score >= 90 else "needs_improvement",
         }
 
-    def check_system_status(self):
+    def check_system_status(self) -> None:
         """Check system status."""
         print("Checking system status...")
 
@@ -264,7 +264,7 @@ class ComplianceReporter:
                     }
                 )
 
-    def generate_recommendations(self):
+    def generate_recommendations(self) -> None:
         """Generate recommendations based on findings."""
         # Add standard recommendations
         recommendations = [
@@ -298,7 +298,7 @@ class ComplianceReporter:
         # Add to existing recommendations
         self.report_data["recommendations"].extend(recommendations)
 
-    def generate_html_report(self, output_file: str):
+    def generate_html_report(self, output_file: str) -> None:
         """Generate HTML report."""
         print(f"Generating HTML report: {output_file}")
 
@@ -398,14 +398,14 @@ class ComplianceReporter:
         with open(output_file, "w") as f:
             f.write(html)
 
-    def generate_json_report(self, output_file: str):
+    def generate_json_report(self, output_file: str) -> None:
         """Generate JSON report."""
         print(f"Generating JSON report: {output_file}")
 
         with open(output_file, "w") as f:
             json.dump(self.report_data, f, indent=2)
 
-    def run_full_report(self, output_format: str = "html", output_file: str | None = None):
+    def run_full_report(self, output_format: str = "html", output_file: str | None = None) -> None:
         """Run full compliance report."""
         print("=" * 70)
         print("PBX Compliance Report Generator")
@@ -434,7 +434,7 @@ class ComplianceReporter:
         print(f"Compliance Score: {self.report_data['compliance_status'].get('overall_score', 0)}%")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="PBX Compliance Report Generator")
     parser.add_argument("--format", choices=["html", "json"], default="html", help="Output format")
     parser.add_argument("--output", help="Output file path")

@@ -22,7 +22,7 @@ from pbx.utils.database import DatabaseBackend, ExtensionDB
 from pbx.utils.encryption import get_encryption
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Seed initial extensions into the database")
     parser.add_argument(
         "--config", default="config.yml", help="Path to config file (default: config.yml)"

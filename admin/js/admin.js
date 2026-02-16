@@ -2466,29 +2466,29 @@ async function loadRegisteredPhones() {
         tbody.innerHTML = '';
 
         // Create rows safely using DOM methods to prevent XSS
-        phones.forEach(phone => {
+        for (const phone of phones) {
             const row = document.createElement('tr');
 
             // Extension number
             const extCell = document.createElement('td');
             const extStrong = document.createElement('strong');
-            extStrong.textContent = phone.extension_number || 'Unknown';
+            extStrong.textContent = phone.extension_number ?? 'Unknown';
             extCell.appendChild(extStrong);
             row.appendChild(extCell);
 
             // IP Address
             const ipCell = document.createElement('td');
-            ipCell.textContent = phone.ip_address || 'Unknown';
+            ipCell.textContent = phone.ip_address ?? 'Unknown';
             row.appendChild(ipCell);
 
             // MAC Address
             const macCell = document.createElement('td');
-            macCell.textContent = phone.mac_address || 'Unknown';
+            macCell.textContent = phone.mac_address ?? 'Unknown';
             row.appendChild(macCell);
 
             // User Agent
             const uaCell = document.createElement('td');
-            uaCell.textContent = phone.user_agent || 'Unknown';
+            uaCell.textContent = phone.user_agent ?? 'Unknown';
             row.appendChild(uaCell);
 
             // Last Registration
@@ -2497,7 +2497,7 @@ async function loadRegisteredPhones() {
             row.appendChild(regCell);
 
             tbody.appendChild(row);
-        });
+        }
     } catch (error) {
         console.error('Error loading registered phones:', error);
 
@@ -2555,24 +2555,24 @@ async function loadRegisteredATAs() {
         tbody.innerHTML = '';
 
         // Create rows safely using DOM methods to prevent XSS
-        atas.forEach(ata => {
+        for (const ata of atas) {
             const row = document.createElement('tr');
 
             // Extension number
             const extCell = document.createElement('td');
             const extStrong = document.createElement('strong');
-            extStrong.textContent = ata.extension_number || 'Unknown';
+            extStrong.textContent = ata.extension_number ?? 'Unknown';
             extCell.appendChild(extStrong);
             row.appendChild(extCell);
 
             // IP Address
             const ipCell = document.createElement('td');
-            ipCell.textContent = ata.ip_address || 'Unknown';
+            ipCell.textContent = ata.ip_address ?? 'Unknown';
             row.appendChild(ipCell);
 
             // MAC Address
             const macCell = document.createElement('td');
-            macCell.textContent = ata.mac_address || 'Unknown';
+            macCell.textContent = ata.mac_address ?? 'Unknown';
             row.appendChild(macCell);
 
             // Vendor/Model
@@ -2586,7 +2586,7 @@ async function loadRegisteredATAs() {
 
             // User Agent
             const uaCell = document.createElement('td');
-            uaCell.textContent = ata.user_agent || 'Unknown';
+            uaCell.textContent = ata.user_agent ?? 'Unknown';
             row.appendChild(uaCell);
 
             // Last Registration
@@ -2595,7 +2595,7 @@ async function loadRegisteredATAs() {
             row.appendChild(regCell);
 
             tbody.appendChild(row);
-        });
+        }
     } catch (error) {
         console.error('Error loading registered ATAs:', error);
 
@@ -2652,12 +2652,12 @@ async function populateProvisioningFormDropdowns() {
                 extensionSelect.appendChild(selectOption);
                 
                 if (extensions && extensions.length > 0) {
-                    extensions.forEach(ext => {
+                    for (const ext of extensions) {
                         const option = document.createElement('option');
                         option.value = ext.number;
                         option.textContent = `${ext.number} - ${ext.name}`;
                         extensionSelect.appendChild(option);
-                    });
+                    }
                     console.log(`Loaded ${extensions.length} extensions for dropdown`);
                 } else {
                     extensionSelect.innerHTML = '';
@@ -2695,12 +2695,12 @@ async function populateProvisioningFormDropdowns() {
             selectOption.value = '';
             selectOption.textContent = 'Select Vendor';
             vendorSelect.appendChild(selectOption);
-            supportedVendors.forEach(vendor => {
+            for (const vendor of supportedVendors) {
                 const option = document.createElement('option');
                 option.value = vendor;
                 option.textContent = vendor.toUpperCase();
                 vendorSelect.appendChild(option);
-            });
+            }
             console.log(`Populated vendor dropdown with ${supportedVendors.length} vendors:`, supportedVendors);
         } else {
             vendorSelect.innerHTML = '';
@@ -3085,15 +3085,15 @@ function updateModelOptions() {
         return;
     }
 
-    const models = supportedModels[vendor] || [];
+    const models = supportedModels[vendor] ?? [];
     modelSelect.innerHTML = '<option value="">Select Model</option>';
 
-    models.forEach(model => {
+    for (const model of models) {
         const option = document.createElement('option');
         option.value = model;
         option.textContent = model.toUpperCase();
         modelSelect.appendChild(option);
-    });
+    }
 }
 
 async function deleteDevice(mac) {

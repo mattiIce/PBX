@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 
 
-def create_anchor_id(text):
+def create_anchor_id(text: str) -> str:
     """Create URL-safe anchor ID from header text."""
     # Remove HTML tags and special characters
     text = re.sub(r"<[^>]+>", "", text)
@@ -21,7 +21,7 @@ def create_anchor_id(text):
     return anchor
 
 
-def markdown_to_html(markdown_content):
+def markdown_to_html(markdown_content: str) -> str:
     """
     Convert markdown content to HTML with proper formatting.
 
@@ -124,7 +124,7 @@ def markdown_to_html(markdown_content):
     return "\n".join(result_lines)
 
 
-def convert_table(table_lines):
+def convert_table(table_lines: list[str]) -> str:
     """Convert markdown table to HTML table."""
     if len(table_lines) < 2:
         return "\n".join(table_lines)
@@ -153,7 +153,7 @@ def convert_table(table_lines):
     return "\n".join(html)
 
 
-def convert_lists(text):
+def convert_lists(text: str) -> str:
     """Convert markdown lists to HTML lists."""
     lines = text.split("\n")
     result = []
@@ -195,7 +195,7 @@ def convert_lists(text):
     return "\n".join(result)
 
 
-def create_html_template(content, title="PBX System - Troubleshooting Guide"):
+def create_html_template(content: str, title: str = "PBX System - Troubleshooting Guide") -> str:
     """
     Create a complete HTML document with styling.
 
@@ -444,7 +444,7 @@ def create_html_template(content, title="PBX System - Troubleshooting Guide"):
     return template
 
 
-def main():
+def main() -> None:
     """Main conversion function."""
     # Get paths
     script_dir = Path(__file__).parent

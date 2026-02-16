@@ -416,7 +416,7 @@ class CertificateManager:
         return success
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Manage SSL/TLS certificates with Let's Encrypt")
     parser.add_argument("--reload-only", action="store_true", help="Only reload PBX service")

@@ -331,7 +331,7 @@ class SmokeTestRunner:
             raise Exception(f"Connection failed: {e}")
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     # Check if API URL is provided
     api_url = os.environ.get("PBX_API_URL", "http://localhost:9000")

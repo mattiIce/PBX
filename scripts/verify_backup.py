@@ -34,7 +34,7 @@ class BackupVerifier:
             "failed": 0,
         }
 
-    def log_check(self, name: str, status: bool, details: str = ""):
+    def log_check(self, name: str, status: bool, details: str = "") -> None:
         """Log a check result."""
         self.results["checks"].append(
             {"name": name, "status": "pass" if status else "fail", "details": details}
@@ -297,14 +297,14 @@ class BackupVerifier:
         print(f"\n✗ {self.results['failed']} verification(s) failed")
         return 1
 
-    def save_report(self, output_file: str):
+    def save_report(self, output_file: str) -> None:
         """Save verification report."""
         with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
         print(f"\nReport saved to: {output_file}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Backup Verification Tool")
     parser.add_argument("--backup-path", help="Path to specific backup file to verify")
     parser.add_argument(

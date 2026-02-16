@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 class SecurityComplianceChecker:
     """Comprehensive security compliance checker"""
 
-    def __init__(self, verbose=True, json_output=False):
+    def __init__(self, verbose: bool = True, json_output: bool = False) -> None:
         """
         Initialize security compliance checker
 
@@ -42,7 +42,7 @@ class SecurityComplianceChecker:
             "overall": {},
         }
 
-    def print_section(self, title: str):
+    def print_section(self, title: str) -> None:
         """Print section header"""
         if not self.verbose or self.json_output:
             return
@@ -50,7 +50,7 @@ class SecurityComplianceChecker:
         print(f"  {title}")
         print("=" * 80)
 
-    def print_status(self, test_name: str, passed: bool, details: str = ""):
+    def print_status(self, test_name: str, passed: bool, details: str = "") -> None:
         """Print test status with color coding"""
         if not self.verbose or self.json_output:
             return
@@ -446,7 +446,7 @@ class SecurityComplianceChecker:
 
         return self.results, exit_code
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print compliance summary"""
         if self.json_output:
             print(json.dumps(self.results, indent=2))
@@ -503,7 +503,7 @@ class SecurityComplianceChecker:
         print("=" * 80 + "\n")
 
 
-def main():
+def main() -> int:
     """Main entry point"""
     import argparse
 

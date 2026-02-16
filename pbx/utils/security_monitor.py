@@ -50,7 +50,7 @@ class SecurityMonitor:
         }
         self.security_violations = []
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: object = None) -> object:
         """
         Get config value supporting both dot notation and nested dicts
 
@@ -78,7 +78,7 @@ class SecurityMonitor:
 
         return value if value is not None else default
 
-    def start(self):
+    def start(self) -> None:
         """Start security monitoring"""
         if self.running:
             self.logger.warning("Security monitor already running")
@@ -94,7 +94,7 @@ class SecurityMonitor:
         # The monitor thread will perform the first security check
         # No need to call it here to avoid duplicate logs at startup
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop security monitoring"""
         if not self.running:
             return
@@ -104,7 +104,7 @@ class SecurityMonitor:
             self.monitor_thread.join(timeout=5)
         self.logger.info("Security runtime monitor stopped")
 
-    def _monitor_loop(self):
+    def _monitor_loop(self) -> None:
         """Main monitoring loop"""
         while self.running:
             try:
@@ -201,7 +201,7 @@ class SecurityMonitor:
 
         return results
 
-    def _send_security_alert(self, results: dict, severity: str):
+    def _send_security_alert(self, results: dict, severity: str) -> None:
         """
         Send security alert via webhook
 
@@ -236,7 +236,7 @@ class SecurityMonitor:
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send security alert via webhook: {e}")
 
-    def _check_fips_compliance(self) -> dict:
+    def _check_fips_compliance(self) -> dict[str, object]:
         """Check FIPS 140-2 compliance status"""
         result = {
             "name": "FIPS 140-2 Compliance",
@@ -290,7 +290,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_password_policy(self) -> dict:
+    def _check_password_policy(self) -> dict[str, object]:
         """Check password policy enforcement"""
         result = {"name": "Password Policy", "status": "PASS", "severity": "HIGH", "details": {}}
 
@@ -324,7 +324,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_rate_limiting(self) -> dict:
+    def _check_rate_limiting(self) -> dict[str, object]:
         """Check rate limiting configuration"""
         result = {"name": "Rate Limiting", "status": "PASS", "severity": "HIGH", "details": {}}
 
@@ -347,7 +347,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_audit_logging(self) -> dict:
+    def _check_audit_logging(self) -> dict[str, object]:
         """Check security audit logging"""
         result = {
             "name": "Security Audit Logging",
@@ -370,7 +370,7 @@ class SecurityMonitor:
 
         return result
 
-    def _check_threat_detection(self) -> dict:
+    def _check_threat_detection(self) -> dict[str, object]:
         """Check threat detection system"""
         result = {"name": "Threat Detection", "status": "PASS", "severity": "MEDIUM", "details": {}}
 
@@ -388,7 +388,7 @@ class SecurityMonitor:
 
         return result
 
-    def get_compliance_status(self) -> dict:
+    def get_compliance_status(self) -> dict[str, object]:
         """
         Get current compliance status
 
@@ -436,6 +436,6 @@ class SecurityMonitor:
         return True
 
 
-def get_security_monitor(config: dict | None = None, webhook_system=None) -> SecurityMonitor:
+def get_security_monitor(config: dict | None = None, webhook_system: object = None) -> SecurityMonitor:
     """Get security monitor instance"""
     return SecurityMonitor(config, webhook_system)
