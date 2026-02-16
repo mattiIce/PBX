@@ -121,7 +121,7 @@ class E911Protection:
 
         return False
 
-    def is_test_mode(self):
+    def is_test_mode(self) -> bool:
         """
         Check if currently in test mode
 

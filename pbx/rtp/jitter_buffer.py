@@ -302,7 +302,7 @@ class JitterBuffer:
             self.buffer.clear()
             return packets
 
-    def set_length(self, length_ms: int):
+    def set_length(self, length_ms: int) -> None:
         """
         set buffer length manually (disables adaptive mode)
 

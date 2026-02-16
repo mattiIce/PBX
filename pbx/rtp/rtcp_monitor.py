@@ -69,7 +69,7 @@ class RTCPMonitor:
     - Quality thresholds and alerting
     """
 
-    def __init__(self, call_id: str, config: dict[str, Any] | None = None):
+    def __init__(self, call_id: str, config: dict[str, Any] | None = None) -> None:
         """
         Initialize RTCP monitor
 

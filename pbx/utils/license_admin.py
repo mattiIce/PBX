@@ -8,6 +8,8 @@ This account has exclusive access to license management functionality.
 import hashlib
 import hmac
 import logging
+from collections.abc import Callable
+from typing import Any
 
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
@@ -250,7 +252,7 @@ def verify_license_admin_session(request) -> tuple[bool, str | None]:
 
 
 # Decorator for protecting license admin endpoints
-def require_license_admin(f):
+def require_license_admin(f: Callable[..., Any]) -> Callable[..., Any]:
     """Require license admin authentication for an endpoint.
 
     Usage:
@@ -262,7 +264,7 @@ def require_license_admin(f):
     from functools import wraps
 
     @wraps(f)
-    def decorated_function(*args, **kwargs):
+    def decorated_function(*args: Any, **kwargs: Any) -> Any:
         from flask import jsonify, request
 
         is_authorized, error_msg = verify_license_admin_session(request)

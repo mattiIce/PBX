@@ -823,7 +823,7 @@ class DatabaseBackend:
 class VIPCallerDB:
     """VIP Caller database operations"""
 
-    def __init__(self, db: DatabaseBackend):
+    def __init__(self, db: DatabaseBackend) -> None:
         """
         Initialize VIP caller database
 
@@ -899,7 +899,7 @@ class VIPCallerDB:
 class RegisteredPhonesDB:
     """Registered phones database operations"""
 
-    def __init__(self, db: DatabaseBackend):
+    def __init__(self, db: DatabaseBackend) -> None:
         """
         Initialize registered phones database
 
@@ -1275,7 +1275,7 @@ class RegisteredPhonesDB:
 class ExtensionDB:
     """Extension database operations"""
 
-    def __init__(self, db: DatabaseBackend):
+    def __init__(self, db: DatabaseBackend) -> None:
         """
         Initialize extension database
 
@@ -1692,7 +1692,7 @@ class ExtensionDB:
 class ProvisionedDevicesDB:
     """Provisioned devices database operations"""
 
-    def __init__(self, db: DatabaseBackend):
+    def __init__(self, db: DatabaseBackend) -> None:
         """
         Initialize provisioned devices database
 
