@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-const { describe, it, expect, beforeEach } = require('@jest/globals');
+import { describe, it, expect, beforeEach } from '@jest/globals';
 
 // Mock fetch and DOM
 global.fetch = jest.fn();
