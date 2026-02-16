@@ -55,7 +55,7 @@ class ComplianceReporter:
             return
 
         try:
-            with open(audit_log) as f:
+            with audit_log.open() as f:
                 lines = f.readlines()
 
             # Parse JSON log entries
@@ -398,14 +398,14 @@ class ComplianceReporter:
 </html>
 """
 
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             f.write(html)
 
     def generate_json_report(self, output_file: str) -> None:
         """Generate JSON report."""
         print(f"Generating JSON report: {output_file}")
 
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             json.dump(self.report_data, f, indent=2)
 
     def run_full_report(self, output_format: str = "html", output_file: str | None = None) -> None:

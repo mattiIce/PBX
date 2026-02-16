@@ -547,7 +547,7 @@ def main() -> None:
 
     # Output report
     if args.output:
-        with open(args.output, "w") as f:
+        with Path(args.output).open("w") as f:
             f.write(report)
         print(f"Report written to: {args.output}")
     else:

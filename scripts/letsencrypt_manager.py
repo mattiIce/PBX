@@ -379,7 +379,7 @@ class CertificateManager:
 
             script_path = Path(__file__).resolve()
             hook_script = hook_dir / "reload-pbx.sh"
-            with open(hook_script, "w") as f:
+            with hook_script.open("w") as f:
                 f.write("#!/bin/bash\n")
                 f.write("# Reload PBX service after certificate renewal\n")
                 f.write(f"python3 {script_path} --reload-only\n")

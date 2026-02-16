@@ -84,7 +84,7 @@ def generate_self_signed_cert(
     # Write private key to file
     key_file = cert_path / "server.key"
     print(f"3. Writing private key to {key_file}...")
-    with open(key_file, "wb") as f:
+    with key_file.open("wb") as f:
         f.write(
             private_key.private_bytes(
                 encoding=serialization.Encoding.PEM,
@@ -99,7 +99,7 @@ def generate_self_signed_cert(
     # Write certificate to file
     cert_file = cert_path / "server.crt"
     print(f"4. Writing certificate to {cert_file}...")
-    with open(cert_file, "wb") as f:
+    with cert_file.open("wb") as f:
         f.write(cert.public_bytes(serialization.Encoding.PEM))
 
     print()

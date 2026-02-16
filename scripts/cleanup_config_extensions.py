@@ -58,7 +58,7 @@ def main() -> None:
         sys.exit(1)
 
     # Load current config
-    with open(config_file) as f:
+    with Path(config_file).open() as f:
         config = yaml.safe_load(f)
 
     # Check if extensions exist
@@ -104,7 +104,7 @@ def main() -> None:
 """
 
     # Write updated config
-    with open(config_file, "w") as f:
+    with Path(config_file).open("w") as f:
         # Write the comment first
         f.write(comment)
         f.write("\n")

@@ -30,9 +30,9 @@ def setup_config() -> dict:
     try:
         import yaml
 
-        config_path = str(Path(__file__).parent.parent / "config.yml")
-        if Path(config_path).exists():
-            with open(config_path) as f:
+        config_path = Path(__file__).parent.parent / "config.yml"
+        if config_path.exists():
+            with config_path.open() as f:
                 config = yaml.safe_load(f)
                 return config.get("licensing", {})
     except (KeyError, OSError, TypeError, ValueError) as e:
@@ -77,7 +77,7 @@ def cmd_generate(args: argparse.Namespace) -> int:
     safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", args.org).lower()
     output_file = args.output or f"license_{safe_org}_{datetime.now(UTC).strftime('%Y%m%d')}.json"
 
-    with open(output_file, "w") as f:
+    with Path(output_file).open("w") as f:
         json.dump(license_data, f, indent=2)
     print("\n✓ License generated successfully!")
     print(f"\nLicense Key: {license_data['key']}")
@@ -102,7 +102,7 @@ def cmd_install(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        with open(args.license_file) as f:
+        with Path(args.license_file).open() as f:
             license_data = json.load(f)
     except (OSError, ValueError, json.JSONDecodeError) as e:
         print(f"Error: Failed to load license file: {e}")
