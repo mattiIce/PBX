@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class CallRecording:
@@ -31,7 +32,7 @@ class CallRecording:
 
         Path(recording_path).mkdir(parents=True, exist_ok=True)
 
-    def start(self, from_ext: str, to_ext: str):
+    def start(self, from_ext: str, to_ext: str) -> Path | None:
         """
         Start recording
 
@@ -65,7 +66,7 @@ class CallRecording:
         if self.recording:
             self.audio_buffer.append(audio_data)
 
-    def stop(self):
+    def stop(self) -> Path | None:
         """Stop recording and save file"""
         if not self.recording:
             return None
@@ -91,7 +92,7 @@ class CallRecording:
 
         return None
 
-    def get_duration(self):
+    def get_duration(self) -> float:
         """Get recording duration in seconds"""
         if self.start_time:
             end_time = datetime.now(UTC)
@@ -141,7 +142,7 @@ class CallRecordingSystem:
             return True
         return False
 
-    def stop_recording(self, call_id: str):
+    def stop_recording(self, call_id: str) -> Any | None:
         """
         Stop recording a call
 

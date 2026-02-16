@@ -6,6 +6,7 @@ from datetime import UTC, datetime
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class Extension:
@@ -27,7 +28,7 @@ class Extension:
         self.address = None
         self.registration_time = None
 
-    def register(self, address):
+    def register(self, address: tuple) -> None:
         """
         Register extension
 
@@ -38,13 +39,13 @@ class Extension:
         self.address = address
         self.registration_time = datetime.now(UTC)
 
-    def unregister(self):
+    def unregister(self) -> None:
         """Unregister extension"""
         self.registered = False
         self.address = None
         self.registration_time = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         status = "registered" if self.registered else "unregistered"
         return f"Extension {self.number} ({self.name}) - {status}"
 
@@ -52,7 +53,7 @@ class Extension:
 class ExtensionRegistry:
     """Registry of all extensions"""
 
-    def __init__(self, config, database=None) -> None:
+    def __init__(self, config: Any, database: Any | None =None) -> None:
         """
         Initialize extension registry
 
@@ -73,7 +74,7 @@ class ExtensionRegistry:
         self._load_extensions()
 
     @staticmethod
-    def create_extension_from_db(db_extension):
+    def create_extension_from_db(db_extension: dict) -> Any | None:
         """
         Create an Extension object from database data
 
@@ -148,7 +149,7 @@ class ExtensionRegistry:
 
             self.logger.error(traceback.format_exc())
 
-    def reload(self):
+    def reload(self) -> None:
         """Reload extensions from database or configuration"""
         if not self.database or not self.database.enabled:
             # Only reload config if not using database
@@ -156,11 +157,11 @@ class ExtensionRegistry:
         self.extensions.clear()
         self._load_extensions()
 
-    def reload_extensions(self):
+    def reload_extensions(self) -> None:
         """Alias for reload() - reload extensions from database or configuration"""
         self.reload()
 
-    def get(self, number: str):
+    def get(self, number: str) -> Any | None:
         """
         Get extension by number
 
@@ -172,7 +173,7 @@ class ExtensionRegistry:
         """
         return self.extensions.get(str(number))
 
-    def get_extension(self, number: str):
+    def get_extension(self, number: str) -> Any | None:
         """
         Get extension by number (alias for get() for backward compatibility)
 
@@ -184,7 +185,7 @@ class ExtensionRegistry:
         """
         return self.get(number)
 
-    def register(self, number: str, address) -> bool:
+    def register(self, number: str, address: tuple) -> bool:
         """
         Register extension
 
@@ -241,11 +242,11 @@ class ExtensionRegistry:
         """
         return [ext for ext in self.extensions.values() if ext.registered]
 
-    def get_registered_count(self):
+    def get_registered_count(self) -> int:
         """Get count of registered extensions"""
         return len(self.get_registered())
 
-    def get_all(self):
+    def get_all(self) -> list:
         """Get all extensions"""
         return list(self.extensions.values())
 

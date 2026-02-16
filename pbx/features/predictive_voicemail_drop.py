@@ -6,6 +6,7 @@ Auto-leave message on voicemail detection
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class VoicemailDropSystem:
@@ -21,7 +22,7 @@ class VoicemailDropSystem:
     - Campaign-specific messages
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize voicemail drop system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -313,7 +314,7 @@ class VoicemailDropSystem:
             for msg in self.messages.values()
         ]
 
-    def tune_detection(self, threshold: float, max_time: int):
+    def tune_detection(self, threshold: float, max_time: int) -> None:
         """
         Tune detection parameters
 
@@ -349,7 +350,7 @@ class VoicemailDropSystem:
 _voicemail_drop = None
 
 
-def get_voicemail_drop(config=None) -> VoicemailDropSystem:
+def get_voicemail_drop(config: Any | None =None) -> VoicemailDropSystem:
     """Get or create voicemail drop instance"""
     global _voicemail_drop
     if _voicemail_drop is None:

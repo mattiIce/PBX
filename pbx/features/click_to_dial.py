@@ -8,6 +8,7 @@ import uuid
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class ClickToDialEngine:
@@ -16,7 +17,7 @@ class ClickToDialEngine:
     Enables dialing from web interfaces and applications
     """
 
-    def __init__(self, db_backend, config: dict, pbx_core=None) -> None:
+    def __init__(self, db_backend: Any | None, config: dict, pbx_core: Any | None =None) -> None:
         """
         Initialize click-to-dial engine
 

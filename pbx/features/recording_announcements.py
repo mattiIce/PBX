@@ -8,12 +8,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class RecordingAnnouncements:
     """System for playing recording disclosure announcements"""
 
-    def __init__(self, config=None, database=None) -> None:
+    def __init__(self, config: Any | None =None, database: Any | None =None) -> None:
         """Initialize recording announcements"""
         self.logger = get_logger()
         self.config = config or {}
@@ -154,7 +155,7 @@ class RecordingAnnouncements:
         except sqlite3.Error as e:
             self.logger.error(f"Error logging announcement: {e}")
 
-    def _check_audio_file(self):
+    def _check_audio_file(self) -> bool:
         """Check if announcement audio file exists"""
         if Path(self.audio_path).exists():
             self.logger.info(f"  Announcement audio: {self.audio_path}")

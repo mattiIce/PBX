@@ -7,6 +7,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class SpeechAnalyticsEngine:
@@ -15,7 +16,7 @@ class SpeechAnalyticsEngine:
     Framework for transcription, sentiment, and summarization
     """
 
-    def __init__(self, db_backend, config: dict) -> None:
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize speech analytics engine
 

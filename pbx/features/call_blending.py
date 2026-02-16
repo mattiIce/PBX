@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class CallDirection(Enum):
@@ -52,7 +53,7 @@ class CallBlending:
     - Real-time workload balancing
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize call blending"""
         self.logger = get_logger()
         self.config = config or {}
@@ -195,7 +196,7 @@ class CallBlending:
         # Otherwise use normal blending
         return self._blend_call(agent)
 
-    def queue_call(self, call: dict, direction: str):
+    def queue_call(self, call: dict, direction: str) -> None:
         """
         Queue a call for blending
 
@@ -349,7 +350,7 @@ class CallBlending:
 _call_blending = None
 
 
-def get_call_blending(config=None) -> CallBlending:
+def get_call_blending(config: Any | None =None) -> CallBlending:
     """Get or create call blending instance"""
     global _call_blending
     if _call_blending is None:

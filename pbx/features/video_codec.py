@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 # Try to import PyAV (Python binding for FFmpeg)
 try:
@@ -70,7 +71,7 @@ class VideoCodecManager:
     - Hardware encoders (NVENC, QuickSync, etc.)
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize video codec manager"""
         self.logger = get_logger()
         self.config = config or {}
@@ -551,7 +552,7 @@ class VideoCodecManager:
 _video_codec_manager = None
 
 
-def get_video_codec_manager(config=None) -> VideoCodecManager:
+def get_video_codec_manager(config: Any | None =None) -> VideoCodecManager:
     """Get or create video codec manager instance"""
     global _video_codec_manager
     if _video_codec_manager is None:

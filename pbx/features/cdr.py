@@ -9,6 +9,7 @@ from enum import Enum
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class CallDisposition(Enum):
@@ -159,7 +160,7 @@ class CDRSystem:
         if record:
             record.recording_file = recording_file
 
-    def _save_record(self, record) -> None:
+    def _save_record(self, record: Any) -> None:
         """
         Save CDR record to file
 

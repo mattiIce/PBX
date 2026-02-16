@@ -6,12 +6,13 @@ Call whisper, barge-in, and supervisor monitoring
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class AdvancedCallFeatures:
     """Advanced call features for supervisor monitoring and intervention"""
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize advanced call features"""
         self.logger = get_logger()
         self.config = config or {}

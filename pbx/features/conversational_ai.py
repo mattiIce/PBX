@@ -7,6 +7,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 # NLTK for natural language processing
 try:
@@ -57,7 +58,7 @@ class ConversationalAI:
     - Microsoft Azure Bot Service
     """
 
-    def __init__(self, config=None, db_backend=None) -> None:
+    def __init__(self, config: Any | None =None, db_backend: Any | None =None) -> None:
         """Initialize conversational AI system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -592,7 +593,7 @@ class ConversationalAI:
             self.logger.error(f"NLTK tokenization error: {e}")
             return text.lower().split()
 
-    def end_conversation(self, call_id: str):
+    def end_conversation(self, call_id: str) -> dict:
         """
         End a conversation
 
@@ -737,7 +738,7 @@ class ConversationalAI:
 _conversational_ai = None
 
 
-def get_conversational_ai(config=None, db_backend=None) -> ConversationalAI:
+def get_conversational_ai(config: Any | None =None, db_backend: Any | None =None) -> ConversationalAI:
     """Get or create conversational AI instance"""
     global _conversational_ai
     if _conversational_ai is None:

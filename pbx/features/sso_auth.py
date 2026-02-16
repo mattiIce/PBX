@@ -7,6 +7,7 @@ import secrets
 from datetime import UTC, datetime, timedelta
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 # Try to import SAML library (free)
 try:
@@ -18,7 +19,7 @@ except ImportError:
 class SSOAuthService:
     """Single Sign-On authentication service"""
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize SSO service"""
         self.logger = get_logger()
         self.config = config or {}

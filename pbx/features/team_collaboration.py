@@ -6,6 +6,7 @@ Built-in chat platform for team collaboration
 import sqlite3
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class TeamMessagingEngine:
@@ -14,7 +15,7 @@ class TeamMessagingEngine:
     Provides chat channels and direct messaging
     """
 
-    def __init__(self, db_backend, config: dict) -> None:
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize team messaging engine
 
@@ -301,7 +302,7 @@ class FileShareEngine:
     Secure document collaboration
     """
 
-    def __init__(self, db_backend, config: dict) -> None:
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize file share engine
 

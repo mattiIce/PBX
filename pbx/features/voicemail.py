@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
+from typing import Any
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -53,10 +54,10 @@ class VoicemailBox:
         self,
         extension_number: str,
         storage_path: str ="voicemail",
-        config=None,
-        email_notifier=None,
-        database=None,
-        transcription_service=None,
+        config: Any | None =None,
+        email_notifier: Any | None =None,
+        database: Any | None =None,
+        transcription_service: Any | None =None,
     ) -> None:
         """
         Initialize voicemail box
@@ -119,13 +120,13 @@ class VoicemailBox:
         # Load existing messages from disk
         self._load_messages()
 
-    def _get_db_placeholder(self):
+    def _get_db_placeholder(self) -> str:
         """Get database parameter placeholder based on database type"""
         if self.database and self.database.db_type == "postgresql":
             return "%s"
         return "?"
 
-    def save_message(self, caller_id: str, audio_data: bytes, duration: float | None =None):
+    def save_message(self, caller_id: str, audio_data: bytes, duration: float | None =None) -> str:
         """
         Save voicemail message
 
@@ -699,7 +700,7 @@ class VoicemailBox:
 class VoicemailSystem:
     """Manages voicemail for all extensions"""
 
-    def __init__(self, storage_path: str ="voicemail", config=None, database=None) -> None:
+    def __init__(self, storage_path: str ="voicemail", config: Any | None =None, database: Any | None =None) -> None:
         """
         Initialize voicemail system
 
@@ -724,7 +725,7 @@ class VoicemailSystem:
 
         Path(storage_path).mkdir(parents=True, exist_ok=True)
 
-    def get_mailbox(self, extension_number: str):
+    def get_mailbox(self, extension_number: str) -> VoicemailBox:
         """
         Get or create mailbox for extension
 
@@ -744,7 +745,7 @@ class VoicemailSystem:
             )
         return self.mailboxes[extension_number]
 
-    def save_message(self, extension_number: str, caller_id: str, audio_data: bytes, duration: float | None =None):
+    def save_message(self, extension_number: str, caller_id: str, audio_data: bytes, duration: float | None =None) -> str:
         """
         Save voicemail message
 
@@ -760,7 +761,7 @@ class VoicemailSystem:
         mailbox = self.get_mailbox(extension_number)
         return mailbox.save_message(caller_id, audio_data, duration)
 
-    def send_daily_reminders(self):
+    def send_daily_reminders(self) -> int:
         """
         Send daily reminders for unread voicemails
 
@@ -784,7 +785,7 @@ class VoicemailSystem:
 
         return count
 
-    def get_message_count(self, extension_number: str, unread_only: bool =True):
+    def get_message_count(self, extension_number: str, unread_only: bool =True) -> int:
         """
         Get message count for extension
 

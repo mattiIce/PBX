@@ -7,12 +7,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class RecordingRetentionManager:
     """Manager for call recording retention policies"""
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize retention manager"""
         self.logger = get_logger()
         self.config = config or {}

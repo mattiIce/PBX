@@ -9,6 +9,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 # Import ExtensionDB for database-based AD sync
 try:
@@ -30,7 +31,7 @@ class PhoneBook:
     - Provides API access for management
     """
 
-    def __init__(self, config: dict, database=None) -> None:
+    def __init__(self, config: dict, database: Any | None =None) -> None:
         """
         Initialize phone book
 
@@ -306,7 +307,7 @@ class PhoneBook:
 
         return results
 
-    def sync_from_ad(self, ad_integration, extension_registry: str) -> int:
+    def sync_from_ad(self, ad_integration: Any, extension_registry: str) -> int:
         """
         Sync phone book from Active Directory
 

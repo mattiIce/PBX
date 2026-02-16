@@ -8,7 +8,7 @@ import time
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pbx.utils.logger import get_logger
 
@@ -68,7 +68,7 @@ class WebRTCSignalingServer:
     - Integration with SIP infrastructure
     """
 
-    def __init__(self, config=None, pbx_core=None) -> None:
+    def __init__(self, config: Any | None =None, pbx_core: Any | None =None) -> None:
         """
         Initialize WebRTC signaling server
 
@@ -159,13 +159,13 @@ class WebRTCSignalingServer:
         else:
             self.logger.info("WebRTC signaling server disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None =None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
-    def _start_cleanup_thread(self):
+    def _start_cleanup_thread(self) -> None:
         """Start session cleanup thread"""
         self.running = True
         self.cleanup_thread = threading.Thread(
@@ -174,7 +174,7 @@ class WebRTCSignalingServer:
         self.cleanup_thread.start()
         self.logger.info("Started WebRTC session cleanup thread")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the WebRTC signaling server"""
         self.logger.info("Stopping WebRTC signaling server...")
         self.running = False
@@ -182,13 +182,13 @@ class WebRTCSignalingServer:
             self.cleanup_thread.join(timeout=5)
         self.logger.info("WebRTC signaling server stopped")
 
-    def _cleanup_worker(self):
+    def _cleanup_worker(self) -> None:
         """Worker thread for cleaning up stale sessions"""
         while self.running:
             time.sleep(30)  # Check every 30 seconds
             self._cleanup_stale_sessions()
 
-    def _cleanup_stale_sessions(self):
+    def _cleanup_stale_sessions(self) -> None:
         """Remove stale sessions that have timed out"""
         with self.lock:
             now = datetime.now(UTC)
@@ -207,7 +207,7 @@ class WebRTCSignalingServer:
                     )
                     self._remove_session(session_id)
 
-    def _log_session_creation(self, session_id: str, extension: str, session):
+    def _log_session_creation(self, session_id: str, extension: str, session: dict) -> None:
         """Log verbose session creation details"""
         if not self.verbose_logging:
             return
@@ -221,7 +221,7 @@ class WebRTCSignalingServer:
             f"  Sessions for extension {extension}: {len(self.extension_sessions.get(extension, set()))}"
         )
 
-    def _create_virtual_webrtc_extension(self, extension: str):
+    def _create_virtual_webrtc_extension(self, extension: str) -> None:
         """Create virtual WebRTC extension if needed"""
         if not self.pbx_core:
             return None
@@ -580,7 +580,7 @@ class WebRTCSignalingServer:
         self.logger.info(f"Associated call {call_id} with WebRTC session {session_id}")
         return True
 
-    def set_session_metadata(self, session_id: str, key: str, value) -> bool:
+    def set_session_metadata(self, session_id: str, key: str, value: Any) -> bool:
         """set metadata for a session"""
         session = self.get_session(session_id)
         if not session:
@@ -590,7 +590,7 @@ class WebRTCSignalingServer:
         session.update_activity()
         return True
 
-    def get_session_metadata(self, session_id: str, key: str, default=None):
+    def get_session_metadata(self, session_id: str, key: str, default: Any | None =None) -> Any:
         """Get metadata from a session"""
         session = self.get_session(session_id)
         if not session:
@@ -609,7 +609,7 @@ class WebRTCGateway:
     - Manages RTP/SRTP bridging
     """
 
-    def __init__(self, pbx_core=None) -> None:
+    def __init__(self, pbx_core: Any | None =None) -> None:
         """
         Initialize WebRTC gateway
 
@@ -783,7 +783,7 @@ class WebRTCGateway:
             return sip_sdp
 
     def initiate_call(
-        self, session_id: str, target_extension: str, webrtc_signaling=None
+        self, session_id: str, target_extension: str, webrtc_signaling: Any | None =None
     ) -> str | None:
         """
         Initiate a call from WebRTC client to extension
@@ -1152,7 +1152,7 @@ class WebRTCGateway:
             return None
 
     def receive_call(
-        self, session_id: str, call_id: str, caller_sdp: str | None = None, webrtc_signaling=None
+        self, session_id: str, call_id: str, caller_sdp: str | None = None, webrtc_signaling: Any | None =None
     ) -> bool:
         """
         Route incoming call to WebRTC client
@@ -1226,7 +1226,7 @@ class WebRTCGateway:
             self.logger.debug(traceback.format_exc())
             return False
 
-    def answer_call(self, session_id: str, webrtc_signaling=None) -> bool:
+    def answer_call(self, session_id: str, webrtc_signaling: Any | None =None) -> bool:
         """
         Handle WebRTC client answering an incoming call
 

@@ -8,6 +8,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class PredictiveDialingDatabase:
@@ -16,7 +17,7 @@ class PredictiveDialingDatabase:
     Stores campaigns, contacts, call attempts, and statistics
     """
 
-    def __init__(self, db_backend) -> None:
+    def __init__(self, db_backend: Any | None) -> None:
         """
         Initialize database layer
 

@@ -14,8 +14,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
-def check_kernel_fips():
-    """Check if kernel FIPS mode is enabled"""
+def check_kernel_fips() -> bool:
+    """Check if kernel FIPS mode is enabled."""
     try:
         with open("/proc/sys/crypto/fips_enabled") as f:
             return f.read().strip() == "1"
@@ -23,8 +23,8 @@ def check_kernel_fips():
         return False
 
 
-def check_python_fips():
-    """Check if Python hashlib is in FIPS mode"""
+def check_python_fips() -> bool:
+    """Check if Python hashlib is in FIPS mode."""
     try:
         import hashlib
 

@@ -10,6 +10,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class RegionStatus(Enum):
@@ -49,7 +50,7 @@ class GeographicRedundancy:
     - Data replication
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize geographic redundancy"""
         self.logger = get_logger()
         self.config = config or {}
@@ -455,7 +456,7 @@ class GeographicRedundancy:
 _geographic_redundancy = None
 
 
-def get_geographic_redundancy(config=None) -> GeographicRedundancy:
+def get_geographic_redundancy(config: Any | None =None) -> GeographicRedundancy:
     """Get or create geographic redundancy instance"""
     global _geographic_redundancy
     if _geographic_redundancy is None:

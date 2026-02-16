@@ -33,7 +33,7 @@ class EnvironmentLoader:
         "TRANSCRIPTION_API_KEY": "",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize environment loader"""
         self.logger = get_logger()
         self.loaded_vars = {}
@@ -123,7 +123,7 @@ class EnvironmentLoader:
 
         return value.strip() in complete_patterns
 
-    def _try_type_conversion(self, value: str):
+    def _try_type_conversion(self, value: str) -> str | int | float | bool:
         """
         Try to convert string value to appropriate type (int, float, bool)
 
@@ -185,7 +185,7 @@ class EnvironmentLoader:
 
         return resolved
 
-    def get_loaded_vars(self) -> list:
+    def get_loaded_vars(self) -> list[str]:
         """
         Get list of environment variables that were loaded
 
@@ -194,7 +194,7 @@ class EnvironmentLoader:
         """
         return list(self.loaded_vars.keys())
 
-    def validate_required_vars(self, required_vars: list) -> tuple:
+    def validate_required_vars(self, required_vars: list[str]) -> tuple[bool, list[str]]:
         """
         Validate that required environment variables are set
 
@@ -213,7 +213,7 @@ class EnvironmentLoader:
         return len(missing) == 0, missing
 
     @staticmethod
-    def load_env_file(env_file: str = ".env"):
+    def load_env_file(env_file: str = ".env") -> int:
         """
         Load environment variables from a .env file
 
@@ -232,7 +232,7 @@ class EnvironmentLoader:
         loaded_count = 0
 
         try:
-            with open(env_file) as f:
+            with Path(env_file).open() as f:
                 for line_num, line in enumerate(f, 1):
                     # Skip empty lines and comments
                     line = line.strip()

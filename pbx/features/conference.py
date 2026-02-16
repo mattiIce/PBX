@@ -3,6 +3,7 @@ Conference calling system
 """
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class ConferenceRoom:
@@ -75,7 +76,7 @@ class ConferenceRoom:
                 return True
         return False
 
-    def get_participant_count(self):
+    def get_participant_count(self) -> int:
         """Get number of participants"""
         return len(self.participants)
 
@@ -92,7 +93,7 @@ class ConferenceSystem:
         self.rooms = {}
         self.logger = get_logger()
 
-    def create_room(self, room_number: str, max_participants: int =10):
+    def create_room(self, room_number: str, max_participants: int =10) -> Any:
         """
         Create conference room
 
@@ -161,6 +162,6 @@ class ConferenceSystem:
             return result
         return False
 
-    def get_active_rooms(self):
+    def get_active_rooms(self) -> list:
         """Get all active conference rooms"""
         return list(self.rooms.values())

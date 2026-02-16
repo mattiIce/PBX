@@ -253,7 +253,7 @@ class G729CodecManager:
         self.logger.debug(f"Created G.729 decoder for call {call_id}")
         return decoder
 
-    def release_codec(self, call_id: str):
+    def release_codec(self, call_id: str) -> None:
         """
         Release codec resources for a call
 

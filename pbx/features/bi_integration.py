@@ -8,7 +8,7 @@ import json
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from tableauhyperapi import TableDefinition
@@ -63,7 +63,7 @@ class BIIntegration:
     - Metabase (SQL, API)
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize BI integration"""
         self.logger = get_logger()
         self.config = config or {}
@@ -215,7 +215,7 @@ class BIIntegration:
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.json"
 
         # Convert datetime objects to strings for JSON serialization
-        def serialize_datetime(obj):
+        def serialize_datetime(obj: Any) -> str:
             if isinstance(obj, datetime):
                 return obj.isoformat()
             raise TypeError(f"type {type(obj)} not serializable")
@@ -721,7 +721,7 @@ class BIIntegration:
 _bi_integration = None
 
 
-def get_bi_integration(config=None) -> BIIntegration:
+def get_bi_integration(config: Any | None =None) -> BIIntegration:
     """Get or create BI integration instance"""
     global _bi_integration
     if _bi_integration is None:

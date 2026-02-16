@@ -940,7 +940,7 @@ class G722CodecManager:
 
         return decoder
 
-    def release_codec(self, call_id: str):
+    def release_codec(self, call_id: str) -> None:
         """
         Release codec resources for a call
 

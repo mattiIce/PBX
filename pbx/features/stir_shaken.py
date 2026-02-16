@@ -12,6 +12,7 @@ import time
 import uuid
 from datetime import UTC, datetime, timedelta
 from enum import Enum
+from typing import Any
 
 try:
     from cryptography import x509
@@ -561,7 +562,7 @@ class STIRSHAKENManager:
 
 
 def add_stir_shaken_to_invite(
-    sip_message,
+    sip_message: Any,
     stir_shaken_manager: STIRSHAKENManager,
     from_number: str,
     to_number: str,
@@ -592,7 +593,7 @@ def add_stir_shaken_to_invite(
 
 
 def verify_stir_shaken_invite(
-    sip_message, stir_shaken_manager: STIRSHAKENManager
+    sip_message: Any, stir_shaken_manager: STIRSHAKENManager
 ) -> tuple[VerificationStatus, dict | None]:
     """
     Verify STIR/SHAKEN signature on incoming SIP INVITE

@@ -41,8 +41,8 @@ if not is_tts_available():
 
 
 def generate_auto_attendant_tts(
-    output_dir="auto_attendant", company_name="your company", sample_rate=8000
-):
+    output_dir: str = "auto_attendant", company_name: str = "your company", sample_rate: int = 8000
+) -> int:
     """
     Generate TTS voice prompts for auto attendant
 
@@ -121,7 +121,7 @@ def generate_auto_attendant_tts(
     return success_count
 
 
-def generate_voicemail_tts(output_dir="voicemail_prompts", sample_rate=8000):
+def generate_voicemail_tts(output_dir: str = "voicemail_prompts", sample_rate: int = 8000) -> int:
     """
     Generate TTS voice prompts for voicemail system
 
@@ -228,8 +228,8 @@ def generate_voicemail_tts(output_dir="voicemail_prompts", sample_rate=8000):
     return success_count
 
 
-def main():
-    """Main function"""
+def main() -> None:
+    """Main function."""
     import argparse
 
     parser = argparse.ArgumentParser(

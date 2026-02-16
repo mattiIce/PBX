@@ -8,6 +8,7 @@ from datetime import UTC, datetime, timedelta
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class CampaignStatus(Enum):
@@ -80,7 +81,7 @@ class PredictiveDialer:
     - Compliance with call regulations
     """
 
-    def __init__(self, config=None, db_backend=None) -> None:
+    def __init__(self, config: Any | None =None, db_backend: Any | None =None) -> None:
         """Initialize predictive dialer"""
         self.logger = get_logger()
         self.config = config or {}
@@ -494,7 +495,7 @@ class PredictiveDialer:
 _predictive_dialer = None
 
 
-def get_predictive_dialer(config=None, db_backend=None) -> PredictiveDialer:
+def get_predictive_dialer(config: Any | None =None, db_backend: Any | None =None) -> PredictiveDialer:
     """Get or create predictive dialer instance"""
     global _predictive_dialer
     if _predictive_dialer is None:

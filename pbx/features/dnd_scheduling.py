@@ -9,6 +9,7 @@ from datetime import UTC, datetime, timedelta
 
 from pbx.features.presence import PresenceStatus
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class DNDRule:
@@ -92,7 +93,7 @@ class DNDRule:
 class CalendarMonitor:
     """Monitors calendar events and triggers DND"""
 
-    def __init__(self, outlook_integration=None, check_interval: int = 60) -> None:
+    def __init__(self, outlook_integration: Any | None =None, check_interval: int = 60) -> None:
         """
         Initialize calendar monitor
 
@@ -108,7 +109,7 @@ class CalendarMonitor:
         self.extension_email_map = {}  # extension -> email address
         self.active_meetings = {}  # extension -> meeting_info
 
-    def register_user(self, extension: str, email: str):
+    def register_user(self, extension: str, email: str) -> None:
         """
         Register user for calendar monitoring
 
@@ -119,7 +120,7 @@ class CalendarMonitor:
         self.extension_email_map[extension] = email
         self.logger.info(f"Registered calendar monitoring for {extension} ({email})")
 
-    def unregister_user(self, extension: str):
+    def unregister_user(self, extension: str) -> None:
         """
         Unregister user from calendar monitoring
 
@@ -131,7 +132,7 @@ class CalendarMonitor:
         if extension in self.active_meetings:
             del self.active_meetings[extension]
 
-    def start(self):
+    def start(self) -> Path | None:
         """Start calendar monitoring thread"""
         if self.running:
             return
@@ -147,14 +148,14 @@ class CalendarMonitor:
         self.thread.start()
         self.logger.info("Calendar monitoring started")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop calendar monitoring thread"""
         self.running = False
         if self.thread:
             self.thread.join(timeout=5)
         self.logger.info("Calendar monitoring stopped")
 
-    def _monitor_loop(self):
+    def _monitor_loop(self) -> None:
         """Main monitoring loop"""
         while self.running:
             try:
@@ -168,7 +169,7 @@ class CalendarMonitor:
                     break
                 time.sleep(1)
 
-    def _check_all_calendars(self):
+    def _check_all_calendars(self) -> None:
         """Check calendars for all registered users"""
         now = datetime.now(UTC)
 
@@ -250,7 +251,7 @@ class DNDScheduler:
     Manages automatic DND scheduling based on calendar and time-based rules
     """
 
-    def __init__(self, presence_system=None, outlook_integration=None, config: dict | None = None) -> None:
+    def __init__(self, presence_system: Any | None =None, outlook_integration: Any | None =None, config: dict | None = None) -> None:
         """
         Initialize DND scheduler
 
@@ -287,7 +288,7 @@ class DNDScheduler:
         if self.enabled:
             self.logger.info("DND Scheduler initialized")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None =None) -> Any:
         """
         Get config value supporting both dot notation and nested dicts
 
@@ -315,7 +316,7 @@ class DNDScheduler:
 
         return value if value is not None else default
 
-    def start(self):
+    def start(self) -> Path | None:
         """Start DND scheduler"""
         if not self.enabled:
             self.logger.info("DND Scheduler is disabled")
@@ -335,7 +336,7 @@ class DNDScheduler:
 
         self.logger.info("DND Scheduler started")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop DND scheduler"""
         self.running = False
 
@@ -407,7 +408,7 @@ class DNDScheduler:
 
         return [rule.to_dict() for rule in self.rules[extension]]
 
-    def register_calendar_user(self, extension: str, email: str):
+    def register_calendar_user(self, extension: str, email: str) -> None:
         """
         Register user for calendar-based DND
 
@@ -418,7 +419,7 @@ class DNDScheduler:
         if self.calendar_dnd_enabled:
             self.calendar_monitor.register_user(extension, email)
 
-    def unregister_calendar_user(self, extension: str):
+    def unregister_calendar_user(self, extension: str) -> None:
         """
         Unregister user from calendar-based DND
 
@@ -461,7 +462,7 @@ class DNDScheduler:
             del self.manual_overrides[extension]
             self.logger.info(f"Cleared manual override for {extension}")
 
-    def _monitoring_loop(self):
+    def _monitoring_loop(self) -> None:
         """Main monitoring loop for rule checking"""
         while self.running:
             try:
@@ -509,7 +510,7 @@ class DNDScheduler:
 
         return should_dnd
 
-    def _apply_dnd_status(self, extension: str, current_status):
+    def _apply_dnd_status(self, extension: str, current_status: str) -> None:
         """Apply DND or IN_MEETING status"""
         # Save previous status for restoration
         if extension not in self.previous_statuses:
@@ -525,7 +526,7 @@ class DNDScheduler:
                 extension, PresenceStatus.DO_NOT_DISTURB, "Auto-DND (scheduled)"
             )
 
-    def _remove_dnd_status(self, extension: str):
+    def _remove_dnd_status(self, extension: str) -> None:
         """Remove DND status and restore previous"""
         # Check if we set this status (not user)
         if extension in self.previous_statuses:
@@ -625,7 +626,7 @@ class DNDScheduler:
 
 
 def get_dnd_scheduler(
-    presence_system=None, outlook_integration=None, config: dict | None = None
+    presence_system: Any | None =None, outlook_integration: Any | None =None, config: dict | None = None
 ) -> DNDScheduler:
     """Get DND scheduler instance"""
     return DNDScheduler(presence_system, outlook_integration, config)

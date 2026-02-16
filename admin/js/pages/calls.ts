@@ -77,10 +77,10 @@ export async function loadDTMFConfig(): Promise<void> {
         const data: DTMFConfig = await response.json();
 
         const modeSelect = document.getElementById('dtmf-mode') as HTMLSelectElement | null;
-        if (modeSelect) modeSelect.value = data.mode || 'rfc2833';
+        if (modeSelect) modeSelect.value = data.mode ?? 'rfc2833';
 
         const threshold = document.getElementById('dtmf-threshold') as HTMLInputElement | null;
-        if (threshold) threshold.value = String(data.threshold || -30);
+        if (threshold) threshold.value = String(data.threshold ?? -30);
     } catch (error: unknown) {
         console.error('Error loading DTMF config:', error);
     }
@@ -90,8 +90,8 @@ export async function saveDTMFConfig(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
         const config = {
-            mode: (document.getElementById('dtmf-mode') as HTMLSelectElement | null)?.value || 'rfc2833',
-            threshold: parseInt((document.getElementById('dtmf-threshold') as HTMLInputElement | null)?.value || '-30')
+            mode: (document.getElementById('dtmf-mode') as HTMLSelectElement | null)?.value ?? 'rfc2833',
+            threshold: parseInt((document.getElementById('dtmf-threshold') as HTMLInputElement | null)?.value ?? '-30')
         };
 
         const response = await fetch(`${API_BASE}/api/config/dtmf`, {

@@ -17,6 +17,7 @@ from pathlib import Path
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class PhoneTemplate:
@@ -35,7 +36,7 @@ class PhoneTemplate:
         self.model = model.lower()
         self.template_content = template_content
 
-    def generate_config(self, extension_config: str, server_config):
+    def generate_config(self, extension_config: str, server_config: dict) -> str:
         """
         Generate configuration from template
 
@@ -100,7 +101,7 @@ class PhoneTemplate:
         return config
 
 
-def normalize_mac_address(mac):
+def normalize_mac_address(mac: str) -> str:
     """
     Normalize MAC address to consistent format
 
@@ -185,7 +186,7 @@ class ProvisioningDevice:
 class PhoneProvisioning:
     """Phone provisioning management"""
 
-    def __init__(self, config, database=None) -> None:
+    def __init__(self, config: Any, database: Any | None =None) -> None:
         """
         Initialize phone provisioning
 
@@ -1071,7 +1072,7 @@ P2351 = 1
         key = (vendor.lower(), model.lower())
         self.templates[key] = PhoneTemplate(vendor, model, template_content)
 
-    def get_template(self, vendor: str, model: str):
+    def get_template(self, vendor: str, model: str) -> Any | None:
         """
         Get phone template
 
@@ -1085,7 +1086,7 @@ P2351 = 1
         key = (vendor.lower(), model.lower())
         return self.templates.get(key)
 
-    def register_device(self, mac_address: str, extension_number: str, vendor: str, model: str):
+    def register_device(self, mac_address: str, extension_number: str, vendor: str, model: str) -> Any:
         """
         Register a device for provisioning
 
@@ -1164,7 +1165,7 @@ P2351 = 1
             return True
         return False
 
-    def get_device(self, mac_address: str):
+    def get_device(self, mac_address: str) -> Any | None:
         """
         Get device by MAC address
 
@@ -1327,7 +1328,7 @@ P2351 = 1
             "display_name": "Directory",
         }
 
-    def generate_config(self, mac_address: str, extension_registry: str, request_info=None) -> tuple:
+    def generate_config(self, mac_address: str, extension_registry: str, request_info: dict | None =None) -> tuple:
         """
         Generate configuration for a device
 
@@ -1502,7 +1503,7 @@ P2351 = 1
             return self.provision_requests[-limit:]
         return self.provision_requests
 
-    def _generate_config_url(self, mac_address: str):
+    def _generate_config_url(self, mac_address: str) -> str:
         """
         Generate provisioning config URL for a device
 
@@ -1574,7 +1575,7 @@ P2351 = 1
             result[v] = sorted(result[v])
         return result
 
-    def reboot_phone(self, extension_number: str, sip_server) -> bool:
+    def reboot_phone(self, extension_number: str, sip_server: Any) -> bool:
         """
         Send SIP NOTIFY to reboot a phone
 
@@ -1625,7 +1626,7 @@ P2351 = 1
             self.logger.error(f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
             return False
 
-    def reboot_all_phones(self, sip_server) -> dict:
+    def reboot_all_phones(self, sip_server: Any) -> dict:
         """
         Send SIP NOTIFY to reboot all registered phones
 
@@ -1686,7 +1687,7 @@ P2351 = 1
 
         return sorted(templates_list, key=lambda x: (x["vendor"], x["model"]))
 
-    def get_template_content(self, vendor: str, model: str):
+    def get_template_content(self, vendor: str, model: str) -> Any | None:
         """
         Get the content of a specific template
 
@@ -1836,7 +1837,7 @@ P2351 = 1
         else:
             return False, "Database not available - static IP mapping requires database"
 
-    def get_static_ip(self, mac_address: str):
+    def get_static_ip(self, mac_address: str) -> Any | None:
         """
         Get static IP address for a device
 

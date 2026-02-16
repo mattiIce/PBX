@@ -391,7 +391,7 @@ class OpusCodecManager:
     Manages Opus codecs for multiple calls
     """
 
-    def __init__(self, pbx) -> None:
+    def __init__(self, pbx: Any) -> None:
         """
         Initialize Opus codec manager
 

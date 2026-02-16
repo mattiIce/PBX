@@ -13,12 +13,13 @@ from email.utils import formatdate
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class EmailNotifier:
     """Handles email notifications for voicemail"""
 
-    def __init__(self, config) -> None:
+    def __init__(self, config: Any) -> None:
         """
         Initialize email notifier
 
@@ -73,7 +74,7 @@ class EmailNotifier:
             self.logger.info("Email notifications disabled")
 
     def send_voicemail_notification(
-        self, to_email, extension_number: str, caller_id: str, timestamp, audio_file_path: str | None =None, duration: float | None =None
+        self, to_email: str, extension_number: str, caller_id: str, timestamp: Any, audio_file_path: str | None =None, duration: float | None =None
     ) -> bool:
         """
         Send voicemail notification email
@@ -162,7 +163,7 @@ class EmailNotifier:
             self.logger.error(f"Failed to prepare voicemail notification: {e}")
             return False
 
-    def send_reminder(self, to_email, extension_number: str, unread_count: int, messages) -> bool:
+    def send_reminder(self, to_email: str, extension_number: str, unread_count: int, messages: list) -> bool:
         """
         Send daily reminder about unread voicemails
 
@@ -220,7 +221,7 @@ class EmailNotifier:
             self.logger.error(f"Failed to send voicemail reminder: {e}")
             return False
 
-    def _create_email_body(self, extension_number: str, caller_id: str, timestamp, duration: float | None =None):
+    def _create_email_body(self, extension_number: str, caller_id: str, timestamp: Any, duration: float | None =None) -> str:
         """
         Create email body text
 
@@ -255,7 +256,7 @@ class EmailNotifier:
 
         return body
 
-    def _send_email(self, msg):
+    def _send_email(self, msg: Any) -> None:
         """
         Send email via SMTP
 
@@ -288,10 +289,10 @@ class EmailNotifier:
             self.logger.error(f"Error sending email: {e}")
             raise
 
-    def _start_reminder_thread(self):
+    def _start_reminder_thread(self) -> None:
         """Start background thread for daily reminders"""
 
-        def reminder_loop():
+        def reminder_loop() -> None:
             self.logger.info("Started daily reminder thread")
             while self.reminders_enabled:
                 try:
@@ -315,7 +316,7 @@ class EmailNotifier:
         thread = threading.Thread(target=reminder_loop, daemon=True)
         thread.start()
 
-    def _send_all_reminders(self):
+    def _send_all_reminders(self) -> None:
         """
         Send reminders to all extensions with unread voicemails
 

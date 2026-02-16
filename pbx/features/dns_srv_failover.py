@@ -7,6 +7,7 @@ import random
 import socket
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class SRVRecord:
@@ -36,7 +37,7 @@ class DNSSRVFailover:
     - Health monitoring
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize DNS SRV failover"""
         self.logger = get_logger()
         self.config = config or {}
@@ -315,7 +316,7 @@ class DNSSRVFailover:
 
                 break
 
-    def _trigger_failover(self, srv_name: str):
+    def _trigger_failover(self, srv_name: str) -> None:
         """Trigger failover to next available server"""
         self.logger.warning(f"Triggering failover for {srv_name}")
 
@@ -370,7 +371,7 @@ class DNSSRVFailover:
 _dns_srv_failover = None
 
 
-def get_dns_srv_failover(config=None) -> DNSSRVFailover:
+def get_dns_srv_failover(config: Any | None =None) -> DNSSRVFailover:
     """Get or create DNS SRV failover instance"""
     global _dns_srv_failover
     if _dns_srv_failover is None:

@@ -7,7 +7,7 @@ import contextlib
 import json
 import threading
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -112,7 +112,7 @@ class CRMLookupProvider:
 class PhoneBookLookupProvider(CRMLookupProvider):
     """Phone book lookup provider"""
 
-    def __init__(self, config: dict, phone_book=None) -> None:
+    def __init__(self, config: dict, phone_book: Any | None =None) -> None:
         """
         Initialize phone book lookup provider
 
@@ -151,7 +151,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
 class ActiveDirectoryLookupProvider(CRMLookupProvider):
     """Active Directory lookup provider"""
 
-    def __init__(self, config: dict, ad_integration=None) -> None:
+    def __init__(self, config: dict, ad_integration: Any | None =None) -> None:
         """
         Initialize AD lookup provider
 
@@ -261,7 +261,7 @@ class CRMIntegration:
     - Priority-based lookup (try multiple sources)
     """
 
-    def __init__(self, config=None, pbx_core=None) -> None:
+    def __init__(self, config: Any | None =None, pbx_core: Any | None =None) -> None:
         """
         Initialize CRM integration
 
@@ -297,7 +297,7 @@ class CRMIntegration:
         else:
             self.logger.info("CRM integration disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None =None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)

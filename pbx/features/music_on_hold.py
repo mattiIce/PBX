@@ -45,7 +45,7 @@ class MusicOnHold:
                         self.classes[item] = audio_files
                         self.logger.info(f"Loaded MOH class '{item}' with {len(audio_files)} files")
 
-    def _scan_audio_files(self, directory) -> list:
+    def _scan_audio_files(self, directory: str | Path) -> list:
         """
         Scan directory for audio files
 
@@ -141,7 +141,7 @@ class MusicOnHold:
         self.classes[class_name] = files
         self.logger.info(f"Added MOH class '{class_name}' with {len(files)} files")
 
-    def get_classes(self):
+    def get_classes(self) -> list:
         """Get list of available MOH classes"""
         return list(self.classes.keys())
 

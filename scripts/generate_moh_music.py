@@ -253,7 +253,7 @@ def generate_soft_pad(output_file: str | Path, duration: int = 30) -> None:
     print(f"✓ Generated {output_file}")
 
 
-def generate_gentle_chimes(output_file, duration=30):
+def generate_gentle_chimes(output_file: str | Path, duration: int = 30) -> None:
     """
     Generate gentle chime sounds.
 
@@ -306,7 +306,7 @@ def generate_gentle_chimes(output_file, duration=30):
     print(f"✓ Generated {output_file}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Generate Music on Hold (MOH) audio files for PBX system"
     )
@@ -366,11 +366,11 @@ def main():
     print("=" * 60)
     print()
     print("Generated files:")
-    for filename in sorted(os.listdir(args.output_dir)):
-        if filename.endswith(".wav"):
-            filepath = Path(args.output_dir) / filename
-            size_kb = Path(filepath).stat().st_size / 1024
-            print(f"  • {filename} ({size_kb:.1f} KB)")
+    output_path = Path(args.output_dir)
+    for filepath in sorted(output_path.iterdir()):
+        if filepath.suffix == ".wav":
+            size_kb = filepath.stat().st_size / 1024
+            print(f"  • {filepath.name} ({size_kb:.1f} KB)")
     print()
     print("Usage:")
     print(f"  1. Files are in: {args.output_dir}/")

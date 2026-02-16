@@ -6,12 +6,13 @@ Route calls based on business hours and schedules
 from datetime import UTC, datetime, time
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class TimeBasedRouting:
     """Time-based call routing system"""
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize time-based routing"""
         self.logger = get_logger()
         self.config = config or {}

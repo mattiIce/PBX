@@ -8,6 +8,7 @@ from enum import Enum
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 # Import Vosk for FREE offline transcription (already integrated)
 try:
@@ -62,7 +63,7 @@ class RecordingAnalytics:
     - Custom ML models (compliance, quality)
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize recording analytics"""
         self.logger = get_logger()
         self.config = config or {}
@@ -185,7 +186,7 @@ class RecordingAnalytics:
 
         return None
 
-    def _process_vosk_audio(self, recognizer, wf):
+    def _process_vosk_audio(self, recognizer: Any, wf: Any):
         """Process audio file with Vosk recognizer"""
         import json
 
@@ -932,7 +933,7 @@ class RecordingAnalytics:
 _recording_analytics = None
 
 
-def get_recording_analytics(config=None) -> RecordingAnalytics:
+def get_recording_analytics(config: Any | None =None) -> RecordingAnalytics:
     """Get or create recording analytics instance"""
     global _recording_analytics
     if _recording_analytics is None:

@@ -22,7 +22,7 @@ class TLSManager:
     Supports FIPS-approved cipher suites
     """
 
-    def __init__(self, cert_file=None, key_file=None, fips_mode=False):
+    def __init__(self, cert_file: str | None = None, key_file: str | None = None, fips_mode: bool = False) -> None:
         """
         Initialize TLS manager
 

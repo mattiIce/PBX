@@ -9,6 +9,7 @@ import sqlite3
 from datetime import UTC, datetime, time
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class DialPattern:
@@ -135,7 +136,7 @@ class TimeBasedRate:
 class LeastCostRouting:
     """Least-Cost Routing engine with database persistence"""
 
-    def __init__(self, pbx) -> None:
+    def __init__(self, pbx: Any) -> None:
         """
         Initialize LCR engine
 

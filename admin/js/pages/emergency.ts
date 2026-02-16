@@ -59,7 +59,7 @@ export async function loadEmergencyContacts(): Promise<void> {
         const tbody = document.getElementById('emergency-contacts-body') as HTMLElement | null;
         if (!tbody) return;
 
-        const contacts = data.contacts || [];
+        const contacts = data.contacts ?? [];
         if (contacts.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">No emergency contacts</td></tr>';
             return;
@@ -81,7 +81,7 @@ export async function loadEmergencyContacts(): Promise<void> {
 
 function getPriorityBadge(priority: string | undefined): string {
     const classes: Record<string, string> = { high: 'danger', medium: 'warning', low: 'info' };
-    return `<span class="status-badge ${classes[priority || ''] || 'info'}">${priority || 'normal'}</span>`;
+    return `<span class="status-badge ${classes[priority ?? ''] ?? 'info'}">${priority ?? 'normal'}</span>`;
 }
 
 export async function loadEmergencyHistory(): Promise<void> {
@@ -96,7 +96,7 @@ export async function loadEmergencyHistory(): Promise<void> {
         const container = document.getElementById('emergency-history') as HTMLElement | null;
         if (!container) return;
 
-        const history = data.history || [];
+        const history = data.history ?? [];
         container.innerHTML = history.length === 0
             ? '<div class="info-box">No emergency history</div>'
             : history.map(h => `
@@ -140,7 +140,7 @@ export async function loadE911Sites(): Promise<void> {
         const container = document.getElementById('e911-sites-list') as HTMLElement | null;
         if (!container) return;
 
-        const sites = data.sites || [];
+        const sites = data.sites ?? [];
         container.innerHTML = sites.length === 0
             ? '<div class="info-box">No E911 sites configured</div>'
             : sites.map(s => `
@@ -166,7 +166,7 @@ export async function loadExtensionLocations(): Promise<void> {
 
         const container = document.getElementById('extension-locations-list') as HTMLElement | null;
         if (container) {
-            const locations = data.locations || [];
+            const locations = data.locations ?? [];
             container.innerHTML = locations.length === 0
                 ? '<div class="info-box">No locations assigned</div>'
                 : locations.map(l => `

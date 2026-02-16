@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class StorageRegion(Enum):
@@ -45,7 +46,7 @@ class DataResidencyControls:
     - Data localization enforcement
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize data residency controls"""
         self.logger = get_logger()
         self.config = config or {}
@@ -364,7 +365,7 @@ class DataResidencyControls:
 _data_residency = None
 
 
-def get_data_residency(config=None) -> DataResidencyControls:
+def get_data_residency(config: Any | None =None) -> DataResidencyControls:
     """Get or create data residency controls instance"""
     global _data_residency
     if _data_residency is None:

@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from email.utils import formatdate
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class EmergencyContact:
@@ -63,7 +64,7 @@ class EmergencyNotificationSystem:
     during emergency situations (911 calls, panic buttons, etc.)
     """
 
-    def __init__(self, pbx_core, config: dict | None = None, database=None) -> None:
+    def __init__(self, pbx_core: Any | None, config: dict | None = None, database: Any | None =None) -> None:
         """
         Initialize emergency notification system
 
@@ -130,7 +131,7 @@ class EmergencyNotificationSystem:
         if self.database and self.database.enabled:
             self._load_contacts_from_db()
 
-    def _get_db_placeholder(self):
+    def _get_db_placeholder(self) -> str:
         """Get database-agnostic placeholder for SQL queries"""
         return "?" if self.database.db_type == "sqlite" else "%s"
 
@@ -387,7 +388,7 @@ class EmergencyNotificationSystem:
 
     def _notify_contact(
         self, contact: EmergencyContact, trigger_type: str, details: dict, notification_record: dict
-    ):
+    ) -> None:
         """
         Notify a specific contact using configured methods
 
@@ -468,7 +469,7 @@ class EmergencyNotificationSystem:
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error initiating emergency call: {e}")
 
-    def _send_page_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_page_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send overhead page notification"""
         if hasattr(self.pbx_core, "paging_system") and self.pbx_core.paging_system.enabled:
             # Use all-call paging for emergencies
@@ -536,7 +537,7 @@ PBX Emergency Notification System
                 lines.append(f"  {key}: {value}")
         return "\n".join(lines)
 
-    def _send_email_direct(self, to_address, subject, body, email_notifier):
+    def _send_email_direct(self, to_address: str, subject: str, body: str, email_notifier: Any | None) -> None:
         """Send email directly using SMTP"""
         import smtplib
         from email.mime.multipart import MIMEMultipart

@@ -9,12 +9,13 @@ from pathlib import Path
 
 from pbx.core.call import CallState
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class OperatorConsole:
     """Operator console for receptionists"""
 
-    def __init__(self, config: dict, pbx_core) -> None:
+    def __init__(self, config: dict, pbx_core: Any | None) -> None:
         """
         Initialize operator console
 
@@ -269,7 +270,7 @@ class OperatorConsole:
 
         return None
 
-    def _send_page_notification(self, message: str, park_slot: str, method: str = "log"):
+    def _send_page_notification(self, message: str, park_slot: str, method: str = "log") -> None:
         """
         Send page notification via configured method
 

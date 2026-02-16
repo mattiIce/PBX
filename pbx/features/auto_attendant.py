@@ -10,6 +10,7 @@ from enum import Enum
 from pathlib import Path
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class AAState(Enum):
@@ -47,7 +48,7 @@ class AutoAttendant:
     - Database persistence for configuration
     """
 
-    def __init__(self, config=None, pbx_core=None) -> None:
+    def __init__(self, config: Any | None =None, pbx_core: Any | None =None) -> None:
         """
         Initialize Auto Attendant
 
@@ -219,7 +220,7 @@ class AutoAttendant:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing auto attendant database: {e}")
 
-    def _load_config_from_db(self):
+    def _load_config_from_db(self) -> dict | None:
         """Load configuration from database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -357,7 +358,7 @@ class AutoAttendant:
         """Check if auto attendant is enabled"""
         return self.enabled
 
-    def get_extension(self):
+    def get_extension(self) -> str:
         """Get the auto attendant extension number"""
         return self.extension
 
@@ -812,7 +813,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def handle_dtmf(self, session, digit: str) -> dict:
+    def handle_dtmf(self, session: dict, digit: str) -> dict:
         """
         Handle DTMF input during auto attendant session
 
@@ -866,7 +867,7 @@ class AutoAttendant:
         # Default: invalid input
         return self._handle_invalid_input(session)
 
-    def handle_timeout(self, session) -> dict:
+    def handle_timeout(self, session: dict) -> dict:
         """
         Handle timeout (no input received)
 
@@ -896,7 +897,7 @@ class AutoAttendant:
         session["state"] = AAState.MAIN_MENU
         return {"action": "play", "file": self._get_audio_file("timeout"), "session": session}
 
-    def _handle_menu_input(self, session, digit: str) -> dict:
+    def _handle_menu_input(self, session: dict, digit: str) -> dict:
         """
         Handle menu input (supports both legacy and new hierarchical menus)
 
@@ -953,7 +954,7 @@ class AutoAttendant:
         # Invalid option
         return self._handle_invalid_input(session)
 
-    def _navigate_to_submenu(self, session, submenu_id) -> dict:
+    def _navigate_to_submenu(self, session: dict, submenu_id) -> dict:
         """
         Navigate to a submenu
 
@@ -987,7 +988,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def _handle_go_back(self, session) -> dict:
+    def _handle_go_back(self, session: dict) -> dict:
         """
         Handle "go back" to previous menu
 
@@ -1020,7 +1021,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def _handle_repeat_menu(self, session) -> dict:
+    def _handle_repeat_menu(self, session: dict) -> dict:
         """
         Repeat current menu
 
@@ -1041,7 +1042,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def _handle_invalid_input(self, session) -> dict:
+    def _handle_invalid_input(self, session: dict) -> dict:
         """
         Handle invalid input
 
@@ -1108,7 +1109,7 @@ class AutoAttendant:
             lines.append(f"  Press {digit}: {option['description']}")
         return "\n".join(lines)
 
-    def end_session(self, session):
+    def end_session(self, session: dict) -> None:
         """
         End auto attendant session
 
@@ -1120,7 +1121,7 @@ class AutoAttendant:
         session["state"] = AAState.ENDED
 
 
-def generate_auto_attendant_prompts(output_dir: str ="auto_attendant"):
+def generate_auto_attendant_prompts(output_dir: str ="auto_attendant") -> None:
     """
     Generate audio prompts for auto attendant
 

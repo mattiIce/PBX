@@ -379,7 +379,7 @@ class SpeexCodecManager:
     Manages multiple Speex codec instances for different calls.
     """
 
-    def __init__(self, pbx) -> None:
+    def __init__(self, pbx: Any) -> None:
         """
         Initialize Speex codec manager
 

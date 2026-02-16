@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class NATType(Enum):
@@ -42,7 +43,7 @@ class SessionBorderController:
     IP_PATTERN = r"(\d+\.\d+\.\d+\.\d+)"
     PACKETS_PER_SECOND = 50  # Assumed packets per second for VoIP bandwidth calculation
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize SBC"""
         self.logger = get_logger()
         self.config = config or {}
@@ -378,7 +379,7 @@ class SessionBorderController:
 
         return relay_info
 
-    def release_relay(self, call_id: str):
+    def release_relay(self, call_id: str) -> None:
         """Release relay ports for a call"""
         if call_id in self.relay_sessions:
             session = self.relay_sessions[call_id]
@@ -452,7 +453,7 @@ class SessionBorderController:
 
         return {"admit": True, "allocated_bandwidth": estimated_bandwidth}
 
-    def release_call_resources(self, call_id: str):
+    def release_call_resources(self, call_id: str) -> None:
         """Release resources for a completed call"""
         # Release bandwidth
         if call_id in self.bandwidth_by_call:
@@ -553,7 +554,7 @@ class SessionBorderController:
 _sbc = None
 
 
-def get_sbc(config=None) -> SessionBorderController:
+def get_sbc(config: Any | None =None) -> SessionBorderController:
     """Get or create SBC instance"""
     global _sbc
     if _sbc is None:

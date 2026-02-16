@@ -10,6 +10,7 @@ from collections import deque
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class QoSMetrics:
@@ -263,7 +264,7 @@ class QoSMonitor:
     QoS monitoring system for tracking call quality across the PBX
     """
 
-    def __init__(self, pbx) -> None:
+    def __init__(self, pbx: Any) -> None:
         """
         Initialize QoS monitor
 

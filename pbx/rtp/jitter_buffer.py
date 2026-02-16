@@ -6,6 +6,8 @@ Handles variable packet arrival times to provide smooth audio playback.
 Adapts buffer size based on network conditions.
 """
 
+from __future__ import annotations
+
 import threading
 import time
 from collections import deque
@@ -15,9 +17,18 @@ from pbx.utils.logger import get_logger
 
 
 class JitterBufferPacket:
-    """Represents a packet in the jitter buffer"""
+    """Represents a packet in the jitter buffer."""
 
-    def __init__(self, data: bytes, sequence: int, timestamp: int, arrival_time: float):
+    def __init__(self, data: bytes, sequence: int, timestamp: int, arrival_time: float) -> None:
+        """
+        Initialize a jitter buffer packet.
+
+        Args:
+            data: Raw packet payload bytes.
+            sequence: RTP sequence number.
+            timestamp: RTP timestamp.
+            arrival_time: Time the packet arrived (seconds since epoch).
+        """
         self.data: bytes = data
         self.sequence: int = sequence
         self.timestamp: int = timestamp

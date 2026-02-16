@@ -19,6 +19,7 @@ import re
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 # Import for multi-site E911 support (avoid repeated imports in methods)
 try:
@@ -50,7 +51,7 @@ class KarisLawCompliance:
     # Direct 911 pattern (primary)
     DIRECT_911_PATTERN = r"^911$"
 
-    def __init__(self, pbx_core, config: dict | None = None) -> None:
+    def __init__(self, pbx_core: Any | None, config: dict | None = None) -> None:
         """
         Initialize Kari's Law compliance module
 

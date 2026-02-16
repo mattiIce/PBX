@@ -8,12 +8,13 @@ import sqlite3
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class FindMeFollowMe:
     """Find Me/Follow Me call routing system"""
 
-    def __init__(self, config=None, database=None) -> None:
+    def __init__(self, config: Any | None =None, database: Any | None =None) -> None:
         """Initialize Find Me/Follow Me"""
         self.logger = get_logger()
         self.config = config or {}

@@ -11,6 +11,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 # ML libraries for improved accuracy
 try:
@@ -87,7 +88,7 @@ class VoiceBiometrics:
     - Microsoft Azure Speaker Recognition
     """
 
-    def __init__(self, config=None, db_backend=None) -> None:
+    def __init__(self, config: Any | None =None, db_backend: Any | None =None) -> None:
         """Initialize voice biometrics system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -729,7 +730,7 @@ class VoiceBiometrics:
             return True
         return False
 
-    def suspend_profile(self, user_id: str):
+    def suspend_profile(self, user_id: str) -> None:
         """Suspend a voice profile (e.g., after multiple failed verifications)"""
         if user_id in self.profiles:
             self.profiles[user_id].status = BiometricStatus.SUSPENDED
@@ -768,7 +769,7 @@ class VoiceBiometrics:
 _voice_biometrics = None
 
 
-def get_voice_biometrics(config=None, db_backend=None) -> VoiceBiometrics:
+def get_voice_biometrics(config: Any | None =None, db_backend: Any | None =None) -> VoiceBiometrics:
     """Get or create voice biometrics instance"""
     global _voice_biometrics
     if _voice_biometrics is None:

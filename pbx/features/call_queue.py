@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 from enum import Enum
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class QueueStrategy(Enum):
@@ -46,7 +47,7 @@ class QueuedCall:
         self.enqueue_time = datetime.now(UTC)
         self.position = 0
 
-    def get_wait_time(self):
+    def get_wait_time(self) -> float:
         """Get time spent in queue (seconds)"""
         return (datetime.now(UTC) - self.enqueue_time).total_seconds()
 
@@ -86,7 +87,7 @@ class Agent:
         """set agent offline"""
         self.status = AgentStatus.OFFLINE
 
-    def complete_call(self):
+    def complete_call(self) -> None:
         """Mark call as completed"""
         self.calls_taken += 1
         self.last_call_time = datetime.now(UTC)
@@ -105,7 +106,7 @@ class CallQueue:
         self,
         queue_number: str,
         name: str,
-        strategy=QueueStrategy.ROUND_ROBIN,
+        strategy: str =QueueStrategy.ROUND_ROBIN,
         max_wait_time: int =300,
         max_queue_size: int =50,
     ) -> None:
@@ -129,7 +130,7 @@ class CallQueue:
         self.logger = get_logger()
         self.round_robin_index = 0
 
-    def add_agent(self, agent) -> None:
+    def add_agent(self, agent: Any) -> None:
         """
         Add agent to queue
 
@@ -168,7 +169,7 @@ class CallQueue:
         )
         return queued_call
 
-    def dequeue(self):
+    def dequeue(self) -> Any | None:
         """
         Remove and return next call from queue
 
@@ -186,7 +187,7 @@ class CallQueue:
         for i, call in enumerate(self.queue):
             call.position = i + 1
 
-    def get_next_agent(self):
+    def get_next_agent(self) -> Any | None:
         """
         Get next available agent based on strategy
 
@@ -250,7 +251,7 @@ class CallQueue:
 
         return assignments
 
-    def get_queue_status(self):
+    def get_queue_status(self) -> dict | None:
         """Get queue status information"""
         available_agents = sum(1 for a in self.agents.values() if a.is_available())
 
@@ -263,7 +264,7 @@ class CallQueue:
             "average_wait_time": self._get_average_wait_time(),
         }
 
-    def _get_average_wait_time(self):
+    def _get_average_wait_time(self) -> float:
         """Calculate average wait time for calls in queue"""
         if not self.queue:
             return 0
@@ -278,7 +279,7 @@ class QueueSystem:
         self.queues = {}
         self.logger = get_logger()
 
-    def create_queue(self, queue_number: str, name: str, strategy=QueueStrategy.ROUND_ROBIN):
+    def create_queue(self, queue_number: str, name: str, strategy: str =QueueStrategy.ROUND_ROBIN) -> Any:
         """
         Create new queue
 
@@ -295,7 +296,7 @@ class QueueSystem:
         self.logger.info(f"Created queue {queue_number}: {name}")
         return queue
 
-    def get_queue(self, queue_number: str):
+    def get_queue(self, queue_number: str) -> dict | None:
         """Get queue by number"""
         return self.queues.get(queue_number)
 
@@ -316,7 +317,7 @@ class QueueSystem:
             return queue.enqueue(call_id, caller_extension) is not None
         return False
 
-    def process_all_queues(self):
+    def process_all_queues(self) -> int:
         """Process all queues and return assignments"""
         all_assignments = []
         for queue in self.queues.values():
@@ -324,6 +325,6 @@ class QueueSystem:
             all_assignments.extend(assignments)
         return all_assignments
 
-    def get_all_status(self):
+    def get_all_status(self) -> dict | None:
         """Get status of all queues"""
         return [q.get_queue_status() for q in self.queues.values()]

@@ -6,6 +6,7 @@ Use business number on mobile device
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class MobileNumberPortability:
@@ -26,7 +27,7 @@ class MobileNumberPortability:
     - Mobile app with SIP support
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """Initialize mobile number portability"""
         self.logger = get_logger()
         self.config = config or {}
@@ -229,7 +230,7 @@ class MobileNumberPortability:
 _mobile_number_portability = None
 
 
-def get_mobile_number_portability(config=None) -> MobileNumberPortability:
+def get_mobile_number_portability(config: Any | None =None) -> MobileNumberPortability:
     """Get or create mobile number portability instance"""
     global _mobile_number_portability
     if _mobile_number_portability is None:

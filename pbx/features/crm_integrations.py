@@ -6,6 +6,7 @@ HubSpot and Zendesk integration for marketing and support
 import sqlite3
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class HubSpotIntegration:
@@ -14,7 +15,7 @@ class HubSpotIntegration:
     Marketing automation and CRM integration
     """
 
-    def __init__(self, db_backend, config: dict) -> None:
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize HubSpot integration
 
@@ -338,7 +339,7 @@ class ZendeskIntegration:
     Helpdesk ticket creation and management
     """
 
-    def __init__(self, db_backend, config: dict) -> None:
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize Zendesk integration
 

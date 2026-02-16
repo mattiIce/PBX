@@ -7,6 +7,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class ConversationalAIDatabase:
@@ -15,7 +16,7 @@ class ConversationalAIDatabase:
     Stores conversations, messages, intents, and analytics
     """
 
-    def __init__(self, db_backend) -> None:
+    def __init__(self, db_backend: Any | None) -> None:
         """
         Initialize database layer
 
@@ -258,7 +259,7 @@ class ConversationalAIDatabase:
         except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Error saving intent: {e}")
 
-    def end_conversation(self, call_id: str, final_intent: str, message_count: int):
+    def end_conversation(self, call_id: str, final_intent: str, message_count: int) -> None:
         """Mark conversation as ended"""
         try:
             cursor = self.db.connection.cursor()

@@ -14,6 +14,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class WebhookEvent:
@@ -122,7 +123,7 @@ class WebhookDeliveryQueue:
         self.queue = queue.Queue(maxsize=max_size)
         self.logger = get_logger()
 
-    def enqueue(self, event: WebhookEvent, subscription: WebhookSubscription):
+    def enqueue(self, event: WebhookEvent, subscription: WebhookSubscription) -> None:
         """Add event to delivery queue"""
         try:
             self.queue.put_nowait((event, subscription))
@@ -149,7 +150,7 @@ class WebhookSystem:
     - Delivery status tracking
     """
 
-    def __init__(self, config=None) -> None:
+    def __init__(self, config: Any | None =None) -> None:
         """
         Initialize webhook system
 
@@ -187,7 +188,7 @@ class WebhookSystem:
         else:
             self.logger.info("Webhook system disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None =None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
@@ -211,7 +212,7 @@ class WebhookSystem:
                     f"Loaded webhook subscription: {subscription.url} (events: {subscription.events})"
                 )
 
-    def _start_workers(self):
+    def _start_workers(self) -> None:
         """Start webhook delivery worker threads"""
         self.running = True
         for i in range(self.worker_threads):
@@ -222,7 +223,7 @@ class WebhookSystem:
             self.workers.append(worker)
         self.logger.info(f"Started {self.worker_threads} webhook delivery workers")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the webhook system"""
         self.logger.info("Stopping webhook system...")
         self.running = False
@@ -231,7 +232,7 @@ class WebhookSystem:
                 worker.join(timeout=5)
         self.logger.info("Webhook system stopped")
 
-    def _delivery_worker(self):
+    def _delivery_worker(self) -> None:
         """Worker thread for delivering webhooks"""
         while self.running:
             item = self.delivery_queue.dequeue(timeout=1.0)

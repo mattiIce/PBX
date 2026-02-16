@@ -77,7 +77,7 @@ class UserPresence:
         """Update last activity timestamp"""
         self.last_activity = datetime.now(UTC)
 
-    def get_idle_time(self):
+    def get_idle_time(self) -> float:
         """Get time since last activity in seconds"""
         return (datetime.now(UTC) - self.last_activity).total_seconds()
 
@@ -130,7 +130,7 @@ class PresenceSystem:
             self._notify_subscribers(extension)
         return self.users[extension]
 
-    def unregister_user(self, extension: str):
+    def unregister_user(self, extension: str) -> None:
         """
         Unregister user
 
@@ -198,7 +198,7 @@ class PresenceSystem:
         if user:
             user.update_activity()
 
-    def get_status(self, extension: str):
+    def get_status(self, extension: str) -> dict | None:
         """
         Get user presence status
 
@@ -210,7 +210,7 @@ class PresenceSystem:
         """
         return self.users.get(extension)
 
-    def subscribe(self, subscriber_extension: str, watched_extension: str):
+    def subscribe(self, subscriber_extension: str, watched_extension: str) -> bool:
         """
         Subscribe to presence updates
 
@@ -225,7 +225,7 @@ class PresenceSystem:
             self.subscribers[watched_extension].append(subscriber_extension)
             self.logger.debug(f"{subscriber_extension} subscribed to {watched_extension}")
 
-    def unsubscribe(self, subscriber_extension: str, watched_extension: str):
+    def unsubscribe(self, subscriber_extension: str, watched_extension: str) -> bool:
         """
         Unsubscribe from presence updates
 
@@ -237,7 +237,7 @@ class PresenceSystem:
             if subscriber_extension in self.subscribers[watched_extension]:
                 self.subscribers[watched_extension].remove(subscriber_extension)
 
-    def _notify_subscribers(self, extension: str):
+    def _notify_subscribers(self, extension: str) -> None:
         """
         Notify subscribers of presence change
 

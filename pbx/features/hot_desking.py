@@ -7,6 +7,7 @@ import threading
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class HotDeskSession:
@@ -56,7 +57,7 @@ class HotDeskingSystem:
     - Extension profile migration
     """
 
-    def __init__(self, config=None, pbx_core=None) -> None:
+    def __init__(self, config: Any | None =None, pbx_core: Any | None =None) -> None:
         """
         Initialize hot-desking system
 
@@ -94,13 +95,13 @@ class HotDeskingSystem:
         else:
             self.logger.info("Hot-desking system disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None =None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
-    def _start_cleanup_thread(self):
+    def _start_cleanup_thread(self) -> None:
         """Start auto-logout cleanup thread"""
         self.running = True
         self.cleanup_thread = threading.Thread(
@@ -109,7 +110,7 @@ class HotDeskingSystem:
         self.cleanup_thread.start()
         self.logger.info("Started hot-desking auto-logout thread")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the hot-desking system"""
         self.logger.info("Stopping hot-desking system...")
         self.running = False
@@ -117,7 +118,7 @@ class HotDeskingSystem:
             self.cleanup_thread.join(timeout=5)
         self.logger.info("Hot-desking system stopped")
 
-    def _cleanup_worker(self):
+    def _cleanup_worker(self) -> None:
         """Worker thread for auto-logout"""
         import time
 
@@ -125,7 +126,7 @@ class HotDeskingSystem:
             time.sleep(60)  # Check every minute
             self._auto_logout_inactive_sessions()
 
-    def _auto_logout_inactive_sessions(self):
+    def _auto_logout_inactive_sessions(self) -> None:
         """Automatically log out inactive sessions"""
         with self.lock:
             now = datetime.now(UTC)

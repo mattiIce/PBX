@@ -8,6 +8,7 @@ import sqlite3
 from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class CallQualityPredictionDatabase:
@@ -16,7 +17,7 @@ class CallQualityPredictionDatabase:
     Stores network metrics, predictions, and quality alerts
     """
 
-    def __init__(self, db_backend) -> None:
+    def __init__(self, db_backend: Any | None) -> None:
         """
         Initialize database layer
 
@@ -349,7 +350,7 @@ class CallQualityPredictionDatabase:
             self.logger.error(f"Error getting active alerts: {e}")
             return []
 
-    def acknowledge_alert(self, alert_id: int):
+    def acknowledge_alert(self, alert_id: int) -> bool:
         """Mark alert as acknowledged"""
         try:
             cursor = self.db.connection.cursor()

@@ -7,6 +7,7 @@ import ipaddress
 import sqlite3
 
 from pbx.utils.logger import get_logger
+from typing import Any
 
 
 class NomadicE911Engine:
@@ -15,7 +16,7 @@ class NomadicE911Engine:
     Tracks and updates emergency locations for mobile/remote workers
     """
 
-    def __init__(self, db_backend, config: dict) -> None:
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize Nomadic E911 engine
 
