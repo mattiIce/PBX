@@ -1993,7 +1993,7 @@ def get_quality_predictions() -> tuple[Response, int]:
             pbx_core.config if pbx_core else None,
             getattr(pbx_core, "db", None) if pbx_core else None,
         )
-        predictions = dict(qp.active_predictions.items())
+        predictions = qp.active_predictions.copy()
         return send_json({"predictions": predictions}), 200
     except Exception as e:
         logger.error(f"Error getting quality predictions: {e}")
@@ -2170,7 +2170,7 @@ def calculate_video_bandwidth() -> tuple[Response, int]:
         quality = body.get("quality", "high")
 
         # Validate resolution input
-        if not isinstance(resolution_input, (list, tuple)) or len(resolution_input) != 2:
+        if not isinstance(resolution_input, list | tuple) or len(resolution_input) != 2:
             return send_json({"error": "resolution must be [width, height]"}, 400), 400
 
         try:
@@ -2339,7 +2339,7 @@ def get_recording_analyses() -> tuple[Response, int]:
         from pbx.features.call_recording_analytics import get_recording_analytics
 
         ra = get_recording_analytics(pbx_core.config if pbx_core else None)
-        analyses = dict(ra.analyses.items())
+        analyses = ra.analyses.copy()
         return send_json({"analyses": analyses}), 200
     except Exception as e:
         logger.error(f"Error getting recording analyses: {e}")
@@ -2610,7 +2610,7 @@ def get_sbc_relays() -> tuple[Response, int]:
         from pbx.features.session_border_controller import get_sbc
 
         sbc = get_sbc(pbx_core.config if pbx_core else None)
-        relays = dict(sbc.relay_sessions.items())
+        relays = sbc.relay_sessions.copy()
         return send_json({"relays": relays}), 200
     except Exception as e:
         logger.error(f"Error getting SBC relays: {e}")

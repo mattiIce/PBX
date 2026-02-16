@@ -324,7 +324,7 @@ def format_health_check_response(
 
         if "metrics" in details:
             for key, value in details["metrics"].items():
-                if isinstance(value, (int, float)):
+                if isinstance(value, int | float):
                     lines.append(f"# HELP pbx_{key} {key.replace('_', ' ').title()}")
                     lines.append(f"# TYPE pbx_{key} gauge")
                     lines.append(f"pbx_{key} {value}")

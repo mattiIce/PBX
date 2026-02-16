@@ -438,7 +438,7 @@ class VoiceBiometrics:
                 values = [
                     f.get(key, 0.0)
                     for f in profile.enrollment_features
-                    if isinstance(f.get(key), (int, float))
+                    if isinstance(f.get(key), int | float)
                 ]
                 if values:
                     aggregated_features[key] = sum(values) / len(values)
@@ -555,7 +555,7 @@ class VoiceBiometrics:
                 verify_val = voice_features[key]
 
                 # Normalize and calculate distance
-                if isinstance(stored_val, (int, float)) and isinstance(verify_val, (int, float)):
+                if isinstance(stored_val, int | float) and isinstance(verify_val, int | float):
                     # Use relative difference for comparison
                     max_val = max(abs(stored_val), abs(verify_val), 1e-6)
                     distance = abs(stored_val - verify_val) / max_val

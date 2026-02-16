@@ -239,7 +239,7 @@ class BIIntegration:
 
             if data:
                 # Write headers
-                headers = list(data[0].keys())
+                headers = list(data[0])
                 ws.append(headers)
 
                 # Write data rows

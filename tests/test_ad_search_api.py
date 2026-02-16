@@ -21,7 +21,7 @@ def test_ad_search_users_method() -> None:
     import inspect
 
     sig = inspect.signature(ad_integration.search_users)
-    params = list(sig.parameters.keys())
+    params = list(sig.parameters)
     assert "query" in params, "search_users should accept 'query' parameter"
     assert "max_results" in params, "search_users should accept 'max_results' parameter"
 

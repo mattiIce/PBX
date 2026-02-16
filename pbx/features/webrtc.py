@@ -336,7 +336,7 @@ class WebRTCSignalingServer:
             self.logger.warning(f"Extension {extension} not found in registry for WebRTC session")
             if self.verbose_logging and self.pbx_core:
                 self.logger.warning(
-                    f"[VERBOSE] Available extensions: {list(self.pbx_core.extension_registry.extensions.keys())[:10]}"
+                    f"[VERBOSE] Available extensions: {list(self.pbx_core.extension_registry.extensions)[:10]}"
                 )
 
         if self.on_session_created:
@@ -434,7 +434,7 @@ class WebRTCSignalingServer:
             if self.verbose_logging:
                 self.logger.warning("[VERBOSE] Unknown session details:")
                 self.logger.warning(f"  Session ID: {session_id}")
-                self.logger.warning(f"  Active sessions: {list(self.sessions.keys())}")
+                self.logger.warning(f"  Active sessions: {list(self.sessions)}")
             return False
 
         session.local_sdp = sdp
@@ -817,7 +817,7 @@ class WebRTCGateway:
                     self.logger.error("[VERBOSE] Session lookup failed:")
                     if webrtc_signaling:
                         self.logger.error(
-                            f"  Active sessions: {list(webrtc_signaling.sessions.keys())}"
+                            f"  Active sessions: {list(webrtc_signaling.sessions)}"
                         )
                     else:
                         self.logger.error("  No signaling server provided")
@@ -849,7 +849,7 @@ class WebRTCGateway:
                 if self.verbose_logging:
                     self.logger.error("[VERBOSE] Extension validation failed:")
                     all_exts = (
-                        list(self.pbx_core.extension_registry.extensions.keys())
+                        list(self.pbx_core.extension_registry.extensions)
                         if hasattr(self.pbx_core.extension_registry, "extensions")
                         else []
                     )

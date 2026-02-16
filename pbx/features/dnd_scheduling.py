@@ -547,7 +547,7 @@ class DNDScheduler:
         now = datetime.now(UTC)
 
         for extension in list(
-            set(list(self.rules.keys()) + list(self.calendar_monitor.extension_email_map.keys()))
+            set(self.rules) | set(self.calendar_monitor.extension_email_map)
         ):
             try:
                 # Check manual override first

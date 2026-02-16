@@ -17,7 +17,7 @@ class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder that handles datetime objects."""
 
     def default(self, obj: object) -> Any:
-        if isinstance(obj, (datetime, date)):
+        if isinstance(obj, datetime | date):
             return obj.isoformat()
         return super().default(obj)
 

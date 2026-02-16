@@ -192,7 +192,7 @@ class EnvironmentLoader:
         Returns:
             list of environment variable names (values are masked)
         """
-        return list(self.loaded_vars.keys())
+        return list(self.loaded_vars)
 
     def validate_required_vars(self, required_vars: list[str]) -> tuple[bool, list[str]]:
         """

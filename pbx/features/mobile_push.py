@@ -551,7 +551,7 @@ class MobilePushNotifications:
         cutoff = datetime.now(UTC) - timedelta(days=days)
 
         removed_count = 0
-        for user_id in list(self.device_tokens.keys()):
+        for user_id in list(self.device_tokens):
             original_count = len(self.device_tokens[user_id])
             self.device_tokens[user_id] = [
                 t for t in self.device_tokens[user_id] if t["last_seen"] > cutoff

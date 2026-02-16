@@ -1058,7 +1058,7 @@ P2351 = 1
                             vendor = parts[0]
                             model = "_".join(parts[1:])
 
-                            with open(filepath) as f:
+                            with filepath.open() as f:
                                 template_content = f.read()
 
                             self.add_template(vendor, model, template_content)
@@ -1372,7 +1372,7 @@ P2351 = 1
             error_msg = f"Device {mac_address} not registered in provisioning system"
             self.logger.warning(error_msg)
             self.logger.warning(f"  Normalized MAC: {normalized}")
-            self.logger.warning(f"  Registered devices: {list(self.devices.keys())}")
+            self.logger.warning(f"  Registered devices: {list(self.devices)}")
 
             # Provide helpful guidance
             # Determine protocol based on actual API configuration
@@ -1417,7 +1417,7 @@ P2351 = 1
         if not template:
             error_msg = f"Template not found for {device.vendor} {device.model}"
             self.logger.warning(error_msg)
-            self.logger.warning(f"  Available templates: {list(self.templates.keys())}")
+            self.logger.warning(f"  Available templates: {list(self.templates)}")
             request_log["error"] = error_msg
             self._add_request_log(request_log)
             return None, None
@@ -1756,7 +1756,7 @@ P2351 = 1
         template_path = Path(custom_dir) / template_filename
 
         try:
-            with open(template_path, "w") as f:
+            with template_path.open("w") as f:
                 f.write(template.template_content)
 
             self.logger.info(f"Exported template to: {template_path}")
@@ -1803,7 +1803,7 @@ P2351 = 1
         template_path = Path(custom_dir) / template_filename
 
         try:
-            with open(template_path, "w") as f:
+            with template_path.open("w") as f:
                 f.write(content)
 
             # Update in memory

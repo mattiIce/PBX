@@ -1176,7 +1176,7 @@ class MFAManager:
             """
             )
             # Convert public_key to JSON string if it's a dict/bytes
-            if isinstance(public_key, (dict, bytes)):
+            if isinstance(public_key, dict | bytes):
                 public_key = (
                     json.dumps(public_key)
                     if isinstance(public_key, dict)

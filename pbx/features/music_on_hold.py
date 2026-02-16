@@ -143,7 +143,7 @@ class MusicOnHold:
 
     def get_classes(self) -> list:
         """Get list of available MOH classes"""
-        return list(self.classes.keys())
+        return list(self.classes)
 
     def get_class_files(self, class_name: str) -> list:
         """

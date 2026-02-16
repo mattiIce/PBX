@@ -260,12 +260,12 @@ class IntegrationSetup:
             return
 
         if choice == "all":
-            selected = list(self.INTEGRATIONS.keys())
+            selected = list(self.INTEGRATIONS)
         else:
             try:
                 indices = [int(x.strip()) for x in choice.split(",")]
                 selected = [
-                    list(self.INTEGRATIONS.keys())[i - 1]
+                    list(self.INTEGRATIONS)[i - 1]
                     for i in indices
                     if 1 <= i <= len(self.INTEGRATIONS)
                 ]

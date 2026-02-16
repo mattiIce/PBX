@@ -991,7 +991,7 @@ class ThreatDetector:
 
         try:
             # Validate hours parameter to prevent SQL injection
-            if not isinstance(hours, (int, float)) or hours < 0 or hours > 8760:  # Max 1 year
+            if not isinstance(hours, int | float) or hours < 0 or hours > 8760:  # Max 1 year
                 hours = 24  # Default to 24 hours if invalid
 
             # Count events by type
