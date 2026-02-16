@@ -14,10 +14,10 @@ Features:
 import hashlib
 import json
 import logging
-import os
 import secrets
 from datetime import UTC, datetime, timedelta
 from enum import Enum
+from os import getenv
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class LicenseManager:
     Supports multiple license types and feature gating.
     """
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize license manager.
 
@@ -109,7 +109,7 @@ class LicenseManager:
             return True
 
         # Environment variable (second priority)
-        env_enabled = os.getenv("PBX_LICENSING_ENABLED", "").lower()
+        env_enabled = getenv("PBX_LICENSING_ENABLED", "").lower()
         if env_enabled in ("true", "1", "yes", "on"):
             return True
         if env_enabled in ("false", "0", "no", "of"):
@@ -212,7 +212,7 @@ class LicenseManager:
             return
 
         try:
-            with open(self.license_path) as f:
+            with Path(self.license_path).open() as f:
                 license_data = json.load(f)
 
             # Validate and decrypt license
@@ -379,7 +379,7 @@ class LicenseManager:
             True if saved successfully, False otherwise
         """
         try:
-            with open(self.license_path, "w") as f:
+            with Path(self.license_path).open("w") as f:
                 json.dump(license_data, f, indent=2)
 
             logger.info(f"License saved to {self.license_path}")
@@ -418,11 +418,12 @@ class LicenseManager:
                 "enforcement": "mandatory",
             }
 
-            with open(lock_path, "w") as f:
+            lock_file = Path(lock_path)
+            with lock_file.open("w") as f:
                 json.dump(lock_data, f, indent=2)
 
             # Restrict permissions (owner read/write only)
-            os.chmod(lock_path, 0o600)
+            lock_file.chmod(0o600)
 
             logger.info(
                 f"License lock file created at {lock_path} - licensing enforcement is now mandatory"

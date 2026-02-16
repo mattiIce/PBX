@@ -399,7 +399,7 @@ class PBXMetricsExporter:
         """
         self.errors_total.labels(error_type=error_type, component=component).inc()
 
-    def record_auth_attempt(self, status: str, method: str = "password"):
+    def record_auth_attempt(self, status: str, method: str = "password") -> None:
         """
         Record authentication attempt.
 
@@ -409,7 +409,7 @@ class PBXMetricsExporter:
         """
         self.authentication_attempts.labels(status=status, method=method).inc()
 
-    def update_certificate_expiry(self, cert_name: str, days_until_expiry: int):
+    def update_certificate_expiry(self, cert_name: str, days_until_expiry: int) -> None:
         """
         Update certificate expiry metric.
 
@@ -428,7 +428,7 @@ class PBXMetricsExporter:
         """
         return generate_latest(self.registry)
 
-    def set_system_info(self, version: str, **kwargs):
+    def set_system_info(self, version: str, **kwargs: str) -> None:
         """
         set system information.
 

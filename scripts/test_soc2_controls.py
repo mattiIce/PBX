@@ -16,11 +16,10 @@ import argparse
 import json
 import sys
 from datetime import UTC, datetime
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from pathlib import Path
 
 from pbx.features.compliance_framework import SOC2ComplianceEngine
 from pbx.utils.config import Config
@@ -74,9 +73,9 @@ class SOC2ControlTester:
         self.engine = SOC2ComplianceEngine(self.db, self.config.config)
         return True
 
-    def print_status(self, message: str, status: str = "INFO"):
+    def print_status(self, message: str, status: str = "INFO") -> None:
         """
-        Print status message
+        Print status message.
 
         Args:
             message: Message to print
@@ -502,8 +501,8 @@ class SOC2ControlTester:
 
         return passed
 
-    def print_summary(self):
-        """Print test summary"""
+    def print_summary(self) -> None:
+        """Print test summary."""
         if not self.verbose:
             return
 
@@ -533,8 +532,8 @@ class SOC2ControlTester:
         print()
 
 
-def main():
-    """Main entry point"""
+def main() -> int:
+    """Main entry point."""
     parser = argparse.ArgumentParser(description="SOC 2 Type 2 Controls Testing Script")
     parser.add_argument(
         "--config",

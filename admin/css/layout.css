@@ -101,8 +101,8 @@ header h1 {
 }
 
 .sidebar-section {
-    padding: 20px 0 10px 0;
-    border-bottom: 1px solid #e1e8ed;
+    padding: var(--space-lg) 0 var(--space-sm) 0;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .sidebar-section:last-child {
@@ -110,13 +110,13 @@ header h1 {
 }
 
 .sidebar-section-title {
-    font-size: 0.75rem;
-    font-weight: 700;
+    font-size: var(--font-size-xs);
+    font-weight: var(--font-weight-bold);
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    color: #6c757d;
-    padding: 0 20px 10px 20px;
-    margin-bottom: 5px;
+    color: var(--color-text-secondary);
+    padding: 0 var(--space-lg) var(--space-sm) var(--space-lg);
+    margin-bottom: var(--space-xs);
 }
 
 /* Navigation Tab Buttons */
@@ -124,17 +124,17 @@ header h1 {
     display: flex;
     align-items: center;
     width: 100%;
-    padding: 12px 20px;
+    padding: var(--space-md) var(--space-lg);
     background: none;
     border: none;
     border-left: 3px solid transparent;
     cursor: pointer;
     font-size: 0.95rem;
-    font-weight: 500;
-    color: #6c757d;
-    transition: all 0.2s ease;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-text-secondary);
+    transition: all var(--transition-fast);
     text-align: left;
-    gap: 12px;
+    gap: var(--space-md);
 }
 
 .tab-button:hover {
@@ -177,14 +177,14 @@ header h1 {
     flex: 1 !important;
     overflow-y: auto;
     overflow-x: hidden;
-    background: #f5f7fa;
+    background: var(--color-bg);
     min-height: 0;
 }
 
 /* Tab Content */
 .tab-content {
     display: none;
-    padding: 30px;
+    padding: var(--space-xl);
     animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
