@@ -74,7 +74,7 @@ cp config.yml your_config.yml
 python scripts/generate_ssl_cert.py --hostname YOUR_IP_OR_HOSTNAME
 
 # 8. Generate voice prompts (REQUIRED)
-python scripts/generate_voice_prompts.py
+python scripts/generate_tts_prompts.py
 
 # 9. Start PBX (with auto-reload for development)
 make dev              # Backend + frontend with hot reload
@@ -172,7 +172,7 @@ sudo scripts/setup_reverse_proxy.sh
 **Option B: In-House Certificate Authority**
 ```bash
 # If you have an enterprise CA
-python scripts/request_certificate.py --ca-server ca.yourcompany.com
+python scripts/request_ca_cert.py --ca-server ca.yourcompany.com
 ```
 
 **Option C: Self-Signed (Development Only)**
@@ -183,7 +183,7 @@ python scripts/generate_ssl_cert.py --hostname pbx.yourcompany.com
 #### Step 3: Generate Voice Prompts (CRITICAL)
 ```bash
 # Voice prompts are REQUIRED for auto-attendant and voicemail
-python scripts/generate_voice_prompts.py
+python scripts/generate_tts_prompts.py
 
 # Verify prompts were created
 ls -lh voicemail_prompts/
@@ -563,7 +563,7 @@ voicemail:
 ```bash
 # PostgreSQL (recommended for production)
 sudo -u postgres createdb pbx_voicemail
-python scripts/init_voicemail_db.py
+python scripts/init_database.py
 
 # Tables created:
 # - voicemail_messages: metadata (caller, timestamp, duration, listened)
@@ -638,10 +638,10 @@ auto_attendant:
 **Generating Voice Prompts:**
 ```bash
 # Generate all default prompts
-python scripts/generate_voice_prompts.py
+python scripts/generate_tts_prompts.py
 
 # Generate custom prompt
-python scripts/generate_voice_prompts.py --text "Thank you for calling ABC Company" --output auto_attendant/prompts/custom_welcome.wav
+python scripts/generate_tts_prompts.py --text "Thank you for calling ABC Company" --output auto_attendant/prompts/custom_welcome.wav
 ```
 
 ### 4.3 Phone Provisioning
@@ -1128,7 +1128,7 @@ sudo certbot certonly --standalone -d pbx.company.com
 
 **In-House CA:**
 ```bash
-python scripts/request_certificate.py \
+python scripts/request_ca_cert.py \
   --ca-server ca.company.com \
   --common-name pbx.company.com
 ```
@@ -1266,7 +1266,7 @@ sudo ufw allow 10000:20000/udp
 # Check config.yml codecs match phone codecs
 
 # Regenerate voice prompts at correct sample rate
-python scripts/generate_voice_prompts.py
+python scripts/generate_tts_prompts.py
 ```
 
 **Issue: Extensions Won't Register**
@@ -1287,7 +1287,7 @@ tail -f logs/pbx.log | grep SIP
 python scripts/verify_database.py
 
 # Initialize voicemail DB
-python scripts/init_voicemail_db.py
+python scripts/init_database.py
 
 # Verify voice prompts exist
 ls -lh voicemail_prompts/
@@ -1296,7 +1296,7 @@ ls -lh voicemail_prompts/
 **Issue: Email Notifications Not Sending**
 ```bash
 # Test SMTP settings
-python scripts/test_email.py
+python -c "import smtplib; s=smtplib.SMTP('localhost'); s.quit(); print('OK')"
 
 # Check .env credentials
 cat .env | grep SMTP
@@ -1329,10 +1329,13 @@ sudo systemctl start pbx
 **Database Migration:**
 ```bash
 # Export from SQLite
-python scripts/export_db.py --from sqlite --output export.json
+sqlite3 pbx.db .dump > export.sql
 
 # Import to PostgreSQL
-python scripts/import_db.py --to postgresql --input export.json
+psql -U pbx_user -d pbx_system < export.sql
+
+# Or use Alembic to set up a fresh PostgreSQL schema
+alembic upgrade head
 ```
 
 ### 7.4 Log Management
@@ -1417,7 +1420,7 @@ Metrics include:
 **Full System Backup:**
 ```bash
 # Backup script (run as root)
-sudo /opt/pbx/scripts/backup_full.sh
+sudo /opt/pbx/scripts/backup.sh
 
 # Creates:
 # - Database dump
@@ -1433,7 +1436,7 @@ sudo /opt/pbx/scripts/backup_full.sh
 sudo systemctl stop pbx
 
 # Restore from backup
-sudo /opt/pbx/scripts/restore_backup.sh /backup/pbx_20250115.tar.gz
+sudo tar xzf /backup/pbx_20250115.tar.gz -C /opt/pbx/
 
 # Verify database
 python scripts/verify_database.py
@@ -1470,7 +1473,7 @@ This section covers how to safely update your PBX system, including:
 1. **Create a full backup:**
    ```bash
    # Automated backup script
-   sudo /opt/pbx/scripts/backup_full.sh
+   sudo /opt/pbx/scripts/backup.sh
    
    # Manual backup
    BACKUP_DIR="/var/backups/pbx/manual-$(date +%Y%m%d-%H%M%S)"
@@ -1626,7 +1629,7 @@ sudo systemctl status pbx
 ```bash
 # Regenerate voice prompts (if espeak was updated)
 cd /opt/pbx
-python scripts/generate_voice_prompts.py
+python scripts/generate_tts_prompts.py
 
 # Test audio functionality
 python scripts/test_audio_comprehensive.py
@@ -2129,7 +2132,7 @@ git fetch origin
 git log HEAD..origin/main
 
 # 2. Create backup
-sudo /opt/pbx/scripts/backup_full.sh
+sudo /opt/pbx/scripts/backup.sh
 
 # 3. Apply update during maintenance window
 sudo systemctl stop pbx
@@ -2528,9 +2531,9 @@ integrations:
 | No audio | Check firewall: `sudo ufw allow 10000:20000/udp` |
 | Won't register | Verify SIP port: `sudo ufw allow 5060/udp` |
 | Login fails | Clear cache: `Ctrl+Shift+R`, check service: `systemctl status pbx` |
-| Email not sending | Test: `python scripts/test_email.py` |
+| Email not sending | Check SMTP config in `.env`, verify connectivity |
 | Database error | Verify: `python scripts/verify_database.py` |
-| Voice prompts missing | Generate: `python scripts/generate_voice_prompts.py` |
+| Voice prompts missing | Generate: `python scripts/generate_tts_prompts.py` |
 
 ### Appendix F: Additional Resources
 

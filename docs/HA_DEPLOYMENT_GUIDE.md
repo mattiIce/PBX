@@ -161,7 +161,7 @@ This guide describes how to deploy the Warden VoIP PBX system in a high availabi
 ```bash
 # Install PostgreSQL
 sudo apt-get update
-sudo apt-get install -y postgresql-14
+sudo apt-get install -y postgresql-17
 
 # Configure for replication
 sudo -u postgres psql << EOF
