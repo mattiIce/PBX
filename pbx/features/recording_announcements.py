@@ -6,15 +6,15 @@ Auto-play recording disclosure before recording starts
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class RecordingAnnouncements:
     """System for playing recording disclosure announcements"""
 
-    def __init__(self, config: Any | None =None, database: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None, database: Any | None = None) -> None:
         """Initialize recording announcements"""
         self.logger = get_logger()
         self.config = config or {}

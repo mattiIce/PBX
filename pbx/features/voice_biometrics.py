@@ -9,9 +9,9 @@ import sqlite3
 import struct
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # ML libraries for improved accuracy
 try:
@@ -88,7 +88,7 @@ class VoiceBiometrics:
     - Microsoft Azure Speaker Recognition
     """
 
-    def __init__(self, config: Any | None =None, db_backend: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None, db_backend: Any | None = None) -> None:
         """Initialize voice biometrics system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -769,7 +769,9 @@ class VoiceBiometrics:
 _voice_biometrics = None
 
 
-def get_voice_biometrics(config: Any | None =None, db_backend: Any | None =None) -> VoiceBiometrics:
+def get_voice_biometrics(
+    config: Any | None = None, db_backend: Any | None = None
+) -> VoiceBiometrics:
     """Get or create voice biometrics instance"""
     global _voice_biometrics
     if _voice_biometrics is None:

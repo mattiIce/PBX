@@ -5,9 +5,9 @@ SAML/OAuth enterprise authentication using free libraries
 
 import secrets
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # Try to import SAML library (free)
 try:
@@ -19,7 +19,7 @@ except ImportError:
 class SSOAuthService:
     """Single Sign-On authentication service"""
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize SSO service"""
         self.logger = get_logger()
         self.config = config or {}

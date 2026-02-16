@@ -6,9 +6,9 @@ Note: GDPR and PCI DSS engines are commented out as they are not required for US
 
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # GDPR Compliance Engine - COMMENTED OUT (Not required for US-based operations)
 # Preserved for potential future international use

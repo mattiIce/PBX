@@ -24,7 +24,7 @@ class PresenceStatus(Enum):
 class UserPresence:
     """Represents presence information for a user"""
 
-    def __init__(self, extension: str, name: str ="") -> None:
+    def __init__(self, extension: str, name: str = "") -> None:
         """
         Initialize user presence
 
@@ -41,7 +41,7 @@ class UserPresence:
         self.in_call = False
         self.call_id = None
 
-    def set_status(self, status: str, custom_message: str ="") -> None:
+    def set_status(self, status: str, custom_message: str = "") -> None:
         """
         set presence status
 
@@ -97,7 +97,7 @@ class UserPresence:
 class PresenceSystem:
     """Manages presence for all users"""
 
-    def __init__(self, auto_away_timeout: int =300, auto_offline_timeout: int =1800) -> None:
+    def __init__(self, auto_away_timeout: int = 300, auto_offline_timeout: int = 1800) -> None:
         """
         Initialize presence system
 
@@ -111,7 +111,7 @@ class PresenceSystem:
         self.auto_away_timeout = auto_away_timeout
         self.auto_offline_timeout = auto_offline_timeout
 
-    def register_user(self, extension: str, name: str ="") -> None:
+    def register_user(self, extension: str, name: str = "") -> None:
         """
         Register user for presence
 
@@ -142,7 +142,7 @@ class PresenceSystem:
             user.set_status(PresenceStatus.OFFLINE)
             self._notify_subscribers(extension)
 
-    def set_status(self, extension: str, status: str, custom_message: str ="") -> bool:
+    def set_status(self, extension: str, status: str, custom_message: str = "") -> bool:
         """
         set user status
 

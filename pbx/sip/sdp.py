@@ -12,7 +12,9 @@ class SDPSession:
     def __init__(self) -> None:
         """Initialize SDP session with default values."""
         self.version: int = 0
-        self.origin: dict[str, str] = {}  # username, session_id, version, network_type, address_type, address
+        self.origin: dict[
+            str, str
+        ] = {}  # username, session_id, version, network_type, address_type, address
         self.session_name: str = "-"
         self.connection: dict[str, str] = {}  # network_type, address_type, address
         self.media: list[dict[str, Any]] = []  # list of media descriptions

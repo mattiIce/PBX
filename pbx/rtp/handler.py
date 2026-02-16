@@ -203,7 +203,9 @@ class RTPRelay:
         self.port_range_end: int = port_range_end
         self.active_relays: dict[str, dict[str, Any]] = {}
         self.logger = get_logger()
-        self.port_pool: list[int] = list(range(port_range_start, port_range_end, 2))  # Even ports for RTP
+        self.port_pool: list[int] = list(
+            range(port_range_start, port_range_end, 2)
+        )  # Even ports for RTP
         self.qos_monitor: QoSMonitor | None = qos_monitor
 
     def allocate_relay(self, call_id: str) -> tuple[int, int] | None:
@@ -237,9 +239,7 @@ class RTPRelay:
         self.port_pool.insert(0, rtp_port)
         return None
 
-    def set_endpoints(
-        self, call_id: str, endpoint_a: AddrTuple, endpoint_b: AddrTuple
-    ) -> None:
+    def set_endpoints(self, call_id: str, endpoint_a: AddrTuple, endpoint_b: AddrTuple) -> None:
         """
         Set both endpoints for RTP relay.
 
@@ -314,9 +314,7 @@ class RTPRelayHandler:
             self.qos_metrics_b_to_a = self.qos_monitor.start_monitoring(f"{call_id}_b_to_a")
             self.logger.debug("QoS monitoring started for call %s (both directions)", call_id)
 
-    def set_endpoints(
-        self, endpoint_a: AddrTuple | None, endpoint_b: AddrTuple | None
-    ) -> None:
+    def set_endpoints(self, endpoint_a: AddrTuple | None, endpoint_b: AddrTuple | None) -> None:
         """
         Set the two endpoints to relay between.
 

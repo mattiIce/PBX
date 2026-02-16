@@ -6,9 +6,9 @@ Web and application-based dialing with WebRTC integration
 import sqlite3
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class ClickToDialEngine:
@@ -17,7 +17,7 @@ class ClickToDialEngine:
     Enables dialing from web interfaces and applications
     """
 
-    def __init__(self, db_backend: Any | None, config: dict, pbx_core: Any | None =None) -> None:
+    def __init__(self, db_backend: Any | None, config: dict, pbx_core: Any | None = None) -> None:
         """
         Initialize click-to-dial engine
 

@@ -6,9 +6,9 @@ import json
 import wave
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # Constants for Vosk transcription
 VOSK_FRAME_SIZE = 4000  # Number of frames to read per chunk
@@ -35,7 +35,7 @@ except ImportError:
 class VoicemailTranscriptionService:
     """Service for transcribing voicemail messages to text"""
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """
         Initialize transcription service
 
@@ -91,7 +91,7 @@ class VoicemailTranscriptionService:
             else:
                 self.logger.debug("Voicemail transcription service disabled in configuration")
 
-    def transcribe(self, audio_file_path: str, language: str ="en-US") -> dict:
+    def transcribe(self, audio_file_path: str, language: str = "en-US") -> dict:
         """
         Transcribe voicemail audio file to text
 
@@ -166,7 +166,9 @@ class VoicemailTranscriptionService:
                 "error": str(e),
             }
 
-    def _create_error_response(self, error_msg: str, language: str, provider: str | None =None) -> dict:
+    def _create_error_response(
+        self, error_msg: str, language: str, provider: str | None = None
+    ) -> dict:
         """
         Helper method to create error response structure
 
@@ -188,7 +190,7 @@ class VoicemailTranscriptionService:
             "error": error_msg,
         }
 
-    def _transcribe_vosk(self, audio_file_path: str, language: str ="en-US") -> dict:
+    def _transcribe_vosk(self, audio_file_path: str, language: str = "en-US") -> dict:
         """
         Transcribe using Vosk (offline, free speech recognition)
 
@@ -273,7 +275,7 @@ class VoicemailTranscriptionService:
             self.logger.error(f"Vosk transcription error: {e}")
             return self._create_error_response(str(e), language, "vosk")
 
-    def _transcribe_google(self, audio_file_path: str, language: str ="en-US") -> dict:
+    def _transcribe_google(self, audio_file_path: str, language: str = "en-US") -> dict:
         """
         Transcribe using Google Cloud Speech-to-Text API
 

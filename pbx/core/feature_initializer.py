@@ -5,6 +5,9 @@ Extracts the feature subsystem initialization logic from PBXCore.__init__
 into a dedicated class for better modularity and maintainability.
 """
 
+import logging
+from typing import Any
+
 from pbx.features.call_parking import CallParkingSystem
 from pbx.features.call_queue import QueueSystem
 from pbx.features.call_recording import CallRecordingSystem
@@ -25,7 +28,7 @@ class FeatureInitializer:
     """Handles initialization of all PBX feature subsystems"""
 
     @staticmethod
-    def initialize(pbx_core):
+    def initialize(pbx_core: Any) -> None:
         """
         Initialize all feature subsystems on a PBXCore instance.
 
@@ -41,7 +44,7 @@ class FeatureInitializer:
         database = pbx_core.database
 
         # Initialize advanced features
-        voicemail_path = config.get("voicemail.storage_path", "voicemail")
+        voicemail_path: str = config.get("voicemail.storage_path", "voicemail")
         pbx_core.voicemail_system = VoicemailSystem(
             storage_path=voicemail_path,
             config=config,
@@ -287,13 +290,15 @@ class FeatureInitializer:
             pbx_core.skills_router = None
 
     @staticmethod
-    def _init_active_directory(pbx_core, config):
+    def _init_active_directory(pbx_core: Any, config: Any) -> None:
         """Initialize Active Directory integration"""
         from pbx.integrations.active_directory import ActiveDirectoryIntegration
 
-        config_file = config._config_file if hasattr(config, "_config_file") else "config.yml"
+        config_file: str = (
+            config._config_file if hasattr(config, "_config_file") else "config.yml"
+        )
 
-        ad_config = {
+        ad_config: dict[str, Any] = {
             "integrations.active_directory.enabled": config.get(
                 "integrations.active_directory.enabled"
             ),
@@ -341,7 +346,7 @@ class FeatureInitializer:
                     )
 
                     # Handle both int and dict return types
-                    synced_count = (
+                    synced_count: int = (
                         sync_result
                         if isinstance(sync_result, int)
                         else sync_result.get("synced_count", 0)
@@ -375,7 +380,9 @@ class FeatureInitializer:
             pbx_core.ad_integration = None
 
     @staticmethod
-    def _init_open_source_integrations(pbx_core, config, logger):
+    def _init_open_source_integrations(
+        pbx_core: Any, config: Any, logger: logging.Logger
+    ) -> None:
         """Initialize open-source and third-party integrations"""
         # Jitsi Meet - Video conferencing
         if config.get("integrations.jitsi.enabled", False):

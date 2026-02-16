@@ -5,9 +5,9 @@ Voicemail system
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
-from typing import Any
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -53,11 +53,11 @@ class VoicemailBox:
     def __init__(
         self,
         extension_number: str,
-        storage_path: str ="voicemail",
-        config: Any | None =None,
-        email_notifier: Any | None =None,
-        database: Any | None =None,
-        transcription_service: Any | None =None,
+        storage_path: str = "voicemail",
+        config: Any | None = None,
+        email_notifier: Any | None = None,
+        database: Any | None = None,
+        transcription_service: Any | None = None,
     ) -> None:
         """
         Initialize voicemail box
@@ -126,7 +126,7 @@ class VoicemailBox:
             return "%s"
         return "?"
 
-    def save_message(self, caller_id: str, audio_data: bytes, duration: float | None =None) -> str:
+    def save_message(self, caller_id: str, audio_data: bytes, duration: float | None = None) -> str:
         """
         Save voicemail message
 
@@ -339,7 +339,7 @@ class VoicemailBox:
 
         return message_id
 
-    def get_messages(self, unread_only: bool =False) -> list:
+    def get_messages(self, unread_only: bool = False) -> list:
         """
         Get voicemail messages
 
@@ -474,7 +474,9 @@ class VoicemailBox:
                                 # Try common timestamp formats
                                 for fmt in ["%Y-%m-%d %H:%M:%S.%", "%Y-%m-%d %H:%M:%S"]:
                                     try:
-                                        timestamp = datetime.strptime(timestamp, fmt).replace(tzinfo=UTC)
+                                        timestamp = datetime.strptime(timestamp, fmt).replace(
+                                            tzinfo=UTC
+                                        )
                                         break
                                     except ValueError:
                                         continue
@@ -547,7 +549,9 @@ class VoicemailBox:
                     time_str = parts[2]
 
                     try:
-                        timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S").replace(tzinfo=UTC)
+                        timestamp = datetime.strptime(
+                            f"{date_str}_{time_str}", "%Y%m%d_%H%M%S"
+                        ).replace(tzinfo=UTC)
 
                         message = {
                             "id": name_without_ext,
@@ -700,7 +704,12 @@ class VoicemailBox:
 class VoicemailSystem:
     """Manages voicemail for all extensions"""
 
-    def __init__(self, storage_path: str ="voicemail", config: Any | None =None, database: Any | None =None) -> None:
+    def __init__(
+        self,
+        storage_path: str = "voicemail",
+        config: Any | None = None,
+        database: Any | None = None,
+    ) -> None:
         """
         Initialize voicemail system
 
@@ -745,7 +754,13 @@ class VoicemailSystem:
             )
         return self.mailboxes[extension_number]
 
-    def save_message(self, extension_number: str, caller_id: str, audio_data: bytes, duration: float | None =None) -> str:
+    def save_message(
+        self,
+        extension_number: str,
+        caller_id: str,
+        audio_data: bytes,
+        duration: float | None = None,
+    ) -> str:
         """
         Save voicemail message
 
@@ -785,7 +800,7 @@ class VoicemailSystem:
 
         return count
 
-    def get_message_count(self, extension_number: str, unread_only: bool =True) -> int:
+    def get_message_count(self, extension_number: str, unread_only: bool = True) -> int:
         """
         Get message count for extension
 

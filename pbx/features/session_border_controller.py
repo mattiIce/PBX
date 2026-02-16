@@ -9,9 +9,9 @@ import time
 from collections import defaultdict
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class NATType(Enum):
@@ -43,7 +43,7 @@ class SessionBorderController:
     IP_PATTERN = r"(\d+\.\d+\.\d+\.\d+)"
     PACKETS_PER_SECOND = 50  # Assumed packets per second for VoIP bandwidth calculation
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize SBC"""
         self.logger = get_logger()
         self.config = config or {}
@@ -554,7 +554,7 @@ class SessionBorderController:
 _sbc = None
 
 
-def get_sbc(config: Any | None =None) -> SessionBorderController:
+def get_sbc(config: Any | None = None) -> SessionBorderController:
     """Get or create SBC instance"""
     global _sbc
     if _sbc is None:

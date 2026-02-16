@@ -12,7 +12,7 @@ from pbx.utils.logger import get_logger
 class MusicOnHold:
     """Manages music on hold"""
 
-    def __init__(self, moh_directory: str ="moh", default_class: str ="default") -> None:
+    def __init__(self, moh_directory: str = "moh", default_class: str = "default") -> None:
         """
         Initialize MOH system
 
@@ -64,7 +64,7 @@ class MusicOnHold:
 
         return sorted(audio_files)
 
-    def start_moh(self, call_id: str, moh_class: str | None =None) -> Path | None:
+    def start_moh(self, call_id: str, moh_class: str | None = None) -> Path | None:
         """
         Start music on hold for call
 

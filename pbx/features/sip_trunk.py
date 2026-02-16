@@ -8,10 +8,10 @@ import threading
 import time
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.e911_protection import E911Protection
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class TrunkStatus(Enum):
@@ -43,11 +43,11 @@ class SIPTrunk:
         host: str,
         username: str,
         password: str,
-        port: int =5060,
-        codec_preferences: list | None =None,
-        priority: int =100,
-        max_channels: int =10,
-        health_check_interval: int =60,
+        port: int = 5060,
+        codec_preferences: list | None = None,
+        priority: int = 100,
+        max_channels: int = 10,
+        health_check_interval: int = 60,
     ) -> None:
         """
         Initialize SIP trunk
@@ -290,7 +290,9 @@ class SIPTrunk:
 class OutboundRule:
     """Routing rule for outbound calls"""
 
-    def __init__(self, rule_id: str, pattern: str, trunk_id: str, prepend: str ="", strip: int =0) -> None:
+    def __init__(
+        self, rule_id: str, pattern: str, trunk_id: str, prepend: str = "", strip: int = 0
+    ) -> None:
         """
         Initialize outbound rule
 
@@ -345,7 +347,7 @@ class OutboundRule:
 class SIPTrunkSystem:
     """Manages SIP trunks for external calls with health monitoring and failover"""
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize SIP trunk system
 
         Args:
@@ -705,7 +707,7 @@ class SIPTrunkSystem:
 _trunk_manager = None
 
 
-def get_trunk_manager(config: Any | None =None) -> SIPTrunkSystem:
+def get_trunk_manager(config: Any | None = None) -> SIPTrunkSystem:
     """
     Get or create SIP trunk manager instance.
 

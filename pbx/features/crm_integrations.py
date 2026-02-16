@@ -4,9 +4,9 @@ HubSpot and Zendesk integration for marketing and support
 """
 
 import sqlite3
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class HubSpotIntegration:

@@ -5,9 +5,9 @@ Routes calls to agents based on their skills and expertise
 
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class Skill:
@@ -89,7 +89,7 @@ class SkillsBasedRouter:
     Routes calls to agents based on required skills and agent proficiency
     """
 
-    def __init__(self, database: Any | None =None, config: dict | None = None) -> None:
+    def __init__(self, database: Any | None = None, config: dict | None = None) -> None:
         """
         Initialize skills-based router
 
@@ -122,7 +122,7 @@ class SkillsBasedRouter:
         if self.enabled:
             self.logger.info("Skills-Based Routing initialized")
 
-    def _get_config(self, key: str, default: Any | None =None) -> Any:
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get config value supporting both dot notation and nested dicts"""
         if hasattr(self.config, "get") and "." in key:
             value = self.config.get(key, None)
@@ -564,6 +564,6 @@ class SkillsBasedRouter:
         return reqs
 
 
-def get_skills_router(database: Any | None =None, config: dict | None = None) -> SkillsBasedRouter:
+def get_skills_router(database: Any | None = None, config: dict | None = None) -> SkillsBasedRouter:
     """Get skills-based router instance"""
     return SkillsBasedRouter(database, config)

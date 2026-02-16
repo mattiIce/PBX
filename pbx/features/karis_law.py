@@ -17,9 +17,9 @@ References:
 
 import re
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # Import for multi-site E911 support (avoid repeated imports in methods)
 try:

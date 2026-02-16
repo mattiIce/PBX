@@ -5,9 +5,9 @@ Provides persistence for conversations, intents, and statistics
 
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class ConversationalAIDatabase:
@@ -189,7 +189,9 @@ class ConversationalAIDatabase:
             self.logger.error(f"Error saving conversation: {e}")
             return None
 
-    def save_message(self, conversation_id: int, role: str, content: str, timestamp: datetime) -> None:
+    def save_message(
+        self, conversation_id: int, role: str, content: str, timestamp: datetime
+    ) -> None:
         """Save a message in the conversation"""
         try:
             cursor = self.db.connection.cursor()

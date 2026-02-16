@@ -18,7 +18,24 @@ if TYPE_CHECKING:
 type AddrTuple = tuple[str, int]
 
 # Valid DTMF digits for SIP INFO validation
-VALID_DTMF_DIGITS: list[str] = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#", "A", "B", "C", "D"]
+VALID_DTMF_DIGITS: list[str] = [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "*",
+    "#",
+    "A",
+    "B",
+    "C",
+    "D",
+]
 
 # RFC 2833 Event Code to DTMF digit mapping (for SIP INFO messages that send event codes)
 # Some phones send "Signal=11" instead of "Signal=#"

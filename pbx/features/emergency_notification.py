@@ -9,9 +9,9 @@ import threading
 import time
 from datetime import UTC, datetime
 from email.utils import formatdate
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class EmergencyContact:
@@ -64,7 +64,9 @@ class EmergencyNotificationSystem:
     during emergency situations (911 calls, panic buttons, etc.)
     """
 
-    def __init__(self, pbx_core: Any | None, config: dict | None = None, database: Any | None =None) -> None:
+    def __init__(
+        self, pbx_core: Any | None, config: dict | None = None, database: Any | None = None
+    ) -> None:
         """
         Initialize emergency notification system
 
@@ -425,7 +427,9 @@ class EmergencyNotificationSystem:
             if "sms" not in notification_record["methods_used"]:
                 notification_record["methods_used"].append("sms")
 
-    def _send_call_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
+    def _send_call_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send call notification to contact"""
         if not contact.extension:
             self.logger.warning(f"Cannot call {contact.name}: no extension configured")
@@ -469,14 +473,18 @@ class EmergencyNotificationSystem:
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error initiating emergency call: {e}")
 
-    def _send_page_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
+    def _send_page_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send overhead page notification"""
         if hasattr(self.pbx_core, "paging_system") and self.pbx_core.paging_system.enabled:
             # Use all-call paging for emergencies
             self.logger.warning(f"🔊 Emergency page triggered: {trigger_type}")
             # In full implementation, would trigger actual overhead paging
 
-    def _send_email_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
+    def _send_email_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send email notification"""
         if not contact.email:
             self.logger.warning(f"Cannot email {contact.name}: no email configured")
@@ -537,7 +545,9 @@ PBX Emergency Notification System
                 lines.append(f"  {key}: {value}")
         return "\n".join(lines)
 
-    def _send_email_direct(self, to_address: str, subject: str, body: str, email_notifier: Any | None) -> None:
+    def _send_email_direct(
+        self, to_address: str, subject: str, body: str, email_notifier: Any | None
+    ) -> None:
         """Send email directly using SMTP"""
         import smtplib
         from email.mime.multipart import MIMEMultipart
@@ -564,7 +574,9 @@ PBX Emergency Notification System
         server.send_message(msg)
         server.quit()
 
-    def _send_sms_notification(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
+    def _send_sms_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send SMS notification"""
         if not contact.phone:
             self.logger.warning(f"Cannot SMS {contact.name}: no phone configured")
@@ -716,7 +728,9 @@ PBX Emergency Notification System
         with self.lock:
             return self.notification_history[-limit:]
 
-    def on_911_call(self, caller_extension: str, caller_name: str, location: str | None = None) -> None:
+    def on_911_call(
+        self, caller_extension: str, caller_name: str, location: str | None = None
+    ) -> None:
         """
         Handle 911 call detection
 

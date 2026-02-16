@@ -19,7 +19,9 @@ if TYPE_CHECKING:
 class WebRTCSession:
     """Represents a WebRTC session"""
 
-    def __init__(self, session_id: str, extension: str, peer_connection_id: str | None = None) -> None:
+    def __init__(
+        self, session_id: str, extension: str, peer_connection_id: str | None = None
+    ) -> None:
         """
         Initialize WebRTC session
 
@@ -68,7 +70,7 @@ class WebRTCSignalingServer:
     - Integration with SIP infrastructure
     """
 
-    def __init__(self, config: Any | None =None, pbx_core: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None, pbx_core: Any | None = None) -> None:
         """
         Initialize WebRTC signaling server
 
@@ -159,7 +161,7 @@ class WebRTCSignalingServer:
         else:
             self.logger.info("WebRTC signaling server disabled")
 
-    def _get_config(self, key: str, default: Any | None =None) -> Any:
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
@@ -590,7 +592,7 @@ class WebRTCSignalingServer:
         session.update_activity()
         return True
 
-    def get_session_metadata(self, session_id: str, key: str, default: Any | None =None) -> Any:
+    def get_session_metadata(self, session_id: str, key: str, default: Any | None = None) -> Any:
         """Get metadata from a session"""
         session = self.get_session(session_id)
         if not session:
@@ -609,7 +611,7 @@ class WebRTCGateway:
     - Manages RTP/SRTP bridging
     """
 
-    def __init__(self, pbx_core: Any | None =None) -> None:
+    def __init__(self, pbx_core: Any | None = None) -> None:
         """
         Initialize WebRTC gateway
 
@@ -783,7 +785,7 @@ class WebRTCGateway:
             return sip_sdp
 
     def initiate_call(
-        self, session_id: str, target_extension: str, webrtc_signaling: Any | None =None
+        self, session_id: str, target_extension: str, webrtc_signaling: Any | None = None
     ) -> str | None:
         """
         Initiate a call from WebRTC client to extension
@@ -1152,7 +1154,11 @@ class WebRTCGateway:
             return None
 
     def receive_call(
-        self, session_id: str, call_id: str, caller_sdp: str | None = None, webrtc_signaling: Any | None =None
+        self,
+        session_id: str,
+        call_id: str,
+        caller_sdp: str | None = None,
+        webrtc_signaling: Any | None = None,
     ) -> bool:
         """
         Route incoming call to WebRTC client
@@ -1226,7 +1232,7 @@ class WebRTCGateway:
             self.logger.debug(traceback.format_exc())
             return False
 
-    def answer_call(self, session_id: str, webrtc_signaling: Any | None =None) -> bool:
+    def answer_call(self, session_id: str, webrtc_signaling: Any | None = None) -> bool:
         """
         Handle WebRTC client answering an incoming call
 

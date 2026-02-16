@@ -6,10 +6,10 @@ Provides advanced call handling for receptionists and front desk staff
 import json
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pbx.core.call import CallState
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class OperatorConsole:

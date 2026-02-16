@@ -299,7 +299,7 @@ class HealthMonitor:
         self.health_data["checks"]["storage"] = checks
         self._update_summary(checks)
 
-    def check_ssl_certificate(self):
+    def check_ssl_certificate(self) -> None:
         """Check SSL certificate expiration."""
         checks = {}
 
@@ -349,14 +349,14 @@ class HealthMonitor:
         self.health_data["checks"]["ssl"] = checks
         self._update_summary(checks)
 
-    def _is_port_listening(self, port):
+    def _is_port_listening(self, port: int) -> bool:
         """Check if a port is listening."""
         for conn in psutil.net_connections(kind="inet"):
             if conn.laddr.port == port and conn.status == "LISTEN":
                 return True
         return False
 
-    def _get_status(self, value, warning_threshold, critical_threshold):
+    def _get_status(self, value: float, warning_threshold: float, critical_threshold: float) -> str:
         """Determine status based on thresholds."""
         if value >= critical_threshold:
             return "critical"
@@ -364,7 +364,7 @@ class HealthMonitor:
             return "warning"
         return "healthy"
 
-    def _update_summary(self, checks):
+    def _update_summary(self, checks: dict) -> None:
         """Update summary counts."""
         for check in checks.values():
             if isinstance(check, dict) and "status" in check:
@@ -376,7 +376,7 @@ class HealthMonitor:
                 elif status == "critical":
                     self.health_data["summary"]["critical"] += 1
 
-    def run_all_checks(self):
+    def run_all_checks(self) -> None:
         """Run all health checks."""
         print("Running health checks...")
         self.check_system_resources()
@@ -386,7 +386,7 @@ class HealthMonitor:
         self.check_disk_space_specific()
         self.check_ssl_certificate()
 
-    def generate_text_report(self):
+    def generate_text_report(self) -> str:
         """Generate text report."""
         lines = []
         lines.append("=" * 80)
@@ -427,11 +427,11 @@ class HealthMonitor:
         lines.append("=" * 80)
         return "\n".join(lines)
 
-    def generate_json_report(self):
+    def generate_json_report(self) -> str:
         """Generate JSON report."""
         return json.dumps(self.health_data, indent=2)
 
-    def generate_html_report(self):
+    def generate_html_report(self) -> str:
         """Generate HTML report."""
         html = (
             """
@@ -519,7 +519,7 @@ class HealthMonitor:
         return html
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="PBX Health Monitoring")
     parser.add_argument(
         "--format",

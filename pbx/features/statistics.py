@@ -5,9 +5,9 @@ Provides comprehensive analytics for dashboard visualization
 
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class StatisticsEngine:
@@ -23,7 +23,7 @@ class StatisticsEngine:
         self.cdr_system = cdr_system
         self.logger = get_logger()
 
-    def get_dashboard_statistics(self, days: int =7) -> dict:
+    def get_dashboard_statistics(self, days: int = 7) -> dict:
         """
         Get comprehensive statistics for dashboard
 
@@ -122,7 +122,7 @@ class StatisticsEngine:
 
         return distribution
 
-    def _get_top_callers(self, days: int, limit: int =10) -> list:
+    def _get_top_callers(self, days: int, limit: int = 10) -> list:
         """Get top callers by call volume"""
         caller_stats = defaultdict(lambda: {"calls": 0, "duration": 0})
 
@@ -219,7 +219,7 @@ class StatisticsEngine:
             "avg_duration_per_day": round(total_duration / days / 60, 2) if days > 0 else 0,
         }
 
-    def get_call_quality_metrics(self, pbx_core: Any | None =None) -> dict:
+    def get_call_quality_metrics(self, pbx_core: Any | None = None) -> dict:
         """
         Get call quality metrics from QoS monitoring
 
@@ -310,7 +310,9 @@ class StatisticsEngine:
             return round(uptime, 0)
         return 0
 
-    def get_advanced_analytics(self, start_date: str | None, end_date: str | None, filters: dict | None =None) -> dict:
+    def get_advanced_analytics(
+        self, start_date: str | None, end_date: str | None, filters: dict | None = None
+    ) -> dict:
         """
         Get advanced analytics with date range and filters
 
@@ -383,7 +385,7 @@ class StatisticsEngine:
             "filters_applied": filters or {},
         }
 
-    def get_call_center_metrics(self, days: int =7, queue_name: str | None =None) -> dict:
+    def get_call_center_metrics(self, days: int = 7, queue_name: str | None = None) -> dict:
         """
         Get call center performance metrics
 

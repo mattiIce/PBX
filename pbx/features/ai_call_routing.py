@@ -6,9 +6,9 @@ Intelligent routing using free machine learning (scikit-learn)
 import json
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # Try to import scikit-learn (free ML library)
 try:
@@ -24,7 +24,7 @@ except ImportError:
 class AICallRouting:
     """AI-powered call routing using machine learning"""
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize AI call routing"""
         self.logger = get_logger()
         self.config = config or {}

@@ -5,9 +5,9 @@ iOS and Android mobile client support
 
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class MobilePlatform(Enum):
@@ -61,7 +61,7 @@ class MobileAppFramework:
     - Both: SIP client libraries (PJSIP, Linphone, etc.)
     """
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize mobile app framework"""
         self.logger = get_logger()
         self.config = config or {}
@@ -463,7 +463,7 @@ class MobileAppFramework:
 _mobile_app_framework = None
 
 
-def get_mobile_app_framework(config: Any | None =None) -> MobileAppFramework:
+def get_mobile_app_framework(config: Any | None = None) -> MobileAppFramework:
     """Get or create mobile app framework instance"""
     global _mobile_app_framework
     if _mobile_app_framework is None:

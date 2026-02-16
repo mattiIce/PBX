@@ -8,9 +8,9 @@ import threading
 import time
 from collections import deque
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class QoSMetrics:

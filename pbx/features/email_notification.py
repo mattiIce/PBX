@@ -11,9 +11,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class EmailNotifier:
@@ -74,7 +74,13 @@ class EmailNotifier:
             self.logger.info("Email notifications disabled")
 
     def send_voicemail_notification(
-        self, to_email: str, extension_number: str, caller_id: str, timestamp: Any, audio_file_path: str | None =None, duration: float | None =None
+        self,
+        to_email: str,
+        extension_number: str,
+        caller_id: str,
+        timestamp: Any,
+        audio_file_path: str | None = None,
+        duration: float | None = None,
     ) -> bool:
         """
         Send voicemail notification email
@@ -163,7 +169,9 @@ class EmailNotifier:
             self.logger.error(f"Failed to prepare voicemail notification: {e}")
             return False
 
-    def send_reminder(self, to_email: str, extension_number: str, unread_count: int, messages: list) -> bool:
+    def send_reminder(
+        self, to_email: str, extension_number: str, unread_count: int, messages: list
+    ) -> bool:
         """
         Send daily reminder about unread voicemails
 
@@ -221,7 +229,9 @@ class EmailNotifier:
             self.logger.error(f"Failed to send voicemail reminder: {e}")
             return False
 
-    def _create_email_body(self, extension_number: str, caller_id: str, timestamp: Any, duration: float | None =None) -> str:
+    def _create_email_body(
+        self, extension_number: str, caller_id: str, timestamp: Any, duration: float | None = None
+    ) -> str:
         """
         Create email body text
 

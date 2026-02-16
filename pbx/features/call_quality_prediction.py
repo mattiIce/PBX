@@ -634,7 +634,9 @@ class CallQualityPrediction:
 _quality_prediction = None
 
 
-def get_quality_prediction(config: Any | None = None, db_backend: Any | None = None) -> CallQualityPrediction:
+def get_quality_prediction(
+    config: Any | None = None, db_backend: Any | None = None
+) -> CallQualityPrediction:
     """Get or create call quality prediction instance"""
     global _quality_prediction
     if _quality_prediction is None:

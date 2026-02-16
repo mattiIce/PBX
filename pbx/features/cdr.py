@@ -7,9 +7,9 @@ import json
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class CallDisposition(Enum):
@@ -52,7 +52,7 @@ class CDRRecord:
         self.answer_time = datetime.now(UTC)
         self.disposition = CallDisposition.ANSWERED
 
-    def mark_ended(self, hangup_cause: str | None =None) -> None:
+    def mark_ended(self, hangup_cause: str | None = None) -> None:
         """
         Mark call as ended
 
@@ -92,7 +92,7 @@ class CDRRecord:
 class CDRSystem:
     """Manages call detail records"""
 
-    def __init__(self, storage_path: str ="cdr") -> None:
+    def __init__(self, storage_path: str = "cdr") -> None:
         """
         Initialize CDR system
 
@@ -133,7 +133,7 @@ class CDRSystem:
         if record:
             record.mark_answered()
 
-    def end_record(self, call_id: str, hangup_cause: str | None =None) -> None:
+    def end_record(self, call_id: str, hangup_cause: str | None = None) -> None:
         """
         End CDR record
 
@@ -178,7 +178,7 @@ class CDRSystem:
         except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving CDR record: {e}")
 
-    def get_records(self, date: str | None =None, limit: int =100) -> list:
+    def get_records(self, date: str | None = None, limit: int = 100) -> list:
         """
         Get CDR records
 
@@ -210,7 +210,7 @@ class CDRSystem:
 
         return records
 
-    def get_statistics(self, date: str | None =None) -> dict:
+    def get_statistics(self, date: str | None = None) -> dict:
         """
         Get call statistics
 
@@ -243,7 +243,7 @@ class CDRSystem:
             "average_duration": round(avg_duration, 2),
         }
 
-    def get_extension_statistics(self, extension: str, date: str | None =None) -> dict:
+    def get_extension_statistics(self, extension: str, date: str | None = None) -> dict:
         """
         Get statistics for specific extension
 

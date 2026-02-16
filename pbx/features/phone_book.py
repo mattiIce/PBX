@@ -7,9 +7,9 @@ and can be pushed to IP phones
 import json
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # Import ExtensionDB for database-based AD sync
 try:
@@ -31,7 +31,7 @@ class PhoneBook:
     - Provides API access for management
     """
 
-    def __init__(self, config: dict, database: Any | None =None) -> None:
+    def __init__(self, config: dict, database: Any | None = None) -> None:
         """
         Initialize phone book
 

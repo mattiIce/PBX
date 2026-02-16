@@ -6,15 +6,15 @@ Records audio from calls for compliance, quality assurance, and training
 import wave
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class CallRecording:
     """Manages recording for a single call"""
 
-    def __init__(self, call_id: str, recording_path: str ="recordings") -> None:
+    def __init__(self, call_id: str, recording_path: str = "recordings") -> None:
         """
         Initialize call recording
 
@@ -103,7 +103,7 @@ class CallRecording:
 class CallRecordingSystem:
     """Manages call recording for all calls"""
 
-    def __init__(self, recording_path: str ="recordings", auto_record: bool =False) -> None:
+    def __init__(self, recording_path: str = "recordings", auto_record: bool = False) -> None:
         """
         Initialize call recording system
 
@@ -186,7 +186,7 @@ class CallRecordingSystem:
         """Check if call is being recorded"""
         return call_id in self.active_recordings
 
-    def get_recordings(self, limit: int =100) -> list:
+    def get_recordings(self, limit: int = 100) -> list:
         """
         Get recording metadata
 

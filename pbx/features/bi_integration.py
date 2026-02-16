@@ -63,7 +63,7 @@ class BIIntegration:
     - Metabase (SQL, API)
     """
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize BI integration"""
         self.logger = get_logger()
         self.config = config or {}
@@ -721,7 +721,7 @@ class BIIntegration:
 _bi_integration = None
 
 
-def get_bi_integration(config: Any | None =None) -> BIIntegration:
+def get_bi_integration(config: Any | None = None) -> BIIntegration:
     """Get or create BI integration instance"""
     global _bi_integration
     if _bi_integration is None:

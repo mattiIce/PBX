@@ -6,9 +6,9 @@ Provides persistence for voice profiles, enrollments, and verifications
 import json
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class VoiceBiometricsDatabase:
@@ -232,7 +232,9 @@ class VoiceBiometricsDatabase:
         except sqlite3.Error as e:
             self.logger.error(f"Error updating enrollment progress: {e}")
 
-    def save_verification(self, user_id: str, call_id: str, verified: bool, confidence: float) -> None:
+    def save_verification(
+        self, user_id: str, call_id: str, verified: bool, confidence: float
+    ) -> None:
         """Save verification result"""
         try:
             # Get profile ID

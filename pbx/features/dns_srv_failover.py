@@ -5,9 +5,9 @@ Automatic server failover using DNS SRV records
 
 import random
 import socket
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class SRVRecord:
@@ -37,7 +37,7 @@ class DNSSRVFailover:
     - Health monitoring
     """
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize DNS SRV failover"""
         self.logger = get_logger()
         self.config = config or {}
@@ -284,7 +284,9 @@ class DNSSRVFailover:
             self.logger.error(f"Health check error for {target}:{port}: {e}")
             return False
 
-    def mark_server_failed(self, service: str, protocol: str, domain: str, target: str, port: int) -> None:
+    def mark_server_failed(
+        self, service: str, protocol: str, domain: str, target: str, port: int
+    ) -> None:
         """
         Mark server as failed
 
@@ -371,7 +373,7 @@ class DNSSRVFailover:
 _dns_srv_failover = None
 
 
-def get_dns_srv_failover(config: Any | None =None) -> DNSSRVFailover:
+def get_dns_srv_failover(config: Any | None = None) -> DNSSRVFailover:
     """Get or create DNS SRV failover instance"""
     global _dns_srv_failover
     if _dns_srv_failover is None:

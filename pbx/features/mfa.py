@@ -20,10 +20,10 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Any
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class TOTPGenerator:
@@ -610,7 +610,7 @@ class MFAManager:
     Manages MFA enrollment, verification, and backup codes
     """
 
-    def __init__(self, database: Any | None =None, config: dict | None = None) -> None:
+    def __init__(self, database: Any | None = None, config: dict | None = None) -> None:
         """
         Initialize MFA manager
 
@@ -1533,6 +1533,6 @@ class MFAManager:
         return codes
 
 
-def get_mfa_manager(database: Any | None =None, config: dict | None = None) -> MFAManager:
+def get_mfa_manager(database: Any | None = None, config: dict | None = None) -> MFAManager:
     """Get MFA manager instance"""
     return MFAManager(database, config)

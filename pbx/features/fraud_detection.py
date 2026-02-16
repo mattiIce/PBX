@@ -5,15 +5,15 @@ Pattern analysis for unusual call behavior using custom algorithms
 
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class FraudDetectionSystem:
     """System for detecting and alerting on unusual call patterns"""
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize fraud detection system"""
         self.logger = get_logger()
         self.config = config or {}

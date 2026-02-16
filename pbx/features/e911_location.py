@@ -4,15 +4,15 @@ Simplified location-based emergency routing for one site with 3 buildings
 """
 
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class E911LocationService:
     """Service for managing E911 locations and routing (single site, 3 buildings)"""
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize E911 location service"""
         self.logger = get_logger()
         self.config = config or {}

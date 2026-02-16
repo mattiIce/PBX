@@ -215,7 +215,7 @@ def text_to_wav_telephony(
             Path(temp_wav_path).unlink()
 
 
-def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
+def generate_prompts(prompts: dict[str, str], output_dir: str, company_name: str | None = None, sample_rate: int = 8000) -> tuple[int, int]:
     """
     Generate multiple voice prompts from text
 

@@ -3,10 +3,11 @@ Advanced Audio Processing
 Noise suppression and echo cancellation using free libraries
 """
 
+from typing import Any
+
 import numpy as np
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # Try to import WebRTC Audio Processing (free)
 try:
@@ -18,7 +19,7 @@ except ImportError:
 class AudioProcessor:
     """Advanced audio processing for noise suppression and echo cancellation"""
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize audio processor"""
         self.logger = get_logger()
         self.config = config or {}

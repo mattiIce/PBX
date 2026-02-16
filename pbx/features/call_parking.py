@@ -4,15 +4,17 @@ Allows calls to be parked and retrieved from any extension
 """
 
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class ParkedCall:
     """Represents a parked call"""
 
-    def __init__(self, call_id: str, park_number: str, from_extension: str, original_destination: str | None) -> None:
+    def __init__(
+        self, call_id: str, park_number: str, from_extension: str, original_destination: str | None
+    ) -> None:
         """
         Initialize parked call
 
@@ -50,7 +52,11 @@ class CallParkingSystem:
     """Manages call parking"""
 
     def __init__(
-        self, park_range_start: int =70, park_range_end: int =79, timeout: int =120, callback_extension: str | None =None
+        self,
+        park_range_start: int = 70,
+        park_range_end: int = 79,
+        timeout: int = 120,
+        callback_extension: str | None = None,
     ) -> None:
         """
         Initialize call parking system
@@ -80,7 +86,9 @@ class CallParkingSystem:
                 return slot
         return None
 
-    def park_call(self, call_id: str, from_extension: str, original_destination: str | None =None) -> Any | None:
+    def park_call(
+        self, call_id: str, from_extension: str, original_destination: str | None = None
+    ) -> Any | None:
         """
         Park a call
 

@@ -6,10 +6,10 @@ Automatically sets DND status based on calendar events and scheduled rules
 import threading
 import time
 from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pbx.features.presence import PresenceStatus
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class DNDRule:
@@ -93,7 +93,7 @@ class DNDRule:
 class CalendarMonitor:
     """Monitors calendar events and triggers DND"""
 
-    def __init__(self, outlook_integration: Any | None =None, check_interval: int = 60) -> None:
+    def __init__(self, outlook_integration: Any | None = None, check_interval: int = 60) -> None:
         """
         Initialize calendar monitor
 
@@ -251,7 +251,12 @@ class DNDScheduler:
     Manages automatic DND scheduling based on calendar and time-based rules
     """
 
-    def __init__(self, presence_system: Any | None =None, outlook_integration: Any | None =None, config: dict | None = None) -> None:
+    def __init__(
+        self,
+        presence_system: Any | None = None,
+        outlook_integration: Any | None = None,
+        config: dict | None = None,
+    ) -> None:
         """
         Initialize DND scheduler
 
@@ -288,7 +293,7 @@ class DNDScheduler:
         if self.enabled:
             self.logger.info("DND Scheduler initialized")
 
-    def _get_config(self, key: str, default: Any | None =None) -> Any:
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """
         Get config value supporting both dot notation and nested dicts
 
@@ -626,7 +631,9 @@ class DNDScheduler:
 
 
 def get_dnd_scheduler(
-    presence_system: Any | None =None, outlook_integration: Any | None =None, config: dict | None = None
+    presence_system: Any | None = None,
+    outlook_integration: Any | None = None,
+    config: dict | None = None,
 ) -> DNDScheduler:
     """Get DND scheduler instance"""
     return DNDScheduler(presence_system, outlook_integration, config)

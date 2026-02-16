@@ -5,9 +5,9 @@ AI-powered call classification and tagging
 
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 # ML libraries for improved classification
 try:
@@ -75,7 +75,7 @@ class CallTagging:
     - Tag analytics and reporting
     """
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize call tagging system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -1040,7 +1040,7 @@ class CallTagging:
 _call_tagging = None
 
 
-def get_call_tagging(config: Any | None =None) -> CallTagging:
+def get_call_tagging(config: Any | None = None) -> CallTagging:
     """Get or create call tagging instance"""
     global _call_tagging
     if _call_tagging is None:

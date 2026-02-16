@@ -2,14 +2,15 @@
 Conference calling system
 """
 
-from pbx.utils.logger import get_logger
 from typing import Any
+
+from pbx.utils.logger import get_logger
 
 
 class ConferenceRoom:
     """Represents a conference room"""
 
-    def __init__(self, room_number: str, max_participants: int =10) -> None:
+    def __init__(self, room_number: str, max_participants: int = 10) -> None:
         """
         Initialize conference room
 
@@ -93,7 +94,7 @@ class ConferenceSystem:
         self.rooms = {}
         self.logger = get_logger()
 
-    def create_room(self, room_number: str, max_participants: int =10) -> Any:
+    def create_room(self, room_number: str, max_participants: int = 10) -> Any:
         """
         Create conference room
 

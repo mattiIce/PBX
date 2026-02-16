@@ -4,9 +4,9 @@ Built-in chat platform for team collaboration
 """
 
 import sqlite3
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class TeamMessagingEngine:

@@ -14,10 +14,10 @@ Manual reboot options if needed:
 
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class PhoneTemplate:
@@ -120,7 +120,13 @@ class ProvisioningDevice:
     """Represents a provisioned phone device"""
 
     def __init__(
-        self, mac_address: str, extension_number: str, vendor: str, model: str, device_type: str | None =None, config_url: str | None =None
+        self,
+        mac_address: str,
+        extension_number: str,
+        vendor: str,
+        model: str,
+        device_type: str | None = None,
+        config_url: str | None = None,
     ) -> None:
         """
         Initialize provisioning device
@@ -186,7 +192,7 @@ class ProvisioningDevice:
 class PhoneProvisioning:
     """Phone provisioning management"""
 
-    def __init__(self, config: Any, database: Any | None =None) -> None:
+    def __init__(self, config: Any, database: Any | None = None) -> None:
         """
         Initialize phone provisioning
 
@@ -1086,7 +1092,9 @@ P2351 = 1
         key = (vendor.lower(), model.lower())
         return self.templates.get(key)
 
-    def register_device(self, mac_address: str, extension_number: str, vendor: str, model: str) -> Any:
+    def register_device(
+        self, mac_address: str, extension_number: str, vendor: str, model: str
+    ) -> Any:
         """
         Register a device for provisioning
 
@@ -1328,7 +1336,9 @@ P2351 = 1
             "display_name": "Directory",
         }
 
-    def generate_config(self, mac_address: str, extension_registry: str, request_info: dict | None =None) -> tuple:
+    def generate_config(
+        self, mac_address: str, extension_registry: str, request_info: dict | None = None
+    ) -> tuple:
         """
         Generate configuration for a device
 
@@ -1489,7 +1499,7 @@ P2351 = 1
         if len(self.provision_requests) > self.max_request_history:
             self.provision_requests = self.provision_requests[-self.max_request_history :]
 
-    def get_request_history(self, limit: int | None =None) -> list:
+    def get_request_history(self, limit: int | None = None) -> list:
         """
         Get provisioning request history
 
@@ -1547,7 +1557,7 @@ P2351 = 1
             vendors.add(vendor)
         return sorted(vendors)
 
-    def get_supported_models(self, vendor: str | None =None) -> list:
+    def get_supported_models(self, vendor: str | None = None) -> list:
         """
         Get list of supported models
 

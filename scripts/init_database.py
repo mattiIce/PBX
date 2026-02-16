@@ -13,8 +13,8 @@ import psycopg2
 # Database configuration
 # NOTE: For production use, set these environment variables:
 #   - DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
-def get_db_config():
-    """Get database configuration from environment variables with validation"""
+def get_db_config() -> dict[str, str | int]:
+    """Get database configuration from environment variables with validation."""
     try:
         port = int(os.environ.get("DB_PORT", 5432))
     except ValueError:
@@ -39,8 +39,8 @@ def get_db_config():
 DB_CONFIG = get_db_config()
 
 
-def test_connection():
-    """Test database connection"""
+def test_connection() -> bool:
+    """Test database connection."""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()

@@ -5,9 +5,9 @@ Allows users to log in from any phone and retain their settings
 
 import threading
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class HotDeskSession:
@@ -57,7 +57,7 @@ class HotDeskingSystem:
     - Extension profile migration
     """
 
-    def __init__(self, config: Any | None =None, pbx_core: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None, pbx_core: Any | None = None) -> None:
         """
         Initialize hot-desking system
 
@@ -95,7 +95,7 @@ class HotDeskingSystem:
         else:
             self.logger.info("Hot-desking system disabled")
 
-    def _get_config(self, key: str, default: Any | None =None) -> Any:
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)

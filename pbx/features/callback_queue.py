@@ -6,9 +6,9 @@ Avoid hold time with scheduled callbacks
 import sqlite3
 from datetime import UTC, datetime, timedelta
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class CallbackStatus(Enum):
@@ -25,7 +25,7 @@ class CallbackStatus(Enum):
 class CallbackQueue:
     """System for managing callback requests"""
 
-    def __init__(self, config: Any | None =None, database: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None, database: Any | None = None) -> None:
         """Initialize callback queue"""
         self.logger = get_logger()
         self.config = config or {}

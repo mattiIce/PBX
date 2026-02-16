@@ -5,9 +5,9 @@ Manages incoming calls and distributes them to available agents
 
 from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class QueueStrategy(Enum):
@@ -55,7 +55,7 @@ class QueuedCall:
 class Agent:
     """Represents a call queue agent"""
 
-    def __init__(self, extension: str, name: str ="") -> None:
+    def __init__(self, extension: str, name: str = "") -> None:
         """
         Initialize agent
 
@@ -74,7 +74,7 @@ class Agent:
         """set agent as available"""
         self.status = AgentStatus.AVAILABLE
 
-    def set_busy(self, call_id: str | None =None) -> None:
+    def set_busy(self, call_id: str | None = None) -> None:
         """set agent as busy"""
         self.status = AgentStatus.BUSY
         self.current_call_id = call_id
@@ -106,9 +106,9 @@ class CallQueue:
         self,
         queue_number: str,
         name: str,
-        strategy: str =QueueStrategy.ROUND_ROBIN,
-        max_wait_time: int =300,
-        max_queue_size: int =50,
+        strategy: str = QueueStrategy.ROUND_ROBIN,
+        max_wait_time: int = 300,
+        max_queue_size: int = 50,
     ) -> None:
         """
         Initialize call queue
@@ -212,7 +212,9 @@ class CallQueue:
 
         elif self.strategy == QueueStrategy.LEAST_RECENT:
             # Agent who hasn't taken a call longest
-            agent = min(available_agents, key=lambda a: a.last_call_time or datetime.min.replace(tzinfo=UTC))
+            agent = min(
+                available_agents, key=lambda a: a.last_call_time or datetime.min.replace(tzinfo=UTC)
+            )
             return agent
 
         elif self.strategy == QueueStrategy.FEWEST_CALLS:
@@ -279,7 +281,9 @@ class QueueSystem:
         self.queues = {}
         self.logger = get_logger()
 
-    def create_queue(self, queue_number: str, name: str, strategy: str =QueueStrategy.ROUND_ROBIN) -> Any:
+    def create_queue(
+        self, queue_number: str, name: str, strategy: str = QueueStrategy.ROUND_ROBIN
+    ) -> Any:
         """
         Create new queue
 

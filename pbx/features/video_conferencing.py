@@ -6,9 +6,9 @@ HD video calls, screen sharing, and 4K video support
 import hashlib
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class VideoConferencingEngine:

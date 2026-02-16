@@ -8,9 +8,9 @@ import sqlite3
 import time
 from enum import Enum
 from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class AAState(Enum):
@@ -48,7 +48,7 @@ class AutoAttendant:
     - Database persistence for configuration
     """
 
-    def __init__(self, config: Any | None =None, pbx_core: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None, pbx_core: Any | None = None) -> None:
         """
         Initialize Auto Attendant
 
@@ -284,7 +284,7 @@ class AutoAttendant:
         except sqlite3.Error as e:
             self.logger.error(f"Error loading menu options from database: {e}")
 
-    def _save_menu_option_to_db(self, digit: str, destination: str, description: str ="") -> None:
+    def _save_menu_option_to_db(self, digit: str, destination: str, description: str = "") -> None:
         """Save a menu option to database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -332,7 +332,7 @@ class AutoAttendant:
         # Save to database
         self._save_config_to_db()
 
-    def add_menu_option(self, digit: str, destination: str, description: str ="") -> bool:
+    def add_menu_option(self, digit: str, destination: str, description: str = "") -> bool:
         """Add or update a menu option and persist to database"""
         if not self.enabled:
             self.logger.error("Cannot add menu option: Auto attendant feature is not enabled")
@@ -366,7 +366,14 @@ class AutoAttendant:
     # Submenu Management Methods
     # ============================================================================
 
-    def create_menu(self, menu_id: str, parent_menu_id: str, menu_name: str, prompt_text: str ="", audio_file: str | None =None) -> bool:
+    def create_menu(
+        self,
+        menu_id: str,
+        parent_menu_id: str,
+        menu_name: str,
+        prompt_text: str = "",
+        audio_file: str | None = None,
+    ) -> bool:
         """
         Create a new menu (or submenu)
 
@@ -417,7 +424,13 @@ class AutoAttendant:
             self.logger.error(f"Error creating menu: {e}")
             return False
 
-    def update_menu(self, menu_id: str, menu_name: str | None =None, prompt_text: str | None =None, audio_file: str | None =None) -> bool:
+    def update_menu(
+        self,
+        menu_id: str,
+        menu_name: str | None = None,
+        prompt_text: str | None = None,
+        audio_file: str | None = None,
+    ) -> bool:
         """
         Update an existing menu
 
@@ -587,7 +600,14 @@ class AutoAttendant:
             self.logger.error(f"Error listing menus: {e}")
             return []
 
-    def add_menu_item(self, menu_id: str, digit: str, destination_type: str, destination_value: str, description: str ="") -> bool:
+    def add_menu_item(
+        self,
+        menu_id: str,
+        digit: str,
+        destination_type: str,
+        destination_value: str,
+        description: str = "",
+    ) -> bool:
         """
         Add item to a menu
 
@@ -696,7 +716,7 @@ class AutoAttendant:
             self.logger.error(f"Error getting menu items: {e}")
             return []
 
-    def get_menu_tree(self, menu_id: str ="main", depth: int =0) -> dict:
+    def get_menu_tree(self, menu_id: str = "main", depth: int = 0) -> dict:
         """
         Get complete menu hierarchy as a tree
 
@@ -728,7 +748,7 @@ class AutoAttendant:
 
         return menu
 
-    def _get_menu_depth(self, menu_id: str, current_depth: int =0) -> int:
+    def _get_menu_depth(self, menu_id: str, current_depth: int = 0) -> int:
         """
         Calculate depth of a menu in the hierarchy
 
@@ -1121,7 +1141,7 @@ class AutoAttendant:
         session["state"] = AAState.ENDED
 
 
-def generate_auto_attendant_prompts(output_dir: str ="auto_attendant") -> None:
+def generate_auto_attendant_prompts(output_dir: str = "auto_attendant") -> None:
     """
     Generate audio prompts for auto attendant
 
@@ -1174,7 +1194,9 @@ def generate_auto_attendant_prompts(output_dir: str ="auto_attendant") -> None:
     logger.info("For REAL VOICE, run: python3 scripts/generate_espeak_voices.py")
 
 
-def generate_submenu_prompt(menu_id: str, prompt_text: str, output_dir: str ="auto_attendant") -> str:
+def generate_submenu_prompt(
+    menu_id: str, prompt_text: str, output_dir: str = "auto_attendant"
+) -> str:
     """
     Generate voice prompt for a submenu
 

@@ -6,9 +6,9 @@ Provides persistence for campaigns, contacts, and call results
 import json
 import sqlite3
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class PredictiveDialingDatabase:

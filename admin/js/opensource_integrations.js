@@ -430,7 +430,7 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
             showJitsiStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showJitsiStatus('Error: ' + error.message, 'error');
+        showJitsiStatus(`Error: ${error.message}`, 'error');
     }
 });
 
@@ -534,7 +534,7 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
             showMatrixStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showMatrixStatus('Error: ' + error.message, 'error');
+        showMatrixStatus(`Error: ${error.message}`, 'error');
     }
 });
 
@@ -648,7 +648,7 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
             showEspoCRMStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showEspoCRMStatus('Error: ' + error.message, 'error');
+        showEspoCRMStatus(`Error: ${error.message}`, 'error');
     }
 });
 
@@ -665,7 +665,7 @@ async function testEspoCRMConnection() {
 
     try {
         // Test API endpoint
-        const testUrl = apiUrl + '/App/user';
+        const testUrl = `${apiUrl}/App/user`;
         const response = await fetch(testUrl, {
             headers: {
                 'X-Api-Key': apiKey,
@@ -676,16 +676,14 @@ async function testEspoCRMConnection() {
         if (response.ok) {
             const data = await response.json();
             showEspoCRMStatus(
-                '✅ Connection successful!<br>' +
-                'Connected as: ' + (data.userName || 'Unknown') + '<br>' +
-                'EspoCRM is ready for integration.',
+                `✅ Connection successful!<br>Connected as: ${data.userName ?? 'Unknown'}<br>EspoCRM is ready for integration.`,
                 'success'
             );
         } else {
-            throw new Error('API returned status ' + response.status);
+            throw new Error(`API returned status ${response.status}`);
         }
     } catch (error) {
-        showEspoCRMStatus('❌ Connection failed: ' + error.message + '<br>Check API URL and API Key.', 'error');
+        showEspoCRMStatus(`❌ Connection failed: ${error.message}<br>Check API URL and API Key.`, 'error');
     }
 }
 
@@ -700,14 +698,14 @@ function showEspoCRMStatus(message, type) {
 
 function showTab(tabId) {
     // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    for (const tab of document.querySelectorAll('.tab-content')) {
         tab.classList.remove('active');
-    });
+    }
 
     // Remove active from all buttons
-    document.querySelectorAll('.tab-button').forEach(btn => {
+    for (const btn of document.querySelectorAll('.tab-button')) {
         btn.classList.remove('active');
-    });
+    }
 
     // Show selected tab
     const selectedTab = document.getElementById(tabId);
@@ -735,7 +733,7 @@ function showTab(tabId) {
  * Create an instant Jitsi meeting
  */
 async function createInstantJitsiMeeting() {
-    const roomName = document.getElementById('jitsi-instant-room').value || '';
+    const roomName = document.getElementById('jitsi-instant-room').value ?? '';
 
     try {
         const response = await fetch('/api/integrations/jitsi/instant', {
@@ -756,7 +754,7 @@ async function createInstantJitsiMeeting() {
         displayJitsiMeetingResult(data.meeting_url);
         showQuickSetupNotification('Meeting created successfully!', 'success');
     } catch (error) {
-        showQuickSetupNotification('Failed to create meeting: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to create meeting: ${error.message}`, 'error');
     }
 }
 
@@ -792,7 +790,7 @@ async function scheduleJitsiMeeting() {
         displayJitsiMeetingResult(data.meeting_url);
         showQuickSetupNotification('Meeting scheduled successfully!', 'success');
     } catch (error) {
-        showQuickSetupNotification('Failed to schedule meeting: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to schedule meeting: ${error.message}`, 'error');
     }
 }
 
@@ -910,7 +908,7 @@ async function sendMatrixMessage() {
         showMatrixMessageResult('✅ Message sent successfully!', 'success');
         document.getElementById('matrix-message-text').value = ''; // Clear message
     } catch (error) {
-        showMatrixMessageResult('❌ Failed to send message: ' + error.message, 'error');
+        showMatrixMessageResult(`❌ Failed to send message: ${error.message}`, 'error');
     }
 }
 

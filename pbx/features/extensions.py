@@ -3,10 +3,10 @@ Extension management and registry
 """
 
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class Extension:
@@ -53,7 +53,7 @@ class Extension:
 class ExtensionRegistry:
     """Registry of all extensions"""
 
-    def __init__(self, config: Any, database: Any | None =None) -> None:
+    def __init__(self, config: Any, database: Any | None = None) -> None:
         """
         Initialize extension registry
 

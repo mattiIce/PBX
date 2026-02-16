@@ -7,9 +7,9 @@ based on destination, time of day, and carrier rates
 import re
 import sqlite3
 from datetime import UTC, datetime, time
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class DialPattern:

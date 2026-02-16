@@ -73,7 +73,7 @@ def pcm16_to_ulaw(pcm_data: bytes) -> bytes:
     return bytes(ulaw_data)
 
 
-def pcm16_to_g722(pcm_data, sample_rate=8000):
+def pcm16_to_g722(pcm_data: bytes, sample_rate: int = 8000) -> bytes:
     """
     Convert 16-bit PCM audio data to G.722 format
 
@@ -143,7 +143,7 @@ def pcm16_to_g722(pcm_data, sample_rate=8000):
     return g722_data if g722_data is not None else b""
 
 
-def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
+def convert_pcm_wav_to_g722_wav(input_wav_path: str | Path, output_wav_path: str | Path | None = None) -> bool:
     """
     Convert a PCM WAV file to G.722 WAV format
 
@@ -161,7 +161,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
         output_wav_path = input_wav_path
 
     try:
-        with open(input_wav_path, "rb") as f:
+        with Path(input_wav_path).open("rb") as f:
             # Read RIFF header
             riff = f.read(4)
             if riff != b"RIFF":
@@ -212,7 +212,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
                 return False
 
             # Write G.722 WAV file
-            with open(output_wav_path, "wb") as out_f:
+            with Path(output_wav_path).open("wb") as out_f:
                 # G.722 WAV uses format code 0x0067 and 8kHz clock rate
                 # Note: G.722 actually samples at 16kHz but uses 8kHz clock
                 # rate per RFC
@@ -233,7 +233,7 @@ def convert_pcm_wav_to_g722_wav(input_wav_path, output_wav_path=None):
         return False
 
 
-def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
+def generate_beep_tone(frequency: int = 1000, duration_ms: int = 500, sample_rate: int = 8000) -> bytes:
     """
     Generate a simple beep tone in raw PCM format
 
@@ -258,8 +258,8 @@ def generate_beep_tone(frequency=1000, duration_ms=500, sample_rate=8000):
 
 
 def build_wav_header(
-    data_size, sample_rate=8000, channels=1, bits_per_sample=16, audio_format=WAV_FORMAT_PCM
-):
+    data_size: int, sample_rate: int = 8000, channels: int = 1, bits_per_sample: int = 16, audio_format: int = WAV_FORMAT_PCM
+) -> bytes:
     """
     Build a WAV file header
 
@@ -301,7 +301,7 @@ def build_wav_header(
     return header
 
 
-def generate_voicemail_beep():
+def generate_voicemail_beep() -> bytes:
     """
     Generate a voicemail beep tone (single beep, 1000 Hz, 500ms)
 
@@ -313,7 +313,7 @@ def generate_voicemail_beep():
     return header + pcm_data
 
 
-def generate_ring_tone(rings=1):
+def generate_ring_tone(rings: int = 1) -> bytes:
     """
     Generate a ring tone (2 seconds ring, 4 seconds silence, repeated)
 

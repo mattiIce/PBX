@@ -10,11 +10,11 @@ import queue
 import threading
 import time
 from datetime import UTC, datetime
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class WebhookEvent:
@@ -150,7 +150,7 @@ class WebhookSystem:
     - Delivery status tracking
     """
 
-    def __init__(self, config: Any | None =None) -> None:
+    def __init__(self, config: Any | None = None) -> None:
         """
         Initialize webhook system
 
@@ -188,7 +188,7 @@ class WebhookSystem:
         else:
             self.logger.info("Webhook system disabled")
 
-    def _get_config(self, key: str, default: Any | None =None) -> Any:
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)

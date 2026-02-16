@@ -5,9 +5,9 @@ Provides support for overhead paging via digital-to-analog converters
 
 import uuid
 from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from typing import Any
 
 
 class PagingSystem:
@@ -28,7 +28,7 @@ class PagingSystem:
     - Emergency override capabilities
     """
 
-    def __init__(self, config: dict, database: Any | None =None) -> None:
+    def __init__(self, config: dict, database: Any | None = None) -> None:
         """
         Initialize paging system
 
