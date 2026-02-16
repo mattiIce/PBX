@@ -6,8 +6,8 @@ to catch issues before the PBX starts, preventing runtime errors.
 """
 
 import logging
-import os
 import re
+from os import environ
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +19,7 @@ class ConfigValidator:
     Validates PBX configuration for production readiness.
     """
 
-    def __init__(self, config: dict[str, Any]):
+    def __init__(self, config: dict[str, Any]) -> None:
         """
         Initialize validator with configuration.
 
@@ -52,7 +52,7 @@ class ConfigValidator:
         is_valid = len(self.errors) == 0
         return is_valid, self.errors, self.warnings
 
-    def _validate_server_config(self):
+    def _validate_server_config(self) -> None:
         """Validate server configuration."""
         server_config = self.config.get("server", {})
 
@@ -83,7 +83,7 @@ class ConfigValidator:
                 "external_ip is set to 0.0.0.0. Should be set to actual server IP."
             )
 
-    def _validate_database_config(self):
+    def _validate_database_config(self) -> None:
         """Validate database configuration."""
         db_config = self.config.get("database", {})
         db_type = db_config.get("type", "sqlite")
@@ -97,7 +97,7 @@ class ConfigValidator:
                 # Check for environment variable placeholders
                 if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
                     env_var = value[2:-1]  # Extract var name
-                    if not os.environ.get(env_var):
+                    if not environ.get(env_var):
                         self.errors.append(
                             f"Database config '{field}' references undefined "
                             f"environment variable: {env_var}"
@@ -123,7 +123,7 @@ class ConfigValidator:
             # Warn if using SQLite in production
             self.warnings.append("Using SQLite database. PostgreSQL is recommended for production.")
 
-    def _validate_api_config(self):
+    def _validate_api_config(self) -> None:
         """Validate API configuration."""
         api_config = self.config.get("api", {})
 
@@ -150,7 +150,7 @@ class ConfigValidator:
         else:
             self.warnings.append("SSL/TLS is disabled. HTTPS is recommended for production.")
 
-    def _validate_security_config(self):
+    def _validate_security_config(self) -> None:
         """Validate security configuration."""
         security_config = self.config.get("security", {})
 
@@ -167,7 +167,7 @@ class ConfigValidator:
                 "Lower values provide better security."
             )
 
-    def _validate_extensions_config(self):
+    def _validate_extensions_config(self) -> None:
         """Validate extensions configuration."""
         extensions = self.config.get("extensions", [])
 
@@ -202,7 +202,7 @@ class ConfigValidator:
                     self.warnings.append(f"Extension {number}: weak password detected")
                     break
 
-    def _validate_codecs_config(self):
+    def _validate_codecs_config(self) -> None:
         """Validate codec configuration."""
         codecs_config = self.config.get("codecs", {})
 
@@ -222,7 +222,7 @@ class ConfigValidator:
                 "G.711 (PCMU/PCMA) codec not explicitly enabled. This is the most compatible codec."
             )
 
-    def _validate_production_readiness(self):
+    def _validate_production_readiness(self) -> None:
         """Check production-specific requirements."""
         # Check for example/default values that should be changed
 

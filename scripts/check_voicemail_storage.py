@@ -7,6 +7,7 @@ voicemails are being saved to the database or file system only.
 """
 
 import sys
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
@@ -16,7 +17,7 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def main():
+def main() -> None:
     print("=" * 70)
     print("  VOICEMAIL STORAGE CHECK")
     print("=" * 70)

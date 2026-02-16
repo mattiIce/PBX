@@ -30,7 +30,7 @@ from pbx.utils.audio import pcm16_to_ulaw
 class AudioTester:
     """Comprehensive audio testing for PBX system"""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         self.verbose = verbose
         self.test_results = {
             "passed": 0,
@@ -63,7 +63,7 @@ class AudioTester:
             7: "μ-law",
         }
 
-    def log(self, message, level="INFO"):
+    def log(self, message: str, level: str = "INFO") -> None:
         """Log a message"""
         if self.verbose or level != "DEBUG":
             prefix = {
@@ -75,7 +75,7 @@ class AudioTester:
             }.get(level, "•")
             print(f"{prefix} {message}")
 
-    def validate_wav_file(self, filepath):
+    def validate_wav_file(self, filepath: str | Path) -> tuple[bool, str | None]:
         """
         Validate a WAV file for telephony compatibility
 
@@ -132,7 +132,7 @@ class AudioTester:
         except (KeyError, OSError, TypeError, ValueError) as e:
             return False, f"Unexpected error: {e!s}"
 
-    def test_voicemail_prompts(self):
+    def test_voicemail_prompts(self) -> bool:
         """Test all voicemail prompt files"""
         self.log("\n=== Testing Voicemail Prompts ===")
 
@@ -170,7 +170,7 @@ class AudioTester:
 
         return all_valid
 
-    def test_audio_conversion_ulaw(self):
+    def test_audio_conversion_ulaw(self) -> bool:
         """Test PCM to μ-law audio conversion"""
         self.log("\n=== Testing Audio Conversion (PCM to μ-law) ===")
 
@@ -217,7 +217,7 @@ class AudioTester:
             self.test_results["errors"].append(f"Conversion error: {e!s}")
             return False
 
-    def test_codec_compatibility(self, codec="G.711"):
+    def test_codec_compatibility(self, codec: str = "G.711") -> bool:
         """Test codec compatibility"""
         self.log(f"\n=== Testing Codec Compatibility ({codec}) ===")
 
@@ -251,7 +251,7 @@ class AudioTester:
         self.test_results["warnings"] += 1
         return False
 
-    def test_ivr_integration(self):
+    def test_ivr_integration(self) -> bool:
         """Test IVR audio integration"""
         self.log("\n=== Testing IVR Audio Integration ===")
 
@@ -274,7 +274,7 @@ class AudioTester:
             self.test_results["errors"].append(f"Import error: {e!s}")
             return False
 
-    def test_audio_file_permissions(self):
+    def test_audio_file_permissions(self) -> bool:
         """Test that audio files have correct permissions"""
         self.log("\n=== Testing Audio File Permissions ===")
 
@@ -307,7 +307,7 @@ class AudioTester:
             return True
         return False
 
-    def run_all_tests(self, codec="G.711"):
+    def run_all_tests(self, codec: str = "G.711") -> bool:
         """Run all audio tests"""
         self.log("=" * 60)
         self.log("PBX Audio Comprehensive Test Suite")
@@ -327,7 +327,7 @@ class AudioTester:
         # Return True if all tests passed
         return self.test_results["failed"] == 0
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print test summary"""
         self.log("\n" + "=" * 60)
         self.log("TEST SUMMARY")
@@ -356,7 +356,7 @@ class AudioTester:
             )
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="Comprehensive audio testing for PBX system")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")

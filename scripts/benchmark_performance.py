@@ -379,7 +379,7 @@ class PerformanceBenchmark:
             overall_score=overall_score,
         )
 
-    def print_results(self, results: BenchmarkResults, format: str = "text"):
+    def print_results(self, results: BenchmarkResults, format: str = "text") -> None:
         """
         Print benchmark results.
 
@@ -442,7 +442,7 @@ class PerformanceBenchmark:
         print("=" * 70)
         print()
 
-    def save_results(self, results: BenchmarkResults, filename: str):
+    def save_results(self, results: BenchmarkResults, filename: str) -> None:
         """
         Save benchmark results to file.
 
@@ -455,7 +455,7 @@ class PerformanceBenchmark:
         print(f"Results saved to {filename}")
 
 
-def main():
+def main() -> int:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Run PBX performance benchmarks")
     parser.add_argument("--api-url", default="http://localhost:9000", help="PBX API URL")

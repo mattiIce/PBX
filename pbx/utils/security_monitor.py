@@ -17,7 +17,7 @@ class SecurityMonitor:
     Ensures FIPS compliance and security features remain active during operation
     """
 
-    def __init__(self, config: dict | None = None, webhook_system=None):
+    def __init__(self, config: dict | None = None, webhook_system: object = None) -> None:
         """
         Initialize security monitor
 

@@ -440,7 +440,7 @@ function applyRoleBasedUI() {
             if (allHidden && sectionTitle) {
                 section.style.display = 'none';
             }
-        });
+        }
 
         // Update header to show non-admin status
         const header = document.querySelector('header h1');
@@ -537,13 +537,13 @@ function initializeTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
     console.log(`Found ${tabButtons.length} tab buttons`);
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const tabName = this.getAttribute('data-tab');
+    for (const button of tabButtons) {
+        button.addEventListener('click', () => {
+            const tabName = (button).getAttribute('data-tab');
             console.log(`Tab button clicked: ${tabName}`);
-            showTab(tabName);
+            if (tabName) showTab(tabName);
         });
-    });
+    }
 }
 
 // Auto-refresh wrapper functions - defined once to avoid recreation on tab switch
@@ -694,14 +694,14 @@ function showTab(tabName) {
     console.log(`showTab called with: ${tabName}`);
     
     // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    for (const tab of document.querySelectorAll('.tab-content')) {
         tab.classList.remove('active');
-    });
+    }
 
     // Remove active from all buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
+    for (const button of document.querySelectorAll('.tab-button')) {
         button.classList.remove('active');
-    });
+    }
 
     // Show selected tab
     const tabElement = document.getElementById(tabName);
@@ -1661,12 +1661,12 @@ async function loadFeaturesStatus() {
     } catch (error) {
         console.error('Error loading features status:', error);
         // Show error in tables
-        ['core-features-table', 'advanced-features-table', 'integration-features-table'].forEach(tableId => {
+        for (const tableId of ['core-features-table', 'advanced-features-table', 'integration-features-table']) {
             const table = document.getElementById(tableId);
             if (table) {
                 table.innerHTML = '<tr><td colspan="3" class="loading">Error loading features. Check Configuration tab.</td></tr>';
             }
-        });
+        }
     }
 }
 
@@ -2035,12 +2035,12 @@ async function loadVoicemailTab() {
         const select = document.getElementById('vm-extension-select');
         select.innerHTML = '<option value="">Select Extension</option>';
 
-        extensions.forEach(ext => {
+        for (const ext of extensions) {
             const option = document.createElement('option');
             option.value = ext.number;
             option.textContent = `${ext.number} - ${ext.name}`;
             select.appendChild(option);
-        });
+        }
     } catch (error) {
         console.error('Error loading voicemail tab:', error);
         showNotification('Failed to load extensions', 'error');
@@ -2159,7 +2159,7 @@ function updateVoicemailTableView(messages, extension) {
     }
 
     tbody.innerHTML = '';
-    messages.forEach(msg => {
+    for (const msg of messages) {
         const row = document.createElement('tr');
         const timestamp = new Date(msg.timestamp).toLocaleString();
         const duration = msg.duration ? `${msg.duration}s` : 'Unknown';
@@ -2178,7 +2178,7 @@ function updateVoicemailTableView(messages, extension) {
             </td>
         `;
         tbody.appendChild(row);
-    });
+    }
 }
 
 window.toggleVoicemailView = function() {

@@ -65,7 +65,7 @@ class SecurityComplianceChecker:
                 if line.strip():
                     print(f"       {line}")
 
-    def check_fips_compliance(self) -> Dict:
+    def check_fips_compliance(self) -> dict:
         """Check FIPS 140-2 compliance"""
         self.print_section("FIPS 140-2 Compliance Check")
 
@@ -215,7 +215,7 @@ class SecurityComplianceChecker:
         self.results["fips"] = fips_results
         return fips_results
 
-    def check_soc2_compliance(self) -> Dict:
+    def check_soc2_compliance(self) -> dict:
         """Check SOC 2 Type 2 compliance"""
         self.print_section("SOC 2 Type 2 Compliance Check")
 
@@ -329,7 +329,7 @@ class SecurityComplianceChecker:
         self.results["soc2"] = soc2_results
         return soc2_results
 
-    def check_security_configuration(self) -> Dict:
+    def check_security_configuration(self) -> dict:
         """Check security configuration and best practices"""
         self.print_section("Security Configuration Review")
 

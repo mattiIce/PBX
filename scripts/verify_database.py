@@ -8,6 +8,7 @@ troubleshoot database connectivity issues.
 """
 
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -18,20 +19,20 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
 
-def print_header(text):
+def print_header(text: str) -> None:
     """Print a formatted header"""
     print("\n" + "=" * 70)
     print(f"  {text}")
     print("=" * 70)
 
 
-def print_section(text):
+def print_section(text: str) -> None:
     """Print a formatted section header"""
     print(f"\n{text}")
     print("-" * 70)
 
 
-def check_psycopg2():
+def check_psycopg2() -> bool:
     """Check if psycopg2 is installed"""
     print_section("1. Checking PostgreSQL Driver (psycopg2)")
     try:
@@ -47,7 +48,7 @@ def check_psycopg2():
         return False
 
 
-def check_config():
+def check_config() -> tuple[object | None, dict | None]:
     """Check database configuration"""
     print_section("2. Checking Database Configuration")
     try:
@@ -73,7 +74,7 @@ def check_config():
         return None, None
 
 
-def check_connection(config):
+def check_connection(config: object) -> bool:
     """Check database connection"""
     print_section("3. Testing Database Connection")
     try:
@@ -140,7 +141,7 @@ def check_connection(config):
         return False
 
 
-def provide_recommendations(psycopg2_ok, config_ok, connection_ok):
+def provide_recommendations(psycopg2_ok: bool, config_ok: bool, connection_ok: bool) -> bool:
     """Provide recommendations based on test results"""
     print_header("RECOMMENDATIONS")
 
