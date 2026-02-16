@@ -115,7 +115,7 @@ class AICallRouting:
 
         try:
             # Prepare features and labels
-            X = []
+            x_data = []
             y = []
 
             for data in self.training_data[-1000:]:  # Use last 1000 samples
@@ -125,17 +125,17 @@ class AICallRouting:
                     data["call_duration"],
                     data["wait_time"],
                 ]
-                X.append(features)
+                x_data.append(features)
                 y.append(data["routed_to"])
 
-            X = np.array(X)
+            x_data = np.array(x_data)
             y = np.array(y)
 
             # Encode labels
             y_encoded = self.label_encoder.fit_transform(y)
 
             # Train model
-            self.model.fit(X, y_encoded)
+            self.model.fit(x_data, y_encoded)
 
             self.logger.info(f"Trained ML model on {len(X)} samples")
 

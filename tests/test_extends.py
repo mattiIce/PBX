@@ -462,9 +462,8 @@ class TestExceptionSpecificity(TestCase):
     def test_no_bare_except_in_api_routes(self) -> None:
         """API route modules should not use bare except clauses."""
         import ast
-        import glob
 
-        route_files = glob.glob("/home/user/PBX/pbx/api/routes/*.py")
+        route_files = list(Path("/home/user/PBX/pbx/api/routes").glob("*.py"))
         bare_except_files = []
 
         for filepath in route_files:
@@ -472,9 +471,8 @@ class TestExceptionSpecificity(TestCase):
                 try:
                     tree = ast.parse(f.read())
                     for node in ast.walk(tree):
-                        if isinstance(node, ast.ExceptHandler):
-                            if node.type is None:
-                                bare_except_files.append(f"{Path(filepath).name}:{node.lineno}")
+                        if isinstance(node, ast.ExceptHandler) and node.type is None:
+                            bare_except_files.append(f"{Path(filepath).name}:{node.lineno}")
                 except SyntaxError:
                     pass  # Skip files with syntax errors
 
@@ -486,9 +484,8 @@ class TestExceptionSpecificity(TestCase):
     def test_no_bare_except_in_core_modules(self) -> None:
         """Core modules should not use bare except clauses."""
         import ast
-        import glob
 
-        core_files = glob.glob("/home/user/PBX/pbx/core/*.py")
+        core_files = list(Path("/home/user/PBX/pbx/core").glob("*.py"))
         bare_except_count = 0
         total_except_count = 0
 
@@ -554,9 +551,13 @@ class TestExceptionSpecificity(TestCase):
 
         has_import_error_handler = False
         for node in ast.walk(tree):
-            if isinstance(node, ast.ExceptHandler) and node.type is not None:
-                if isinstance(node.type, ast.Name) and node.type.id == "ImportError":
-                    has_import_error_handler = True
+            if (
+                isinstance(node, ast.ExceptHandler)
+                and node.type is not None
+                and isinstance(node.type, ast.Name)
+                and node.type.id == "ImportError"
+            ):
+                has_import_error_handler = True
 
         self.assertTrue(
             has_import_error_handler,
@@ -573,9 +574,12 @@ class TestExceptionSpecificity(TestCase):
 
         exception_types = set()
         for node in ast.walk(tree):
-            if isinstance(node, ast.ExceptHandler) and node.type is not None:
-                if isinstance(node.type, ast.Name):
-                    exception_types.add(node.type.id)
+            if (
+                isinstance(node, ast.ExceptHandler)
+                and node.type is not None
+                and isinstance(node.type, ast.Name)
+            ):
+                exception_types.add(node.type.id)
 
         # Should use Exception (with context) rather than bare except
         self.assertIn("Exception", exception_types)

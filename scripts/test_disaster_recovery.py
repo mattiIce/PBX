@@ -170,15 +170,13 @@ class DisasterRecoveryTester:
             for pattern in config_files:
                 # Handle glob patterns
                 if "*" in pattern:
-                    import glob
-
-                    files = glob.glob(pattern)
+                    files = list(Path(".").glob(pattern))
                     for file in files:
-                        if Path(file).exists():
-                            dest = Path(config_backup_dir) / Path(file).name
+                        if file.exists():
+                            dest = Path(config_backup_dir) / file.name
                             if not self.config.dry_run:
                                 shutil.copy2(file, dest)
-                            backed_up_files.append(file)
+                            backed_up_files.append(str(file))
                 elif Path(pattern).exists():
                     dest = Path(config_backup_dir) / Path(pattern).name
                     if not self.config.dry_run:
@@ -376,12 +374,11 @@ class DisasterRecoveryTester:
 
             # Restore files
             restored_files = []
-            for file in os.listdir(config_backup_dir):
-                src = Path(config_backup_dir) / file
-                dest = Path(restore_config_dir) / file
+            for file in config_backup_dir.iterdir():
+                dest = restore_config_dir / file.name
                 if not self.config.dry_run:
-                    shutil.copy2(src, dest)
-                restored_files.append(file)
+                    shutil.copy2(file, dest)
+                restored_files.append(file.name)
 
             self.results["restore"]["config"] = {
                 "success": True,
@@ -468,15 +465,12 @@ class DisasterRecoveryTester:
         self.logger.info("\nPhase 1: BACKUP")
         self.logger.info("-" * 70)
 
-        if self.config.test_type in ["full", "database-only"]:
-            if not self.test_database_backup():
-                overall_success = False
-        if self.config.test_type in ["full", "config-only"]:
-            if not self.test_config_backup():
-                overall_success = False
-        if self.config.test_type in ["full", "files-only"]:
-            if not self.test_voicemail_backup():
-                overall_success = False
+        if self.config.test_type in ["full", "database-only"] and not self.test_database_backup():
+            overall_success = False
+        if self.config.test_type in ["full", "config-only"] and not self.test_config_backup():
+            overall_success = False
+        if self.config.test_type in ["full", "files-only"] and not self.test_voicemail_backup():
+            overall_success = False
 
         self.backup_completed_time = time.time()
 
@@ -484,12 +478,12 @@ class DisasterRecoveryTester:
         self.logger.info("\nPhase 2: RESTORE")
         self.logger.info("-" * 70)
 
-        if self.config.test_type in ["full", "database-only"]:
-            if not self.test_database_restore():
-                overall_success = False
-        if self.config.test_type in ["full", "config-only"]:
-            if not self.test_config_restore():
-                overall_success = False
+        if (
+            self.config.test_type in ["full", "database-only"] and not self.test_database_restore()
+        ):
+            overall_success = False
+        if self.config.test_type in ["full", "config-only"] and not self.test_config_restore():
+            overall_success = False
 
         self.restore_completed_time = time.time()
 

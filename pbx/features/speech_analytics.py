@@ -325,8 +325,8 @@ class SpeechAnalyticsEngine:
         # Calculate confidence based on word count
         # Confidence scales linearly: 10 sentiment words = 100% confidence
         # This provides a reasonable threshold for reliable sentiment detection
-        CONFIDENCE_SCALING_FACTOR = 10.0
-        confidence = min(1.0, (positive_count + negative_count) / CONFIDENCE_SCALING_FACTOR)
+        confidence_scaling_factor = 10.0
+        confidence = min(1.0, (positive_count + negative_count) / confidence_scaling_factor)
 
         return {
             "sentiment": sentiment,

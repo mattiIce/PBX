@@ -199,9 +199,9 @@ class CallQualityPrediction:
                 ]
 
                 # Normalize and predict
-                X = np.array([feature_vector])
-                X_scaled = self.scaler.transform(X)
-                predicted_mos = self.rf_model.predict(X_scaled)[0]
+                x_data = np.array([feature_vector])
+                x_scaled = self.scaler.transform(x_data)
+                predicted_mos = self.rf_model.predict(x_scaled)[0]
 
                 # Bound to valid MOS range
                 predicted_mos = max(1.0, min(5.0, predicted_mos))
@@ -452,11 +452,11 @@ class CallQualityPrediction:
         if SKLEARN_AVAILABLE:
             try:
                 # Extract features and target
-                X, y = self._extract_features_and_targets(historical_data)
+                x_data, y = self._extract_features_and_targets(historical_data)
 
                 # Normalize features for better performance
                 self.scaler = StandardScaler()
-                X_scaled = self.scaler.fit_transform(X)
+                x_scaled = self.scaler.fit_transform(x_data)
 
                 # Train RandomForest Regressor
                 self.rf_model = RandomForestRegressor(
@@ -465,11 +465,11 @@ class CallQualityPrediction:
                     random_state=42,
                     n_jobs=-1,  # Use all CPU cores
                 )
-                self.rf_model.fit(X_scaled, y)
+                self.rf_model.fit(x_scaled, y)
                 self.model_trained = True
 
                 # Validate model on training data
-                predictions = self.rf_model.predict(X_scaled)
+                predictions = self.rf_model.predict(x_scaled)
 
                 # Calculate R-squared
                 ss_res = np.sum((y - predictions) ** 2)

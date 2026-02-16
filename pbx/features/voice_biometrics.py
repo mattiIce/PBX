@@ -464,7 +464,7 @@ class VoiceBiometrics:
                         vec = [feat.get(k, 0.0) for k in sorted(feature_keys)]
                         feature_vectors.append(vec)
 
-                    X = np.array(feature_vectors)
+                    x_data = np.array(feature_vectors)
 
                     # Train Gaussian Mixture Model (GMM) for speaker modeling
                     # GMM is industry-standard for voice biometrics
@@ -473,7 +473,7 @@ class VoiceBiometrics:
                         covariance_type="diag",
                         random_state=42,
                     )
-                    profile.gmm_model.fit(X)
+                    profile.gmm_model.fit(x_data)
 
                     self.logger.info(
                         f"Trained GMM model for user {user_id} with {len(feature_vectors)} samples"

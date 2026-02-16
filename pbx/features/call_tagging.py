@@ -264,7 +264,7 @@ class CallTagging:
             )
 
             # Transform training texts
-            X_train = self.tfidf_vectorizer.fit_transform(training_texts)
+            x_train = self.tfidf_vectorizer.fit_transform(training_texts)
 
             # Initialize label encoder
             self.label_encoder = LabelEncoder()
@@ -272,7 +272,7 @@ class CallTagging:
 
             # Train Naive Bayes classifier (fast and effective for text)
             self.ml_classifier = MultinomialNB(alpha=1.0)
-            self.ml_classifier.fit(X_train, y_train)
+            self.ml_classifier.fit(x_train, y_train)
 
             self.logger.info(f"ML classifier trained with {len(training_texts)} examples")
             self.logger.info(f"Categories: {list(self.label_encoder.classes_)}")
@@ -438,10 +438,10 @@ class CallTagging:
 
         try:
             # Transform transcript using TF-IDF
-            X = self.tfidf_vectorizer.transform([transcript])
+            x_data = self.tfidf_vectorizer.transform([transcript])
 
             # Get probability predictions for all classes
-            probabilities = self.ml_classifier.predict_proba(X)[0]
+            probabilities = self.ml_classifier.predict_proba(x_data)[0]
 
             # Get class labels
             classes = self.label_encoder.classes_

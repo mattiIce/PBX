@@ -14,8 +14,8 @@ def test_index_creation_with_permission_error() -> None:
     """Test that index creation failures don't cause startup errors"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create a test config for SQLite
@@ -51,8 +51,8 @@ def test_index_creation_with_permission_error() -> None:
 def test_table_already_exists_handling() -> None:
     """Test that 'already exists' errors are handled gracefully"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")
