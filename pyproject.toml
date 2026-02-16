@@ -184,7 +184,7 @@ ignore = [
 "pbx/main.py" = ["PLC0415"]  # lazy imports for startup sequence
 "pbx/utils/*" = ["PLC0415"]  # lazy imports for optional dependencies
 "pbx/integrations/*" = ["PLC0415"]  # lazy imports for optional integrations
-"scripts/*" = ["PLC0415", "PLW1510"]  # scripts use lazy imports and subprocess without check
+"scripts/*" = ["PLC0415", "PLW1510", "PT028"]  # scripts use lazy imports, subprocess without check, and test_ functions with defaults
 
 [tool.ruff.lint.isort]
 known-first-party = ["pbx"]

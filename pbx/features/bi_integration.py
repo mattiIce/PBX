@@ -165,13 +165,13 @@ class BIIntegration:
             self.logger.error(f"Query execution failed: {e}")
             return []
 
-    def _format_data(self, data: list[dict], format: ExportFormat, dataset_name: str) -> str:
+    def _format_data(self, data: list[dict], export_format: ExportFormat, dataset_name: str) -> str:
         """
         Convert data to requested format
 
         Args:
             data: Query results
-            format: Export format
+            export_format: Export format
             dataset_name: Dataset name
 
         Returns:
@@ -182,13 +182,13 @@ class BIIntegration:
 
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
-        if format == ExportFormat.CSV:
+        if export_format == ExportFormat.CSV:
             return self._export_csv(data, dataset_name, timestamp)
-        if format == ExportFormat.JSON:
+        if export_format == ExportFormat.JSON:
             return self._export_json(data, dataset_name, timestamp)
-        if format == ExportFormat.EXCEL:
+        if export_format == ExportFormat.EXCEL:
             return self._export_excel(data, dataset_name, timestamp)
-        self.logger.warning(f"Format {format.value} not yet implemented")
+        self.logger.warning(f"Format {export_format.value} not yet implemented")
         return ""
 
     def _export_csv(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
@@ -256,7 +256,7 @@ class BIIntegration:
     def export_dataset(
         self,
         dataset_name: str,
-        format: ExportFormat = ExportFormat.CSV,
+        export_format: ExportFormat = ExportFormat.CSV,
         start_date: datetime | None = None,
         end_date: datetime | None = None,
         provider: BIProvider = None,
@@ -266,7 +266,7 @@ class BIIntegration:
 
         Args:
             dataset_name: Name of dataset to export
-            format: Export format
+            export_format: Export format
             start_date: Start date for data
             end_date: End date for data
             provider: BI provider (optional)
@@ -286,14 +286,14 @@ class BIIntegration:
         if not end_date:
             end_date = datetime.now(UTC)
 
-        self.logger.info(f"Exporting dataset '{dataset_name}' to {format.value}")
+        self.logger.info(f"Exporting dataset '{dataset_name}' to {export_format.value}")
         self.logger.info(f"  Date range: {start_date} to {end_date}")
 
         # Execute query and fetch data
         data = self._execute_query(dataset.query, start_date, end_date)
 
         # Convert to requested format
-        export_file = self._format_data(data, format, dataset_name)
+        export_file = self._format_data(data, export_format, dataset_name)
 
         dataset.last_exported = datetime.now(UTC)
         dataset.export_count += 1
@@ -303,7 +303,7 @@ class BIIntegration:
         return {
             "success": True,
             "dataset": dataset_name,
-            "format": format.value,
+            "format": export_format.value,
             "file_path": export_file,
             "record_count": len(data),
             "exported_at": datetime.now(UTC).isoformat(),
@@ -563,7 +563,7 @@ class BIIntegration:
         self.logger.info(f"Created custom dataset: {name}")
 
     def schedule_export(
-        self, dataset_name: str, schedule: str, format: ExportFormat = ExportFormat.CSV
+        self, dataset_name: str, schedule: str, export_format: ExportFormat = ExportFormat.CSV
     ) -> None:
         """
         Schedule automatic export
@@ -571,7 +571,7 @@ class BIIntegration:
         Args:
             dataset_name: Dataset to export
             schedule: Schedule (daily, weekly, monthly)
-            format: Export format
+            export_format: Export format
         """
         if dataset_name not in self.datasets:
             self.logger.error(f"Dataset {dataset_name} not found for scheduling")
@@ -581,7 +581,7 @@ class BIIntegration:
         # In production, this would integrate with cron or a task scheduler
         self.logger.info(f"Scheduled export for {dataset_name}")
         self.logger.info(f"  Schedule: {schedule}")
-        self.logger.info(f"  Format: {format.value}")
+        self.logger.info(f"  Format: {export_format.value}")
 
         # Store schedule configuration
         if not hasattr(self, "scheduled_exports"):
@@ -589,7 +589,7 @@ class BIIntegration:
 
         self.scheduled_exports[dataset_name] = {
             "schedule": schedule,
-            "format": format,
+            "format": export_format,
             "last_run": None,
             "next_run": self._calculate_next_run(schedule),
         }

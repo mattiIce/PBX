@@ -146,9 +146,7 @@ class EnvSetup:
         if "DB_PORT" in self.variables and not self._validate_port(self.variables["DB_PORT"]):
             errors.append("Invalid DB_PORT (must be 1-65535)")
 
-        if "SMTP_PORT" in self.variables and not self._validate_port(
-            self.variables["SMTP_PORT"]
-        ):
+        if "SMTP_PORT" in self.variables and not self._validate_port(self.variables["SMTP_PORT"]):
             errors.append("Invalid SMTP_PORT (must be 1-65535)")
 
         if "SMTP_FROM_ADDRESS" in self.variables and not self._validate_email(

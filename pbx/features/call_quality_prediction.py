@@ -491,7 +491,7 @@ class CallQualityPrediction:
 
                 self.logger.info("RandomForest model training completed")
                 self.logger.info(f"  Training R-squared: {r_squared:.3f}")
-                self.logger.info(f"  Features: {X.shape[1]}")
+                self.logger.info(f"  Features: {x_data.shape[1]}")
                 self.logger.info(
                     f"  Top features: {
                         sorted(

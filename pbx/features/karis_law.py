@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Kari's Law Compliance Module
 
@@ -239,7 +241,7 @@ class KarisLawCompliance:
 
         return True, routing_info
 
-    def _get_nomadic_e911_engine(self) -> "NomadicE911Engine" | None:
+    def _get_nomadic_e911_engine(self) -> NomadicE911Engine | None:
         """
         Get or create nomadic E911 engine instance
 
@@ -343,7 +345,7 @@ class KarisLawCompliance:
         call_id: str,
         location_info: dict | None,
         caller_info: dict,
-        nomadic_e911_engine: "NomadicE911Engine" | None = None,
+        nomadic_e911_engine: NomadicE911Engine | None = None,
     ) -> dict:
         """
         Route emergency call to appropriate trunk
@@ -437,7 +439,7 @@ class KarisLawCompliance:
         self,
         extension: str,
         location_info: dict | None = None,
-        nomadic_e911_engine: "NomadicE911Engine" | None = None,
+        nomadic_e911_engine: NomadicE911Engine | None = None,
     ) -> str | None:
         """
         Get site-specific emergency trunk for extension (Multi-Site E911)
@@ -478,7 +480,7 @@ class KarisLawCompliance:
             return None
 
     def _get_site_info(
-        self, extension: str, nomadic_e911_engine: "NomadicE911Engine" | None = None
+        self, extension: str, nomadic_e911_engine: NomadicE911Engine | None = None
     ) -> dict | None:
         """
         Get site information for extension (PSAP, ELIN, etc.)

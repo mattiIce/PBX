@@ -92,7 +92,7 @@ def test_symmetric_rtp() -> bool:
     time.sleep(0.05)
 
     try:
-        data_at_b, addr = sock_b.recvfrom(2048)
+        data_at_b, _addr = sock_b.recvfrom(2048)
         if not len(data_at_b) > 0:
             return False
     except TimeoutError:

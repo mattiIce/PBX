@@ -53,7 +53,9 @@ def check_system_fips() -> bool:
 
     # Check OpenSSL FIPS
     try:
-        result = subprocess.run(["openssl", "list", "-providers"], capture_output=True, text=True, check=False)
+        result = subprocess.run(
+            ["openssl", "list", "-providers"], capture_output=True, text=True, check=False
+        )
         has_fips = "fips" in result.stdout.lower()
         print_status("OpenSSL FIPS provider", has_fips)
         if not has_fips:

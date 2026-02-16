@@ -479,9 +479,7 @@ class ActiveDirectoryIntegration:
                         if use_database:
                             extension_db.update(number=ext_number, allow_external=False)
                         else:
-                            pbx_config.update_extension(
-                                number=ext_number, allow_external=False
-                            )
+                            pbx_config.update_extension(number=ext_number, allow_external=False)
 
                         if extension_registry:
                             registry_ext = extension_registry.get(ext_number)
@@ -710,9 +708,7 @@ class ActiveDirectoryIntegration:
                     ),
                     "email": str(entry.mail) if hasattr(entry, "mail") else None,
                     "phone": (
-                        str(entry.telephoneNumber)
-                        if hasattr(entry, "telephoneNumber")
-                        else None
+                        str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else None
                     ),
                 }
                 for entry in self.connection.entries

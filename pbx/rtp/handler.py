@@ -1247,8 +1247,7 @@ class RTPDTMFListener:
                                 )
 
                                 if digit and (
-                                    not self.detected_digits
-                                    or self.detected_digits[-1] != digit
+                                    not self.detected_digits or self.detected_digits[-1] != digit
                                 ):
                                     self.detected_digits.append(digit)
                                     self.logger.info(f"DTMF digit detected: {digit}")

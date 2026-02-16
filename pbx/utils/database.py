@@ -952,10 +952,10 @@ class RegisteredPhonesDB:
             # and IP point to same record)
             and not any(r["id"] == old_by_ip["id"] for r in old_registrations)
         ):
-                old_registrations.append(old_by_ip)
-                self.logger.info(
-                    f"Phone IP {ip_address} was registered to extension {old_by_ip['extension_number']}, will update to {extension_number}"
-                )
+            old_registrations.append(old_by_ip)
+            self.logger.info(
+                f"Phone IP {ip_address} was registered to extension {old_by_ip['extension_number']}, will update to {extension_number}"
+            )
 
         # Delete old registrations to different extensions
         for old_reg in old_registrations:

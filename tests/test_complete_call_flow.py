@@ -134,7 +134,7 @@ a=sendrecv
             time.sleep(0.1)
             sock_b.settimeout(0.5)
             try:
-                data, addr = sock_b.recvfrom(2048)
+                data, _addr = sock_b.recvfrom(2048)
                 assert data == packet_a
             except TimeoutError:
                 pytest.fail("Packet from A did not reach B")

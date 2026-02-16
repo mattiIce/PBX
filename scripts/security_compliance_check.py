@@ -95,7 +95,11 @@ class SecurityComplianceChecker:
         # Check 2: OpenSSL FIPS provider
         try:
             result = subprocess.run(
-                ["openssl", "list", "-providers"], capture_output=True, text=True, timeout=5, check=False
+                ["openssl", "list", "-providers"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
             )
             openssl_fips = "fips" in result.stdout.lower()
             fips_results["checks"]["openssl_fips"] = openssl_fips

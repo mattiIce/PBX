@@ -1223,15 +1223,13 @@ class PBXCore:
                 and self.phone_book.enabled
                 and self.phone_book.auto_sync_from_ad
             ):
-                    self.logger.info(
-                        "Auto-syncing phone book from Active Directory after AD user sync"
-                    )
-                    phone_book_synced = self.phone_book.sync_from_ad(
-                        self.ad_integration, self.extension_registry
-                    )
-                    self.logger.info(
-                        f"Phone book synced {phone_book_synced} entries from Active Directory"
-                    )
+                self.logger.info("Auto-syncing phone book from Active Directory after AD user sync")
+                phone_book_synced = self.phone_book.sync_from_ad(
+                    self.ad_integration, self.extension_registry
+                )
+                self.logger.info(
+                    f"Phone book synced {phone_book_synced} entries from Active Directory"
+                )
 
             # Automatically trigger phone reboots for updated extensions
             rebooted_count = 0

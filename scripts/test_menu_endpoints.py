@@ -14,7 +14,7 @@ import urllib.error
 import urllib.request
 
 
-def test_endpoint(
+def check_endpoint(
     base_url: str,
     endpoint: str,
     method: str = "GET",
@@ -102,20 +102,20 @@ def main() -> int:
     # Test GET endpoints
     print("\nGET Endpoints:")
     print("-" * 70)
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menus", timeout=args.timeout))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menus/main", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/menus", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/menus/main", timeout=args.timeout))
     results.append(
-        test_endpoint(base_url, "/api/auto-attendant/menus/main/items", timeout=args.timeout)
+        check_endpoint(base_url, "/api/auto-attendant/menus/main/items", timeout=args.timeout)
     )
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menu-tree", timeout=args.timeout))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/config", timeout=args.timeout))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/prompts", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/menu-tree", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/config", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/prompts", timeout=args.timeout))
 
     # Test a non-existent menu (should return 404)
     print("\nNegative Tests (should fail with 404):")
     print("-" * 70)
     results.append(
-        test_endpoint(
+        check_endpoint(
             base_url,
             "/api/auto-attendant/menus/nonexistent",
             expected_status=404,

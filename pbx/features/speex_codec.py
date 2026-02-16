@@ -44,7 +44,11 @@ class SpeexCodec:
     DEFAULT_MODE = MODE_NARROWBAND
 
     # Sample rates for each mode
-    SAMPLE_RATES: ClassVar[dict[str, int]] = {MODE_NARROWBAND: 8000, MODE_WIDEBAND: 16000, MODE_ULTRA_WIDEBAND: 32000}
+    SAMPLE_RATES: ClassVar[dict[str, int]] = {
+        MODE_NARROWBAND: 8000,
+        MODE_WIDEBAND: 16000,
+        MODE_ULTRA_WIDEBAND: 32000,
+    }
 
     # Payload types (RFC 5574)
     # Ensure no conflicts with iLBC (PT 97)

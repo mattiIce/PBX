@@ -247,7 +247,7 @@ class IntegrationSetup:
 
         # Show available integrations
         print("Available integrations:")
-        for i, (int_name, int_info) in enumerate(self.INTEGRATIONS.items(), 1):
+        for i, (_int_name, int_info) in enumerate(self.INTEGRATIONS.items(), 1):
             print(f"  {i}. {int_info['name']} - {int_info['description']}")
 
         print("\nWhich integrations would you like to enable?")

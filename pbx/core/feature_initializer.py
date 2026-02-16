@@ -378,7 +378,7 @@ class FeatureInitializer:
             pbx_core.ad_integration = None
 
     @staticmethod
-    def _init_open_source_integrations(pbx_core: Any, config: Any, logger: logging.Logger) -> None:
+    def _init_open_source_integrations(pbx_core: Any, config: Any, _logger: logging.Logger) -> None:
         """Initialize open-source and third-party integrations"""
         # Jitsi Meet - Video conferencing
         if config.get("integrations.jitsi.enabled", False):

@@ -637,8 +637,8 @@ class VoiceBiometrics:
                             features["energy_mean"] = float(np.mean(st_features[1]))  # Energy
                             features["spectral_centroid"] = float(np.mean(st_features[3]))
                             features["spectral_spread"] = float(np.mean(st_features[4]))
-                            features["spectral_entropy"] = float(np.mean(stFeatures[5]))
-                            features["spectral_rollof"] = float(np.mean(stFeatures[7]))
+                            features["spectral_entropy"] = float(np.mean(st_features[5]))
+                            features["spectral_rollof"] = float(np.mean(st_features[7]))
 
                             self.logger.debug("Extracted features using pyAudioAnalysis")
 

@@ -462,9 +462,7 @@ class SpeechAnalyticsEngine:
         Returns:
             list of detected keywords
         """
-        detected = [
-            keyword for keyword in keywords if keyword.lower() in text.lower()
-        ]
+        detected = [keyword for keyword in keywords if keyword.lower() in text.lower()]
 
         return detected
 

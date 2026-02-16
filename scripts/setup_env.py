@@ -309,7 +309,7 @@ def main() -> None:
         all_vars = []
         var_info_map = {}  # Create flat mapping for efficient lookup
         idx = 1
-        for category, vars_dict in ENV_VARS.items():
+        for vars_dict in ENV_VARS.values():
             for var_name, var_info in vars_dict.items():
                 all_vars.append(var_name)
                 var_info_map[var_name] = var_info

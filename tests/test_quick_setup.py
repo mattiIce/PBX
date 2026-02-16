@@ -169,7 +169,7 @@ def main() -> int:
     passed = sum(1 for _, result in results if result)
     total = len(results)
 
-    for name, result in results:
+    for _name, _result in results:
         pass
 
     if passed == total:

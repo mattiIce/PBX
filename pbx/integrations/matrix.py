@@ -457,13 +457,11 @@ class MatrixIntegration:
             result = self._make_request("GET", f"rooms/{room_id}/members")
 
             if result and result.get("chunk"):
-                members = []
-                for event in result["chunk"]:
-                    if (
-                        event.get("type") == "m.room.member"
-                        and event.get("membership") == "join"
-                    ):
-                        members.append(event.get("state_key"))
+                members = [
+                    event.get("state_key")
+                    for event in result["chunk"]
+                    if event.get("type") == "m.room.member" and event.get("membership") == "join"
+                ]
                 return members
 
             return []

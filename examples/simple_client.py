@@ -3,6 +3,7 @@
 Simple SIP client example for testing PBX
 This demonstrates how to register an extension and make calls
 """
+
 import socket
 import time
 
@@ -59,17 +60,16 @@ class SimpleSIPClient:
         # Wait for response
         try:
             self.socket.settimeout(5)
-            data, addr = self.socket.recvfrom(4096)
+            data, _addr = self.socket.recvfrom(4096)
             response = data.decode("utf-8")
 
             if "200 OK" in response:
                 print(f"✓ Extension {self.extension} registered successfully")
                 return True
-            else:
-                first_line = response.split('\r\n')[0]
-                print(f"✗ Registration failed: {first_line}")
-                return False
-        except socket.timeout:
+            first_line = response.split("\r\n")[0]
+            print(f"✗ Registration failed: {first_line}")
+            return False
+        except TimeoutError:
             print("✗ Registration timeout")
             return False
 

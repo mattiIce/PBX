@@ -126,9 +126,7 @@ class TestProvisioningTemplateCRUD:
             patch("os.path.exists", return_value=True),
             patch("os.makedirs"),
         ):
-            success, _msg = provisioning.update_template(
-                "acme", "rocket", "updated content"
-            )
+            success, _msg = provisioning.update_template("acme", "rocket", "updated content")
 
         assert success is True
         template = provisioning.get_template("acme", "rocket")

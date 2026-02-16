@@ -172,15 +172,15 @@ class CapacityCalculator:
             estimated_monthly_cost=round(estimated_monthly_cost, 2),
         )
 
-    def print_report(self, requirements: CapacityRequirements, format: str = "text") -> None:
+    def print_report(self, requirements: CapacityRequirements, output_format: str = "text") -> None:
         """
         Print capacity planning report.
 
         Args:
             requirements: CapacityRequirements object
-            format: Output format (text/json)
+            output_format: Output format (text/json)
         """
-        if format == "json":
+        if output_format == "json":
             print(json.dumps(requirements.__dict__, indent=2))
             return
 
@@ -325,7 +325,7 @@ Examples:
         log_retention_days=args.log_retention_days,
     )
 
-    calculator.print_report(requirements, format=args.format)
+    calculator.print_report(requirements, output_format=args.format)
 
     return 0
 

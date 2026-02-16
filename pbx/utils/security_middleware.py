@@ -276,7 +276,7 @@ class SecretValidator:
     ]
 
     @staticmethod
-    def validate_secrets(config: dict) -> tuple[bool, list[str]]:
+    def validate_secrets(_config: dict) -> tuple[bool, list[str]]:
         """Validate secrets configuration.
 
         Args:
@@ -297,7 +297,7 @@ class SecretValidator:
         return len(missing) == 0, missing
 
     @staticmethod
-    def check_weak_secrets(config: dict) -> list[str]:
+    def check_weak_secrets(_config: dict) -> list[str]:
         """Check for weak or default secrets.
 
         Args:

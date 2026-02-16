@@ -194,7 +194,7 @@ def get_recent_requests(host: str = "localhost", port: int = 9000, limit: int = 
         return []
 
 
-def test_mac_lookup(mac_address: str, host: str = "localhost", port: int = 9000) -> bool:
+def check_mac_lookup(mac_address: str, host: str = "localhost", port: int = 9000) -> bool:
     """Test if a specific MAC address is registered"""
     print_section(f"Testing MAC Address: {mac_address}")
 
@@ -240,7 +240,7 @@ def test_mac_lookup(mac_address: str, host: str = "localhost", port: int = 9000)
         return False
 
 
-def test_config_download(mac_address: str, host: str = "localhost", port: int = 9000) -> bool:
+def check_config_download(mac_address: str, host: str = "localhost", port: int = 9000) -> bool:
     """Test downloading config for a MAC address"""
     print_section(f"Testing Config Download for: {mac_address}")
 
@@ -396,8 +396,8 @@ Examples:
     if api_ok:
         _ = get_diagnostics(host, port)  # Get diagnostics for logging
         if mac_address:
-            test_mac_lookup(mac_address, host, port)
-            test_config_download(mac_address, host, port)
+            check_mac_lookup(mac_address, host, port)
+            check_config_download(mac_address, host, port)
 
     print_recommendations()
 

@@ -480,9 +480,7 @@ class DisasterRecoveryTester:
         self.logger.info("\nPhase 2: RESTORE")
         self.logger.info("-" * 70)
 
-        if (
-            self.config.test_type in ["full", "database-only"] and not self.test_database_restore()
-        ):
+        if self.config.test_type in ["full", "database-only"] and not self.test_database_restore():
             overall_success = False
         if self.config.test_type in ["full", "config-only"] and not self.test_config_restore():
             overall_success = False

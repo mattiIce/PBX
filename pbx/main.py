@@ -35,7 +35,7 @@ def signal_handler(sig: int, frame: object) -> None:
 
 def main() -> None:
     """Main entry point for the PBX server."""
-    global running, pbx
+    global running, pbx  # noqa: PLW0602
 
     logger.info("=" * 60)
     logger.info("Warden VoIP System v1.0.0")

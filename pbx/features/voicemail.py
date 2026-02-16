@@ -627,9 +627,9 @@ class VoicemailBox:
             if len(audio_data) >= MIN_WAV_HEADER_SIZE and not (
                 audio_data.startswith(b"RIFF") and audio_data[8:12] == b"WAVE"
             ):
-                    self.logger.warning(
-                        "Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
-                    )
+                self.logger.warning(
+                    "Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
+                )
 
             with open(self.greeting_path, "wb") as f:
                 f.write(audio_data)

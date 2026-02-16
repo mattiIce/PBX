@@ -133,7 +133,10 @@ class BackupVerifier:
         try:
             # Create temporary database
             result = subprocess.run(
-                ["sudo", "-u", "postgres", "createdb", temp_db], capture_output=True, timeout=30, check=False
+                ["sudo", "-u", "postgres", "createdb", temp_db],
+                capture_output=True,
+                timeout=30,
+                check=False,
             )
 
             if result.returncode != 0:
@@ -198,7 +201,10 @@ class BackupVerifier:
             # Clean up temporary database
             try:
                 subprocess.run(
-                    ["sudo", "-u", "postgres", "dropdb", temp_db], capture_output=True, timeout=30, check=False
+                    ["sudo", "-u", "postgres", "dropdb", temp_db],
+                    capture_output=True,
+                    timeout=30,
+                    check=False,
                 )
                 print(f"  Cleaned up temporary database: {temp_db}")
             except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):

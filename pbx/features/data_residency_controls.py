@@ -186,12 +186,13 @@ class DataResidencyControls:
             }
 
         # Check for EU data protection rules
-        if (
-            user_region in ["eu-west", "eu-central", "uk"]
-            and target_region not in ["eu-west", "eu-central", "uk"]
-        ):
-                self.blocked_operations += 1
-                return {"allowed": False, "reason": "EU data cannot be stored outside EU (GDPR)"}
+        if user_region in ["eu-west", "eu-central", "uk"] and target_region not in [
+            "eu-west",
+            "eu-central",
+            "uk",
+        ]:
+            self.blocked_operations += 1
+            return {"allowed": False, "reason": "EU data cannot be stored outside EU (GDPR)"}
 
         return {"allowed": True}
 

@@ -91,7 +91,7 @@ class TestQoSMetrics:
                 metrics.last_arrival_time = arrival_time
                 metrics.last_packet_timestamp = timestamp
             else:
-                metrics.last_arrival_time
+                _ = metrics.last_arrival_time
                 metrics.last_arrival_time = arrival_time
                 metrics.update_packet_received(100 + i, timestamp, 160)
 

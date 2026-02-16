@@ -269,10 +269,7 @@ class PresenceSystem:
                 self._notify_subscribers(user.extension)
 
             # Auto-away after shorter inactivity
-            elif (
-                idle_time > self.auto_away_timeout
-                and user.status == PresenceStatus.AVAILABLE
-            ):
+            elif idle_time > self.auto_away_timeout and user.status == PresenceStatus.AVAILABLE:
                 user.set_status(PresenceStatus.AWAY, "Auto-away")
                 self._notify_subscribers(user.extension)
 

@@ -144,7 +144,9 @@ class STIRSHAKENManager:
                 for cert_pem in ca_data.split(b"-----END CERTIFICATE-----"):
                     if b"-----BEGIN CERTIFICATE-----" in cert_pem:
                         full_cert_pem = cert_pem + b"-----END CERTIFICATE-----"
-                        cert = x509.load_pem_x509_certificate(full_cert_pem.strip(), default_backend())
+                        cert = x509.load_pem_x509_certificate(
+                            full_cert_pem.strip(), default_backend()
+                        )
                         self.ca_bundle.append(cert)
             self.logger.info(f"Loaded CA bundle with {len(self.ca_bundle)} certificates")
         except OSError as e:

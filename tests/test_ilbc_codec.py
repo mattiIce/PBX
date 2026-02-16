@@ -195,7 +195,7 @@ class TestILBCCodec:
         """Test encoder reset"""
         codec = ILBCCodec({"mode": 30})
         codec.encoder = Mock()
-        codec.encoder
+        assert codec.encoder is not None
 
         codec.reset_encoder()
 
@@ -206,7 +206,7 @@ class TestILBCCodec:
         """Test decoder reset"""
         codec = ILBCCodec({"mode": 30})
         codec.decoder = Mock()
-        codec.decoder
+        assert codec.decoder is not None
 
         codec.reset_decoder()
 

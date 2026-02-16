@@ -956,9 +956,7 @@ class VoicemailHandler:
                         # Use struct.unpack for efficient batch conversion
                         samples: list[float] = []
                         # Process in chunks for efficiency
-                        chunk_size: int = min(
-                            len(recent_audio), 8192
-                        )  # Process up to 8KB at once
+                        chunk_size: int = min(len(recent_audio), 8192)  # Process up to 8KB at once
                         for i in range(0, len(recent_audio), chunk_size):
                             chunk = recent_audio[i : i + chunk_size]
                             # Unpack bytes and convert to float samples

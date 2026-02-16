@@ -381,15 +381,15 @@ class PerformanceBenchmark:
             overall_score=overall_score,
         )
 
-    def print_results(self, results: BenchmarkResults, format: str = "text") -> None:
+    def print_results(self, results: BenchmarkResults, output_format: str = "text") -> None:
         """
         Print benchmark results.
 
         Args:
             results: BenchmarkResults object
-            format: Output format (text/json)
+            output_format: Output format (text/json)
         """
-        if format == "json":
+        if output_format == "json":
             print(json.dumps(asdict(results), indent=2))
             return
 
@@ -468,7 +468,7 @@ def main() -> int:
 
     benchmark = PerformanceBenchmark(api_url=args.api_url)
     results = benchmark.run_benchmark()
-    benchmark.print_results(results, format=args.format)
+    benchmark.print_results(results, output_format=args.format)
 
     if args.save:
         benchmark.save_results(results, args.save)

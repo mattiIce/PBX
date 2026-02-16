@@ -162,9 +162,7 @@ class OutlookIntegration:
                         "start": event.get("start", {}).get("dateTime"),
                         "end": event.get("end", {}).get("dateTime"),
                         "location": event.get("location", {}).get("displayName"),
-                        "organizer": event.get("organizer", {})
-                        .get("emailAddress", {})
-                        .get("name"),
+                        "organizer": event.get("organizer", {}).get("emailAddress", {}).get("name"),
                         "is_all_day": event.get("isAllDay", False),
                         "is_cancelled": event.get("isCancelled", False),
                     }

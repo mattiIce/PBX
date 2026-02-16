@@ -372,9 +372,7 @@ class CallTagging:
         if metadata:
             meta_tags = self._tag_from_metadata(metadata)
             tags_added.extend(
-                tag
-                for tag in meta_tags
-                if self.tag_call(call_id, tag, TagSource.RULE, 1.0)
+                tag for tag in meta_tags if self.tag_call(call_id, tag, TagSource.RULE, 1.0)
             )
 
         if tags_added:

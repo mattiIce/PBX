@@ -131,14 +131,14 @@ class TestSpeexCodec:
         codec = SpeexCodec({"mode": "wb", "vbr": True, "payload_type": 99})
         fmtp = codec.get_fmtp()
 
-        assert 'mode="1 in any"', fmtp
+        assert 'mode="1 in any"' in fmtp
 
     def test_get_fmtp_ultrawideband(self) -> None:
         """Test FMTP for ultra-wideband mode"""
         codec = SpeexCodec({"mode": "uwb", "vbr": True, "payload_type": 100})
         fmtp = codec.get_fmtp()
 
-        assert 'mode="2 in any"', fmtp
+        assert 'mode="2 in any"' in fmtp
 
     def test_get_fmtp_no_vbr(self) -> None:
         """Test FMTP without VBR"""

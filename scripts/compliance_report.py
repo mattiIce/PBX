@@ -235,7 +235,10 @@ class ComplianceReporter:
 
             try:
                 result = subprocess.run(
-                    [sys.executable, str(health_script), "--json"], capture_output=True, timeout=30, check=False
+                    [sys.executable, str(health_script), "--json"],
+                    capture_output=True,
+                    timeout=30,
+                    check=False,
                 )
                 if result.returncode == 0:
                     self.report_data["recommendations"].append(

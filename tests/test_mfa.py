@@ -336,7 +336,7 @@ def test_fido2_assertion_verification() -> bool:
     verifier = FIDO2Verifier()
 
     # Test with missing data
-    success, error = verifier.verify_assertion("test_cred", {}, b"public_key")
+    success, _error = verifier.verify_assertion("test_cred", {}, b"public_key")
     assert not success, "Verification should fail with missing data"
 
     # Test with simulated valid data (basic mode without full crypto)

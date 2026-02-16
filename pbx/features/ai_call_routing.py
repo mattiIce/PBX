@@ -137,7 +137,7 @@ class AICallRouting:
             # Train model
             self.model.fit(x_data, y_encoded)
 
-            self.logger.info(f"Trained ML model on {len(X)} samples")
+            self.logger.info(f"Trained ML model on {len(x_data)} samples")
 
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error training ML model: {e}")

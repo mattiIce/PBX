@@ -64,7 +64,7 @@ def test_auto_unblock() -> bool:
     detector.block_ip(test_ip, "Test auto-unblock", duration=1.5)
 
     # IP should be blocked
-    is_blocked, reason = detector.is_ip_blocked(test_ip)
+    is_blocked, _reason = detector.is_ip_blocked(test_ip)
     assert is_blocked, "IP should be blocked"
 
     # Wait for block to expire

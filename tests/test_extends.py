@@ -224,10 +224,12 @@ class TestGracefulShutdownExceptions(TestCase):
         from pbx.utils.graceful_shutdown import ConnectionRetry
 
         retry = ConnectionRetry(max_retries=3)
-        for attempt in retry:
+        last_attempt = 0
+        for _ in retry:
+            last_attempt += 1
             # Simulate success on first attempt
             break
-        self.assertEqual(attempt, 1)
+        self.assertEqual(last_attempt, 1)
 
     def test_with_retry_success(self) -> None:
         """with_retry should return result on success."""
@@ -470,9 +472,11 @@ class TestExceptionSpecificity(TestCase):
             with open(filepath) as f:
                 try:
                     tree = ast.parse(f.read())
-                    for node in ast.walk(tree):
-                        if isinstance(node, ast.ExceptHandler) and node.type is None:
-                            bare_except_files.append(f"{Path(filepath).name}:{node.lineno}")
+                    bare_except_files.extend(
+                        f"{Path(filepath).name}:{node.lineno}"
+                        for node in ast.walk(tree)
+                        if isinstance(node, ast.ExceptHandler) and node.type is None
+                    )
                 except SyntaxError:
                     pass  # Skip files with syntax errors
 
