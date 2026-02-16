@@ -48,7 +48,7 @@ except ImportError:
 class HealthMonitor:
     """Production health monitoring and reporting."""
 
-    def __init__(self, api_url="https://localhost:9000", verify_ssl=False):
+    def __init__(self, api_url: str = "https://localhost:9000", verify_ssl: bool = False) -> None:
         self.api_url = api_url
         self.verify_ssl = verify_ssl
         self.base_dir = Path(__file__).parent.parent
@@ -60,7 +60,7 @@ class HealthMonitor:
             "summary": {"healthy": 0, "warning": 0, "critical": 0},
         }
 
-    def check_system_resources(self):
+    def check_system_resources(self) -> None:
         """Check system resource usage."""
         checks = {}
 
@@ -111,7 +111,7 @@ class HealthMonitor:
         self.health_data["checks"]["system"] = checks
         self._update_summary(checks)
 
-    def check_pbx_service(self):
+    def check_pbx_service(self) -> None:
         """Check if PBX service is running."""
         checks = {}
 
@@ -173,7 +173,7 @@ class HealthMonitor:
         self.health_data["checks"]["pbx_service"] = checks
         self._update_summary(checks)
 
-    def check_database(self):
+    def check_database(self) -> None:
         """Check database connectivity."""
         checks = {}
 
@@ -238,7 +238,7 @@ class HealthMonitor:
         self.health_data["checks"]["database"] = checks
         self._update_summary(checks)
 
-    def check_api_endpoints(self):
+    def check_api_endpoints(self) -> None:
         """Check API endpoint availability."""
         if not requests:
             self.health_data["checks"]["api"] = {
@@ -274,7 +274,7 @@ class HealthMonitor:
         self.health_data["checks"]["api"] = checks
         self._update_summary(checks)
 
-    def check_disk_space_specific(self):
+    def check_disk_space_specific(self) -> None:
         """Check disk space for specific PBX directories."""
         checks = {}
 

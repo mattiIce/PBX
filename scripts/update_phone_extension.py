@@ -23,9 +23,9 @@ from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
 
-def update_phone_extension(mac_address: str, new_extension: str):
+def update_phone_extension(mac_address: str, new_extension: str) -> bool:
     """
-    Update a phone's extension in the registered_phones table
+    Update a phone's extension in the registered_phones table.
 
     Args:
         mac_address: MAC address of the phone
@@ -127,9 +127,8 @@ def update_phone_extension(mac_address: str, new_extension: str):
     return success
 
 
-def main():
-    """Main entry point"""
-
+def main() -> None:
+    """Main entry point."""
     if len(sys.argv) != 3:
         print("Usage: python scripts/update_phone_extension.py <mac_address> <new_extension>")
         print("")

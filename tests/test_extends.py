@@ -242,7 +242,7 @@ class TestGracefulShutdownExceptions(TestCase):
 
         call_count = 0
 
-        def flaky_func():
+        def flaky_func() -> str:
             nonlocal call_count
             call_count += 1
             if call_count < 3:
@@ -257,7 +257,7 @@ class TestGracefulShutdownExceptions(TestCase):
         """with_retry should raise after all retries exhausted."""
         from pbx.utils.graceful_shutdown import with_retry
 
-        def always_fails():
+        def always_fails() -> None:
             raise ConnectionError("persistent failure")
 
         with self.assertRaises(RuntimeError):

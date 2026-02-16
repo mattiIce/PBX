@@ -952,9 +952,9 @@ class VoicemailHandler:
                             # Convert bytes to audio samples for DTMF detection
                             # G.711 u-law is 8-bit samples, one byte per sample
                             # Use struct.unpack for efficient batch conversion
-                            samples = []
+                            samples: list[float] = []
                             # Process in chunks for efficiency
-                            chunk_size = min(len(recent_audio), 8192)  # Process up to 8KB at once
+                            chunk_size: int = min(len(recent_audio), 8192)  # Process up to 8KB at once
                             for i in range(0, len(recent_audio), chunk_size):
                                 chunk = recent_audio[i : i + chunk_size]
                                 # Unpack bytes and convert to float samples
@@ -964,7 +964,7 @@ class VoicemailHandler:
                                 samples.extend([(b - 128) / 128.0 for b in unpacked])
 
                             # Detect DTMF
-                            digit = dtmf_detector.detect_tone(samples)
+                            digit: str | None = dtmf_detector.detect_tone(samples)
 
                             if digit == "#":
                                 pbx.logger.info(
@@ -980,7 +980,7 @@ class VoicemailHandler:
             pbx.logger.error(f"Error in voicemail DTMF monitoring: {e}")
             pbx.logger.error(traceback.format_exc())
 
-    def complete_voicemail_recording(self, call_id):
+    def complete_voicemail_recording(self, call_id: str) -> None:
         """
         Complete voicemail recording and save the message
 
@@ -995,18 +995,18 @@ class VoicemailHandler:
             return
 
         # Get the recorder if it exists
-        recorder = getattr(call, "voicemail_recorder", None)
+        recorder: Any | None = getattr(call, "voicemail_recorder", None)
         if recorder:
             # Stop recording
             recorder.stop()
 
             # Get recorded audio
-            audio_data = recorder.get_recorded_audio()
-            duration = recorder.get_duration()
+            audio_data: bytes = recorder.get_recorded_audio()
+            duration: float = recorder.get_duration()
 
             if audio_data and len(audio_data) > 0:
                 # Build proper WAV file header for the recorded audio
-                wav_data = pbx._build_wav_file(audio_data)
+                wav_data: bytes = pbx._build_wav_file(audio_data)
 
                 # Save to voicemail system
                 pbx.voicemail_system.save_message(
@@ -1021,7 +1021,7 @@ class VoicemailHandler:
             else:
                 pbx.logger.warning(f"No audio recorded for voicemail on call {call_id}")
                 # Still create a minimal voicemail to indicate the attempt
-                placeholder_audio = pbx._build_wav_file(b"")
+                placeholder_audio: bytes = pbx._build_wav_file(b"")
                 pbx.voicemail_system.save_message(
                     extension_number=call.to_extension,
                     caller_id=call.from_extension,

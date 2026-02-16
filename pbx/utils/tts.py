@@ -5,9 +5,9 @@ Uses gTTS (Google Text-to-Speech) for natural American English voices
 
 import subprocess
 import tempfile
+from pathlib import Path
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 # Try to import TTS dependencies
 try:
@@ -23,17 +23,17 @@ except ImportError as e:
 logger = get_logger()
 
 
-def is_tts_available():
+def is_tts_available() -> bool:
     """Check if TTS dependencies are available"""
     return GTTS_AVAILABLE
 
 
-def get_tts_requirements():
+def get_tts_requirements() -> str:
     """Get installation instructions for TTS dependencies"""
     return "pip install gTTS pydub"
 
 
-def _generate_mp3(text, language, tld, slow):
+def _generate_mp3(text: str, language: str, tld: str, slow: bool) -> str:
     """
     Generate MP3 file from text using gTTS
 
@@ -53,7 +53,7 @@ def _generate_mp3(text, language, tld, slow):
     return temp_mp3_path
 
 
-def _convert_to_telephony_audio(mp3_path, sample_rate):
+def _convert_to_telephony_audio(mp3_path: str, sample_rate: int) -> object:
     """
     Convert MP3 to telephony format audio (16-bit, mono, specified sample rate)
 
@@ -71,7 +71,7 @@ def _convert_to_telephony_audio(mp3_path, sample_rate):
     return audio
 
 
-def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
+def _encode_g722_with_ffmpeg(pcm_wav_path: str, output_file: str, sample_rate: int) -> bool:
     """
     Encode PCM WAV to G.722 using ffmpeg
 
@@ -123,7 +123,7 @@ def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
         return False
 
 
-def _export_audio(audio, output_file, convert_to_g722, sample_rate):
+def _export_audio(audio: object, output_file: str, convert_to_g722: bool, sample_rate: int) -> str | None:
     """
     Export audio to output file, optionally converting to G.722
 
@@ -156,8 +156,8 @@ def _export_audio(audio, output_file, convert_to_g722, sample_rate):
 
 
 def text_to_wav_telephony(
-    text, output_file, language="en", tld="com", slow=False, sample_rate=8000, convert_to_g722=False
-):
+    text: str, output_file: str | Path, language: str = "en", tld: str = "com", slow: bool = False, sample_rate: int = 8000, convert_to_g722: bool = False
+) -> bool:
     """
     Convert text to WAV file in telephony format using gTTS (Google Text-to-Speech)
 
