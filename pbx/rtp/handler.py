@@ -5,6 +5,7 @@ Handles real-time audio/video streaming
 
 from __future__ import annotations
 
+import contextlib
 import socket
 import struct
 import threading
@@ -774,10 +775,8 @@ class RTPPlayer:
         """Stop RTP player."""
         self.running = False
         if self.socket:
-            try:
+            with contextlib.suppress(OSError):
                 self.socket.close()
-            except OSError:
-                pass  # Socket already closed
             self.socket = None
         self.logger.info(f"RTP player stopped for call {self.call_id}")
 
@@ -1247,15 +1246,12 @@ class RTPDTMFListener:
                                     self.audio_buffer[: self.dtmf_buffer_size]
                                 )
 
-                                if digit:
-                                    # Check if this is a new digit (not a
-                                    # repeat)
-                                    if (
-                                        not self.detected_digits
-                                        or self.detected_digits[-1] != digit
-                                    ):
-                                        self.detected_digits.append(digit)
-                                        self.logger.info(f"DTMF digit detected: {digit}")
+                                if digit and (
+                                    not self.detected_digits
+                                    or self.detected_digits[-1] != digit
+                                ):
+                                    self.detected_digits.append(digit)
+                                    self.logger.info(f"DTMF digit detected: {digit}")
 
                                 # Keep a sliding window of audio
                                 self.audio_buffer = self.audio_buffer[self.dtmf_slide_size :]

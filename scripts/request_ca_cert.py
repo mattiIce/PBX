@@ -5,7 +5,6 @@ Generates a CSR and submits it to the CA for signing
 """
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -75,7 +74,7 @@ def request_certificate_from_ca(
             )
 
         # Set restrictive permissions
-        os.chmod(key_file, 0o600)
+        key_file.chmod(0o600)
         print(f"   Private key saved to: {key_file}")
 
     # Generate CSR

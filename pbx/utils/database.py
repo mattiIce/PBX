@@ -945,10 +945,13 @@ class RegisteredPhonesDB:
 
         # Check if this IP is registered to a different extension
         old_by_ip = self.get_by_ip(ip_address)
-        if old_by_ip and old_by_ip["extension_number"] != extension_number:
+        if (
+            old_by_ip
+            and old_by_ip["extension_number"] != extension_number
             # Only add if it's not already in the list (avoid duplicates if MAC
             # and IP point to same record)
-            if not any(r["id"] == old_by_ip["id"] for r in old_registrations):
+            and not any(r["id"] == old_by_ip["id"] for r in old_registrations)
+        ):
                 old_registrations.append(old_by_ip)
                 self.logger.info(
                     f"Phone IP {ip_address} was registered to extension {old_by_ip['extension_number']}, will update to {extension_number}"

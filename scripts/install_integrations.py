@@ -476,7 +476,7 @@ class IntegrationInstaller:
                 # Ensure certs directory exists
                 password_file.parent.mkdir(exist_ok=True)
                 password_file.write_text(db_password)
-                os.chmod(password_file, 0o600)  # Read/write for owner only
+                password_file.chmod(0o600)  # Read/write for owner only
 
             # Setup MySQL database
             self.log("Setting up MySQL database...", "STEP")
@@ -497,7 +497,7 @@ class IntegrationInstaller:
                         config_file.write("[client]\n")
                         config_file.write("user=root\n")
                         mysql_config_path = config_file.name
-                    os.chmod(mysql_config_path, 0o600)
+                    Path(mysql_config_path).chmod(0o600)
 
                     # Escape password for SQL
                     # Note: For production use, strongly consider using MySQL connector library
@@ -523,7 +523,7 @@ class IntegrationInstaller:
                         )
                         sql_file.write("FLUSH PRIVILEGES;\n")
                         mysql_sql_path = sql_file.name
-                    os.chmod(mysql_sql_path, 0o600)
+                    Path(mysql_sql_path).chmod(0o600)
 
                     # Execute SQL file - password is in file, not command line or process args
                     self.log("Setting up database and user with secure password...", "STEP")

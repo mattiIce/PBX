@@ -6,6 +6,7 @@ This script helps configure environment variables required for production,
 validates their format, and checks for security issues.
 """
 
+import contextlib
 import re
 import secrets
 import subprocess
@@ -142,17 +143,18 @@ class EnvSetup:
             )
 
         # Validate formats
-        if "DB_PORT" in self.variables:
-            if not self._validate_port(self.variables["DB_PORT"]):
-                errors.append("Invalid DB_PORT (must be 1-65535)")
+        if "DB_PORT" in self.variables and not self._validate_port(self.variables["DB_PORT"]):
+            errors.append("Invalid DB_PORT (must be 1-65535)")
 
-        if "SMTP_PORT" in self.variables:
-            if not self._validate_port(self.variables["SMTP_PORT"]):
-                errors.append("Invalid SMTP_PORT (must be 1-65535)")
+        if "SMTP_PORT" in self.variables and not self._validate_port(
+            self.variables["SMTP_PORT"]
+        ):
+            errors.append("Invalid SMTP_PORT (must be 1-65535)")
 
-        if "SMTP_FROM_ADDRESS" in self.variables:
-            if not self._validate_email(self.variables["SMTP_FROM_ADDRESS"]):
-                warnings.append("SMTP_FROM_ADDRESS may not be a valid email")
+        if "SMTP_FROM_ADDRESS" in self.variables and not self._validate_email(
+            self.variables["SMTP_FROM_ADDRESS"]
+        ):
+            warnings.append("SMTP_FROM_ADDRESS may not be a valid email")
 
         # Check for weak passwords
         if "DB_PASSWORD" in self.variables:
@@ -296,11 +298,9 @@ class EnvSetup:
     def _write_env_file(self) -> None:
         """Write environment variables to file."""
         # Set secure permissions first (Unix-like systems)
-        try:
+        with contextlib.suppress(OSError):
             # Create file with restricted permissions
             Path(self.env_file).touch(mode=0o600)
-        except OSError:
-            pass  # Windows doesn't support chmod
 
         with open(self.env_file, "w") as f:
             f.write("# PBX Environment Configuration\n")

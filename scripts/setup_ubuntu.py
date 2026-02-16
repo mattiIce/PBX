@@ -392,7 +392,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             with open(self.env_file, "w", encoding="utf-8") as f:
                 f.write(env_content)
             # Set restrictive permissions on .env file
-            os.chmod(self.env_file, 0o600)
+            self.env_file.chmod(0o600)
             self.print_success(f".env file created at {self.env_file}")
             return True
         except OSError as e:

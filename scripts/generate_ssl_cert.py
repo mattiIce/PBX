@@ -5,7 +5,6 @@ For development and testing purposes only
 """
 
 import ipaddress
-import os
 import sys
 from datetime import UTC
 from pathlib import Path
@@ -95,7 +94,7 @@ def generate_self_signed_cert(
         )
 
     # Set restrictive permissions on private key
-    os.chmod(key_file, 0o600)
+    key_file.chmod(0o600)
 
     # Write certificate to file
     cert_file = cert_path / "server.crt"
