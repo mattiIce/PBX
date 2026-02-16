@@ -38,7 +38,7 @@ class JitterBufferPacket:
 
 class JitterBuffer:
     """
-    Adaptive jitter buffer for RTP packets
+    Adaptive jitter buffer for RTP packets.
 
     Smooths out variable packet arrival times caused by network jitter.
     Based on implementations from FreeSWITCH and Asterisk.
@@ -50,9 +50,9 @@ class JitterBuffer:
     - Late packet handling
     """
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         """
-        Initialize jitter buffer
+        Initialize jitter buffer.
 
         Args:
             config: Configuration dictionary with:
@@ -62,34 +62,34 @@ class JitterBuffer:
                 - adaptive: Enable adaptive mode (default: True)
         """
         self.logger = get_logger()
-        self.config = config or {}
+        self.config: dict[str, Any] = config or {}
 
         # Configuration parameters
-        self.initial_length_ms = self.config.get("initial_length_ms", 50)
-        self.max_length_ms = self.config.get("max_length_ms", 200)
-        self.max_drift_ms = self.config.get("max_drift_ms", 30)
-        self.adaptive = self.config.get("adaptive", True)
+        self.initial_length_ms: int = self.config.get("initial_length_ms", 50)
+        self.max_length_ms: int = self.config.get("max_length_ms", 200)
+        self.max_drift_ms: int = self.config.get("max_drift_ms", 30)
+        self.adaptive: bool = self.config.get("adaptive", True)
 
         # Buffer state
-        self.buffer: deque = deque()
-        self.lock = threading.Lock()
+        self.buffer: deque[JitterBufferPacket] = deque()
+        self.lock: threading.Lock = threading.Lock()
 
         # Packet tracking
-        self.last_sequence = None
-        self.last_timestamp = None
-        self.packets_received = 0
-        self.packets_dropped = 0
-        self.packets_late = 0
-        self.packets_lost = 0
+        self.last_sequence: int | None = None
+        self.last_timestamp: int | None = None
+        self.packets_received: int = 0
+        self.packets_dropped: int = 0
+        self.packets_late: int = 0
+        self.packets_lost: int = 0
 
         # Timing
         self.start_time: float | None = None
-        self.current_length_ms = self.initial_length_ms
+        self.current_length_ms: float = self.initial_length_ms
 
         # Statistics for adaptive behavior
-        self.jitter_estimate = 0.0
+        self.jitter_estimate: float = 0.0
         self.last_arrival_time: float | None = None
-        self.transit_time_variance = 0.0
+        self.transit_time_variance: float = 0.0
 
         self.logger.info(
             "Jitter buffer initialized: "
@@ -168,8 +168,8 @@ class JitterBuffer:
 
             return packet.data
 
-    def _insert_ordered(self, packet: JitterBufferPacket):
-        """Insert packet in sequence order"""
+    def _insert_ordered(self, packet: JitterBufferPacket) -> None:
+        """Insert packet in sequence order."""
         # If buffer empty, just append
         if len(self.buffer) == 0:
             self.buffer.append(packet)
@@ -204,8 +204,8 @@ class JitterBuffer:
 
         return diff
 
-    def _update_statistics(self, packet: JitterBufferPacket):
-        """Update jitter and timing statistics"""
+    def _update_statistics(self, packet: JitterBufferPacket) -> None:
+        """Update jitter and timing statistics."""
         if self.last_arrival_time is None:
             self.last_arrival_time = packet.arrival_time
             return
@@ -231,8 +231,8 @@ class JitterBuffer:
 
         self.last_arrival_time = packet.arrival_time
 
-    def _adapt_buffer_size(self):
-        """Adapt buffer size based on jitter"""
+    def _adapt_buffer_size(self) -> None:
+        """Adapt buffer size based on jitter."""
         # Calculate target buffer size based on jitter
         # Use 3x jitter as buffer size (allows for variance)
         target_ms = self.jitter_estimate * 1000 * 3
@@ -273,8 +273,8 @@ class JitterBuffer:
                 "adaptive": self.adaptive,
             }
 
-    def reset(self):
-        """Reset jitter buffer state"""
+    def reset(self) -> None:
+        """Reset jitter buffer state."""
         with self.lock:
             self.buffer.clear()
             self.last_sequence = None
@@ -317,23 +317,21 @@ class JitterBuffer:
 
 
 class JitterBufferManager:
-    """
-    Manager for multiple jitter buffers (one per call)
-    """
+    """Manager for multiple jitter buffers (one per call)."""
 
-    def __init__(self, pbx):
+    def __init__(self, pbx: Any) -> None:
         """
-        Initialize jitter buffer manager
+        Initialize jitter buffer manager.
 
         Args:
-            pbx: PBX instance
+            pbx: PBX instance.
         """
         self.pbx = pbx
         self.logger = get_logger()
         self.buffers: dict[str, JitterBuffer] = {}
 
         # Get global config
-        self.config = {}
+        self.config: dict[str, Any] = {}
         if hasattr(pbx, "config") and pbx.config:
             rtp_config = pbx.config.get("rtp", {})
             self.config = rtp_config.get("jitter_buffer", {})

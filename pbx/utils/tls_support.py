@@ -40,7 +40,7 @@ class TLSManager:
         if cert_file and key_file:
             self._create_ssl_context()
 
-    def _create_ssl_context(self):
+    def _create_ssl_context(self) -> None:
         """Create SSL context with FIPS-approved settings and TLS 1.3 support"""
         try:
             # Create SSL context
@@ -86,7 +86,7 @@ class TLSManager:
             self.logger.error(f"Failed to create SSL context: {e}")
             self.ssl_context = None
 
-    def wrap_socket(self, socket, server_side=True):
+    def wrap_socket(self, socket: object, server_side: bool = True) -> ssl.SSLSocket | None:
         """
         Wrap socket with TLS
 
@@ -110,7 +110,7 @@ class TLSManager:
             self.logger.error(f"Failed to wrap socket with TLS: {e}")
             return None
 
-    def is_available(self):
+    def is_available(self) -> bool:
         """Check if TLS is available"""
         return self.ssl_context is not None
 
@@ -121,7 +121,7 @@ class SRTPManager:
     Uses AES-GCM for FIPS compliance
     """
 
-    def __init__(self, fips_mode=False):
+    def __init__(self, fips_mode: bool = False) -> None:
         """
         Initialize SRTP manager
 
@@ -137,7 +137,7 @@ class SRTPManager:
                 "SRTP requires cryptography library. Install with: pip install cryptography"
             )
 
-    def create_session(self, call_id, master_key, master_salt):
+    def create_session(self, call_id: str, master_key: bytes, master_salt: bytes) -> bool:
         """
         Create SRTP session with encryption keys
 
@@ -168,7 +168,7 @@ class SRTPManager:
             self.logger.error(f"Failed to create SRTP session: {e}")
             return False
 
-    def encrypt_rtp_packet(self, call_id, rtp_packet, sequence_number):
+    def encrypt_rtp_packet(self, call_id: str, rtp_packet: bytes, sequence_number: int) -> bytes | None:
         """
         Encrypt RTP packet using SRTP
 
@@ -199,7 +199,7 @@ class SRTPManager:
             self.logger.error(f"Failed to encrypt RTP packet: {e}")
             return None
 
-    def decrypt_rtp_packet(self, call_id, encrypted_packet, sequence_number):
+    def decrypt_rtp_packet(self, call_id: str, encrypted_packet: bytes, sequence_number: int) -> bytes | None:
         """
         Decrypt SRTP packet
 

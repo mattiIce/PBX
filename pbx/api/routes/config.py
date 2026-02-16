@@ -1,7 +1,6 @@
 """Flask Blueprint for configuration and SSL management routes."""
 
 import ipaddress
-import os
 import ssl
 import traceback
 from datetime import UTC, datetime, timedelta
@@ -473,7 +472,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
             )
 
         # set restrictive permissions on private key
-        os.chmod(key_file, 0o600)
+        key_file.chmod(0o600)
 
         # Write certificate to file
         cert_file = cert_path / "server.crt"

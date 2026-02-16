@@ -52,8 +52,6 @@ logging:
 
     def teardown_method(self) -> None:
         """Clean up test environment"""
-        import os
-
         if Path(self.temp_config_path).exists():
             Path(self.temp_config_path).unlink(missing_ok=True)
 

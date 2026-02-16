@@ -27,7 +27,7 @@ import yaml
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Remove extensions from config.yml (after migration to database)"
     )

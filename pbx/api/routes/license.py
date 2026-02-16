@@ -3,6 +3,7 @@
 import os
 import tempfile
 from pathlib import Path
+from typing import Any
 
 from flask import Blueprint, Response
 
@@ -19,7 +20,7 @@ logger = get_logger()
 license_bp = Blueprint("license", __name__)
 
 
-def _require_license_admin() -> tuple[bool, dict]:
+def _require_license_admin() -> tuple[bool, dict[str, Any]]:
     """Check if current user is the license administrator (extension 9322).
 
     Returns:

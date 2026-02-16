@@ -52,7 +52,7 @@ export async function loadPagingZones(): Promise<void> {
         const tbody = document.getElementById('paging-zones-body') as HTMLElement | null;
         if (!tbody) return;
 
-        const zones = data.zones || [];
+        const zones = data.zones ?? [];
         if (zones.length === 0) {
             tbody.innerHTML = '<tr><td colspan="4">No paging zones</td></tr>';
             return;
@@ -82,7 +82,7 @@ export async function loadPagingDevices(): Promise<void> {
 
         const container = document.getElementById('paging-devices-list') as HTMLElement | null;
         if (container) {
-            const devices = data.devices || [];
+            const devices = data.devices ?? [];
             container.innerHTML = devices.length === 0
                 ? '<div class="info-box">No paging devices</div>'
                 : devices.map(d => `<div class="device-item">${escapeHtml(d.name || d.id)}</div>`).join('');
@@ -103,7 +103,7 @@ export async function loadActivePages(): Promise<void> {
 
         const container = document.getElementById('active-pages') as HTMLElement | null;
         if (container) {
-            const pages = data.pages || [];
+            const pages = data.pages ?? [];
             container.innerHTML = pages.length === 0
                 ? '<div class="info-box">No active pages</div>'
                 : pages.map(p => `<div class="page-item">${escapeHtml(p.zone)} - ${escapeHtml(p.initiator)}</div>`).join('');

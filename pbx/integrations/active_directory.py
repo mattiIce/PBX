@@ -172,7 +172,12 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(self, extension_registry: object | None = None, extension_db: object | None = None, phone_provisioning: object | None = None) -> dict | int:
+    def sync_users(
+        self,
+        extension_registry: object | None = None,
+        extension_db: object | None = None,
+        phone_provisioning: object | None = None,
+    ) -> dict | int:
         """
         Synchronize users from Active Directory
 
