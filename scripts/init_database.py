@@ -16,7 +16,7 @@ import psycopg2
 def get_db_config() -> dict[str, str | int]:
     """Get database configuration from environment variables with validation."""
     try:
-        port = int(os.environ.get("DB_PORT", 5432))
+        port = int(os.environ.get("DB_PORT", "5432"))
     except ValueError:
         print("✗ Error: DB_PORT must be a valid integer")
         sys.exit(1)

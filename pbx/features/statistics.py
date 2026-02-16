@@ -324,10 +324,10 @@ class StatisticsEngine:
         Returns:
             Dictionary with filtered analytics
         """
-        from datetime import datetime as dt
+        from datetime import UTC, datetime as dt
 
-        start = dt.strptime(start_date, "%Y-%m-%d")
-        end = dt.strptime(end_date, "%Y-%m-%d")
+        start = dt.strptime(start_date, "%Y-%m-%d").replace(tzinfo=UTC)
+        end = dt.strptime(end_date, "%Y-%m-%d").replace(tzinfo=UTC)
         days_diff = (end - start).days + 1
 
         all_records = []

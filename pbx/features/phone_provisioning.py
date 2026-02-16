@@ -1581,8 +1581,8 @@ P2351 = 1
                 result[v] = []
             result[v].append(m)
         # Sort each vendor's models
-        for v in result:
-            result[v] = sorted(result[v])
+        for v, models in result.items():
+            result[v] = sorted(models)
         return result
 
     def reboot_phone(self, extension_number: str, sip_server: Any) -> bool:

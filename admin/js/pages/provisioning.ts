@@ -212,4 +212,5 @@ window.loadProvisioningTemplates = loadProvisioningTemplates;
 window.loadProvisioningSettings = loadProvisioningSettings;
 window.loadPhonebookSettings = loadPhonebookSettings;
 window.deleteDevice = deleteDevice;
-window.viewTemplate = viewTemplate as (...args: string[]) => void | Promise<void>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy backward compat shim, overridden by admin.js at runtime
+(window as any).viewTemplate = viewTemplate;

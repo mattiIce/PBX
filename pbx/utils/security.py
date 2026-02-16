@@ -737,9 +737,9 @@ class ThreatDetector:
 
         # Store in database
         if self.database and self.database.enabled:
-            from datetime import datetime as dt, timedelta
+            from datetime import UTC, datetime as dt, timedelta
 
-            blocked_until_dt = dt.now() + timedelta(seconds=duration)
+            blocked_until_dt = dt.now(tz=UTC) + timedelta(seconds=duration)
 
             insert_query = (
                 """

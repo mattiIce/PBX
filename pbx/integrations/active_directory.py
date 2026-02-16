@@ -427,8 +427,7 @@ class ActiveDirectoryIntegration:
                                     "ad_synced": True,
                                 }
                                 # Apply permissions to config
-                                for perm_key, perm_value in permissions.items():
-                                    ext_config[perm_key] = perm_value
+                                ext_config.update(permissions)
 
                                 new_ext = Extension(extension_number, display_name, ext_config)
                                 extension_registry.extensions[extension_number] = new_ext

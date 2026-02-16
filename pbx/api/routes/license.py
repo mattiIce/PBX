@@ -338,7 +338,7 @@ def handle_license_toggle() -> tuple[Response, int]:
             with os.fdopen(tmp_fd, "w") as tmp_file:
                 tmp_file.writelines(env_lines)
             # Atomically replace the original .env with the new version
-            os.replace(tmp_path, env_file)
+            Path(tmp_path).replace(env_file)
         except OSError as write_err:
             # Best-effort cleanup of temporary file
             try:

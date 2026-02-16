@@ -166,7 +166,7 @@ def test_setup_environment_file() -> None:
             assert "DB_HOST=localhost" in content, "Should contain host"
 
         # Verify file permissions are restrictive (600)
-        file_mode = os.stat(wizard.env_file).st_mode & 0o777
+        file_mode = Path(wizard.env_file).stat().st_mode & 0o777
         assert file_mode == 0o600, f"File should have 600 permissions, got {oct(file_mode)}"
 
     finally:

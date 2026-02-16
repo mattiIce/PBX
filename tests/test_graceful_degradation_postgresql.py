@@ -7,11 +7,10 @@ PostgreSQL backend is not available, falling back to SQLite.
 
 import sys
 from datetime import datetime, timezone
+from pathlib import Path
 from unittest import TestCase, mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-from pathlib import Path
 
 from pbx.utils.database import POSTGRES_AVAILABLE, DatabaseBackend
 

@@ -11,7 +11,7 @@ from datetime import UTC
 from pathlib import Path
 
 try:
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes, serialization

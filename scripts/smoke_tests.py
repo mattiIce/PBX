@@ -306,7 +306,7 @@ class SmokeTestRunner:
             except (ValueError, json.JSONDecodeError):
                 return e.code, {"error": str(e)}
         except urllib.error.URLError as e:
-            raise Exception(f"Connection failed: {e}")
+            raise Exception(f"Connection failed: {e}") from e
 
     def _get_text(self, path: str) -> tuple[int, str]:
         """
@@ -328,7 +328,7 @@ class SmokeTestRunner:
         except urllib.error.HTTPError as e:
             return e.code, e.read().decode()
         except urllib.error.URLError as e:
-            raise Exception(f"Connection failed: {e}")
+            raise Exception(f"Connection failed: {e}") from e
 
 
 def main() -> None:

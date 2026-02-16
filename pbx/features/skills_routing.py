@@ -142,8 +142,7 @@ class SkillsBasedRouter:
     def _initialize_schema(self) -> None:
         """Initialize skills routing database tables"""
         # Skills table
-        skills_table = (
-            """
+        skills_table = """
         CREATE TABLE IF NOT EXISTS skills (
             skill_id VARCHAR(50) PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
@@ -151,16 +150,6 @@ class SkillsBasedRouter:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS skills (
-            skill_id VARCHAR(50) PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         # Agent skills table
         agent_skills_table = (
