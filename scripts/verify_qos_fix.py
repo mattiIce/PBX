@@ -18,7 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from pbx.features.qos_monitoring import QoSMetrics
 
 
-def verify_fix():
+def verify_fix() -> int:
     """Verify the QoS sampling fix is working correctly"""
 
     print("=" * 70)

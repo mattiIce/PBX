@@ -1946,7 +1946,7 @@ function initializeForms() {
                 }
             } catch (error) {
                 console.error('Error registering device:', error);
-                showNotification('Error registering device: ' + error.message, 'error');
+                showNotification(`Error registering device: ${error.message}`, 'error');
             }
         });
     }
@@ -3011,7 +3011,7 @@ async function loadSupportedVendors() {
         if (vendorsList) {
             const errorPara = document.createElement('p');
             errorPara.className = 'error';
-            errorPara.textContent = 'Error connecting to server: ' + error.message;
+            errorPara.textContent = `Error connecting to server: ${error.message}`;
             
             const solutionPara = document.createElement('p');
             const solutionStrong = document.createElement('strong');
@@ -3072,7 +3072,7 @@ async function loadProvisioningDevices() {
     } catch (error) {
         console.error('Error loading provisioning devices:', error);
         document.getElementById('provisioning-devices-table-body').innerHTML =
-            '<tr><td colspan="8" class="error">Error: ' + error.message + '</td></tr>';
+            `<tr><td colspan="8" class="error">Error: ${error.message}</td></tr>`;
     }
 }
 
@@ -3111,11 +3111,11 @@ async function deleteDevice(mac) {
             loadProvisioningDevices();
         } else {
             const data = await response.json();
-            showNotification('Failed to delete device: ' + (data.error || 'Unknown error'), 'error');
+            showNotification(`Failed to delete device: ${data.error ?? 'Unknown error'}`, 'error');
         }
     } catch (error) {
         console.error('Error deleting device:', error);
-        showNotification('Error deleting device: ' + error.message, 'error');
+        showNotification(`Error deleting device: ${error.message}`, 'error');
     }
 }
 
@@ -3133,7 +3133,7 @@ async function loadProvisioningTemplates() {
         }
     } catch (error) {
         console.error('Error loading templates:', error);
-        showNotification('Error loading templates: ' + error.message, 'error');
+        showNotification(`Error loading templates: ${error.message}`, 'error');
     }
 }
 
@@ -3220,7 +3220,7 @@ async function viewTemplate(vendor, model) {
         }
     } catch (error) {
         console.error('Error viewing template:', error);
-        showNotification('Error viewing template: ' + error.message, 'error');
+        showNotification(`Error viewing template: ${error.message}`, 'error');
     }
 }
 
@@ -3235,11 +3235,11 @@ async function exportTemplate(vendor, model) {
             loadProvisioningTemplates(); // Refresh list
         } else {
             const error = await response.json();
-            showNotification('Error exporting template: ' + error.error, 'error');
+            showNotification(`Error exporting template: ${error.error}`, 'error');
         }
     } catch (error) {
         console.error('Error exporting template:', error);
-        showNotification('Error exporting template: ' + error.message, 'error');
+        showNotification(`Error exporting template: ${error.message}`, 'error');
     }
 }
 
@@ -3256,7 +3256,7 @@ async function editTemplate(vendor, model) {
         }
     } catch (error) {
         console.error('Error loading template:', error);
-        showNotification('Error loading template: ' + error.message, 'error');
+        showNotification(`Error loading template: ${error.message}`, 'error');
     }
 }
 
@@ -3331,11 +3331,11 @@ async function saveTemplateContent(vendor, model, content) {
             loadProvisioningTemplates(); // Refresh list
         } else {
             const error = await response.json();
-            showNotification('Error updating template: ' + error.error, 'error');
+            showNotification(`Error updating template: ${error.error}`, 'error');
         }
     } catch (error) {
         console.error('Error saving template:', error);
-        showNotification('Error saving template: ' + error.message, 'error');
+        showNotification(`Error saving template: ${error.message}`, 'error');
     }
 }
 
@@ -3351,7 +3351,7 @@ async function reloadTemplates() {
             loadProvisioningTemplates(); // Refresh list
         } else {
             const error = await response.json();
-            showNotification('Error reloading templates: ' + error.error, 'error');
+            showNotification(`Error reloading templates: ${error.error}`, 'error');
         }
     } catch (error) {
         console.error('Error reloading templates:', error);

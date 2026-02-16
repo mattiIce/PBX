@@ -29,30 +29,30 @@ except ImportError:
 class PhoneProvisioningSetup:
     """Interactive setup for phone provisioning"""
 
-    def __init__(self, config_path="config.yml", api_url="https://localhost:9000"):
+    def __init__(self, config_path: str = "config.yml", api_url: str = "https://localhost:9000") -> None:
         self.config_path = config_path
         self.api_url = api_url
         self.config = None
         self.pbx_running = False
         self.devices_to_register = []
 
-    def clear_screen(self):
+    def clear_screen(self) -> None:
         """Clear the terminal screen"""
         os.system("clear" if os.name != "nt" else "cls")
 
-    def print_header(self, text):
+    def print_header(self, text: str) -> None:
         """Print a formatted header"""
         print("\n" + "=" * 70)
         print(f"  {text}")
         print("=" * 70 + "\n")
 
-    def print_section(self, text):
+    def print_section(self, text: str) -> None:
         """Print a formatted section header"""
         print(f"\n{'─' * 70}")
         print(f"  {text}")
         print("─" * 70)
 
-    def get_input(self, prompt, default=None, validation_func=None):
+    def get_input(self, prompt: str, default: str | None = None, validation_func: object = None) -> str:
         """Get user input with optional default and validation"""
         while True:
             if default:
@@ -74,7 +74,7 @@ class PhoneProvisioningSetup:
 
             return user_input
 
-    def get_yes_no(self, prompt, default="y"):
+    def get_yes_no(self, prompt: str, default: str = "y") -> bool:
         """Get yes/no input from user"""
         default_text = "Y/n" if default.lower() == "y" else "y/N"
         response = input(f"{prompt} [{default_text}]: ").strip().lower()
@@ -82,7 +82,7 @@ class PhoneProvisioningSetup:
             response = default.lower()
         return response in ["y", "yes"]
 
-    def validate_mac_address(self, mac):
+    def validate_mac_address(self, mac: str) -> tuple[bool, str | None]:
         """Validate MAC address format"""
         # Remove common separators
         cleaned = mac.replace(":", "").replace("-", "").replace(".", "")
@@ -94,13 +94,13 @@ class PhoneProvisioningSetup:
                 pass
         return False, "Invalid MAC address format. Use format like: 00:15:65:12:34:56"
 
-    def validate_extension(self, ext):
+    def validate_extension(self, ext: str) -> tuple[bool, str | None]:
         """Validate extension number"""
         if ext.isdigit() and len(ext) >= 3:
             return True, None
         return False, "Extension must be a number with at least 3 digits"
 
-    def load_config(self):
+    def load_config(self) -> bool:
         """Load the PBX configuration file"""
         try:
             with open(self.config_path) as f:
@@ -113,7 +113,7 @@ class PhoneProvisioningSetup:
             print(f"❌ Error loading configuration: {e}")
             return False
 
-    def save_config(self):
+    def save_config(self) -> bool:
         """Save the PBX configuration file"""
         try:
             with open(self.config_path, "w") as f:
@@ -123,7 +123,7 @@ class PhoneProvisioningSetup:
             print(f"❌ Error saving configuration: {e}")
             return False
 
-    def check_pbx_running(self):
+    def check_pbx_running(self) -> bool:
         """Check if PBX is currently running"""
         if not REQUESTS_AVAILABLE:
             return False
@@ -136,7 +136,7 @@ class PhoneProvisioningSetup:
             self.pbx_running = False
             return False
 
-    def get_supported_vendors(self):
+    def get_supported_vendors(self) -> dict:
         """Get list of supported phone vendors and models"""
         if not REQUESTS_AVAILABLE or not self.pbx_running:
             # Return defaults if PBX is not running
@@ -160,7 +160,7 @@ class PhoneProvisioningSetup:
 
         return {"vendors": [], "models": {}}
 
-    def get_extensions(self):
+    def get_extensions(self) -> list[str]:
         """Get list of configured extensions"""
         if not self.config:
             return []
@@ -168,7 +168,7 @@ class PhoneProvisioningSetup:
         extensions = self.config.get("extensions", [])
         return [ext["number"] for ext in extensions]
 
-    def register_device_api(self, mac, extension, vendor, model):
+    def register_device_api(self, mac: str, extension: str, vendor: str, model: str) -> bool:
         """Register a device via API (if PBX is running)"""
         if not REQUESTS_AVAILABLE or not self.pbx_running:
             return False
@@ -189,7 +189,7 @@ class PhoneProvisioningSetup:
             print(f"❌ Error registering device: {e}")
             return False
 
-    def add_device_to_config(self, mac, extension, vendor, model):
+    def add_device_to_config(self, mac: str, extension: str, vendor: str, model: str) -> bool:
         """Add device to config.yml provisioning section"""
         if not self.config:
             return False
@@ -222,7 +222,7 @@ class PhoneProvisioningSetup:
 
         return True
 
-    def setup_provisioning_settings(self):
+    def setup_provisioning_settings(self) -> bool:
         """Configure basic provisioning settings"""
         self.print_section("Step 1: Provisioning Settings")
 

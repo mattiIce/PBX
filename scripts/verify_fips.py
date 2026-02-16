@@ -16,14 +16,14 @@ from pbx.utils.config import Config
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
 
 
-def print_header(text):
+def print_header(text: str) -> None:
     """Print section header"""
     print("\n" + "=" * 70)
     print(text)
     print("=" * 70)
 
 
-def print_status(test_name, passed, message=""):
+def print_status(test_name: str, passed: bool, message: str = "") -> None:
     """Print test status"""
     status = "✓ PASS" if passed else "✗ FAIL"
     color = "\033[92m" if passed else "\033[91m"
@@ -34,7 +34,7 @@ def print_status(test_name, passed, message=""):
         print(f"       {message}")
 
 
-def check_system_fips():
+def check_system_fips() -> bool:
     """Check if system-level FIPS is enabled"""
     print_header("System FIPS Configuration")
 
@@ -86,7 +86,7 @@ def check_system_fips():
     return all_passed
 
 
-def check_cryptography_library():
+def check_cryptography_library() -> bool:
     """Check cryptography library configuration"""
     print_header("Cryptography Library")
 
@@ -142,7 +142,7 @@ def check_cryptography_library():
     return all_passed
 
 
-def check_pbx_configuration():
+def check_pbx_configuration() -> bool:
     """Check PBX FIPS configuration"""
     print_header("Warden Voip System Configuration")
 
@@ -185,7 +185,7 @@ def check_pbx_configuration():
     return all_passed
 
 
-def test_encryption_operations():
+def test_encryption_operations() -> bool:
     """Test FIPS-compliant encryption operations"""
     print_header("Encryption Operations Test")
 
@@ -264,7 +264,7 @@ def test_encryption_operations():
     return all_passed
 
 
-def check_dependencies():
+def check_dependencies() -> bool:
     """Check Python dependencies for FIPS compliance"""
     print_header("Python Dependencies")
 
@@ -312,7 +312,7 @@ def check_dependencies():
     return all_passed
 
 
-def generate_report():
+def generate_report() -> int:
     """Generate comprehensive FIPS compliance report"""
     print("\n" + "=" * 70)
     print("FIPS 140-2 COMPLIANCE VERIFICATION REPORT")

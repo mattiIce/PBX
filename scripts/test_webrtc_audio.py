@@ -16,11 +16,10 @@ Usage:
 import argparse
 import sys
 from datetime import UTC, datetime
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
-
-from pathlib import Path
 
 from pbx.features.webrtc import WebRTCSignalingServer
 

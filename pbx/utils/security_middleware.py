@@ -39,7 +39,7 @@ class SecurityHeaders:
     }
 
     @staticmethod
-    def add_headers(handler, is_https: bool = False):
+    def add_headers(handler: object, is_https: bool = False) -> None:
         """Add security headers to response.
 
         Args:
