@@ -17,7 +17,7 @@ class Config:
     # Email validation regex pattern
     EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
-    def __init__(self, config_file="config.yml", load_env=True):
+    def __init__(self, config_file: str = "config.yml", load_env: bool = True) -> None:
         """
         Initialize configuration
 
@@ -39,7 +39,7 @@ class Config:
         self.load()
 
     @staticmethod
-    def validate_email(email):
+    def validate_email(email: str) -> bool:
         """
         Validate email format
 
@@ -53,10 +53,10 @@ class Config:
             return False
         return bool(Config.EMAIL_PATTERN.match(email))
 
-    def load(self):
+    def load(self) -> None:
         """Load configuration from YAML file and resolve environment variables"""
         if Path(self.config_file).exists():
-            with open(self.config_file) as f:
+            with Path(self.config_file).open() as f:
                 self.config = yaml.safe_load(f) or {}
 
             # Resolve environment variables in configuration
@@ -65,7 +65,7 @@ class Config:
         else:
             raise FileNotFoundError(f"Configuration file not found: {self.config_file}")
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: object = None) -> object:
         """
         Get configuration value
 
@@ -89,11 +89,11 @@ class Config:
 
         return value
 
-    def get_extensions(self):
+    def get_extensions(self) -> list[dict]:
         """Get all configured extensions"""
         return self.config.get("extensions", [])
 
-    def get_extension(self, number):
+    def get_extension(self, number: str | int) -> dict | None:
         """
         Get extension by number
 
@@ -109,7 +109,7 @@ class Config:
                 return ext
         return None
 
-    def save(self):
+    def save(self) -> bool:
         """Save current configuration to YAML file"""
         try:
             with open(self.config_file, "w") as f:
@@ -121,11 +121,8 @@ class Config:
         except OSError as e:
             logger.error("Error saving config: Disk error - %s", e)
             return False
-        except OSError as e:
-            logger.error("Error saving config: %s", e)
-            return False
 
-    def add_extension(self, number, name, email, password, allow_external=True):
+    def add_extension(self, number: str | int, name: str, email: str, password: str, allow_external: bool = True) -> bool:
         """
         Add a new extension to configuration
 

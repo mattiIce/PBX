@@ -80,7 +80,7 @@ def parse_csv_metadata(csv_path):
                     # Try alternative formats
                     for fmt in ["%Y-%m-%d %H:%M:%S", "%m/%d/%Y %H:%M:%S", "%Y%m%d_%H%M%S"]:
                         try:
-                            timestamp = datetime.strptime(timestamp_str, fmt)
+                            timestamp = datetime.strptime(timestamp_str, fmt).replace(tzinfo=UTC)
                             break
                         except ValueError:
                             continue
@@ -208,7 +208,7 @@ def parse_filename_metadata(audio_dir):
                 time_str = parts[2]
 
                 try:
-                    timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+                    timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S").replace(tzinfo=UTC)
                 except (ValueError, TypeError):
                     timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime, tz=UTC)
 

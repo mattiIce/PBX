@@ -146,7 +146,7 @@ class CertificateManager:
 
             # Parse output: notAfter=Jan  1 00:00:00 2025 GMT
             date_str = result.stdout.strip().split("=")[1]
-            return datetime.strptime(date_str, "%b %d %H:%M:%S %Y %Z")
+            return datetime.strptime(date_str, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=UTC)
         except (subprocess.CalledProcessError, ValueError, IndexError) as e:
             logger.error(f"Failed to get certificate expiry: {e}")
             return None

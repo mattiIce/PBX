@@ -11,7 +11,6 @@ Requirements:
 Note: Requires internet connection to use Google TTS API (free, no API key needed)
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -62,7 +61,7 @@ def generate_auto_attendant_tts(
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text
@@ -140,7 +139,7 @@ def generate_voicemail_tts(output_dir="voicemail_prompts", sample_rate=8000):
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text

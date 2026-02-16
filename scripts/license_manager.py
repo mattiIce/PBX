@@ -14,7 +14,6 @@ Usage:
 
 import argparse
 import json
-import os
 import sys
 from datetime import datetime, timezone
 
@@ -382,7 +381,7 @@ def cmd_batch_generate(args):
     output_dir = args.output_dir or "generated_licenses"
 
     # Create output directory
-    os.makedirs(output_dir, exist_ok=True)
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     print(f"Generating {len(licenses_to_generate)} licenses...")
     print(f"Output directory: {output_dir}")

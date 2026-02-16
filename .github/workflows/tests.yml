@@ -2,59 +2,72 @@ name: Tests
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
+  UV_SYSTEM_PYTHON: "1"
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
+      fail-fast: false
       matrix:
-        python-version: ['3.13']
+        python-version: ["3.13", "3.14"]
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v6
-      with:
-        python-version: ${{ matrix.python-version }}
-        cache: 'pip'
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
 
-    - name: Install system dependencies
-      run: |
-        set -e
-        sudo apt-get update
-        sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev libspeex-dev
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-    - name: Install Python dependencies
-      run: |
-        set -e
-        pip install uv
-        uv pip install --system -r requirements.txt
-        uv pip install --system -r requirements-dev.txt
+      - name: Install system dependencies
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            espeak ffmpeg libopus-dev portaudio19-dev libspeex-dev
 
-    - name: Run pytest with coverage
-      run: |
-        pytest tests/ -v --tb=short --maxfail=5 --cov=pbx --cov-report=xml --cov-report=term-missing
+      - name: Install Python dependencies
+        run: |
+          set -e
+          uv pip install -e ".[test]"
 
-    - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v5
-      with:
-        files: ./coverage.xml
-        flags: unittests
-        name: codecov-umbrella
-        fail_ci_if_error: false
-        token: ${{ secrets.CODECOV_TOKEN }}
-      continue-on-error: true
+      - name: Run pytest with coverage
+        run: |
+          pytest tests/ -v --tb=short --maxfail=5 \
+            --cov=pbx --cov-report=xml --cov-report=term-missing
+
+      - name: Upload coverage to Codecov
+        if: matrix.python-version == '3.13'
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
+        continue-on-error: true
 
   test-with-postgresql:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     services:
       postgres:
-        image: postgres:17
+        image: postgres:17-alpine
         env:
           POSTGRES_DB: pbx_system
           POSTGRES_USER: pbx_user
@@ -68,42 +81,66 @@ jobs:
           - 5432:5432
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.13'
-        cache: 'pip'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install system dependencies
-      run: |
-        set -e
-        sudo apt-get update
-        sudo apt-get install -y espeak ffmpeg libopus-dev portaudio19-dev
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-    - name: Install Python dependencies
-      run: |
-        set -e
-        pip install uv
-        uv pip install --system -r requirements.txt
-        uv pip install --system -r requirements-dev.txt
+      - name: Install system dependencies
+        run: |
+          set -e
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            espeak ffmpeg libopus-dev portaudio19-dev libspeex-dev
 
-    - name: Configure database
-      env:
-        DB_HOST: localhost
-        DB_PORT: 5432
-        DB_NAME: pbx_system
-        DB_USER: pbx_user
-        DB_PASSWORD: test_password
-      run: |
-        set -e
-        echo "DB_HOST=$DB_HOST" > .env
-        echo "DB_PORT=$DB_PORT" >> .env
-        echo "DB_NAME=$DB_NAME" >> .env
-        echo "DB_USER=$DB_USER" >> .env
-        echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+      - name: Install Python dependencies
+        run: |
+          set -e
+          uv pip install -e ".[test]"
 
-    - name: Run PostgreSQL tests
-      run: |
-        pytest tests/test_*postgresql*.py tests/test_database*.py -v
+      - name: Configure database
+        env:
+          DB_HOST: localhost
+          DB_PORT: "5432"
+          DB_NAME: pbx_system
+          DB_USER: pbx_user
+          DB_PASSWORD: test_password
+        run: |
+          set -e
+          echo "DB_HOST=$DB_HOST" > .env
+          echo "DB_PORT=$DB_PORT" >> .env
+          echo "DB_NAME=$DB_NAME" >> .env
+          echo "DB_USER=$DB_USER" >> .env
+          echo "DB_PASSWORD=$DB_PASSWORD" >> .env
+
+      - name: Run PostgreSQL tests
+        run: |
+          pytest tests/test_*postgresql*.py tests/test_database*.py -v
+
+  test-javascript:
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run JavaScript tests
+        run: npm test
+
+      - name: Run type check
+        run: npm run typecheck

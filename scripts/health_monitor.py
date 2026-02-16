@@ -316,7 +316,7 @@ class HealthMonitor:
                 if result.returncode == 0:
                     # Parse expiration date
                     expiry_str = result.stdout.strip().split("=")[1]
-                    expiry_date = datetime.datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
+                    expiry_date = datetime.datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z").replace(tzinfo=datetime.UTC)
                     days_until_expiry = (expiry_date - datetime.datetime.now(datetime.UTC)).days
 
                     if days_until_expiry < 7:

@@ -5,7 +5,6 @@ Export to BI tools (Tableau, Power BI, etc.)
 
 import csv
 import json
-import os
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import TYPE_CHECKING
@@ -178,7 +177,7 @@ class BIIntegration:
             str: Path to exported file
         """
         # Ensure export directory exists
-        os.makedirs(self.export_path, exist_ok=True)
+        Path(self.export_path).mkdir(parents=True, exist_ok=True)
 
         timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 

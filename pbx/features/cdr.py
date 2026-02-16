@@ -4,7 +4,6 @@ Tracks all calls for billing, analytics, and reporting
 """
 
 import json
-import os
 from datetime import UTC, datetime
 from enum import Enum
 from pathlib import Path
@@ -103,7 +102,7 @@ class CDRSystem:
         self.active_records = {}  # call_id -> CDRRecord
         self.logger = get_logger()
 
-        os.makedirs(storage_path, exist_ok=True)
+        Path(storage_path).mkdir(parents=True, exist_ok=True)
 
     def start_record(self, call_id, from_extension, to_extension):
         """

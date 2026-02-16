@@ -329,7 +329,7 @@ def main():
     args = parser.parse_args()
 
     # Create output directory
-    os.makedirs(args.output_dir, exist_ok=True)
+    Path(args.output_dir).mkdir(parents=True, exist_ok=True)
 
     # Determine which tracks to generate
     generate_all = args.all or not (

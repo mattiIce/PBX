@@ -12,7 +12,6 @@ Note: Requires internet connection to use Google TTS API (free, no API key neede
       Voice quality is natural and professional-sounding.
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -57,7 +56,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text
@@ -130,7 +129,7 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text

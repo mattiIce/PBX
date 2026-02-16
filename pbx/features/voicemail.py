@@ -2,7 +2,6 @@
 Voicemail system
 """
 
-import os
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
@@ -42,6 +41,8 @@ MIN_WAV_HEADER_SIZE = 12  # Minimum size for RIFF/WAVE header check
 
 # Cache the debug PIN logging flag at module level to avoid repeated environment lookups
 # This value is set once when the module is loaded and doesn't change during runtime
+import os
+
 _DEBUG_PIN_LOGGING_ENABLED = os.environ.get("DEBUG_VM_PIN", "false").lower() in ("true", "1", "yes")
 
 
@@ -113,7 +114,7 @@ class VoicemailBox:
                     )
 
         # Create storage directory
-        os.makedirs(self.storage_path, exist_ok=True)
+        Path(self.storage_path).mkdir(parents=True, exist_ok=True)
 
         # Load existing messages from disk
         self._load_messages()
@@ -404,7 +405,7 @@ class VoicemailBox:
 
                 # Delete file
                 if Path(msg["file_path"]).exists():
-                    os.remove(msg["file_path"])
+                    Path(msg["file_path"]).unlink()
                     self.logger.info(f"  ✓ Deleted audio file: {msg['file_path']}")
 
                 # Delete from database if available
@@ -472,7 +473,7 @@ class VoicemailBox:
                                 # Try common timestamp formats
                                 for fmt in ["%Y-%m-%d %H:%M:%S.%", "%Y-%m-%d %H:%M:%S"]:
                                     try:
-                                        timestamp = datetime.strptime(timestamp, fmt)
+                                        timestamp = datetime.strptime(timestamp, fmt).replace(tzinfo=UTC)
                                         break
                                     except ValueError:
                                         continue
@@ -531,7 +532,8 @@ class VoicemailBox:
         if not Path(self.storage_path).exists():
             return
 
-        for filename in os.listdir(self.storage_path):
+        for entry in Path(self.storage_path).iterdir():
+            filename = entry.name
             if filename.endswith(".wav"):
                 file_path = Path(self.storage_path) / filename
                 # Parse message info from filename: {caller_id}_{timestamp}.wav
@@ -685,7 +687,7 @@ class VoicemailBox:
         """
         try:
             if Path(self.greeting_path).exists():
-                os.remove(self.greeting_path)
+                Path(self.greeting_path).unlink()
                 self.logger.info(f"Deleted custom greeting for extension {self.extension_number}")
                 return True
             return False
@@ -720,7 +722,7 @@ class VoicemailSystem:
             except Exception as e:
                 self.logger.error(f"Failed to initialize email notifier: {e}")
 
-        os.makedirs(storage_path, exist_ok=True)
+        Path(storage_path).mkdir(parents=True, exist_ok=True)
 
     def get_mailbox(self, extension_number):
         """

@@ -12,7 +12,6 @@ Manual reboot options if needed:
 - API: POST /api/phones/reboot or POST /api/phones/{extension}/reboot
 """
 
-import os
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -1042,9 +1041,10 @@ P2351 = 1
 
         if custom_templates_dir and Path(custom_templates_dir).exists():
             try:
-                for filename in os.listdir(custom_templates_dir):
+                for entry in Path(custom_templates_dir).iterdir():
+                    filename = entry.name
                     if filename.endswith(".template"):
-                        filepath = Path(custom_templates_dir) / filename
+                        filepath = entry
                         # Parse filename: vendor_model.template
                         parts = filename.replace(".template", "").split("_")
                         if len(parts) >= 2:
@@ -1735,7 +1735,7 @@ P2351 = 1
         # Create directory if it doesn't exist
         if not Path(custom_dir).exists():
             try:
-                os.makedirs(custom_dir)
+                Path(custom_dir).mkdir(parents=True, exist_ok=True)
                 self.logger.info(f"Created custom templates directory: {custom_dir}")
             except OSError as e:
                 return False, f"Failed to create directory: {e}", None
@@ -1783,7 +1783,7 @@ P2351 = 1
         # Create directory if it doesn't exist
         if not Path(custom_dir).exists():
             try:
-                os.makedirs(custom_dir)
+                Path(custom_dir).mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 return False, f"Failed to create directory: {e}"
 

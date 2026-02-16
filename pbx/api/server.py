@@ -123,7 +123,7 @@ class PBXFlaskServer:
             if response.status_code == 200:
                 data = response.json()
                 if data.get("certificate") and data.get("private_key"):
-                    os.makedirs(str(Path(cert_file).parent), exist_ok=True)
+                    Path(cert_file).parent.mkdir(parents=True, exist_ok=True)
                     with open(cert_file, "w") as f:
                         f.write(data["certificate"])
                     with open(key_file, "w") as f:

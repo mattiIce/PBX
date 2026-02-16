@@ -3,29 +3,33 @@ Logging configuration for PBX system
 """
 
 import logging
-import os
 from pathlib import Path
 
 
 class PBXLogger:
     """Centralized logging for PBX system"""
 
-    _instance = None
-    _sub_loggers = {}
+    _instance: "PBXLogger | None" = None
+    _sub_loggers: dict[str, logging.Logger] = {}
 
-    def __new__(cls):
+    def __new__(cls) -> "PBXLogger":
         if cls._instance is None:
             cls._instance = super().__new__(cls)
             cls._instance._initialized = False
         return cls._instance
 
-    def __init__(self):
+    def __init__(self) -> None:
         if getattr(self, "_initialized", False):
             return
         self._initialized = True
-        self.logger = None
+        self.logger: logging.Logger | None = None
 
-    def setup(self, log_level="INFO", log_file=None, console=True):
+    def setup(
+        self,
+        log_level: str = "INFO",
+        log_file: str | None = None,
+        console: bool = True,
+    ) -> None:
         """
         Setup logging configuration
 
@@ -53,20 +57,27 @@ class PBXLogger:
 
         # File handler
         if log_file:
-            log_dir = str(Path(log_file).parent)
-            if log_dir:  # Only create directory if path includes a directory
-                os.makedirs(log_dir, exist_ok=True)
+            log_path = Path(log_file)
+            log_dir = log_path.parent
+            if str(log_dir):  # Only create directory if path includes a directory
+                log_dir.mkdir(parents=True, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(formatter)
             self.logger.addHandler(file_handler)
 
-    def get_logger(self):
+    def get_logger(self) -> logging.Logger:
         """Get the logger instance"""
         if self.logger is None:
             self.setup()
         return self.logger
 
-    def get_sub_logger(self, name, log_file=None, log_level=None, console=True):
+    def get_sub_logger(
+        self,
+        name: str,
+        log_file: str | None = None,
+        log_level: str | None = None,
+        console: bool = True,
+    ) -> logging.Logger:
         """
         Get or create a sub-logger with its own log file
 
@@ -109,9 +120,10 @@ class PBXLogger:
 
         # File handler (if log_file specified)
         if log_file:
-            log_dir = str(Path(log_file).parent)
-            if log_dir:  # Only create directory if path includes a directory
-                os.makedirs(log_dir, exist_ok=True)
+            log_path = Path(log_file)
+            log_dir = log_path.parent
+            if str(log_dir):  # Only create directory if path includes a directory
+                log_dir.mkdir(parents=True, exist_ok=True)
             file_handler = logging.FileHandler(log_file)
             file_handler.setFormatter(formatter)
             logger.addHandler(file_handler)
@@ -122,12 +134,12 @@ class PBXLogger:
         return logger
 
 
-def get_logger():
+def get_logger() -> logging.Logger:
     """Get PBX logger instance"""
     return PBXLogger().get_logger()
 
 
-def get_vm_ivr_logger():
+def get_vm_ivr_logger() -> logging.Logger:
     """Get VM IVR logger instance with dedicated log file"""
     return PBXLogger().get_sub_logger(
         name="VM_IVR",

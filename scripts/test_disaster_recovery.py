@@ -97,7 +97,7 @@ class DisasterRecoveryTester:
 
         try:
             # Create backup directory
-            os.makedirs(self.config.backup_dir, exist_ok=True)
+            Path(self.config.backup_dir).mkdir(parents=True, exist_ok=True)
 
             # Backup filename with timestamp
             timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
@@ -158,7 +158,7 @@ class DisasterRecoveryTester:
 
         try:
             config_backup_dir = Path(self.config.backup_dir) / "config"
-            os.makedirs(config_backup_dir, exist_ok=True)
+            config_backup_dir.mkdir(parents=True, exist_ok=True)
 
             # Files to backup
             config_files = [
@@ -207,7 +207,7 @@ class DisasterRecoveryTester:
 
         try:
             data_backup_dir = Path(self.config.backup_dir) / "data"
-            os.makedirs(data_backup_dir, exist_ok=True)
+            data_backup_dir.mkdir(parents=True, exist_ok=True)
 
             # Directories to backup
             data_dirs = ["voicemail", "recordings", "voicemail_prompts", "moh"]
@@ -377,7 +377,7 @@ class DisasterRecoveryTester:
 
             # Create restore directory
             restore_config_dir = Path(self.config.restore_dir) / "config"
-            os.makedirs(restore_config_dir, exist_ok=True)
+            restore_config_dir.mkdir(parents=True, exist_ok=True)
 
             # Restore files
             restored_files = []
