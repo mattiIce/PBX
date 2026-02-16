@@ -34,8 +34,8 @@ class SDPSession:
             if not stripped_line or "=" not in stripped_line:
                 continue
 
-            type_char = line[0]
-            value = line[2:].strip()
+            type_char = stripped_line[0]
+            value = stripped_line[2:].strip()
 
             if type_char == "v":
                 # Version

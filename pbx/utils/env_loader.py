@@ -233,16 +233,16 @@ class EnvironmentLoader:
             with Path(env_file).open() as f:
                 for line_num, line in enumerate(f, 1):
                     # Skip empty lines and comments
-                    line = line.strip()
-                    if not line or line.startswith("#"):
+                    stripped_line = line.strip()
+                    if not stripped_line or stripped_line.startswith("#"):
                         continue
 
                     # Parse KEY=VALUE format
-                    if "=" not in line:
-                        logger.warning(f"Invalid line {line_num} in {env_file}: {line}")
+                    if "=" not in stripped_line:
+                        logger.warning(f"Invalid line {line_num} in {env_file}: {stripped_line}")
                         continue
 
-                    key, value = line.split("=", 1)
+                    key, value = stripped_line.split("=", 1)
                     key = key.strip()
                     value = value.strip()
 

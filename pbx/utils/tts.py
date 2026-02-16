@@ -258,14 +258,15 @@ def generate_prompts(
 
     for filename, text in prompts.items():
         # Substitute company name if present
-        if company_name and "{company_name}" in text:
-            text = text.replace("{company_name}", company_name)
+        prompt_text = text
+        if company_name and "{company_name}" in prompt_text:
+            prompt_text = prompt_text.replace("{company_name}", company_name)
 
         wav_name = filename if filename.endswith(".wav") else f"{filename}.wav"
         output_file = Path(output_dir) / wav_name
 
         try:
-            if text_to_wav_telephony(text, output_file, sample_rate=sample_rate):
+            if text_to_wav_telephony(prompt_text, output_file, sample_rate=sample_rate):
                 file_size = Path(output_file).stat().st_size
                 logger.info(f"Generated {filename}: {file_size:,} bytes")
                 success_count += 1

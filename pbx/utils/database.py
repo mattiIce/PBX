@@ -281,9 +281,9 @@ class DatabaseBackend:
                 # Execute each statement
                 cursor = self.connection.cursor()
                 for stmt in statements:
-                    stmt = stmt.strip()
-                    if stmt:
-                        cursor.execute(stmt)
+                    stripped_stmt = stmt.strip()
+                    if stripped_stmt:
+                        cursor.execute(stripped_stmt)
                 cursor.close()
                 if not self._autocommit:
                     self.connection.commit()

@@ -160,9 +160,9 @@ def read_existing_env() -> tuple[dict[str, str], Path]:
         print(f"✓ Found existing .env file at: {env_file}")
         with open(env_file) as f:
             for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
+                stripped_line = line.strip()
+                if stripped_line and not stripped_line.startswith("#") and "=" in stripped_line:
+                    key, value = stripped_line.split("=", 1)
                     # Remove quotes if present
                     value = value.strip()
                     if (value.startswith('"') and value.endswith('"')) or (
@@ -327,17 +327,17 @@ def main() -> None:
         selected_indices = []
         invalid_inputs = []
         for item in selection.split(","):
-            item = item.strip()
-            if not item:
+            stripped_item = item.strip()
+            if not stripped_item:
                 continue
             try:
-                num = int(item)
+                num = int(stripped_item)
                 if num >= 1:  # Only accept positive numbers starting from 1
                     selected_indices.append(num - 1)
                 else:
-                    invalid_inputs.append(item)
+                    invalid_inputs.append(stripped_item)
             except ValueError:
-                invalid_inputs.append(item)
+                invalid_inputs.append(stripped_item)
 
         # Warn about invalid inputs
         if invalid_inputs:

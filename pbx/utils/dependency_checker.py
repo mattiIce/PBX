@@ -46,18 +46,18 @@ def parse_requirements_txt(requirements_path: str = "requirements.txt") -> dict[
         return requirements
 
     for line in req_path.read_text().splitlines():
-        line = line.strip()
+        stripped_line = line.strip()
 
         # Skip empty lines and comments
-        if not line or line.startswith("#"):
+        if not stripped_line or stripped_line.startswith("#"):
             continue
 
         # Remove inline comments
-        if "#" in line:
-            line = line.split("#")[0].strip()
+        if "#" in stripped_line:
+            stripped_line = stripped_line.split("#")[0].strip()
 
         # Parse package name and version spec
-        match = re.match(r"^([a-zA-Z0-9_.-]+)([>=<!=]+.*)?", line)
+        match = re.match(r"^([a-zA-Z0-9_.-]+)([>=<!=]+.*)?", stripped_line)
         if match:
             package_name = match.group(1)
             version_spec = match.group(2) or ""
