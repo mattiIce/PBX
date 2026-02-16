@@ -439,8 +439,8 @@ python3 scripts/capacity_calculator.py --current-usage
 # Cleanup old recordings
 find recordings/ -mtime +90 -delete
 
-# Cleanup old CDR
-python3 scripts/cleanup_cdr.py --days 365
+# Cleanup old CDR (via SQL)
+psql -U warden -d warden_pbx -c "DELETE FROM call_detail_records WHERE created_at < NOW() - INTERVAL '365 days';"
 ```
 
 **4. Use Spot Instances** (Non-Production)
