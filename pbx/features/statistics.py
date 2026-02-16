@@ -5,6 +5,7 @@ Provides comprehensive analytics for dashboard visualization
 
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from pbx.utils.logger import get_logger
@@ -484,7 +485,7 @@ class StatisticsEngine:
                 "queue",
             ]
 
-            with open(filename, "w", newline="") as csvfile:
+            with Path(filename).open("w", newline="") as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=headers, extrasaction="ignore")
                 writer.writeheader()
                 writer.writerows(records)

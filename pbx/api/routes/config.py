@@ -339,7 +339,7 @@ def get_ssl_status() -> tuple[Response, int]:
         cert_details = None
         if cert_exists and SSL_GENERATION_AVAILABLE:
             try:
-                with open(cert_file, "rb") as f:
+                with Path(cert_file).open("rb") as f:
                     cert_data = f.read()
                     cert = x509.load_pem_x509_certificate(cert_data, default_backend())
 
@@ -462,7 +462,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
 
         # Write private key to file
         key_file = cert_path / "server.key"
-        with open(key_file, "wb") as f:
+        with key_file.open("wb") as f:
             f.write(
                 private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
@@ -476,7 +476,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
 
         # Write certificate to file
         cert_file = cert_path / "server.crt"
-        with open(cert_file, "wb") as f:
+        with cert_file.open("wb") as f:
             f.write(cert.public_bytes(serialization.Encoding.PEM))
 
         logger.info(f"SSL certificate generated successfully: {cert_file}")

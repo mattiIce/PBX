@@ -142,7 +142,7 @@ class EmailNotifier:
             # Attach audio file if requested and available
             if self.include_attachment and audio_file_path and Path(audio_file_path).exists():
                 try:
-                    with open(audio_file_path, "rb") as f:
+                    with Path(audio_file_path).open("rb") as f:
                         audio_data = f.read()
 
                     audio = MIMEAudio(audio_data, "wav")

@@ -137,7 +137,7 @@ def export_analytics() -> Response | tuple[Response, int]:
 
             if pbx_core.statistics_engine.export_to_csv(analytics["records"], temp_file.name):
                 # Read the file and send as response
-                with open(temp_file.name, "rb") as f:
+                with Path(temp_file.name).open("rb") as f:
                     csv_data = f.read()
 
                 # Clean up temp file

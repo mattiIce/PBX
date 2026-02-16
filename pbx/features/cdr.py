@@ -172,7 +172,7 @@ class CDRSystem:
         filename = Path(self.storage_path) / f"cdr_{date_str}.jsonl"
 
         try:
-            with open(filename, "a") as f:
+            with filename.open("a") as f:
                 json.dump(record.to_dict(), f)
                 f.write("\n")
         except (OSError, ValueError, json.JSONDecodeError) as e:
@@ -199,7 +199,7 @@ class CDRSystem:
 
         records = []
         try:
-            with open(filename) as f:
+            with filename.open() as f:
                 for line in f:
                     if line.strip():
                         records.append(json.loads(line))

@@ -6,6 +6,7 @@ Intelligent routing using free machine learning (scikit-learn)
 import json
 from collections import defaultdict
 from datetime import UTC, datetime, timedelta
+from pathlib import Path
 from typing import Any
 
 from pbx.utils.logger import get_logger
@@ -267,7 +268,7 @@ class AICallRouting:
                     export_item["timestamp"] = export_item["timestamp"].isoformat()
                 export_data.append(export_item)
 
-            with open(filename, "w") as f:
+            with Path(filename).open("w") as f:
                 json.dump(export_data, f, indent=2)
 
             self.logger.info(f"Exported {len(export_data)} training samples to {filename}")
@@ -279,7 +280,7 @@ class AICallRouting:
     def import_training_data(self, filename: str) -> bool:
         """Import training data from JSON file"""
         try:
-            with open(filename) as f:
+            with Path(filename).open() as f:
                 import_data = json.load(f)
 
             for item in import_data:

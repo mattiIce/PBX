@@ -371,7 +371,7 @@ class OperatorConsole:
         """
         if Path(self.vip_db_path).exists():
             try:
-                with open(self.vip_db_path) as f:
+                with Path(self.vip_db_path).open() as f:
                     return json.load(f)
             except (OSError, ValueError, json.JSONDecodeError) as e:
                 self.logger.error(f"Failed to load VIP database: {e}")
@@ -381,7 +381,7 @@ class OperatorConsole:
     def _save_vip_database(self) -> bool:
         """Save VIP caller database to JSON file"""
         try:
-            with open(self.vip_db_path, "w") as f:
+            with Path(self.vip_db_path).open("w") as f:
                 json.dump(self.vip_callers, f, indent=2)
             return True
         except (OSError, ValueError, json.JSONDecodeError) as e:

@@ -51,7 +51,7 @@ def handle_static_file(path: str) -> Response:
             content_type = "application/octet-stream"
 
         # Read and serve file
-        with open(full_path, "rb") as f:
+        with full_path.open("rb") as f:
             content = f.read()
 
         response = current_app.response_class(

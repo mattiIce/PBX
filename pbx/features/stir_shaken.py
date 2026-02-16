@@ -12,6 +12,7 @@ import time
 import uuid
 from datetime import UTC, datetime, timedelta
 from enum import Enum
+from pathlib import Path
 from typing import Any
 
 try:
@@ -113,7 +114,7 @@ class STIRSHAKENManager:
     def _load_private_key(self, key_path: str) -> None:
         """Load private key from file"""
         try:
-            with open(key_path, "rb") as f:
+            with Path(key_path).open("rb") as f:
                 key_data = f.read()
                 self.private_key = serialization.load_pem_private_key(
                     key_data, password=None, backend=default_backend()
@@ -126,7 +127,7 @@ class STIRSHAKENManager:
     def _load_certificate(self, cert_path: str) -> None:
         """Load certificate from file"""
         try:
-            with open(cert_path, "rb") as f:
+            with Path(cert_path).open("rb") as f:
                 cert_data = f.read()
                 self.certificate = x509.load_pem_x509_certificate(cert_data, default_backend())
             self.logger.info(f"Loaded certificate from {cert_path}")
@@ -137,7 +138,7 @@ class STIRSHAKENManager:
     def _load_ca_bundle(self, ca_path: str) -> None:
         """Load CA certificate bundle"""
         try:
-            with open(ca_path, "rb") as f:
+            with Path(ca_path).open("rb") as f:
                 ca_data = f.read()
                 # Load all certificates from bundle
                 self.ca_bundle = []

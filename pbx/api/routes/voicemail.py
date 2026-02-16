@@ -93,7 +93,7 @@ def handle_get_voicemail(subpath: str) -> Response:
                 )
             # Default: Serve audio file for playback in admin panel
             if Path(message["file_path"]).exists():
-                with open(message["file_path"], "rb") as f:
+                with Path(message["file_path"]).open("rb") as f:
                     audio_data = f.read()
                 response = current_app.response_class(
                     response=audio_data,
@@ -299,7 +299,7 @@ def _handle_get_voicemail_greeting(subpath: str) -> Response:
             return send_json({"error": "No custom greeting found"}, 404)
 
         # Serve greeting file
-        with open(greeting_path, "rb") as f:
+        with Path(greeting_path).open("rb") as f:
             greeting_data = f.read()
 
         response = current_app.response_class(
@@ -371,7 +371,7 @@ def handle_export_voicemail_box(subpath: str) -> Response:
                 zipf.writestr("MANIFEST.txt", "".join(manifest_lines))
 
             # Read ZIP file content
-            with open(zip_path, "rb") as f:
+            with zip_path.open("rb") as f:
                 zip_content = f.read()
 
             # Send ZIP file as response

@@ -1181,7 +1181,7 @@ def generate_auto_attendant_prompts(output_dir: str = "auto_attendant") -> None:
             wav_data = generate_voice_prompt(prompt_type)
 
             # Write to file
-            with open(output_file, "wb") as f:
+            with output_file.open("wb") as f:
                 f.write(wav_data)
 
             logger.info(f"Generated {output_file}")
