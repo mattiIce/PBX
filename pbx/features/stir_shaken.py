@@ -542,13 +542,13 @@ class STIRSHAKENManager:
         )
 
         # Write certificate
-        cert_path = f"{output_dir}/stir_shaken_cert.pem"
-        with open(cert_path, "wb") as f:
+        cert_path = Path(output_dir) / "stir_shaken_cert.pem"
+        with cert_path.open("wb") as f:
             f.write(cert.public_bytes(serialization.Encoding.PEM))
 
         # Write private key
-        key_path = f"{output_dir}/stir_shaken_key.pem"
-        with open(key_path, "wb") as f:
+        key_path = Path(output_dir) / "stir_shaken_key.pem"
+        with key_path.open("wb") as f:
             f.write(
                 private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,

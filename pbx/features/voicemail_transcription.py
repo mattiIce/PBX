@@ -304,7 +304,7 @@ class VoicemailTranscriptionService:
             client = speech.SpeechClient()
 
             # Read audio file
-            with open(audio_file_path, "rb") as audio_file:
+            with Path(audio_file_path).open("rb") as audio_file:
                 content = audio_file.read()
 
             # Configure audio and recognition settings

@@ -347,7 +347,7 @@ class MatrixIntegration:
                 "Content-type": content_type,
             }
 
-            with open(file_path, "rb") as f:
+            with Path(file_path).open("rb") as f:
                 response = requests.post(url, data=f.read(), headers=headers, timeout=30)
 
             if response.status_code == 200:

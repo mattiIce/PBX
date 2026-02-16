@@ -923,7 +923,7 @@ class RTPPlayer:
             return False
 
         try:
-            with open(file_path, "rb") as f:
+            with Path(file_path).open("rb") as f:
                 # Read WAV header
                 riff = f.read(4)
                 if riff != b"RIFF" or len(riff) < 4:

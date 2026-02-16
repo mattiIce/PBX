@@ -218,8 +218,9 @@ class DisasterRecoveryTester:
                         shutil.copytree(dir_name, dest, dirs_exist_ok=True)
 
                         # Calculate size
-                        for root, _dirs, files in os.walk(dest):
-                            total_size += sum(Path(Path(root).stat().st_size / f) for f in files)
+                        for entry in dest.rglob("*"):
+                            if entry.is_file():
+                                total_size += entry.stat().st_size
 
                     backed_up_dirs.append(dir_name)
 
