@@ -25,7 +25,7 @@ class SessionToken:
     # Token expiration time (24 hours in seconds)
     TOKEN_EXPIRATION = 24 * 60 * 60
 
-    def __init__(self, secret_key: str | None = None):
+    def __init__(self, secret_key: str | None = None) -> None:
         """
         Initialize session token manager
 

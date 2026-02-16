@@ -61,7 +61,7 @@ class DRTestResults:
 class DisasterRecoveryTester:
     """Automated DR testing"""
 
-    def __init__(self, config: DRTestConfig):
+    def __init__(self, config: DRTestConfig) -> None:
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.results = {
@@ -522,7 +522,7 @@ class DisasterRecoveryTester:
         return results
 
 
-def print_results(results: DRTestResults):
+def print_results(results: DRTestResults) -> None:
     """Print formatted test results"""
     print("\n" + "=" * 70)
     print("DISASTER RECOVERY TEST RESULTS")
@@ -580,7 +580,7 @@ def print_results(results: DRTestResults):
     print("=" * 70 + "\n")
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="Automated Disaster Recovery Testing Tool")
     parser.add_argument(

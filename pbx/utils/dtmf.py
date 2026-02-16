@@ -35,7 +35,7 @@ DTMF_HIGH_FREQS = [1209, 1336, 1477, 1633]
 class DTMFDetector:
     """DTMF tone detector using Goertzel algorithm"""
 
-    def __init__(self, sample_rate: int = 8000, samples_per_frame: int = 205):
+    def __init__(self, sample_rate: int = 8000, samples_per_frame: int = 205) -> None:
         """
         Initialize DTMF detector
 
@@ -243,7 +243,7 @@ class DTMFDetector:
 class DTMFGenerator:
     """Generate DTMF tones for testing"""
 
-    def __init__(self, sample_rate: int = 8000):
+    def __init__(self, sample_rate: int = 8000) -> None:
         """
         Initialize DTMF generator
 

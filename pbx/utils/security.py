@@ -478,7 +478,7 @@ def get_rate_limiter(config: dict | None = None) -> RateLimiter:
     return RateLimiter(config)
 
 
-def get_security_auditor(database=None, config: dict | None = None) -> SecurityAuditor:
+def get_security_auditor(database: object = None, config: dict | None = None) -> SecurityAuditor:
     """Get security auditor instance"""
     return SecurityAuditor(database, config)
 
@@ -963,7 +963,7 @@ class ThreatDetector:
         except sqlite3.Error as e:
             self.logger.error(f"Failed to log threat event: {e}")
 
-    def get_threat_summary(self, hours: int = 24) -> dict:
+    def get_threat_summary(self, hours: int = 24) -> dict[str, object]:
         """
         Get summary of recent threats
 
@@ -1035,6 +1035,6 @@ class ThreatDetector:
             return summary
 
 
-def get_threat_detector(database=None, config: dict | None = None) -> ThreatDetector:
+def get_threat_detector(database: object = None, config: dict | None = None) -> ThreatDetector:
     """Get threat detector instance"""
     return ThreatDetector(database, config)

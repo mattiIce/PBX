@@ -24,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 from pbx.utils.licensing import LicenseManager, LicenseType
 
 
-def setup_config():
+def setup_config() -> dict:
     """Load configuration for license manager."""
     # Try to load from config.yml
     try:
@@ -41,7 +41,7 @@ def setup_config():
     return {}
 
 
-def cmd_generate(args):
+def cmd_generate(args: argparse.Namespace) -> int:
     """Generate a new license."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -91,7 +91,7 @@ def cmd_generate(args):
     return 0
 
 
-def cmd_install(args):
+def cmd_install(args: argparse.Namespace) -> int:
     """Install a license file."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -133,7 +133,7 @@ def cmd_install(args):
     return 1
 
 
-def cmd_status(args):
+def cmd_status(args: argparse.Namespace) -> int:
     """Show license status."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -167,7 +167,7 @@ def cmd_status(args):
     return 0
 
 
-def cmd_revoke(args):
+def cmd_revoke(args: argparse.Namespace) -> int:
     """Revoke current license."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -189,7 +189,7 @@ def cmd_revoke(args):
     return 1
 
 
-def cmd_enable(args):
+def cmd_enable(args: argparse.Namespace) -> int:
     """Enable licensing enforcement."""
     # Update environment file
     env_file = str(Path(__file__).parent.parent / ".env")
@@ -224,7 +224,7 @@ def cmd_enable(args):
     return 0
 
 
-def cmd_disable(args):
+def cmd_disable(args: argparse.Namespace) -> int:
     """Disable licensing enforcement."""
     # Update environment file
     env_file = str(Path(__file__).parent.parent / ".env")
@@ -267,7 +267,7 @@ def cmd_disable(args):
     return 0
 
 
-def cmd_remove_lock(args):
+def cmd_remove_lock(args: argparse.Namespace) -> int:
     """Remove license lock file."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -291,7 +291,7 @@ def cmd_remove_lock(args):
     return 1
 
 
-def cmd_features(args):
+def cmd_features(args: argparse.Namespace) -> int:
     """List available features for current license."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -343,7 +343,7 @@ def cmd_features(args):
     return 0
 
 
-def cmd_batch_generate(args):
+def cmd_batch_generate(args: argparse.Namespace) -> int:
     """Generate multiple licenses from a configuration file."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -449,7 +449,7 @@ def cmd_batch_generate(args):
     return 0
 
 
-def main():
+def main() -> int:
     """Run the license management CLI tool."""
     parser = argparse.ArgumentParser(
         description="License Management CLI Tool",
