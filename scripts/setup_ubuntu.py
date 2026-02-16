@@ -135,7 +135,7 @@ class SetupWizard:
         """Check Ubuntu version"""
         self.print_info("Checking Ubuntu version...")
         try:
-            with open("/etc/os-release", encoding="utf-8") as f:
+            with Path("/etc/os-release").open(encoding="utf-8") as f:
                 content = f.read()
                 if "Ubuntu" in content:
                     if "24.04" in content:
@@ -389,7 +389,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
 """
 
         try:
-            with open(self.env_file, "w", encoding="utf-8") as f:
+            with self.env_file.open("w", encoding="utf-8") as f:
                 f.write(env_content)
             # Set restrictive permissions on .env file
             self.env_file.chmod(0o600)

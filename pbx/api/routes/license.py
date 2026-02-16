@@ -303,7 +303,7 @@ def handle_license_toggle() -> tuple[Response, int]:
         # Read existing .env
         env_lines = []
         if Path(env_file).exists():
-            with open(env_file) as f:
+            with Path(env_file).open() as f:
                 env_lines = f.readlines()
 
         # Check if license lock exists

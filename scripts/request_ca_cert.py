@@ -54,7 +54,7 @@ def request_certificate_from_ca(
     # Check if we already have a private key
     if key_file.exists():
         print(f"Using existing private key: {key_file}")
-        with open(key_file, "rb") as f:
+        with key_file.open("rb") as f:
             private_key = serialization.load_pem_private_key(f.read(), password=None)
     else:
         print("1. Generating RSA private key (2048 bits)...")
@@ -64,7 +64,7 @@ def request_certificate_from_ca(
         )
 
         # Save private key
-        with open(key_file, "wb") as f:
+        with key_file.open("wb") as f:
             f.write(
                 private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
@@ -108,7 +108,7 @@ def request_certificate_from_ca(
 
     # Save CSR for reference
     csr_file = cert_path / "server.csr"
-    with open(csr_file, "w") as f:
+    with csr_file.open("w") as f:
         f.write(csr_pem)
     print(f"   CSR saved to: {csr_file}")
 
@@ -142,7 +142,7 @@ def request_certificate_from_ca(
             return False
 
         # Save certificate
-        with open(cert_file, "w") as f:
+        with cert_file.open("w") as f:
             f.write(signed_cert)
         print(f"   ✓ Certificate saved to: {cert_file}")
 
@@ -150,7 +150,7 @@ def request_certificate_from_ca(
         ca_cert_data = cert_data.get("ca_certificate")
         if ca_cert_data:
             ca_cert_file = cert_path / "ca.crt"
-            with open(ca_cert_file, "w") as f:
+            with ca_cert_file.open("w") as f:
                 f.write(ca_cert_data)
             print(f"   ✓ CA certificate saved to: {ca_cert_file}")
 
@@ -188,7 +188,7 @@ def request_certificate_from_ca(
 def load_ca_config_from_yml(config_file: str = "config.yml") -> dict:
     """Load CA configuration from config.yml"""
     try:
-        with open(config_file) as f:
+        with Path(config_file).open() as f:
             config = yaml.safe_load(f)
 
         ssl_config = config.get("api", {}).get("ssl", {})
@@ -242,7 +242,7 @@ if __name__ == "__main__":
     if not hostname:
         # Try to load from config.yml
         try:
-            with open(args.config) as f:
+            with Path(args.config).open() as f:
                 config = yaml.safe_load(f)
             hostname = config.get("server", {}).get("external_ip", "localhost")
         except (KeyError, OSError, TypeError, ValueError):

@@ -630,7 +630,7 @@ def main() -> None:
 
         # Save report if requested
         if args.save_report:
-            with open(args.save_report, "w") as f:
+            with Path(args.save_report).open("w") as f:
                 json.dump(asdict(results), f, indent=2)
             print(f"Results saved to {args.save_report}")
 

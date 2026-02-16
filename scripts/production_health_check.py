@@ -189,7 +189,7 @@ class HealthCheck:
             print(f"\n{BLUE}=== Memory ==={RESET}")
 
         try:
-            with open("/proc/meminfo") as f:
+            with Path("/proc/meminfo").open() as f:
                 meminfo = {line.split()[0].rstrip(":"): int(line.split()[1]) for line in f}
 
             mem_total = meminfo.get("MemTotal", 0)
@@ -229,7 +229,7 @@ class HealthCheck:
                 try:
                     # Basic validation - just check if file is readable
                     # Full certificate validation would require the cryptography module
-                    with open(cert_path, "rb") as f:
+                    with cert_path.open("rb") as f:
                         f.read()
                     self.log(f"SSL certificate found at {cert_path}", "pass", "warning")
                     break
@@ -252,7 +252,7 @@ class HealthCheck:
             try:
                 import yaml
 
-                with open(config_file) as f:
+                with config_file.open() as f:
                     yaml.safe_load(f)
                 self.log("config.yml is valid YAML", "pass", "critical")
             except OSError as e:

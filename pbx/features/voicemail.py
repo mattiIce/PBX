@@ -144,7 +144,7 @@ class VoicemailBox:
 
         file_path = Path(self.storage_path) / f"{message_id}.wav"
 
-        with open(file_path, "wb") as f:
+        with file_path.open("wb") as f:
             f.write(audio_data)
 
         message = {
@@ -631,7 +631,7 @@ class VoicemailBox:
                     "Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
                 )
 
-            with open(self.greeting_path, "wb") as f:
+            with self.greeting_path.open("wb") as f:
                 f.write(audio_data)
             self.logger.info(
                 f"Saved custom greeting for extension {self.extension_number} ({len(audio_data)} bytes) to {self.greeting_path}"

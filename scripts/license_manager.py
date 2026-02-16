@@ -199,7 +199,7 @@ def cmd_enable(args: argparse.Namespace) -> int:
     # Read existing .env
     env_lines = []
     if Path(env_file).exists():
-        with open(env_file) as f:
+        with Path(env_file).open() as f:
             env_lines = f.readlines()
 
     # Update or add PBX_LICENSING_ENABLED
@@ -214,7 +214,7 @@ def cmd_enable(args: argparse.Namespace) -> int:
         env_lines.append("\n# Licensing\nPBX_LICENSING_ENABLED=true\n")
 
     # Write back
-    with open(env_file, "w") as f:
+    with Path(env_file).open("w") as f:
         f.writelines(env_lines)
 
     print("✓ Licensing enabled in .env file")
@@ -234,7 +234,7 @@ def cmd_disable(args: argparse.Namespace) -> int:
     # Read existing .env
     env_lines = []
     if Path(env_file).exists():
-        with open(env_file) as f:
+        with Path(env_file).open() as f:
             env_lines = f.readlines()
 
     # Check for license lock file
@@ -257,7 +257,7 @@ def cmd_disable(args: argparse.Namespace) -> int:
         env_lines.append("\n# Licensing\nPBX_LICENSING_ENABLED=false\n")
 
     # Write back
-    with open(env_file, "w") as f:
+    with Path(env_file).open("w") as f:
         f.writelines(env_lines)
 
     print("✓ Licensing disabled in .env file (all features unlocked)")
@@ -354,7 +354,7 @@ def cmd_batch_generate(args: argparse.Namespace) -> int:
         return 1
 
     try:
-        with open(args.batch_file) as f:
+        with Path(args.batch_file).open() as f:
             if args.batch_file.endswith(".json"):
                 import json
 
@@ -423,7 +423,7 @@ def cmd_batch_generate(args: argparse.Namespace) -> int:
             timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             output_file = Path(output_dir) / f"license_{safe_org}_{timestamp}_{i}.json"
 
-            with open(output_file, "w") as f:
+            with output_file.open("w") as f:
                 json.dump(license_data, f, indent=2)
 
             print(f"  ✓ Saved to: {output_file}")

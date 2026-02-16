@@ -197,12 +197,12 @@ class BIIntegration:
 
         if not data:
             # Create empty file
-            with open(filename, "w", newline="") as f:
+            with Path(filename).open("w", newline="") as f:
                 f.write("")
             return filename
 
         # Write CSV with headers
-        with open(filename, "w", newline="") as f:
+        with Path(filename).open("w", newline="") as f:
             writer = csv.DictWriter(f, fieldnames=data[0].keys())
             writer.writeheader()
             writer.writerows(data)
@@ -220,7 +220,7 @@ class BIIntegration:
                 return obj.isoformat()
             raise TypeError(f"type {type(obj)} not serializable")
 
-        with open(filename, "w") as f:
+        with Path(filename).open("w") as f:
             json.dump(data, f, indent=2, default=serialize_datetime)
 
         self.logger.info(f"Exported {len(data)} rows to {filename}")
