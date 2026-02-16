@@ -7,12 +7,12 @@
 # Usage:
 #   pip install -c constraints.txt -e .
 #   pip install -c constraints.txt -r requirements.txt
-#   pip install -c constraints.txt -r requirements-dev.txt
+#   pip install -c constraints.txt -e ".[dev]"
 #
 # To update versions: Review and update version numbers based on the latest stable
 # releases compatible with Python 3.13+. Test thoroughly after updating.
 #
-# Generated from: pyproject.toml and requirements-dev.txt
+# Generated from: pyproject.toml
 # Python Version: 3.13
 # Last Updated: 2026-02-12
 
