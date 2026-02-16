@@ -3,8 +3,8 @@ Test RTP bidirectional QoS tracking to verify packet loss calculation fix
 """
 
 from unittest.mock import Mock
-import pytest
 
+import pytest
 
 from pbx.features.qos_monitoring import QoSMonitor
 from pbx.rtp.handler import RTPRelayHandler

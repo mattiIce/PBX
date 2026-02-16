@@ -9,18 +9,17 @@ import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any
-
+from typing import Any, ClassVar
 
 from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSystem
 
-
 # Mock webhook receiver server
+
 
 class MockWebhookReceiver(BaseHTTPRequestHandler):
     """Mock HTTP server to receive webhooks"""
 
-    received_webhooks = []
+    received_webhooks: ClassVar[list] = []
 
     def do_POST(self) -> None:
         content_length = int(self.headers["Content-Length"])
@@ -33,7 +32,7 @@ class MockWebhookReceiver(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(b'{"success": true}')
 
-    def log_message(self, format: str, *args: Any) -> None:
+    def log_message(self, fmt: str, *args: Any) -> None:
         # Suppress logging
         pass
 
@@ -108,9 +107,9 @@ def test_webhook_subscription() -> bool:
 
     # Test disabled subscription
     subscription.enabled = False
-    assert (
-        subscription.matches_event("call.started") is False
-    ), "Disabled subscription should not match"
+    assert subscription.matches_event("call.started") is False, (
+        "Disabled subscription should not match"
+    )
 
     return True
 

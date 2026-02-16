@@ -4,7 +4,6 @@ Tests for QoS (Quality of Service) Monitoring System
 
 import time
 
-
 from pbx.features.qos_monitoring import QoSMetrics, QoSMonitor
 
 
@@ -33,7 +32,7 @@ class TestQoSMetrics:
         """Test packet sent counter"""
         metrics = QoSMetrics("test-call-123")
 
-        for i in range(10):
+        for _i in range(10):
             metrics.update_packet_sent()
 
         assert metrics.packets_sent == 10
@@ -92,7 +91,7 @@ class TestQoSMetrics:
                 metrics.last_arrival_time = arrival_time
                 metrics.last_packet_timestamp = timestamp
             else:
-                metrics.last_arrival_time
+                _ = metrics.last_arrival_time
                 metrics.last_arrival_time = arrival_time
                 metrics.update_packet_received(100 + i, timestamp, 160)
 
@@ -165,6 +164,7 @@ class TestQoSMetrics:
         assert "quality_rating" in summary
         assert summary["call_id"] == "test-call-123"
         assert summary["packets_received"] == 10
+
 
 class TestQoSMonitor:
     """Test QoSMonitor class"""

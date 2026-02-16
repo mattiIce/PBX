@@ -145,29 +145,29 @@ ENV_VARS = {
 }
 
 
-def get_project_root():
+def get_project_root() -> Path:
     """Get the project root directory"""
     # Script is in scripts/, so parent is project root
     return Path(__file__).parent.parent
 
 
-def read_existing_env():
+def read_existing_env() -> tuple[dict[str, str], Path]:
     """Read existing .env file if it exists"""
     env_file = get_project_root() / ".env"
     env_vars = {}
 
     if env_file.exists():
         print(f"✓ Found existing .env file at: {env_file}")
-        with open(env_file, "r") as f:
+        with open(env_file) as f:
             for line in f:
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, value = line.split("=", 1)
+                stripped_line = line.strip()
+                if stripped_line and not stripped_line.startswith("#") and "=" in stripped_line:
+                    key, value = stripped_line.split("=", 1)
                     # Remove quotes if present
                     value = value.strip()
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
+                    if (value.startswith('"') and value.endswith('"')) or (
+                        value.startswith("'") and value.endswith("'")
+                    ):
                         value = value[1:-1]
                     env_vars[key.strip()] = value
     else:
@@ -176,7 +176,9 @@ def read_existing_env():
     return env_vars, env_file
 
 
-def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
+def prompt_for_value(
+    var_name: str, var_info: dict, current_value: str | None = None, retry_count: int = 0
+) -> str:
     """Prompt user for an environment variable value"""
     # Prevent infinite recursion
     if retry_count >= 3:
@@ -184,7 +186,7 @@ def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
         return ""
 
     desc = var_info["description"]
-    default = current_value if current_value else var_info.get("default", "")
+    default = current_value or var_info.get("default", "")
     example = var_info.get("example", "")
     required = var_info.get("required", False)
     help_text = var_info.get("help", "")
@@ -219,16 +221,16 @@ def prompt_for_value(var_name, var_info, current_value=None, retry_count=0):
     if not new_value:
         if current_value:
             return current_value
-        elif default:
+        if default:
             return default
-        elif required:
+        if required:
             print("  ⚠ This value is required!")
             return prompt_for_value(var_name, var_info, current_value, retry_count + 1)
 
     return new_value
 
 
-def write_env_file(env_vars, env_file):
+def write_env_file(env_vars: dict[str, str], env_file: Path) -> None:
     """Write environment variables to .env file"""
     with open(env_file, "w") as f:
         f.write("# Warden Voip System Environment Variables\n")
@@ -238,7 +240,7 @@ def write_env_file(env_vars, env_file):
 
         for category, vars_dict in ENV_VARS.items():
             f.write(f"# {category}\n")
-            for var_name in vars_dict.keys():
+            for var_name in vars_dict:
                 value = env_vars.get(var_name, "")
                 # Quote values that contain spaces or special characters
                 # When wrapping in double quotes, only double quotes need escaping
@@ -251,7 +253,7 @@ def write_env_file(env_vars, env_file):
             f.write("\n")
 
 
-def main():
+def main() -> None:
     print("=" * 70)
     print("Warden Voip System - Environment Variable Setup")
     print("=" * 70)
@@ -276,7 +278,7 @@ def main():
         if choice == "4":
             print("Cancelled.")
             return
-        elif choice == "3":
+        if choice == "3":
             update_mode = "required"
         elif choice == "2":
             update_mode = "specific"
@@ -292,7 +294,7 @@ def main():
         if choice == "3":
             print("Cancelled.")
             return
-        elif choice == "2":
+        if choice == "2":
             update_mode = "required"
         else:
             update_mode = "all"
@@ -307,7 +309,7 @@ def main():
         all_vars = []
         var_info_map = {}  # Create flat mapping for efficient lookup
         idx = 1
-        for category, vars_dict in ENV_VARS.items():
+        for vars_dict in ENV_VARS.values():
             for var_name, var_info in vars_dict.items():
                 all_vars.append(var_name)
                 var_info_map[var_name] = var_info
@@ -325,17 +327,17 @@ def main():
         selected_indices = []
         invalid_inputs = []
         for item in selection.split(","):
-            item = item.strip()
-            if not item:
+            stripped_item = item.strip()
+            if not stripped_item:
                 continue
             try:
-                num = int(item)
+                num = int(stripped_item)
                 if num >= 1:  # Only accept positive numbers starting from 1
                     selected_indices.append(num - 1)
                 else:
-                    invalid_inputs.append(item)
+                    invalid_inputs.append(stripped_item)
             except ValueError:
-                invalid_inputs.append(item)
+                invalid_inputs.append(stripped_item)
 
         # Warn about invalid inputs
         if invalid_inputs:
@@ -388,7 +390,7 @@ def main():
             if var_info.get("sensitive", False) and value:
                 display_value = "*" * 8
             else:
-                display_value = value if value else "(not set)"
+                display_value = value or "(not set)"
             print(f"  {var_name}: {display_value}")
         print()
 

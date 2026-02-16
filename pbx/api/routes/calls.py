@@ -1,19 +1,14 @@
 """Flask Blueprint for call management and analytics routes."""
 
-import os
 import tempfile
+from pathlib import Path
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, current_app, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
     require_auth,
-    require_admin,
-    get_request_body,
-    DateTimeEncoder,
-    validate_limit_param,
+    send_json,
 )
 from pbx.utils.logger import get_logger
 
@@ -31,8 +26,7 @@ def get_calls() -> tuple[Response, int]:
         calls = pbx_core.call_manager.get_active_calls()
         data = [str(call) for call in calls]
         return send_json(data), 200
-    else:
-        return send_json({"error": "PBX not initialized"}, 500), 500
+    return send_json({"error": "PBX not initialized"}, 500), 500
 
 
 @calls_bp.route("/api/statistics", methods=["GET"])
@@ -48,19 +42,15 @@ def get_statistics() -> tuple[Response, int]:
             stats = pbx_core.statistics_engine.get_dashboard_statistics(days)
 
             # Add call quality metrics (with QoS integration)
-            stats["call_quality"] = pbx_core.statistics_engine.get_call_quality_metrics(
-                pbx_core
-            )
+            stats["call_quality"] = pbx_core.statistics_engine.get_call_quality_metrics(pbx_core)
 
             # Add real-time metrics
-            stats["real_time"] = pbx_core.statistics_engine.get_real_time_metrics(
-                pbx_core
-            )
+            stats["real_time"] = pbx_core.statistics_engine.get_real_time_metrics(pbx_core)
 
             return send_json(stats), 200
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting statistics: {e}")
-            return send_json({"error": f"Error getting statistics: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting statistics: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Statistics engine not initialized"}, 500), 500
 
@@ -88,16 +78,16 @@ def get_advanced_analytics() -> tuple[Response, int]:
                 filters["min_duration"] = int(request.args.get("min_duration"))
 
             analytics = pbx_core.statistics_engine.get_advanced_analytics(
-                start_date, end_date, filters if filters else None
+                start_date, end_date, filters or None
             )
 
             return send_json(analytics), 200
 
         except ValueError as e:
-            return send_json({"error": f"Invalid date format: {str(e)}"}, 400), 400
-        except (KeyError, TypeError, ValueError) as e:
+            return send_json({"error": f"Invalid date format: {e!s}"}, 400), 400
+        except (KeyError, TypeError) as e:
             logger.error(f"Error getting advanced analytics: {e}")
-            return send_json({"error": f"Error getting advanced analytics: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting advanced analytics: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Statistics engine not initialized"}, 500), 500
 
@@ -118,7 +108,7 @@ def get_call_center_metrics() -> tuple[Response, int]:
 
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error getting call center metrics: {e}")
-            return send_json({"error": f"Error getting call center metrics: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error getting call center metrics: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Statistics engine not initialized"}, 500), 500
 
@@ -142,18 +132,16 @@ def export_analytics() -> Response | tuple[Response, int]:
             )
 
             # Export to CSV
-            temp_file = tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv")
-            temp_file.close()
+            with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv") as temp_file:
+                pass
 
-            if pbx_core.statistics_engine.export_to_csv(
-                analytics["records"], temp_file.name
-            ):
+            if pbx_core.statistics_engine.export_to_csv(analytics["records"], temp_file.name):
                 # Read the file and send as response
-                with open(temp_file.name, "rb") as f:
+                with Path(temp_file.name).open("rb") as f:
                     csv_data = f.read()
 
                 # Clean up temp file
-                os.unlink(temp_file.name)
+                Path(temp_file.name).unlink()
 
                 response = current_app.response_class(
                     response=csv_data,
@@ -164,11 +152,10 @@ def export_analytics() -> Response | tuple[Response, int]:
                     f'attachment; filename="cdr_export_{start_date}_to_{end_date}.csv"'
                 )
                 return response
-            else:
-                return send_json({"error": "Failed to export data"}, 500), 500
+            return send_json({"error": "Failed to export data"}, 500), 500
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             logger.error(f"Error exporting analytics: {e}")
-            return send_json({"error": f"Error exporting analytics: {str(e)}"}, 500), 500
+            return send_json({"error": f"Error exporting analytics: {e!s}"}, 500), 500
     else:
         return send_json({"error": "Statistics engine not initialized"}, 500), 500

@@ -3,21 +3,25 @@ WebRTC Browser Calling Support
 Provides WebRTC signaling and integration with PBX SIP infrastructure
 """
 
-import os
 import threading
 import time
 import uuid
-from datetime import datetime, timezone
-from collections.abc import Callable
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
+
+if TYPE_CHECKING:
+    from collections.abc import Callable
 
 
 class WebRTCSession:
     """Represents a WebRTC session"""
 
-    def __init__(self, session_id: str, extension: str, peer_connection_id: str | None = None):
+    def __init__(
+        self, session_id: str, extension: str, peer_connection_id: str | None = None
+    ) -> None:
         """
         Initialize WebRTC session
 
@@ -29,8 +33,8 @@ class WebRTCSession:
         self.session_id = session_id
         self.extension = extension
         self.peer_connection_id = peer_connection_id or str(uuid.uuid4())
-        self.created_at = datetime.now(timezone.utc)
-        self.last_activity = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
+        self.last_activity = datetime.now(UTC)
         self.state = "new"  # new, connecting, connected, disconnected
         self.local_sdp = None
         self.remote_sdp = None
@@ -38,9 +42,9 @@ class WebRTCSession:
         self.call_id = None
         self.metadata = {}
 
-    def update_activity(self):
+    def update_activity(self) -> None:
         """Update last activity timestamp"""
-        self.last_activity = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(UTC)
 
     def to_dict(self) -> dict:
         """Convert session to dictionary"""
@@ -66,7 +70,7 @@ class WebRTCSignalingServer:
     - Integration with SIP infrastructure
     """
 
-    def __init__(self, config=None, pbx_core=None):
+    def __init__(self, config: Any | None = None, pbx_core: Any | None = None) -> None:
         """
         Initialize WebRTC signaling server
 
@@ -152,20 +156,18 @@ class WebRTCSignalingServer:
                 self.logger.info(f"  STUN servers: {self.stun_servers}")
                 self.logger.info(f"  TURN servers: {len(self.turn_servers)} configured")
                 self.logger.info(f"  Session timeout: {self.session_timeout}s")
-                self.logger.info(
-                    f"  ICE transport policy: {self.ice_transport_policy}"
-                )
+                self.logger.info(f"  ICE transport policy: {self.ice_transport_policy}")
             self._start_cleanup_thread()
         else:
             self.logger.info("WebRTC signaling server disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
-    def _start_cleanup_thread(self):
+    def _start_cleanup_thread(self) -> None:
         """Start session cleanup thread"""
         self.running = True
         self.cleanup_thread = threading.Thread(
@@ -174,7 +176,7 @@ class WebRTCSignalingServer:
         self.cleanup_thread.start()
         self.logger.info("Started WebRTC session cleanup thread")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the WebRTC signaling server"""
         self.logger.info("Stopping WebRTC signaling server...")
         self.running = False
@@ -182,16 +184,16 @@ class WebRTCSignalingServer:
             self.cleanup_thread.join(timeout=5)
         self.logger.info("WebRTC signaling server stopped")
 
-    def _cleanup_worker(self):
+    def _cleanup_worker(self) -> None:
         """Worker thread for cleaning up stale sessions"""
         while self.running:
             time.sleep(30)  # Check every 30 seconds
             self._cleanup_stale_sessions()
 
-    def _cleanup_stale_sessions(self):
+    def _cleanup_stale_sessions(self) -> None:
         """Remove stale sessions that have timed out"""
         with self.lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             stale_sessions = []
 
             for session_id, session in self.sessions.items():
@@ -207,7 +209,7 @@ class WebRTCSignalingServer:
                     )
                     self._remove_session(session_id)
 
-    def _log_session_creation(self, session_id: str, extension: str, session):
+    def _log_session_creation(self, session_id: str, extension: str, session: dict) -> None:
         """Log verbose session creation details"""
         if not self.verbose_logging:
             return
@@ -221,7 +223,7 @@ class WebRTCSignalingServer:
             f"  Sessions for extension {extension}: {len(self.extension_sessions.get(extension, set()))}"
         )
 
-    def _create_virtual_webrtc_extension(self, extension: str):
+    def _create_virtual_webrtc_extension(self, extension: str) -> None:
         """Create virtual WebRTC extension if needed"""
         if not self.pbx_core:
             return None
@@ -311,7 +313,7 @@ class WebRTCSignalingServer:
                     import hashlib
 
                     mac_suffix = hashlib.sha256(session_id.encode()).hexdigest()[:12]
-                    success, stored_mac = self.pbx_core.registered_phones_db.register_phone(
+                    success, _stored_mac = self.pbx_core.registered_phones_db.register_phone(
                         extension_number=extension,
                         ip_address="webrtc",  # Special marker for WebRTC connections
                         # Use hash of session ID for uniqueness
@@ -334,7 +336,7 @@ class WebRTCSignalingServer:
             self.logger.warning(f"Extension {extension} not found in registry for WebRTC session")
             if self.verbose_logging and self.pbx_core:
                 self.logger.warning(
-                    f"[VERBOSE] Available extensions: {list(self.pbx_core.extension_registry.extensions.keys())[:10]}"
+                    f"[VERBOSE] Available extensions: {list(self.pbx_core.extension_registry.extensions)[:10]}"
                 )
 
         if self.on_session_created:
@@ -432,9 +434,7 @@ class WebRTCSignalingServer:
             if self.verbose_logging:
                 self.logger.warning("[VERBOSE] Unknown session details:")
                 self.logger.warning(f"  Session ID: {session_id}")
-                self.logger.warning(
-                    f"  Active sessions: {list(self.sessions.keys())}"
-                )
+                self.logger.warning(f"  Active sessions: {list(self.sessions)}")
             return False
 
         session.local_sdp = sdp
@@ -515,9 +515,7 @@ class WebRTCSignalingServer:
         if self.verbose_logging:
             self.logger.info("[VERBOSE] ICE candidate added:")
             self.logger.info(f"  Session ID: {session_id}")
-            self.logger.info(
-                f"  Candidate: {candidate.get('candidate', 'N/A')}"
-            )
+            self.logger.info(f"  Candidate: {candidate.get('candidate', 'N/A')}")
             self.logger.info(f"  SDP MID: {candidate.get('sdpMid', 'N/A')}")
             self.logger.info(f"  SDP M-Line Index: {candidate.get('sdpMLineIndex', 'N/A')}")
             self.logger.info(f"  Total candidates for session: {len(session.ice_candidates)}")
@@ -532,21 +530,17 @@ class WebRTCSignalingServer:
             Dictionary with ICE servers configuration, codec preferences,
             audio settings, and DTMF configuration (matches Zultys ZIP33G)
         """
-        ice_servers = []
-
-        # Add STUN servers
-        for stun_url in self.stun_servers:
-            ice_servers.append({"urls": stun_url})
+        ice_servers = [{"urls": stun_url} for stun_url in self.stun_servers]
 
         # Add TURN servers
-        for turn_config in self.turn_servers:
-            ice_servers.append(
-                {
-                    "urls": turn_config.get("url"),
-                    "username": turn_config.get("username"),
-                    "credential": turn_config.get("credential"),
-                }
-            )
+        ice_servers.extend(
+            {
+                "urls": turn_config.get("url"),
+                "username": turn_config.get("username"),
+                "credential": turn_config.get("credential"),
+            }
+            for turn_config in self.turn_servers
+        )
 
         return {
             "iceServers": ice_servers,
@@ -584,7 +578,7 @@ class WebRTCSignalingServer:
         self.logger.info(f"Associated call {call_id} with WebRTC session {session_id}")
         return True
 
-    def set_session_metadata(self, session_id: str, key: str, value) -> bool:
+    def set_session_metadata(self, session_id: str, key: str, value: Any) -> bool:
         """set metadata for a session"""
         session = self.get_session(session_id)
         if not session:
@@ -594,7 +588,7 @@ class WebRTCSignalingServer:
         session.update_activity()
         return True
 
-    def get_session_metadata(self, session_id: str, key: str, default=None):
+    def get_session_metadata(self, session_id: str, key: str, default: Any | None = None) -> Any:
         """Get metadata from a session"""
         session = self.get_session(session_id)
         if not session:
@@ -613,7 +607,7 @@ class WebRTCGateway:
     - Manages RTP/SRTP bridging
     """
 
-    def __init__(self, pbx_core=None):
+    def __init__(self, pbx_core: Any | None = None) -> None:
         """
         Initialize WebRTC gateway
 
@@ -704,7 +698,11 @@ class WebRTCGateway:
             return webrtc_sdp
 
     def sip_to_webrtc_sdp(
-        self, sip_sdp: str, ice_ufrag: str = None, ice_pwd: str = None, fingerprint: str = None
+        self,
+        sip_sdp: str,
+        ice_ufrag: str | None = None,
+        ice_pwd: str | None = None,
+        fingerprint: str | None = None,
     ) -> str:
         """
         Convert SIP SDP to WebRTC-compatible SDP
@@ -783,7 +781,7 @@ class WebRTCGateway:
             return sip_sdp
 
     def initiate_call(
-        self, session_id: str, target_extension: str, webrtc_signaling=None
+        self, session_id: str, target_extension: str, webrtc_signaling: Any | None = None
     ) -> str | None:
         """
         Initiate a call from WebRTC client to extension
@@ -819,7 +817,7 @@ class WebRTCGateway:
                     self.logger.error("[VERBOSE] Session lookup failed:")
                     if webrtc_signaling:
                         self.logger.error(
-                            f"  Active sessions: {list(webrtc_signaling.sessions.keys())}"
+                            f"  Active sessions: {list(webrtc_signaling.sessions)}"
                         )
                     else:
                         self.logger.error("  No signaling server provided")
@@ -832,9 +830,7 @@ class WebRTCGateway:
                 self.logger.info("[VERBOSE] Session found:")
                 self.logger.info(f"  From Extension: {from_extension}")
                 self.logger.info(f"  Session State: {session.state}")
-                self.logger.info(
-                    f"  Has Local SDP: {session.local_sdp is not None}"
-                )
+                self.logger.info(f"  Has Local SDP: {session.local_sdp is not None}")
 
             # Verify target extension exists or is a valid dialplan pattern
             # Check if it's a regular extension in the registry
@@ -853,7 +849,7 @@ class WebRTCGateway:
                 if self.verbose_logging:
                     self.logger.error("[VERBOSE] Extension validation failed:")
                     all_exts = (
-                        list(self.pbx_core.extension_registry.extensions.keys())
+                        list(self.pbx_core.extension_registry.extensions)
                         if hasattr(self.pbx_core.extension_registry, "extensions")
                         else []
                     )
@@ -924,25 +920,17 @@ class WebRTCGateway:
                         "port": audio_info.get("port"),
                         "formats": audio_info.get("formats", []),
                     }
-                    self.logger.debug(
-                        f"WebRTC RTP endpoint: {call.caller_rtp}"
-                    )
+                    self.logger.debug(f"WebRTC RTP endpoint: {call.caller_rtp}")
 
                     if self.verbose_logging:
                         self.logger.info("[VERBOSE] RTP endpoint info extracted:")
-                        self.logger.info(
-                            f"  Address: {audio_info.get('address')}"
-                        )
+                        self.logger.info(f"  Address: {audio_info.get('address')}")
                         self.logger.info(f"  Port: {audio_info.get('port')}")
-                        self.logger.info(
-                            f"  Formats: {audio_info.get('formats', [])}"
-                        )
-                else:
-                    if self.verbose_logging:
-                        self.logger.warning("[VERBOSE] No audio info found in SDP")
-            else:
-                if self.verbose_logging:
-                    self.logger.warning("[VERBOSE] No local SDP available in session")
+                        self.logger.info(f"  Formats: {audio_info.get('formats', [])}")
+                elif self.verbose_logging:
+                    self.logger.warning("[VERBOSE] No audio info found in SDP")
+            elif self.verbose_logging:
+                self.logger.warning("[VERBOSE] No local SDP available in session")
 
             # 4. Associate call ID with WebRTC session
             if webrtc_signaling:
@@ -980,9 +968,7 @@ class WebRTCGateway:
 
                 if self.verbose_logging:
                     self.logger.info("[VERBOSE] Auto attendant session started")
-                    self.logger.info(
-                        f"[VERBOSE] Initial action: {aa_session.get('action')}"
-                    )
+                    self.logger.info(f"[VERBOSE] Initial action: {aa_session.get('action')}")
 
                 # set up RTP player to play the welcome message
                 if aa_session.get("action") == "play" and aa_session.get("file"):
@@ -1075,9 +1061,7 @@ class WebRTCGateway:
                     # access)
                     call.connect()
                     if self.verbose_logging:
-                        self.logger.info(
-                            f"[VERBOSE] Call marked as connected, state: {call.state}"
-                        )
+                        self.logger.info(f"[VERBOSE] Call marked as connected, state: {call.state}")
 
                     # Start CDR record for analytics
                     if hasattr(self.pbx_core, "cdr_system") and self.pbx_core.cdr_system:
@@ -1098,9 +1082,7 @@ class WebRTCGateway:
                                     "[VERBOSE] Starting voicemail IVR session with RTP"
                                 )
                                 self.logger.info(f"  Caller RTP: {caller_address}:{caller_port}")
-                                self.logger.info(
-                                    f"  Local RTP port: {call.rtp_ports[0]}"
-                                )
+                                self.logger.info(f"  Local RTP port: {call.rtp_ports[0]}")
 
                             # Start voicemail IVR session in a separate thread
                             # This handles audio prompts and DTMF input, just
@@ -1135,9 +1117,7 @@ class WebRTCGateway:
                             f"No caller RTP info available for WebRTC voicemail call {call_id}"
                         )
                         if self.verbose_logging:
-                            self.logger.warning(
-                                f"[VERBOSE] caller_rtp: {call.caller_rtp}"
-                            )
+                            self.logger.warning(f"[VERBOSE] caller_rtp: {call.caller_rtp}")
                 else:
                     self.logger.error(f"Voicemail system not available for WebRTC call {call_id}")
                     if self.verbose_logging:
@@ -1160,21 +1140,21 @@ class WebRTCGateway:
             self.logger.error(f"Error initiating call from WebRTC: {e}")
             if self.verbose_logging:
                 self.logger.error("[VERBOSE] ===== Call initiation FAILED =====")
-                self.logger.error(
-                    f"[VERBOSE] Exception type: {type(e).__name__}"
-                )
-                self.logger.error(f"[VERBOSE] Exception message: {str(e)}")
+                self.logger.error(f"[VERBOSE] Exception type: {type(e).__name__}")
+                self.logger.error(f"[VERBOSE] Exception message: {e!s}")
             import traceback
 
             self.logger.debug(traceback.format_exc())
             if self.verbose_logging:
-                self.logger.error(
-                    f"[VERBOSE] Full traceback:\n{traceback.format_exc()}"
-                )
+                self.logger.error(f"[VERBOSE] Full traceback:\n{traceback.format_exc()}")
             return None
 
     def receive_call(
-        self, session_id: str, call_id: str, caller_sdp: str = None, webrtc_signaling=None
+        self,
+        session_id: str,
+        call_id: str,
+        caller_sdp: str | None = None,
+        webrtc_signaling: Any | None = None,
     ) -> bool:
         """
         Route incoming call to WebRTC client
@@ -1248,7 +1228,7 @@ class WebRTCGateway:
             self.logger.debug(traceback.format_exc())
             return False
 
-    def answer_call(self, session_id: str, webrtc_signaling=None) -> bool:
+    def answer_call(self, session_id: str, webrtc_signaling: Any | None = None) -> bool:
         """
         Handle WebRTC client answering an incoming call
 
@@ -1295,18 +1275,14 @@ class WebRTCGateway:
                         "port": audio_info.get("port"),
                         "formats": audio_info.get("formats", []),
                     }
-                    self.logger.debug(
-                        f"WebRTC answered RTP endpoint: {call.callee_rtp}"
-                    )
+                    self.logger.debug(f"WebRTC answered RTP endpoint: {call.callee_rtp}")
 
             # Connect the call
             call.connect()
             session.state = "connected"
             session.update_activity()
 
-            self.logger.info(
-                f"WebRTC session {session_id} answered call {session.call_id}"
-            )
+            self.logger.info(f"WebRTC session {session_id} answered call {session.call_id}")
             return True
 
         except (KeyError, TypeError, ValueError) as e:

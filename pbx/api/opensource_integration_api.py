@@ -3,8 +3,13 @@ REST API endpoints for open-source integrations
 Handles Jitsi, EspoCRM, and Matrix integrations
 """
 
+from collections.abc import Callable
+from typing import Any
 
-def add_opensource_integration_endpoints(handler):
+
+def add_opensource_integration_endpoints(
+    handler: Any,
+) -> dict[str, Callable[..., None]]:
     """
     Add endpoint handlers for open-source integrations
 
@@ -13,7 +18,7 @@ def add_opensource_integration_endpoints(handler):
     """
 
     # Jitsi Meet endpoints
-    def handle_jitsi_create_meeting(handler):
+    def handle_jitsi_create_meeting(handler: Any) -> None:
         """POST /api/integrations/jitsi/meetings - Create Jitsi meeting"""
         try:
             body = handler._get_body()
@@ -40,7 +45,7 @@ def add_opensource_integration_endpoints(handler):
             handler.pbx_core.logger.error(f"Failed to create Jitsi meeting: {e}")
             handler._send_json({"error": str(e)}, 500)
 
-    def handle_jitsi_instant_meeting(handler):
+    def handle_jitsi_instant_meeting(handler: Any) -> None:
         """POST /api/integrations/jitsi/instant - Create instant meeting"""
         try:
             body = handler._get_body()
@@ -61,7 +66,7 @@ def add_opensource_integration_endpoints(handler):
             handler._send_json({"error": str(e)}, 500)
 
     # EspoCRM endpoints
-    def handle_espocrm_search_contact(handler):
+    def handle_espocrm_search_contact(handler: Any) -> None:
         """GET /api/integrations/espocrm/contacts/search?phone={number} - Find contact by phone"""
         try:
             from urllib.parse import parse_qs, urlparse
@@ -92,7 +97,7 @@ def add_opensource_integration_endpoints(handler):
             handler.pbx_core.logger.error(f"Failed to search contact: {e}")
             handler._send_json({"error": str(e)}, 500)
 
-    def handle_espocrm_create_contact(handler):
+    def handle_espocrm_create_contact(handler: Any) -> None:
         """POST /api/integrations/espocrm/contacts - Create contact"""
         try:
             body = handler._get_body()
@@ -119,7 +124,7 @@ def add_opensource_integration_endpoints(handler):
             handler.pbx_core.logger.error(f"Failed to create contact: {e}")
             handler._send_json({"error": str(e)}, 500)
 
-    def handle_espocrm_log_call(handler):
+    def handle_espocrm_log_call(handler: Any) -> None:
         """POST /api/integrations/espocrm/calls - Log call"""
         try:
             body = handler._get_body()
@@ -147,7 +152,7 @@ def add_opensource_integration_endpoints(handler):
             handler._send_json({"error": str(e)}, 500)
 
     # Matrix endpoints
-    def handle_matrix_send_message(handler):
+    def handle_matrix_send_message(handler: Any) -> None:
         """POST /api/integrations/matrix/messages - Send message to room"""
         try:
             body = handler._get_body()
@@ -172,7 +177,7 @@ def add_opensource_integration_endpoints(handler):
             handler.pbx_core.logger.error(f"Failed to send Matrix message: {e}")
             handler._send_json({"error": str(e)}, 500)
 
-    def handle_matrix_send_notification(handler):
+    def handle_matrix_send_notification(handler: Any) -> None:
         """POST /api/integrations/matrix/notifications - Send notification"""
         try:
             body = handler._get_body()
@@ -192,7 +197,7 @@ def add_opensource_integration_endpoints(handler):
             handler.pbx_core.logger.error(f"Failed to send notification: {e}")
             handler._send_json({"error": str(e)}, 500)
 
-    def handle_matrix_create_room(handler):
+    def handle_matrix_create_room(handler: Any) -> None:
         """POST /api/integrations/matrix/rooms - Create room"""
         try:
             body = handler._get_body()

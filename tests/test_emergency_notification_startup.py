@@ -3,15 +3,13 @@
 Test to verify emergency notification system initializes without database errors
 """
 
-import os
 import shutil
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_emergency_notification_system_initialization() -> None:
@@ -57,7 +55,6 @@ def test_emergency_notification_system_initialization() -> None:
         # Verify database connection works
         contacts = emergency_system.get_emergency_contacts()
         assert contacts == [], "Should return empty list initially"
-
 
         # Clean up
         db.disconnect()
@@ -119,7 +116,6 @@ def test_emergency_notification_database_operations() -> None:
         contacts = emergency_system.get_emergency_contacts()
         assert len(contacts) == 1, f"Expected 1 contact, got {len(contacts)}"
         assert contacts[0]["name"] == "Test Contact", "Contact name mismatch"
-
 
         # Clean up
         db.disconnect()

@@ -3,7 +3,8 @@ Time-Based Routing
 Route calls based on business hours and schedules
 """
 
-from datetime import datetime, time, timezone
+from datetime import UTC, datetime, time
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -11,7 +12,7 @@ from pbx.utils.logger import get_logger
 class TimeBasedRouting:
     """Time-based call routing system"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize time-based routing"""
         self.logger = get_logger()
         self.config = config or {}
@@ -27,7 +28,7 @@ class TimeBasedRouting:
             self.logger.info("Time-based routing initialized")
             self._load_rules()
 
-    def _load_rules(self):
+    def _load_rules(self) -> None:
         """Load routing rules from config"""
         rules = self.config.get("features", {}).get("time_based_routing", {}).get("rules", [])
         for rule in rules:
@@ -49,10 +50,10 @@ class TimeBasedRouting:
             return ""
 
         # Generate rule ID
-        rule_id = f"tbr_{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}_{len(self.routing_rules)}"
+        rule_id = f"tbr_{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}_{len(self.routing_rules)}"
 
         rule["rule_id"] = rule_id
-        rule["created_at"] = datetime.now(timezone.utc)
+        rule["created_at"] = datetime.now(UTC)
         rule["enabled"] = rule.get("enabled", True)
         rule["priority"] = rule.get("priority", 100)
 
@@ -67,9 +68,7 @@ class TimeBasedRouting:
         self.logger.info(f"Added time-based routing rule: {rule['name']} (ID: {rule_id})")
         return rule_id
 
-    def get_routing_destination(
-        self, destination: str, call_time: datetime | None = None
-    ) -> dict:
+    def get_routing_destination(self, destination: str, call_time: datetime | None = None) -> dict:
         """
         Get routing destination based on time rules
 
@@ -84,7 +83,7 @@ class TimeBasedRouting:
             return {"destination": destination, "rule": None}
 
         if call_time is None:
-            call_time = datetime.now(timezone.utc)
+            call_time = datetime.now(UTC)
 
         # Get rules for this destination
         rule_ids = self.destination_rules.get(destination, [])
@@ -146,11 +145,7 @@ class TimeBasedRouting:
                 return False
 
         # Check holidays
-        if "exclude_holidays" in conditions and conditions["exclude_holidays"]:
-            if self._is_holiday(check_time):
-                return False
-
-        return True
+        return not (conditions.get("exclude_holidays") and self._is_holiday(check_time))
 
     def _parse_time(self, time_str: str) -> time:
         """Parse time string (HH:MM format)"""
@@ -161,9 +156,8 @@ class TimeBasedRouting:
         """Check if time is in range"""
         if start_time <= end_time:
             return start_time <= check_time <= end_time
-        else:
-            # Range spans midnight
-            return check_time >= start_time or check_time <= end_time
+        # Range spans midnight
+        return check_time >= start_time or check_time <= end_time
 
     def _is_holiday(self, check_date: datetime) -> bool:
         """Check if date is a holiday"""

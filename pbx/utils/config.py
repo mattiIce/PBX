@@ -1,13 +1,12 @@
 """Configuration management for PBX system."""
 
 import logging
-import os
 import re
+from pathlib import Path
 
 import yaml
 
 from pbx.utils.env_loader import get_env_loader, load_env_file
-from pathlib import Path
 
 logger = logging.getLogger(__name__)
 
@@ -18,7 +17,7 @@ class Config:
     # Email validation regex pattern
     EMAIL_PATTERN = re.compile(r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$")
 
-    def __init__(self, config_file="config.yml", load_env=True):
+    def __init__(self, config_file: str = "config.yml", load_env: bool = True) -> None:
         """
         Initialize configuration
 
@@ -40,7 +39,7 @@ class Config:
         self.load()
 
     @staticmethod
-    def validate_email(email):
+    def validate_email(email: str) -> bool:
         """
         Validate email format
 
@@ -54,21 +53,19 @@ class Config:
             return False
         return bool(Config.EMAIL_PATTERN.match(email))
 
-    def load(self):
+    def load(self) -> None:
         """Load configuration from YAML file and resolve environment variables"""
         if Path(self.config_file).exists():
-            with open(self.config_file, "r") as f:
+            with Path(self.config_file).open() as f:
                 self.config = yaml.safe_load(f) or {}
 
             # Resolve environment variables in configuration
             if self.env_enabled and self.env_loader:
                 self.config = self.env_loader.resolve_config(self.config)
         else:
-            raise FileNotFoundError(
-                f"Configuration file not found: {self.config_file}"
-            )
+            raise FileNotFoundError(f"Configuration file not found: {self.config_file}")
 
-    def get(self, key, default=None):
+    def get(self, key: str, default: object = None) -> object:
         """
         Get configuration value
 
@@ -92,11 +89,11 @@ class Config:
 
         return value
 
-    def get_extensions(self):
+    def get_extensions(self) -> list[dict]:
         """Get all configured extensions"""
         return self.config.get("extensions", [])
 
-    def get_extension(self, number):
+    def get_extension(self, number: str | int) -> dict | None:
         """
         Get extension by number
 
@@ -112,10 +109,10 @@ class Config:
                 return ext
         return None
 
-    def save(self):
+    def save(self) -> bool:
         """Save current configuration to YAML file"""
         try:
-            with open(self.config_file, "w") as f:
+            with Path(self.config_file).open("w") as f:
                 yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
             return True
         except PermissionError as e:
@@ -124,11 +121,10 @@ class Config:
         except OSError as e:
             logger.error("Error saving config: Disk error - %s", e)
             return False
-        except OSError as e:
-            logger.error("Error saving config: %s", e)
-            return False
 
-    def add_extension(self, number, name, email, password, allow_external=True):
+    def add_extension(
+        self, number: str | int, name: str, email: str, password: str, allow_external: bool = True
+    ) -> bool:
         """
         Add a new extension to configuration
 
@@ -173,7 +169,14 @@ class Config:
             logger.error("Error adding extension: %s", e)
             return False
 
-    def update_extension(self, number, name=None, email=None, password=None, allow_external=None):
+    def update_extension(
+        self,
+        number: str | int,
+        name: str | None = None,
+        email: str | None = None,
+        password: str | None = None,
+        allow_external: bool | None = None,
+    ) -> bool:
         """
         Update an existing extension
 
@@ -214,7 +217,7 @@ class Config:
             logger.error("Error updating extension: %s", e)
             return False
 
-    def delete_extension(self, number):
+    def delete_extension(self, number: str | int) -> bool:
         """
         Delete an extension from configuration
 
@@ -242,7 +245,7 @@ class Config:
             logger.error("Error deleting extension: %s", e)
             return False
 
-    def update_email_config(self, config_data):
+    def update_email_config(self, config_data: dict) -> bool:
         """
         Update email/SMTP configuration
 
@@ -289,7 +292,7 @@ class Config:
             logger.error("Error updating email config: %s", e)
             return False
 
-    def update_voicemail_pin(self, extension_number, pin):
+    def update_voicemail_pin(self, extension_number: str | int, pin: str | int) -> bool:
         """
         Update voicemail PIN for an extension
 
@@ -320,7 +323,7 @@ class Config:
             logger.error("Error updating voicemail PIN: %s", e)
             return False
 
-    def get_dtmf_config(self):
+    def get_dtmf_config(self) -> dict | None:
         """
         Get DTMF configuration
 
@@ -343,7 +346,7 @@ class Config:
             logger.error("Error getting DTMF config: %s", e)
             return None
 
-    def _ensure_dtmf_config_structure(self):
+    def _ensure_dtmf_config_structure(self) -> dict:
         """Ensure DTMF config structure exists"""
         if "features" not in self.config:
             self.config["features"] = {}
@@ -353,7 +356,7 @@ class Config:
             self.config["features"]["webrtc"]["dtmf"] = {}
         return self.config["features"]["webrtc"]["dtmf"]
 
-    def _update_dtmf_simple_fields(self, dtmf_config, dtmf):
+    def _update_dtmf_simple_fields(self, dtmf_config: dict, dtmf: dict) -> None:
         """Update simple boolean/string DTMF fields"""
         if "mode" in dtmf:
             dtmf_config["mode"] = dtmf["mode"]
@@ -364,7 +367,7 @@ class Config:
         if "relay_enabled" in dtmf:
             dtmf_config["relay_enabled"] = bool(dtmf["relay_enabled"])
 
-    def _validate_dtmf_payload_type(self, payload_type):
+    def _validate_dtmf_payload_type(self, payload_type: int | str) -> int | None:
         """Validate DTMF payload type"""
         payload_type = int(payload_type)
         if payload_type < 96 or payload_type > 127:
@@ -375,7 +378,7 @@ class Config:
             return None
         return payload_type
 
-    def _validate_dtmf_duration(self, duration):
+    def _validate_dtmf_duration(self, duration: int | str) -> int | None:
         """Validate DTMF duration"""
         duration = int(duration)
         if duration < 80 or duration > 500:
@@ -386,7 +389,7 @@ class Config:
             return None
         return duration
 
-    def _validate_dtmf_threshold(self, threshold):
+    def _validate_dtmf_threshold(self, threshold: float | str) -> float | None:
         """Validate DTMF detection threshold"""
         threshold = float(threshold)
         if threshold < 0.1 or threshold > 0.9:
@@ -397,7 +400,7 @@ class Config:
             return None
         return threshold
 
-    def update_dtmf_config(self, config_data):
+    def update_dtmf_config(self, config_data: dict) -> bool:
         """
         Update DTMF configuration
 

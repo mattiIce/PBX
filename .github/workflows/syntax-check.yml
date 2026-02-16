@@ -2,117 +2,161 @@ name: Syntax Validation
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   pull_request:
-    branches: [ main, develop ]
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+env:
+  PYTHON_VERSION: "3.13"
 
 jobs:
   syntax-check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
 
     steps:
-    - uses: actions/checkout@v6
+      - uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.13'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Comprehensive Syntax Check
-      run: |
-        echo "Checking all Python files for syntax errors..."
-        ERROR_COUNT=0
-        FILE_COUNT=0
+      - name: Comprehensive Syntax Check
+        run: |
+          echo "Checking all Python files for syntax errors..."
+          ERROR_COUNT=0
+          FILE_COUNT=0
 
-        while IFS= read -r -d '' file; do
-          FILE_COUNT=$((FILE_COUNT + 1))
-          if ! python3 -m py_compile "$file" 2>/dev/null; then
-            echo "Syntax error in: $file"
-            python3 -m py_compile "$file" 2>&1 || true
-            ERROR_COUNT=$((ERROR_COUNT + 1))
+          while IFS= read -r -d '' file; do
+            FILE_COUNT=$((FILE_COUNT + 1))
+            if ! python3 -m py_compile "$file" 2>/dev/null; then
+              echo "::error file=$file::Syntax error in: $file"
+              python3 -m py_compile "$file" 2>&1 || true
+              ERROR_COUNT=$((ERROR_COUNT + 1))
+            fi
+          done < <(find . -name "*.py" -type f ! -path "./.git/*" ! -path "./venv/*" ! -path "./.venv/*" ! -path "./__pycache__/*" -print0)
+
+          echo ""
+          echo "=========================================="
+          echo "Syntax Check Summary"
+          echo "=========================================="
+          echo "Total Python files checked: $FILE_COUNT"
+          echo "Files with syntax errors: $ERROR_COUNT"
+          echo ""
+
+          if [ $ERROR_COUNT -gt 0 ]; then
+            echo "::error::Syntax validation FAILED ($ERROR_COUNT files with errors)"
+            exit 1
+          else
+            echo "All Python files are syntactically valid"
+            exit 0
           fi
-        done < <(find . -name "*.py" -type f ! -path "./.git/*" ! -path "./venv/*" ! -path "./.venv/*" ! -path "./__pycache__/*" -print0)
 
-        echo ""
-        echo "=========================================="
-        echo "Syntax Check Summary"
-        echo "=========================================="
-        echo "Total Python files checked: $FILE_COUNT"
-        echo "Files with syntax errors: $ERROR_COUNT"
-        echo ""
+      - name: AST Parse Validation
+        run: |
+          python3 << 'EOF'
+          import ast
+          import sys
+          from pathlib import Path
 
-        if [ $ERROR_COUNT -gt 0 ]; then
-          echo "Syntax validation FAILED"
-          exit 1
-        else
-          echo "All Python files are syntactically valid"
-          exit 0
-        fi
+          error_count = 0
+          file_count = 0
 
-    - name: AST Parse Validation
-      run: |
-        python3 << 'EOF'
-        import ast
-        import sys
-        from pathlib import Path
+          for py_file in Path('.').rglob('*.py'):
+              if any(part in py_file.parts for part in ['.git', 'venv', '.venv', '__pycache__', 'node_modules']):
+                  continue
 
-        error_count = 0
-        file_count = 0
+              file_count += 1
+              try:
+                  with open(py_file, 'r', encoding='utf-8') as f:
+                      content = f.read()
+                  ast.parse(content, filename=str(py_file))
+              except SyntaxError as e:
+                  print(f"AST Error in {py_file}: {e.msg} at line {e.lineno}")
+                  error_count += 1
+              except Exception as e:
+                  print(f"Error parsing {py_file}: {e}")
+                  error_count += 1
 
-        for py_file in Path('.').rglob('*.py'):
-            if any(part in py_file.parts for part in ['.git', 'venv', '.venv', '__pycache__']):
-                continue
+          print(f"\nAST validation: {file_count} files checked, {error_count} errors")
 
-            file_count += 1
-            try:
-                with open(py_file, 'r', encoding='utf-8') as f:
-                    content = f.read()
-                ast.parse(content, filename=str(py_file))
-            except SyntaxError as e:
-                print(f"AST Error in {py_file}: {e.msg} at line {e.lineno}")
-                error_count += 1
-            except Exception as e:
-                print(f"Error parsing {py_file}: {e}")
-                error_count += 1
+          if error_count > 0:
+              print("AST validation FAILED")
+              sys.exit(1)
+          else:
+              print("All files passed AST validation")
+              sys.exit(0)
+          EOF
 
-        print(f"\nAST validation: {file_count} files checked, {error_count} errors")
+      - name: YAML Syntax Check
+        run: |
+          python3 << 'EOF'
+          import yaml
+          import sys
+          from pathlib import Path
 
-        if error_count > 0:
-            print("AST validation FAILED")
-            sys.exit(1)
-        else:
-            print("All files passed AST validation")
-            sys.exit(0)
-        EOF
+          error_count = 0
+          file_count = 0
 
-    - name: Check for Common Issues
-      run: |
-        python3 << 'EOF'
-        from pathlib import Path
+          for yaml_file in Path('.').rglob('*.yml'):
+              if '.git' in yaml_file.parts:
+                  continue
+              file_count += 1
+              try:
+                  with open(yaml_file, 'r') as f:
+                      yaml.safe_load(f)
+              except yaml.YAMLError as e:
+                  print(f"YAML error in {yaml_file}: {e}")
+                  error_count += 1
 
-        issues = []
+          for yaml_file in Path('.').rglob('*.yaml'):
+              if '.git' in yaml_file.parts:
+                  continue
+              file_count += 1
+              try:
+                  with open(yaml_file, 'r') as f:
+                      yaml.safe_load(f)
+              except yaml.YAMLError as e:
+                  print(f"YAML error in {yaml_file}: {e}")
+                  error_count += 1
 
-        for py_file in Path('.').rglob('*.py'):
-            if any(part in py_file.parts for part in ['.git', 'venv', '.venv', '__pycache__']):
-                continue
+          print(f"YAML validation: {file_count} files checked, {error_count} errors")
+          if error_count > 0:
+              sys.exit(1)
+          EOF
 
-            try:
-                with open(py_file, 'r', encoding='utf-8') as f:
-                    lines = f.readlines()
+      - name: Check for Common Issues
+        run: |
+          python3 << 'EOF'
+          from pathlib import Path
 
-                for i, line in enumerate(lines, 1):
-                    if line.startswith(' ') and '\t' in line:
-                        issues.append(f"{py_file}:{i} - Mixed tabs and spaces")
+          issues = []
 
-            except Exception as e:
-                issues.append(f"{py_file} - Error reading file: {e}")
+          for py_file in Path('.').rglob('*.py'):
+              if any(part in py_file.parts for part in ['.git', 'venv', '.venv', '__pycache__', 'node_modules']):
+                  continue
 
-        if issues:
-            print("Potential issues found:")
-            for issue in issues[:20]:
-                print(f"  {issue}")
-            if len(issues) > 20:
-                print(f"  ... and {len(issues) - 20} more")
-        else:
-            print("No common issues detected")
-        EOF
+              try:
+                  with open(py_file, 'r', encoding='utf-8') as f:
+                      lines = f.readlines()
+
+                  for i, line in enumerate(lines, 1):
+                      if line.startswith(' ') and '\t' in line:
+                          issues.append(f"{py_file}:{i} - Mixed tabs and spaces")
+
+              except Exception as e:
+                  issues.append(f"{py_file} - Error reading file: {e}")
+
+          if issues:
+              print("Potential issues found:")
+              for issue in issues[:20]:
+                  print(f"  {issue}")
+              if len(issues) > 20:
+                  print(f"  ... and {len(issues) - 20} more")
+          else:
+              print("No common issues detected")
+          EOF

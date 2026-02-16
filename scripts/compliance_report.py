@@ -12,17 +12,17 @@ Usage:
 import argparse
 import json
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 
 class ComplianceReporter:
     """Generate compliance reports."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.base_dir = Path(__file__).parent.parent
         self.report_data = {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "version": self._get_version(),
             "compliance_status": {},
             "audit_summary": {},
@@ -38,7 +38,7 @@ class ComplianceReporter:
             return version_file.read_text().strip()
         return "unknown"
 
-    def analyze_audit_logs(self, days: int = 30):
+    def analyze_audit_logs(self, days: int = 30) -> None:
         """Analyze audit logs for compliance."""
         print(f"Analyzing audit logs (last {days} days)...")
 
@@ -115,7 +115,7 @@ class ComplianceReporter:
         security_actions = ["login", "logout", "password_change", "permission_change"]
         return sum(1 for event in events if event.get("action") in security_actions)
 
-    def _check_suspicious_activity(self, events: list[dict]):
+    def _check_suspicious_activity(self, events: list[dict]) -> None:
         """Check for suspicious activity in audit logs."""
         # Check for multiple failed logins
         failed_logins = [
@@ -132,7 +132,7 @@ class ComplianceReporter:
                 }
             )
 
-    def check_security_controls(self):
+    def check_security_controls(self) -> None:
         """Check security controls."""
         print("Checking security controls...")
 
@@ -145,7 +145,7 @@ class ComplianceReporter:
 
             try:
                 result = subprocess.run(
-                    [sys.executable, str(fips_script)], capture_output=True, timeout=30
+                    [sys.executable, str(fips_script)], capture_output=True, timeout=30, check=False
                 )
                 controls["fips_140_2"] = {
                     "status": "compliant" if result.returncode == 0 else "non_compliant",
@@ -224,7 +224,7 @@ class ComplianceReporter:
             "status": "compliant" if compliance_score >= 90 else "needs_improvement",
         }
 
-    def check_system_status(self):
+    def check_system_status(self) -> None:
         """Check system status."""
         print("Checking system status...")
 
@@ -235,7 +235,10 @@ class ComplianceReporter:
 
             try:
                 result = subprocess.run(
-                    [sys.executable, str(health_script), "--json"], capture_output=True, timeout=30
+                    [sys.executable, str(health_script), "--json"],
+                    capture_output=True,
+                    timeout=30,
+                    check=False,
                 )
                 if result.returncode == 0:
                     self.report_data["recommendations"].append(
@@ -264,7 +267,7 @@ class ComplianceReporter:
                     }
                 )
 
-    def generate_recommendations(self):
+    def generate_recommendations(self) -> None:
         """Generate recommendations based on findings."""
         # Add standard recommendations
         recommendations = [
@@ -298,7 +301,7 @@ class ComplianceReporter:
         # Add to existing recommendations
         self.report_data["recommendations"].extend(recommendations)
 
-    def generate_html_report(self, output_file: str):
+    def generate_html_report(self, output_file: str) -> None:
         """Generate HTML report."""
         print(f"Generating HTML report: {output_file}")
 
@@ -325,13 +328,13 @@ class ComplianceReporter:
 </head>
 <body>
     <h1>PBX System Compliance Report</h1>
-    <p>Generated: {self.report_data['generated_at']}</p>
-    <p>Version: {self.report_data['version']}</p>
+    <p>Generated: {self.report_data["generated_at"]}</p>
+    <p>Version: {self.report_data["version"]}</p>
 
     <h2>Compliance Status</h2>
-    <div class="score">{self.report_data['compliance_status'].get('overall_score', 0)}%</div>
-    <p>Status: <span class="status-{self.report_data['compliance_status'].get('status', 'unknown')}">{self.report_data['compliance_status'].get('status', 'unknown').upper()}</span></p>
-    <p>{self.report_data['compliance_status'].get('compliant_controls', 0)} of {self.report_data['compliance_status'].get('total_controls', 0)} controls compliant</p>
+    <div class="score">{self.report_data["compliance_status"].get("overall_score", 0)}%</div>
+    <p>Status: <span class="status-{self.report_data["compliance_status"].get("status", "unknown")}">{self.report_data["compliance_status"].get("status", "unknown").upper()}</span></p>
+    <p>{self.report_data["compliance_status"].get("compliant_controls", 0)} of {self.report_data["compliance_status"].get("total_controls", 0)} controls compliant</p>
 
     <h2>Security Controls</h2>
     <table>
@@ -347,8 +350,8 @@ class ComplianceReporter:
             html += f"""
         <tr>
             <td>{control_name}</td>
-            <td class="{status_class}">{control['status'].upper()}</td>
-            <td>{control['description']}</td>
+            <td class="{status_class}">{control["status"].upper()}</td>
+            <td>{control["description"]}</td>
         </tr>
 """
 
@@ -359,10 +362,10 @@ class ComplianceReporter:
 """
         audit = self.report_data.get("audit_summary", {})
         html += f"""
-    <p>Total Events: {audit.get('total_events', 0)}</p>
-    <p>Unique Users: {audit.get('users', 0)}</p>
-    <p>Failed Actions: {audit.get('failed_actions', 0)}</p>
-    <p>Security Events: {audit.get('security_events', 0)}</p>
+    <p>Total Events: {audit.get("total_events", 0)}</p>
+    <p>Unique Users: {audit.get("users", 0)}</p>
+    <p>Failed Actions: {audit.get("failed_actions", 0)}</p>
+    <p>Security Events: {audit.get("security_events", 0)}</p>
 """
 
         if self.report_data.get("findings"):
@@ -380,10 +383,10 @@ class ComplianceReporter:
                 severity_class = f"severity-{finding['severity']}"
                 html += f"""
         <tr>
-            <td class="{severity_class}">{finding['severity'].upper()}</td>
-            <td>{finding['category']}</td>
-            <td>{finding['finding']}</td>
-            <td>{finding['recommendation']}</td>
+            <td class="{severity_class}">{finding["severity"].upper()}</td>
+            <td>{finding["category"]}</td>
+            <td>{finding["finding"]}</td>
+            <td>{finding["recommendation"]}</td>
         </tr>
 """
             html += """
@@ -398,14 +401,14 @@ class ComplianceReporter:
         with open(output_file, "w") as f:
             f.write(html)
 
-    def generate_json_report(self, output_file: str):
+    def generate_json_report(self, output_file: str) -> None:
         """Generate JSON report."""
         print(f"Generating JSON report: {output_file}")
 
         with open(output_file, "w") as f:
             json.dump(self.report_data, f, indent=2)
 
-    def run_full_report(self, output_format: str = "html", output_file: str = None):
+    def run_full_report(self, output_format: str = "html", output_file: str | None = None) -> None:
         """Run full compliance report."""
         print("=" * 70)
         print("PBX Compliance Report Generator")
@@ -419,7 +422,7 @@ class ComplianceReporter:
 
         # Generate output
         if output_file is None:
-            timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
             output_file = f"compliance_report_{timestamp}.{output_format}"
 
         if output_format == "html":
@@ -434,7 +437,7 @@ class ComplianceReporter:
         print(f"Compliance Score: {self.report_data['compliance_status'].get('overall_score', 0)}%")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="PBX Compliance Report Generator")
     parser.add_argument("--format", choices=["html", "json"], default="html", help="Output format")
     parser.add_argument("--output", help="Output file path")

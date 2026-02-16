@@ -3,10 +3,11 @@ Real-Time Speech Analytics Framework
 Provides live transcription, sentiment analysis, and call summarization
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class SpeechAnalyticsEngine:
@@ -15,7 +16,7 @@ class SpeechAnalyticsEngine:
     Framework for transcription, sentiment, and summarization
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize speech analytics engine
 
@@ -104,7 +105,7 @@ class SpeechAnalyticsEngine:
                         config.get("summarization_enabled", True),
                         config.get("keywords", ""),
                         config.get("alert_threshold", 0.7),
-                        datetime.now(timezone.utc),
+                        datetime.now(UTC),
                         extension,
                     ),
                 )
@@ -158,7 +159,7 @@ class SpeechAnalyticsEngine:
             "sentiment": "neutral",
             "sentiment_score": 0.0,
             "keywords_detected": [],
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Get configuration for this call
@@ -221,10 +222,9 @@ class SpeechAnalyticsEngine:
             if self._vosk_recognizer.AcceptWaveform(audio_chunk):
                 result = json.loads(self._vosk_recognizer.Result())
                 return result.get("text", "")
-            else:
-                # Partial result
-                result = json.loads(self._vosk_recognizer.PartialResult())
-                return result.get("partial", "")
+            # Partial result
+            result = json.loads(self._vosk_recognizer.PartialResult())
+            return result.get("partial", "")
 
         except ImportError:
             self.logger.warning("Vosk library not available, transcription disabled")
@@ -325,8 +325,8 @@ class SpeechAnalyticsEngine:
         # Calculate confidence based on word count
         # Confidence scales linearly: 10 sentiment words = 100% confidence
         # This provides a reasonable threshold for reliable sentiment detection
-        CONFIDENCE_SCALING_FACTOR = 10.0
-        confidence = min(1.0, (positive_count + negative_count) / CONFIDENCE_SCALING_FACTOR)
+        confidence_scaling_factor = 10.0
+        confidence = min(1.0, (positive_count + negative_count) / confidence_scaling_factor)
 
         return {
             "sentiment": sentiment,
@@ -462,12 +462,7 @@ class SpeechAnalyticsEngine:
         Returns:
             list of detected keywords
         """
-        detected = []
-        text_lower = text.lower()
-
-        for keyword in keywords:
-            if keyword.lower() in text_lower:
-                detected.append(keyword)
+        detected = [keyword for keyword in keywords if keyword.lower() in text.lower()]
 
         return detected
 
@@ -481,19 +476,18 @@ class SpeechAnalyticsEngine:
         try:
             result = self.db.execute("SELECT * FROM speech_analytics_configs ORDER BY extension")
 
-            configs = []
-            for row in result or []:
-                configs.append(
-                    {
-                        "extension": row[1],
-                        "enabled": bool(row[2]),
-                        "transcription_enabled": bool(row[3]),
-                        "sentiment_enabled": bool(row[4]),
-                        "summarization_enabled": bool(row[5]),
-                        "keywords": row[6],
-                        "alert_threshold": float(row[7]) if row[7] else 0.7,
-                    }
-                )
+            configs = [
+                {
+                    "extension": row[1],
+                    "enabled": bool(row[2]),
+                    "transcription_enabled": bool(row[3]),
+                    "sentiment_enabled": bool(row[4]),
+                    "summarization_enabled": bool(row[5]),
+                    "keywords": row[6],
+                    "alert_threshold": float(row[7]) if row[7] else 0.7,
+                }
+                for row in result or []
+            ]
 
             return configs
 

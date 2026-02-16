@@ -3,35 +3,39 @@ SDP (Session Description Protocol) Parser and Builder
 Used for media negotiation in SIP calls
 """
 
+from typing import Any
+
 
 class SDPSession:
-    """Represents an SDP session description"""
+    """Represents an SDP session description."""
 
-    def __init__(self):
-        """Initialize SDP session"""
-        self.version = 0
-        self.origin = {}  # username, session_id, version, network_type, address_type, address
-        self.session_name = "-"
-        self.connection = {}  # network_type, address_type, address
-        self.media = []  # list of media descriptions
+    def __init__(self) -> None:
+        """Initialize SDP session with default values."""
+        self.version: int = 0
+        self.origin: dict[
+            str, str
+        ] = {}  # username, session_id, version, network_type, address_type, address
+        self.session_name: str = "-"
+        self.connection: dict[str, str] = {}  # network_type, address_type, address
+        self.media: list[dict[str, Any]] = []  # list of media descriptions
 
-    def parse(self, sdp_body):
+    def parse(self, sdp_body: str) -> None:
         """
-        Parse SDP body
+        Parse SDP body.
 
         Args:
-            sdp_body: SDP body as string
+            sdp_body: SDP body as string.
         """
         lines = sdp_body.strip().split("\n")
-        current_media = None
+        current_media: dict[str, Any] | None = None
 
         for line in lines:
-            line = line.strip()
-            if not line or "=" not in line:
+            stripped_line = line.strip()
+            if not stripped_line or "=" not in stripped_line:
                 continue
 
-            type_char = line[0]
-            value = line[2:].strip()
+            type_char = stripped_line[0]
+            value = stripped_line[2:].strip()
 
             if type_char == "v":
                 # Version
@@ -58,7 +62,7 @@ class SDPSession:
                 # Connection information
                 parts = value.split()
                 if len(parts) >= 3:
-                    connection = {
+                    connection: dict[str, str] = {
                         "network_type": parts[0],
                         "address_type": parts[1],
                         "address": parts[2],
@@ -85,12 +89,13 @@ class SDPSession:
                 # Attribute (associated with current media)
                 current_media["attributes"].append(value)
 
-    def get_audio_info(self):
+    def get_audio_info(self) -> dict[str, Any] | None:
         """
-        Get audio media information
+        Get audio media information.
 
         Returns:
-            Dictionary with audio info or None
+            Dictionary with audio info (address, port, formats) or None if
+            no audio media is present.
         """
         for media in self.media:
             if media["type"] == "audio":
@@ -105,14 +110,14 @@ class SDPSession:
                 }
         return None
 
-    def build(self):
+    def build(self) -> str:
         """
-        Build SDP string
+        Build SDP string.
 
         Returns:
-            SDP body as string
+            SDP body as string.
         """
-        lines = []
+        lines: list[str] = []
 
         # Version
         lines.append(f"v={self.version}")
@@ -131,9 +136,7 @@ class SDPSession:
         # Connection (session-level)
         if self.connection:
             c = self.connection
-            lines.append(
-                f"c={c['network_type']} {c['address_type']} {c['address']}"
-            )
+            lines.append(f"c={c['network_type']} {c['address_type']} {c['address']}")
 
         # Time (required by SDP spec)
         lines.append("t=0 0")
@@ -142,47 +145,50 @@ class SDPSession:
         for media in self.media:
             # Media line
             formats = " ".join(media["formats"])
-            lines.append(
-                f"m={media['type']} {media['port']} {media['protocol']} {formats}"
-            )
+            lines.append(f"m={media['type']} {media['port']} {media['protocol']} {formats}")
 
             # Media-level connection
             if "connection" in media:
                 c = media["connection"]
-                lines.append(
-                    f"c={c['network_type']} {c['address_type']} {c['address']}"
-                )
+                lines.append(f"c={c['network_type']} {c['address_type']} {c['address']}")
 
             # Attributes
-            for attr in media.get("attributes", []):
-                lines.append(f"a={attr}")
+            lines.extend(f"a={attr}" for attr in media.get("attributes", []))
 
         return "\r\n".join(lines) + "\r\n"
 
 
 class SDPBuilder:
-    """Helper to build SDP messages"""
+    """Helper to build SDP messages."""
 
     @staticmethod
     def build_audio_sdp(
-        local_ip, local_port, session_id="0", codecs=None, dtmf_payload_type=101, ilbc_mode=30
-    ):
+        local_ip: str,
+        local_port: int,
+        session_id: str = "0",
+        codecs: list[str] | None = None,
+        dtmf_payload_type: int = 101,
+        ilbc_mode: int = 30,
+    ) -> str:
         """
-        Build SDP for audio call
+        Build SDP for audio call.
 
         Args:
-            local_ip: Local IP address for RTP
-            local_port: Local RTP port
-            session_id: Session ID (can be timestamp)
-            codecs: list of codec payload types to offer (default: ['0', '8', '9', '18', '2', '101'])
-                   When negotiating with a caller, pass their offered codecs to maintain compatibility
-                   Standard payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32
-            dtmf_payload_type: Payload type for RFC2833 telephone-event (default: 101)
-                   Can be configured to use alternative payload types (96-127) if needed
-            ilbc_mode: iLBC frame duration in milliseconds - 20ms (15.2 kbps) or 30ms (13.33 kbps, default: 30)
+            local_ip: Local IP address for RTP.
+            local_port: Local RTP port.
+            session_id: Session ID (can be timestamp).
+            codecs: List of codec payload types to offer
+                (default: ['0', '8', '9', '18', '2', '101']).
+                When negotiating with a caller, pass their offered codecs to
+                maintain compatibility.
+                Standard payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32.
+            dtmf_payload_type: Payload type for RFC2833 telephone-event (default: 101).
+                Can be configured to use alternative payload types (96-127) if needed.
+            ilbc_mode: iLBC frame duration in milliseconds - 20ms (15.2 kbps) or
+                30ms (13.33 kbps, default: 30).
 
         Returns:
-            SDP body as string
+            SDP body as string.
         """
         if codecs is None:
             # Default codec order: PCMU, PCMA, G722, G729, G726-32, telephone-event
@@ -203,7 +209,7 @@ class SDPBuilder:
         sdp.connection = {"network_type": "IN", "address_type": "IP4", "address": local_ip}
 
         # Build attributes dynamically based on codecs
-        attributes = []
+        attributes: list[str] = []
 
         # Add rtpmap for each codec
         if "0" in codecs:
@@ -266,7 +272,7 @@ class SDPBuilder:
         attributes.append("sendrecv")
 
         # Add audio media
-        media = {
+        media: dict[str, Any] = {
             "type": "audio",
             "port": local_port,
             "protocol": "RTP/AVP",

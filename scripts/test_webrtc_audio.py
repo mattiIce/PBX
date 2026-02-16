@@ -14,21 +14,20 @@ Usage:
 """
 
 import argparse
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.features.webrtc import WebRTCSignalingServer
-from pathlib import Path
 
 
 class WebRTCAudioTester:
     """WebRTC audio testing and troubleshooting"""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         self.verbose = verbose
         self.test_results = {
             "passed": 0,
@@ -56,7 +55,7 @@ class WebRTCAudioTester:
             },
         }
 
-    def log(self, message, level="INFO"):
+    def log(self, message: str, level: str = "INFO") -> None:
         """Log a message"""
         if self.verbose or level != "DEBUG":
             prefix = {
@@ -68,30 +67,29 @@ class WebRTCAudioTester:
             }.get(level, "•")
             print(f"{prefix} {message}")
 
-    def test_webrtc_module_imports(self):
+    def test_webrtc_module_imports(self) -> bool:
         """Test that WebRTC modules can be imported"""
         self.log("\n=== Testing WebRTC Module Imports ===")
 
         try:
-
             self.log("WebRTC modules imported successfully", "PASS")
             self.test_results["passed"] += 1
             return True
 
         except ImportError as e:
-            self.log(f"Failed to import WebRTC modules: {str(e)}", "FAIL")
+            self.log(f"Failed to import WebRTC modules: {e!s}", "FAIL")
             self.test_results["failed"] += 1
-            self.test_results["errors"].append(f"Import error: {str(e)}")
+            self.test_results["errors"].append(f"Import error: {e!s}")
             return False
 
-    def test_webrtc_configuration(self):
+    def test_webrtc_configuration(self) -> bool:
         """Test WebRTC configuration"""
         self.log("\n=== Testing WebRTC Configuration ===")
 
         try:
             # Mock configuration for testing
             class MockConfig:
-                def get(self, key, default=None):
+                def get(self, key: str, default: object = None) -> object:
                     config_map = {
                         "features.webrtc.enabled": True,
                         "features.webrtc.session_timeout": 300,
@@ -109,7 +107,7 @@ class WebRTCAudioTester:
                 config = MockConfig()
                 signaling = WebRTCSignalingServer(config)
             except (OSError, ValueError) as e:
-                self.log(f"WebRTC signaling initialization failed: {str(e)}", "WARN")
+                self.log(f"WebRTC signaling initialization failed: {e!s}", "WARN")
                 self.log("This is expected if WebRTC module requires different config", "WARN")
                 self.test_results["warnings"] += 1
                 return False
@@ -142,12 +140,12 @@ class WebRTCAudioTester:
             return len(issues) == 0
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.log(f"Configuration test failed: {str(e)}", "FAIL")
+            self.log(f"Configuration test failed: {e!s}", "FAIL")
             self.test_results["failed"] += 1
-            self.test_results["errors"].append(f"Config error: {str(e)}")
+            self.test_results["errors"].append(f"Config error: {e!s}")
             return False
 
-    def test_codec_negotiation(self, preferred_codec="opus"):
+    def test_codec_negotiation(self, preferred_codec: str = "opus") -> bool:
         """Test codec negotiation"""
         self.log(f"\n=== Testing Codec Negotiation ({preferred_codec}) ===")
 
@@ -205,12 +203,11 @@ class WebRTCAudioTester:
                 )
 
             return True
-        else:
-            self.log(f"Unknown codec: {preferred_codec}", "FAIL")
-            self.test_results["failed"] += 1
-            return False
+        self.log(f"Unknown codec: {preferred_codec}", "FAIL")
+        self.test_results["failed"] += 1
+        return False
 
-    def test_browser_compatibility(self, browser="Chrome"):
+    def test_browser_compatibility(self, browser: str = "Chrome") -> bool:
         """Test browser compatibility"""
         self.log(f"\n=== Testing Browser Compatibility ({browser}) ===")
 
@@ -234,18 +231,16 @@ class WebRTCAudioTester:
 
         if len(supported_codecs) > 0:
             self.log(
-                f"{browser} supports {len(supported_codecs)} codecs: "
-                f"{', '.join(supported_codecs)}",
+                f"{browser} supports {len(supported_codecs)} codecs: {', '.join(supported_codecs)}",
                 "PASS",
             )
             self.test_results["passed"] += 1
             return True
-        else:
-            self.log(f"{browser} has limited codec support", "WARN")
-            self.test_results["warnings"] += 1
-            return False
+        self.log(f"{browser} has limited codec support", "WARN")
+        self.test_results["warnings"] += 1
+        return False
 
-    def test_network_conditions(self):
+    def test_network_conditions(self) -> bool:
         """Test considerations for different network conditions"""
         self.log("\n=== Testing Network Conditions Considerations ===")
 
@@ -297,7 +292,7 @@ class WebRTCAudioTester:
         self.test_results["passed"] += 1
         return True
 
-    def test_common_audio_issues(self):
+    def test_common_audio_issues(self) -> bool:
         """Test for common WebRTC audio issues"""
         self.log("\n=== Common WebRTC Audio Issues & Solutions ===")
 
@@ -368,7 +363,7 @@ class WebRTCAudioTester:
         self.test_results["passed"] += 1
         return True
 
-    def generate_troubleshooting_guide(self):
+    def generate_troubleshooting_guide(self) -> bool:
         """Generate troubleshooting guide"""
         self.log("\n=== WebRTC Audio Troubleshooting Guide ===")
 
@@ -427,7 +422,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
         try:
             with open(guide_path, "w") as f:
                 f.write("# WebRTC Audio Troubleshooting Guide\n\n")
-                f.write(f"Generated: {datetime.now(timezone.utc).isoformat()}\n\n")
+                f.write(f"Generated: {datetime.now(UTC).isoformat()}\n\n")
                 f.write(guide)
                 f.write("\n\n## Test Results\n\n")
                 f.write(f"- Passed: {self.test_results['passed']}\n")
@@ -436,19 +431,18 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
 
                 if self.test_results["recommendations"]:
                     f.write("\n## Recommendations\n\n")
-                    for rec in self.test_results["recommendations"]:
-                        f.write(f"- {rec}\n")
+                    f.writelines(f"- {rec}\n" for rec in self.test_results["recommendations"])
 
             self.log(f"Troubleshooting guide saved to: {guide_path}", "PASS")
             self.test_results["passed"] += 1
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.log(f"Failed to save guide: {str(e)}", "WARN")
+            self.log(f"Failed to save guide: {e!s}", "WARN")
             self.test_results["warnings"] += 1
             return False
 
-    def run_all_tests(self, browser="Chrome", codec="opus"):
+    def run_all_tests(self, browser: str = "Chrome", codec: str = "opus") -> bool:
         """Run all WebRTC audio tests"""
         self.log("=" * 60)
         self.log("WebRTC Audio Validation & Troubleshooting")
@@ -470,7 +464,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
         # Return True if all tests passed (warnings are OK)
         return self.test_results["failed"] == 0
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print test summary"""
         self.log("\n" + "=" * 60)
         self.log("TEST SUMMARY")
@@ -501,12 +495,12 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
                 self.log("  Note: Check warnings above for optimization opportunities", "WARN")
         else:
             self.log(
-                f"\n✗ {self.test_results['failed']} TEST(S) FAILED - " "Please review errors above",
+                f"\n✗ {self.test_results['failed']} TEST(S) FAILED - Please review errors above",
                 "FAIL",
             )
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="WebRTC audio validation and troubleshooting")
     parser.add_argument("--verbose", "-v", action="store_true", help="Enable verbose output")

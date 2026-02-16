@@ -4,14 +4,13 @@ SAML/OAuth enterprise authentication using free libraries
 """
 
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
 # Try to import SAML library (free)
 try:
-    pass
-
     SAML_AVAILABLE = True
 except ImportError:
     SAML_AVAILABLE = False
@@ -20,7 +19,7 @@ except ImportError:
 class SSOAuthService:
     """Single Sign-On authentication service"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize SSO service"""
         self.logger = get_logger()
         self.config = config or {}
@@ -178,9 +177,9 @@ class SSOAuthService:
 
         self.active_sessions[session_id] = {
             "user_info": user_info,
-            "created_at": datetime.now(timezone.utc),
-            "expires_at": datetime.now(timezone.utc) + timedelta(seconds=self.session_timeout),
-            "last_activity": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
+            "expires_at": datetime.now(UTC) + timedelta(seconds=self.session_timeout),
+            "last_activity": datetime.now(UTC),
         }
 
         self.logger.info(f"Created SSO session for {user_info.get('user_id')}")
@@ -195,12 +194,12 @@ class SSOAuthService:
         session = self.active_sessions[session_id]
 
         # Check if session expired
-        if datetime.now(timezone.utc) > session["expires_at"]:
+        if datetime.now(UTC) > session["expires_at"]:
             del self.active_sessions[session_id]
             return None
 
         # Update last activity
-        session["last_activity"] = datetime.now(timezone.utc)
+        session["last_activity"] = datetime.now(UTC)
 
         return session["user_info"]
 
@@ -213,9 +212,9 @@ class SSOAuthService:
             return True
         return False
 
-    def cleanup_expired_sessions(self):
+    def cleanup_expired_sessions(self) -> None:
         """Clean up expired sessions"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         expired = [
             sid for sid, session in self.active_sessions.items() if now > session["expires_at"]
         ]

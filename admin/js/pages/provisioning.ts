@@ -142,8 +142,8 @@ export async function loadProvisioningSettings(): Promise<void> {
         const data: ProvisioningSettingsResponse = await response.json();
 
         const el = (id: string): HTMLElement | null => document.getElementById(id);
-        if (el('provisioning-enabled')) (el('provisioning-enabled') as HTMLInputElement).checked = data.enabled || false;
-        if (el('provisioning-url-format')) (el('provisioning-url-format') as HTMLInputElement).value = data.url_format || '';
+        if (el('provisioning-enabled')) (el('provisioning-enabled') as HTMLInputElement).checked = data.enabled ?? false;
+        if (el('provisioning-url-format')) (el('provisioning-url-format') as HTMLInputElement).value = data.url_format ?? '';
     } catch (error: unknown) {
         console.error('Error loading provisioning settings:', error);
     }
@@ -159,8 +159,8 @@ export async function loadPhonebookSettings(): Promise<void> {
         const data: PhonebookSettingsResponse = await response.json();
 
         const el = (id: string): HTMLElement | null => document.getElementById(id);
-        if (el('ldap-phonebook-enabled')) (el('ldap-phonebook-enabled') as HTMLInputElement).checked = data.ldap_enabled || false;
-        if (el('remote-phonebook-enabled')) (el('remote-phonebook-enabled') as HTMLInputElement).checked = data.remote_enabled || false;
+        if (el('ldap-phonebook-enabled')) (el('ldap-phonebook-enabled') as HTMLInputElement).checked = data.ldap_enabled ?? false;
+        if (el('remote-phonebook-enabled')) (el('remote-phonebook-enabled') as HTMLInputElement).checked = data.remote_enabled ?? false;
     } catch (error: unknown) {
         console.error('Error loading phonebook settings:', error);
     }
@@ -192,12 +192,12 @@ function populateProvisioningFormDropdowns(): void {
     const vendorSelect = document.getElementById('device-vendor') as HTMLSelectElement | null;
     if (!vendorSelect) return;
     vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
-    supportedVendors.forEach(v => {
+    for (const v of supportedVendors) {
         const option = document.createElement('option');
         option.value = v;
         option.textContent = v;
         vendorSelect.appendChild(option);
-    });
+    }
 }
 
 export function viewTemplate(name: string): void {
@@ -212,4 +212,5 @@ window.loadProvisioningTemplates = loadProvisioningTemplates;
 window.loadProvisioningSettings = loadProvisioningSettings;
 window.loadPhonebookSettings = loadPhonebookSettings;
 window.deleteDevice = deleteDevice;
-window.viewTemplate = viewTemplate;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy backward compat shim, overridden by admin.js at runtime
+(window as any).viewTemplate = viewTemplate;

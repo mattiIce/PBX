@@ -3,12 +3,12 @@ Voicemail transcription service using speech-to-text
 """
 
 import json
-import os
 import wave
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 # Constants for Vosk transcription
 VOSK_FRAME_SIZE = 4000  # Number of frames to read per chunk
@@ -35,7 +35,7 @@ except ImportError:
 class VoicemailTranscriptionService:
     """Service for transcribing voicemail messages to text"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """
         Initialize transcription service
 
@@ -87,13 +87,11 @@ class VoicemailTranscriptionService:
                             "  Vosk library not installed. Install with: pip install vosk"
                         )
                 else:
-                    self.logger.info(
-                        f"  API key configured: {bool(self.api_key)}"
-                    )
+                    self.logger.info(f"  API key configured: {bool(self.api_key)}")
             else:
                 self.logger.debug("Voicemail transcription service disabled in configuration")
 
-    def transcribe(self, audio_file_path, language="en-US"):
+    def transcribe(self, audio_file_path: str, language: str = "en-US") -> dict:
         """
         Transcribe voicemail audio file to text
 
@@ -120,7 +118,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": None,
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
                 "error": "Transcription service is disabled",
             }
 
@@ -132,7 +130,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": self.provider,
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
                 "error": f"Audio file not found: {audio_file_path}",
             }
 
@@ -143,20 +141,19 @@ class VoicemailTranscriptionService:
         try:
             if self.provider == "vosk":
                 return self._transcribe_vosk(audio_file_path, language)
-            elif self.provider == "google":
+            if self.provider == "google":
                 return self._transcribe_google(audio_file_path, language)
-            else:
-                error_msg = f"Unsupported transcription provider: {self.provider}. Use 'vosk' (recommended, free) or 'google'"
-                self.logger.error(error_msg)
-                return {
-                    "success": False,
-                    "text": None,
-                    "confidence": 0.0,
-                    "language": language,
-                    "provider": self.provider,
-                    "timestamp": datetime.now(timezone.utc),
-                    "error": error_msg,
-                }
+            error_msg = f"Unsupported transcription provider: {self.provider}. Use 'vosk' (recommended, free) or 'google'"
+            self.logger.error(error_msg)
+            return {
+                "success": False,
+                "text": None,
+                "confidence": 0.0,
+                "language": language,
+                "provider": self.provider,
+                "timestamp": datetime.now(UTC),
+                "error": error_msg,
+            }
         except Exception as e:
             self.logger.error(f"Transcription failed: {e}")
             return {
@@ -165,11 +162,13 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": self.provider,
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
                 "error": str(e),
             }
 
-    def _create_error_response(self, error_msg, language, provider=None):
+    def _create_error_response(
+        self, error_msg: str, language: str, provider: str | None = None
+    ) -> dict:
         """
         Helper method to create error response structure
 
@@ -187,11 +186,11 @@ class VoicemailTranscriptionService:
             "confidence": 0.0,
             "language": language,
             "provider": provider or self.provider,
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
             "error": error_msg,
         }
 
-    def _transcribe_vosk(self, audio_file_path, language="en-US"):
+    def _transcribe_vosk(self, audio_file_path: str, language: str = "en-US") -> dict:
         """
         Transcribe using Vosk (offline, free speech recognition)
 
@@ -243,12 +242,12 @@ class VoicemailTranscriptionService:
                         break
                     if rec.AcceptWaveform(data):
                         result = json.loads(rec.Result())
-                        if "text" in result and result["text"]:
+                        if result.get("text"):
                             results.append(result["text"])
 
                 # Get final result
                 final_result = json.loads(rec.FinalResult())
-                if "text" in final_result and final_result["text"]:
+                if final_result.get("text"):
                     results.append(final_result["text"])
 
             # Combine all text
@@ -264,20 +263,19 @@ class VoicemailTranscriptionService:
                     "confidence": VOSK_DEFAULT_CONFIDENCE,  # Vosk doesn't provide confidence
                     "language": language,
                     "provider": "vosk",
-                    "timestamp": datetime.now(timezone.utc),
+                    "timestamp": datetime.now(UTC),
                     "error": None,
                 }
-            else:
-                self.logger.warning("Transcription returned empty text")
-                return self._create_error_response(
-                    "Transcription returned empty text", language, "vosk"
-                )
+            self.logger.warning("Transcription returned empty text")
+            return self._create_error_response(
+                "Transcription returned empty text", language, "vosk"
+            )
 
         except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Vosk transcription error: {e}")
             return self._create_error_response(str(e), language, "vosk")
 
-    def _transcribe_google(self, audio_file_path, language="en-US"):
+    def _transcribe_google(self, audio_file_path: str, language: str = "en-US") -> dict:
         """
         Transcribe using Google Cloud Speech-to-Text API
 
@@ -297,7 +295,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": "google",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
                 "error": error_msg,
             }
 
@@ -306,7 +304,7 @@ class VoicemailTranscriptionService:
             client = speech.SpeechClient()
 
             # Read audio file
-            with open(audio_file_path, "rb") as audio_file:
+            with Path(audio_file_path).open("rb") as audio_file:
                 content = audio_file.read()
 
             # Configure audio and recognition settings
@@ -333,9 +331,7 @@ class VoicemailTranscriptionService:
 
                     if text:
                         self.logger.info("✓ Transcription successful")
-                        self.logger.info(
-                            f"  Text length: {len(text)} characters"
-                        )
+                        self.logger.info(f"  Text length: {len(text)} characters")
                         self.logger.info(f"  Confidence: {confidence:.2%}")
                         self.logger.debug(f"  Text: {text[:100]}...")
                         return {
@@ -344,7 +340,7 @@ class VoicemailTranscriptionService:
                             "confidence": confidence,
                             "language": language,
                             "provider": "google",
-                            "timestamp": datetime.now(timezone.utc),
+                            "timestamp": datetime.now(UTC),
                             "error": None,
                         }
 
@@ -356,7 +352,7 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": "google",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
                 "error": "Transcription returned no results",
             }
 
@@ -368,6 +364,6 @@ class VoicemailTranscriptionService:
                 "confidence": 0.0,
                 "language": language,
                 "provider": "google",
-                "timestamp": datetime.now(timezone.utc),
+                "timestamp": datetime.now(UTC),
                 "error": str(e),
             }

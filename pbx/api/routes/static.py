@@ -5,13 +5,12 @@ Uses current_app.config['ADMIN_DIR'] for the admin directory path.
 """
 
 import mimetypes
-import os
+from pathlib import Path
 
 from flask import Blueprint, Response, current_app, redirect
 
 from pbx.api.utils import send_json
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger()
 
@@ -47,12 +46,12 @@ def handle_static_file(path: str) -> Response:
             return send_json({"error": "File not found"}, 404)
 
         # Determine content type
-        content_type, _ = mimetypes.guess_type(full_path)
+        content_type, _ = mimetypes.guess_type(str(full_path))
         if not content_type:
             content_type = "application/octet-stream"
 
         # Read and serve file
-        with open(full_path, "rb") as f:
+        with full_path.open("rb") as f:
             content = f.read()
 
         response = current_app.response_class(
@@ -64,5 +63,5 @@ def handle_static_file(path: str) -> Response:
     except KeyError:
         logger.error("ADMIN_DIR not configured in Flask app config")
         return send_json({"error": "Admin directory not configured"}, 500)
-    except (KeyError, OSError, TypeError, ValueError) as e:
+    except (OSError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)

@@ -4,15 +4,15 @@ Replaces the legacy BaseHTTPRequestHandler-based server with Flask.
 """
 
 import os
-import ssl
 import socket
+import ssl
 import threading
-import time
 import traceback
+from pathlib import Path
+from typing import Any
 
 from pbx.api.app import create_app
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 logger = get_logger()
 
@@ -22,7 +22,7 @@ class PBXFlaskServer:
 
     def __init__(
         self,
-        pbx_core,
+        pbx_core: Any,
         host: str = "0.0.0.0",  # nosec B104 - PBX API needs to bind all interfaces
         port: int = 9000,
     ) -> None:
@@ -100,10 +100,16 @@ class PBXFlaskServer:
             logger.error(f"Failed to configure SSL: {e}")
             traceback.print_exc()
 
-    def _request_certificate_from_ca(self, ca_config, cert_file, key_file):
+    def _request_certificate_from_ca(
+        self,
+        ca_config: dict[str, Any],
+        cert_file: str | None,
+        key_file: str | None,
+    ) -> bool:
         """Request certificate from in-house CA."""
         try:
             import requests
+
             ca_url = ca_config.get("url")
             ca_token = ca_config.get("token")
             hostname = ca_config.get("hostname", socket.gethostname())
@@ -117,18 +123,16 @@ class PBXFlaskServer:
                 json={"hostname": hostname, "type": "server"},
                 headers={"Authorization": f"Bearer {ca_token}"} if ca_token else {},
                 timeout=30,
-                verify=ca_config.get("verify_ssl", True)
+                verify=ca_config.get("verify_ssl", True),
             )
 
             if response.status_code == 200:
                 data = response.json()
                 if data.get("certificate") and data.get("private_key"):
-                    os.makedirs(str(Path(cert_file).parent), exist_ok=True)
-                    with open(cert_file, "w") as f:
-                        f.write(data["certificate"])
-                    with open(key_file, "w") as f:
-                        f.write(data["private_key"])
-                    os.chmod(key_file, 0o600)
+                    Path(cert_file).parent.mkdir(parents=True, exist_ok=True)
+                    Path(cert_file).write_text(data["certificate"])
+                    Path(key_file).write_text(data["private_key"])
+                    Path(key_file).chmod(0o600)
                     logger.info(f"Certificate obtained from CA: {cert_file}")
                     return True
 

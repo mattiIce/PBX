@@ -198,7 +198,7 @@ Q2 = [-12, 12, 52]  # Higher sub-band (2-bit)
 class G722State:
     """G.722 encoder/decoder state per ITU-T specification"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # QMF filter history
         self.x = [0] * 24
 
@@ -242,7 +242,7 @@ class G722CodecITU:
     SAMPLE_RATE = 16000
     PAYLOAD_TYPE = 9
 
-    def __init__(self, bitrate: int = 64000):
+    def __init__(self, bitrate: int = 64000) -> None:
         """Initialize G.722 codec"""
         self.logger = get_logger()
         self.bitrate = bitrate
@@ -280,7 +280,7 @@ class G722CodecITU:
                 s2 = s2 >> 2
 
                 # Update QMF history
-                state.x = [s1, s2] + state.x[:22]
+                state.x = [s1, s2, *state.x[:22]]
 
                 # QMF analysis - split into sub-bands
                 xl = self._qmf_analysis(state.x, 0)
@@ -375,8 +375,7 @@ class G722CodecITU:
 
         # Quantize difference using logarithmic quantizer
         # Use DET (quantizer scale factor)
-        if state.det < 0:
-            state.det = 0
+        state.det = max(state.det, 0)
 
         # Normalize difference by scale factor
         if state.det >= 32:
@@ -423,8 +422,7 @@ class G722CodecITU:
         d_h = xh - sz_h
 
         # Quantize difference
-        if state.det_h < 0:
-            state.det_h = 0
+        state.det_h = max(state.det_h, 0)
 
         if state.det_h >= 8:
             dqm = abs(d_h) * 8 // state.det_h
@@ -496,8 +494,7 @@ class G722CodecITU:
     def _inverse_quant_lower(self, il: int, det: int) -> int:
         """Inverse quantizer for lower sub-band"""
         # Get quantized magnitude
-        if il > 63:
-            il = 63
+        il = min(il, 63)
 
         # Apply sign
         if il >= 32:
@@ -548,8 +545,7 @@ class G722CodecITU:
     def _adapt_lower(self, il: int, det: int) -> int:
         """Adapt quantizer scale factor for lower sub-band"""
         # Limit index
-        if il > 63:
-            il = 63
+        il = min(il, 63)
 
         # Adapt det using WL table
         nbl = det + WL_TABLE[il]
@@ -562,8 +558,7 @@ class G722CodecITU:
 
         # Convert to linear scale
         det = nbl >> 11
-        if det < 1:
-            det = 1
+        det = max(det, 1)
 
         return det
 
@@ -580,12 +575,11 @@ class G722CodecITU:
 
         # Convert to linear
         det = nbh >> 11
-        if det < 1:
-            det = 1
+        det = max(det, 1)
 
         return det
 
-    def _update_predictor_lower(self, state: G722State, dq: int):
+    def _update_predictor_lower(self, state: G722State, dq: int) -> None:
         """
         Update adaptive predictor for lower sub-band
 
@@ -597,7 +591,7 @@ class G722CodecITU:
         # Simplified predictor update
         state.sp = state.s
 
-    def _update_predictor_higher(self, state: G722State, dq: int):
+    def _update_predictor_higher(self, state: G722State, dq: int) -> None:
         """
         Update adaptive predictor for higher sub-band
 
@@ -610,7 +604,7 @@ class G722CodecITU:
         """Clamp value to range"""
         if value < min_val:
             return min_val
-        elif value > max_val:
+        if value > max_val:
             return max_val
         return value
 

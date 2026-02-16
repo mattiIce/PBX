@@ -12,8 +12,8 @@ Tests the complete call flow including:
 import socket
 import struct
 import time
-import pytest
 
+import pytest
 
 from pbx.rtp.handler import RTPRelayHandler
 from pbx.rtp.rfc2833 import RFC2833EventPacket
@@ -93,7 +93,9 @@ a=sendrecv
             port_b = sock_b.getsockname()[1]
 
             # Build simple RTP packet
-            def build_rtp_packet(payload_type: int = 0, seq: int = 1, timestamp: int = 160, ssrc: int = 0x12345678) -> bytes:
+            def build_rtp_packet(
+                payload_type: int = 0, seq: int = 1, timestamp: int = 160, ssrc: int = 0x12345678
+            ) -> bytes:
                 version = 2
                 header = struct.pack(
                     "!BBHII",
@@ -132,22 +134,21 @@ a=sendrecv
             time.sleep(0.1)
             sock_b.settimeout(0.5)
             try:
-                data, addr = sock_b.recvfrom(2048)
+                data, _addr = sock_b.recvfrom(2048)
                 assert data == packet_a
-            except socket.timeout:
+            except TimeoutError:
                 pytest.fail("Packet from A did not reach B")
             # Packet from B should reach A
             sock_b.sendto(packet_b, ("127.0.0.1", 20000))
             time.sleep(0.1)
             sock_a.settimeout(0.5)
             try:
-                data, addr = sock_a.recvfrom(2048)
+                data, _addr = sock_a.recvfrom(2048)
                 assert data == packet_b
-            except socket.timeout:
+            except TimeoutError:
                 pytest.fail("Packet from B did not reach A")
             sock_a.close()
             sock_b.close()
-
 
         finally:
             relay.stop()
@@ -168,7 +169,7 @@ a=sendrecv
             # Unpack and verify
             unpacked = RFC2833EventPacket.unpack(data)
             assert unpacked.get_digit() == digit
-            assert unpacked.end == False
+            assert not unpacked.end
             assert unpacked.duration == 160
         # Test end bit
         packet_end = RFC2833EventPacket("5", end=True, duration=320)

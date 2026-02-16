@@ -4,7 +4,6 @@ Test suite for all SIP methods including MESSAGE, PRACK, UPDATE, and PUBLISH
 
 from typing import Any
 
-
 from pbx.sip.message import SIPMessage
 from pbx.sip.server import SIPServer
 
@@ -28,12 +27,16 @@ class MockPBXCore:
         self.messages: list[Any] = []
         self.call_manager = MockCallManager()
 
-    def register_extension(self, from_header: str, addr: Any, user_agent: str, contact: str) -> bool:
+    def register_extension(
+        self, from_header: str, addr: Any, user_agent: str, contact: str
+    ) -> bool:
         """Mock registration"""
         self.register_calls.append((from_header, addr, user_agent, contact))
         return True
 
-    def route_call(self, from_header: str, to_header: str, call_id: str, message: Any, addr: Any) -> bool:
+    def route_call(
+        self, from_header: str, to_header: str, call_id: str, message: Any, addr: Any
+    ) -> bool:
         """Mock call routing"""
         self.route_calls.append((from_header, to_header, call_id))
         return True

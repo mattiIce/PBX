@@ -25,14 +25,14 @@ from pathlib import Path
 class IntegrationInstaller:
     """Automated installer for PBX integrations"""
 
-    def __init__(self, verbose=False, dry_run=False):
+    def __init__(self, verbose: bool = False, dry_run: bool = False) -> None:
         self.verbose = verbose
         self.dry_run = dry_run
         self.base_path = Path(__file__).parent.parent
         self.is_root = os.geteuid() == 0 if hasattr(os, "geteuid") else False
 
-    def log(self, message, level="INFO"):
-        """Log a message"""
+    def log(self, message: str, level: str = "INFO") -> None:
+        """Log a message."""
         prefix = {
             "INFO": "ℹ️ ",
             "SUCCESS": "✅",
@@ -42,7 +42,13 @@ class IntegrationInstaller:
         }.get(level, "")
         print(f"{prefix} {message}")
 
-    def run_command(self, cmd, check=True, capture=False, show_output=True):
+    def run_command(
+        self,
+        cmd: list[str] | str,
+        check: bool = True,
+        capture: bool = False,
+        show_output: bool = True,
+    ) -> bool | str:
         """
         Run a command safely using subprocess without shell=True.
 
@@ -75,17 +81,18 @@ class IntegrationInstaller:
                     cmd, shell=use_shell, check=check, capture_output=True, text=True
                 )
                 return result.stdout.strip()
-            else:
-                # Let output flow to terminal in real-time
-                subprocess.run(cmd, shell=use_shell, check=check)
-                return True
+            # Let output flow to terminal in real-time
+            subprocess.run(cmd, shell=use_shell, check=check)
+            return True
         except subprocess.CalledProcessError as e:
             self.log(f"Command failed: {cmd_str}", "ERROR")
             if self.verbose:
                 self.log(f"Error: {e}", "ERROR")
             return False
 
-    def run_shell_command(self, cmd, check=True, capture=False, show_output=True):
+    def run_shell_command(
+        self, cmd: str, check: bool = True, capture: bool = False, show_output: bool = True
+    ) -> bool | str:
         """
         Run a shell command that requires pipes/redirections (trusted input only).
         This is kept separate to clearly mark which commands need shell=True.
@@ -108,34 +115,33 @@ class IntegrationInstaller:
                     cmd, shell=True, check=check, capture_output=True, text=True
                 )
                 return result.stdout.strip()
-            else:
-                # Let output flow to terminal in real-time
-                subprocess.run(cmd, shell=True, check=check)
-                return True
+            # Let output flow to terminal in real-time
+            subprocess.run(cmd, shell=True, check=check)
+            return True
         except subprocess.CalledProcessError as e:
             self.log(f"Command failed: {cmd}", "ERROR")
             if self.verbose:
                 self.log(f"Error: {e}", "ERROR")
             return False
 
-    def check_command_exists(self, command):
-        """Check if a command exists using Python's shutil.which for cross-platform compatibility"""
+    def check_command_exists(self, command: str) -> bool:
+        """Check if a command exists using Python's shutil.which for cross-platform compatibility."""
         result = shutil.which(command)
         return result is not None
 
-    def detect_os(self):
-        """Detect the operating system"""
+    def detect_os(self) -> str:
+        """Detect the operating system."""
         system = platform.system().lower()
         if system == "linux":
             # Try to detect specific distro
             if Path("/etc/debian_version").exists():
                 return "debian"
-            elif Path("/etc/redhat-release").exists():
+            if Path("/etc/redhat-release").exists():
                 return "redhat"
         return system
 
-    def check_prerequisites(self):
-        """Check if system meets prerequisites"""
+    def check_prerequisites(self) -> bool:
+        """Check if system meets prerequisites."""
         self.log("Checking prerequisites...", "STEP")
 
         # Check if running as root
@@ -154,8 +160,8 @@ class IntegrationInstaller:
         self.log("Prerequisites check passed", "SUCCESS")
         return True
 
-    def install_ssl_certificates(self):
-        """Install SSL certificates for localhost"""
+    def install_ssl_certificates(self) -> bool:
+        """Install SSL certificates for localhost."""
         self.log("Setting up SSL certificates...", "STEP")
 
         cert_dir = self.base_path / "certs"
@@ -203,8 +209,8 @@ class IntegrationInstaller:
             self.log(f"Failed to generate SSL certificates: {e}", "ERROR")
             return False
 
-    def install_jitsi(self):
-        """Install Jitsi Meet"""
+    def install_jitsi(self) -> bool:
+        """Install Jitsi Meet."""
         self.log("Installing Jitsi Meet...", "STEP")
 
         # Check if already installed
@@ -263,8 +269,8 @@ class IntegrationInstaller:
             )
             return False
 
-    def install_matrix_synapse(self):
-        """Install Matrix Synapse"""
+    def install_matrix_synapse(self) -> bool:
+        """Install Matrix Synapse."""
         self.log("Installing Matrix Synapse...", "STEP")
 
         # Check if already installed
@@ -334,19 +340,17 @@ class IntegrationInstaller:
                         self.log(f"Failed to configure Matrix: {e}", "WARNING")
 
                 return True
-            else:
-                self.log("Failed to install Matrix Synapse", "ERROR")
-                return False
-        else:
-            self.log("Automatic Matrix installation only supported on Debian/Ubuntu", "ERROR")
-            self.log(
-                "Please install manually: https://matrix-org.github.io/synapse/latest/setup/installation.html",
-                "INFO",
-            )
+            self.log("Failed to install Matrix Synapse", "ERROR")
             return False
+        self.log("Automatic Matrix installation only supported on Debian/Ubuntu", "ERROR")
+        self.log(
+            "Please install manually: https://matrix-org.github.io/synapse/latest/setup/installation.html",
+            "INFO",
+        )
+        return False
 
-    def install_espocrm(self):
-        """Install EspoCRM"""
+    def install_espocrm(self) -> bool:
+        """Install EspoCRM."""
         self.log("Installing EspoCRM...", "STEP")
 
         # Check if already installed
@@ -472,7 +476,7 @@ class IntegrationInstaller:
                 # Ensure certs directory exists
                 password_file.parent.mkdir(exist_ok=True)
                 password_file.write_text(db_password)
-                os.chmod(password_file, 0o600)  # Read/write for owner only
+                password_file.chmod(0o600)  # Read/write for owner only
 
             # Setup MySQL database
             self.log("Setting up MySQL database...", "STEP")
@@ -493,7 +497,7 @@ class IntegrationInstaller:
                         config_file.write("[client]\n")
                         config_file.write("user=root\n")
                         mysql_config_path = config_file.name
-                    os.chmod(mysql_config_path, 0o600)
+                    Path(mysql_config_path).chmod(0o600)
 
                     # Escape password for SQL
                     # Note: For production use, strongly consider using MySQL connector library
@@ -519,18 +523,18 @@ class IntegrationInstaller:
                         )
                         sql_file.write("FLUSH PRIVILEGES;\n")
                         mysql_sql_path = sql_file.name
-                    os.chmod(mysql_sql_path, 0o600)
+                    Path(mysql_sql_path).chmod(0o600)
 
                     # Execute SQL file - password is in file, not command line or process args
                     self.log("Setting up database and user with secure password...", "STEP")
-                    with open(mysql_sql_path, "r") as sql_input:
+                    with open(mysql_sql_path) as sql_input:
                         subprocess.run(
                             ["mysql", f"--defaults-file={mysql_config_path}"],
                             stdin=sql_input,
                             check=True,
                         )
                 except subprocess.CalledProcessError as e:
-                    self.log(f"Failed to setup MySQL database: {str(e)}", "ERROR")
+                    self.log(f"Failed to setup MySQL database: {e!s}", "ERROR")
                     return False
                 finally:
                     # Critical cleanup: Remove temp files containing sensitive data
@@ -539,7 +543,7 @@ class IntegrationInstaller:
                     for temp_file in [mysql_config_path, mysql_sql_path]:
                         try:
                             if temp_file and Path(temp_file).exists():
-                                os.remove(temp_file)
+                                Path(temp_file).unlink()
                         except OSError as e:
                             cleanup_errors.append(f"{temp_file}: {e}")
 
@@ -561,16 +565,15 @@ class IntegrationInstaller:
             )
 
             return True
-        else:
-            self.log("Automatic EspoCRM installation only supported on Debian/Ubuntu", "ERROR")
-            self.log(
-                "Please install manually: https://docs.espocrm.com/administration/installation/",
-                "INFO",
-            )
-            return False
+        self.log("Automatic EspoCRM installation only supported on Debian/Ubuntu", "ERROR")
+        self.log(
+            "Please install manually: https://docs.espocrm.com/administration/installation/",
+            "INFO",
+        )
+        return False
 
-    def install_all(self):
-        """Install all integrations"""
+    def install_all(self) -> bool:
+        """Install all integrations."""
         self.log("=" * 60, "INFO")
         self.log("PBX Integration Auto-Installer", "INFO")
         self.log("=" * 60, "INFO")
@@ -616,13 +619,12 @@ class IntegrationInstaller:
             )
             self.log("4. Complete EspoCRM setup at http://localhost/espocrm", "INFO")
             return True
-        else:
-            self.log("Some installations failed. Check logs above.", "WARNING")
-            return False
+        self.log("Some installations failed. Check logs above.", "WARNING")
+        return False
 
 
-def main():
-    """Main entry point"""
+def main() -> None:
+    """Main entry point."""
     parser = argparse.ArgumentParser(
         description="Automatically install PBX integration services",
         formatter_class=argparse.RawDescriptionHelpFormatter,

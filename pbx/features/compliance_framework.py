@@ -4,10 +4,11 @@ SOC 2 type 2 compliance features
 Note: GDPR and PCI DSS engines are commented out as they are not required for US-based operations
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # GDPR Compliance Engine - COMMENTED OUT (Not required for US-based operations)
 # Preserved for potential future international use
@@ -271,7 +272,7 @@ class SOC2ComplianceEngine:
     Confidentiality, and Privacy
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize SOC 2 type II compliance engine
 
@@ -289,7 +290,7 @@ class SOC2ComplianceEngine:
         # Initialize default SOC 2 type 2 controls
         self._initialize_default_controls()
 
-    def _initialize_default_controls(self):
+    def _initialize_default_controls(self) -> None:
         """Initialize default SOC 2 type 2 controls"""
         default_controls = [
             # Security (Common Criteria)
@@ -492,7 +493,7 @@ class SOC2ComplianceEngine:
                    SET test_results = %s, last_tested = %s
                    WHERE control_id = %s"""
                 ),
-                (test_results, datetime.now(timezone.utc), control_id),
+                (test_results, datetime.now(UTC), control_id),
             )
 
             self.logger.info(f"Updated test results for control {control_id}")
@@ -512,18 +513,17 @@ class SOC2ComplianceEngine:
         try:
             result = self.db.fetch_all("SELECT * FROM soc2_controls ORDER BY control_id")
 
-            controls = []
-            for row in result or []:
-                controls.append(
-                    {
-                        "control_id": row.get("control_id"),
-                        "control_category": row.get("control_category"),
-                        "description": row.get("description"),
-                        "implementation_status": row.get("implementation_status"),
-                        "last_tested": row.get("last_tested"),
-                        "test_results": row.get("test_results"),
-                    }
-                )
+            controls = [
+                {
+                    "control_id": row.get("control_id"),
+                    "control_category": row.get("control_category"),
+                    "description": row.get("description"),
+                    "implementation_status": row.get("implementation_status"),
+                    "last_tested": row.get("last_tested"),
+                    "test_results": row.get("test_results"),
+                }
+                for row in result or []
+            ]
 
             return controls
 
@@ -555,18 +555,17 @@ class SOC2ComplianceEngine:
                 (category,),
             )
 
-            controls = []
-            for row in result or []:
-                controls.append(
-                    {
-                        "control_id": row.get("control_id"),
-                        "control_category": row.get("control_category"),
-                        "description": row.get("description"),
-                        "implementation_status": row.get("implementation_status"),
-                        "last_tested": row.get("last_tested"),
-                        "test_results": row.get("test_results"),
-                    }
-                )
+            controls = [
+                {
+                    "control_id": row.get("control_id"),
+                    "control_category": row.get("control_category"),
+                    "description": row.get("description"),
+                    "implementation_status": row.get("implementation_status"),
+                    "last_tested": row.get("last_tested"),
+                    "test_results": row.get("test_results"),
+                }
+                for row in result or []
+            ]
 
             return controls
 

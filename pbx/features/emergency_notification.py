@@ -4,13 +4,14 @@ Provides emergency contact notifications and 911 call alerts
 """
 
 import json
+import sqlite3
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from email.utils import formatdate
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class EmergencyContact:
@@ -19,12 +20,12 @@ class EmergencyContact:
     def __init__(
         self,
         name: str,
-        extension: str = None,
-        phone: str = None,
-        email: str = None,
+        extension: str | None = None,
+        phone: str | None = None,
+        email: str | None = None,
         priority: int = 1,
-        notification_methods: list[str] = None,
-    ):
+        notification_methods: list[str] | None = None,
+    ) -> None:
         """
         Initialize emergency contact
 
@@ -44,7 +45,7 @@ class EmergencyContact:
         self.notification_methods = notification_methods or ["call"]
         self.id = f"{name.lower().replace(' ', '_')}_{extension or phone}"
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "id": self.id,
@@ -63,7 +64,9 @@ class EmergencyNotificationSystem:
     during emergency situations (911 calls, panic buttons, etc.)
     """
 
-    def __init__(self, pbx_core, config: dict = None, database=None):
+    def __init__(
+        self, pbx_core: Any | None, config: dict | None = None, database: Any | None = None
+    ) -> None:
         """
         Initialize emergency notification system
 
@@ -106,13 +109,11 @@ class EmergencyNotificationSystem:
         if self.enabled:
             self.logger.info("Emergency notification system initialized")
             self.logger.info(f"Emergency contacts configured: {len(self.emergency_contacts)}")
-            self.logger.info(
-                f"Notification methods: {', '.join(self.notify_methods)}"
-            )
+            self.logger.info(f"Notification methods: {', '.join(self.notify_methods)}")
         else:
             self.logger.info("Emergency notification system disabled")
 
-    def _load_emergency_contacts(self):
+    def _load_emergency_contacts(self) -> None:
         """Load emergency contacts from configuration or database"""
         # Load from config
         contacts_config = self.config.get("features.emergency_notification.contacts", [])
@@ -132,11 +133,11 @@ class EmergencyNotificationSystem:
         if self.database and self.database.enabled:
             self._load_contacts_from_db()
 
-    def _get_db_placeholder(self):
+    def _get_db_placeholder(self) -> str:
         """Get database-agnostic placeholder for SQL queries"""
         return "?" if self.database.db_type == "sqlite" else "%s"
 
-    def _load_contacts_from_db(self):
+    def _load_contacts_from_db(self) -> None:
         """Load emergency contacts from database"""
         try:
             query = """
@@ -165,9 +166,7 @@ class EmergencyNotificationSystem:
                 if not any(c.id == contact.id for c in self.emergency_contacts):
                     self.emergency_contacts.append(contact)
 
-            self.logger.info(
-                f"Loaded {len(results)} emergency contacts from database"
-            )
+            self.logger.info(f"Loaded {len(results)} emergency contacts from database")
 
         except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
             self.logger.error(f"Failed to load emergency contacts from database: {e}")
@@ -175,11 +174,11 @@ class EmergencyNotificationSystem:
     def add_emergency_contact(
         self,
         name: str,
-        extension: str = None,
-        phone: str = None,
-        email: str = None,
+        extension: str | None = None,
+        phone: str | None = None,
+        email: str | None = None,
         priority: int = 1,
-        notification_methods: list[str] = None,
+        notification_methods: list[str] | None = None,
     ) -> EmergencyContact:
         """
         Add an emergency contact
@@ -224,7 +223,7 @@ class EmergencyNotificationSystem:
 
             return contact
 
-    def _save_contact_to_db(self, contact: EmergencyContact):
+    def _save_contact_to_db(self, contact: EmergencyContact) -> None:
         """Save emergency contact to database"""
         try:
             placeholder = self._get_db_placeholder()
@@ -311,7 +310,9 @@ class EmergencyNotificationSystem:
                 if self.database and self.database.enabled:
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"  # nosec B608 - placeholder is safely parameterized
+                        query = (
+                            f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"  # nosec B608 - placeholder is safely parameterized
+                        )
                         self.database.execute(query, (contact_id,))
                     except sqlite3.Error as e:
                         self.logger.error(f"Failed to remove contact from database: {e}")
@@ -321,7 +322,7 @@ class EmergencyNotificationSystem:
 
             return False
 
-    def get_emergency_contacts(self, priority_filter: int = None) -> list[dict]:
+    def get_emergency_contacts(self, priority_filter: int | None = None) -> list[dict]:
         """
         Get list of emergency contacts
 
@@ -355,7 +356,7 @@ class EmergencyNotificationSystem:
             return False
 
         with self.lock:
-            notification_id = f"emergency_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}"
+            notification_id = f"emergency_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}"
 
             self.logger.warning(f"🚨 EMERGENCY NOTIFICATION TRIGGERED: {trigger_type}")
             self.logger.warning(f"Details: {details}")
@@ -363,7 +364,7 @@ class EmergencyNotificationSystem:
             # Record notification
             notification_record = {
                 "id": notification_id,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "trigger_type": trigger_type,
                 "details": details,
                 "contacts_notified": [],
@@ -389,7 +390,7 @@ class EmergencyNotificationSystem:
 
     def _notify_contact(
         self, contact: EmergencyContact, trigger_type: str, details: dict, notification_record: dict
-    ):
+    ) -> None:
         """
         Notify a specific contact using configured methods
 
@@ -426,7 +427,9 @@ class EmergencyNotificationSystem:
             if "sms" not in notification_record["methods_used"]:
                 notification_record["methods_used"].append("sms")
 
-    def _send_call_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_call_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send call notification to contact"""
         if not contact.extension:
             self.logger.warning(f"Cannot call {contact.name}: no extension configured")
@@ -460,7 +463,7 @@ class EmergencyNotificationSystem:
                             "contact": contact,
                             "trigger_type": trigger_type,
                             "details": details,
-                            "timestamp": datetime.now(timezone.utc),
+                            "timestamp": datetime.now(UTC),
                             "call_id": call_id,
                         }
                     )
@@ -470,14 +473,18 @@ class EmergencyNotificationSystem:
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error initiating emergency call: {e}")
 
-    def _send_page_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_page_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send overhead page notification"""
         if hasattr(self.pbx_core, "paging_system") and self.pbx_core.paging_system.enabled:
             # Use all-call paging for emergencies
             self.logger.warning(f"🔊 Emergency page triggered: {trigger_type}")
             # In full implementation, would trigger actual overhead paging
 
-    def _send_email_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_email_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send email notification"""
         if not contact.email:
             self.logger.warning(f"Cannot email {contact.name}: no email configured")
@@ -499,7 +506,7 @@ class EmergencyNotificationSystem:
                 body = """EMERGENCY NOTIFICATION
 
 type: {trigger_type}
-Time: {details.get('timestamp', datetime.now(timezone.utc))}
+Time: {details.get('timestamp', datetime.now(UTC))}
 Contact: {contact.name}
 Priority: {contact.priority}
 
@@ -538,7 +545,9 @@ PBX Emergency Notification System
                 lines.append(f"  {key}: {value}")
         return "\n".join(lines)
 
-    def _send_email_direct(self, to_address, subject, body, email_notifier):
+    def _send_email_direct(
+        self, to_address: str, subject: str, body: str, email_notifier: Any | None
+    ) -> None:
         """Send email directly using SMTP"""
         import smtplib
         from email.mime.multipart import MIMEMultipart
@@ -565,7 +574,9 @@ PBX Emergency Notification System
         server.send_message(msg)
         server.quit()
 
-    def _send_sms_notification(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_sms_notification(
+        self, contact: EmergencyContact, trigger_type: str, details: dict
+    ) -> None:
         """Send SMS notification"""
         if not contact.phone:
             self.logger.warning(f"Cannot SMS {contact.name}: no phone configured")
@@ -593,7 +604,7 @@ PBX Emergency Notification System
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending emergency SMS: {e}")
 
-    def _send_sms_twilio(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_sms_twilio(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send SMS via Twilio"""
         try:
             # Check if Twilio is available
@@ -619,7 +630,7 @@ PBX Emergency Notification System
 
             # Build SMS message
             message_body = f"🚨 EMERGENCY: {trigger_type}\n"
-            message_body += f"Time: {details.get('timestamp', datetime.now(timezone.utc))}\n"
+            message_body += f"Time: {details.get('timestamp', datetime.now(UTC))}\n"
             message_body += f"Contact: {contact.name}\n"
             message_body += "Respond immediately."
 
@@ -632,7 +643,7 @@ PBX Emergency Notification System
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending Twilio SMS: {e}")
 
-    def _send_sms_aws(self, contact: EmergencyContact, trigger_type: str, details: dict):
+    def _send_sms_aws(self, contact: EmergencyContact, trigger_type: str, details: dict) -> None:
         """Send SMS via AWS SNS"""
         try:
             # Check if boto3 is available
@@ -650,7 +661,7 @@ PBX Emergency Notification System
 
             # Build SMS message
             message_body = f"🚨 EMERGENCY: {trigger_type}\n"
-            message_body += f"Time: {details.get('timestamp', datetime.now(timezone.utc))}\n"
+            message_body += f"Time: {details.get('timestamp', datetime.now(UTC))}\n"
             message_body += f"Contact: {contact.name}\n"
             message_body += "Respond immediately."
 
@@ -672,7 +683,7 @@ PBX Emergency Notification System
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending AWS SNS SMS: {e}")
 
-    def _save_notification_to_db(self, notification_record: dict):
+    def _save_notification_to_db(self, notification_record: dict) -> None:
         """Save notification record to database"""
         try:
             # Insert notification record with database-agnostic placeholders
@@ -717,7 +728,9 @@ PBX Emergency Notification System
         with self.lock:
             return self.notification_history[-limit:]
 
-    def on_911_call(self, caller_extension: str, caller_name: str, location: str = None):
+    def on_911_call(
+        self, caller_extension: str, caller_name: str, location: str | None = None
+    ) -> None:
         """
         Handle 911 call detection
 
@@ -735,7 +748,7 @@ PBX Emergency Notification System
             "caller_extension": caller_extension,
             "caller_name": caller_name,
             "location": location or "Unknown",
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Trigger emergency notifications
@@ -752,7 +765,7 @@ PBX Emergency Notification System
 
         details = {
             "test": True,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "message": "This is a test of the emergency notification system",
         }
 

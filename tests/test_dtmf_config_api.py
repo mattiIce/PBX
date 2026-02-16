@@ -3,14 +3,12 @@ Test DTMF Configuration API
 Tests the DTMF configuration GET and POST endpoints
 """
 
-import os
 import tempfile
+from pathlib import Path
 
 import yaml
 
-
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 class TestDTMFConfigMethods:
@@ -19,7 +17,6 @@ class TestDTMFConfigMethods:
     def setup_method(self) -> None:
         """Set up test configuration file"""
         # Create a temporary config file
-        self.temp_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
         config_data = {
             "features": {
                 "webrtc": {
@@ -35,8 +32,8 @@ class TestDTMFConfigMethods:
                 }
             }
         }
-        yaml.dump(config_data, self.temp_config)
-        self.temp_config.close()
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as self.temp_config:
+            yaml.dump(config_data, self.temp_config)
 
         # Create Config instance with test file
         self.config = Config(config_file=self.temp_config.name, load_env=False)
@@ -44,7 +41,7 @@ class TestDTMFConfigMethods:
     def teardown_method(self) -> None:
         """Clean up temporary config file"""
         if Path(self.temp_config.name).exists():
-            os.unlink(self.temp_config.name)
+            Path(self.temp_config.name).unlink()
 
     def test_get_dtmf_config_default(self) -> None:
         """Test getting DTMF configuration with default values"""
@@ -184,9 +181,8 @@ class TestDTMFConfigMethods:
     def test_get_dtmf_config_with_missing_structure(self) -> None:
         """Test getting DTMF config when structure doesn't exist"""
         # Create a config without the dtmf structure
-        empty_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
-        yaml.dump({}, empty_config)
-        empty_config.close()
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as empty_config:
+            yaml.dump({}, empty_config)
 
         config = Config(config_file=empty_config.name, load_env=False)
         dtmf_config = config.get_dtmf_config()
@@ -195,14 +191,13 @@ class TestDTMFConfigMethods:
         assert dtmf_config is not None
         assert dtmf_config["mode"] == "RFC2833"
         assert dtmf_config["payload_type"] == 101
-        os.unlink(empty_config.name)
+        Path(empty_config.name).unlink(missing_ok=True)
 
     def test_update_dtmf_config_creates_structure(self) -> None:
         """Test that updating DTMF config creates the structure if missing"""
         # Create a config without the dtmf structure
-        empty_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
-        yaml.dump({}, empty_config)
-        empty_config.close()
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as empty_config:
+            yaml.dump({}, empty_config)
 
         config = Config(config_file=empty_config.name, load_env=False)
 
@@ -215,7 +210,7 @@ class TestDTMFConfigMethods:
         dtmf_config = config.get_dtmf_config()
         assert dtmf_config["mode"] == "SIP_INFO"
         assert dtmf_config["payload_type"] == 100
-        os.unlink(empty_config.name)
+        Path(empty_config.name).unlink(missing_ok=True)
 
     def test_update_dtmf_config_without_dtmf_wrapper(self) -> None:
         """Test updating DTMF config with data not wrapped in 'dtmf' key"""

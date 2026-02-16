@@ -4,12 +4,12 @@ Tracks all calls for billing, analytics, and reporting
 """
 
 import json
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class CallDisposition(Enum):
@@ -25,7 +25,7 @@ class CallDisposition(Enum):
 class CDRRecord:
     """Represents a single call detail record"""
 
-    def __init__(self, call_id, from_extension, to_extension):
+    def __init__(self, call_id: str, from_extension: str, to_extension: str) -> None:
         """
         Initialize CDR record
 
@@ -37,7 +37,7 @@ class CDRRecord:
         self.call_id = call_id
         self.from_extension = from_extension
         self.to_extension = to_extension
-        self.start_time = datetime.now(timezone.utc)
+        self.start_time = datetime.now(UTC)
         self.answer_time = None
         self.end_time = None
         self.disposition = None
@@ -47,19 +47,19 @@ class CDRRecord:
         self.hangup_cause = None
         self.user_agent = None
 
-    def mark_answered(self):
+    def mark_answered(self) -> None:
         """Mark call as answered"""
-        self.answer_time = datetime.now(timezone.utc)
+        self.answer_time = datetime.now(UTC)
         self.disposition = CallDisposition.ANSWERED
 
-    def mark_ended(self, hangup_cause=None):
+    def mark_ended(self, hangup_cause: str | None = None) -> None:
         """
         Mark call as ended
 
         Args:
             hangup_cause: Reason for hangup
         """
-        self.end_time = datetime.now(timezone.utc)
+        self.end_time = datetime.now(UTC)
         self.hangup_cause = hangup_cause
 
         # Calculate durations
@@ -71,7 +71,7 @@ class CDRRecord:
         if not self.disposition:
             self.disposition = CallDisposition.FAILED
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "call_id": self.call_id,
@@ -92,7 +92,7 @@ class CDRRecord:
 class CDRSystem:
     """Manages call detail records"""
 
-    def __init__(self, storage_path="cdr"):
+    def __init__(self, storage_path: str = "cdr") -> None:
         """
         Initialize CDR system
 
@@ -103,9 +103,9 @@ class CDRSystem:
         self.active_records = {}  # call_id -> CDRRecord
         self.logger = get_logger()
 
-        os.makedirs(storage_path, exist_ok=True)
+        Path(storage_path).mkdir(parents=True, exist_ok=True)
 
-    def start_record(self, call_id, from_extension, to_extension):
+    def start_record(self, call_id: str, from_extension: str, to_extension: str) -> CDRRecord:
         """
         Start CDR record for new call
 
@@ -122,7 +122,7 @@ class CDRSystem:
         self.logger.debug(f"Started CDR record for call {call_id}")
         return record
 
-    def mark_answered(self, call_id):
+    def mark_answered(self, call_id: str) -> None:
         """
         Mark call as answered
 
@@ -133,7 +133,7 @@ class CDRSystem:
         if record:
             record.mark_answered()
 
-    def end_record(self, call_id, hangup_cause=None):
+    def end_record(self, call_id: str, hangup_cause: str | None = None) -> None:
         """
         End CDR record
 
@@ -148,7 +148,7 @@ class CDRSystem:
             del self.active_records[call_id]
             self.logger.debug(f"Ended CDR record for call {call_id}")
 
-    def set_recording(self, call_id, recording_file):
+    def set_recording(self, call_id: str, recording_file: str) -> None:
         """
         set recording file for call
 
@@ -160,7 +160,7 @@ class CDRSystem:
         if record:
             record.recording_file = recording_file
 
-    def _save_record(self, record):
+    def _save_record(self, record: Any) -> None:
         """
         Save CDR record to file
 
@@ -172,13 +172,13 @@ class CDRSystem:
         filename = Path(self.storage_path) / f"cdr_{date_str}.jsonl"
 
         try:
-            with open(filename, "a") as f:
+            with filename.open("a") as f:
                 json.dump(record.to_dict(), f)
                 f.write("\n")
         except (OSError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving CDR record: {e}")
 
-    def get_records(self, date=None, limit=100):
+    def get_records(self, date: str | None = None, limit: int = 100) -> list:
         """
         Get CDR records
 
@@ -190,7 +190,7 @@ class CDRSystem:
             list of CDR dictionaries
         """
         if date is None:
-            date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+            date = datetime.now(UTC).strftime("%Y-%m-%d")
 
         filename = Path(self.storage_path) / f"cdr_{date}.jsonl"
 
@@ -199,7 +199,7 @@ class CDRSystem:
 
         records = []
         try:
-            with open(filename, "r") as f:
+            with filename.open() as f:
                 for line in f:
                     if line.strip():
                         records.append(json.loads(line))
@@ -210,7 +210,7 @@ class CDRSystem:
 
         return records
 
-    def get_statistics(self, date=None):
+    def get_statistics(self, date: str | None = None) -> dict:
         """
         Get call statistics
 
@@ -233,7 +233,7 @@ class CDRSystem:
         answer_rate = (answered_calls / total_calls * 100) if total_calls > 0 else 0
 
         return {
-            "date": date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "date": date or datetime.now(UTC).strftime("%Y-%m-%d"),
             "total_calls": total_calls,
             "answered_calls": answered_calls,
             "failed_calls": failed_calls,
@@ -243,7 +243,7 @@ class CDRSystem:
             "average_duration": round(avg_duration, 2),
         }
 
-    def get_extension_statistics(self, extension, date=None):
+    def get_extension_statistics(self, extension: str, date: str | None = None) -> dict:
         """
         Get statistics for specific extension
 
@@ -268,7 +268,7 @@ class CDRSystem:
 
         return {
             "extension": extension,
-            "date": date or datetime.now(timezone.utc).strftime("%Y-%m-%d"),
+            "date": date or datetime.now(UTC).strftime("%Y-%m-%d"),
             "total_calls": len(ext_records),
             "outbound_calls": outbound,
             "inbound_calls": inbound,

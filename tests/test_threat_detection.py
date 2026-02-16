@@ -2,13 +2,13 @@
 """
 Tests for Enhanced Threat Detection
 """
-import os
-import time
 
+import contextlib
+import time
+from pathlib import Path
 
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.security import ThreatDetector
-from pathlib import Path
 
 
 def test_threat_detector_initialization() -> bool:
@@ -64,14 +64,14 @@ def test_auto_unblock() -> bool:
     detector.block_ip(test_ip, "Test auto-unblock", duration=1.5)
 
     # IP should be blocked
-    is_blocked, reason = detector.is_ip_blocked(test_ip)
+    is_blocked, _reason = detector.is_ip_blocked(test_ip)
     assert is_blocked, "IP should be blocked"
 
     # Wait for block to expire
     time.sleep(2)
 
     # IP should be auto-unblocked
-    is_blocked, reason = detector.is_ip_blocked(test_ip)
+    is_blocked, _reason = detector.is_ip_blocked(test_ip)
     assert not is_blocked, "IP should be auto-unblocked after duration"
 
     return True
@@ -86,7 +86,7 @@ def test_failed_attempt_tracking() -> bool:
     test_ip = "192.168.1.102"
 
     # Record multiple failed attempts (below threshold)
-    for i in range(3):
+    for _i in range(3):
         detector.record_failed_attempt(test_ip, "Invalid password")
 
     # IP should not be blocked yet
@@ -94,10 +94,10 @@ def test_failed_attempt_tracking() -> bool:
     assert not is_blocked, "IP should not be blocked below threshold"
 
     # Record more failed attempts to exceed threshold
-    for i in range(3):
+    for _i in range(3):
         detector.record_failed_attempt(test_ip, "Invalid password")
         # Check attempt count (debug)
-        attempt_count = len(detector.failed_attempts.get(test_ip, []))
+        len(detector.failed_attempts.get(test_ip, []))
 
     # IP should now be auto-blocked
     is_blocked, reason = detector.is_ip_blocked(test_ip)
@@ -129,7 +129,7 @@ def test_suspicious_pattern_detection() -> bool:
     assert is_threat, "Should be threat after exceeding threshold"
 
     # IP should be blocked
-    is_blocked, reason = detector.is_ip_blocked(test_ip)
+    is_blocked, _reason = detector.is_ip_blocked(test_ip)
     assert is_blocked, "IP should be blocked after suspicious pattern"
 
     return True
@@ -163,9 +163,8 @@ def test_with_database() -> bool:
     # Create temporary SQLite database
     import tempfile
 
-    db_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    db_path = db_file.name
-    db_file.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as db_file:
+        db_path = db_file.name
 
     try:
         # Create database config
@@ -206,15 +205,13 @@ def test_with_database() -> bool:
 
         # Clean up
         db.connection.close()
-        os.unlink(db_path)
+        Path(db_path).unlink(missing_ok=True)
 
         return True
 
     except (KeyError, OSError, TypeError, ValueError) as e:
         # Clean up on error
         if Path(db_path).exists():
-            try:
-                os.unlink(db_path)
-            except BaseException:
-                pass
+            with contextlib.suppress(BaseException):
+                Path(db_path).unlink(missing_ok=True)
         raise e

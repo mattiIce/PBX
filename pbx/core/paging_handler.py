@@ -6,21 +6,29 @@ including page initiation, zone management, and audio routing to DAC devices.
 """
 
 import time
+from typing import Any
 
 
 class PagingHandler:
     """Handles paging system calls and audio routing"""
 
-    def __init__(self, pbx_core):
+    def __init__(self, pbx_core: Any) -> None:
         """
         Initialize PagingHandler with reference to PBXCore.
 
         Args:
             pbx_core: The PBXCore instance
         """
-        self.pbx_core = pbx_core
+        self.pbx_core: Any = pbx_core
 
-    def handle_paging(self, from_ext, to_ext, call_id, message, from_addr):
+    def handle_paging(
+        self,
+        from_ext: str,
+        to_ext: str,
+        call_id: str,
+        message: Any,
+        from_addr: tuple[str, int],
+    ) -> bool:
         """
         Handle paging system calls (7xx pattern or all-call)
 
@@ -44,29 +52,27 @@ class PagingHandler:
         pbx.logger.info(f"Paging call: {from_ext} -> {to_ext}")
 
         # Initiate the page through the paging system
-        page_id = pbx.paging_system.initiate_page(from_ext, to_ext)
+        page_id: str | None = pbx.paging_system.initiate_page(from_ext, to_ext)
         if not page_id:
             pbx.logger.error(f"Failed to initiate page from {from_ext} to {to_ext}")
             return False
 
         # Get zone information
-        page_info = pbx.paging_system.get_page_info(page_id)
+        page_info: dict[str, Any] | None = pbx.paging_system.get_page_info(page_id)
         if not page_info:
             pbx.logger.error(f"Failed to get page info for {page_id}")
             return False
 
         # Parse SDP from caller's INVITE
-        caller_sdp = None
-        caller_codecs = None
+        caller_sdp: dict[str, Any] | None = None
+        caller_codecs: list[str] | None = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
             caller_sdp = caller_sdp_obj.get_audio_info()
 
             if caller_sdp:
-                pbx.logger.info(
-                    f"Paging caller RTP: {caller_sdp['address']}:{caller_sdp['port']}"
-                )
+                pbx.logger.info(f"Paging caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
                 # Extract caller's codec list for negotiation
                 caller_codecs = caller_sdp.get("formats", None)
 
@@ -93,31 +99,29 @@ class PagingHandler:
             return False
 
         # Get configured paging gateway device
-        zones = page_info.get("zones", [])
+        zones: list[dict[str, Any]] = page_info.get("zones", [])
         if not zones:
             pbx.logger.error(f"No zones configured for paging extension {to_ext}")
             pbx.paging_system.end_page(page_id)
             return False
 
         # For now, use the first zone's DAC device
-        zone = zones[0]
-        dac_device_id = zone.get("dac_device")
+        zone: dict[str, Any] = zones[0]
+        dac_device_id: str | None = zone.get("dac_device")
 
         if not dac_device_id:
-            pbx.logger.warning(
-                f"No DAC device configured for zone {zone.get('name')}"
-            )
+            pbx.logger.warning(f"No DAC device configured for zone {zone.get('name')}")
             # Continue anyway - this allows testing without hardware
 
         # Find the DAC device configuration
-        dac_device = None
+        dac_device: dict[str, Any] | None = None
         for device in pbx.paging_system.get_dac_devices():
             if device.get("device_id") == dac_device_id:
                 dac_device = device
                 break
 
         # Answer the call immediately (auto-answer for paging)
-        server_ip = pbx._get_server_ip()
+        server_ip: str = pbx._get_server_ip()
 
         # Determine which codecs to offer based on caller's phone model
         # Get caller's User-Agent to detect phone model
@@ -155,8 +159,8 @@ class PagingHandler:
         ok_response.set_header("Content-type", "application/sdp")
 
         # Build Contact header
-        sip_port = pbx.config.get("server.sip_port", 5060)
-        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+        sip_port: int = pbx.config.get("server.sip_port", 5060)
+        contact_uri: str = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
         ok_response.set_header("Contact", contact_uri)
 
         # Send to caller
@@ -183,7 +187,13 @@ class PagingHandler:
 
         return True
 
-    def _paging_session(self, call_id, call, dac_device, page_info):
+    def _paging_session(
+        self,
+        call_id: str,
+        call: Any,
+        dac_device: dict[str, Any],
+        page_info: dict[str, Any],
+    ) -> None:
         """
         Handle paging session with audio routing to DAC device
 
@@ -203,9 +213,9 @@ class PagingHandler:
             pbx.logger.info(f"Paging zones: {page_info.get('zone_names')}")
 
             # Get DAC device SIP information
-            dac_sip_uri = dac_device.get("sip_uri")
-            dac_ip = dac_device.get("ip_address")
-            dac_port = dac_device.get("port", 5060)
+            dac_sip_uri: str | None = dac_device.get("sip_uri")
+            dac_ip: str | None = dac_device.get("ip_address")
+            dac_port: int = dac_device.get("port", 5060)
 
             if not dac_sip_uri or not dac_ip:
                 pbx.logger.error(

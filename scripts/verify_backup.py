@@ -13,28 +13,28 @@ import argparse
 import json
 import os
 import random
+import sqlite3
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
-import sqlite3
 
 
 class BackupVerifier:
     """Verify backup integrity and restorability."""
 
-    def __init__(self, backup_path: str = None, full_test: bool = False):
+    def __init__(self, backup_path: str | None = None, full_test: bool = False):
         self.backup_path = backup_path
         self.full_test = full_test
         self.base_dir = Path(__file__).parent.parent
         self.results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "checks": [],
             "passed": 0,
             "failed": 0,
         }
 
-    def log_check(self, name: str, status: bool, details: str = ""):
+    def log_check(self, name: str, status: bool, details: str = "") -> None:
         """Log a check result."""
         self.results["checks"].append(
             {"name": name, "status": "pass" if status else "fail", "details": details}
@@ -95,7 +95,7 @@ class BackupVerifier:
         # For SQL backups, check basic structure
         if backup_file.endswith(".sql"):
             try:
-                with open(backup_file, "r") as f:
+                with open(backup_file) as f:
                     first_lines = [next(f) for _ in range(10)]
                     content = "".join(first_lines)
 
@@ -128,12 +128,15 @@ class BackupVerifier:
 
         # Create temporary database name with random suffix to prevent collisions
         random_suffix = random.randint(100000, 999999)
-        temp_db = f"pbx_verify_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{random_suffix}"
+        temp_db = f"pbx_verify_{datetime.now(UTC).strftime('%Y%m%d_%H%M%S')}_{random_suffix}"
 
         try:
             # Create temporary database
             result = subprocess.run(
-                ["sudo", "-u", "postgres", "createdb", temp_db], capture_output=True, timeout=30
+                ["sudo", "-u", "postgres", "createdb", temp_db],
+                capture_output=True,
+                timeout=30,
+                check=False,
             )
 
             if result.returncode != 0:
@@ -143,12 +146,13 @@ class BackupVerifier:
             self.log_check("Create temporary database", True, f"Database: {temp_db}")
 
             # Restore backup to temporary database
-            with open(backup_file, "r") as f:
+            with open(backup_file) as f:
                 result = subprocess.run(
                     ["sudo", "-u", "postgres", "psql", temp_db],
                     stdin=f,
                     capture_output=True,
                     timeout=300,  # 5 minutes
+                    check=False,
                 )
 
             if result.returncode != 0:
@@ -170,6 +174,7 @@ class BackupVerifier:
                 ],
                 capture_output=True,
                 timeout=30,
+                check=False,
             )
 
             if result.returncode == 0:
@@ -181,7 +186,14 @@ class BackupVerifier:
 
             return True
 
-        except (KeyError, OSError, TypeError, ValueError, sqlite3.Error, subprocess.SubprocessError) as e:
+        except (
+            KeyError,
+            OSError,
+            TypeError,
+            ValueError,
+            sqlite3.Error,
+            subprocess.SubprocessError,
+        ) as e:
             self.log_check("Database restore test", False, str(e))
             return False
 
@@ -189,7 +201,10 @@ class BackupVerifier:
             # Clean up temporary database
             try:
                 subprocess.run(
-                    ["sudo", "-u", "postgres", "dropdb", temp_db], capture_output=True, timeout=30
+                    ["sudo", "-u", "postgres", "dropdb", temp_db],
+                    capture_output=True,
+                    timeout=30,
+                    check=False,
                 )
                 print(f"  Cleaned up temporary database: {temp_db}")
             except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
@@ -240,15 +255,14 @@ class BackupVerifier:
 
         # Check for cron job
         try:
-            result = subprocess.run(["crontab", "-l"], capture_output=True, timeout=10)
+            result = subprocess.run(["crontab", "-l"], capture_output=True, timeout=10, check=False)
 
             if result.returncode == 0:
                 cron_content = result.stdout.decode()
                 if "backup.sh" in cron_content:
                     self.log_check("Automated backup scheduled", True, "Found in crontab")
                     return True
-                else:
-                    self.log_check("Automated backup scheduled", False, "Not found in crontab")
+                self.log_check("Automated backup scheduled", False, "Not found in crontab")
             else:
                 self.log_check("Automated backup scheduled", False, "Could not check crontab")
 
@@ -288,18 +302,17 @@ class BackupVerifier:
         if self.results["failed"] == 0:
             print("\n✓ All backup verifications passed")
             return 0
-        else:
-            print(f"\n✗ {self.results['failed']} verification(s) failed")
-            return 1
+        print(f"\n✗ {self.results['failed']} verification(s) failed")
+        return 1
 
-    def save_report(self, output_file: str):
+    def save_report(self, output_file: str) -> None:
         """Save verification report."""
         with open(output_file, "w") as f:
             json.dump(self.results, f, indent=2)
         print(f"\nReport saved to: {output_file}")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Backup Verification Tool")
     parser.add_argument("--backup-path", help="Path to specific backup file to verify")
     parser.add_argument(

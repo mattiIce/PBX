@@ -33,7 +33,7 @@ class FIPSEncryption:
     # OpenSSL 3.x FIPS provider requires minimum password length for PBKDF2
     MIN_PASSWORD_LENGTH = 14
 
-    def __init__(self, fips_mode=False, enforce_fips=False):
+    def __init__(self, fips_mode: bool = False, enforce_fips: bool = False) -> None:
         """
         Initialize FIPS encryption
 
@@ -60,9 +60,8 @@ class FIPSEncryption:
                     "FIPS mode enforcement failed: cryptography library not available. "
                     "Install with: pip install cryptography"
                 )
-            else:
-                self.logger.warning(error_msg)
-                self.logger.warning("Falling back to standard library (non-FIPS compliant)")
+            self.logger.warning(error_msg)
+            self.logger.warning("Falling back to standard library (non-FIPS compliant)")
 
         if fips_mode and CRYPTO_AVAILABLE:
             self.logger.info("FIPS 140-2 compliant encryption ENABLED")
@@ -74,7 +73,7 @@ class FIPSEncryption:
         elif not fips_mode:
             self.logger.warning("FIPS mode is DISABLED - system is not FIPS 140-2 compliant")
 
-    def _pad_password(self, password, salt):
+    def _pad_password(self, password: bytes, salt: bytes) -> bytes:
         """
         Pad short passwords to meet OpenSSL 3.x FIPS PBKDF2 requirements
 
@@ -90,7 +89,9 @@ class FIPSEncryption:
             password = password + b":" + salt[: self.MIN_PASSWORD_LENGTH - len(password) - 1]
         return password
 
-    def hash_password(self, password, salt=None):
+    def hash_password(
+        self, password: str | bytes, salt: str | bytes | None = None
+    ) -> tuple[str, str]:
         """
         Hash password using FIPS-approved SHA-256
 
@@ -130,7 +131,9 @@ class FIPSEncryption:
         # Return base64-encoded strings for storage
         return (base64.b64encode(hashed).decode("utf-8"), base64.b64encode(salt).decode("utf-8"))
 
-    def verify_password(self, password, hashed_password, salt):
+    def verify_password(
+        self, password: str | bytes, hashed_password: str | bytes, salt: str | bytes
+    ) -> bool:
         """
         Verify password against hash
 
@@ -155,7 +158,7 @@ class FIPSEncryption:
         # Constant-time comparison to prevent timing attacks
         return secrets.compare_digest(new_hash, hashed_password)
 
-    def encrypt_data(self, data, key):
+    def encrypt_data(self, data: str | bytes, key: str | bytes) -> tuple[str, str, str]:
         """
         Encrypt data using AES-256-GCM (FIPS 197)
 
@@ -171,8 +174,7 @@ class FIPSEncryption:
         """
         if not CRYPTO_AVAILABLE:
             raise ImportError(
-                "Encryption requires cryptography library. "
-                "Install with: pip install cryptography"
+                "Encryption requires cryptography library. Install with: pip install cryptography"
             )
 
         if isinstance(data, str):
@@ -205,7 +207,9 @@ class FIPSEncryption:
             base64.b64encode(encryptor.tag).decode("utf-8"),
         )
 
-    def decrypt_data(self, encrypted_data, nonce, tag, key):
+    def decrypt_data(
+        self, encrypted_data: str | bytes, nonce: str | bytes, tag: str | bytes, key: str | bytes
+    ) -> bytes:
         """
         Decrypt data using AES-256-GCM
 
@@ -223,8 +227,7 @@ class FIPSEncryption:
         """
         if not CRYPTO_AVAILABLE:
             raise ImportError(
-                "Decryption requires cryptography library. "
-                "Install with: pip install cryptography"
+                "Decryption requires cryptography library. Install with: pip install cryptography"
             )
 
         # Decode from base64
@@ -250,7 +253,7 @@ class FIPSEncryption:
 
         return plaintext
 
-    def generate_secure_token(self, length=32):
+    def generate_secure_token(self, length: int = 32) -> str:
         """
         Generate cryptographically secure random token
 
@@ -263,7 +266,9 @@ class FIPSEncryption:
         token = secrets.token_bytes(length)
         return base64.b64encode(token).decode("utf-8")
 
-    def derive_key(self, password, salt=None, key_length=32):
+    def derive_key(
+        self, password: str | bytes, salt: str | bytes | None = None, key_length: int = 32
+    ) -> tuple[bytes, bytes]:
         """
         Derive encryption key from password using PBKDF2 (FIPS-approved KDF)
 
@@ -302,7 +307,7 @@ class FIPSEncryption:
 
         return derived, salt
 
-    def hash_data(self, data):
+    def hash_data(self, data: str | bytes) -> str:
         """
         Hash data using SHA-256 (FIPS 180-4)
 
@@ -320,16 +325,15 @@ class FIPSEncryption:
             digest = hashes.Hash(hashes.SHA256())
             digest.update(data)
             return digest.finalize().hex()
-        else:
-            # Fallback to hashlib
-            return hashlib.sha256(data).hexdigest()
+        # Fallback to hashlib
+        return hashlib.sha256(data).hexdigest()
 
 
 # Global instance
 _encryption_instance = None
 
 
-def get_encryption(fips_mode=False, enforce_fips=False):
+def get_encryption(fips_mode: bool = False, enforce_fips: bool = False) -> FIPSEncryption:
     """
     Get or create encryption instance
 

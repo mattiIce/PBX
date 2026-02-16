@@ -27,7 +27,7 @@ class GracefulShutdownHandler:
     - Provides shutdown timeout for forced termination
     """
 
-    def __init__(self, pbx_core=None, shutdown_timeout: int = 30):
+    def __init__(self, pbx_core: object = None, shutdown_timeout: int = 30) -> None:
         """
         Initialize shutdown handler.
 
@@ -42,7 +42,7 @@ class GracefulShutdownHandler:
         self._original_sigint = None
         self._original_sigterm = None
 
-    def setup_handlers(self):
+    def setup_handlers(self) -> None:
         """Setup signal handlers for graceful shutdown."""
         # Store original handlers
         self._original_sigint = signal.signal(signal.SIGINT, self._signal_handler)
@@ -50,7 +50,7 @@ class GracefulShutdownHandler:
 
         logger.info("Graceful shutdown handlers registered")
 
-    def _signal_handler(self, signum, frame):
+    def _signal_handler(self, signum: int, frame: object) -> None:
         """Handle shutdown signals."""
         signal_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
 
@@ -66,7 +66,7 @@ class GracefulShutdownHandler:
         shutdown_thread.daemon = False
         shutdown_thread.start()
 
-    def _execute_shutdown(self):
+    def _execute_shutdown(self) -> None:
         """Execute the actual shutdown sequence."""
         try:
             start_time = time.time()
@@ -102,7 +102,7 @@ class GracefulShutdownHandler:
             traceback.print_exc()
             sys.exit(1)
 
-    def _wait_for_calls_to_complete(self, timeout: int = 20):
+    def _wait_for_calls_to_complete(self, timeout: int = 20) -> None:
         """
         Wait for active calls to complete.
 
@@ -139,7 +139,7 @@ class GracefulShutdownHandler:
                 except Exception as e:
                     logger.error(f"Error ending call {call.call_id}: {e}")
 
-    def _stop_services(self):
+    def _stop_services(self) -> None:
         """Stop PBX services in proper order."""
         if not self.pbx_core:
             return
@@ -160,14 +160,14 @@ class GracefulShutdownHandler:
             except Exception as e:
                 logger.error(f"Error stopping {service_name}: {e}")
 
-    def _stop_if_exists(self, attr_name: str):
+    def _stop_if_exists(self, attr_name: str) -> None:
         """Stop a service if it exists and has a stop method."""
         if hasattr(self.pbx_core, attr_name):
             service = getattr(self.pbx_core, attr_name)
             if service and hasattr(service, "stop"):
                 service.stop()
 
-    def _cleanup_resources(self):
+    def _cleanup_resources(self) -> None:
         """Cleanup resources before exit."""
         if not self.pbx_core:
             return
@@ -201,7 +201,7 @@ class GracefulShutdownHandler:
             logger.error(f"Error during resource cleanup: {e}")
 
 
-def setup_graceful_shutdown(pbx_core, timeout: int = 30) -> GracefulShutdownHandler:
+def setup_graceful_shutdown(pbx_core: object, timeout: int = 30) -> GracefulShutdownHandler:
     """
     Setup graceful shutdown handling for the PBX system.
 
@@ -231,7 +231,9 @@ class ConnectionRetry:
                 retry.handle_error(e)
     """
 
-    def __init__(self, max_retries: int = 5, base_delay: float = 1.0, max_delay: float = 60.0):
+    def __init__(
+        self, max_retries: int = 5, base_delay: float = 1.0, max_delay: float = 60.0
+    ) -> None:
         """
         Initialize retry handler.
 
@@ -246,12 +248,12 @@ class ConnectionRetry:
         self.attempt = 0
         self.last_error = None
 
-    def __iter__(self):
+    def __iter__(self) -> "ConnectionRetry":
         """Make this object iterable."""
         self.attempt = 0
         return self
 
-    def __next__(self):
+    def __next__(self) -> int:
         """Get next retry attempt."""
         if self.attempt >= self.max_retries:
             if self.last_error:
@@ -269,7 +271,7 @@ class ConnectionRetry:
         self.attempt += 1
         return self.attempt
 
-    def handle_error(self, error: Exception):
+    def handle_error(self, error: Exception) -> None:
         """
         Handle an error from a retry attempt.
 
@@ -280,7 +282,7 @@ class ConnectionRetry:
         logger.warning(f"Attempt {self.attempt} failed: {error}")
 
 
-def with_retry(func: Callable, max_retries: int = 3, on_error: Callable | None = None):
+def with_retry(func: Callable, max_retries: int = 3, on_error: Callable | None = None) -> object:
     """
     Decorator or wrapper for retrying a function with exponential backoff.
 

@@ -5,21 +5,20 @@ These tests verify the PBX system degrades gracefully when the
 PostgreSQL backend is not available, falling back to SQLite.
 """
 
-import os
 import sys
-from unittest import TestCase, mock
 from datetime import datetime, timezone
+from pathlib import Path
+from unittest import TestCase, mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from pbx.utils.database import DatabaseBackend, POSTGRES_AVAILABLE
-from pathlib import Path
+from pbx.utils.database import POSTGRES_AVAILABLE, DatabaseBackend
 
 
 class TestPostgreSQLGracefulDegradation(TestCase):
     """Test graceful fallback to SQLite when PostgreSQL unavailable."""
 
-    def test_fallback_to_sqlite_when_postgres_unavailable(self):
+    def test_fallback_to_sqlite_when_postgres_unavailable(self) -> None:
         """Should fall back to SQLite when PostgreSQL driver missing."""
         config = {
             "database.type": "postgresql",
@@ -36,7 +35,7 @@ class TestPostgreSQLGracefulDegradation(TestCase):
         else:
             self.assertEqual(db.db_type, "sqlite")
 
-    def test_sqlite_fallback_functional(self):
+    def test_sqlite_fallback_functional(self) -> None:
         """SQLite fallback should be fully functional."""
         config = {"database.type": "sqlite", "database.path": ":memory:"}
         db = DatabaseBackend(config)
@@ -56,7 +55,7 @@ class TestPostgreSQLGracefulDegradation(TestCase):
         self.assertIsNotNone(result)
         db.disconnect()
 
-    def test_operations_without_database(self):
+    def test_operations_without_database(self) -> None:
         """Core PBX operations should work even without database."""
         config = {"database.type": "invalid"}
         db = DatabaseBackend(config)
@@ -64,12 +63,13 @@ class TestPostgreSQLGracefulDegradation(TestCase):
         self.assertEqual(db.fetch_all("SELECT 1"), [])
         self.assertFalse(db.execute("INSERT INTO nonexistent VALUES (1)"))
 
-    def test_postgresql_import_error_graceful(self):
+    def test_postgresql_import_error_graceful(self) -> None:
         """ImportError for psycopg2 should not crash the system."""
         from pbx.utils.database import POSTGRES_AVAILABLE
+
         self.assertIsInstance(POSTGRES_AVAILABLE, bool)
 
-    def test_database_reconnection_after_degradation(self):
+    def test_database_reconnection_after_degradation(self) -> None:
         """Database should handle reconnection after degradation."""
         config = {"database.type": "sqlite", "database.path": ":memory:"}
         db = DatabaseBackend(config)
@@ -83,7 +83,7 @@ class TestPostgreSQLGracefulDegradation(TestCase):
         self.assertTrue(db.enabled)
         db.disconnect()
 
-    def test_execute_with_context_non_critical_errors(self):
+    def test_execute_with_context_non_critical_errors(self) -> None:
         """Non-critical execution errors should be handled gracefully."""
         config = {"database.type": "sqlite", "database.path": ":memory:"}
         db = DatabaseBackend(config)

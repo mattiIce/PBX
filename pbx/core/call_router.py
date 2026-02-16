@@ -7,28 +7,34 @@ and voicemail fallback routing.
 """
 
 import re
-import struct
 import threading
 import time
-import traceback
+from pathlib import Path
+from typing import Any
 
 from pbx.features.webhooks import WebhookEvent
-from pathlib import Path
 
 
 class CallRouter:
     """Handles call routing, dialplan checking, and no-answer fallback"""
 
-    def __init__(self, pbx_core):
+    def __init__(self, pbx_core: Any) -> None:
         """
         Initialize CallRouter with reference to PBXCore.
 
         Args:
             pbx_core: The PBXCore instance
         """
-        self.pbx_core = pbx_core
+        self.pbx_core: Any = pbx_core
 
-    def route_call(self, from_header, to_header, call_id, message, from_addr):
+    def route_call(
+        self,
+        from_header: str,
+        to_header: str,
+        call_id: str,
+        message: Any,
+        from_addr: tuple[str, int],
+    ) -> bool:
         """
         Route call from one extension to another
 
@@ -64,11 +70,15 @@ class CallRouter:
         # Check if this is an emergency call (911) - Kari's Law compliance
         # Must be handled first for immediate routing
         if pbx.karis_law and pbx.karis_law.is_emergency_number(to_ext):
-            return pbx._emergency_handler.handle_emergency_call(from_ext, to_ext, call_id, message, from_addr)
+            return pbx._emergency_handler.handle_emergency_call(
+                from_ext, to_ext, call_id, message, from_addr
+            )
 
         # Check if this is an auto attendant call (extension 0)
         if pbx.auto_attendant and to_ext == pbx.auto_attendant.get_extension():
-            return pbx._auto_attendant_handler.handle_auto_attendant(from_ext, to_ext, call_id, message, from_addr)
+            return pbx._auto_attendant_handler.handle_auto_attendant(
+                from_ext, to_ext, call_id, message, from_addr
+            )
 
         # Check if this is a voicemail access call (*xxxx pattern)
         # Validate format: must be * followed by exactly 3 or 4 digits
@@ -78,7 +88,9 @@ class CallRouter:
             and len(to_ext) <= 5
             and to_ext[1:].isdigit()
         ):
-            return pbx._voicemail_handler.handle_voicemail_access(from_ext, to_ext, call_id, message, from_addr)
+            return pbx._voicemail_handler.handle_voicemail_access(
+                from_ext, to_ext, call_id, message, from_addr
+            )
 
         # Check if this is a paging call (7xx pattern or all-call)
         if pbx.paging_system and pbx.paging_system.is_paging_extension(to_ext):
@@ -95,17 +107,15 @@ class CallRouter:
             return False
 
         # Parse SDP from caller's INVITE
-        caller_sdp = None
-        caller_codecs = None
+        caller_sdp: dict[str, Any] | None = None
+        caller_codecs: list[str] | None = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
             caller_sdp = caller_sdp_obj.get_audio_info()
 
             if caller_sdp:
-                pbx.logger.info(
-                    f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}"
-                )
+                pbx.logger.info(f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
                 # Extract caller's codec list to maintain codec compatibility
                 caller_codecs = caller_sdp.get("formats", None)
                 if caller_codecs:
@@ -162,7 +172,7 @@ class CallRouter:
             return False
 
         # Check if destination is a WebRTC extension
-        is_webrtc_destination = (
+        is_webrtc_destination: bool = (
             dest_ext_obj.address
             and isinstance(dest_ext_obj.address, tuple)
             and len(dest_ext_obj.address) == 2
@@ -177,7 +187,7 @@ class CallRouter:
 
             if pbx.webrtc_gateway:
                 # Get caller's SDP if available
-                caller_sdp_str = message.body if message.body else None
+                caller_sdp_str = message.body or None
 
                 # Route the call through WebRTC gateway
                 success = pbx.webrtc_gateway.receive_call(
@@ -194,12 +204,10 @@ class CallRouter:
                     # Note: The WebRTC client will be notified via the signaling channel
                     # and should send an answer when the user accepts the call
                     return True
-                else:
-                    pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
-                    return False
-            else:
-                pbx.logger.error("WebRTC gateway not available for routing call")
+                pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
                 return False
+            pbx.logger.error("WebRTC gateway not available for routing call")
+            return False
 
         # Build SDP for forwarding INVITE to callee
         # Use the server's external IP address for SDP
@@ -279,7 +287,7 @@ class CallRouter:
             # Add MAC address header if configured
             if pbx.config.get("sip.device.send_mac_address", True):
                 # Try to get MAC address from registered phones database
-                mac_address = None
+                mac_address: str | None = None
                 if pbx.registered_phones_db:
                     try:
                         phones = pbx.registered_phones_db.get_by_extension(from_ext)
@@ -308,15 +316,13 @@ class CallRouter:
             call.callee_addr = dest_ext_obj.address
             call.callee_invite = invite_to_callee  # Store the INVITE for CANCEL reference
 
-            pbx.logger.info(
-                f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}"
-            )
+            pbx.logger.info(f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}")
             pbx.logger.info(
                 f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}"
             )
 
             # Start no-answer timer to route to voicemail if not answered
-            no_answer_timeout = pbx.config.get("voicemail.no_answer_timeout", 30)
+            no_answer_timeout: int = pbx.config.get("voicemail.no_answer_timeout", 30)
             call.no_answer_timer = threading.Timer(
                 no_answer_timeout, self._handle_no_answer, args=(call_id,)
             )
@@ -325,7 +331,7 @@ class CallRouter:
 
         return True
 
-    def _check_dialplan(self, extension):
+    def _check_dialplan(self, extension: str) -> bool:
         """
         Check if extension matches dialplan rules
 
@@ -335,47 +341,44 @@ class CallRouter:
         Returns:
             True if allowed by dialplan
         """
-        dialplan = self.pbx_core.config.get("dialplan", {})
+        dialplan: dict[str, str] = self.pbx_core.config.get("dialplan", {})
 
         # Check emergency pattern (Kari's Law - direct 911 dialing)
         # Always allow 911 and legacy formats (9911, 9-911)
-        emergency_pattern = dialplan.get("emergency_pattern", "^9?-?911$")
+        emergency_pattern: str = dialplan.get("emergency_pattern", "^9?-?911$")
         if re.match(emergency_pattern, extension):
             return True
 
         # Check internal pattern
-        internal_pattern = dialplan.get("internal_pattern", "^1[0-9]{3}$")
+        internal_pattern: str = dialplan.get("internal_pattern", "^1[0-9]{3}$")
         if re.match(internal_pattern, extension):
             return True
 
         # Check conference pattern
-        conference_pattern = dialplan.get("conference_pattern", "^2[0-9]{3}$")
+        conference_pattern: str = dialplan.get("conference_pattern", "^2[0-9]{3}$")
         if re.match(conference_pattern, extension):
             return True
 
         # Check voicemail pattern
-        voicemail_pattern = dialplan.get("voicemail_pattern", "^\\*[0-9]{3,4}$")
+        voicemail_pattern: str = dialplan.get("voicemail_pattern", "^\\*[0-9]{3,4}$")
         if re.match(voicemail_pattern, extension):
             return True
 
         # Check auto attendant pattern
-        auto_attendant_pattern = dialplan.get("auto_attendant_pattern", "^0$")
+        auto_attendant_pattern: str = dialplan.get("auto_attendant_pattern", "^0$")
         if re.match(auto_attendant_pattern, extension):
             return True
 
         # Check parking pattern
-        parking_pattern = dialplan.get("parking_pattern", "^7[0-9]$")
+        parking_pattern: str = dialplan.get("parking_pattern", "^7[0-9]$")
         if re.match(parking_pattern, extension):
             return True
 
         # Check queue pattern
-        queue_pattern = dialplan.get("queue_pattern", "^8[0-9]{3}$")
-        if re.match(queue_pattern, extension):
-            return True
+        queue_pattern: str = dialplan.get("queue_pattern", "^8[0-9]{3}$")
+        return bool(re.match(queue_pattern, extension))
 
-        return False
-
-    def _send_cancel_to_callee(self, call, call_id):
+    def _send_cancel_to_callee(self, call: Any, call_id: str) -> None:
         """Send CANCEL to callee to stop their phone from ringing"""
         from pbx.sip.message import SIPMessageBuilder
 
@@ -399,7 +402,7 @@ class CallRouter:
         self.pbx_core.sip_server._send_message(cancel_request.build(), call.callee_addr)
         self.pbx_core.logger.info(f"Sent CANCEL to callee {call.to_extension} to stop ringing")
 
-    def _answer_call_for_voicemail(self, call, call_id):
+    def _answer_call_for_voicemail(self, call: Any, call_id: str) -> bool:
         """Answer call for voicemail recording"""
         from pbx.sip.message import SIPMessageBuilder
         from pbx.sip.sdp import SDPBuilder
@@ -409,10 +412,12 @@ class CallRouter:
         if not (call.original_invite and call.caller_addr and call.caller_rtp and call.rtp_ports):
             return False
 
-        server_ip = pbx._get_server_ip()
+        server_ip: str = pbx._get_server_ip()
         caller_user_agent = pbx._get_phone_user_agent(call.from_extension)
         caller_phone_model = pbx._detect_phone_model(caller_user_agent)
-        caller_codecs = call.caller_rtp.get("formats", None) if call.caller_rtp else None
+        caller_codecs: list[str] | None = (
+            call.caller_rtp.get("formats", None) if call.caller_rtp else None
+        )
         codecs_for_caller = pbx._get_codecs_for_phone_model(
             caller_phone_model, default_codecs=caller_codecs
         )
@@ -442,8 +447,8 @@ class CallRouter:
         ok_response.set_header("Content-type", "application/sdp")
 
         # Build Contact header
-        sip_port = pbx.config.get("server.sip_port", 5060)
-        contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+        sip_port: int = pbx.config.get("server.sip_port", 5060)
+        contact_uri: str = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
         ok_response.set_header("Contact", contact_uri)
 
         # Send to caller
@@ -452,7 +457,7 @@ class CallRouter:
         call.connect()
         return True
 
-    def _handle_no_answer(self, call_id):
+    def _handle_no_answer(self, call_id: str) -> None:
         """
         Handle no-answer timeout - route call to voicemail
 
@@ -492,7 +497,6 @@ class CallRouter:
         # Play voicemail greeting and beep tone to caller
         if call.caller_rtp:
             try:
-                import os
                 import tempfile
 
                 # Create RTP player to send audio to caller
@@ -509,8 +513,8 @@ class CallRouter:
                     # Check for custom greeting first
                     mailbox = pbx.voicemail_system.get_mailbox(call.to_extension)
                     custom_greeting_path = mailbox.get_greeting_path()
-                    greeting_file = None
-                    temp_file_created = False
+                    greeting_file: str | None = None
+                    temp_file_created: bool = False
 
                     if custom_greeting_path:
                         # Use custom greeting
@@ -536,9 +540,7 @@ class CallRouter:
                             temp_file.write(greeting_prompt)
                             greeting_file = temp_file.name
                             temp_file_created = True
-                        pbx.logger.info(
-                            f"Using default greeting for extension {call.to_extension}"
-                        )
+                        pbx.logger.info(f"Using default greeting for extension {call.to_extension}")
 
                     try:
                         player.play_file(greeting_file)
@@ -547,7 +549,7 @@ class CallRouter:
                         # Clean up temp file only if we created one
                         if temp_file_created:
                             try:
-                                os.unlink(greeting_file)
+                                Path(greeting_file).unlink()
                             except (OSError, FileNotFoundError) as e:
                                 pbx.logger.debug(f"Could not delete temp greeting file: {e}")
 
@@ -556,9 +558,7 @@ class CallRouter:
                     player.stop()
                     pbx.logger.info(f"Played voicemail greeting and beep for call {call_id}")
                 else:
-                    pbx.logger.warning(
-                        f"Failed to start RTP player for greeting on call {call_id}"
-                    )
+                    pbx.logger.warning(f"Failed to start RTP player for greeting on call {call_id}")
             except OSError as e:
                 pbx.logger.error(f"Error playing voicemail greeting: {e}")
 
@@ -569,18 +569,21 @@ class CallRouter:
                 call.voicemail_recorder = recorder
 
                 # set recording timeout (max voicemail duration)
-                max_duration = pbx.config.get("voicemail.max_message_duration", 180)
+                max_duration: int = pbx.config.get("voicemail.max_message_duration", 180)
 
                 # Schedule voicemail completion after max duration
                 voicemail_timer = threading.Timer(
-                    max_duration, pbx._voicemail_handler.complete_voicemail_recording, args=(call_id,)
+                    max_duration,
+                    pbx._voicemail_handler.complete_voicemail_recording,
+                    args=(call_id,),
                 )
                 voicemail_timer.start()
                 call.voicemail_timer = voicemail_timer
 
                 # Start DTMF monitoring thread to detect # key press
                 dtmf_monitor_thread = threading.Thread(
-                    target=pbx._voicemail_handler.monitor_voicemail_dtmf, args=(call_id, call, recorder)
+                    target=pbx._voicemail_handler.monitor_voicemail_dtmf,
+                    args=(call_id, call, recorder),
                 )
                 dtmf_monitor_thread.daemon = True
                 dtmf_monitor_thread.start()

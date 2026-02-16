@@ -5,7 +5,6 @@ Validates RFC 2833 RTP event handling for DTMF signaling with payload type 101
 
 import struct
 
-
 from pbx.rtp.rfc2833 import (
     RFC2833_CODE_TO_DIGIT,
     RFC2833_EVENT_CODES,
@@ -38,7 +37,7 @@ class TestRFC2833EventPacket:
         """Test creating packet with DTMF digit"""
         packet = RFC2833EventPacket("5", end=False, volume=10, duration=160)
         assert packet.event == 5
-        assert packet.end == False
+        assert not packet.end
         assert packet.volume == 10
         assert packet.duration == 160
         assert packet.get_digit() == "5"
@@ -53,7 +52,7 @@ class TestRFC2833EventPacket:
         """Test creating packet with # digit"""
         packet = RFC2833EventPacket("#", end=True, volume=10, duration=320)
         assert packet.event == 11
-        assert packet.end == True
+        assert packet.end
         assert packet.get_digit() == "#"
 
     def test_packet_creation_with_event_code(self) -> None:
@@ -76,7 +75,7 @@ class TestRFC2833EventPacket:
         # Check E bit (should be 0) and volume
         end_bit = bool(byte2 & 0x80)
         volume = byte2 & 0x3F
-        assert end_bit == False
+        assert not end_bit
         assert volume == 10
 
     def test_packet_pack_with_end_bit(self) -> None:
@@ -87,7 +86,7 @@ class TestRFC2833EventPacket:
         # Unpack and verify end bit
         event, byte2, duration = struct.unpack("!BBH", data)
         end_bit = bool(byte2 & 0x80)
-        assert end_bit == True
+        assert end_bit
         assert event == 1
         assert duration == 320
 
@@ -102,7 +101,7 @@ class TestRFC2833EventPacket:
 
         assert unpacked is not None
         assert unpacked.event == 8
-        assert unpacked.end == False
+        assert not unpacked.end
         assert unpacked.volume == 12
         assert unpacked.duration == 200
         assert unpacked.get_digit() == "8"
@@ -115,7 +114,7 @@ class TestRFC2833EventPacket:
         unpacked = RFC2833EventPacket.unpack(packed)
 
         assert unpacked is not None
-        assert unpacked.end == True
+        assert unpacked.end
         assert unpacked.get_digit() == "9"
 
     def test_packet_unpack_invalid_data(self) -> None:
@@ -158,6 +157,7 @@ class TestRFC2833EventPacket:
 
         unpacked = RFC2833EventPacket.unpack(data)
         assert unpacked.duration == 65535
+
 
 class TestRFC2833Integration:
     """Integration tests for RFC 2833 components"""
@@ -217,6 +217,7 @@ class TestRFC2833Integration:
         unpacked = RFC2833EventPacket.unpack(payload)
         assert unpacked.get_digit() == "5"
 
+
 class TestRFC2833Compliance:
     """Test RFC 2833 compliance and specifications"""
 
@@ -229,7 +230,7 @@ class TestRFC2833Compliance:
 
     def test_event_code_range(self) -> None:
         """Test that DTMF event codes are in valid range (0-15)"""
-        for digit, code in RFC2833_EVENT_CODES.items():
+        for code in RFC2833_EVENT_CODES.values():
             assert code >= 0
             assert code <= 15
 

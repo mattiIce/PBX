@@ -8,7 +8,6 @@ import shutil
 import tempfile
 import time
 
-
 from pbx.core.call import Call, CallState
 from pbx.core.pbx import PBXCore
 from pbx.rtp.handler import RTPRecorder
@@ -159,7 +158,6 @@ def test_voicemail_save_on_hangup() -> None:
 
         assert len(messages) > 0
         assert messages[0]["caller_id"] == "1001"
-
 
     finally:
         # Cleanup

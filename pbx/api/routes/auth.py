@@ -8,7 +8,7 @@ admin extension.
 import secrets
 import traceback
 
-from flask import Blueprint, Response, request
+from flask import Blueprint, Response
 
 from pbx.api.utils import get_pbx_core, get_request_body, send_json
 from pbx.utils.logger import get_logger
@@ -67,8 +67,7 @@ def handle_login() -> Response:
                         "email": "",
                     }
                 )
-            else:
-                return send_json({"error": "Invalid credentials"}, 401)
+            return send_json({"error": "Invalid credentials"}, 401)
 
         # Get extension from database
         if not pbx_core.extension_db:

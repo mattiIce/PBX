@@ -3,9 +3,9 @@ Database migration system for PBX features
 Manages schema versioning and migrations
 """
 
+import sqlite3
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class MigrationManager:
@@ -14,7 +14,7 @@ class MigrationManager:
     Tracks versions and applies migrations in order
     """
 
-    def __init__(self, db_backend):
+    def __init__(self, db_backend: object) -> None:
         """
         Initialize migration manager
 
@@ -54,7 +54,7 @@ class MigrationManager:
             result = result.replace(placeholder, value)
         return result
 
-    def register_migration(self, version: int, name: str, sql: str):
+    def register_migration(self, version: int, name: str, sql: str) -> None:
         """
         Register a migration
 
@@ -65,7 +65,7 @@ class MigrationManager:
         """
         self.migrations.append({"version": version, "name": name, "sql": sql})
 
-    def init_migrations_table(self):
+    def init_migrations_table(self) -> bool:
         """Create migrations tracking table if it doesn't exist"""
         try:
             if self.db.db_type == "postgresql":
@@ -206,7 +206,7 @@ class MigrationManager:
             return []
 
 
-def register_all_migrations(manager: MigrationManager):
+def register_all_migrations(manager: MigrationManager) -> None:
     """
     Register all framework feature migrations
 

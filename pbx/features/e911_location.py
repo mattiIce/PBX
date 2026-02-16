@@ -3,7 +3,8 @@ E911 Support for Single Site with Multiple Buildings
 Simplified location-based emergency routing for one site with 3 buildings
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -11,7 +12,7 @@ from pbx.utils.logger import get_logger
 class E911LocationService:
     """Service for managing E911 locations and routing (single site, 3 buildings)"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize E911 location service"""
         self.logger = get_logger()
         self.config = config or {}
@@ -27,7 +28,7 @@ class E911LocationService:
             self.logger.info("E911 location service initialized (single site, multi-building)")
             self._load_buildings()
 
-    def _load_buildings(self):
+    def _load_buildings(self) -> None:
         """Load building configurations for the site"""
         # Load from config or create defaults
         buildings_config = self.config.get("features", {}).get("e911", {}).get("buildings", [])
@@ -75,7 +76,7 @@ class E911LocationService:
             "building_id": building_id,
             "floor": floor,
             "room": room,
-            "registered_at": datetime.now(timezone.utc),
+            "registered_at": datetime.now(UTC),
         }
 
         self.logger.info(
@@ -135,7 +136,7 @@ class E911LocationService:
             "device_id": device_id,
             "caller_info": caller_info,
             "location": full_location,
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
         }
         self.emergency_calls.append(call_record)
 

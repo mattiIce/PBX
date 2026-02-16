@@ -31,7 +31,7 @@ export async function loadPhoneBook(): Promise<void> {
         const tbody = document.getElementById('phone-book-body') as HTMLElement | null;
         if (!tbody) return;
 
-        const entries = data.entries || [];
+        const entries = data.entries ?? [];
         if (entries.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">No phone book entries</td></tr>';
             return;

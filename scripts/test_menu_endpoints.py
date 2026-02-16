@@ -14,7 +14,14 @@ import urllib.error
 import urllib.request
 
 
-def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=200, timeout=10):
+def check_endpoint(
+    base_url: str,
+    endpoint: str,
+    method: str = "GET",
+    data: dict | None = None,
+    expected_status: int = 200,
+    timeout: int = 10,
+) -> bool:
     """Test a single API endpoint."""
     url = f"{base_url}{endpoint}"
 
@@ -44,9 +51,8 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
                     # Response body is not valid JSON; ignore and continue without extra details.
                     pass
                 return True
-            else:
-                print(f"✗ {method} {endpoint} - Got status {status}, expected {expected_status}")
-                return False
+            print(f"✗ {method} {endpoint} - Got status {status}, expected {expected_status}")
+            return False
 
     except urllib.error.HTTPError as e:
         status = e.code
@@ -61,9 +67,8 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
         if status == expected_status:
             print(f"✓ {method} {endpoint} (expected {expected_status})")
             return True
-        else:
-            print(f"✗ {method} {endpoint} - HTTP {status}: {error_msg}")
-            return False
+        print(f"✗ {method} {endpoint} - HTTP {status}: {error_msg}")
+        return False
     except urllib.error.URLError as e:
         print(f"✗ {method} {endpoint} - Connection error: {e}")
         return False
@@ -72,7 +77,7 @@ def test_endpoint(base_url, endpoint, method="GET", data=None, expected_status=2
         return False
 
 
-def main():
+def main() -> int:
     parser = argparse.ArgumentParser(description="Test auto-attendant menu API endpoints")
     parser.add_argument("--host", default="localhost", help="API server host (default: localhost)")
     parser.add_argument("--port", default="9000", help="API server port (default: 9000)")
@@ -97,20 +102,20 @@ def main():
     # Test GET endpoints
     print("\nGET Endpoints:")
     print("-" * 70)
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menus", timeout=args.timeout))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menus/main", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/menus", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/menus/main", timeout=args.timeout))
     results.append(
-        test_endpoint(base_url, "/api/auto-attendant/menus/main/items", timeout=args.timeout)
+        check_endpoint(base_url, "/api/auto-attendant/menus/main/items", timeout=args.timeout)
     )
-    results.append(test_endpoint(base_url, "/api/auto-attendant/menu-tree", timeout=args.timeout))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/config", timeout=args.timeout))
-    results.append(test_endpoint(base_url, "/api/auto-attendant/prompts", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/menu-tree", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/config", timeout=args.timeout))
+    results.append(check_endpoint(base_url, "/api/auto-attendant/prompts", timeout=args.timeout))
 
     # Test a non-existent menu (should return 404)
     print("\nNegative Tests (should fail with 404):")
     print("-" * 70)
     results.append(
-        test_endpoint(
+        check_endpoint(
             base_url,
             "/api/auto-attendant/menus/nonexistent",
             expected_status=404,
@@ -127,19 +132,18 @@ def main():
     if passed == total:
         print("✓ All endpoints are working correctly!")
         return 0
-    else:
-        print("✗ Some endpoints are not working. Check the errors above.")
-        print("\nTroubleshooting steps:")
-        print("1. Ensure the PBX service is running:")
-        print("   sudo systemctl status pbx")
-        print("2. Restart the service if needed:")
-        print("   sudo systemctl restart pbx")
-        print("3. Check the logs for errors:")
-        print("   sudo journalctl -u pbx -n 50")
-        print("4. Verify the code is up to date:")
-        print("   git log --oneline -1 -- pbx/api/rest_api.py")
-        print("\nSee TROUBLESHOOTING_AUTO_ATTENDANT_MENUS.md for more details.")
-        return 1
+    print("✗ Some endpoints are not working. Check the errors above.")
+    print("\nTroubleshooting steps:")
+    print("1. Ensure the PBX service is running:")
+    print("   sudo systemctl status pbx")
+    print("2. Restart the service if needed:")
+    print("   sudo systemctl restart pbx")
+    print("3. Check the logs for errors:")
+    print("   sudo journalctl -u pbx -n 50")
+    print("4. Verify the code is up to date:")
+    print("   git log --oneline -1 -- pbx/api/rest_api.py")
+    print("\nSee TROUBLESHOOTING_AUTO_ATTENDANT_MENUS.md for more details.")
+    return 1
 
 
 if __name__ == "__main__":

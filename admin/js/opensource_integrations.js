@@ -239,7 +239,7 @@ async function quickSetupIntegration(integration) {
     const config = defaults[integration];
 
     if (!config) {
-        showQuickSetupNotification('Unknown integration: ' + integration, 'error');
+        showQuickSetupNotification(`Unknown integration: ${integration}`, 'error');
         return;
     }
 
@@ -266,17 +266,15 @@ async function quickSetupIntegration(integration) {
             updateQuickSetupStatus();
 
             // Show success message
-            let message = `✅ ${INTEGRATION_NAMES[integration]} enabled with default settings! The integration is now active.`;
+            const basePart = `✅ ${INTEGRATION_NAMES[integration]} enabled with default settings! The integration is now active.`;
 
             // Show additional info for specific integrations
             if (integration === 'matrix') {
-                message += ' Note: You need to set MATRIX_BOT_PASSWORD in your .env file for Matrix to work.';
-                showQuickSetupNotification(message, 'warning', 8000);
+                showQuickSetupNotification(`${basePart} Note: You need to set MATRIX_BOT_PASSWORD in your .env file for Matrix to work.`, 'warning', 8000);
             } else if (integration === 'espocrm') {
-                message += ' Note: You need to set ESPOCRM_API_KEY and api_url in the configuration tab.';
-                showQuickSetupNotification(message, 'warning', 8000);
+                showQuickSetupNotification(`${basePart} Note: You need to set ESPOCRM_API_KEY and api_url in the configuration tab.`, 'warning', 8000);
             } else {
-                showQuickSetupNotification(message, 'success');
+                showQuickSetupNotification(basePart, 'success');
             }
 
             // Reload the detailed config if on that tab
@@ -296,7 +294,7 @@ async function quickSetupIntegration(integration) {
             }
         }
     } catch (error) {
-        showQuickSetupNotification('Error enabling integration: ' + error.message, 'error');
+        showQuickSetupNotification(`Error enabling integration: ${error.message}`, 'error');
         // Revert checkbox
         const checkbox = document.getElementById(`quick-${integration}-enabled`);
         if (checkbox) {
@@ -313,7 +311,7 @@ async function disableIntegration(integration) {
         // First, get current config
         const response = await fetch('/api/config');
         const data = await response.json();
-        const currentConfig = data.integrations?.[integration] || {};
+        const currentConfig = data.integrations?.[integration] ?? {};
 
         // Set enabled to false
         currentConfig.enabled = false;
@@ -345,7 +343,7 @@ async function disableIntegration(integration) {
                 loadEspoCRMConfig();
             }
         } else {
-            showQuickSetupNotification('Failed to disable ' + INTEGRATION_NAMES[integration], 'error');
+            showQuickSetupNotification(`Failed to disable ${INTEGRATION_NAMES[integration]}`, 'error');
             // Revert checkbox
             const checkbox = document.getElementById(`quick-${integration}-enabled`);
             if (checkbox) {
@@ -353,7 +351,7 @@ async function disableIntegration(integration) {
             }
         }
     } catch (error) {
-        showQuickSetupNotification('Error disabling integration: ' + error.message, 'error');
+        showQuickSetupNotification(`Error disabling integration: ${error.message}`, 'error');
         // Revert checkbox
         const checkbox = document.getElementById(`quick-${integration}-enabled`);
         if (checkbox) {
@@ -366,40 +364,35 @@ async function disableIntegration(integration) {
 // Jitsi Meet Integration
 // =============================================================================
 
-function loadJitsiConfig() {
-    fetch('/api/config')
-        .then(response => {
-            if (!response.ok) {
-                // Gracefully handle errors (config endpoint may require auth or not be available)
-                if (window.suppressErrorNotifications) {
-                    console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
-                } else {
-                    console.error('Failed to load Jitsi config:', response.status);
-                }
-                return null;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (!data) return; // Skip processing if request failed
-            
-            const config = data.integrations?.jitsi || {};
-
-            document.getElementById('jitsi-enabled').checked = config.enabled || false;
-            document.getElementById('jitsi-server-url').value = config.server_url || 'https://localhost';
-            document.getElementById('jitsi-auto-create-rooms').checked = config.auto_create_rooms !== false;
-            document.getElementById('jitsi-app-id').value = config.app_id || '';
-            document.getElementById('jitsi-app-secret').value = config.app_secret || '';
-
-            toggleJitsiSettings();
-        })
-        .catch(error => {
+async function loadJitsiConfig() {
+    try {
+        const response = await fetch('/api/config');
+        if (!response.ok) {
             if (window.suppressErrorNotifications) {
-                console.info('Failed to load Jitsi config (expected if not authenticated):', error.message);
+                console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
             } else {
-                console.error('Failed to load Jitsi config:', error);
+                console.error('Failed to load Jitsi config:', response.status);
             }
-        });
+            return;
+        }
+
+        const data = await response.json();
+        const config = data.integrations?.jitsi ?? {};
+
+        document.getElementById('jitsi-enabled').checked = config.enabled ?? false;
+        document.getElementById('jitsi-server-url').value = config.server_url ?? 'https://localhost';
+        document.getElementById('jitsi-auto-create-rooms').checked = config.auto_create_rooms !== false;
+        document.getElementById('jitsi-app-id').value = config.app_id ?? '';
+        document.getElementById('jitsi-app-secret').value = config.app_secret ?? '';
+
+        toggleJitsiSettings();
+    } catch (error) {
+        if (window.suppressErrorNotifications) {
+            console.info('Failed to load Jitsi config (expected if not authenticated):', error.message);
+        } else {
+            console.error('Failed to load Jitsi config:', error);
+        }
+    }
 }
 
 function toggleJitsiSettings() {
@@ -437,32 +430,28 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
             showJitsiStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showJitsiStatus('Error: ' + error.message, 'error');
+        showJitsiStatus(`Error: ${error.message}`, 'error');
     }
 });
 
 async function testJitsiConnection() {
     const serverUrl = document.getElementById('jitsi-server-url').value;
 
-    showJitsiStatus('Testing connection to ' + escapeHtml(serverUrl) + '...', 'info');
+    showJitsiStatus(`Testing connection to ${escapeHtml(serverUrl)}...`, 'info');
 
     try {
         // Test if server is reachable
-        const testUrl = serverUrl + '/external_api.js';
+        const testUrl = `${serverUrl}/external_api.js`;
         const response = await fetch(testUrl, { mode: 'no-cors' });
 
         // If no error, server is likely reachable
-        showJitsiStatus('✅ Connection successful! Jitsi server is accessible.', 'success');
-
-        // Create a test meeting URL
-        const testMeetingUrl = serverUrl + '/test-pbx-' + Date.now();
+        const testMeetingUrl = `${serverUrl}/test-pbx-${Date.now()}`;
         showJitsiStatus(
-            '✅ Connection successful!<br>' +
-            'Test meeting URL: <a href="' + escapeHtml(testMeetingUrl) + '" target="_blank">' + escapeHtml(testMeetingUrl) + '</a>',
+            `✅ Connection successful!<br>Test meeting URL: <a href="${escapeHtml(testMeetingUrl)}" target="_blank">${escapeHtml(testMeetingUrl)}</a>`,
             'success'
         );
     } catch (error) {
-        showJitsiStatus('⚠️ Could not verify connection. Server may still be accessible.<br>Error: ' + escapeHtml(error.message), 'warning');
+        showJitsiStatus(`⚠️ Could not verify connection. Server may still be accessible.<br>Error: ${escapeHtml(error.message)}`, 'warning');
     }
 }
 
@@ -475,42 +464,37 @@ function showJitsiStatus(message, type) {
 // Matrix Integration
 // =============================================================================
 
-function loadMatrixConfig() {
-    fetch('/api/config')
-        .then(response => {
-            if (!response.ok) {
-                // Gracefully handle errors (config endpoint may require auth or not be available)
-                if (window.suppressErrorNotifications) {
-                    console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
-                } else {
-                    console.error('Failed to load Matrix config:', response.status);
-                }
-                return null;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (!data) return; // Skip processing if request failed
-            
-            const config = data.integrations?.matrix || {};
-
-            document.getElementById('matrix-enabled').checked = config.enabled || false;
-            document.getElementById('matrix-homeserver-url').value = config.homeserver_url || 'https://localhost:8008';
-            document.getElementById('matrix-bot-username').value = config.bot_username || '';
-            document.getElementById('matrix-bot-password').value = config.bot_password || '';
-            document.getElementById('matrix-notification-room').value = config.notification_room || '';
-            document.getElementById('matrix-voicemail-room').value = config.voicemail_room || '';
-            document.getElementById('matrix-missed-call-notifications').checked = config.missed_call_notifications !== false;
-
-            toggleMatrixSettings();
-        })
-        .catch(error => {
+async function loadMatrixConfig() {
+    try {
+        const response = await fetch('/api/config');
+        if (!response.ok) {
             if (window.suppressErrorNotifications) {
-                console.info('Failed to load Matrix config (expected if not authenticated):', error.message);
+                console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
             } else {
-                console.error('Failed to load Matrix config:', error);
+                console.error('Failed to load Matrix config:', response.status);
             }
-        });
+            return;
+        }
+
+        const data = await response.json();
+        const config = data.integrations?.matrix ?? {};
+
+        document.getElementById('matrix-enabled').checked = config.enabled ?? false;
+        document.getElementById('matrix-homeserver-url').value = config.homeserver_url ?? 'https://localhost:8008';
+        document.getElementById('matrix-bot-username').value = config.bot_username ?? '';
+        document.getElementById('matrix-bot-password').value = config.bot_password ?? '';
+        document.getElementById('matrix-notification-room').value = config.notification_room ?? '';
+        document.getElementById('matrix-voicemail-room').value = config.voicemail_room ?? '';
+        document.getElementById('matrix-missed-call-notifications').checked = config.missed_call_notifications !== false;
+
+        toggleMatrixSettings();
+    } catch (error) {
+        if (window.suppressErrorNotifications) {
+            console.info('Failed to load Matrix config (expected if not authenticated):', error.message);
+        } else {
+            console.error('Failed to load Matrix config:', error);
+        }
+    }
 }
 
 function toggleMatrixSettings() {
@@ -550,7 +534,7 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
             showMatrixStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showMatrixStatus('Error: ' + error.message, 'error');
+        showMatrixStatus(`Error: ${error.message}`, 'error');
     }
 });
 
@@ -568,7 +552,7 @@ async function testMatrixConnection() {
 
     try {
         // Test homeserver connectivity
-        const versionUrl = homeserverUrl + '/_matrix/client/versions';
+        const versionUrl = `${homeserverUrl}/_matrix/client/versions`;
         const versionResponse = await fetch(versionUrl);
 
         if (!versionResponse.ok) {
@@ -576,15 +560,14 @@ async function testMatrixConnection() {
         }
 
         const versions = await versionResponse.json();
+        const versionList = versions.versions?.join(', ') ?? 'Unknown';
 
         showMatrixStatus(
-            '✅ Homeserver is accessible!<br>' +
-            'Supported versions: ' + (versions.versions?.join(', ') || 'Unknown') + '<br>' +
-            '<small>Note: Full authentication test requires server-side validation</small>',
+            `✅ Homeserver is accessible!<br>Supported versions: ${versionList}<br><small>Note: Full authentication test requires server-side validation</small>`,
             'success'
         );
     } catch (error) {
-        showMatrixStatus('❌ Connection failed: ' + error.message, 'error');
+        showMatrixStatus(`❌ Connection failed: ${error.message}`, 'error');
     }
 }
 
@@ -597,41 +580,36 @@ function showMatrixStatus(message, type) {
 // EspoCRM Integration
 // =============================================================================
 
-function loadEspoCRMConfig() {
-    fetch('/api/config')
-        .then(response => {
-            if (!response.ok) {
-                // Gracefully handle errors (config endpoint may require auth or not be available)
-                if (window.suppressErrorNotifications) {
-                    console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
-                } else {
-                    console.error('Failed to load EspoCRM config:', response.status);
-                }
-                return null;
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (!data) return; // Skip processing if request failed
-            
-            const config = data.integrations?.espocrm || {};
-
-            document.getElementById('espocrm-enabled').checked = config.enabled || false;
-            document.getElementById('espocrm-api-url').value = config.api_url || 'https://localhost/api/v1';
-            document.getElementById('espocrm-api-key').value = config.api_key || '';
-            document.getElementById('espocrm-auto-create-contacts').checked = config.auto_create_contacts !== false;
-            document.getElementById('espocrm-auto-log-calls').checked = config.auto_log_calls !== false;
-            document.getElementById('espocrm-screen-pop').checked = config.screen_pop !== false;
-
-            toggleEspoCRMSettings();
-        })
-        .catch(error => {
+async function loadEspoCRMConfig() {
+    try {
+        const response = await fetch('/api/config');
+        if (!response.ok) {
             if (window.suppressErrorNotifications) {
-                console.info('Failed to load EspoCRM config (expected if not authenticated):', error.message);
+                console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
             } else {
-                console.error('Failed to load EspoCRM config:', error);
+                console.error('Failed to load EspoCRM config:', response.status);
             }
-        });
+            return;
+        }
+
+        const data = await response.json();
+        const config = data.integrations?.espocrm ?? {};
+
+        document.getElementById('espocrm-enabled').checked = config.enabled ?? false;
+        document.getElementById('espocrm-api-url').value = config.api_url ?? 'https://localhost/api/v1';
+        document.getElementById('espocrm-api-key').value = config.api_key ?? '';
+        document.getElementById('espocrm-auto-create-contacts').checked = config.auto_create_contacts !== false;
+        document.getElementById('espocrm-auto-log-calls').checked = config.auto_log_calls !== false;
+        document.getElementById('espocrm-screen-pop').checked = config.screen_pop !== false;
+
+        toggleEspoCRMSettings();
+    } catch (error) {
+        if (window.suppressErrorNotifications) {
+            console.info('Failed to load EspoCRM config (expected if not authenticated):', error.message);
+        } else {
+            console.error('Failed to load EspoCRM config:', error);
+        }
+    }
 }
 
 function toggleEspoCRMSettings() {
@@ -670,7 +648,7 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
             showEspoCRMStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showEspoCRMStatus('Error: ' + error.message, 'error');
+        showEspoCRMStatus(`Error: ${error.message}`, 'error');
     }
 });
 
@@ -687,7 +665,7 @@ async function testEspoCRMConnection() {
 
     try {
         // Test API endpoint
-        const testUrl = apiUrl + '/App/user';
+        const testUrl = `${apiUrl}/App/user`;
         const response = await fetch(testUrl, {
             headers: {
                 'X-Api-Key': apiKey,
@@ -698,16 +676,14 @@ async function testEspoCRMConnection() {
         if (response.ok) {
             const data = await response.json();
             showEspoCRMStatus(
-                '✅ Connection successful!<br>' +
-                'Connected as: ' + (data.userName || 'Unknown') + '<br>' +
-                'EspoCRM is ready for integration.',
+                `✅ Connection successful!<br>Connected as: ${data.userName ?? 'Unknown'}<br>EspoCRM is ready for integration.`,
                 'success'
             );
         } else {
-            throw new Error('API returned status ' + response.status);
+            throw new Error(`API returned status ${response.status}`);
         }
     } catch (error) {
-        showEspoCRMStatus('❌ Connection failed: ' + error.message + '<br>Check API URL and API Key.', 'error');
+        showEspoCRMStatus(`❌ Connection failed: ${error.message}<br>Check API URL and API Key.`, 'error');
     }
 }
 
@@ -722,14 +698,14 @@ function showEspoCRMStatus(message, type) {
 
 function showTab(tabId) {
     // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    for (const tab of document.querySelectorAll('.tab-content')) {
         tab.classList.remove('active');
-    });
+    }
 
     // Remove active from all buttons
-    document.querySelectorAll('.tab-button').forEach(btn => {
+    for (const btn of document.querySelectorAll('.tab-button')) {
         btn.classList.remove('active');
-    });
+    }
 
     // Show selected tab
     const selectedTab = document.getElementById(tabId);
@@ -757,7 +733,7 @@ function showTab(tabId) {
  * Create an instant Jitsi meeting
  */
 async function createInstantJitsiMeeting() {
-    const roomName = document.getElementById('jitsi-instant-room').value || '';
+    const roomName = document.getElementById('jitsi-instant-room').value ?? '';
 
     try {
         const response = await fetch('/api/integrations/jitsi/instant', {
@@ -778,7 +754,7 @@ async function createInstantJitsiMeeting() {
         displayJitsiMeetingResult(data.meeting_url);
         showQuickSetupNotification('Meeting created successfully!', 'success');
     } catch (error) {
-        showQuickSetupNotification('Failed to create meeting: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to create meeting: ${error.message}`, 'error');
     }
 }
 
@@ -814,7 +790,7 @@ async function scheduleJitsiMeeting() {
         displayJitsiMeetingResult(data.meeting_url);
         showQuickSetupNotification('Meeting scheduled successfully!', 'success');
     } catch (error) {
-        showQuickSetupNotification('Failed to schedule meeting: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to schedule meeting: ${error.message}`, 'error');
     }
 }
 
@@ -932,7 +908,7 @@ async function sendMatrixMessage() {
         showMatrixMessageResult('✅ Message sent successfully!', 'success');
         document.getElementById('matrix-message-text').value = ''; // Clear message
     } catch (error) {
-        showMatrixMessageResult('❌ Failed to send message: ' + error.message, 'error');
+        showMatrixMessageResult(`❌ Failed to send message: ${error.message}`, 'error');
     }
 }
 
@@ -945,7 +921,7 @@ async function sendMatrixTestNotification() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                message: '🧪 Test notification from PBX Admin Panel - ' + new Date().toLocaleString()
+                message: `🧪 Test notification from PBX Admin Panel - ${new Date().toLocaleString()}`
             })
         });
 
@@ -956,7 +932,7 @@ async function sendMatrixTestNotification() {
 
         showMatrixMessageResult('✅ Test notification sent successfully!', 'success');
     } catch (error) {
-        showMatrixMessageResult('❌ Failed to send notification: ' + error.message, 'error');
+        showMatrixMessageResult(`❌ Failed to send notification: ${error.message}`, 'error');
     }
 }
 
@@ -995,7 +971,7 @@ async function createMatrixRoom() {
         document.getElementById('matrix-new-room-name').value = '';
         document.getElementById('matrix-new-room-topic').value = '';
     } catch (error) {
-        showQuickSetupNotification('Failed to create room: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to create room: ${error.message}`, 'error');
     }
 }
 
@@ -1063,7 +1039,7 @@ async function searchEspoCRMContact() {
         const data = await response.json();
         displayEspoCRMSearchResults(data);
     } catch (error) {
-        showQuickSetupNotification('Failed to search contact: ' + error.message, 'error');
+        showQuickSetupNotification(`Failed to search contact: ${error.message}`, 'error');
     }
 }
 
@@ -1138,7 +1114,7 @@ async function createEspoCRMContact() {
         }
 
         const data = await response.json();
-        showEspoCRMCreateResult('✅ Contact created successfully! CRM ID: ' + (data.contact?.id || 'unknown'));
+        showEspoCRMCreateResult(`✅ Contact created successfully! CRM ID: ${data.contact?.id ?? 'unknown'}`);
 
         // Clear form
         document.getElementById('espocrm-new-firstname').value = '';
@@ -1148,7 +1124,7 @@ async function createEspoCRMContact() {
         document.getElementById('espocrm-new-company').value = '';
         document.getElementById('espocrm-new-title').value = '';
     } catch (error) {
-        showEspoCRMCreateResult('❌ Failed to create contact: ' + error.message);
+        showEspoCRMCreateResult(`❌ Failed to create contact: ${error.message}`);
     }
 }
 

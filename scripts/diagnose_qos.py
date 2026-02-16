@@ -10,7 +10,6 @@ Examples:
     python scripts/diagnose_qos.py 600703453@192.168.10.135
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -19,8 +18,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
 def diagnose_call_quality(
-    call_id, packets_sent, packets_received, packets_lost, jitter_avg, latency_avg, duration
-):
+    call_id: str,
+    packets_sent: int,
+    packets_received: int,
+    packets_lost: int,
+    jitter_avg: float,
+    latency_avg: float,
+    duration: float,
+) -> None:
     """
     Diagnose call quality issues
 
@@ -155,8 +160,8 @@ def diagnose_call_quality(
     print("=" * 70)
 
 
-def main():
-    """Main function"""
+def main() -> None:
+    """Main function."""
     if len(sys.argv) < 2:
         print("Usage: python scripts/diagnose_qos.py <call_id>")
         print()

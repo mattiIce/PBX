@@ -6,6 +6,7 @@ during development and testing scenarios.
 
 import os
 import re
+from typing import ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -22,13 +23,13 @@ class E911Protection:
     """
 
     # Patterns that match E911/emergency numbers
-    E911_PATTERNS = [
+    E911_PATTERNS: ClassVar[list[str]] = [
         r"^911$",  # Standard 911
         r"^[0-9]*911$",  # Enhanced 911 with numeric prefix
         r"^\*911$",  # Asterisk prefix (e.g., *911)
     ]
 
-    def __init__(self, config=None):
+    def __init__(self, config: object = None) -> None:
         """
         Initialize E911 protection
 
@@ -44,7 +45,7 @@ class E911Protection:
                 "E911 Protection: TEST MODE DETECTED - All emergency calls will be blocked"
             )
 
-    def _detect_test_mode(self):
+    def _detect_test_mode(self) -> bool:
         """
         Detect if running in test mode
 
@@ -71,7 +72,7 @@ class E911Protection:
 
         return False
 
-    def is_e911_number(self, number):
+    def is_e911_number(self, number: str | int | None) -> bool:
         """
         Check if a number is an E911/emergency number
 
@@ -88,13 +89,9 @@ class E911Protection:
         number_str = str(number).strip()
 
         # Check against all E911 patterns
-        for pattern in self.E911_PATTERNS:
-            if re.match(pattern, number_str):
-                return True
+        return any(re.match(pattern, number_str) for pattern in self.E911_PATTERNS)
 
-        return False
-
-    def block_if_e911(self, number, context=""):
+    def block_if_e911(self, number: str | int | None, context: str = "") -> bool:
         """
         Block call if number is E911 and in test mode
 
@@ -124,7 +121,7 @@ class E911Protection:
 
         return False
 
-    def is_test_mode(self):
+    def is_test_mode(self) -> bool:
         """
         Check if currently in test mode
 

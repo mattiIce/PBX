@@ -14,18 +14,17 @@ Usage:
 
 import argparse
 import json
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.utils.licensing import LicenseManager, LicenseType
-from pathlib import Path
 
 
-def setup_config():
+def setup_config() -> dict:
     """Load configuration for license manager."""
     # Try to load from config.yml
     try:
@@ -33,7 +32,7 @@ def setup_config():
 
         config_path = str(Path(__file__).parent.parent / "config.yml")
         if Path(config_path).exists():
-            with open(config_path, "r") as f:
+            with open(config_path) as f:
                 config = yaml.safe_load(f)
                 return config.get("licensing", {})
     except (KeyError, OSError, TypeError, ValueError) as e:
@@ -42,7 +41,7 @@ def setup_config():
     return {}
 
 
-def cmd_generate(args):
+def cmd_generate(args: argparse.Namespace) -> int:
     """Generate a new license."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -76,7 +75,7 @@ def cmd_generate(args):
     import re
 
     safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", args.org).lower()
-    output_file = args.output or f"license_{safe_org}_{datetime.now(timezone.utc).strftime('%Y%m%d')}.json"
+    output_file = args.output or f"license_{safe_org}_{datetime.now(UTC).strftime('%Y%m%d')}.json"
 
     with open(output_file, "w") as f:
         json.dump(license_data, f, indent=2)
@@ -92,7 +91,7 @@ def cmd_generate(args):
     return 0
 
 
-def cmd_install(args):
+def cmd_install(args: argparse.Namespace) -> int:
     """Install a license file."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -103,7 +102,7 @@ def cmd_install(args):
         return 1
 
     try:
-        with open(args.license_file, "r") as f:
+        with open(args.license_file) as f:
             license_data = json.load(f)
     except (OSError, ValueError, json.JSONDecodeError) as e:
         print(f"Error: Failed to load license file: {e}")
@@ -130,12 +129,11 @@ def cmd_install(args):
         print(f"Message: {message}")
 
         return 0
-    else:
-        print("\n✗ Failed to install license")
-        return 1
+    print("\n✗ Failed to install license")
+    return 1
 
 
-def cmd_status(args):
+def cmd_status(args: argparse.Namespace) -> int:
     """Show license status."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -169,7 +167,7 @@ def cmd_status(args):
     return 0
 
 
-def cmd_revoke(args):
+def cmd_revoke(args: argparse.Namespace) -> int:
     """Revoke current license."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -187,12 +185,11 @@ def cmd_revoke(args):
     if lm.revoke_license():
         print("✓ License revoked successfully")
         return 0
-    else:
-        print("✗ Failed to revoke license")
-        return 1
+    print("✗ Failed to revoke license")
+    return 1
 
 
-def cmd_enable(args):
+def cmd_enable(args: argparse.Namespace) -> int:
     """Enable licensing enforcement."""
     # Update environment file
     env_file = str(Path(__file__).parent.parent / ".env")
@@ -202,7 +199,7 @@ def cmd_enable(args):
     # Read existing .env
     env_lines = []
     if Path(env_file).exists():
-        with open(env_file, "r") as f:
+        with open(env_file) as f:
             env_lines = f.readlines()
 
     # Update or add PBX_LICENSING_ENABLED
@@ -227,7 +224,7 @@ def cmd_enable(args):
     return 0
 
 
-def cmd_disable(args):
+def cmd_disable(args: argparse.Namespace) -> int:
     """Disable licensing enforcement."""
     # Update environment file
     env_file = str(Path(__file__).parent.parent / ".env")
@@ -237,7 +234,7 @@ def cmd_disable(args):
     # Read existing .env
     env_lines = []
     if Path(env_file).exists():
-        with open(env_file, "r") as f:
+        with open(env_file) as f:
             env_lines = f.readlines()
 
     # Check for license lock file
@@ -270,7 +267,7 @@ def cmd_disable(args):
     return 0
 
 
-def cmd_remove_lock(args):
+def cmd_remove_lock(args: argparse.Namespace) -> int:
     """Remove license lock file."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -290,12 +287,11 @@ def cmd_remove_lock(args):
         print("\nLicensing can now be disabled via:")
         print(f"  python {__file__} disable")
         return 0
-    else:
-        print("✗ License lock file does not exist or could not be removed")
-        return 1
+    print("✗ License lock file does not exist or could not be removed")
+    return 1
 
 
-def cmd_features(args):
+def cmd_features(args: argparse.Namespace) -> int:
     """List available features for current license."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -347,7 +343,7 @@ def cmd_features(args):
     return 0
 
 
-def cmd_batch_generate(args):
+def cmd_batch_generate(args: argparse.Namespace) -> int:
     """Generate multiple licenses from a configuration file."""
     config = setup_config()
     lm = LicenseManager(config)
@@ -358,7 +354,7 @@ def cmd_batch_generate(args):
         return 1
 
     try:
-        with open(args.batch_file, "r") as f:
+        with open(args.batch_file) as f:
             if args.batch_file.endswith(".json"):
                 import json
 
@@ -380,7 +376,7 @@ def cmd_batch_generate(args):
     output_dir = args.output_dir or "generated_licenses"
 
     # Create output directory
-    os.makedirs(output_dir, exist_ok=True)
+    Path(output_dir).mkdir(parents=True, exist_ok=True)
 
     print(f"Generating {len(licenses_to_generate)} licenses...")
     print(f"Output directory: {output_dir}")
@@ -424,8 +420,8 @@ def cmd_batch_generate(args):
             import re
 
             safe_org = re.sub(r"[^a-zA-Z0-9_-]", "_", issued_to).lower()
-            output_file = Path(output_dir) / f"license_{safe_org}_{datetime.now(timezone.utc.strftime('%Y%m%d_%H%M%S')}_{i}.json",
-            )
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+            output_file = Path(output_dir) / f"license_{safe_org}_{timestamp}_{i}.json"
 
             with open(output_file, "w") as f:
                 json.dump(license_data, f, indent=2)
@@ -434,7 +430,7 @@ def cmd_batch_generate(args):
             generated_count += 1
 
         except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
-            error_msg = f"License {i} ({license_spec.get('issued_to', 'unknown')}): {str(e)}"
+            error_msg = f"License {i} ({license_spec.get('issued_to', 'unknown')}): {e!s}"
             errors.append(error_msg)
             print(f"  ✗ Error: {e}")
 
@@ -453,7 +449,7 @@ def cmd_batch_generate(args):
     return 0
 
 
-def main():
+def main() -> int:
     """Run the license management CLI tool."""
     parser = argparse.ArgumentParser(
         description="License Management CLI Tool",
@@ -564,25 +560,24 @@ Examples:
     try:
         if args.command == "generate":
             return cmd_generate(args)
-        elif args.command == "batch-generate":
+        if args.command == "batch-generate":
             return cmd_batch_generate(args)
-        elif args.command == "install":
+        if args.command == "install":
             return cmd_install(args)
-        elif args.command == "status":
+        if args.command == "status":
             return cmd_status(args)
-        elif args.command == "features":
+        if args.command == "features":
             return cmd_features(args)
-        elif args.command == "revoke":
+        if args.command == "revoke":
             return cmd_revoke(args)
-        elif args.command == "enable":
+        if args.command == "enable":
             return cmd_enable(args)
-        elif args.command == "disable":
+        if args.command == "disable":
             return cmd_disable(args)
-        elif args.command == "remove-lock":
+        if args.command == "remove-lock":
             return cmd_remove_lock(args)
-        else:
-            parser.print_help()
-            return 1
+        parser.print_help()
+        return 1
 
     except Exception as e:
         print(f"\nError: {e}")

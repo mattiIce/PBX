@@ -6,16 +6,13 @@ endpoints.
 
 from typing import Any
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
-    require_auth,
     require_admin,
-    get_request_body,
-    DateTimeEncoder,
+    require_auth,
+    send_json,
 )
 from pbx.utils.logger import get_logger
 
@@ -120,12 +117,11 @@ def handle_ad_sync() -> Response:
             return send_json(
                 {
                     "success": True,
-                    "message": f'Successfully synchronized {result["synced_count"]} users from Active Directory',
+                    "message": f"Successfully synchronized {result['synced_count']} users from Active Directory",
                     "synced_count": result["synced_count"],
                 }
             )
-        else:
-            return send_json({"success": False, "error": result["error"]}, 400)
+        return send_json({"success": False, "error": result["error"]}, 400)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -153,8 +149,7 @@ def handle_crm_lookup() -> Response:
 
         if caller_info:
             return send_json({"found": True, "caller_info": caller_info.to_dict()})
-        else:
-            return send_json({"found": False, "message": "Caller not found"})
+        return send_json({"found": False, "message": "Caller not found"})
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -169,9 +164,7 @@ def handle_get_crm_providers() -> Response:
 
     try:
         providers = pbx_core.crm_integration.get_provider_status()
-        return send_json(
-            {"enabled": pbx_core.crm_integration.enabled, "providers": providers}
-        )
+        return send_json({"enabled": pbx_core.crm_integration.enabled, "providers": providers})
     except Exception as e:
         return send_json({"error": str(e)}, 500)
 
@@ -192,8 +185,7 @@ def handle_jitsi_create_meeting() -> Response:
         handler = endpoints.get("POST /api/integrations/jitsi/meetings")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Jitsi create meeting: {e}")
         return send_json({"error": str(e)}, 500)
@@ -212,8 +204,7 @@ def handle_jitsi_instant_meeting() -> Response:
         handler = endpoints.get("POST /api/integrations/jitsi/instant")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Jitsi instant meeting: {e}")
         return send_json({"error": str(e)}, 500)
@@ -235,8 +226,7 @@ def handle_espocrm_create_contact() -> Response:
         handler = endpoints.get("POST /api/integrations/espocrm/contacts")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in EspoCRM create contact: {e}")
         return send_json({"error": str(e)}, 500)
@@ -255,8 +245,7 @@ def handle_espocrm_log_call() -> Response:
         handler = endpoints.get("POST /api/integrations/espocrm/calls")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in EspoCRM log call: {e}")
         return send_json({"error": str(e)}, 500)
@@ -275,8 +264,7 @@ def handle_espocrm_search_contact() -> Response:
         handler = endpoints.get("GET /api/integrations/espocrm/contacts/search")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in EspoCRM search contact: {e}")
         return send_json({"error": str(e)}, 500)
@@ -298,8 +286,7 @@ def handle_matrix_send_message() -> Response:
         handler = endpoints.get("POST /api/integrations/matrix/messages")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Matrix send message: {e}")
         return send_json({"error": str(e)}, 500)
@@ -318,8 +305,7 @@ def handle_matrix_send_notification() -> Response:
         handler = endpoints.get("POST /api/integrations/matrix/notifications")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Matrix send notification: {e}")
         return send_json({"error": str(e)}, 500)
@@ -338,8 +324,7 @@ def handle_matrix_create_room() -> Response:
         handler = endpoints.get("POST /api/integrations/matrix/rooms")
         if handler:
             return handler(request)
-        else:
-            return send_json({"error": "Handler not found"}, 500)
+        return send_json({"error": "Handler not found"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error in Matrix create room: {e}")
         return send_json({"error": str(e)}, 500)

@@ -1,6 +1,5 @@
 """Extension management schemas."""
 
-
 from pydantic import BaseModel, Field, field_validator
 
 

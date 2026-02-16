@@ -25,13 +25,17 @@ def test_compliance_checker_help() -> None:
     script_path = str(Path(__file__).parent.parent / "scripts" / "security_compliance_check.py")
 
     result = subprocess.run(
-        [sys.executable, script_path, "--help"], capture_output=True, text=True, timeout=10
+        [sys.executable, script_path, "--help"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
     )
 
     assert result.returncode == 0, "Help command should succeed"
-    assert (
-        "FIPS" in result.stdout or "compliance" in result.stdout.lower()
-    ), "Help should mention FIPS or compliance"
+    assert "FIPS" in result.stdout or "compliance" in result.stdout.lower(), (
+        "Help should mention FIPS or compliance"
+    )
 
 
 def test_compliance_checker_json_output() -> None:
@@ -40,7 +44,11 @@ def test_compliance_checker_json_output() -> None:
     script_path = str(Path(__file__).parent.parent / "scripts" / "security_compliance_check.py")
 
     result = subprocess.run(
-        [sys.executable, script_path, "--json"], capture_output=True, text=True, timeout=30
+        [sys.executable, script_path, "--json"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
     )
 
     # Extract JSON from output (may have log messages before it)
@@ -58,7 +66,7 @@ def test_compliance_checker_json_output() -> None:
     # Parse JSON
     try:
         data = json.loads(json_output)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         raise
 
     # Validate structure
@@ -93,7 +101,11 @@ def test_fips_algorithm_checks() -> None:
     script_path = str(Path(__file__).parent.parent / "scripts" / "security_compliance_check.py")
 
     result = subprocess.run(
-        [sys.executable, script_path, "--json"], capture_output=True, text=True, timeout=30
+        [sys.executable, script_path, "--json"],
+        capture_output=True,
+        text=True,
+        timeout=30,
+        check=False,
     )
 
     # Extract JSON
@@ -144,7 +156,11 @@ def test_soc2_testing_script_help() -> None:
     script_path = str(Path(__file__).parent.parent / "scripts" / "test_soc2_controls.py")
 
     result = subprocess.run(
-        [sys.executable, script_path, "--help"], capture_output=True, text=True, timeout=10
+        [sys.executable, script_path, "--help"],
+        capture_output=True,
+        text=True,
+        timeout=10,
+        check=False,
     )
 
     assert result.returncode == 0, "Help command should succeed"
@@ -172,9 +188,8 @@ def main() -> None:
         try:
             test_func()
             passed += 1
-        except Exception as e:
+        except Exception:
             failed += 1
-
 
     if failed > 0:
         sys.exit(1)

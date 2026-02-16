@@ -3,13 +3,14 @@ Auto Attendant (IVR) System for PBX
 Provides automated call answering and menu navigation
 """
 
-import os
+import contextlib
 import sqlite3
 import time
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class AAState(Enum):
@@ -47,7 +48,7 @@ class AutoAttendant:
     - Database persistence for configuration
     """
 
-    def __init__(self, config=None, pbx_core=None):
+    def __init__(self, config: Any | None = None, pbx_core: Any | None = None) -> None:
         """
         Initialize Auto Attendant
 
@@ -104,17 +105,13 @@ class AutoAttendant:
 
         # Create audio directory if it doesn't exist
         if not Path(self.audio_path).exists():
-            os.makedirs(self.audio_path)
-            self.logger.info(
-                f"Created auto attendant audio directory: {self.audio_path}"
-            )
+            Path(self.audio_path).mkdir(parents=True, exist_ok=True)
+            self.logger.info(f"Created auto attendant audio directory: {self.audio_path}")
 
-        self.logger.info(
-            f"Auto Attendant initialized on extension {self.extension}"
-        )
+        self.logger.info(f"Auto Attendant initialized on extension {self.extension}")
         self.logger.info(f"Menu options: {len(self.menu_options)}")
 
-    def _init_database(self):
+    def _init_database(self) -> None:
         """Initialize database tables for auto attendant persistence"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -223,7 +220,7 @@ class AutoAttendant:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing auto attendant database: {e}")
 
-    def _load_config_from_db(self):
+    def _load_config_from_db(self) -> dict | None:
         """Load configuration from database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -247,7 +244,7 @@ class AutoAttendant:
             self.logger.error(f"Error loading auto attendant config from database: {e}")
             return None
 
-    def _save_config_to_db(self):
+    def _save_config_to_db(self) -> None:
         """Save configuration to database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -268,7 +265,7 @@ class AutoAttendant:
         except sqlite3.Error as e:
             self.logger.error(f"Error saving auto attendant config to database: {e}")
 
-    def _load_menu_options_from_db(self):
+    def _load_menu_options_from_db(self) -> None:
         """Load menu options from database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -287,7 +284,7 @@ class AutoAttendant:
         except sqlite3.Error as e:
             self.logger.error(f"Error loading menu options from database: {e}")
 
-    def _save_menu_option_to_db(self, digit, destination, description=""):
+    def _save_menu_option_to_db(self, digit: str, destination: str, description: str = "") -> None:
         """Save a menu option to database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -307,7 +304,7 @@ class AutoAttendant:
         except sqlite3.Error as e:
             self.logger.error(f"Error saving menu option to database: {e}")
 
-    def _delete_menu_option_from_db(self, digit):
+    def _delete_menu_option_from_db(self, digit: str) -> None:
         """Delete a menu option from database"""
         try:
             conn = sqlite3.connect(self.db_path)
@@ -319,7 +316,7 @@ class AutoAttendant:
         except sqlite3.Error as e:
             self.logger.error(f"Error deleting menu option from database: {e}")
 
-    def update_config(self, **kwargs):
+    def update_config(self, **kwargs) -> None:
         """Update configuration and persist to database"""
         if "enabled" in kwargs:
             self.enabled = bool(kwargs["enabled"])
@@ -335,7 +332,7 @@ class AutoAttendant:
         # Save to database
         self._save_config_to_db()
 
-    def add_menu_option(self, digit, destination, description=""):
+    def add_menu_option(self, digit: str, destination: str, description: str = "") -> bool:
         """Add or update a menu option and persist to database"""
         if not self.enabled:
             self.logger.error("Cannot add menu option: Auto attendant feature is not enabled")
@@ -345,7 +342,7 @@ class AutoAttendant:
         self._save_menu_option_to_db(digit, destination, description)
         return True
 
-    def remove_menu_option(self, digit):
+    def remove_menu_option(self, digit: str) -> bool:
         """Remove a menu option and delete from database"""
         if not self.enabled:
             self.logger.error("Cannot remove menu option: Auto attendant feature is not enabled")
@@ -357,11 +354,11 @@ class AutoAttendant:
             return True
         return False
 
-    def is_enabled(self):
+    def is_enabled(self) -> bool:
         """Check if auto attendant is enabled"""
         return self.enabled
 
-    def get_extension(self):
+    def get_extension(self) -> str:
         """Get the auto attendant extension number"""
         return self.extension
 
@@ -369,7 +366,14 @@ class AutoAttendant:
     # Submenu Management Methods
     # ============================================================================
 
-    def create_menu(self, menu_id, parent_menu_id, menu_name, prompt_text="", audio_file=None):
+    def create_menu(
+        self,
+        menu_id: str,
+        parent_menu_id: str,
+        menu_name: str,
+        prompt_text: str = "",
+        audio_file: str | None = None,
+    ) -> bool:
         """
         Create a new menu (or submenu)
 
@@ -420,7 +424,13 @@ class AutoAttendant:
             self.logger.error(f"Error creating menu: {e}")
             return False
 
-    def update_menu(self, menu_id, menu_name=None, prompt_text=None, audio_file=None):
+    def update_menu(
+        self,
+        menu_id: str,
+        menu_name: str | None = None,
+        prompt_text: str | None = None,
+        audio_file: str | None = None,
+    ) -> bool:
         """
         Update an existing menu
 
@@ -459,7 +469,7 @@ class AutoAttendant:
             # Field names are hardcoded constants; all values use parameterized placeholders in params list
             cursor.execute(
                 f"UPDATE auto_attendant_menus SET {', '.join(updates)} WHERE menu_id = ?",  # nosec B608
-                params
+                params,
             )
 
             conn.commit()
@@ -470,7 +480,7 @@ class AutoAttendant:
             self.logger.error(f"Error updating menu: {e}")
             return False
 
-    def delete_menu(self, menu_id):
+    def delete_menu(self, menu_id: str) -> bool:
         """
         Delete a menu and all its items (CASCADE)
 
@@ -516,7 +526,7 @@ class AutoAttendant:
             self.logger.error(f"Error deleting menu: {e}")
             return False
 
-    def get_menu(self, menu_id):
+    def get_menu(self, menu_id: str) -> dict:
         """
         Get menu details
 
@@ -557,7 +567,7 @@ class AutoAttendant:
             self.logger.error(f"Error getting menu: {e}")
             return None
 
-    def list_menus(self):
+    def list_menus(self) -> list:
         """
         list all menus
 
@@ -590,7 +600,14 @@ class AutoAttendant:
             self.logger.error(f"Error listing menus: {e}")
             return []
 
-    def add_menu_item(self, menu_id, digit, destination_type, destination_value, description=""):
+    def add_menu_item(
+        self,
+        menu_id: str,
+        digit: str,
+        destination_type: str,
+        destination_value: str,
+        description: str = "",
+    ) -> bool:
         """
         Add item to a menu
 
@@ -612,10 +629,9 @@ class AutoAttendant:
                 return False
 
             # If submenu, verify it exists
-            if destination_type == "submenu":
-                if not self.get_menu(destination_value):
-                    self.logger.error(f"Submenu '{destination_value}' does not exist")
-                    return False
+            if destination_type == "submenu" and not self.get_menu(destination_value):
+                self.logger.error(f"Submenu '{destination_value}' does not exist")
+                return False
 
             conn = sqlite3.connect(self.db_path)
             cursor = conn.cursor()
@@ -637,7 +653,7 @@ class AutoAttendant:
             self.logger.error(f"Error adding menu item: {e}")
             return False
 
-    def remove_menu_item(self, menu_id, digit):
+    def remove_menu_item(self, menu_id: str, digit: str) -> bool:
         """
         Remove item from a menu
 
@@ -663,7 +679,7 @@ class AutoAttendant:
             self.logger.error(f"Error removing menu item: {e}")
             return False
 
-    def get_menu_items(self, menu_id):
+    def get_menu_items(self, menu_id: str) -> list:
         """
         Get all items for a menu
 
@@ -700,7 +716,7 @@ class AutoAttendant:
             self.logger.error(f"Error getting menu items: {e}")
             return []
 
-    def get_menu_tree(self, menu_id="main", depth=0):
+    def get_menu_tree(self, menu_id: str = "main", depth: int = 0) -> dict:
         """
         Get complete menu hierarchy as a tree
 
@@ -732,7 +748,7 @@ class AutoAttendant:
 
         return menu
 
-    def _get_menu_depth(self, menu_id, current_depth=0):
+    def _get_menu_depth(self, menu_id: str, current_depth: int = 0) -> int:
         """
         Calculate depth of a menu in the hierarchy
 
@@ -752,7 +768,7 @@ class AutoAttendant:
 
         return self._get_menu_depth(menu["parent_menu_id"], current_depth + 1)
 
-    def _would_create_circular_reference(self, menu_id, parent_menu_id):
+    def _would_create_circular_reference(self, menu_id: str, parent_menu_id: str) -> bool:
         """
         Check if setting parent would create circular reference
 
@@ -783,7 +799,7 @@ class AutoAttendant:
 
         return False
 
-    def start_session(self, call_id, from_extension):
+    def start_session(self, call_id: str, from_extension: str) -> dict:
         """
         Start an auto attendant session for a call
 
@@ -817,7 +833,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def handle_dtmf(self, session, digit):
+    def handle_dtmf(self, session: dict, digit: str) -> dict:
         """
         Handle DTMF input during auto attendant session
 
@@ -835,7 +851,7 @@ class AutoAttendant:
         session["last_input_time"] = time.time()
 
         # Special digits for navigation (only if not configured as menu options)
-        if current_state == AAState.MAIN_MENU or current_state == AAState.SUBMENU:
+        if current_state in (AAState.MAIN_MENU, AAState.SUBMENU):
             # Check if digit is a configured menu option first
             current_menu_id = session.get("current_menu_id", "main")
             menu_items = self.get_menu_items(current_menu_id)
@@ -847,17 +863,17 @@ class AutoAttendant:
 
             # If not a menu option, check for special navigation keys
             if not is_menu_option:
-                if digit == "*" or digit == "9":
+                if digit in {"*", "9"}:
                     # Go back to previous menu
                     return self._handle_go_back(session)
-                elif digit == "#":
+                if digit == "#":
                     # Repeat current menu
                     return self._handle_repeat_menu(session)
 
             # Handle menu input
             return self._handle_menu_input(session, digit)
 
-        elif current_state == AAState.INVALID:
+        if current_state == AAState.INVALID:
             # After invalid input, any key returns to menu
             current_menu_id = session.get("current_menu_id", "main")
             session["state"] = AAState.MAIN_MENU if current_menu_id == "main" else AAState.SUBMENU
@@ -871,7 +887,7 @@ class AutoAttendant:
         # Default: invalid input
         return self._handle_invalid_input(session)
 
-    def handle_timeout(self, session):
+    def handle_timeout(self, session: dict) -> dict:
         """
         Handle timeout (no input received)
 
@@ -881,9 +897,7 @@ class AutoAttendant:
         Returns:
             dict: Action to take
         """
-        self.logger.warning(
-            f"Auto attendant timeout for call {session.get('call_id')}"
-        )
+        self.logger.warning(f"Auto attendant timeout for call {session.get('call_id')}")
 
         session["retry_count"] += 1
 
@@ -903,7 +917,7 @@ class AutoAttendant:
         session["state"] = AAState.MAIN_MENU
         return {"action": "play", "file": self._get_audio_file("timeout"), "session": session}
 
-    def _handle_menu_input(self, session, digit):
+    def _handle_menu_input(self, session: dict, digit: str) -> dict:
         """
         Handle menu input (supports both legacy and new hierarchical menus)
 
@@ -933,12 +947,12 @@ class AutoAttendant:
                     # Navigate to submenu
                     return self._navigate_to_submenu(session, dest_value)
 
-                elif dest_type in ["extension", "queue", "operator"]:
+                if dest_type in ["extension", "queue", "operator"]:
                     # Transfer to destination
                     session["state"] = AAState.TRANSFERRING
                     return {"action": "transfer", "destination": dest_value, "session": session}
 
-                elif dest_type == "voicemail":
+                if dest_type == "voicemail":
                     # Transfer to voicemail
                     session["state"] = AAState.TRANSFERRING
                     return {
@@ -960,7 +974,7 @@ class AutoAttendant:
         # Invalid option
         return self._handle_invalid_input(session)
 
-    def _navigate_to_submenu(self, session, submenu_id):
+    def _navigate_to_submenu(self, session: dict, submenu_id: str) -> dict:
         """
         Navigate to a submenu
 
@@ -994,7 +1008,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def _handle_go_back(self, session):
+    def _handle_go_back(self, session: dict) -> dict:
         """
         Handle "go back" to previous menu
 
@@ -1027,7 +1041,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def _handle_repeat_menu(self, session):
+    def _handle_repeat_menu(self, session: dict) -> dict:
         """
         Repeat current menu
 
@@ -1048,7 +1062,7 @@ class AutoAttendant:
             "session": session,
         }
 
-    def _handle_invalid_input(self, session):
+    def _handle_invalid_input(self, session: dict) -> dict:
         """
         Handle invalid input
 
@@ -1075,7 +1089,7 @@ class AutoAttendant:
         session["state"] = AAState.INVALID
         return {"action": "play", "file": self._get_audio_file("invalid"), "session": session}
 
-    def _get_audio_file(self, prompt_type):
+    def _get_audio_file(self, prompt_type: str) -> str:
         """
         Get path to audio file for prompt
 
@@ -1088,10 +1102,9 @@ class AutoAttendant:
         # For submenu, check if there's a custom audio file in the menu record
         if prompt_type not in ["welcome", "main_menu", "invalid", "timeout", "transferring"]:
             menu = self.get_menu(prompt_type)
-            if menu and menu.get("audio_file"):
+            if menu and menu.get("audio_file") and Path(menu["audio_file"]).exists():
                 # Use custom audio file if specified
-                if Path(menu["audio_file"]).exists():
-                    return menu["audio_file"]
+                return menu["audio_file"]
 
         # Try to find recorded audio file first
         wav_file = Path(self.audio_path) / f"{prompt_type}.wav"
@@ -1103,7 +1116,7 @@ class AutoAttendant:
         self.logger.debug(f"No audio file found for {prompt_type}, will use generated prompt")
         return None
 
-    def get_menu_text(self):
+    def get_menu_text(self) -> str:
         """
         Get text description of menu options
 
@@ -1115,7 +1128,7 @@ class AutoAttendant:
             lines.append(f"  Press {digit}: {option['description']}")
         return "\n".join(lines)
 
-    def end_session(self, session):
+    def end_session(self, session: dict) -> None:
         """
         End auto attendant session
 
@@ -1127,7 +1140,7 @@ class AutoAttendant:
         session["state"] = AAState.ENDED
 
 
-def generate_auto_attendant_prompts(output_dir="auto_attendant"):
+def generate_auto_attendant_prompts(output_dir: str = "auto_attendant") -> None:
     """
     Generate audio prompts for auto attendant
 
@@ -1148,7 +1161,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts to generate
@@ -1168,7 +1181,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
             wav_data = generate_voice_prompt(prompt_type)
 
             # Write to file
-            with open(output_file, "wb") as f:
+            with output_file.open("wb") as f:
                 f.write(wav_data)
 
             logger.info(f"Generated {output_file}")
@@ -1180,7 +1193,9 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
     logger.info("For REAL VOICE, run: python3 scripts/generate_espeak_voices.py")
 
 
-def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
+def generate_submenu_prompt(
+    menu_id: str, prompt_text: str, output_dir: str = "auto_attendant"
+) -> str:
     """
     Generate voice prompt for a submenu
 
@@ -1204,7 +1219,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
 
             # Create output directory if needed
             if not Path(output_dir).exists():
-                os.makedirs(output_dir)
+                Path(output_dir).mkdir(parents=True, exist_ok=True)
 
             output_file = Path(output_dir) / f"{menu_id}.wav"
 
@@ -1239,7 +1254,7 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
                 )
                 # Clean up temp file
                 if tmp_mp3_path and Path(tmp_mp3_path).exists():
-                    os.unlink(tmp_mp3_path)
+                    Path(tmp_mp3_path).unlink()
                 logger.info(f"Generated submenu prompt: {output_file}")
                 return output_file
             except (FileNotFoundError, subprocess.CalledProcessError):
@@ -1258,10 +1273,8 @@ def generate_submenu_prompt(menu_id, prompt_text, output_dir="auto_attendant"):
     except (OSError, subprocess.SubprocessError) as e:
         # Clean up temp file on error
         if tmp_mp3_path and Path(tmp_mp3_path).exists():
-            try:
-                os.unlink(tmp_mp3_path)
-            except OSError:
-                pass
+            with contextlib.suppress(OSError):
+                Path(tmp_mp3_path).unlink()
         logger = get_logger()
         logger.error(f"Error generating submenu prompt: {e}")
         return None

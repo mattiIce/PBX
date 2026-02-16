@@ -1,3 +1,6 @@
+# Docker Compose configuration for Warden VoIP PBX
+# No 'version' field needed for modern Docker Compose (v2+)
+
 services:
   # =============================================================================
   # PostgreSQL Database Service
@@ -26,10 +29,17 @@ services:
     networks:
       - pbx-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pbx_user}"]
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-pbx_user} -d ${DB_NAME:-pbx_system}"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 1g
+        reservations:
+          memory: 256m
 
   # =============================================================================
   # Redis Service
@@ -39,7 +49,12 @@ services:
     image: redis:7-alpine
     container_name: pbx-redis
     restart: unless-stopped
-    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+    command: >
+      redis-server
+      --appendonly yes
+      --requirepass ${REDIS_PASSWORD:?REDIS_PASSWORD is required}
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
     volumes:
       # Persistent Redis data (AOF persistence)
       - redis_data:/data
@@ -50,10 +65,17 @@ services:
     networks:
       - pbx-network
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD}", "ping"]
       interval: 10s
       timeout: 5s
       retries: 5
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+        reservations:
+          memory: 64m
 
   # =============================================================================
   # PBX Application Service
@@ -150,6 +172,15 @@ services:
       - NET_BIND_SERVICE  # Allow binding to privileged ports
     security_opt:
       - no-new-privileges:true
+    read_only: true
+    tmpfs:
+      - /tmp:size=100M
+    deploy:
+      resources:
+        limits:
+          memory: 2g
+        reservations:
+          memory: 512m
 
 # =============================================================================
 # Network Configuration

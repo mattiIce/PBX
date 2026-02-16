@@ -8,7 +8,6 @@ to the build_audio_sdp function.
 """
 
 from typing import Any
-
 from unittest.mock import MagicMock, Mock, call
 
 from pbx.core.pbx import PBXCore
@@ -119,6 +118,7 @@ class TestDTMFPayloadTypePassthrough:
         # Should have rtpmap for 101 since it IS in the codec list
         assert "a=rtpmap:101 telephone-event/8000" in sdp
         assert "a=fmtp:101 0-16" in sdp
+
 
 class TestDTMFPayloadTypeIntegration:
     """Test DTMF payload type integration with PBX configuration"""

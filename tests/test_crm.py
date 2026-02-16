@@ -6,7 +6,6 @@ Tests CRM integration framework, screen pop support, and specific integrations (
 
 from typing import Any
 
-
 from pbx.features.crm_integration import (
     ActiveDirectoryLookupProvider,
     CallerInfo,
@@ -307,12 +306,12 @@ def test_phone_number_normalization() -> bool:
 
     # Test various formats
     assert crm._normalize_phone_number("555-1234") == "5551234", "Should remove dashes"
-    assert (
-        crm._normalize_phone_number("(555) 123-4567") == "5551234567"
-    ), "Should remove parens and spaces"
-    assert (
-        crm._normalize_phone_number("+1-555-123-4567") == "15551234567"
-    ), "Should remove plus and dashes"
+    assert crm._normalize_phone_number("(555) 123-4567") == "5551234567", (
+        "Should remove parens and spaces"
+    )
+    assert crm._normalize_phone_number("+1-555-123-4567") == "15551234567", (
+        "Should remove plus and dashes"
+    )
     assert crm._normalize_phone_number("555 123 4567") == "5551234567", "Should remove spaces"
 
     return True
@@ -468,6 +467,7 @@ class TestHubSpotIntegration:
         result = self.integration.create_deal(deal)
         assert not result
 
+
 class TestZendeskIntegration:
     """Test Zendesk integration functionality"""
 
@@ -598,6 +598,8 @@ class TestZendeskIntegration:
         # Check activity log
         logs = self.db.execute("SELECT * FROM integration_activity_log")
         assert len(logs) > 0
+
+
 # ============================================================================
 # Test Runner
 # ============================================================================
@@ -617,7 +619,4 @@ def run_framework_tests() -> bool:
     results.append(test_phone_number_normalization())
     results.append(test_provider_status())
 
-    if all(results):
-        return True
-    else:
-        return False
+    return bool(all(results))

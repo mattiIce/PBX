@@ -4,18 +4,18 @@ Provides advanced call handling for receptionists and front desk staff
 """
 
 import json
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from pbx.core.call import CallState
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class OperatorConsole:
     """Operator console for receptionists"""
 
-    def __init__(self, config: dict, pbx_core):
+    def __init__(self, config: dict, pbx_core: Any | None) -> None:
         """
         Initialize operator console
 
@@ -47,9 +47,7 @@ class OperatorConsole:
         self.vip_callers = self._load_vip_database()
 
         if self.enabled:
-            self.logger.info(
-                f"Operator console enabled for extensions: {self.operator_extensions}"
-            )
+            self.logger.info(f"Operator console enabled for extensions: {self.operator_extensions}")
 
     def is_operator(self, extension: str) -> bool:
         """
@@ -87,12 +85,12 @@ class OperatorConsole:
         # Check if extension is on a call
         active_calls = self.pbx_core.call_manager.get_active_calls()
         for call in active_calls:
-            if call.from_extension == extension or call.to_extension == extension:
+            if extension in (call.from_extension, call.to_extension):
                 from pbx.core.call import CallState
 
                 if call.state == CallState.RINGING:
                     return "ringing"
-                elif call.state == CallState.CONNECTED:
+                if call.state == CallState.CONNECTED:
                     return "busy"
 
         # Check presence status if available
@@ -151,13 +149,13 @@ class OperatorConsole:
             {
                 "call_id": call_id,
                 "operator": operator_extension,
-                "started_at": datetime.now(timezone.utc),
+                "started_at": datetime.now(UTC),
                 "original_destination": call.to_extension,
             }
         )
 
         # Intercept the call - put original destination on hold
-        if call.state == CallState.RINGING or call.state == CallState.CALLING:
+        if call.state in (CallState.RINGING, CallState.CALLING):
             # Call hasn't been answered yet, redirect to operator
             original_destination = call.to_extension
             call.to_extension = operator_extension
@@ -173,7 +171,7 @@ class OperatorConsole:
                 f"Redirected call {call_id} from {original_destination} to operator {operator_extension}"
             )
             return True
-        elif call.state == CallState.CONNECTED:
+        if call.state == CallState.CONNECTED:
             # Call already connected, put it on hold and notify operator
             call.hold()
             self.logger.info(f"Put call {call_id} on hold for operator screening")
@@ -219,7 +217,7 @@ class OperatorConsole:
         call.transfer_info["announcement"] = announcement
         call.transfer_info["target_extension"] = target_extension
         call.transfer_info["transfer_type"] = "announced"
-        call.transfer_info["initiated_at"] = datetime.now(timezone.utc).isoformat()
+        call.transfer_info["initiated_at"] = datetime.now(UTC).isoformat()
 
         # Use the existing transfer mechanism
         # In a production system, this would wait for target acknowledgment
@@ -272,7 +270,7 @@ class OperatorConsole:
 
         return None
 
-    def _send_page_notification(self, message: str, park_slot: str, method: str = "log"):
+    def _send_page_notification(self, message: str, park_slot: str, method: str = "log") -> None:
         """
         Send page notification via configured method
 
@@ -324,12 +322,12 @@ class OperatorConsole:
             {
                 "message": full_message,
                 "method": method,
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
                 "park_slot": park_slot,
             }
         )
 
-    def get_directory(self, search_query: str = None) -> list[dict]:
+    def get_directory(self, search_query: str | None = None) -> list[dict]:
         """
         Get company directory for quick lookup
 
@@ -373,17 +371,17 @@ class OperatorConsole:
         """
         if Path(self.vip_db_path).exists():
             try:
-                with open(self.vip_db_path, "r") as f:
+                with Path(self.vip_db_path).open() as f:
                     return json.load(f)
             except (OSError, ValueError, json.JSONDecodeError) as e:
                 self.logger.error(f"Failed to load VIP database: {e}")
                 return {}
         return {}
 
-    def _save_vip_database(self):
+    def _save_vip_database(self) -> bool:
         """Save VIP caller database to JSON file"""
         try:
-            with open(self.vip_db_path, "w") as f:
+            with Path(self.vip_db_path).open("w") as f:
                 json.dump(self.vip_callers, f, indent=2)
             return True
         except (OSError, ValueError, json.JSONDecodeError) as e:
@@ -391,8 +389,12 @@ class OperatorConsole:
             return False
 
     def mark_vip_caller(
-        self, caller_id: str, priority_level: int = 1, name: str = None, notes: str = None
-    ):
+        self,
+        caller_id: str,
+        priority_level: int = 1,
+        name: str | None = None,
+        notes: str | None = None,
+    ) -> bool:
         """
         Mark a caller as VIP for priority handling
 
@@ -416,8 +418,8 @@ class OperatorConsole:
             "priority_level": priority_level,
             "name": name,
             "notes": notes,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "updated_at": datetime.now(timezone.utc).isoformat(),
+            "created_at": datetime.now(UTC).isoformat(),
+            "updated_at": datetime.now(UTC).isoformat(),
         }
 
         self.vip_callers[caller_id] = vip_entry

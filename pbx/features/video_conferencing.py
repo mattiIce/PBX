@@ -4,10 +4,11 @@ HD video calls, screen sharing, and 4K video support
 """
 
 import hashlib
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class VideoConferencingEngine:
@@ -16,7 +17,7 @@ class VideoConferencingEngine:
     Supports HD/4K video, screen sharing, and multi-party conferences
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize video conferencing engine
 
@@ -152,7 +153,7 @@ class VideoConferencingEngine:
                    SET left_at = %s
                    WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
                 ),
-                (datetime.now(timezone.utc), room_id, extension),
+                (datetime.now(UTC), room_id, extension),
             )
 
             self.logger.info(f"Participant {extension} left room {room_id}")
@@ -223,18 +224,17 @@ class VideoConferencingEngine:
                 (room_id,),
             )
 
-            participants = []
-            for row in result or []:
-                participants.append(
-                    {
-                        "extension": row[2],
-                        "display_name": row[3],
-                        "joined_at": row[4],
-                        "video_enabled": bool(row[6]),
-                        "audio_enabled": bool(row[7]),
-                        "screen_sharing": bool(row[8]),
-                    }
-                )
+            participants = [
+                {
+                    "extension": row[2],
+                    "display_name": row[3],
+                    "joined_at": row[4],
+                    "video_enabled": bool(row[6]),
+                    "audio_enabled": bool(row[7]),
+                    "screen_sharing": bool(row[8]),
+                }
+                for row in result or []
+            ]
 
             return participants
 
@@ -327,20 +327,19 @@ class VideoConferencingEngine:
                 "SELECT * FROM video_conference_rooms ORDER BY created_at DESC"
             )
 
-            rooms = []
-            for row in result or []:
-                rooms.append(
-                    {
-                        "id": row[0],
-                        "room_name": row[1],
-                        "owner_extension": row[2],
-                        "max_participants": row[3],
-                        "enable_4k": bool(row[4]),
-                        "enable_screen_share": bool(row[5]),
-                        "recording_enabled": bool(row[6]),
-                        "created_at": row[8],
-                    }
-                )
+            rooms = [
+                {
+                    "id": row[0],
+                    "room_name": row[1],
+                    "owner_extension": row[2],
+                    "max_participants": row[3],
+                    "enable_4k": bool(row[4]),
+                    "enable_screen_share": bool(row[5]),
+                    "recording_enabled": bool(row[6]),
+                    "created_at": row[8],
+                }
+                for row in result or []
+            ]
 
             return rooms
 

@@ -3,7 +3,6 @@ Test API Endpoint URL Correctness
 Tests that the REST API endpoints match the URLs expected by the admin UI.
 """
 
-import os
 from pathlib import Path
 
 
@@ -15,7 +14,7 @@ class TestAPIEndpointURLs:
         """Set up the test class by reading the REST API file once"""
         # Get the path to the rest_api.py file relative to this test file
         rest_api_path = str(Path(__file__).parent.parent / "pbx" / "api" / "rest_api.py")
-        with open(rest_api_path, "r") as f:
+        with open(rest_api_path) as f:
             cls.rest_api_content = f.read()
 
     def test_dtmf_config_endpoints(self) -> None:

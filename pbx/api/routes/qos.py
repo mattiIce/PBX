@@ -1,17 +1,13 @@
 """Quality of Service (QoS) monitoring Blueprint routes."""
 
-import json
-
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
-    require_auth,
-    require_admin,
     get_request_body,
-    DateTimeEncoder,
+    require_admin,
+    require_auth,
+    send_json,
 )
 from pbx.utils.logger import get_logger
 
@@ -33,7 +29,7 @@ def handle_get_qos_metrics() -> tuple[Response, int]:
         return send_json({"active_calls": len(metrics), "metrics": metrics}), 200
     except Exception as e:
         logger.error(f"Error getting QoS metrics: {e}")
-        return send_json({"error": f"Error getting QoS metrics: {str(e)}"}, 500), 500
+        return send_json({"error": f"Error getting QoS metrics: {e!s}"}, 500), 500
 
 
 @qos_bp.route("/api/qos/alerts", methods=["GET"])
@@ -57,9 +53,9 @@ def handle_get_qos_alerts() -> tuple[Response, int]:
     except ValueError as e:
         logger.error(f"Invalid parameter for QoS alerts: {e}")
         return send_json({"error": "Invalid limit parameter, must be an integer"}, 400), 400
-    except (KeyError, TypeError, ValueError) as e:
+    except (KeyError, TypeError) as e:
         logger.error(f"Error getting QoS alerts: {e}")
-        return send_json({"error": f"Error getting QoS alerts: {str(e)}"}, 500), 500
+        return send_json({"error": f"Error getting QoS alerts: {e!s}"}, 500), 500
 
 
 @qos_bp.route("/api/qos/history", methods=["GET"])
@@ -92,9 +88,9 @@ def handle_get_qos_history() -> tuple[Response, int]:
         return send_json(
             {"error": "Invalid parameters, check limit (integer) and min_mos (float)"}, 400
         ), 400
-    except (KeyError, TypeError, ValueError) as e:
+    except (KeyError, TypeError) as e:
         logger.error(f"Error getting QoS history: {e}")
-        return send_json({"error": f"Error getting QoS history: {str(e)}"}, 500), 500
+        return send_json({"error": f"Error getting QoS history: {e!s}"}, 500), 500
 
 
 @qos_bp.route("/api/qos/statistics", methods=["GET"])
@@ -110,7 +106,7 @@ def handle_get_qos_statistics() -> tuple[Response, int]:
         return send_json(stats), 200
     except Exception as e:
         logger.error(f"Error getting QoS statistics: {e}")
-        return send_json({"error": f"Error getting QoS statistics: {str(e)}"}, 500), 500
+        return send_json({"error": f"Error getting QoS statistics: {e!s}"}, 500), 500
 
 
 @qos_bp.route("/api/qos/call/<call_id>", methods=["GET"])
@@ -125,11 +121,10 @@ def handle_get_qos_call_metrics(call_id: str) -> tuple[Response, int]:
         metrics = pbx_core.qos_monitor.get_metrics(call_id)
         if metrics:
             return send_json(metrics), 200
-        else:
-            return send_json({"error": f"No QoS metrics found for call {call_id}"}, 404), 404
+        return send_json({"error": f"No QoS metrics found for call {call_id}"}, 404), 404
     except Exception as e:
         logger.error(f"Error getting call QoS metrics: {e}")
-        return send_json({"error": f"Error getting call QoS metrics: {str(e)}"}, 500), 500
+        return send_json({"error": f"Error getting call QoS metrics: {e!s}"}, 500), 500
 
 
 @qos_bp.route("/api/qos/clear-alerts", methods=["POST"])
@@ -204,8 +199,6 @@ def handle_update_qos_thresholds() -> tuple[Response, int]:
         ), 200
     except ValueError as e:
         logger.error(f"Invalid threshold value: {e}")
-        return send_json(
-            {"error": "Invalid threshold values, must be valid numbers"}, 400
-        ), 400
-    except (KeyError, TypeError, ValueError) as e:
+        return send_json({"error": "Invalid threshold values, must be valid numbers"}, 400), 400
+    except (KeyError, TypeError) as e:
         return send_json({"error": str(e)}, 500), 500

@@ -2,18 +2,16 @@
 Tests for voicemail transcription functionality
 """
 
-import os
 import struct
 import sys
 import tempfile
 import wave
 from datetime import datetime
+from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 
-
 from pbx.features.voicemail_transcription import VoicemailTranscriptionService
-from pathlib import Path
 
 # Mock the optional dependencies before importing the module
 sys.modules["vosk"] = MagicMock()
@@ -37,10 +35,12 @@ class TestVoicemailTranscription:
         """Clean up test fixtures"""
         # Remove test files
         if Path(self.test_audio_path).exists():
-            os.remove(self.test_audio_path)
-        os.rmdir(self.temp_dir)
+            Path(self.test_audio_path).unlink(missing_ok=True)
+        Path(self.temp_dir).rmdir()
 
-    def _create_test_wav(self, filepath: str, duration: float = 1.0, sample_rate: int = 8000) -> None:
+    def _create_test_wav(
+        self, filepath: str, duration: float = 1.0, sample_rate: int = 8000
+    ) -> None:
         """
         Create a test WAV file with a simple varying amplitude wave
 
@@ -117,9 +117,9 @@ class TestVoicemailTranscription:
 
         assert not result["success"]
         assert "Unsupported transcription provider" in result["error"]
+
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
-
     def test_transcription_google_success(self, mock_speech: MagicMock) -> None:
         """Test successful Google Cloud Speech-to-Text transcription"""
         config = Mock()
@@ -163,9 +163,9 @@ class TestVoicemailTranscription:
         assert result["confidence"] == 0.95
         assert result["provider"] == "google"
         assert result["error"] is None
+
     @patch("pbx.features.voicemail_transcription.GOOGLE_SPEECH_AVAILABLE", True)
     @patch("pbx.features.voicemail_transcription.speech")
-
     def test_transcription_google_no_results(self, mock_speech: MagicMock) -> None:
         """Test Google transcription with no results"""
         config = Mock()

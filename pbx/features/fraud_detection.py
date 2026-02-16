@@ -4,7 +4,8 @@ Pattern analysis for unusual call behavior using custom algorithms
 """
 
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -12,7 +13,7 @@ from pbx.utils.logger import get_logger
 class FraudDetectionSystem:
     """System for detecting and alerting on unusual call patterns"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize fraud detection system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -58,7 +59,7 @@ class FraudDetectionSystem:
         extension = call_data.get("from")
         destination = call_data.get("to")
         duration = call_data.get("duration", 0)
-        timestamp = call_data.get("timestamp", datetime.now(timezone.utc))
+        timestamp = call_data.get("timestamp", datetime.now(UTC))
 
         # Track call
         self.call_history[extension].append(
@@ -137,7 +138,7 @@ class FraudDetectionSystem:
             return score, alerts
 
         # Count calls in last hour
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+        cutoff = datetime.now(UTC) - timedelta(hours=1)
         recent_calls = [c for c in self.call_history[extension] if c["timestamp"] > cutoff]
 
         if len(recent_calls) > self.max_calls_per_hour:
@@ -152,13 +153,13 @@ class FraudDetectionSystem:
         alerts = []
 
         # Simple check: international numbers typically start with + or 011
-        is_international = destination.startswith("+") or destination.startswith("011")
+        is_international = destination.startswith(("+", "011"))
 
         if not is_international:
             return score, alerts
 
         # Count international calls today
-        cutoff = datetime.now(timezone.utc) - timedelta(days=1)
+        cutoff = datetime.now(UTC) - timedelta(days=1)
         intl_calls = [
             c
             for c in self.call_history.get(extension, [])
@@ -212,7 +213,7 @@ class FraudDetectionSystem:
             return score, alerts
 
         # Calculate total cost today
-        cutoff = datetime.now(timezone.utc) - timedelta(days=1)
+        cutoff = datetime.now(UTC) - timedelta(days=1)
         daily_cost = sum(c["cost"] for c in self.call_history[extension] if c["timestamp"] > cutoff)
 
         if daily_cost > self.max_cost_per_day:
@@ -224,7 +225,7 @@ class FraudDetectionSystem:
     def add_blocked_pattern(self, pattern: str, reason: str) -> bool:
         """Add a number pattern to block list"""
         self.blocked_patterns.append(
-            {"pattern": pattern, "reason": reason, "added_at": datetime.now(timezone.utc)}
+            {"pattern": pattern, "reason": reason, "added_at": datetime.now(UTC)}
         )
         self.logger.info(f"Added blocked pattern: {pattern} ({reason})")
         return True
@@ -238,7 +239,7 @@ class FraudDetectionSystem:
 
     def get_alerts(self, extension: str | None = None, hours: int = 24) -> list[dict]:
         """Get recent fraud alerts"""
-        cutoff = datetime.now(timezone.utc) - timedelta(hours=hours)
+        cutoff = datetime.now(UTC) - timedelta(hours=hours)
 
         alerts = [a for a in self.alerts if a["timestamp"] > cutoff]
 
@@ -253,7 +254,7 @@ class FraudDetectionSystem:
             return {"total_calls": 0}
 
         calls = self.call_history[extension]
-        cutoff_24h = datetime.now(timezone.utc) - timedelta(days=1)
+        cutoff_24h = datetime.now(UTC) - timedelta(days=1)
         recent_calls = [c for c in calls if c["timestamp"] > cutoff_24h]
 
         return {
@@ -268,9 +269,9 @@ class FraudDetectionSystem:
             ),
         }
 
-    def cleanup_old_data(self, days: int = 30):
+    def cleanup_old_data(self, days: int = 30) -> None:
         """Clean up old call history"""
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
 
         for extension in self.call_history:
             self.call_history[extension] = [

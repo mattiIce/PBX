@@ -9,7 +9,6 @@ import socket
 import struct
 import time
 
-
 from pbx.rtp.handler import RTPRelay
 
 
@@ -42,7 +41,6 @@ def test_early_rtp_packets() -> bool:
     if not rtp_ports:
         return False
 
-
     # Set up ONLY endpoint A (simulating INVITE received but no 200 OK yet)
     expected_a = ("192.168.1.10", 5000)
     relay_handler = relay.active_relays[call_id]["handler"]
@@ -56,9 +54,6 @@ def test_early_rtp_packets() -> bool:
     sock_b = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock_b.bind(("127.0.0.1", 46001))
     sock_b.settimeout(0.5)
-
-    actual_a = ("127.0.0.1", 46000)
-    actual_b = ("127.0.0.1", 46001)
 
     # Give relay time to start
     time.sleep(0.1)
@@ -92,10 +87,10 @@ def test_early_rtp_packets() -> bool:
     time.sleep(0.05)
 
     try:
-        data_at_b, addr = sock_b.recvfrom(2048)
+        data_at_b, _addr = sock_b.recvfrom(2048)
         if not len(data_at_b) > 0:
             return False
-    except socket.timeout:
+    except TimeoutError:
         return False
 
     # Send from B, should receive at A
@@ -104,16 +99,15 @@ def test_early_rtp_packets() -> bool:
     time.sleep(0.05)
 
     try:
-        data_at_a, addr = sock_a.recvfrom(2048)
+        data_at_a, _addr = sock_a.recvfrom(2048)
         if not len(data_at_a) > 0:
             return False
-    except socket.timeout:
+    except TimeoutError:
         return False
 
     # Cleanup
     sock_a.close()
     sock_b.close()
     relay.release_relay(call_id)
-
 
     return True

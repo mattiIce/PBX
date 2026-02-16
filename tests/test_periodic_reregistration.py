@@ -10,7 +10,6 @@ Tests that the system properly checks the table first and preserves
 existing MAC, IP, and extension information instead of stripping/losing it.
 """
 
-
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
@@ -100,9 +99,7 @@ def test_periodic_reregistration_preserves_data() -> None:
 
     # Verify we only have ONE record (not multiple duplicate entries)
     all_phones = phones_db.get_by_extension("1001")
-    assert (
-        len(all_phones) == 1
-    ), f"Expected 1 phone record, got {len(all_phones)}"
+    assert len(all_phones) == 1, f"Expected 1 phone record, got {len(all_phones)}"
 
 
 def test_multiple_phones_reregistering() -> None:
@@ -131,7 +128,6 @@ def test_multiple_phones_reregistering() -> None:
     _ = phones_db.register_phone("1002", "192.168.1.101", None, "Polycom VVX")
     # Phone 3 re-registers without MAC
     _ = phones_db.register_phone("1003", "192.168.1.102", None, "Cisco SPA")
-
 
     # Verify all MACs preserved
     phone1 = phones_db.get_by_ip("192.168.1.100", "1001")

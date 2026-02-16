@@ -2,15 +2,14 @@
 """
 Tests for voicemail database integration
 """
-import os
+
 import shutil
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.voicemail import VoicemailSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_database_configuration() -> None:
@@ -23,9 +22,9 @@ def test_database_configuration() -> None:
     assert config.get("database.host") is not None, "Database host should be set"
     # Port should be an integer after env variable resolution
     db_port = config.get("database.port")
-    assert (
-        db_port == 5432 or db_port == "5432"
-    ), f"Expected port 5432, got {db_port} (type: {type(db_port)})"
+    assert db_port == 5432 or db_port == "5432", (
+        f"Expected port 5432, got {db_port} (type: {type(db_port)})"
+    )
     assert config.get("database.name") is not None, "Database name should be set"
     assert config.get("database.user") is not None, "Database user should be set"
 
@@ -34,8 +33,8 @@ def test_database_backend_initialization() -> None:
     """Test database backend initialization with SQLite fallback"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create a test config for SQLite
@@ -62,7 +61,7 @@ def test_database_backend_initialization() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_voicemail_database_integration() -> None:
@@ -70,8 +69,8 @@ def test_voicemail_database_integration() -> None:
 
     # Create temporary directories for test
     temp_dir = tempfile.mkdtemp()
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create test config with SQLite
@@ -125,7 +124,7 @@ def test_voicemail_database_integration() -> None:
         # Cleanup
         shutil.rmtree(temp_dir)
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_voicemail_without_database() -> None:
@@ -147,7 +146,6 @@ def test_voicemail_without_database() -> None:
 
         assert message_id is not None
         assert len(vm_system.get_mailbox("1001").messages) == 1
-
 
     finally:
         # Cleanup

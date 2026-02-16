@@ -14,18 +14,18 @@ Options:
 """
 
 import argparse
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
-from pathlib import Path
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Migrate extensions from config.yml to database")
     parser.add_argument(
         "--config", default="config.yml", help="Path to config file (default: config.yml)"
@@ -139,9 +139,9 @@ def main():
                     number=number,
                     name=name,
                     password_hash=password_hash,
-                    email=email if email else None,
+                    email=email or None,
                     allow_external=allow_external,
-                    voicemail_pin=voicemail_pin if voicemail_pin else None,
+                    voicemail_pin=voicemail_pin or None,
                     ad_synced=ad_synced,
                     ad_username=None,
                 )

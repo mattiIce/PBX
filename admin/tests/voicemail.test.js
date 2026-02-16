@@ -2,7 +2,7 @@
  * @jest-environment jsdom
  */
 
-const { describe, it, expect, beforeEach } = require('@jest/globals');
+import { describe, it, expect, beforeEach } from '@jest/globals';
 
 // Mock fetch and DOM
 global.fetch = jest.fn();
@@ -67,9 +67,9 @@ describe('Voicemail Management', () => {
     // Reset select element
     document.getElementById('vm-extension-select').innerHTML = '';
     // Reset section visibility
-    ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview'].forEach(id => {
+    for (const id of ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview']) {
       document.getElementById(id).style.display = '';
-    });
+    }
     document.getElementById('vm-current-extension').textContent = '';
   });
 

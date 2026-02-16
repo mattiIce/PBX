@@ -10,8 +10,10 @@ import json
 import logging
 import time
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 try:
     from cryptography import x509
@@ -61,7 +63,7 @@ class STIRSHAKENManager:
     - Verification service integration
     """
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize STIR/SHAKEN manager
 
@@ -109,10 +111,10 @@ class STIRSHAKENManager:
             f"STIR/SHAKEN initialized (signing: {self.enable_signing}, verification: {self.enable_verification})"
         )
 
-    def _load_private_key(self, key_path: str):
+    def _load_private_key(self, key_path: str) -> None:
         """Load private key from file"""
         try:
-            with open(key_path, "rb") as f:
+            with Path(key_path).open("rb") as f:
                 key_data = f.read()
                 self.private_key = serialization.load_pem_private_key(
                     key_data, password=None, backend=default_backend()
@@ -122,10 +124,10 @@ class STIRSHAKENManager:
             self.logger.error(f"Failed to load private key: {e}")
             self.enabled = False
 
-    def _load_certificate(self, cert_path: str):
+    def _load_certificate(self, cert_path: str) -> None:
         """Load certificate from file"""
         try:
-            with open(cert_path, "rb") as f:
+            with Path(cert_path).open("rb") as f:
                 cert_data = f.read()
                 self.certificate = x509.load_pem_x509_certificate(cert_data, default_backend())
             self.logger.info(f"Loaded certificate from {cert_path}")
@@ -133,17 +135,19 @@ class STIRSHAKENManager:
             self.logger.error(f"Failed to load certificate: {e}")
             self.enabled = False
 
-    def _load_ca_bundle(self, ca_path: str):
+    def _load_ca_bundle(self, ca_path: str) -> None:
         """Load CA certificate bundle"""
         try:
-            with open(ca_path, "rb") as f:
+            with Path(ca_path).open("rb") as f:
                 ca_data = f.read()
                 # Load all certificates from bundle
                 self.ca_bundle = []
                 for cert_pem in ca_data.split(b"-----END CERTIFICATE-----"):
                     if b"-----BEGIN CERTIFICATE-----" in cert_pem:
-                        cert_pem = cert_pem + b"-----END CERTIFICATE-----"
-                        cert = x509.load_pem_x509_certificate(cert_pem.strip(), default_backend())
+                        full_cert_pem = cert_pem + b"-----END CERTIFICATE-----"
+                        cert = x509.load_pem_x509_certificate(
+                            full_cert_pem.strip(), default_backend()
+                        )
                         self.ca_bundle.append(cert)
             self.logger.info(f"Loaded CA bundle with {len(self.ca_bundle)} certificates")
         except OSError as e:
@@ -154,7 +158,7 @@ class STIRSHAKENManager:
         originating_tn: str,
         destination_tn: str,
         attestation: AttestationLevel = AttestationLevel.FULL,
-        orig_id: str = None,
+        orig_id: str | None = None,
     ) -> str | None:
         """
         Create a PASSporT token (RFC 8225)
@@ -301,7 +305,7 @@ class STIRSHAKENManager:
         originating_tn: str,
         destination_tn: str,
         attestation: AttestationLevel = AttestationLevel.FULL,
-        orig_id: str = None,
+        orig_id: str | None = None,
     ) -> str | None:
         """
         Create SIP Identity header with PASSporT (RFC 8588)
@@ -344,7 +348,7 @@ class STIRSHAKENManager:
                 passport = identity_header[start:end]
             else:
                 # No quotes, take first part before semicolon
-                passport = identity_header.split(";")[0]
+                passport = identity_header.split(";", maxsplit=1)[0]
 
             # Parse parameters
             params = {}
@@ -472,7 +476,7 @@ class STIRSHAKENManager:
             if len(digits) == 10:
                 return f"+1{digits}"
             # Add + to 11+ digit numbers
-            elif len(digits) >= 11:
+            if len(digits) >= 11:
                 return f"+{digits}"
 
         return tn
@@ -495,7 +499,7 @@ class STIRSHAKENManager:
             data += "=" * padding
         return base64.urlsafe_b64decode(data)
 
-    def generate_test_certificate(self, output_dir: str = None) -> tuple[str, str]:
+    def generate_test_certificate(self, output_dir: str | None = None) -> tuple[str, str]:
         """
         Generate self-signed certificate for testing
 
@@ -532,19 +536,19 @@ class STIRSHAKENManager:
             .issuer_name(issuer)
             .public_key(private_key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.now(timezone.utc))
-            .not_valid_after(datetime.now(timezone.utc) + timedelta(days=365))
+            .not_valid_before(datetime.now(UTC))
+            .not_valid_after(datetime.now(UTC) + timedelta(days=365))
             .sign(private_key, hashes.SHA256(), default_backend())
         )
 
         # Write certificate
-        cert_path = f"{output_dir}/stir_shaken_cert.pem"
-        with open(cert_path, "wb") as f:
+        cert_path = Path(output_dir) / "stir_shaken_cert.pem"
+        with cert_path.open("wb") as f:
             f.write(cert.public_bytes(serialization.Encoding.PEM))
 
         # Write private key
-        key_path = f"{output_dir}/stir_shaken_key.pem"
-        with open(key_path, "wb") as f:
+        key_path = Path(output_dir) / "stir_shaken_key.pem"
+        with key_path.open("wb") as f:
             f.write(
                 private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
@@ -561,12 +565,12 @@ class STIRSHAKENManager:
 
 
 def add_stir_shaken_to_invite(
-    sip_message,
+    sip_message: Any,
     stir_shaken_manager: STIRSHAKENManager,
     from_number: str,
     to_number: str,
     attestation: AttestationLevel = AttestationLevel.FULL,
-):
+) -> None:
     """
     Add STIR/SHAKEN Identity header to SIP INVITE message
 
@@ -592,7 +596,7 @@ def add_stir_shaken_to_invite(
 
 
 def verify_stir_shaken_invite(
-    sip_message, stir_shaken_manager: STIRSHAKENManager
+    sip_message: Any, stir_shaken_manager: STIRSHAKENManager
 ) -> tuple[VerificationStatus, dict | None]:
     """
     Verify STIR/SHAKEN signature on incoming SIP INVITE

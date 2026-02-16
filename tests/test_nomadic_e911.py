@@ -3,8 +3,8 @@ Tests for Nomadic E911 Framework
 """
 
 from typing import Any
-import pytest
 
+import pytest
 
 from pbx.features.nomadic_e911 import NomadicE911Engine
 
@@ -303,5 +303,5 @@ class TestNomadicE911:
 
         location = self.engine.get_location("1006")
         assert location is not None
-        assert location["latitude"] == pytest.approx(42.3314, abs=10**(-4))
-        assert location["longitude"] == pytest.approx(-83.0458, abs=10**(-4))
+        assert location["latitude"] == pytest.approx(42.3314, abs=10 ** (-4))
+        assert location["longitude"] == pytest.approx(-83.0458, abs=10 ** (-4))

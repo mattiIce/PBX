@@ -25,10 +25,10 @@ import argparse
 import json
 import os
 import socket
-import sys
-from datetime import datetime, timezone
-from pathlib import Path
 import sqlite3
+import sys
+from datetime import UTC, datetime
+from pathlib import Path
 
 try:
     import psycopg2
@@ -51,17 +51,17 @@ RESET = "\033[0m"
 class HealthCheck:
     """Production health check for PBX system."""
 
-    def __init__(self, json_output=False, critical_only=False):
+    def __init__(self, json_output: bool = False, critical_only: bool = False) -> None:
         self.json_output = json_output
         self.critical_only = critical_only
         self.results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "checks": [],
             "summary": {"passed": 0, "failed": 0, "warnings": 0},
         }
         self.base_dir = Path(__file__).parent.parent
 
-    def log(self, message: str, status: str, level: str = "info"):
+    def log(self, message: str, status: str, level: str = "info") -> None:
         """Log a check result."""
         result = {"name": message, "status": status, "level": level}
         self.results["checks"].append(result)
@@ -89,7 +89,7 @@ class HealthCheck:
         except OSError:
             return False
 
-    def check_service_ports(self):
+    def check_service_ports(self) -> None:
         """Check if required service ports are listening."""
         if not self.json_output:
             print(f"\n{BLUE}=== Service Ports ==={RESET}")
@@ -106,7 +106,7 @@ class HealthCheck:
             else:
                 self.log(f"{name} (port {port}) - Not accessible", "fail", level)
 
-    def check_database(self):
+    def check_database(self) -> None:
         """Check database connectivity."""
         if not self.json_output:
             print(f"\n{BLUE}=== Database ==={RESET}")
@@ -135,9 +135,9 @@ class HealthCheck:
             if not self.critical_only and not self.json_output:
                 print(f"  Version: {version[:50]}")
         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
-            self.log(f"Database connection failed: {str(e)}", "fail", "critical")
+            self.log(f"Database connection failed: {e!s}", "fail", "critical")
 
-    def check_redis(self):
+    def check_redis(self) -> None:
         """Check Redis connectivity."""
         if not self.json_output and not self.critical_only:
             print(f"\n{BLUE}=== Redis ==={RESET}")
@@ -161,9 +161,9 @@ class HealthCheck:
             r.ping()
             self.log("Redis connectivity", "pass", "warning")
         except Exception as e:
-            self.log(f"Redis connection failed: {str(e)}", "warn", "warning")
+            self.log(f"Redis connection failed: {e!s}", "warn", "warning")
 
-    def check_disk_space(self):
+    def check_disk_space(self) -> None:
         """Check available disk space."""
         if not self.json_output and not self.critical_only:
             print(f"\n{BLUE}=== Disk Space ==={RESET}")
@@ -171,7 +171,7 @@ class HealthCheck:
         try:
             import shutil
 
-            total, used, free = shutil.disk_usage("/")
+            total, _used, free = shutil.disk_usage("/")
             free_percent = (free / total) * 100
 
             if free_percent < 10:
@@ -181,18 +181,16 @@ class HealthCheck:
             else:
                 self.log(f"Disk space: {free_percent:.1f}% free", "pass", "info")
         except OSError as e:
-            self.log(f"Could not check disk space: {str(e)}", "warn", "warning")
+            self.log(f"Could not check disk space: {e!s}", "warn", "warning")
 
-    def check_memory(self):
+    def check_memory(self) -> None:
         """Check available memory."""
         if not self.json_output and not self.critical_only:
             print(f"\n{BLUE}=== Memory ==={RESET}")
 
         try:
             with open("/proc/meminfo") as f:
-                meminfo = dict(
-                    (line.split()[0].rstrip(":"), int(line.split()[1])) for line in f.readlines()
-                )
+                meminfo = {line.split()[0].rstrip(":"): int(line.split()[1]) for line in f}
 
             mem_total = meminfo.get("MemTotal", 0)
             mem_available = meminfo.get("MemAvailable", 0)
@@ -211,9 +209,9 @@ class HealthCheck:
                 else:
                     self.log(f"Memory: {available_percent:.1f}% available", "pass", "info")
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.log(f"Could not check memory: {str(e)}", "warn", "warning")
+            self.log(f"Could not check memory: {e!s}", "warn", "warning")
 
-    def check_ssl_certificate(self):
+    def check_ssl_certificate(self) -> None:
         """Check SSL certificate validity."""
         if not self.json_output and not self.critical_only:
             print(f"\n{BLUE}=== SSL Certificate ==={RESET}")
@@ -236,13 +234,13 @@ class HealthCheck:
                     self.log(f"SSL certificate found at {cert_path}", "pass", "warning")
                     break
                 except OSError as e:
-                    self.log(f"Could not validate certificate: {str(e)}", "warn", "warning")
+                    self.log(f"Could not validate certificate: {e!s}", "warn", "warning")
                     break
 
         if not cert_found:
             self.log("No SSL certificate found", "warn", "warning")
 
-    def check_config_files(self):
+    def check_config_files(self) -> None:
         """Check configuration files exist and are valid."""
         if not self.json_output and not self.critical_only:
             print(f"\n{BLUE}=== Configuration ==={RESET}")
@@ -258,7 +256,7 @@ class HealthCheck:
                     yaml.safe_load(f)
                 self.log("config.yml is valid YAML", "pass", "critical")
             except OSError as e:
-                self.log(f"config.yml is invalid: {str(e)}", "fail", "critical")
+                self.log(f"config.yml is invalid: {e!s}", "fail", "critical")
         else:
             self.log("config.yml not found", "fail", "critical")
 
@@ -269,7 +267,7 @@ class HealthCheck:
         else:
             self.log(".env file not found (optional)", "warn", "info")
 
-    def run_all_checks(self):
+    def run_all_checks(self) -> None:
         """Run all health checks."""
         self.check_service_ports()
         self.check_database()
@@ -279,7 +277,7 @@ class HealthCheck:
         self.check_ssl_certificate()
         self.check_config_files()
 
-    def print_summary(self):
+    def print_summary(self) -> int:
         """Print summary of results."""
         if self.json_output:
             print(json.dumps(self.results, indent=2))
@@ -292,22 +290,21 @@ class HealthCheck:
             if self.results["summary"]["failed"] > 0:
                 print(f"\n{RED}Status: UNHEALTHY (critical failures detected){RESET}")
                 return 1
-            elif self.results["summary"]["warnings"] > 0:
+            if self.results["summary"]["warnings"] > 0:
                 print(f"\n{YELLOW}Status: DEGRADED (warnings detected){RESET}")
                 return 2
-            else:
-                print(f"\n{GREEN}Status: HEALTHY{RESET}")
-                return 0
+            print(f"\n{GREEN}Status: HEALTHY{RESET}")
+            return 0
 
         # Return exit code based on failures
         if self.results["summary"]["failed"] > 0:
             return 1
-        elif self.results["summary"]["warnings"] > 0:
+        if self.results["summary"]["warnings"] > 0:
             return 2
         return 0
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="PBX Production Health Check")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
     parser.add_argument("--critical-only", action="store_true", help="Only show critical checks")

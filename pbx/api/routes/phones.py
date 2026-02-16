@@ -5,16 +5,13 @@ Handles phone lookup by MAC/IP address and phone reboot operations.
 
 import re
 
-from flask import Blueprint, Response, jsonify, request
+from flask import Blueprint, Response
 
 from pbx.api.utils import (
-    DateTimeEncoder,
     get_pbx_core,
-    get_request_body,
     require_admin,
     require_auth,
     send_json,
-    verify_authentication,
 )
 from pbx.features.phone_provisioning import normalize_mac_address
 from pbx.utils.logger import get_logger
@@ -65,10 +62,7 @@ def handle_phone_lookup(identifier: str) -> Response:
                 result["provisioned_device"] = device.to_dict()
 
         # Check registered phones
-        if (
-            hasattr(pbx_core, "registered_phones_db")
-            and pbx_core.registered_phones_db
-        ):
+        if hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
             try:
                 phone = pbx_core.registered_phones_db.get_by_mac(normalized_mac)
                 if phone:
@@ -81,10 +75,7 @@ def handle_phone_lookup(identifier: str) -> Response:
         result["type"] = "ip"
 
         # Check registered phones first
-        if (
-            hasattr(pbx_core, "registered_phones_db")
-            and pbx_core.registered_phones_db
-        ):
+        if hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
             try:
                 phone = pbx_core.registered_phones_db.get_by_ip(identifier)
                 if phone:
@@ -158,7 +149,7 @@ def handle_reboot_phones() -> Response:
         return send_json(
             {
                 "success": True,
-                "message": f'Rebooted {results["success_count"]} phones',
+                "message": f"Rebooted {results['success_count']} phones",
                 "rebooted": results["rebooted"],
                 "failed": results["failed"],
                 "success_count": results["success_count"],
@@ -179,20 +170,17 @@ def handle_reboot_phone(extension: str) -> Response:
 
     try:
         # Send SIP NOTIFY to reboot the phone
-        success = pbx_core.phone_provisioning.reboot_phone(
-            extension, pbx_core.sip_server
-        )
+        success = pbx_core.phone_provisioning.reboot_phone(extension, pbx_core.sip_server)
 
         if success:
             return send_json(
                 {"success": True, "message": f"Reboot signal sent to extension {extension}"}
             )
-        else:
-            return send_json(
-                {
-                    "error": f"Failed to send reboot signal to extension {extension}. Extension may not be registered."
-                },
-                400,
-            )
+        return send_json(
+            {
+                "error": f"Failed to send reboot signal to extension {extension}. Extension may not be registered."
+            },
+            400,
+        )
     except Exception as e:
         return send_json({"error": str(e)}, 500)

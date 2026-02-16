@@ -2,12 +2,12 @@
 Voicemail system
 """
 
-import os
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger, get_vm_ivr_logger
-import sqlite3
-from pathlib import Path
 
 try:
     from pbx.features.email_notification import EmailNotifier
@@ -17,8 +17,6 @@ except ImportError:
     EMAIL_NOTIFIER_AVAILABLE = False
 
 try:
-    pass
-
     TRANSCRIPTION_AVAILABLE = True
 except ImportError:
     TRANSCRIPTION_AVAILABLE = False
@@ -44,6 +42,8 @@ MIN_WAV_HEADER_SIZE = 12  # Minimum size for RIFF/WAVE header check
 
 # Cache the debug PIN logging flag at module level to avoid repeated environment lookups
 # This value is set once when the module is loaded and doesn't change during runtime
+import os
+
 _DEBUG_PIN_LOGGING_ENABLED = os.environ.get("DEBUG_VM_PIN", "false").lower() in ("true", "1", "yes")
 
 
@@ -52,13 +52,13 @@ class VoicemailBox:
 
     def __init__(
         self,
-        extension_number,
-        storage_path="voicemail",
-        config=None,
-        email_notifier=None,
-        database=None,
-        transcription_service=None,
-    ):
+        extension_number: str,
+        storage_path: str = "voicemail",
+        config: Any | None = None,
+        email_notifier: Any | None = None,
+        database: Any | None = None,
+        transcription_service: Any | None = None,
+    ) -> None:
         """
         Initialize voicemail box
 
@@ -115,18 +115,18 @@ class VoicemailBox:
                     )
 
         # Create storage directory
-        os.makedirs(self.storage_path, exist_ok=True)
+        Path(self.storage_path).mkdir(parents=True, exist_ok=True)
 
         # Load existing messages from disk
         self._load_messages()
 
-    def _get_db_placeholder(self):
+    def _get_db_placeholder(self) -> str:
         """Get database parameter placeholder based on database type"""
         if self.database and self.database.db_type == "postgresql":
             return "%s"
         return "?"
 
-    def save_message(self, caller_id, audio_data, duration=None):
+    def save_message(self, caller_id: str, audio_data: bytes, duration: float | None = None) -> str:
         """
         Save voicemail message
 
@@ -138,7 +138,7 @@ class VoicemailBox:
         Returns:
             Message ID
         """
-        timestamp = datetime.now(timezone.utc)
+        timestamp = datetime.now(UTC)
         timestamp_str = timestamp.strftime("%Y%m%d_%H%M%S")
         message_id = f"{caller_id}_{timestamp_str}"
 
@@ -157,9 +157,7 @@ class VoicemailBox:
         }
 
         self.messages.append(message)
-        self.logger.info(
-            f"Voicemail saved to file system for extension {self.extension_number}"
-        )
+        self.logger.info(f"Voicemail saved to file system for extension {self.extension_number}")
         self.logger.info(f"  Message ID: {message_id}")
         self.logger.info(f"  Caller ID: {caller_id}")
         self.logger.info(f"  File path: {file_path}")
@@ -170,14 +168,11 @@ class VoicemailBox:
             self.logger.info("Saving voicemail metadata to database...")
             try:
                 placeholder = self._get_db_placeholder()
-                query = """
+                query = f"""
                 INSERT INTO voicemail_messages
                 (message_id, extension_number, caller_id, file_path, duration, listened, created_at)
-                VALUES ({}, {}, {}, {}, {}, {}, {})
-                """.format(  # nosec B608 - placeholder is safely parameterized
-                    placeholder, placeholder, placeholder, placeholder,
-                    placeholder, placeholder, placeholder
-                )
+                VALUES ({placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder}, {placeholder})
+                """  # nosec B608 - placeholder is safely parameterized
 
                 params = (
                     message_id,
@@ -220,9 +215,7 @@ class VoicemailBox:
 
             if transcription_result["success"]:
                 self.logger.info("✓ Voicemail transcribed successfully")
-                self.logger.info(
-                    f"  Confidence: {transcription_result['confidence']:.2%}"
-                )
+                self.logger.info(f"  Confidence: {transcription_result['confidence']:.2%}")
                 self.logger.debug(f"  Text: {transcription_result['text'][:100]}...")
 
                 # Add transcription to message
@@ -236,18 +229,15 @@ class VoicemailBox:
                 if self.database and self.database.enabled:
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = """
+                        query = f"""
                         UPDATE voicemail_messages
-                        SET transcription_text = {},
-                            transcription_confidence = {},
-                            transcription_language = {},
-                            transcription_provider = {},
-                            transcribed_at = {}
-                        WHERE message_id = {}
-                        """.format(  # nosec B608 - placeholder is safely parameterized
-                            placeholder, placeholder, placeholder,
-                            placeholder, placeholder, placeholder
-                        )
+                        SET transcription_text = {placeholder},
+                            transcription_confidence = {placeholder},
+                            transcription_language = {placeholder},
+                            transcription_provider = {placeholder},
+                            transcribed_at = {placeholder}
+                        WHERE message_id = {placeholder}
+                        """  # nosec B608 - placeholder is safely parameterized
                         self.database.execute(
                             query,
                             (
@@ -334,7 +324,7 @@ class VoicemailBox:
 
         return message_id
 
-    def get_messages(self, unread_only=False):
+    def get_messages(self, unread_only: bool = False) -> list:
         """
         Get voicemail messages
 
@@ -348,7 +338,7 @@ class VoicemailBox:
             return [msg for msg in self.messages if not msg["listened"]]
         return self.messages
 
-    def mark_listened(self, message_id):
+    def mark_listened(self, message_id: str) -> None:
         """
         Mark message as listened
 
@@ -365,13 +355,11 @@ class VoicemailBox:
                     self.logger.info("Updating voicemail listened status in database...")
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = """
+                        query = f"""
                         UPDATE voicemail_messages
-                        SET listened = {}
-                        WHERE message_id = {}
-                        """.format(  # nosec B608 - placeholder is safely parameterized
-                            placeholder, placeholder
-                        )
+                        SET listened = {placeholder}
+                        WHERE message_id = {placeholder}
+                        """  # nosec B608 - placeholder is safely parameterized
                         self.database.execute(query, (True, message_id))
                         self.logger.info(
                             f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database"
@@ -385,7 +373,7 @@ class VoicemailBox:
 
                 break
 
-    def delete_message(self, message_id):
+    def delete_message(self, message_id: str) -> bool:
         """
         Delete message
 
@@ -401,22 +389,18 @@ class VoicemailBox:
 
                 # Delete file
                 if Path(msg["file_path"]).exists():
-                    os.remove(msg["file_path"])
-                    self.logger.info(
-                        f"  ✓ Deleted audio file: {msg['file_path']}"
-                    )
+                    Path(msg["file_path"]).unlink()
+                    self.logger.info(f"  ✓ Deleted audio file: {msg['file_path']}")
 
                 # Delete from database if available
                 if self.database and self.database.enabled:
                     self.logger.info("Deleting voicemail from database...")
                     try:
                         placeholder = self._get_db_placeholder()
-                        query = """
+                        query = f"""
                         DELETE FROM voicemail_messages
-                        WHERE message_id = {}
-                        """.format(  # nosec B608 - placeholder is safely parameterized
-                            placeholder
-                        )
+                        WHERE message_id = {placeholder}
+                        """  # nosec B608 - placeholder is safely parameterized
                         self.database.execute(query, (message_id,))
                         self.logger.info(
                             f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database"
@@ -432,7 +416,7 @@ class VoicemailBox:
                 return True
         return False
 
-    def _load_messages(self):
+    def _load_messages(self) -> None:
         """Load existing voicemail messages from database or disk"""
         # Try loading from database first if available
         if self.database and self.database.enabled:
@@ -443,16 +427,14 @@ class VoicemailBox:
                 placeholder = self._get_db_placeholder()
                 # Build query safely - placeholder is only '%s' or '?' from
                 # internal method
-                query = """
+                query = f"""
                 SELECT message_id, caller_id, file_path, duration, listened, created_at,
                        transcription_text, transcription_confidence, transcription_language,
                        transcription_provider, transcribed_at
                 FROM voicemail_messages
-                WHERE extension_number = {}
+                WHERE extension_number = {placeholder}
                 ORDER BY created_at DESC
-                """.format(  # nosec B608 - placeholder is safely parameterized
-                    placeholder
-                )
+                """  # nosec B608 - placeholder is safely parameterized
                 self.logger.debug(  # nosec B608 - log statement only
                     f"  Query: SELECT from voicemail_messages WHERE extension_number = {self.extension_number}"
                 )
@@ -471,7 +453,9 @@ class VoicemailBox:
                                 # Try common timestamp formats
                                 for fmt in ["%Y-%m-%d %H:%M:%S.%", "%Y-%m-%d %H:%M:%S"]:
                                     try:
-                                        timestamp = datetime.strptime(timestamp, fmt)
+                                        timestamp = datetime.strptime(timestamp, fmt).replace(
+                                            tzinfo=UTC
+                                        )
                                         break
                                     except ValueError:
                                         continue
@@ -481,12 +465,12 @@ class VoicemailBox:
                                     self.logger.warning(
                                         f"Could not parse timestamp '{timestamp}' for voicemail {row['message_id']}, using current time"
                                     )
-                                    timestamp = datetime.now(timezone.utc)
+                                    timestamp = datetime.now(UTC)
                         except ValueError:
                             self.logger.warning(
                                 f"Invalid timestamp format for voicemail {row['message_id']}, using current time"
                             )
-                            timestamp = datetime.now(timezone.utc)
+                            timestamp = datetime.now(UTC)
 
                     message = {
                         "id": row["message_id"],
@@ -530,7 +514,8 @@ class VoicemailBox:
         if not Path(self.storage_path).exists():
             return
 
-        for filename in os.listdir(self.storage_path):
+        for entry in Path(self.storage_path).iterdir():
+            filename = entry.name
             if filename.endswith(".wav"):
                 file_path = Path(self.storage_path) / filename
                 # Parse message info from filename: {caller_id}_{timestamp}.wav
@@ -543,7 +528,9 @@ class VoicemailBox:
                     time_str = parts[2]
 
                     try:
-                        timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+                        timestamp = datetime.strptime(
+                            f"{date_str}_{time_str}", "%Y%m%d_%H%M%S"
+                        ).replace(tzinfo=UTC)
 
                         message = {
                             "id": name_without_ext,
@@ -560,7 +547,7 @@ class VoicemailBox:
                             f"Could not parse timestamp from voicemail file: {filename}"
                         )
 
-    def set_pin(self, pin):
+    def set_pin(self, pin: str) -> bool:
         """
         set voicemail PIN
 
@@ -571,18 +558,14 @@ class VoicemailBox:
             True if PIN was set successfully
         """
         if not pin or len(str(pin)) != 4 or not str(pin).isdigit():
-            self.logger.warning(
-                f"Invalid PIN format for extension {self.extension_number}"
-            )
+            self.logger.warning(f"Invalid PIN format for extension {self.extension_number}")
             return False
 
         self.pin = str(pin)
-        self.logger.info(
-            f"Updated voicemail PIN for extension {self.extension_number}"
-        )
+        self.logger.info(f"Updated voicemail PIN for extension {self.extension_number}")
         return True
 
-    def verify_pin(self, pin):
+    def verify_pin(self, pin: str) -> bool:
         """
         Verify voicemail PIN
 
@@ -610,7 +593,7 @@ class VoicemailBox:
         # No PIN configured
         return False
 
-    def has_custom_greeting(self):
+    def has_custom_greeting(self) -> bool:
         """
         Check if a custom greeting has been recorded
 
@@ -624,7 +607,7 @@ class VoicemailBox:
         )
         return exists
 
-    def save_greeting(self, audio_data):
+    def save_greeting(self, audio_data: bytes) -> bool:
         """
         Save custom voicemail greeting
 
@@ -641,11 +624,12 @@ class VoicemailBox:
                 return False
 
             # Check for complete WAV/RIFF header (warn but don't fail for tests)
-            if len(audio_data) >= MIN_WAV_HEADER_SIZE:
-                if not (audio_data.startswith(b"RIFF") and audio_data[8:12] == b"WAVE"):
-                    self.logger.warning(
-                        "Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
-                    )
+            if len(audio_data) >= MIN_WAV_HEADER_SIZE and not (
+                audio_data.startswith(b"RIFF") and audio_data[8:12] == b"WAVE"
+            ):
+                self.logger.warning(
+                    "Audio data may not be in WAV format (invalid or missing RIFF/WAVE header)"
+                )
 
             with open(self.greeting_path, "wb") as f:
                 f.write(audio_data)
@@ -658,16 +642,13 @@ class VoicemailBox:
                 file_size = Path(self.greeting_path).stat().st_size
                 self.logger.info(f"Verified greeting file exists on disk ({file_size} bytes)")
                 return True
-            else:
-                self.logger.error(f"Greeting file was not created at {self.greeting_path}")
-                return False
+            self.logger.error(f"Greeting file was not created at {self.greeting_path}")
+            return False
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.logger.error(
-                f"Error saving greeting for extension {self.extension_number}: {e}"
-            )
+            self.logger.error(f"Error saving greeting for extension {self.extension_number}: {e}")
             return False
 
-    def get_greeting_path(self):
+    def get_greeting_path(self) -> Path | None:
         """
         Get path to custom greeting file
 
@@ -682,7 +663,7 @@ class VoicemailBox:
         self.logger.debug(f"No custom greeting for extension {self.extension_number}")
         return None
 
-    def delete_greeting(self):
+    def delete_greeting(self) -> bool:
         """
         Delete custom greeting
 
@@ -691,23 +672,24 @@ class VoicemailBox:
         """
         try:
             if Path(self.greeting_path).exists():
-                os.remove(self.greeting_path)
-                self.logger.info(
-                    f"Deleted custom greeting for extension {self.extension_number}"
-                )
+                Path(self.greeting_path).unlink()
+                self.logger.info(f"Deleted custom greeting for extension {self.extension_number}")
                 return True
             return False
         except OSError as e:
-            self.logger.error(
-                f"Error deleting greeting for extension {self.extension_number}: {e}"
-            )
+            self.logger.error(f"Error deleting greeting for extension {self.extension_number}: {e}")
             return False
 
 
 class VoicemailSystem:
     """Manages voicemail for all extensions"""
 
-    def __init__(self, storage_path="voicemail", config=None, database=None):
+    def __init__(
+        self,
+        storage_path: str = "voicemail",
+        config: Any | None = None,
+        database: Any | None = None,
+    ) -> None:
         """
         Initialize voicemail system
 
@@ -730,9 +712,9 @@ class VoicemailSystem:
             except Exception as e:
                 self.logger.error(f"Failed to initialize email notifier: {e}")
 
-        os.makedirs(storage_path, exist_ok=True)
+        Path(storage_path).mkdir(parents=True, exist_ok=True)
 
-    def get_mailbox(self, extension_number):
+    def get_mailbox(self, extension_number: str) -> VoicemailBox:
         """
         Get or create mailbox for extension
 
@@ -752,7 +734,13 @@ class VoicemailSystem:
             )
         return self.mailboxes[extension_number]
 
-    def save_message(self, extension_number, caller_id, audio_data, duration=None):
+    def save_message(
+        self,
+        extension_number: str,
+        caller_id: str,
+        audio_data: bytes,
+        duration: float | None = None,
+    ) -> str:
         """
         Save voicemail message
 
@@ -768,7 +756,7 @@ class VoicemailSystem:
         mailbox = self.get_mailbox(extension_number)
         return mailbox.save_message(caller_id, audio_data, duration)
 
-    def send_daily_reminders(self):
+    def send_daily_reminders(self) -> int:
         """
         Send daily reminders for unread voicemails
 
@@ -785,15 +773,14 @@ class VoicemailSystem:
                 extension_config = self.config.get_extension(extension_number)
                 if extension_config:
                     email_address = extension_config.get("email")
-                    if email_address:
-                        if self.email_notifier.send_reminder(
-                            email_address, extension_number, len(unread_messages), unread_messages
-                        ):
-                            count += 1
+                    if email_address and self.email_notifier.send_reminder(
+                        email_address, extension_number, len(unread_messages), unread_messages
+                    ):
+                        count += 1
 
         return count
 
-    def get_message_count(self, extension_number, unread_only=True):
+    def get_message_count(self, extension_number: str, unread_only: bool = True) -> int:
         """
         Get message count for extension
 
@@ -825,7 +812,7 @@ class VoicemailIVR:
     STATE_GREETING_REVIEW = "greeting_review"
     STATE_GOODBYE = "goodbye"
 
-    def __init__(self, voicemail_system: VoicemailSystem, extension_number: str):
+    def __init__(self, voicemail_system: VoicemailSystem, extension_number: str) -> None:
         """
         Initialize voicemail IVR for an extension
 
@@ -874,22 +861,21 @@ class VoicemailIVR:
 
         if self.state == self.STATE_WELCOME:
             return self._handle_welcome(digit)
-        elif self.state == self.STATE_PIN_ENTRY:
+        if self.state == self.STATE_PIN_ENTRY:
             return self._handle_pin_entry(digit)
-        elif self.state == self.STATE_MAIN_MENU:
+        if self.state == self.STATE_MAIN_MENU:
             return self._handle_main_menu(digit)
-        elif self.state == self.STATE_PLAYING_MESSAGE:
+        if self.state == self.STATE_PLAYING_MESSAGE:
             return self._handle_playing_message(digit)
-        elif self.state == self.STATE_MESSAGE_MENU:
+        if self.state == self.STATE_MESSAGE_MENU:
             return self._handle_message_menu(digit)
-        elif self.state == self.STATE_OPTIONS_MENU:
+        if self.state == self.STATE_OPTIONS_MENU:
             return self._handle_options_menu(digit)
-        elif self.state == self.STATE_RECORDING_GREETING:
+        if self.state == self.STATE_RECORDING_GREETING:
             return self._handle_recording_greeting(digit)
-        elif self.state == self.STATE_GREETING_REVIEW:
+        if self.state == self.STATE_GREETING_REVIEW:
             return self._handle_greeting_review(digit)
-        else:
-            return {"action": "unknown_state", "prompt": "goodbye"}
+        return {"action": "unknown_state", "prompt": "goodbye"}
 
     def _handle_welcome(self, digit: str) -> dict:
         """Handle welcome state"""
@@ -944,25 +930,24 @@ class VoicemailIVR:
                     "prompt": "main_menu",
                     "message": f"You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit",
                 }
-            else:
-                self.pin_attempts += 1
-                self.logger.warning(
-                    f"[VM IVR PIN] ✗ Invalid PIN attempt {self.pin_attempts}/{self.max_pin_attempts}"
-                )
-                if self.pin_attempts >= self.max_pin_attempts:
-                    self.state = self.STATE_GOODBYE
-                    self.logger.warning("[VM IVR PIN] Maximum PIN attempts reached, hanging up")
-                    return {
-                        "action": "hangup",
-                        "prompt": "goodbye",
-                        "message": "Too many failed attempts. Goodbye.",
-                    }
+            self.pin_attempts += 1
+            self.logger.warning(
+                f"[VM IVR PIN] ✗ Invalid PIN attempt {self.pin_attempts}/{self.max_pin_attempts}"
+            )
+            if self.pin_attempts >= self.max_pin_attempts:
+                self.state = self.STATE_GOODBYE
+                self.logger.warning("[VM IVR PIN] Maximum PIN attempts reached, hanging up")
                 return {
-                    "action": "play_prompt",
-                    "prompt": "invalid_pin",
-                    "message": "Invalid PIN. Please try again.",
+                    "action": "hangup",
+                    "prompt": "goodbye",
+                    "message": "Too many failed attempts. Goodbye.",
                 }
-        elif digit in "0123456789":
+            return {
+                "action": "play_prompt",
+                "prompt": "invalid_pin",
+                "message": "Invalid PIN. Please try again.",
+            }
+        if digit in "0123456789":
             # Collect PIN digit (limit length to prevent abuse)
             if len(self.entered_pin) < 10:  # Max 10 digits
                 self.entered_pin += digit
@@ -976,10 +961,9 @@ class VoicemailIVR:
                         f"[VM IVR PIN DEBUG] ⚠️  TESTING ONLY - Digit '{digit}' collected, current PIN buffer: '{self.entered_pin}'"
                     )
             return {"action": "collect_digit", "prompt": "continue"}
-        else:
-            # Invalid input, ignore
-            self.logger.debug(f"[VM IVR PIN] Ignoring invalid digit: {digit}")
-            return {"action": "collect_digit", "prompt": "continue"}
+        # Invalid input, ignore
+        self.logger.debug(f"[VM IVR PIN] Ignoring invalid digit: {digit}")
+        return {"action": "collect_digit", "prompt": "continue"}
 
     def _handle_main_menu(self, digit: str) -> dict:
         """Handle main menu state"""
@@ -999,14 +983,13 @@ class VoicemailIVR:
                     "file_path": msg["file_path"],
                     "caller_id": msg["caller_id"],
                 }
-            else:
-                return {
-                    "action": "play_prompt",
-                    "prompt": "no_messages",
-                    "message": "You have no messages",
-                }
+            return {
+                "action": "play_prompt",
+                "prompt": "no_messages",
+                "message": "You have no messages",
+            }
 
-        elif digit == "2":
+        if digit == "2":
             # Options menu
             self.state = self.STATE_OPTIONS_MENU
             return {
@@ -1015,7 +998,7 @@ class VoicemailIVR:
                 "message": "Press 1 to record greeting, * to return to main menu",
             }
 
-        elif digit == "*":
+        if digit == "*":
             # Exit
             self.state = self.STATE_GOODBYE
             return {"action": "hangup", "prompt": "goodbye", "message": "Goodbye"}
@@ -1049,7 +1032,7 @@ class VoicemailIVR:
                 "caller_id": msg["caller_id"],
             }
 
-        elif digit == "2":
+        if digit == "2":
             # Next message
             self.current_message_index += 1
             if self.current_message_index < len(self.current_messages):
@@ -1061,15 +1044,14 @@ class VoicemailIVR:
                     "file_path": msg["file_path"],
                     "caller_id": msg["caller_id"],
                 }
-            else:
-                self.state = self.STATE_MAIN_MENU
-                return {
-                    "action": "play_prompt",
-                    "prompt": "no_more_messages",
-                    "message": "No more messages. Returning to main menu.",
-                }
+            self.state = self.STATE_MAIN_MENU
+            return {
+                "action": "play_prompt",
+                "prompt": "no_more_messages",
+                "message": "No more messages. Returning to main menu.",
+            }
 
-        elif digit == "3":
+        if digit == "3":
             # Delete current message
             msg = self.current_messages[self.current_message_index]
             self.mailbox.delete_message(msg["id"])
@@ -1085,15 +1067,14 @@ class VoicemailIVR:
                     "file_path": msg["file_path"],
                     "caller_id": msg["caller_id"],
                 }
-            else:
-                self.state = self.STATE_MAIN_MENU
-                return {
-                    "action": "play_prompt",
-                    "prompt": "message_deleted",
-                    "message": "Message deleted. Returning to main menu.",
-                }
+            self.state = self.STATE_MAIN_MENU
+            return {
+                "action": "play_prompt",
+                "prompt": "message_deleted",
+                "message": "Message deleted. Returning to main menu.",
+            }
 
-        elif digit == "*":
+        if digit == "*":
             # Return to main menu
             self.state = self.STATE_MAIN_MENU
             unread_count = len(self.mailbox.get_messages(unread_only=True))
@@ -1121,7 +1102,7 @@ class VoicemailIVR:
                 "message": "Record your greeting after the tone. Press # when finished.",
             }
 
-        elif digit == "*":
+        if digit == "*":
             # Return to main menu
             self.state = self.STATE_MAIN_MENU
             unread_count = len(self.mailbox.get_messages(unread_only=True))
@@ -1162,7 +1143,7 @@ class VoicemailIVR:
                 "message": "Playing your greeting...",
             }
 
-        elif digit == "2":
+        if digit == "2":
             # Re-record the greeting
             self.recorded_greeting_data = None  # Clear previous recording
             self.state = self.STATE_RECORDING_GREETING
@@ -1173,7 +1154,7 @@ class VoicemailIVR:
                 "message": "Record your greeting after the tone. Press # when finished.",
             }
 
-        elif digit == "3":
+        if digit == "3":
             # Delete greeting and use default
             self.recorded_greeting_data = None
             if self.mailbox.has_custom_greeting():
@@ -1186,7 +1167,7 @@ class VoicemailIVR:
                 "message": f"Custom greeting deleted, using default. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit",
             }
 
-        elif digit == "*":
+        if digit == "*":
             # Save the greeting and return to main menu
             if self.recorded_greeting_data:
                 try:
@@ -1200,15 +1181,14 @@ class VoicemailIVR:
                             "prompt": "greeting_saved",
                             "message": f"Greeting saved. You have {unread_count} new messages. Press 1 to listen, 2 for options, * to exit",
                         }
-                    else:
-                        self.logger.error(
-                            f"Failed to save greeting for extension {self.extension_number}"
-                        )
-                        return {
-                            "action": "play_prompt",
-                            "prompt": "error",
-                            "message": "Error saving greeting. Press 2 to try again or 3 to cancel.",
-                        }
+                    self.logger.error(
+                        f"Failed to save greeting for extension {self.extension_number}"
+                    )
+                    return {
+                        "action": "play_prompt",
+                        "prompt": "error",
+                        "message": "Error saving greeting. Press 2 to try again or 3 to cancel.",
+                    }
                 except Exception as e:
                     self.logger.error(f"Error saving greeting: {e}")
                     return {
@@ -1230,7 +1210,7 @@ class VoicemailIVR:
             "message": "Invalid option. Press 1 to listen, 2 to re-record, 3 to delete, * to save.",
         }
 
-    def save_recorded_greeting(self, audio_data):
+    def save_recorded_greeting(self, audio_data: bytes) -> bool:
         """
         Save the recorded greeting temporarily for review
 
@@ -1243,7 +1223,7 @@ class VoicemailIVR:
         self.recorded_greeting_data = audio_data
         return True
 
-    def get_recorded_greeting(self):
+    def get_recorded_greeting(self) -> bytes | None:
         """
         Get the temporarily stored greeting for playback
 

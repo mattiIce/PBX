@@ -40,23 +40,23 @@ function setupAutoRefresh(tabName: string): void {
     // Define which tabs should auto-refresh and their refresh functions
     const autoRefreshTabs: Record<string, () => void> = {
         // System Overview
-        'dashboard': () => window.loadDashboard && window.loadDashboard(),
-        'analytics': () => window.loadAnalytics && window.loadAnalytics(),
+        'dashboard': () => window.loadDashboard?.(),
+        'analytics': () => window.loadAnalytics?.(),
 
         // Communication & Calls
-        'calls': () => window.loadCalls && window.loadCalls(),
-        'qos': () => window.loadQoSMetrics && window.loadQoSMetrics(),
+        'calls': () => window.loadCalls?.(),
+        'qos': () => window.loadQoSMetrics?.(),
         'emergency': refreshEmergencyTab,
         'callback-queue': refreshCallbackQueueTab,
 
         // Extensions & Devices
-        'extensions': () => window.loadExtensions && window.loadExtensions(),
-        'phones': () => window.loadRegisteredPhones && window.loadRegisteredPhones(),
-        'atas': () => window.loadRegisteredATAs && window.loadRegisteredATAs(),
-        'hot-desking': () => window.loadHotDeskSessions && window.loadHotDeskSessions(),
+        'extensions': () => window.loadExtensions?.(),
+        'phones': () => window.loadRegisteredPhones?.(),
+        'atas': () => window.loadRegisteredATAs?.(),
+        'hot-desking': () => window.loadHotDeskSessions?.(),
 
         // User Features
-        'voicemail': () => window.loadVoicemailTab && window.loadVoicemailTab(),
+        'voicemail': () => window.loadVoicemailTab?.(),
 
         // Security
         'fraud-detection': refreshFraudDetectionTab
@@ -74,7 +74,7 @@ function setupAutoRefresh(tabName: string): void {
                 }
             } catch (error: unknown) {
                 console.error(`Error during auto-refresh of ${tabName}:`, error);
-                if (error instanceof Error && error.message && error.message.includes('401')) {
+                if (error instanceof Error && error.message?.includes('401')) {
                     console.warn('Authentication error during auto-refresh - user may need to re-login');
                 }
             }
@@ -90,14 +90,14 @@ function setupAutoRefresh(tabName: string): void {
  */
 export function showTab(tabName: string): void {
     // Hide all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    for (const tab of document.querySelectorAll('.tab-content')) {
         (tab as HTMLElement).classList.remove('active');
-    });
+    }
 
     // Remove active from all buttons
-    document.querySelectorAll('.tab-button').forEach(button => {
+    for (const button of document.querySelectorAll('.tab-button')) {
         (button as HTMLElement).classList.remove('active');
-    });
+    }
 
     // Show selected tab
     const tabElement = document.getElementById(tabName) as HTMLElement | null;
@@ -119,57 +119,62 @@ export function showTab(tabName: string): void {
     store.set('currentTab', tabName);
     setupAutoRefresh(tabName);
 
+    // Tab-to-loader mapping for single-loader tabs
+    const tabLoaders: Record<string, (() => void) | undefined> = {
+        'dashboard':           window.loadDashboard,
+        'analytics':           window.loadAnalytics,
+        'extensions':          window.loadExtensions,
+        'phones':              window.loadRegisteredPhones,
+        'atas':                window.loadRegisteredATAs,
+        'provisioning':        window.loadProvisioning,
+        'auto-attendant':      window.loadAutoAttendantConfig,
+        'voicemail':           window.loadVoicemailTab,
+        'paging':              window.loadPagingData,
+        'calls':               window.loadCalls,
+        'config':              window.loadConfig,
+        'features-status':     window.loadFeaturesStatus,
+        'webrtc-phone':        window.loadWebRTCPhoneConfig,
+        'license-management':  window.initLicenseManagement,
+        'qos':                 window.loadQoSMetrics,
+        'find-me-follow-me':   window.loadFMFMExtensions,
+        'time-routing':        window.loadTimeRoutingRules,
+        'webhooks':            window.loadWebhooks,
+        'hot-desking':         window.loadHotDeskSessions,
+        'recording-retention': window.loadRetentionPolicies,
+        'jitsi-integration':   window.loadJitsiConfig,
+        'matrix-integration':  window.loadMatrixConfig,
+        'espocrm-integration': window.loadEspoCRMConfig,
+        'click-to-dial':       window.loadClickToDialTab,
+        'fraud-detection':     window.loadFraudDetectionData,
+        'nomadic-e911':        window.loadNomadicE911Data,
+        'callback-queue':      window.loadCallbackQueue,
+        'mobile-push':         window.loadMobilePushConfig,
+        'recording-announcements': window.loadRecordingAnnouncements,
+        'speech-analytics':    window.loadSpeechAnalyticsConfigs,
+        'compliance':          window.loadComplianceData,
+        'crm-integrations':    window.loadCRMActivityLog,
+        'opensource-integrations': window.loadOpenSourceIntegrations,
+    };
+
+    // Tabs with multiple loaders
+    const multiLoaderTabs: Record<string, ((() => void) | undefined)[]> = {
+        'emergency':           [window.loadEmergencyContacts, window.loadEmergencyHistory],
+        'codecs':              [window.loadCodecStatus, window.loadDTMFConfig],
+        'sip-trunks':          [window.loadSIPTrunks, window.loadTrunkHealth],
+        'least-cost-routing':  [window.loadLCRRates, window.loadLCRStatistics],
+    };
+
     // Load data for the tab
-    switch (tabName) {
-        case 'dashboard':           window.loadDashboard && window.loadDashboard(); break;
-        case 'analytics':           window.loadAnalytics && window.loadAnalytics(); break;
-        case 'extensions':          window.loadExtensions && window.loadExtensions(); break;
-        case 'phones':              window.loadRegisteredPhones && window.loadRegisteredPhones(); break;
-        case 'atas':                window.loadRegisteredATAs && window.loadRegisteredATAs(); break;
-        case 'provisioning':        window.loadProvisioning && window.loadProvisioning(); break;
-        case 'auto-attendant':      window.loadAutoAttendantConfig && window.loadAutoAttendantConfig(); break;
-        case 'voicemail':           window.loadVoicemailTab && window.loadVoicemailTab(); break;
-        case 'paging':              window.loadPagingData && window.loadPagingData(); break;
-        case 'calls':               window.loadCalls && window.loadCalls(); break;
-        case 'config':              window.loadConfig && window.loadConfig(); break;
-        case 'features-status':     window.loadFeaturesStatus && window.loadFeaturesStatus(); break;
-        case 'webrtc-phone':        window.loadWebRTCPhoneConfig && window.loadWebRTCPhoneConfig(); break;
-        case 'license-management':  window.initLicenseManagement && window.initLicenseManagement(); break;
-        case 'qos':                 window.loadQoSMetrics && window.loadQoSMetrics(); break;
-        case 'emergency':
-            if (window.loadEmergencyContacts) window.loadEmergencyContacts();
-            if (window.loadEmergencyHistory) window.loadEmergencyHistory();
-            break;
-        case 'codecs':
-            if (window.loadCodecStatus) window.loadCodecStatus();
-            if (window.loadDTMFConfig) window.loadDTMFConfig();
-            break;
-        case 'sip-trunks':
-            if (window.loadSIPTrunks) window.loadSIPTrunks();
-            if (window.loadTrunkHealth) window.loadTrunkHealth();
-            break;
-        case 'least-cost-routing':
-            if (window.loadLCRRates) window.loadLCRRates();
-            if (window.loadLCRStatistics) window.loadLCRStatistics();
-            break;
-        case 'find-me-follow-me':   window.loadFMFMExtensions && window.loadFMFMExtensions(); break;
-        case 'time-routing':        window.loadTimeRoutingRules && window.loadTimeRoutingRules(); break;
-        case 'webhooks':            window.loadWebhooks && window.loadWebhooks(); break;
-        case 'hot-desking':         window.loadHotDeskSessions && window.loadHotDeskSessions(); break;
-        case 'recording-retention': window.loadRetentionPolicies && window.loadRetentionPolicies(); break;
-        case 'jitsi-integration':   typeof window.loadJitsiConfig === 'function' && window.loadJitsiConfig(); break;
-        case 'matrix-integration':  typeof window.loadMatrixConfig === 'function' && window.loadMatrixConfig(); break;
-        case 'espocrm-integration': typeof window.loadEspoCRMConfig === 'function' && window.loadEspoCRMConfig(); break;
-        case 'click-to-dial':       typeof window.loadClickToDialTab === 'function' && window.loadClickToDialTab(); break;
-        case 'fraud-detection':     typeof window.loadFraudDetectionData === 'function' && window.loadFraudDetectionData(); break;
-        case 'nomadic-e911':        typeof window.loadNomadicE911Data === 'function' && window.loadNomadicE911Data(); break;
-        case 'callback-queue':      typeof window.loadCallbackQueue === 'function' && window.loadCallbackQueue(); break;
-        case 'mobile-push':         typeof window.loadMobilePushConfig === 'function' && window.loadMobilePushConfig(); break;
-        case 'recording-announcements': typeof window.loadRecordingAnnouncements === 'function' && window.loadRecordingAnnouncements(); break;
-        case 'speech-analytics':    typeof window.loadSpeechAnalyticsConfigs === 'function' && window.loadSpeechAnalyticsConfigs(); break;
-        case 'compliance':          typeof window.loadComplianceData === 'function' && window.loadComplianceData(); break;
-        case 'crm-integrations':    typeof window.loadCRMActivityLog === 'function' && window.loadCRMActivityLog(); break;
-        case 'opensource-integrations': typeof window.loadOpenSourceIntegrations === 'function' && window.loadOpenSourceIntegrations(); break;
+    const singleLoader = tabLoaders[tabName];
+    if (singleLoader) {
+        singleLoader();
+    } else {
+        const loaders = multiLoaderTabs[tabName];
+        if (loaders) {
+            for (const loader of loaders) {
+                loader?.();
+            }
+        }
     }
 }
 
@@ -179,10 +184,10 @@ export function showTab(tabName: string): void {
 export function initializeTabs(): void {
     const tabButtons = document.querySelectorAll('.tab-button');
 
-    tabButtons.forEach(button => {
-        button.addEventListener('click', function (this: HTMLElement) {
-            const tabName = this.getAttribute('data-tab');
-            showTab(tabName!);
+    for (const button of tabButtons) {
+        button.addEventListener('click', () => {
+            const tabName = (button as HTMLElement).getAttribute('data-tab');
+            if (tabName) showTab(tabName);
         });
-    });
+    }
 }

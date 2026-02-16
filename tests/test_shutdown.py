@@ -3,15 +3,13 @@
 Test PBX shutdown functionality
 """
 
-import os
 import tempfile
 import time
+from pathlib import Path
 
 import yaml
 
-
 from pbx.core.pbx import PBXCore
-from pathlib import Path
 
 
 def test_pbx_shutdown() -> None:
@@ -70,7 +68,7 @@ def test_pbx_shutdown() -> None:
     finally:
         # Clean up config file
         if Path(config_file).exists():
-            os.unlink(config_file)
+            Path(config_file).unlink()
 
 
 def test_signal_handling_simulation() -> None:
@@ -141,4 +139,4 @@ def test_signal_handling_simulation() -> None:
     finally:
         # Clean up
         if Path(config_file).exists():
-            os.unlink(config_file)
+            Path(config_file).unlink()

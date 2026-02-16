@@ -5,16 +5,17 @@ Export to BI tools (Tableau, Power BI, etc.)
 
 import csv
 import json
-import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
-from typing import TYPE_CHECKING
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
     from tableauhyperapi import TableDefinition
 
-from pbx.utils.logger import get_logger
 import sqlite3
+
+from pbx.utils.logger import get_logger
 
 
 class BIProvider(Enum):
@@ -40,11 +41,11 @@ class ExportFormat(Enum):
 class DataSet:
     """Represents a dataset for BI export"""
 
-    def __init__(self, name: str, query: str):
+    def __init__(self, name: str, query: str) -> None:
         """Initialize dataset"""
         self.name = name
         self.query = query
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.last_exported = None
         self.export_count = 0
 
@@ -62,7 +63,7 @@ class BIIntegration:
     - Metabase (SQL, API)
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize BI integration"""
         self.logger = get_logger()
         self.config = config or {}
@@ -90,7 +91,7 @@ class BIIntegration:
         self.logger.info(f"  Auto export: {self.auto_export_enabled}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_default_datasets(self):
+    def _initialize_default_datasets(self) -> None:
         """Initialize default datasets"""
         # Call Detail Records
         self.datasets["cdr"] = DataSet(
@@ -151,46 +152,44 @@ class BIIntegration:
                 cursor.close()
                 # Convert RealDictRow to regular dict
                 return [dict(row) for row in results]
-            elif db.db_type == "sqlite":
+            if db.db_type == "sqlite":
                 cursor = db.connection.cursor()
                 cursor.execute(query)
                 columns = [description[0] for description in cursor.description]
                 results = cursor.fetchall()
                 # Convert tuples to dicts
-                return [dict(zip(columns, row)) for row in results]
-            else:
-                self.logger.error(f"Unsupported database type: {db.db_type}")
-                return []
+                return [dict(zip(columns, row, strict=False)) for row in results]
+            self.logger.error(f"Unsupported database type: {db.db_type}")
+            return []
         except sqlite3.Error as e:
             self.logger.error(f"Query execution failed: {e}")
             return []
 
-    def _format_data(self, data: list[dict], format: ExportFormat, dataset_name: str) -> str:
+    def _format_data(self, data: list[dict], export_format: ExportFormat, dataset_name: str) -> str:
         """
         Convert data to requested format
 
         Args:
             data: Query results
-            format: Export format
+            export_format: Export format
             dataset_name: Dataset name
 
         Returns:
             str: Path to exported file
         """
         # Ensure export directory exists
-        os.makedirs(self.export_path, exist_ok=True)
+        Path(self.export_path).mkdir(parents=True, exist_ok=True)
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
 
-        if format == ExportFormat.CSV:
+        if export_format == ExportFormat.CSV:
             return self._export_csv(data, dataset_name, timestamp)
-        elif format == ExportFormat.JSON:
+        if export_format == ExportFormat.JSON:
             return self._export_json(data, dataset_name, timestamp)
-        elif format == ExportFormat.EXCEL:
+        if export_format == ExportFormat.EXCEL:
             return self._export_excel(data, dataset_name, timestamp)
-        else:
-            self.logger.warning(f"Format {format.value} not yet implemented")
-            return ""
+        self.logger.warning(f"Format {export_format.value} not yet implemented")
+        return ""
 
     def _export_csv(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
         """Export data to CSV"""
@@ -216,7 +215,7 @@ class BIIntegration:
         filename = f"{self.export_path}/{dataset_name}_{timestamp}.json"
 
         # Convert datetime objects to strings for JSON serialization
-        def serialize_datetime(obj):
+        def serialize_datetime(obj: Any) -> str:
             if isinstance(obj, datetime):
                 return obj.isoformat()
             raise TypeError(f"type {type(obj)} not serializable")
@@ -240,7 +239,7 @@ class BIIntegration:
 
             if data:
                 # Write headers
-                headers = list(data[0].keys())
+                headers = list(data[0])
                 ws.append(headers)
 
                 # Write data rows
@@ -257,9 +256,9 @@ class BIIntegration:
     def export_dataset(
         self,
         dataset_name: str,
-        format: ExportFormat = ExportFormat.CSV,
-        start_date: datetime = None,
-        end_date: datetime = None,
+        export_format: ExportFormat = ExportFormat.CSV,
+        start_date: datetime | None = None,
+        end_date: datetime | None = None,
         provider: BIProvider = None,
     ) -> dict:
         """
@@ -267,7 +266,7 @@ class BIIntegration:
 
         Args:
             dataset_name: Name of dataset to export
-            format: Export format
+            export_format: Export format
             start_date: Start date for data
             end_date: End date for data
             provider: BI provider (optional)
@@ -283,31 +282,31 @@ class BIIntegration:
 
         # Default date range
         if not start_date:
-            start_date = datetime.now(timezone.utc) - timedelta(days=30)
+            start_date = datetime.now(UTC) - timedelta(days=30)
         if not end_date:
-            end_date = datetime.now(timezone.utc)
+            end_date = datetime.now(UTC)
 
-        self.logger.info(f"Exporting dataset '{dataset_name}' to {format.value}")
+        self.logger.info(f"Exporting dataset '{dataset_name}' to {export_format.value}")
         self.logger.info(f"  Date range: {start_date} to {end_date}")
 
         # Execute query and fetch data
         data = self._execute_query(dataset.query, start_date, end_date)
 
         # Convert to requested format
-        export_file = self._format_data(data, format, dataset_name)
+        export_file = self._format_data(data, export_format, dataset_name)
 
-        dataset.last_exported = datetime.now(timezone.utc)
+        dataset.last_exported = datetime.now(UTC)
         dataset.export_count += 1
         self.total_exports += 1
-        self.last_export_time = datetime.now(timezone.utc)
+        self.last_export_time = datetime.now(UTC)
 
         return {
             "success": True,
             "dataset": dataset_name,
-            "format": format.value,
+            "format": export_format.value,
             "file_path": export_file,
             "record_count": len(data),
-            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "exported_at": datetime.now(UTC).isoformat(),
         }
 
     def create_tableau_extract(self, dataset_name: str) -> str | None:
@@ -340,7 +339,7 @@ class BIIntegration:
 
             # Execute query to get data
             data = self._execute_query(
-                dataset.query, datetime.now(timezone.utc) - timedelta(days=30), datetime.now(timezone.utc)
+                dataset.query, datetime.now(UTC) - timedelta(days=30), datetime.now(UTC)
             )
 
             if not data:
@@ -350,21 +349,23 @@ class BIIntegration:
             # Create Hyper file
             extract_path = f"{self.export_path}/{dataset_name}.hyper"
 
-            with HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hyper:
-                with Connection(
+            with (
+                HyperProcess(telemetry=Telemetry.DO_NOT_SEND_USAGE_DATA_TO_TABLEAU) as hyper,
+                Connection(
                     endpoint=hyper.endpoint,
                     database=extract_path,
                     create_mode=CreateMode.CREATE_AND_REPLACE,
-                ) as connection:
-                    # Create table definition from data structure
-                    table_def = self._create_tableau_table_definition(dataset_name, data[0])
-                    connection.catalog.create_table(table_def)
+                ) as connection,
+            ):
+                # Create table definition from data structure
+                table_def = self._create_tableau_table_definition(dataset_name, data[0])
+                connection.catalog.create_table(table_def)
 
-                    # Insert data
-                    with Inserter(connection, table_def) as inserter:
-                        for row in data:
-                            inserter.add_row([row.get(col) for col in row.keys()])
-                        inserter.execute()
+                # Insert data
+                with Inserter(connection, table_def) as inserter:
+                    for row in data:
+                        inserter.add_row([row.get(col) for col in row])
+                    inserter.execute()
 
             self.logger.info(f"Created Tableau extract: {extract_path}")
             return extract_path
@@ -376,11 +377,11 @@ class BIIntegration:
             return self._export_csv(
                 self._execute_query(
                     self.datasets[dataset_name].query,
-                    datetime.now(timezone.utc) - timedelta(days=30),
-                    datetime.now(timezone.utc),
+                    datetime.now(UTC) - timedelta(days=30),
+                    datetime.now(UTC),
                 ),
                 dataset_name,
-                datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S"),
+                datetime.now(UTC).strftime("%Y%m%d_%H%M%S"),
             )
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create Tableau extract: {e}")
@@ -441,7 +442,7 @@ class BIIntegration:
 
             dataset = self.datasets[dataset_name]
             sample_data = self._execute_query(
-                dataset.query, datetime.now(timezone.utc) - timedelta(days=1), datetime.now(timezone.utc)
+                dataset.query, datetime.now(UTC) - timedelta(days=1), datetime.now(UTC)
             )
 
             # Create Power BI dataset schema
@@ -464,11 +465,10 @@ class BIIntegration:
                     "dataset_id": result.get("id"),
                     "dataset_name": dataset_name,
                 }
-            else:
-                return {
-                    "success": False,
-                    "error": f"Power BI API error: {response.status_code} - {response.text}",
-                }
+            return {
+                "success": False,
+                "error": f"Power BI API error: {response.status_code} - {response.text}",
+            }
         except ImportError:
             return {"success": False, "error": "requests library not installed"}
         except (KeyError, TypeError, ValueError, requests.RequestException) as e:
@@ -549,7 +549,7 @@ class BIIntegration:
         }
         return instructions.get(provider, "Configure direct database connection in your BI tool")
 
-    def create_custom_dataset(self, name: str, query: str):
+    def create_custom_dataset(self, name: str, query: str) -> None:
         """
         Create custom dataset
 
@@ -563,15 +563,15 @@ class BIIntegration:
         self.logger.info(f"Created custom dataset: {name}")
 
     def schedule_export(
-        self, dataset_name: str, schedule: str, format: ExportFormat = ExportFormat.CSV
-    ):
+        self, dataset_name: str, schedule: str, export_format: ExportFormat = ExportFormat.CSV
+    ) -> None:
         """
         Schedule automatic export
 
         Args:
             dataset_name: Dataset to export
             schedule: Schedule (daily, weekly, monthly)
-            format: Export format
+            export_format: Export format
         """
         if dataset_name not in self.datasets:
             self.logger.error(f"Dataset {dataset_name} not found for scheduling")
@@ -581,7 +581,7 @@ class BIIntegration:
         # In production, this would integrate with cron or a task scheduler
         self.logger.info(f"Scheduled export for {dataset_name}")
         self.logger.info(f"  Schedule: {schedule}")
-        self.logger.info(f"  Format: {format.value}")
+        self.logger.info(f"  Format: {export_format.value}")
 
         # Store schedule configuration
         if not hasattr(self, "scheduled_exports"):
@@ -589,7 +589,7 @@ class BIIntegration:
 
         self.scheduled_exports[dataset_name] = {
             "schedule": schedule,
-            "format": format,
+            "format": export_format,
             "last_run": None,
             "next_run": self._calculate_next_run(schedule),
         }
@@ -598,30 +598,28 @@ class BIIntegration:
 
     def _calculate_next_run(self, schedule: str) -> datetime:
         """Calculate next scheduled run time"""
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         if schedule == "daily":
             # Next day at midnight
             return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
-        elif schedule == "weekly":
+        if schedule == "weekly":
             # Next Monday at midnight
             days_until_monday = (7 - now.weekday()) % 7 or 7
             return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(
                 days=days_until_monday
             )
-        elif schedule == "monthly":
+        if schedule == "monthly":
             # First day of next month
             if now.month == 12:
                 return now.replace(
                     year=now.year + 1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0
                 )
-            else:
-                return now.replace(
-                    month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0
-                )
-        else:
-            # Default to daily
-            return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+            return now.replace(
+                month=now.month + 1, day=1, hour=0, minute=0, second=0, microsecond=0
+            )
+        # Default to daily
+        return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
 
     def get_available_datasets(self) -> list[dict]:
         """Get list of available datasets"""
@@ -675,14 +673,13 @@ class BIIntegration:
                         "provider": provider.value,
                         "message": "Power BI connection successful",
                     }
-                else:
-                    return {
-                        "success": False,
-                        "provider": provider.value,
-                        "error": f"Power BI API returned {response.status_code}",
-                    }
+                return {
+                    "success": False,
+                    "provider": provider.value,
+                    "error": f"Power BI API returned {response.status_code}",
+                }
 
-            elif provider == BIProvider.TABLEAU:
+            if provider == BIProvider.TABLEAU:
                 # Test Tableau connection
                 # Would test Tableau Server REST API if configured
                 return {
@@ -691,13 +688,12 @@ class BIIntegration:
                     "message": "Tableau connection test (file-based exports only)",
                 }
 
-            else:
-                # Generic test
-                return {
-                    "success": True,
-                    "provider": provider.value,
-                    "message": f"{provider.value} connection test successful",
-                }
+            # Generic test
+            return {
+                "success": True,
+                "provider": provider.value,
+                "message": f"{provider.value} connection test successful",
+            }
         except ImportError:
             return {
                 "success": False,
@@ -727,7 +723,7 @@ class BIIntegration:
 _bi_integration = None
 
 
-def get_bi_integration(config=None) -> BIIntegration:
+def get_bi_integration(config: Any | None = None) -> BIIntegration:
     """Get or create BI integration instance"""
     global _bi_integration
     if _bi_integration is None:

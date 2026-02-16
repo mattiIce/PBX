@@ -4,7 +4,6 @@ Tests for phone model-specific codec selection
 
 from unittest.mock import Mock
 
-
 from pbx.core.pbx import PBXCore
 
 
@@ -63,6 +62,7 @@ class TestPhoneModelDetection:
         user_agent = "zultys zip33g firmware"
         model = self.pbx._detect_phone_model(user_agent)
         assert model == "ZIP33G"
+
 
 class TestCodecSelection:
     """Test codec selection based on phone model"""

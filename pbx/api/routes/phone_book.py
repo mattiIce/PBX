@@ -78,8 +78,7 @@ def handle_add_phone_book_entry() -> Response:
             return send_json(
                 {"success": True, "message": f"Phone book entry added/updated: {extension}"}
             )
-        else:
-            return send_json({"error": "Failed to add phone book entry"}, 500)
+        return send_json({"error": "Failed to add phone book entry"}, 500)
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
@@ -97,9 +96,7 @@ def handle_sync_phone_book() -> Response:
         return send_json({"error": "Active Directory integration not enabled"}, 500)
 
     try:
-        synced_count = phone_book.sync_from_ad(
-            pbx_core.ad_integration, pbx_core.extension_registry
-        )
+        synced_count = phone_book.sync_from_ad(pbx_core.ad_integration, pbx_core.extension_registry)
 
         return send_json(
             {
@@ -124,11 +121,8 @@ def handle_delete_phone_book_entry(extension: str) -> Response:
         success = phone_book.remove_entry(extension)
 
         if success:
-            return send_json(
-                {"success": True, "message": f"Phone book entry deleted: {extension}"}
-            )
-        else:
-            return send_json({"error": "Failed to delete phone book entry"}, 500)
+            return send_json({"success": True, "message": f"Phone book entry deleted: {extension}"})
+        return send_json({"error": "Failed to delete phone book entry"}, 500)
     except Exception as e:
         return send_json({"error": str(e)}, 500)
 

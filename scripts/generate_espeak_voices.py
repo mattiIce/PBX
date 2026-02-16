@@ -12,7 +12,6 @@ Note: Requires internet connection to use Google TTS API (free, no API key neede
       Voice quality is natural and professional-sounding.
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -33,16 +32,18 @@ if not is_tts_available():
     print("=" * 70)
     print("ERROR: TTS dependencies not installed!")
     print("=" * 70)
-    print("")
+    print()
     print("Please install required packages:")
     print(f"  {get_tts_requirements()}")
-    print("")
+    print()
     print("After installation, run this script again.")
     print("=" * 70)
     sys.exit(1)
 
 
-def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="your company"):
+def generate_auto_attendant_voices(
+    output_dir: str = "auto_attendant", company_name: str = "your company"
+) -> int:
     """
     Generate voice prompts for auto attendant
 
@@ -57,7 +58,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text
@@ -116,7 +117,7 @@ def generate_auto_attendant_voices(output_dir="auto_attendant", company_name="yo
     return success_count
 
 
-def generate_voicemail_voices(output_dir="voicemail_prompts"):
+def generate_voicemail_voices(output_dir: str = "voicemail_prompts") -> int:
     """
     Generate voice prompts for voicemail system
 
@@ -130,7 +131,7 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text
@@ -218,8 +219,8 @@ def generate_voicemail_voices(output_dir="voicemail_prompts"):
     return success_count
 
 
-def main():
-    """Main function"""
+def main() -> None:
+    """Main function."""
     import argparse
 
     parser = argparse.ArgumentParser(

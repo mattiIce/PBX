@@ -57,7 +57,7 @@ export async function loadFraudAlerts(): Promise<void> {
         const container = document.getElementById('fraud-alerts-list') as HTMLElement | null;
         if (!container) return;
 
-        const alerts = data.alerts || [];
+        const alerts = data.alerts ?? [];
         if (alerts.length === 0) {
             container.innerHTML = '<div class="info-box">No fraud alerts</div>';
             return;
@@ -86,7 +86,7 @@ export async function loadCallbackQueue(): Promise<void> {
         const tbody = document.getElementById('callback-queue-body') as HTMLElement | null;
         if (!tbody) return;
 
-        const queue = data.queue || [];
+        const queue = data.queue ?? [];
         if (queue.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">No callbacks in queue</td></tr>';
             return;
@@ -155,7 +155,7 @@ export async function loadMobilePushDevices(): Promise<void> {
         const container = document.getElementById('mobile-push-devices') as HTMLElement | null;
         if (!container) return;
 
-        const devices = data.devices || [];
+        const devices = data.devices ?? [];
         if (devices.length === 0) {
             container.innerHTML = '<div class="info-box">No registered devices</div>';
             return;
@@ -183,7 +183,7 @@ export async function loadSpeechAnalyticsConfigs(): Promise<void> {
 
         const container = document.getElementById('speech-analytics-configs') as HTMLElement | null;
         if (container) {
-            container.innerHTML = JSON.stringify(data.configs || [], null, 2);
+            container.innerHTML = JSON.stringify(data.configs ?? [], null, 2);
         }
     } catch (error: unknown) {
         console.error('Error loading speech analytics:', error);

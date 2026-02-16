@@ -3,17 +3,16 @@ Music on Hold (MOH) System
 Plays audio while calls are on hold
 """
 
-import os
 import random
+from pathlib import Path
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class MusicOnHold:
     """Manages music on hold"""
 
-    def __init__(self, moh_directory="moh", default_class="default"):
+    def __init__(self, moh_directory: str = "moh", default_class: str = "default") -> None:
         """
         Initialize MOH system
 
@@ -27,28 +26,26 @@ class MusicOnHold:
         self.logger = get_logger()
         self.active_sessions = {}  # call_id -> current playing file
 
-        os.makedirs(moh_directory, exist_ok=True)
+        Path(moh_directory).mkdir(parents=True, exist_ok=True)
         self._load_classes()
 
-    def _load_classes(self):
+    def _load_classes(self) -> None:
         """Load MOH classes and files"""
         # Create default class if it doesn't exist
         default_path = Path(self.moh_directory) / self.default_class
-        os.makedirs(default_path, exist_ok=True)
+        Path(default_path).mkdir(parents=True, exist_ok=True)
 
         # Scan for MOH classes (subdirectories)
         if Path(self.moh_directory).exists():
-            for item in os.listdir(self.moh_directory):
-                class_path = Path(self.moh_directory) / item
-                if Path(class_path).is_dir():
+            for class_path in Path(self.moh_directory).iterdir():
+                item = class_path.name
+                if class_path.is_dir():
                     audio_files = self._scan_audio_files(class_path)
                     if audio_files:
                         self.classes[item] = audio_files
-                        self.logger.info(
-                            f"Loaded MOH class '{item}' with {len(audio_files)} files"
-                        )
+                        self.logger.info(f"Loaded MOH class '{item}' with {len(audio_files)} files")
 
-    def _scan_audio_files(self, directory):
+    def _scan_audio_files(self, directory: str | Path) -> list:
         """
         Scan directory for audio files
 
@@ -59,15 +56,15 @@ class MusicOnHold:
             list of audio file paths
         """
         audio_extensions = [".wav", ".mp3", ".ogg", ".flac", ".aac"]
-        audio_files = []
-
-        for filename in os.listdir(directory):
-            if any(filename.lower().endswith(ext) for ext in audio_extensions):
-                audio_files.append(Path(directory) / filename)
+        audio_files = [
+            entry
+            for entry in Path(directory).iterdir()
+            if any(entry.name.lower().endswith(ext) for ext in audio_extensions)
+        ]
 
         return sorted(audio_files)
 
-    def start_moh(self, call_id, moh_class=None):
+    def start_moh(self, call_id: str, moh_class: str | None = None) -> Path | None:
         """
         Start music on hold for call
 
@@ -99,7 +96,7 @@ class MusicOnHold:
         self.logger.debug(f"Started MOH for call {call_id}: {audio_file}")
         return audio_file
 
-    def stop_moh(self, call_id):
+    def stop_moh(self, call_id: str) -> None:
         """
         Stop music on hold
 
@@ -110,7 +107,7 @@ class MusicOnHold:
             del self.active_sessions[call_id]
             self.logger.debug(f"Stopped MOH for call {call_id}")
 
-    def get_next_file(self, call_id):
+    def get_next_file(self, call_id: str) -> Path | None:
         """
         Get next file in sequence for call
 
@@ -133,7 +130,7 @@ class MusicOnHold:
 
         return files[index]
 
-    def add_moh_class(self, class_name, files):
+    def add_moh_class(self, class_name: str, files: list) -> None:
         """
         Add MOH class
 
@@ -142,15 +139,13 @@ class MusicOnHold:
             files: list of audio file paths
         """
         self.classes[class_name] = files
-        self.logger.info(
-            f"Added MOH class '{class_name}' with {len(files)} files"
-        )
+        self.logger.info(f"Added MOH class '{class_name}' with {len(files)} files")
 
-    def get_classes(self):
+    def get_classes(self) -> list:
         """Get list of available MOH classes"""
-        return list(self.classes.keys())
+        return list(self.classes)
 
-    def get_class_files(self, class_name):
+    def get_class_files(self, class_name: str) -> list:
         """
         Get files in MOH class
 

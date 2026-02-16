@@ -5,7 +5,6 @@ Tests codec initialization, SDP negotiation, and encoding/decoding
 
 from unittest.mock import MagicMock, Mock, patch
 
-
 from pbx.features.ilbc_codec import ILBCCodec, ILBCCodecManager
 
 
@@ -110,8 +109,8 @@ class TestILBCCodec:
         # (assuming pyilbc is not installed in test environment)
         available = codec.is_available()
         assert isinstance(available, bool)
-    @patch("pbx.features.ilbc_codec.ILBCCodec.is_available")
 
+    @patch("pbx.features.ilbc_codec.ILBCCodec.is_available")
     def test_create_encoder_when_available(self, mock_available: MagicMock) -> None:
         """Test encoder creation when library is available"""
         mock_available.return_value = True
@@ -126,8 +125,8 @@ class TestILBCCodec:
             codec.create_encoder()
 
             assert codec.encoder is not None
-    @patch("pbx.features.ilbc_codec.ILBCCodec.is_available")
 
+    @patch("pbx.features.ilbc_codec.ILBCCodec.is_available")
     def test_create_decoder_when_available(self, mock_available: MagicMock) -> None:
         """Test decoder creation when library is available"""
         mock_available.return_value = True
@@ -196,7 +195,7 @@ class TestILBCCodec:
         """Test encoder reset"""
         codec = ILBCCodec({"mode": 30})
         codec.encoder = Mock()
-        codec.encoder
+        assert codec.encoder is not None
 
         codec.reset_encoder()
 
@@ -207,12 +206,13 @@ class TestILBCCodec:
         """Test decoder reset"""
         codec = ILBCCodec({"mode": 30})
         codec.decoder = Mock()
-        codec.decoder
+        assert codec.decoder is not None
 
         codec.reset_decoder()
 
         # Should recreate decoder (or remain None if library unavailable)
         assert codec is not None
+
 
 class TestILBCCodecManager:
     """Test iLBC codec manager functionality"""
@@ -347,6 +347,7 @@ class TestILBCCodecManager:
         available = manager.is_ilbc_available()
 
         assert isinstance(available, bool)
+
 
 class TestILBCSDP:
     """Test iLBC SDP integration"""

@@ -2,13 +2,15 @@
 Conference calling system
 """
 
+from typing import Any
+
 from pbx.utils.logger import get_logger
 
 
 class ConferenceRoom:
     """Represents a conference room"""
 
-    def __init__(self, room_number, max_participants=10):
+    def __init__(self, room_number: str, max_participants: int = 10) -> None:
         """
         Initialize conference room
 
@@ -21,7 +23,7 @@ class ConferenceRoom:
         self.participants = []
         self.logger = get_logger()
 
-    def add_participant(self, extension, call_id):
+    def add_participant(self, extension: str, call_id: str) -> bool:
         """
         Add participant to conference
 
@@ -42,7 +44,7 @@ class ConferenceRoom:
         self.logger.info(f"Added {extension} to conference {self.room_number}")
         return True
 
-    def remove_participant(self, extension):
+    def remove_participant(self, extension: str) -> bool:
         """
         Remove participant from conference
 
@@ -55,13 +57,11 @@ class ConferenceRoom:
         for i, participant in enumerate(self.participants):
             if participant["extension"] == extension:
                 self.participants.pop(i)
-                self.logger.info(
-                    f"Removed {extension} from conference {self.room_number}"
-                )
+                self.logger.info(f"Removed {extension} from conference {self.room_number}")
                 return True
         return False
 
-    def mute_participant(self, extension):
+    def mute_participant(self, extension: str) -> bool:
         """Mute participant"""
         for participant in self.participants:
             if participant["extension"] == extension:
@@ -69,7 +69,7 @@ class ConferenceRoom:
                 return True
         return False
 
-    def unmute_participant(self, extension):
+    def unmute_participant(self, extension: str) -> bool:
         """Unmute participant"""
         for participant in self.participants:
             if participant["extension"] == extension:
@@ -77,11 +77,11 @@ class ConferenceRoom:
                 return True
         return False
 
-    def get_participant_count(self):
+    def get_participant_count(self) -> int:
         """Get number of participants"""
         return len(self.participants)
 
-    def is_empty(self):
+    def is_empty(self) -> bool:
         """Check if conference is empty"""
         return len(self.participants) == 0
 
@@ -89,12 +89,12 @@ class ConferenceRoom:
 class ConferenceSystem:
     """Manages conference rooms"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize conference system"""
         self.rooms = {}
         self.logger = get_logger()
 
-    def create_room(self, room_number, max_participants=10):
+    def create_room(self, room_number: str, max_participants: int = 10) -> Any:
         """
         Create conference room
 
@@ -110,7 +110,7 @@ class ConferenceSystem:
             self.logger.info(f"Created conference room {room_number}")
         return self.rooms[room_number]
 
-    def get_room(self, room_number):
+    def get_room(self, room_number: str) -> Any | None:
         """
         Get conference room
 
@@ -122,7 +122,7 @@ class ConferenceSystem:
         """
         return self.rooms.get(room_number)
 
-    def join_conference(self, room_number, extension, call_id):
+    def join_conference(self, room_number: str, extension: str, call_id: str) -> bool:
         """
         Join conference
 
@@ -140,7 +140,7 @@ class ConferenceSystem:
 
         return room.add_participant(extension, call_id)
 
-    def leave_conference(self, room_number, extension):
+    def leave_conference(self, room_number: str, extension: str) -> bool:
         """
         Leave conference
 
@@ -163,6 +163,6 @@ class ConferenceSystem:
             return result
         return False
 
-    def get_active_rooms(self):
+    def get_active_rooms(self) -> list:
         """Get all active conference rooms"""
         return list(self.rooms.values())

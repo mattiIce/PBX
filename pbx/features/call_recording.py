@@ -3,18 +3,18 @@ Call recording system
 Records audio from calls for compliance, quality assurance, and training
 """
 
-import os
 import wave
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class CallRecording:
     """Manages recording for a single call"""
 
-    def __init__(self, call_id, recording_path="recordings"):
+    def __init__(self, call_id: str, recording_path: str = "recordings") -> None:
         """
         Initialize call recording
 
@@ -30,9 +30,9 @@ class CallRecording:
         self.start_time = None
         self.audio_buffer = []
 
-        os.makedirs(recording_path, exist_ok=True)
+        Path(recording_path).mkdir(parents=True, exist_ok=True)
 
-    def start(self, from_ext, to_ext):
+    def start(self, from_ext: str, to_ext: str) -> Path | None:
         """
         Start recording
 
@@ -46,19 +46,17 @@ class CallRecording:
         if self.recording:
             return None
 
-        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
         filename = f"{from_ext}_to_{to_ext}_{timestamp}.wav"
         self.file_path = Path(self.recording_path) / filename
 
         self.recording = True
-        self.start_time = datetime.now(timezone.utc)
+        self.start_time = datetime.now(UTC)
 
-        self.logger.info(
-            f"Started recording call {self.call_id} to {self.file_path}"
-        )
+        self.logger.info(f"Started recording call {self.call_id} to {self.file_path}")
         return self.file_path
 
-    def add_audio(self, audio_data):
+    def add_audio(self, audio_data: bytes) -> None:
         """
         Add audio data to recording
 
@@ -68,7 +66,7 @@ class CallRecording:
         if self.recording:
             self.audio_buffer.append(audio_data)
 
-    def stop(self):
+    def stop(self) -> Path | None:
         """Stop recording and save file"""
         if not self.recording:
             return None
@@ -94,10 +92,10 @@ class CallRecording:
 
         return None
 
-    def get_duration(self):
+    def get_duration(self) -> float:
         """Get recording duration in seconds"""
         if self.start_time:
-            end_time = datetime.now(timezone.utc)
+            end_time = datetime.now(UTC)
             return (end_time - self.start_time).total_seconds()
         return 0
 
@@ -105,7 +103,7 @@ class CallRecording:
 class CallRecordingSystem:
     """Manages call recording for all calls"""
 
-    def __init__(self, recording_path="recordings", auto_record=False):
+    def __init__(self, recording_path: str = "recordings", auto_record: bool = False) -> None:
         """
         Initialize call recording system
 
@@ -119,9 +117,9 @@ class CallRecordingSystem:
         self.recording_metadata = []
         self.logger = get_logger()
 
-        os.makedirs(recording_path, exist_ok=True)
+        Path(recording_path).mkdir(parents=True, exist_ok=True)
 
-    def start_recording(self, call_id, from_ext, to_ext):
+    def start_recording(self, call_id: str, from_ext: str, to_ext: str) -> bool:
         """
         Start recording a call
 
@@ -144,7 +142,7 @@ class CallRecordingSystem:
             return True
         return False
 
-    def stop_recording(self, call_id):
+    def stop_recording(self, call_id: str) -> Any | None:
         """
         Stop recording a call
 
@@ -172,7 +170,7 @@ class CallRecordingSystem:
             return file_path
         return None
 
-    def add_audio(self, call_id, audio_data):
+    def add_audio(self, call_id: str, audio_data: bytes) -> None:
         """
         Add audio data to recording
 
@@ -184,11 +182,11 @@ class CallRecordingSystem:
         if recording:
             recording.add_audio(audio_data)
 
-    def is_recording(self, call_id):
+    def is_recording(self, call_id: str) -> bool:
         """Check if call is being recorded"""
         return call_id in self.active_recordings
 
-    def get_recordings(self, limit=100):
+    def get_recordings(self, limit: int = 100) -> list:
         """
         Get recording metadata
 

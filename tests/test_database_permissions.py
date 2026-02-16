@@ -3,21 +3,19 @@
 Tests for database permission error handling
 """
 
-import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_index_creation_with_permission_error() -> None:
     """Test that index creation failures don't cause startup errors"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create a test config for SQLite
@@ -47,14 +45,14 @@ def test_index_creation_with_permission_error() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_table_already_exists_handling() -> None:
     """Test that 'already exists' errors are handled gracefully"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")
@@ -73,14 +71,14 @@ def test_table_already_exists_handling() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_critical_vs_non_critical_errors() -> None:
     """Test that critical and non-critical errors are handled differently"""
 
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         test_config = Config("config.yml")
@@ -108,4 +106,4 @@ def test_critical_vs_non_critical_errors() -> None:
 
     finally:
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)

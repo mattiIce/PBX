@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 """
 Kari's Law Compliance Module
 
@@ -16,7 +18,8 @@ References:
 """
 
 import re
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -41,7 +44,7 @@ class KarisLawCompliance:
     """
 
     # Emergency number patterns (Kari's Law)
-    EMERGENCY_PATTERNS = [
+    EMERGENCY_PATTERNS: ClassVar[list[str]] = [
         r"^911$",  # Standard 911
         r"^9911$",  # Legacy prefix (should be deprecated but supported)
         r"^9-911$",  # Legacy prefix with dash
@@ -50,7 +53,7 @@ class KarisLawCompliance:
     # Direct 911 pattern (primary)
     DIRECT_911_PATTERN = r"^911$"
 
-    def __init__(self, pbx_core, config: dict = None):
+    def __init__(self, pbx_core: Any | None, config: dict | None = None) -> None:
         """
         Initialize Kari's Law compliance module
 
@@ -105,11 +108,7 @@ class KarisLawCompliance:
 
         number_str = str(number).strip()
 
-        for pattern in self.EMERGENCY_PATTERNS:
-            if re.match(pattern, number_str):
-                return True
-
-        return False
+        return any(re.match(pattern, number_str) for pattern in self.EMERGENCY_PATTERNS)
 
     def is_direct_911(self, number: str) -> bool:
         """
@@ -146,9 +145,7 @@ class KarisLawCompliance:
         number_str = str(number).strip()
 
         # Remove prefix (9 or 9-)
-        if number_str.startswith("9-"):
-            return "911"
-        elif number_str.startswith("9") and len(number_str) == 4:
+        if number_str.startswith("9-") or (number_str.startswith("9") and len(number_str) == 4):
             return "911"
 
         return "911"
@@ -184,7 +181,7 @@ class KarisLawCompliance:
         self.logger.critical(f"Dialed Number: {dialed_number}")
         self.logger.critical(f"Normalized: {normalized_number}")
         self.logger.critical(f"Call ID: {call_id}")
-        self.logger.critical(f"Time: {datetime.now(timezone.utc).isoformat()}")
+        self.logger.critical(f"Time: {datetime.now(UTC).isoformat()}")
 
         # Get location information (Ray Baum's Act)
         location_info = self._get_location_info(caller_extension)
@@ -231,7 +228,7 @@ class KarisLawCompliance:
             "dialed_number": dialed_number,
             "normalized_number": normalized_number,
             "location": location_info,
-            "timestamp": datetime.now(timezone.utc),
+            "timestamp": datetime.now(UTC),
             "routing": routing_info,
         }
 
@@ -244,7 +241,7 @@ class KarisLawCompliance:
 
         return True, routing_info
 
-    def _get_nomadic_e911_engine(self) -> "NomadicE911Engine" | None:
+    def _get_nomadic_e911_engine(self) -> NomadicE911Engine | None:
         """
         Get or create nomadic E911 engine instance
 
@@ -348,7 +345,7 @@ class KarisLawCompliance:
         call_id: str,
         location_info: dict | None,
         caller_info: dict,
-        nomadic_e911_engine: "NomadicE911Engine" | None = None,
+        nomadic_e911_engine: NomadicE911Engine | None = None,
     ) -> dict:
         """
         Route emergency call to appropriate trunk
@@ -373,7 +370,7 @@ class KarisLawCompliance:
             "success": False,
             "trunk_id": None,
             "destination": normalized_number,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         # Get trunk system
@@ -406,8 +403,7 @@ class KarisLawCompliance:
                     routing_info["elin"] = site_info.get("elin")
 
                 return routing_info
-            else:
-                self.logger.warning(f"Site-specific emergency trunk {site_trunk_id} not available")
+            self.logger.warning(f"Site-specific emergency trunk {site_trunk_id} not available")
 
         # Try to route via global emergency trunk if configured
         if self.emergency_trunk_id:
@@ -420,13 +416,10 @@ class KarisLawCompliance:
                 routing_info["trunk_id"] = self.emergency_trunk_id
                 routing_info["trunk_name"] = trunk.name
                 return routing_info
-            else:
-                self.logger.warning(
-                    f"Global emergency trunk {self.emergency_trunk_id} not available"
-                )
+            self.logger.warning(f"Global emergency trunk {self.emergency_trunk_id} not available")
 
         # Fallback: try to route via any available trunk
-        routed_trunk, transformed_number = trunk_system.route_outbound(normalized_number)
+        routed_trunk, _transformed_number = trunk_system.route_outbound(normalized_number)
 
         if routed_trunk:
             self.logger.critical(
@@ -446,7 +439,7 @@ class KarisLawCompliance:
         self,
         extension: str,
         location_info: dict | None = None,
-        nomadic_e911_engine: "NomadicE911Engine" | None = None,
+        nomadic_e911_engine: NomadicE911Engine | None = None,
     ) -> str | None:
         """
         Get site-specific emergency trunk for extension (Multi-Site E911)
@@ -487,7 +480,7 @@ class KarisLawCompliance:
             return None
 
     def _get_site_info(
-        self, extension: str, nomadic_e911_engine: "NomadicE911Engine" | None = None
+        self, extension: str, nomadic_e911_engine: NomadicE911Engine | None = None
     ) -> dict | None:
         """
         Get site information for extension (PSAP, ELIN, etc.)
@@ -519,7 +512,7 @@ class KarisLawCompliance:
 
     def _trigger_emergency_notification(
         self, caller_extension: str, caller_info: dict, location_info: dict | None, call_id: str
-    ):
+    ) -> None:
         """
         Trigger automatic notification to designated contacts (Kari's Law requirement)
 
@@ -545,7 +538,7 @@ class KarisLawCompliance:
             "caller_extension": caller_extension,
             "caller_name": caller_info.get("name", "Unknown"),
             "call_id": call_id,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "compliance": "Karis Law",
         }
 

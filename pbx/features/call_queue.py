@@ -3,8 +3,9 @@ Call Queue and ACD (Automatic Call Distribution) system
 Manages incoming calls and distributes them to available agents
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -31,7 +32,7 @@ class AgentStatus(Enum):
 class QueuedCall:
     """Represents a call in queue"""
 
-    def __init__(self, call_id, caller_extension, queue_number):
+    def __init__(self, call_id: str, caller_extension: str, queue_number: str) -> None:
         """
         Initialize queued call
 
@@ -43,18 +44,18 @@ class QueuedCall:
         self.call_id = call_id
         self.caller_extension = caller_extension
         self.queue_number = queue_number
-        self.enqueue_time = datetime.now(timezone.utc)
+        self.enqueue_time = datetime.now(UTC)
         self.position = 0
 
-    def get_wait_time(self):
+    def get_wait_time(self) -> float:
         """Get time spent in queue (seconds)"""
-        return (datetime.now(timezone.utc) - self.enqueue_time).total_seconds()
+        return (datetime.now(UTC) - self.enqueue_time).total_seconds()
 
 
 class Agent:
     """Represents a call queue agent"""
 
-    def __init__(self, extension, name=""):
+    def __init__(self, extension: str, name: str = "") -> None:
         """
         Initialize agent
 
@@ -69,31 +70,31 @@ class Agent:
         self.last_call_time = None
         self.current_call_id = None
 
-    def set_available(self):
+    def set_available(self) -> None:
         """set agent as available"""
         self.status = AgentStatus.AVAILABLE
 
-    def set_busy(self, call_id=None):
+    def set_busy(self, call_id: str | None = None) -> None:
         """set agent as busy"""
         self.status = AgentStatus.BUSY
         self.current_call_id = call_id
 
-    def set_break(self):
+    def set_break(self) -> None:
         """set agent on break"""
         self.status = AgentStatus.ON_BREAK
 
-    def set_offline(self):
+    def set_offline(self) -> None:
         """set agent offline"""
         self.status = AgentStatus.OFFLINE
 
-    def complete_call(self):
+    def complete_call(self) -> None:
         """Mark call as completed"""
         self.calls_taken += 1
-        self.last_call_time = datetime.now(timezone.utc)
+        self.last_call_time = datetime.now(UTC)
         self.current_call_id = None
         self.status = AgentStatus.AVAILABLE
 
-    def is_available(self):
+    def is_available(self) -> bool:
         """Check if agent is available"""
         return self.status == AgentStatus.AVAILABLE
 
@@ -103,12 +104,12 @@ class CallQueue:
 
     def __init__(
         self,
-        queue_number,
-        name,
-        strategy=QueueStrategy.ROUND_ROBIN,
-        max_wait_time=300,
-        max_queue_size=50,
-    ):
+        queue_number: str,
+        name: str,
+        strategy: str = QueueStrategy.ROUND_ROBIN,
+        max_wait_time: int = 300,
+        max_queue_size: int = 50,
+    ) -> None:
         """
         Initialize call queue
 
@@ -129,7 +130,7 @@ class CallQueue:
         self.logger = get_logger()
         self.round_robin_index = 0
 
-    def add_agent(self, agent):
+    def add_agent(self, agent: Any) -> None:
         """
         Add agent to queue
 
@@ -137,16 +138,14 @@ class CallQueue:
             agent: Agent object
         """
         self.agents[agent.extension] = agent
-        self.logger.info(
-            f"Added agent {agent.extension} to queue {self.queue_number}"
-        )
+        self.logger.info(f"Added agent {agent.extension} to queue {self.queue_number}")
 
-    def remove_agent(self, extension):
+    def remove_agent(self, extension: str) -> None:
         """Remove agent from queue"""
         if extension in self.agents:
             del self.agents[extension]
 
-    def enqueue(self, call_id, caller_extension):
+    def enqueue(self, call_id: str, caller_extension: str) -> None:
         """
         Add call to queue
 
@@ -170,7 +169,7 @@ class CallQueue:
         )
         return queued_call
 
-    def dequeue(self):
+    def dequeue(self) -> Any | None:
         """
         Remove and return next call from queue
 
@@ -183,12 +182,12 @@ class CallQueue:
             return call
         return None
 
-    def _update_positions(self):
+    def _update_positions(self) -> None:
         """Update position numbers for queued calls"""
         for i, call in enumerate(self.queue):
             call.position = i + 1
 
-    def get_next_agent(self):
+    def get_next_agent(self) -> Any | None:
         """
         Get next available agent based on strategy
 
@@ -204,7 +203,7 @@ class CallQueue:
             # Return all available agents
             return available_agents
 
-        elif self.strategy == QueueStrategy.ROUND_ROBIN:
+        if self.strategy == QueueStrategy.ROUND_ROBIN:
             # Round robin distribution
             if available_agents:
                 agent = available_agents[self.round_robin_index % len(available_agents)]
@@ -213,7 +212,9 @@ class CallQueue:
 
         elif self.strategy == QueueStrategy.LEAST_RECENT:
             # Agent who hasn't taken a call longest
-            agent = min(available_agents, key=lambda a: a.last_call_time or datetime.min)
+            agent = min(
+                available_agents, key=lambda a: a.last_call_time or datetime.min.replace(tzinfo=UTC)
+            )
             return agent
 
         elif self.strategy == QueueStrategy.FEWEST_CALLS:
@@ -223,7 +224,7 @@ class CallQueue:
 
         return available_agents[0] if available_agents else None
 
-    def process_queue(self):
+    def process_queue(self) -> list:
         """
         Process queued calls and assign to agents
 
@@ -248,13 +249,11 @@ class CallQueue:
             if call:
                 agent.set_busy(call.call_id)
                 assignments.append((call, agent))
-                self.logger.info(
-                    f"Assigned call {call.call_id} to agent {agent.extension}"
-                )
+                self.logger.info(f"Assigned call {call.call_id} to agent {agent.extension}")
 
         return assignments
 
-    def get_queue_status(self):
+    def get_queue_status(self) -> dict | None:
         """Get queue status information"""
         available_agents = sum(1 for a in self.agents.values() if a.is_available())
 
@@ -267,7 +266,7 @@ class CallQueue:
             "average_wait_time": self._get_average_wait_time(),
         }
 
-    def _get_average_wait_time(self):
+    def _get_average_wait_time(self) -> float:
         """Calculate average wait time for calls in queue"""
         if not self.queue:
             return 0
@@ -277,12 +276,14 @@ class CallQueue:
 class QueueSystem:
     """Manages all call queues"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize queue system"""
         self.queues = {}
         self.logger = get_logger()
 
-    def create_queue(self, queue_number, name, strategy=QueueStrategy.ROUND_ROBIN):
+    def create_queue(
+        self, queue_number: str, name: str, strategy: str = QueueStrategy.ROUND_ROBIN
+    ) -> Any:
         """
         Create new queue
 
@@ -299,11 +300,11 @@ class QueueSystem:
         self.logger.info(f"Created queue {queue_number}: {name}")
         return queue
 
-    def get_queue(self, queue_number):
+    def get_queue(self, queue_number: str) -> dict | None:
         """Get queue by number"""
         return self.queues.get(queue_number)
 
-    def enqueue_call(self, queue_number, call_id, caller_extension):
+    def enqueue_call(self, queue_number: str, call_id: str, caller_extension: str) -> bool:
         """
         Add call to queue
 
@@ -320,7 +321,7 @@ class QueueSystem:
             return queue.enqueue(call_id, caller_extension) is not None
         return False
 
-    def process_all_queues(self):
+    def process_all_queues(self) -> int:
         """Process all queues and return assignments"""
         all_assignments = []
         for queue in self.queues.values():
@@ -328,6 +329,6 @@ class QueueSystem:
             all_assignments.extend(assignments)
         return all_assignments
 
-    def get_all_status(self):
+    def get_all_status(self) -> dict | None:
         """Get status of all queues"""
         return [q.get_queue_status() for q in self.queues.values()]

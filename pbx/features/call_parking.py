@@ -3,7 +3,8 @@ Call Parking System
 Allows calls to be parked and retrieved from any extension
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -11,7 +12,9 @@ from pbx.utils.logger import get_logger
 class ParkedCall:
     """Represents a parked call"""
 
-    def __init__(self, call_id, park_number, from_extension, original_destination):
+    def __init__(
+        self, call_id: str, park_number: str, from_extension: str, original_destination: str | None
+    ) -> None:
         """
         Initialize parked call
 
@@ -25,14 +28,14 @@ class ParkedCall:
         self.park_number = park_number
         self.from_extension = from_extension
         self.original_destination = original_destination
-        self.park_time = datetime.now(timezone.utc)
+        self.park_time = datetime.now(UTC)
         self.parker = from_extension
 
-    def get_park_duration(self):
+    def get_park_duration(self) -> float:
         """Get time parked in seconds"""
-        return (datetime.now(timezone.utc) - self.park_time).total_seconds()
+        return (datetime.now(UTC) - self.park_time).total_seconds()
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "call_id": self.call_id,
@@ -49,8 +52,12 @@ class CallParkingSystem:
     """Manages call parking"""
 
     def __init__(
-        self, park_range_start=70, park_range_end=79, timeout=120, callback_extension=None
-    ):
+        self,
+        park_range_start: int = 70,
+        park_range_end: int = 79,
+        timeout: int = 120,
+        callback_extension: str | None = None,
+    ) -> None:
         """
         Initialize call parking system
 
@@ -67,7 +74,7 @@ class CallParkingSystem:
         self.parked_calls = {}  # park_number -> ParkedCall
         self.logger = get_logger()
 
-    def find_available_slot(self):
+    def find_available_slot(self) -> str | None:
         """
         Find next available parking slot
 
@@ -79,7 +86,9 @@ class CallParkingSystem:
                 return slot
         return None
 
-    def park_call(self, call_id, from_extension, original_destination=None):
+    def park_call(
+        self, call_id: str, from_extension: str, original_destination: str | None = None
+    ) -> Any | None:
         """
         Park a call
 
@@ -103,7 +112,7 @@ class CallParkingSystem:
         self.logger.info(f"Parked call {call_id} at slot {park_number}")
         return park_number
 
-    def retrieve_call(self, park_number, retrieving_extension):
+    def retrieve_call(self, park_number: str, retrieving_extension: str) -> Any | None:
         """
         Retrieve a parked call
 
@@ -125,7 +134,7 @@ class CallParkingSystem:
 
         return None
 
-    def check_timeouts(self):
+    def check_timeouts(self) -> list:
         """
         Check for timed out parked calls
 
@@ -142,7 +151,7 @@ class CallParkingSystem:
 
         return timed_out
 
-    def get_parked_calls(self):
+    def get_parked_calls(self) -> list:
         """
         Get all parked calls
 
@@ -151,7 +160,7 @@ class CallParkingSystem:
         """
         return [call.to_dict() for call in self.parked_calls.values()]
 
-    def get_parked_call(self, park_number):
+    def get_parked_call(self, park_number: str) -> Any | None:
         """
         Get specific parked call
 
@@ -163,12 +172,12 @@ class CallParkingSystem:
         """
         return self.parked_calls.get(park_number)
 
-    def is_slot_available(self, park_number):
+    def is_slot_available(self, park_number: str) -> bool:
         """Check if parking slot is available"""
         return park_number not in self.parked_calls
 
-    def get_available_slots(self):
+    def get_available_slots(self) -> list:
         """Get list of available parking slots"""
         all_slots = set(range(self.park_range_start, self.park_range_end + 1))
-        used_slots = set(self.parked_calls.keys())
-        return sorted(list(all_slots - used_slots))
+        used_slots = set(self.parked_calls)
+        return sorted(all_slots - used_slots)

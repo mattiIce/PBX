@@ -1,27 +1,22 @@
 """Flask Blueprint for configuration and SSL management routes."""
 
 import ipaddress
-import os
+import ssl
 import traceback
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
-
 from typing import Any
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response
 
 from pbx.api.utils import (
     get_pbx_core,
+    get_request_body,
+    require_admin,
     send_json,
     verify_authentication,
-    require_auth,
-    require_admin,
-    get_request_body,
-    DateTimeEncoder,
-    validate_limit_param,
 )
 from pbx.utils.logger import get_logger
-import ssl
 
 logger = get_logger()
 
@@ -78,19 +73,14 @@ def get_config() -> tuple[Response, int]:
                 "port": pbx_core.config.get("voicemail.smtp.port", 587),
                 "username": pbx_core.config.get("voicemail.smtp.username", ""),
             },
-            "email": {
-                "from_address": pbx_core.config.get("voicemail.email.from_address", "")
-            },
-            "email_notifications": pbx_core.config.get(
-                "voicemail.email_notifications", False
-            ),
+            "email": {"from_address": pbx_core.config.get("voicemail.email.from_address", "")},
+            "email_notifications": pbx_core.config.get("voicemail.email_notifications", False),
             # Frontend integration loaders (Jitsi, Matrix, EspoCRM) require this field
             "integrations": pbx_core.config.get("integrations", {}),
         }
         return send_json(config_data), 200
-    else:
-        # Return default config if PBX not initialized
-        return send_json(DEFAULT_CONFIG), 200
+    # Return default config if PBX not initialized
+    return send_json(DEFAULT_CONFIG), 200
 
 
 @config_bp.route("/api/config/full", methods=["GET"])
@@ -113,12 +103,8 @@ def get_full_config() -> tuple[Response, int]:
                 "port": pbx_core.config.get("api.port", 9000),
                 "ssl": {
                     "enabled": pbx_core.config.get("api.ssl.enabled", False),
-                    "cert_file": pbx_core.config.get(
-                        "api.ssl.cert_file", "certs/server.crt"
-                    ),
-                    "key_file": pbx_core.config.get(
-                        "api.ssl.key_file", "certs/server.key"
-                    ),
+                    "cert_file": pbx_core.config.get("api.ssl.cert_file", "certs/server.crt"),
+                    "key_file": pbx_core.config.get("api.ssl.key_file", "certs/server.key"),
                 },
             },
             "features": {
@@ -132,45 +118,27 @@ def get_full_config() -> tuple[Response, int]:
                 "presence": pbx_core.config.get("features.presence", True),
                 "music_on_hold": pbx_core.config.get("features.music_on_hold", True),
                 "auto_attendant": pbx_core.config.get("features.auto_attendant", True),
-                "webrtc": {
-                    "enabled": pbx_core.config.get("features.webrtc.enabled", True)
-                },
-                "webhooks": {
-                    "enabled": pbx_core.config.get("features.webhooks.enabled", False)
-                },
+                "webrtc": {"enabled": pbx_core.config.get("features.webrtc.enabled", True)},
+                "webhooks": {"enabled": pbx_core.config.get("features.webhooks.enabled", False)},
                 "crm_integration": {
-                    "enabled": pbx_core.config.get(
-                        "features.crm_integration.enabled", True
-                    )
+                    "enabled": pbx_core.config.get("features.crm_integration.enabled", True)
                 },
                 "hot_desking": {
                     "enabled": pbx_core.config.get("features.hot_desking.enabled", True),
-                    "require_pin": pbx_core.config.get(
-                        "features.hot_desking.require_pin", True
-                    ),
+                    "require_pin": pbx_core.config.get("features.hot_desking.require_pin", True),
                 },
                 "voicemail_transcription": {
-                    "enabled": pbx_core.config.get(
-                        "features.voicemail_transcription.enabled", True
-                    )
+                    "enabled": pbx_core.config.get("features.voicemail_transcription.enabled", True)
                 },
             },
             "voicemail": {
-                "max_message_duration": pbx_core.config.get(
-                    "voicemail.max_message_duration", 180
-                ),
-                "max_greeting_duration": pbx_core.config.get(
-                    "voicemail.max_greeting_duration", 30
-                ),
-                "no_answer_timeout": pbx_core.config.get(
-                    "voicemail.no_answer_timeout", 30
-                ),
+                "max_message_duration": pbx_core.config.get("voicemail.max_message_duration", 180),
+                "max_greeting_duration": pbx_core.config.get("voicemail.max_greeting_duration", 30),
+                "no_answer_timeout": pbx_core.config.get("voicemail.no_answer_timeout", 30),
                 "allow_custom_greetings": pbx_core.config.get(
                     "voicemail.allow_custom_greetings", True
                 ),
-                "email_notifications": pbx_core.config.get(
-                    "voicemail.email_notifications", True
-                ),
+                "email_notifications": pbx_core.config.get("voicemail.email_notifications", True),
                 "smtp": {
                     "host": pbx_core.config.get("voicemail.smtp.host", ""),
                     "port": pbx_core.config.get("voicemail.smtp.port", 587),
@@ -178,20 +146,14 @@ def get_full_config() -> tuple[Response, int]:
                     "username": pbx_core.config.get("voicemail.smtp.username", ""),
                 },
                 "email": {
-                    "from_address": pbx_core.config.get(
-                        "voicemail.email.from_address", ""
-                    ),
-                    "from_name": pbx_core.config.get(
-                        "voicemail.email.from_name", "PBX Voicemail"
-                    ),
+                    "from_address": pbx_core.config.get("voicemail.email.from_address", ""),
+                    "from_name": pbx_core.config.get("voicemail.email.from_name", "PBX Voicemail"),
                 },
             },
             "recording": {
                 "auto_record": pbx_core.config.get("recording.auto_record", False),
                 "format": pbx_core.config.get("recording.format", "wav"),
-                "storage_path": pbx_core.config.get(
-                    "recording.storage_path", "recordings"
-                ),
+                "storage_path": pbx_core.config.get("recording.storage_path", "recordings"),
             },
             "security": {
                 "password": {
@@ -202,17 +164,13 @@ def get_full_config() -> tuple[Response, int]:
                     "require_lowercase": pbx_core.config.get(
                         "security.password.require_lowercase", True
                     ),
-                    "require_digit": pbx_core.config.get(
-                        "security.password.require_digit", True
-                    ),
+                    "require_digit": pbx_core.config.get("security.password.require_digit", True),
                     "require_special": pbx_core.config.get(
                         "security.password.require_special", True
                     ),
                 },
                 "rate_limit": {
-                    "max_attempts": pbx_core.config.get(
-                        "security.rate_limit.max_attempts", 5
-                    ),
+                    "max_attempts": pbx_core.config.get("security.rate_limit.max_attempts", 5),
                     "lockout_duration": pbx_core.config.get(
                         "security.rate_limit.lockout_duration", 900
                     ),
@@ -221,9 +179,7 @@ def get_full_config() -> tuple[Response, int]:
             },
             "conference": {
                 "max_participants": pbx_core.config.get("conference.max_participants", 50),
-                "record_conferences": pbx_core.config.get(
-                    "conference.record_conferences", False
-                ),
+                "record_conferences": pbx_core.config.get("conference.record_conferences", False),
             },
         }
 
@@ -251,9 +207,8 @@ def get_dtmf_config() -> tuple[Response, int]:
         dtmf_config = pbx_core.config.get_dtmf_config()
         if dtmf_config is not None:
             return send_json(dtmf_config), 200
-        else:
-            # Return default DTMF configuration instead of error
-            return send_json(DEFAULT_DTMF_CONFIG), 200
+        # Return default DTMF configuration instead of error
+        return send_json(DEFAULT_DTMF_CONFIG), 200
     except Exception as e:
         logger.error(f"Error getting DTMF config: {e}")
         # Return default configuration on error
@@ -281,8 +236,7 @@ def update_config() -> tuple[Response, int]:
                     "message": "Configuration updated successfully. Restart required.",
                 }
             ), 200
-        else:
-            return send_json({"error": "Failed to update configuration"}, 500), 500
+        return send_json({"error": "Failed to update configuration"}, 500), 500
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -333,8 +287,7 @@ def update_config_section() -> tuple[Response, int]:
                     "message": "Configuration updated successfully. Restart may be required for some changes.",
                 }
             ), 200
-        else:
-            return send_json({"error": "Failed to save configuration"}, 500), 500
+        return send_json({"error": "Failed to save configuration"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -360,8 +313,7 @@ def update_dtmf_config() -> tuple[Response, int]:
                     "message": "DTMF configuration updated successfully. PBX restart required for changes to take effect.",
                 }
             ), 200
-        else:
-            return send_json({"error": "Failed to update DTMF configuration"}, 500), 500
+        return send_json({"error": "Failed to update DTMF configuration"}, 500), 500
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -387,11 +339,11 @@ def get_ssl_status() -> tuple[Response, int]:
         cert_details = None
         if cert_exists and SSL_GENERATION_AVAILABLE:
             try:
-                with open(cert_file, "rb") as f:
+                with Path(cert_file).open("rb") as f:
                     cert_data = f.read()
                     cert = x509.load_pem_x509_certificate(cert_data, default_backend())
 
-                    now = datetime.now(timezone.utc)
+                    now = datetime.now(UTC)
                     cert_details = {
                         "subject": cert.subject.rfc4514_string(),
                         "issuer": cert.issuer.rfc4514_string(),
@@ -434,9 +386,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
         body = get_request_body() or {}
 
         # Get parameters
-        hostname = body.get(
-            "hostname", pbx_core.config.get("server.external_ip", "localhost")
-        )
+        hostname = body.get("hostname", pbx_core.config.get("server.external_ip", "localhost"))
         days_valid = body.get("days_valid", 365)
         cert_dir = body.get("cert_dir", "certs")
 
@@ -501,8 +451,8 @@ def generate_ssl_certificate() -> tuple[Response, int]:
             .issuer_name(issuer)
             .public_key(private_key.public_key())
             .serial_number(x509.random_serial_number())
-            .not_valid_before(datetime.now(timezone.utc))
-            .not_valid_after(datetime.now(timezone.utc) + timedelta(days=days_valid))
+            .not_valid_before(datetime.now(UTC))
+            .not_valid_after(datetime.now(UTC) + timedelta(days=days_valid))
             .add_extension(
                 x509.SubjectAlternativeName(san_list),
                 critical=False,
@@ -512,7 +462,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
 
         # Write private key to file
         key_file = cert_path / "server.key"
-        with open(key_file, "wb") as f:
+        with key_file.open("wb") as f:
             f.write(
                 private_key.private_bytes(
                     encoding=serialization.Encoding.PEM,
@@ -522,11 +472,11 @@ def generate_ssl_certificate() -> tuple[Response, int]:
             )
 
         # set restrictive permissions on private key
-        os.chmod(key_file, 0o600)
+        key_file.chmod(0o600)
 
         # Write certificate to file
         cert_file = cert_path / "server.crt"
-        with open(cert_file, "wb") as f:
+        with cert_file.open("wb") as f:
             f.write(cert.public_bytes(serialization.Encoding.PEM))
 
         logger.info(f"SSL certificate generated successfully: {cert_file}")

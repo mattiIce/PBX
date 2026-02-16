@@ -14,16 +14,17 @@ Usage:
 import argparse
 import json
 import logging
-import os
 import shutil
+import sqlite3
 import subprocess
 import sys
 import time
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
-import sqlite3
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -61,7 +62,7 @@ class DRTestResults:
 class DisasterRecoveryTester:
     """Automated DR testing"""
 
-    def __init__(self, config: DRTestConfig):
+    def __init__(self, config: DRTestConfig) -> None:
         self.config = config
         self.logger = logging.getLogger(__name__)
         self.results = {
@@ -97,11 +98,11 @@ class DisasterRecoveryTester:
 
         try:
             # Create backup directory
-            os.makedirs(self.config.backup_dir, exist_ok=True)
+            Path(self.config.backup_dir).mkdir(parents=True, exist_ok=True)
 
             # Backup filename with timestamp
-            backup_file = Path(self.config.backup_dir) / f"pbx_db_backup_{datetime.now(timezone.utc.strftime('%Y%m%d_%H%M%S')}.sql",
-            )
+            timestamp = datetime.now(UTC).strftime("%Y%m%d_%H%M%S")
+            backup_file = Path(self.config.backup_dir) / f"pbx_db_backup_{timestamp}.sql"
 
             # Run pg_dump
             cmd = [
@@ -121,7 +122,7 @@ class DisasterRecoveryTester:
                 "-v",
             ]
 
-            success, stdout, stderr = self.run_command(cmd)
+            success, _stdout, stderr = self.run_command(cmd)
 
             if success or self.config.dry_run:
                 if not self.config.dry_run:
@@ -138,18 +139,15 @@ class DisasterRecoveryTester:
                             f"Database backup successful: {file_size / 1024 / 1024:.2f} MB"
                         )
                         return True
-                    else:
-                        self.results["errors"].append("Database backup file not created")
-                        return False
-                else:
-                    self.results["backup"]["database"] = {"success": True, "dry_run": True}
-                    return True
-            else:
-                self.results["errors"].append(f"Database backup failed: {stderr}")
-                return False
+                    self.results["errors"].append("Database backup file not created")
+                    return False
+                self.results["backup"]["database"] = {"success": True, "dry_run": True}
+                return True
+            self.results["errors"].append(f"Database backup failed: {stderr}")
+            return False
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Database backup exception: {str(e)}")
+            self.results["errors"].append(f"Database backup exception: {e!s}")
             return False
 
     def test_config_backup(self) -> bool:
@@ -158,7 +156,7 @@ class DisasterRecoveryTester:
 
         try:
             config_backup_dir = Path(self.config.backup_dir) / "config"
-            os.makedirs(config_backup_dir, exist_ok=True)
+            config_backup_dir.mkdir(parents=True, exist_ok=True)
 
             # Files to backup
             config_files = [
@@ -173,21 +171,18 @@ class DisasterRecoveryTester:
             for pattern in config_files:
                 # Handle glob patterns
                 if "*" in pattern:
-                    import glob
-
-                    files = glob.glob(pattern)
+                    files = list(Path().glob(pattern))
                     for file in files:
-                        if Path(file).exists():
-                            dest = Path(config_backup_dir) / Path(file).name
+                        if file.exists():
+                            dest = Path(config_backup_dir) / file.name
                             if not self.config.dry_run:
                                 shutil.copy2(file, dest)
-                            backed_up_files.append(file)
-                else:
-                    if Path(pattern).exists():
-                        dest = Path(config_backup_dir) / Path(pattern).name
-                        if not self.config.dry_run:
-                            shutil.copy2(pattern, dest)
-                        backed_up_files.append(pattern)
+                            backed_up_files.append(str(file))
+                elif Path(pattern).exists():
+                    dest = Path(config_backup_dir) / Path(pattern).name
+                    if not self.config.dry_run:
+                        shutil.copy2(pattern, dest)
+                    backed_up_files.append(pattern)
 
             self.results["backup"]["config"] = {
                 "success": True,
@@ -198,7 +193,7 @@ class DisasterRecoveryTester:
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Configuration backup failed: {str(e)}")
+            self.results["errors"].append(f"Configuration backup failed: {e!s}")
             return False
 
     def test_voicemail_backup(self) -> bool:
@@ -207,7 +202,7 @@ class DisasterRecoveryTester:
 
         try:
             data_backup_dir = Path(self.config.backup_dir) / "data"
-            os.makedirs(data_backup_dir, exist_ok=True)
+            data_backup_dir.mkdir(parents=True, exist_ok=True)
 
             # Directories to backup
             data_dirs = ["voicemail", "recordings", "voicemail_prompts", "moh"]
@@ -222,8 +217,9 @@ class DisasterRecoveryTester:
                         shutil.copytree(dir_name, dest, dirs_exist_ok=True)
 
                         # Calculate size
-                        for root, dirs, files in os.walk(dest):
-                            total_size += sum(Path(Path(root).stat().st_size / f) for f in files)
+                        for entry in dest.rglob("*"):
+                            if entry.is_file():
+                                total_size += entry.stat().st_size
 
                     backed_up_dirs.append(dir_name)
 
@@ -236,7 +232,7 @@ class DisasterRecoveryTester:
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Data backup failed: {str(e)}")
+            self.results["errors"].append(f"Data backup failed: {e!s}")
             return False
 
     def test_database_restore(self) -> bool:
@@ -356,12 +352,11 @@ class DisasterRecoveryTester:
                     self.run_command(cmd_cleanup, check=False)
 
                 return True
-            else:
-                self.results["errors"].append(f"Database restore verification failed: {stderr}")
-                return False
+            self.results["errors"].append(f"Database restore verification failed: {stderr}")
+            return False
 
         except (KeyError, OSError, TypeError, ValueError, sqlite3.Error) as e:
-            self.results["errors"].append(f"Database restore failed: {str(e)}")
+            self.results["errors"].append(f"Database restore failed: {e!s}")
             return False
 
     def test_config_restore(self) -> bool:
@@ -377,16 +372,15 @@ class DisasterRecoveryTester:
 
             # Create restore directory
             restore_config_dir = Path(self.config.restore_dir) / "config"
-            os.makedirs(restore_config_dir, exist_ok=True)
+            restore_config_dir.mkdir(parents=True, exist_ok=True)
 
             # Restore files
             restored_files = []
-            for file in os.listdir(config_backup_dir):
-                src = Path(config_backup_dir) / file
-                dest = Path(restore_config_dir) / file
+            for file in config_backup_dir.iterdir():
+                dest = restore_config_dir / file.name
                 if not self.config.dry_run:
-                    shutil.copy2(src, dest)
-                restored_files.append(file)
+                    shutil.copy2(file, dest)
+                restored_files.append(file.name)
 
             self.results["restore"]["config"] = {
                 "success": True,
@@ -397,7 +391,7 @@ class DisasterRecoveryTester:
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Configuration restore failed: {str(e)}")
+            self.results["errors"].append(f"Configuration restore failed: {e!s}")
             return False
 
     def verify_backup_integrity(self) -> bool:
@@ -422,7 +416,7 @@ class DisasterRecoveryTester:
 
             # Check config backup
             config_dir = Path(self.config.backup_dir) / "config"
-            if Path(config_dir).exists() and os.listdir(config_dir):
+            if config_dir.exists() and any(config_dir.iterdir()):
                 verification_results["config_backup_exists"] = True
 
             # Check data backup
@@ -441,7 +435,7 @@ class DisasterRecoveryTester:
             return verification_results["all_valid"]
 
         except (KeyError, OSError, TypeError, ValueError) as e:
-            self.results["errors"].append(f"Verification failed: {str(e)}")
+            self.results["errors"].append(f"Verification failed: {e!s}")
             return False
 
     def calculate_rto_rpo(self) -> tuple[float, float]:
@@ -473,15 +467,12 @@ class DisasterRecoveryTester:
         self.logger.info("\nPhase 1: BACKUP")
         self.logger.info("-" * 70)
 
-        if self.config.test_type in ["full", "database-only"]:
-            if not self.test_database_backup():
-                overall_success = False
-        if self.config.test_type in ["full", "config-only"]:
-            if not self.test_config_backup():
-                overall_success = False
-        if self.config.test_type in ["full", "files-only"]:
-            if not self.test_voicemail_backup():
-                overall_success = False
+        if self.config.test_type in ["full", "database-only"] and not self.test_database_backup():
+            overall_success = False
+        if self.config.test_type in ["full", "config-only"] and not self.test_config_backup():
+            overall_success = False
+        if self.config.test_type in ["full", "files-only"] and not self.test_voicemail_backup():
+            overall_success = False
 
         self.backup_completed_time = time.time()
 
@@ -489,12 +480,10 @@ class DisasterRecoveryTester:
         self.logger.info("\nPhase 2: RESTORE")
         self.logger.info("-" * 70)
 
-        if self.config.test_type in ["full", "database-only"]:
-            if not self.test_database_restore():
-                overall_success = False
-        if self.config.test_type in ["full", "config-only"]:
-            if not self.test_config_restore():
-                overall_success = False
+        if self.config.test_type in ["full", "database-only"] and not self.test_database_restore():
+            overall_success = False
+        if self.config.test_type in ["full", "config-only"] and not self.test_config_restore():
+            overall_success = False
 
         self.restore_completed_time = time.time()
 
@@ -512,7 +501,7 @@ class DisasterRecoveryTester:
         # Compile results
         results = DRTestResults(
             test_type=self.config.test_type,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             duration=duration,
             overall_success=overall_success,
             backup_results=self.results["backup"],
@@ -527,7 +516,7 @@ class DisasterRecoveryTester:
         return results
 
 
-def print_results(results: DRTestResults):
+def print_results(results: DRTestResults) -> None:
     """Print formatted test results"""
     print("\n" + "=" * 70)
     print("DISASTER RECOVERY TEST RESULTS")
@@ -585,7 +574,7 @@ def print_results(results: DRTestResults):
     print("=" * 70 + "\n")
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="Automated Disaster Recovery Testing Tool")
     parser.add_argument(
@@ -652,7 +641,7 @@ def main():
         print("\n\nTest interrupted by user")
         sys.exit(1)
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
-        logging.error(f"Test failed with error: {e}", exc_info=True)
+        logger.error(f"Test failed with error: {e}", exc_info=True)
         sys.exit(1)
 
 

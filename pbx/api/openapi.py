@@ -4,8 +4,10 @@ Provides a complete API specification documenting all endpoints,
 request/response schemas, and authentication requirements.
 """
 
+from typing import Any
 
-def get_openapi_spec():
+
+def get_openapi_spec() -> dict[str, Any]:
     """Return the OpenAPI 3.0 specification as a dictionary.
 
     Returns:
@@ -56,9 +58,7 @@ def get_openapi_spec():
                             "description": "Service is healthy",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/HealthResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/HealthResponse"}
                                 }
                             },
                         },
@@ -66,9 +66,7 @@ def get_openapi_spec():
                             "description": "Service is unhealthy",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/HealthResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/HealthResponse"}
                                 }
                             },
                         },
@@ -117,19 +115,13 @@ def get_openapi_spec():
                     "responses": {
                         "200": {
                             "description": "PBX status information",
-                            "content": {
-                                "application/json": {
-                                    "schema": {"type": "object"}
-                                }
-                            },
+                            "content": {"application/json": {"schema": {"type": "object"}}},
                         },
                         "500": {
                             "description": "PBX not initialized",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -150,9 +142,7 @@ def get_openapi_spec():
                         "required": True,
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/LoginRequest"
-                                }
+                                "schema": {"$ref": "#/components/schemas/LoginRequest"}
                             }
                         },
                     },
@@ -161,9 +151,7 @@ def get_openapi_spec():
                             "description": "Login successful",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/LoginResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/LoginResponse"}
                                 }
                             },
                         },
@@ -171,9 +159,7 @@ def get_openapi_spec():
                             "description": "Missing required fields",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -181,9 +167,7 @@ def get_openapi_spec():
                             "description": "Invalid credentials",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -205,9 +189,7 @@ def get_openapi_spec():
                             "description": "Logout successful",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/SuccessResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/SuccessResponse"}
                                 }
                             },
                         },
@@ -232,9 +214,7 @@ def get_openapi_spec():
                                 "application/json": {
                                     "schema": {
                                         "type": "array",
-                                        "items": {
-                                            "$ref": "#/components/schemas/Extension"
-                                        },
+                                        "items": {"$ref": "#/components/schemas/Extension"},
                                     }
                                 }
                             },
@@ -243,9 +223,7 @@ def get_openapi_spec():
                             "description": "Authentication required",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -261,9 +239,7 @@ def get_openapi_spec():
                         "required": True,
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/CreateExtensionRequest"
-                                }
+                                "schema": {"$ref": "#/components/schemas/CreateExtensionRequest"}
                             }
                         },
                     },
@@ -272,9 +248,7 @@ def get_openapi_spec():
                             "description": "Extension created",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/SuccessResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/SuccessResponse"}
                                 }
                             },
                         },
@@ -282,9 +256,7 @@ def get_openapi_spec():
                             "description": "Validation error",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -292,9 +264,7 @@ def get_openapi_spec():
                             "description": "Admin authentication required",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -321,9 +291,7 @@ def get_openapi_spec():
                         "required": True,
                         "content": {
                             "application/json": {
-                                "schema": {
-                                    "$ref": "#/components/schemas/UpdateExtensionRequest"
-                                }
+                                "schema": {"$ref": "#/components/schemas/UpdateExtensionRequest"}
                             }
                         },
                     },
@@ -332,9 +300,7 @@ def get_openapi_spec():
                             "description": "Extension updated",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/SuccessResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/SuccessResponse"}
                                 }
                             },
                         },
@@ -342,9 +308,7 @@ def get_openapi_spec():
                             "description": "Validation error",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -352,9 +316,7 @@ def get_openapi_spec():
                             "description": "Extension not found",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -380,9 +342,7 @@ def get_openapi_spec():
                             "description": "Extension deleted",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/SuccessResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/SuccessResponse"}
                                 }
                             },
                         },
@@ -390,9 +350,7 @@ def get_openapi_spec():
                             "description": "Extension not found",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/Error"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/Error"}
                                 }
                             },
                         },
@@ -475,9 +433,7 @@ def get_openapi_spec():
                             "description": "Configuration data",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/ConfigResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/ConfigResponse"}
                                 }
                             },
                         },
@@ -491,20 +447,14 @@ def get_openapi_spec():
                     "security": [{"BearerAuth": []}],
                     "requestBody": {
                         "required": True,
-                        "content": {
-                            "application/json": {
-                                "schema": {"type": "object"}
-                            }
-                        },
+                        "content": {"application/json": {"schema": {"type": "object"}}},
                     },
                     "responses": {
                         "200": {
                             "description": "Configuration updated",
                             "content": {
                                 "application/json": {
-                                    "schema": {
-                                        "$ref": "#/components/schemas/SuccessResponse"
-                                    }
+                                    "schema": {"$ref": "#/components/schemas/SuccessResponse"}
                                 }
                             },
                         },
@@ -530,11 +480,7 @@ def get_openapi_spec():
                     "responses": {
                         "200": {
                             "description": "Full configuration data",
-                            "content": {
-                                "application/json": {
-                                    "schema": {"type": "object"}
-                                }
-                            },
+                            "content": {"application/json": {"schema": {"type": "object"}}},
                         },
                         "401": {
                             "description": "Admin authentication required",

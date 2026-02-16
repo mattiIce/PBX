@@ -95,11 +95,10 @@ class SmokeTestRunner:
         if self.failed == 0:
             print("✓ All smoke tests passed!")
             return True
-        else:
-            print("✗ Some smoke tests failed")
-            if not critical_passed:
-                print("  CRITICAL: Core functionality is broken!")
-            return False
+        print("✗ Some smoke tests failed")
+        if not critical_passed:
+            print("  CRITICAL: Core functionality is broken!")
+        return False
 
     def _run_test_suite(self, tests: list) -> bool:
         """Run a suite of tests."""
@@ -232,7 +231,7 @@ class SmokeTestRunner:
         try:
             # Note: This endpoint requires authentication in production
             # For smoke test, we just verify it returns 401 (not 500)
-            status, data = self._get_json("/api/extensions")
+            status, _data = self._get_json("/api/extensions")
 
             # Either 200 (if auth disabled) or 401 (auth required)
             if status not in [200, 401]:
@@ -246,7 +245,7 @@ class SmokeTestRunner:
     def test_configuration(self) -> tuple[bool, str]:
         """Test /api/config endpoint."""
         try:
-            status, data = self._get_json("/api/config")
+            status, _data = self._get_json("/api/config")
 
             if status != 200:
                 return False, f"HTTP {status}"
@@ -259,7 +258,7 @@ class SmokeTestRunner:
     def test_statistics(self) -> tuple[bool, str]:
         """Test /api/statistics endpoint."""
         try:
-            status, data = self._get_json("/api/statistics")
+            status, _data = self._get_json("/api/statistics")
 
             if status != 200:
                 return False, f"HTTP {status}"
@@ -272,7 +271,7 @@ class SmokeTestRunner:
     def test_qos(self) -> tuple[bool, str]:
         """Test QoS monitoring endpoints."""
         try:
-            status, data = self._get_json("/api/qos/statistics")
+            status, _data = self._get_json("/api/qos/statistics")
 
             if status != 200:
                 return False, f"HTTP {status}"
@@ -296,9 +295,7 @@ class SmokeTestRunner:
         req = urllib.request.Request(url, method="GET")
 
         try:
-            with urllib.request.urlopen(
-                req, timeout=5
-            ) as response:  # nosec B310 - Controlled URL for smoke tests
+            with urllib.request.urlopen(req, timeout=5) as response:  # nosec B310 - Controlled URL for smoke tests
                 data = json.loads(response.read().decode())
                 return response.status, data
         except urllib.error.HTTPError as e:
@@ -309,7 +306,7 @@ class SmokeTestRunner:
             except (ValueError, json.JSONDecodeError):
                 return e.code, {"error": str(e)}
         except urllib.error.URLError as e:
-            raise Exception(f"Connection failed: {e}")
+            raise Exception(f"Connection failed: {e}") from e
 
     def _get_text(self, path: str) -> tuple[int, str]:
         """
@@ -325,18 +322,16 @@ class SmokeTestRunner:
         req = urllib.request.Request(url, method="GET")
 
         try:
-            with urllib.request.urlopen(
-                req, timeout=5
-            ) as response:  # nosec B310 - Controlled URL for smoke tests
+            with urllib.request.urlopen(req, timeout=5) as response:  # nosec B310 - Controlled URL for smoke tests
                 text = response.read().decode()
                 return response.status, text
         except urllib.error.HTTPError as e:
             return e.code, e.read().decode()
         except urllib.error.URLError as e:
-            raise Exception(f"Connection failed: {e}")
+            raise Exception(f"Connection failed: {e}") from e
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     # Check if API URL is provided
     api_url = os.environ.get("PBX_API_URL", "http://localhost:9000")

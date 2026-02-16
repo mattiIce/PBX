@@ -11,7 +11,6 @@ import threading
 import time
 from unittest.mock import MagicMock, patch
 
-
 from pbx.core.call import Call, CallState
 
 
@@ -37,14 +36,13 @@ class TestVoicemailIVREarlyTermination:
 
         # Mock the necessary components
         with (
-            patch("pbx.core.pbx.VoicemailSystem") as MockVoicemailSystem,
-            patch("pbx.rtp.handler.RTPPlayer") as MockRTPPlayer,
-            patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder,
+            patch("pbx.core.pbx.VoicemailSystem") as mock_voicemail_system_cls,
+            patch("pbx.rtp.handler.RTPPlayer") as mock_rtp_player_cls,
+            patch("pbx.rtp.handler.RTPRecorder") as mock_rtp_recorder_cls,
         ):
-
             # Set up mocks
             mock_vm_system = MagicMock()
-            MockVoicemailSystem.return_value = mock_vm_system
+            mock_voicemail_system_cls.return_value = mock_vm_system
 
             mock_mailbox = MagicMock()
             mock_vm_system.get_mailbox.return_value = mock_mailbox
@@ -58,12 +56,12 @@ class TestVoicemailIVREarlyTermination:
             mock_player = MagicMock()
             mock_player.start.return_value = True
             mock_player.play_file.return_value = None
-            MockRTPPlayer.return_value = mock_player
+            mock_rtp_player_cls.return_value = mock_player
 
             mock_recorder = MagicMock()
             mock_recorder.start.return_value = True
             mock_recorder.recorded_data = []
-            MockRTPRecorder.return_value = mock_recorder
+            mock_rtp_recorder_cls.return_value = mock_recorder
 
             # Create PBX core
             pbx_core = PBXCore(self.config_file)
@@ -79,7 +77,6 @@ class TestVoicemailIVREarlyTermination:
 
             # Patch the logger to capture log messages
             with patch.object(pbx_core, "logger") as mock_logger:
-
                 # Simulate call ending before IVR loop starts
                 def end_call_after_setup() -> None:
                     """End call after a short delay to simulate BYE during setup"""
@@ -133,14 +130,13 @@ class TestVoicemailIVREarlyTermination:
         from pbx.core.pbx import PBXCore
 
         with (
-            patch("pbx.core.pbx.VoicemailSystem") as MockVoicemailSystem,
-            patch("pbx.rtp.handler.RTPPlayer") as MockRTPPlayer,
-            patch("pbx.rtp.handler.RTPRecorder") as MockRTPRecorder,
+            patch("pbx.core.pbx.VoicemailSystem") as mock_voicemail_system_cls,
+            patch("pbx.rtp.handler.RTPPlayer") as mock_rtp_player_cls,
+            patch("pbx.rtp.handler.RTPRecorder") as mock_rtp_recorder_cls,
         ):
-
             # Set up mocks
             mock_vm_system = MagicMock()
-            MockVoicemailSystem.return_value = mock_vm_system
+            mock_voicemail_system_cls.return_value = mock_vm_system
 
             mock_mailbox = MagicMock()
             mock_vm_system.get_mailbox.return_value = mock_mailbox
@@ -151,12 +147,12 @@ class TestVoicemailIVREarlyTermination:
 
             mock_player = MagicMock()
             mock_player.start.return_value = True
-            MockRTPPlayer.return_value = mock_player
+            mock_rtp_player_cls.return_value = mock_player
 
             mock_recorder = MagicMock()
             mock_recorder.start.return_value = True
             mock_recorder.recorded_data = []
-            MockRTPRecorder.return_value = mock_recorder
+            mock_rtp_recorder_cls.return_value = mock_recorder
 
             pbx_core = PBXCore(self.config_file)
 

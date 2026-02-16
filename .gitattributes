@@ -1,61 +1,133 @@
 # Git attributes for PBX System
 
 # Auto detect text files and perform LF normalization
-* text=auto
+* text=auto eol=lf
 
+# =============================================================================
 # Source code
-*.py text eol=lf
+# =============================================================================
+*.py text eol=lf diff=python
+*.ts text eol=lf
+*.tsx text eol=lf
+*.js text eol=lf
+*.jsx text eol=lf
+*.mjs text eol=lf
+*.cjs text eol=lf
 *.sh text eol=lf
+*.bash text eol=lf
+
+# =============================================================================
+# Configuration files
+# =============================================================================
 *.yml text eol=lf
 *.yaml text eol=lf
 *.json text eol=lf
-*.md text eol=lf
-*.txt text eol=lf
-
-# Configuration files
+*.toml text eol=lf
+*.ini text eol=lf
+*.cfg text eol=lf
+*.conf text eol=lf
+*.env text eol=lf
 .editorconfig text eol=lf
 .gitignore text eol=lf
 .gitattributes text eol=lf
 Makefile text eol=lf
+Dockerfile text eol=lf
+docker-compose*.yml text eol=lf
 
+# =============================================================================
 # Documentation
-*.md text diff=markdown
-*.txt text
+# =============================================================================
+*.md text eol=lf diff=markdown
+*.txt text eol=lf
+*.rst text eol=lf
+LICENSE text eol=lf
 
+# =============================================================================
+# Web assets
+# =============================================================================
+*.html text eol=lf diff=html
+*.css text eol=lf diff=css
+*.scss text eol=lf diff=css
+*.less text eol=lf diff=css
+*.svg text eol=lf
+*.xml text eol=lf
+
+# =============================================================================
 # Audio files (binary, no diff)
+# =============================================================================
 *.wav binary
 *.mp3 binary
 *.ogg binary
 *.flac binary
+*.aac binary
+*.opus binary
 
+# =============================================================================
 # Archives (binary)
+# =============================================================================
 *.zip binary
 *.tar binary
 *.gz binary
 *.tgz binary
+*.bz2 binary
+*.xz binary
+*.7z binary
 
+# =============================================================================
 # Images (binary)
+# =============================================================================
 *.png binary
 *.jpg binary
 *.jpeg binary
 *.gif binary
 *.ico binary
-*.svg text
+*.webp binary
+*.bmp binary
+*.tiff binary
 
+# =============================================================================
+# Fonts (binary)
+# =============================================================================
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+*.otf binary
+
+# =============================================================================
 # Python compiled files (should be ignored anyway)
+# =============================================================================
 *.pyc binary
 *.pyo binary
+*.pyd binary
 
+# =============================================================================
 # Database files
+# =============================================================================
 *.db binary
 *.sqlite binary
+*.sqlite3 binary
 
-# Export diff output with text
+# =============================================================================
+# Patches and diffs
+# =============================================================================
 *.patch text eol=lf
 *.diff text eol=lf
 
-# Denote all files that should not be normalized
+# =============================================================================
+# Binary executables
+# =============================================================================
 *.exe binary
 *.dll binary
 *.so binary
 *.dylib binary
+*.a binary
+
+# =============================================================================
+# Linguist overrides (for GitHub language detection)
+# =============================================================================
+admin/js/** linguist-language=TypeScript
+tests/** linguist-detectable=false
+docs/** linguist-documentation
+*.min.js linguist-generated
+*.min.css linguist-generated

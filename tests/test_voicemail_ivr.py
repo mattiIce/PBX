@@ -10,14 +10,13 @@ import logging
 import os
 import tempfile
 import types
+from pathlib import Path
 from typing import Any
-
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.audio import generate_voice_prompt
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB
-from pathlib import Path
 
 
 # Helper function for DEBUG_VM_PIN tests to manage environment and module reloading
@@ -325,19 +324,18 @@ def test_debug_pin_flag_disabled_by_default() -> None:
         voicemail = reload_voicemail_module()
 
         # Check that the flag is False
-        assert (
-            voicemail._DEBUG_PIN_LOGGING_ENABLED is False
-        ), "DEBUG_PIN_LOGGING should be False when DEBUG_VM_PIN is not set"
+        assert voicemail._DEBUG_PIN_LOGGING_ENABLED is False, (
+            "DEBUG_PIN_LOGGING should be False when DEBUG_VM_PIN is not set"
+        )
 
         config = Config("config.yml")
         vm_system = voicemail.VoicemailSystem(storage_path="test_voicemail", config=config)
         ivr = voicemail.VoicemailIVR(vm_system, "1001")
 
         # Verify the IVR instance has debug_pin_logging disabled
-        assert (
-            ivr.debug_pin_logging is False
-        ), "VoicemailIVR.debug_pin_logging should be False by default"
-
+        assert ivr.debug_pin_logging is False, (
+            "VoicemailIVR.debug_pin_logging should be False by default"
+        )
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -358,18 +356,18 @@ def test_debug_pin_flag_enabled_when_set() -> None:
             voicemail = reload_voicemail_module()
 
             # Check that the flag is True
-            assert (
-                voicemail._DEBUG_PIN_LOGGING_ENABLED is True
-            ), f"DEBUG_PIN_LOGGING should be True when DEBUG_VM_PIN='{truthy_value}'"
+            assert voicemail._DEBUG_PIN_LOGGING_ENABLED is True, (
+                f"DEBUG_PIN_LOGGING should be True when DEBUG_VM_PIN='{truthy_value}'"
+            )
 
             config = Config("config.yml")
             vm_system = voicemail.VoicemailSystem(storage_path="test_voicemail", config=config)
             ivr = voicemail.VoicemailIVR(vm_system, "1001")
 
             # Verify the IVR instance has debug_pin_logging enabled
-            assert (
-                ivr.debug_pin_logging is True
-            ), f"VoicemailIVR.debug_pin_logging should be True when DEBUG_VM_PIN='{truthy_value}'"
+            assert ivr.debug_pin_logging is True, (
+                f"VoicemailIVR.debug_pin_logging should be True when DEBUG_VM_PIN='{truthy_value}'"
+            )
 
         # Test falsy values
         for falsy_value in ["false", "False", "FALSE", "0", "no", "No", "NO", ""]:
@@ -379,10 +377,9 @@ def test_debug_pin_flag_enabled_when_set() -> None:
             voicemail = reload_voicemail_module()
 
             # Check that the flag is False
-            assert (
-                voicemail._DEBUG_PIN_LOGGING_ENABLED is False
-            ), f"DEBUG_PIN_LOGGING should be False when DEBUG_VM_PIN='{falsy_value}'"
-
+            assert voicemail._DEBUG_PIN_LOGGING_ENABLED is False, (
+                f"DEBUG_PIN_LOGGING should be False when DEBUG_VM_PIN='{falsy_value}'"
+            )
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -431,21 +428,20 @@ def test_debug_pin_logging_suppressed_when_disabled() -> None:
         ivr.logger.removeHandler(handler)
 
         # Verify that sensitive PIN debug messages are NOT in the log
-        assert (
-            "PIN DEBUG" not in log_output
-        ), "PIN DEBUG messages should not appear when DEBUG_VM_PIN is disabled"
-        assert (
-            "TESTING ONLY - Digit" not in log_output
-        ), "Debug digit collection should not appear when DEBUG_VM_PIN is disabled"
-        assert (
-            "TESTING ONLY - Entered PIN:" not in log_output
-        ), "Entered PIN should not be logged when DEBUG_VM_PIN is disabled"
+        assert "PIN DEBUG" not in log_output, (
+            "PIN DEBUG messages should not appear when DEBUG_VM_PIN is disabled"
+        )
+        assert "TESTING ONLY - Digit" not in log_output, (
+            "Debug digit collection should not appear when DEBUG_VM_PIN is disabled"
+        )
+        assert "TESTING ONLY - Entered PIN:" not in log_output, (
+            "Entered PIN should not be logged when DEBUG_VM_PIN is disabled"
+        )
 
         # But regular PIN verification messages should still be there
-        assert (
-            "PIN verification result" in log_output
-        ), "Regular PIN verification logging should still work"
-
+        assert "PIN verification result" in log_output, (
+            "Regular PIN verification logging should still work"
+        )
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -498,25 +494,24 @@ def test_debug_pin_logging_emitted_when_enabled() -> None:
         temp_logger.removeHandler(handler)
 
         # Verify that sensitive PIN debug messages ARE in the log
-        assert (
-            "PIN DEBUG LOGGING ENABLED" in log_output
-        ), "Initialization warning should appear when DEBUG_VM_PIN is enabled"
-        assert (
-            "PIN DEBUG" in log_output
-        ), "PIN DEBUG messages should appear when DEBUG_VM_PIN is enabled"
-        assert (
-            "TESTING ONLY - Digit '1' collected, current PIN buffer: '1'" in log_output
-        ), "Debug digit collection should show first digit"
-        assert (
-            "TESTING ONLY - Digit '4' collected, current PIN buffer: '1234'" in log_output
-        ), "Debug digit collection should show complete PIN buffer"
-        assert (
-            "TESTING ONLY - Entered PIN: '1234'" in log_output
-        ), "Entered PIN should be logged when DEBUG_VM_PIN is enabled"
-        assert (
-            "TESTING ONLY - Expected PIN: '1234'" in log_output
-        ), "Expected PIN should be logged when DEBUG_VM_PIN is enabled"
-
+        assert "PIN DEBUG LOGGING ENABLED" in log_output, (
+            "Initialization warning should appear when DEBUG_VM_PIN is enabled"
+        )
+        assert "PIN DEBUG" in log_output, (
+            "PIN DEBUG messages should appear when DEBUG_VM_PIN is enabled"
+        )
+        assert "TESTING ONLY - Digit '1' collected, current PIN buffer: '1'" in log_output, (
+            "Debug digit collection should show first digit"
+        )
+        assert "TESTING ONLY - Digit '4' collected, current PIN buffer: '1234'" in log_output, (
+            "Debug digit collection should show complete PIN buffer"
+        )
+        assert "TESTING ONLY - Entered PIN: '1234'" in log_output, (
+            "Entered PIN should be logged when DEBUG_VM_PIN is enabled"
+        )
+        assert "TESTING ONLY - Expected PIN: '1234'" in log_output, (
+            "Expected PIN should be logged when DEBUG_VM_PIN is enabled"
+        )
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -536,17 +531,17 @@ def test_debug_pin_module_level_caching() -> None:
         voicemail = reload_voicemail_module()
 
         # Verify it's enabled
-        assert (
-            voicemail._DEBUG_PIN_LOGGING_ENABLED is True
-        ), "DEBUG_PIN_LOGGING should be True initially"
+        assert voicemail._DEBUG_PIN_LOGGING_ENABLED is True, (
+            "DEBUG_PIN_LOGGING should be True initially"
+        )
 
         # Now change the environment variable (simulating runtime change)
         os.environ["DEBUG_VM_PIN"] = "false"
 
         # The module-level flag should NOT change (it's cached)
-        assert (
-            voicemail._DEBUG_PIN_LOGGING_ENABLED is True
-        ), "Module-level DEBUG_PIN_LOGGING should remain True (cached, not re-read from env)"
+        assert voicemail._DEBUG_PIN_LOGGING_ENABLED is True, (
+            "Module-level DEBUG_PIN_LOGGING should remain True (cached, not re-read from env)"
+        )
 
         # Create a new IVR - it should still use the cached True value
         config = Config("config.yml")
@@ -554,7 +549,6 @@ def test_debug_pin_module_level_caching() -> None:
         ivr = voicemail.VoicemailIVR(vm_system, "1001")
 
         assert ivr.debug_pin_logging is True, "New IVR should use cached module-level flag value"
-
 
     finally:
         restore_debug_vm_pin_env(original_value)
@@ -564,8 +558,8 @@ def test_voicemail_pin_from_database() -> None:
     """Test that voicemail PIN is loaded from database and verified correctly"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create test config with SQLite
@@ -593,9 +587,9 @@ def test_voicemail_pin_from_database() -> None:
         assert db_extension.get("voicemail_pin_hash") is not None, "PIN hash should be stored"
         assert db_extension.get("voicemail_pin_salt") is not None, "PIN salt should be stored"
         # Verify it's not stored as plaintext
-        assert (
-            db_extension.get("voicemail_pin_hash") != "4655"
-        ), "PIN should be hashed, not plaintext"
+        assert db_extension.get("voicemail_pin_hash") != "4655", (
+            "PIN should be hashed, not plaintext"
+        )
 
         # Create voicemail system with database
         vm_system = VoicemailSystem(storage_path="test_voicemail", config=config, database=db)
@@ -637,6 +631,6 @@ def test_voicemail_pin_from_database() -> None:
         # Cleanup - use try-except to handle potential issues
         try:
             if Path(temp_db.name).exists():
-                os.unlink(temp_db.name)
+                Path(temp_db.name).unlink(missing_ok=True)
         except (OSError, PermissionError):
             pass  # Don't fail the test on cleanup errors

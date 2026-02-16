@@ -4,21 +4,17 @@ Test that the options menu prompt is available and working correctly
 This test validates the fix for the missing options menu voice prompt issue
 """
 
-import os
-
+from pathlib import Path
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 def test_options_menu_prompt_file_exists() -> None:
     """Test that options_menu.wav file exists"""
 
     options_menu_path = Path("voicemail_prompts") / "options_menu.wav"
-    assert Path(
-        options_menu_path
-    ).exists(), f"options_menu.wav should exist at {options_menu_path}"
+    assert Path(options_menu_path).exists(), f"options_menu.wav should exist at {options_menu_path}"
 
     # Verify it's a valid file with non-zero size
     file_size = Path(options_menu_path).stat().st_size
@@ -53,12 +49,12 @@ def test_options_menu_message_returned() -> None:
 
     # Verify the message contains expected content
     message = result["message"]
-    assert (
-        "record" in message.lower() or "greeting" in message.lower()
-    ), "Message should mention recording or greeting"
-    assert (
-        "press 1" in message.lower() or "press star" in message.lower()
-    ), "Message should provide menu options"
+    assert "record" in message.lower() or "greeting" in message.lower(), (
+        "Message should mention recording or greeting"
+    )
+    assert "press 1" in message.lower() or "press star" in message.lower(), (
+        "Message should provide menu options"
+    )
 
 
 def test_options_menu_complete_flow() -> None:

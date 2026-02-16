@@ -4,11 +4,9 @@ Test SSL configuration mismatch handling
 Tests the scenario where SSL is enabled in config but certificates are missing
 """
 
-import os
 import time
 from pathlib import Path
 from typing import Any
-
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
@@ -84,10 +82,8 @@ def test_ssl_enabled_missing_certificates() -> bool:
 
     mock_pbx = MockPBXCore(config)
 
-
     # Create API server - should handle missing certificates gracefully
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8083)
-
 
     # Verify that SSL is NOT enabled (should fall back to HTTP)
     if api_server.ssl_enabled:
@@ -96,11 +92,9 @@ def test_ssl_enabled_missing_certificates() -> bool:
     if api_server.ssl_context is not None:
         return False
 
-
     # Try to start server - should succeed on HTTP
     if not api_server.start():
         return False
-
 
     # Give it a moment to fully start
     time.sleep(1)
@@ -108,7 +102,6 @@ def test_ssl_enabled_missing_certificates() -> bool:
     # Stop the server
     api_server.stop()
     time.sleep(0.5)
-
 
     return True
 
@@ -143,10 +136,8 @@ def test_ssl_enabled_with_valid_certificates() -> bool:
 
     mock_pbx = MockPBXCore(config)
 
-
     # Create API server
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8084)
-
 
     # Verify that SSL IS enabled
     if not api_server.ssl_enabled:
@@ -155,18 +146,15 @@ def test_ssl_enabled_with_valid_certificates() -> bool:
     if api_server.ssl_context is None:
         return False
 
-
     # Try to start server
     if not api_server.start():
         return False
-
 
     time.sleep(1)
 
     # Stop the server
     api_server.stop()
     time.sleep(0.5)
-
 
     return True
 
@@ -182,17 +170,16 @@ def main() -> bool:
     passed = 0
     failed = 0
 
-    for test_name, test_func in tests:
+    for _test_name, test_func in tests:
         try:
             if test_func():
                 passed += 1
             else:
                 failed += 1
-        except Exception as e:
+        except Exception:
             failed += 1
             import traceback
 
             traceback.print_exc()
-
 
     return failed == 0

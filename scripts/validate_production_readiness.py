@@ -40,7 +40,7 @@ RESET = "\033[0m"
 class ProductionValidator:
     """Validates production readiness of PBX system."""
 
-    def __init__(self, verbose=False):
+    def __init__(self, verbose: bool = False) -> None:
         self.verbose = verbose
         self.results = {
             "passed": [],
@@ -50,7 +50,7 @@ class ProductionValidator:
         }
         self.base_dir = Path(__file__).parent.parent
 
-    def log(self, message, level="info"):
+    def log(self, message: str, level: str = "info") -> None:
         """Log a message with appropriate formatting."""
         if level == "pass":
             print(f"{GREEN}✓{RESET} {message}")
@@ -65,7 +65,7 @@ class ProductionValidator:
             print(f"{BLUE}ℹ{RESET} {message}")
             self.results["info"].append(message)
 
-    def check_system_requirements(self):
+    def check_system_requirements(self) -> None:
         """Check system requirements."""
         print(f"\n{BLUE}=== System Requirements ==={RESET}")
 
@@ -106,7 +106,7 @@ class ProductionValidator:
             else:
                 self.log(f"{desc} ({cmd}): Not found", "fail")
 
-    def check_configuration(self):
+    def check_configuration(self) -> None:
         """Check configuration files."""
         print(f"\n{BLUE}=== Configuration ==={RESET}")
 
@@ -130,7 +130,7 @@ class ProductionValidator:
         if test_config.exists():
             self.log("test_config.yml should not be used in production", "warn")
 
-    def check_security(self):
+    def check_security(self) -> None:
         """Check security configurations."""
         print(f"\n{BLUE}=== Security ==={RESET}")
 
@@ -145,7 +145,7 @@ class ProductionValidator:
             if ssl_key.exists():
                 stat_info = ssl_key.stat()
                 mode = oct(stat_info.st_mode)[-3:]
-                if mode == "600" or mode == "400":
+                if mode in {"600", "400"}:
                     self.log("SSL private key permissions: Secure", "pass")
                 else:
                     self.log(f"SSL private key permissions: {mode} (should be 600 or 400)", "warn")
@@ -161,7 +161,7 @@ class ProductionValidator:
             else:
                 self.log("No obvious default passwords in config.yml", "pass")
 
-    def check_database(self):
+    def check_database(self) -> None:
         """Check database configuration and connectivity."""
         print(f"\n{BLUE}=== Database ==={RESET}")
 
@@ -228,7 +228,7 @@ class ProductionValidator:
         except (KeyError, TypeError, ValueError) as e:
             self.log(f"Could not check database configuration: {e}", "fail")
 
-    def check_directories(self):
+    def check_directories(self) -> None:
         """Check required directories exist."""
         print(f"\n{BLUE}=== Directories ==={RESET}")
 
@@ -246,12 +246,11 @@ class ProductionValidator:
                 self.log(f"{description} directory ({dir_name}): Exists", "pass")
             else:
                 self.log(
-                    f"{description} directory ({dir_name}): "
-                    f"Not found (will be created on startup)",
+                    f"{description} directory ({dir_name}): Not found (will be created on startup)",
                     "warn",
                 )
 
-    def check_network(self):
+    def check_network(self) -> None:
         """Check network configuration."""
         print(f"\n{BLUE}=== Network ==={RESET}")
 
@@ -268,7 +267,7 @@ class ProductionValidator:
                 else:
                     self.log(f"Port {port} ({service}): In use or blocked", "warn")
 
-    def check_python_packages(self):
+    def check_python_packages(self) -> None:
         """Check required Python packages are installed."""
         print(f"\n{BLUE}=== Python Dependencies ==={RESET}")
 
@@ -286,7 +285,7 @@ class ProductionValidator:
             except ImportError:
                 self.log(f"{package_name}: Not installed", "fail")
 
-    def check_service_files(self):
+    def check_service_files(self) -> None:
         """Check systemd service files."""
         print(f"\n{BLUE}=== Service Configuration ==={RESET}")
 
@@ -301,6 +300,7 @@ class ProductionValidator:
                     capture_output=True,
                     text=True,
                     timeout=5,
+                    check=False,
                 )
                 if result.returncode == 0 and "enabled" in result.stdout:
                     self.log("PBX service: Enabled for autostart", "pass")
@@ -311,7 +311,7 @@ class ProductionValidator:
         else:
             self.log("Systemd service file: Not installed", "warn")
 
-    def check_monitoring(self):
+    def check_monitoring(self) -> None:
         """Check monitoring and logging setup."""
         print(f"\n{BLUE}=== Monitoring & Logging ==={RESET}")
 
@@ -336,7 +336,7 @@ class ProductionValidator:
         else:
             self.log("Logrotate configuration: Not found (recommended)", "warn")
 
-    def check_backups(self):
+    def check_backups(self) -> None:
         """Check backup configuration."""
         print(f"\n{BLUE}=== Backup Configuration ==={RESET}")
 
@@ -349,7 +349,9 @@ class ProductionValidator:
 
         # Check for cron jobs
         try:
-            result = subprocess.run(["crontab", "-l"], capture_output=True, text=True, timeout=5)
+            result = subprocess.run(
+                ["crontab", "-l"], capture_output=True, text=True, timeout=5, check=False
+            )
             if "backup" in result.stdout.lower() or "pbx" in result.stdout.lower():
                 self.log("Backup cron job: Configured", "pass")
             else:
@@ -357,7 +359,7 @@ class ProductionValidator:
         except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
             self.log("Could not check cron jobs", "info")
 
-    def command_exists(self, command):
+    def command_exists(self, command: str) -> bool:
         """Check if a command exists."""
         try:
             subprocess.run(
@@ -370,7 +372,7 @@ class ProductionValidator:
         except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
             return False
 
-    def is_port_available(self, port):
+    def is_port_available(self, port: int) -> bool:
         """Check if a port is available."""
         try:
             with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -380,11 +382,11 @@ class ProductionValidator:
         except OSError:
             return False
 
-    def run_all_checks(self):
+    def run_all_checks(self) -> int:
         """Run all validation checks."""
-        print(f"\n{BLUE}{'='*60}{RESET}")
+        print(f"\n{BLUE}{'=' * 60}{RESET}")
         print(f"{BLUE}PBX Production Readiness Validation{RESET}")
-        print(f"{BLUE}{'='*60}{RESET}")
+        print(f"{BLUE}{'=' * 60}{RESET}")
 
         self.check_system_requirements()
         self.check_configuration()
@@ -398,9 +400,9 @@ class ProductionValidator:
         self.check_backups()
 
         # Summary
-        print(f"\n{BLUE}{'='*60}{RESET}")
+        print(f"\n{BLUE}{'=' * 60}{RESET}")
         print(f"{BLUE}Summary{RESET}")
-        print(f"{BLUE}{'='*60}{RESET}")
+        print(f"{BLUE}{'=' * 60}{RESET}")
         print(f"{GREEN}Passed:{RESET} {len(self.results['passed'])}")
         print(f"{RED}Failed:{RESET} {len(self.results['failed'])}")
         print(f"{YELLOW}Warnings:{RESET} {len(self.results['warnings'])}")
@@ -410,17 +412,16 @@ class ProductionValidator:
             if len(self.results["warnings"]) > 0:
                 print(f"{YELLOW}⚠ Please review warnings before production deployment{RESET}")
             return 0
-        else:
-            print(f"\n{RED}✗ {len(self.results['failed'])} critical issues found{RESET}")
-            print(f"{RED}Please fix these issues before production deployment{RESET}")
-            return 1
+        print(f"\n{RED}✗ {len(self.results['failed'])} critical issues found{RESET}")
+        print(f"{RED}Please fix these issues before production deployment{RESET}")
+        return 1
 
-    def output_json(self):
+    def output_json(self) -> str:
         """Output results in JSON format."""
         return json.dumps(self.results, indent=2)
 
 
-def main():
+def main() -> None:
     """Main entry point."""
     parser = argparse.ArgumentParser(description="Validate PBX system production readiness")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")

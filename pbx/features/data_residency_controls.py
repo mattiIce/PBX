@@ -3,8 +3,9 @@ Data Residency Controls
 Geographic data storage options for compliance
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -45,7 +46,7 @@ class DataResidencyControls:
     - Data localization enforcement
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize data residency controls"""
         self.logger = get_logger()
         self.config = config or {}
@@ -73,7 +74,7 @@ class DataResidencyControls:
         self.logger.info(f"  Strict mode: {self.strict_mode}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_default_regions(self):
+    def _initialize_default_regions(self) -> None:
         """Initialize default region configurations"""
         regions = [
             ("us-east", "US East", "/var/pbx/data/us-east"),
@@ -90,7 +91,7 @@ class DataResidencyControls:
                 "compliance_tags": [],
             }
 
-    def configure_region(self, region: str, config: dict):
+    def configure_region(self, region: str, config: dict) -> bool:
         """
         Configure storage region
 
@@ -111,7 +112,7 @@ class DataResidencyControls:
         self.logger.info(f"  Database: {config.get('database_server')}")
         return True
 
-    def set_category_region(self, category: DataCategory, region: StorageRegion):
+    def set_category_region(self, category: DataCategory, region: StorageRegion) -> bool:
         """
         set storage region for data category
 
@@ -130,7 +131,7 @@ class DataResidencyControls:
         self.logger.info(f"set {category.value} to store in {region.value}")
         return True
 
-    def get_storage_location(self, category: str, user_region: str = None) -> dict:
+    def get_storage_location(self, category: str, user_region: str | None = None) -> dict:
         """
         Get storage location for data
 
@@ -161,7 +162,7 @@ class DataResidencyControls:
         }
 
     def validate_storage_operation(
-        self, category: str, target_region: str, user_region: str = None
+        self, category: str, target_region: str, user_region: str | None = None
     ) -> dict:
         """
         Validate if storage operation is allowed
@@ -177,19 +178,21 @@ class DataResidencyControls:
         self.total_storage_operations += 1
 
         # In strict mode, enforce data residency
-        if self.strict_mode and user_region:
-            if target_region != user_region:
-                self.blocked_operations += 1
-                return {
-                    "allowed": False,
-                    "reason": "Cross-region storage not allowed in strict mode",
-                }
+        if self.strict_mode and user_region and target_region != user_region:
+            self.blocked_operations += 1
+            return {
+                "allowed": False,
+                "reason": "Cross-region storage not allowed in strict mode",
+            }
 
         # Check for EU data protection rules
-        if user_region in ["eu-west", "eu-central", "uk"]:
-            if target_region not in ["eu-west", "eu-central", "uk"]:
-                self.blocked_operations += 1
-                return {"allowed": False, "reason": "EU data cannot be stored outside EU (GDPR)"}
+        if user_region in ["eu-west", "eu-central", "uk"] and target_region not in [
+            "eu-west",
+            "eu-central",
+            "uk",
+        ]:
+            self.blocked_operations += 1
+            return {"allowed": False, "reason": "EU data cannot be stored outside EU (GDPR)"}
 
         return {"allowed": True}
 
@@ -199,7 +202,7 @@ class DataResidencyControls:
         category: str,
         from_region: str,
         to_region: str,
-        justification: str = None,
+        justification: str | None = None,
     ) -> dict:
         """
         Transfer data between regions
@@ -260,7 +263,7 @@ class DataResidencyControls:
             "from_region": from_region,
             "to_region": to_region,
             "justification": justification,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "status": "completed",
         }
 
@@ -365,7 +368,7 @@ class DataResidencyControls:
 _data_residency = None
 
 
-def get_data_residency(config=None) -> DataResidencyControls:
+def get_data_residency(config: Any | None = None) -> DataResidencyControls:
     """Get or create data residency controls instance"""
     global _data_residency
     if _data_residency is None:

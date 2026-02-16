@@ -6,8 +6,8 @@ import os
 import sqlite3
 import tempfile
 from datetime import time
+from pathlib import Path
 from typing import Any
-
 
 from pbx.features.least_cost_routing import DialPattern, LeastCostRouting, RateEntry, TimeBasedRate
 
@@ -73,6 +73,7 @@ class TestDialPattern:
         assert pattern.matches("01133123456789")
         assert not pattern.matches("12125551234")
 
+
 class TestRateEntry:
     """Test RateEntry class"""
 
@@ -120,6 +121,7 @@ class TestRateEntry:
         # 66 / 60 * 0.01 = $0.011
         cost = rate.calculate_cost(65)
         assert cost == 0.011
+
 
 class TestTimeBasedRate:
     """Test TimeBasedRate class"""
@@ -169,7 +171,7 @@ class TestLeastCostRouting:
         """Clean up test environment"""
         # Close and remove temporary database
         os.close(self.db_fd)
-        os.unlink(self.db_path)
+        Path(self.db_path).unlink(missing_ok=True)
 
     def test_add_rate(self) -> None:
         """Test adding a rate"""

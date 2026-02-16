@@ -7,32 +7,32 @@ and accessible. It provides detailed diagnostic information to help
 troubleshoot database connectivity issues.
 """
 
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+import sqlite3
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-import sqlite3
-from pathlib import Path
 
 
-def print_header(text):
+def print_header(text: str) -> None:
     """Print a formatted header"""
     print("\n" + "=" * 70)
     print(f"  {text}")
     print("=" * 70)
 
 
-def print_section(text):
+def print_section(text: str) -> None:
     """Print a formatted section header"""
     print(f"\n{text}")
     print("-" * 70)
 
 
-def check_psycopg2():
+def check_psycopg2() -> bool:
     """Check if psycopg2 is installed"""
     print_section("1. Checking PostgreSQL Driver (psycopg2)")
     try:
@@ -48,7 +48,7 @@ def check_psycopg2():
         return False
 
 
-def check_config():
+def check_config() -> tuple[object | None, dict | None]:
     """Check database configuration"""
     print_section("2. Checking Database Configuration")
     try:
@@ -74,7 +74,7 @@ def check_config():
         return None, None
 
 
-def check_connection(config):
+def check_connection(config: object) -> bool:
     """Check database connection"""
     print_section("3. Testing Database Connection")
     try:
@@ -129,10 +129,9 @@ def check_connection(config):
 
             db.disconnect()
             return True
-        else:
-            print("✗ Failed to connect to database")
-            print(f"  Database enabled: {db.enabled}")
-            return False
+        print("✗ Failed to connect to database")
+        print(f"  Database enabled: {db.enabled}")
+        return False
 
     except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
         print(f"✗ Connection error: {e}")
@@ -142,7 +141,7 @@ def check_connection(config):
         return False
 
 
-def provide_recommendations(psycopg2_ok, config_ok, connection_ok):
+def provide_recommendations(psycopg2_ok: bool, config_ok: bool, connection_ok: bool) -> bool:
     """Provide recommendations based on test results"""
     print_header("RECOMMENDATIONS")
 
@@ -189,7 +188,7 @@ def provide_recommendations(psycopg2_ok, config_ok, connection_ok):
     return False
 
 
-def main():
+def main() -> None:
     """Main execution"""
     print_header("PBX DATABASE VERIFICATION TOOL")
     print("\nThis tool verifies that your database is properly configured")
@@ -199,7 +198,7 @@ def main():
 
     # Run checks
     psycopg2_ok = check_psycopg2()
-    config, db_config = check_config()
+    config, _db_config = check_config()
     config_ok = config is not None
 
     connection_ok = False

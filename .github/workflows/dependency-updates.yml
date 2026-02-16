@@ -2,67 +2,134 @@ name: Dependency Updates
 
 on:
   schedule:
-    - cron: '0 9 * * 1'
+    - cron: "0 9 * * 1"
   workflow_dispatch:
 
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  PYTHON_VERSION: "3.13"
+  UV_SYSTEM_PYTHON: "1"
+
 jobs:
-  update-dependencies:
-    runs-on: ubuntu-latest
+  update-python-dependencies:
+    name: Update Python Dependencies
+    runs-on: ubuntu-24.04
 
     steps:
-    - uses: actions/checkout@v6
-      with:
-        ref: main
+      - uses: actions/checkout@v4
+        with:
+          ref: main
 
-    - name: Set up Python
-      uses: actions/setup-python@v6
-      with:
-        python-version: '3.13'
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
 
-    - name: Install pip-tools
-      run: |
-        set -e
-        python -m pip install --upgrade pip pip-tools
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
 
-    - name: Update requirements
-      run: |
-        set -e
-        pip-compile --upgrade requirements.txt --output-file requirements-updated.txt
+      - name: Generate updated lockfile
+        run: |
+          set -e
+          uv pip compile pyproject.toml -o requirements-updated.txt
 
-    - name: Check for updates
-      id: check
-      run: |
-        set -e
-        if ! diff -q requirements.txt requirements-updated.txt > /dev/null 2>&1; then
-          echo "updates_available=true" >> $GITHUB_OUTPUT
-          echo "Updates available!"
-          diff requirements.txt requirements-updated.txt || true
-        else
-          echo "updates_available=false" >> $GITHUB_OUTPUT
-          echo "No updates available"
-        fi
+      - name: Check for updates
+        id: check
+        run: |
+          set -e
+          if [ -f requirements.txt ] && ! diff -q requirements.txt requirements-updated.txt > /dev/null 2>&1; then
+            echo "updates_available=true" >> "$GITHUB_OUTPUT"
+            echo "Updates available!"
+            diff requirements.txt requirements-updated.txt || true
+          else
+            echo "updates_available=false" >> "$GITHUB_OUTPUT"
+            echo "No updates available"
+          fi
 
-    - name: Create Pull Request
-      if: steps.check.outputs.updates_available == 'true'
-      uses: peter-evans/create-pull-request@v8
-      with:
-        commit-message: 'chore(deps): Update Python dependencies'
-        title: 'chore(deps): Weekly dependency updates'
-        body: |
-          ## Automated Dependency Updates
+      - name: Apply updates
+        if: steps.check.outputs.updates_available == 'true'
+        run: cp requirements-updated.txt requirements.txt
 
-          This PR updates Python dependencies to their latest compatible versions.
+      - name: Create Pull Request
+        if: steps.check.outputs.updates_available == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(deps): update Python dependencies"
+          title: "chore(deps): weekly dependency updates"
+          body: |
+            ## Automated Dependency Updates
 
-          ### Changes
-          - Updated dependencies in requirements.txt
+            This PR updates Python dependencies to their latest compatible versions.
 
-          ### Testing
-          - [ ] CI tests pass
-          - [ ] Manual testing completed
+            ### Changes
+            - Updated dependencies in requirements.txt
 
-          **Note:** Review the changes carefully before merging.
-        branch: automated/dependency-updates
-        delete-branch: true
-        labels: |
-          dependencies
-          automated
+            ### Testing
+            - [ ] CI tests pass
+            - [ ] Manual testing completed
+
+            **Note:** Review the changes carefully before merging.
+          branch: automated/dependency-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+
+  update-node-dependencies:
+    name: Update Node.js Dependencies
+    runs-on: ubuntu-24.04
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Check for outdated packages
+        id: check
+        run: |
+          set -e
+          npm outdated --json > outdated.json 2>/dev/null || true
+          if [ -s outdated.json ] && [ "$(cat outdated.json)" != "{}" ]; then
+            echo "updates_available=true" >> "$GITHUB_OUTPUT"
+            echo "Node.js updates available:"
+            cat outdated.json
+          else
+            echo "updates_available=false" >> "$GITHUB_OUTPUT"
+            echo "No Node.js updates available"
+          fi
+
+      - name: Update packages
+        if: steps.check.outputs.updates_available == 'true'
+        run: npm update
+
+      - name: Create Pull Request
+        if: steps.check.outputs.updates_available == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          commit-message: "chore(deps): update Node.js dependencies"
+          title: "chore(deps): weekly Node.js dependency updates"
+          body: |
+            ## Automated Node.js Dependency Updates
+
+            This PR updates Node.js dependencies to their latest compatible versions.
+
+            ### Testing
+            - [ ] CI tests pass
+            - [ ] Frontend builds successfully
+          branch: automated/node-dependency-updates
+          delete-branch: true
+          labels: |
+            dependencies
+            automated
+            javascript

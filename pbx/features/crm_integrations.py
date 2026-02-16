@@ -3,9 +3,10 @@ CRM Integration Framework
 HubSpot and Zendesk integration for marketing and support
 """
 
+import sqlite3
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class HubSpotIntegration:
@@ -14,7 +15,7 @@ class HubSpotIntegration:
     Marketing automation and CRM integration
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize HubSpot integration
 
@@ -199,12 +200,11 @@ class HubSpotIntegration:
                     f"Contact synced: {contact_data.get('email')}",
                 )
                 return True
-            else:
-                self._log_activity(
-                    "hubspot", "sync_contact", "error", f"API error: {response.status_code}"
-                )
-                self.logger.error(f"HubSpot API error: {response.status_code} - {response.text}")
-                return False
+            self._log_activity(
+                "hubspot", "sync_contact", "error", f"API error: {response.status_code}"
+            )
+            self.logger.error(f"HubSpot API error: {response.status_code} - {response.text}")
+            return False
 
         except requests.exceptions.RequestException as e:
             self._log_activity("hubspot", "sync_contact", "error", str(e))
@@ -299,12 +299,11 @@ class HubSpotIntegration:
                     f"Deal created: {deal_data.get('dealname')}",
                 )
                 return True
-            else:
-                self._log_activity(
-                    "hubspot", "create_deal", "error", f"API error: {response.status_code}"
-                )
-                self.logger.error(f"HubSpot API error: {response.status_code} - {response.text}")
-                return False
+            self._log_activity(
+                "hubspot", "create_deal", "error", f"API error: {response.status_code}"
+            )
+            self.logger.error(f"HubSpot API error: {response.status_code} - {response.text}")
+            return False
 
         except requests.exceptions.RequestException as e:
             self._log_activity("hubspot", "create_deal", "error", str(e))
@@ -315,7 +314,7 @@ class HubSpotIntegration:
             self.logger.error(f"HubSpot deal creation error: {e}")
             return False
 
-    def _log_activity(self, integration_type: str, action: str, status: str, details: str):
+    def _log_activity(self, integration_type: str, action: str, status: str, details: str) -> None:
         """Log integration activity"""
         try:
             self.db.execute(
@@ -340,7 +339,7 @@ class ZendeskIntegration:
     Helpdesk ticket creation and management
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize Zendesk integration
 
@@ -533,12 +532,11 @@ class ZendeskIntegration:
                     "zendesk", "create_ticket", "success", f"Ticket created: {ticket_id}"
                 )
                 return ticket_id
-            else:
-                self._log_activity(
-                    "zendesk", "create_ticket", "error", f"API error: {response.status_code}"
-                )
-                self.logger.error(f"Zendesk API error: {response.status_code} - {response.text}")
-                return None
+            self._log_activity(
+                "zendesk", "create_ticket", "error", f"API error: {response.status_code}"
+            )
+            self.logger.error(f"Zendesk API error: {response.status_code} - {response.text}")
+            return None
 
         except requests.exceptions.RequestException as e:
             self._log_activity("zendesk", "create_ticket", "error", str(e))
@@ -620,12 +618,11 @@ class ZendeskIntegration:
                     "zendesk", "update_ticket", "success", f"Ticket updated: {ticket_id}"
                 )
                 return True
-            else:
-                self._log_activity(
-                    "zendesk", "update_ticket", "error", f"API error: {response.status_code}"
-                )
-                self.logger.error(f"Zendesk API error: {response.status_code} - {response.text}")
-                return False
+            self._log_activity(
+                "zendesk", "update_ticket", "error", f"API error: {response.status_code}"
+            )
+            self.logger.error(f"Zendesk API error: {response.status_code} - {response.text}")
+            return False
 
         except requests.exceptions.RequestException as e:
             self._log_activity("zendesk", "update_ticket", "error", str(e))
@@ -636,7 +633,7 @@ class ZendeskIntegration:
             self.logger.error(f"Zendesk ticket update error: {e}")
             return False
 
-    def _log_activity(self, integration_type: str, action: str, status: str, details: str):
+    def _log_activity(self, integration_type: str, action: str, status: str, details: str) -> None:
         """Log integration activity"""
         try:
             self.db.execute(
@@ -676,17 +673,16 @@ class ZendeskIntegration:
                 (limit,),
             )
 
-            activities = []
-            for row in result or []:
-                activities.append(
-                    {
-                        "integration_type": row[1],
-                        "action": row[2],
-                        "status": row[3],
-                        "details": row[4],
-                        "created_at": row[5],
-                    }
-                )
+            activities = [
+                {
+                    "integration_type": row[1],
+                    "action": row[2],
+                    "status": row[3],
+                    "details": row[4],
+                    "created_at": row[5],
+                }
+                for row in result or []
+            ]
 
             return activities
 

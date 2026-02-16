@@ -10,7 +10,7 @@ import re
 from pathlib import Path
 
 
-def create_anchor_id(text):
+def create_anchor_id(text: str) -> str:
     """Create URL-safe anchor ID from header text."""
     # Remove HTML tags and special characters
     text = re.sub(r"<[^>]+>", "", text)
@@ -21,7 +21,7 @@ def create_anchor_id(text):
     return anchor
 
 
-def markdown_to_html(markdown_content):
+def markdown_to_html(markdown_content: str) -> str:
     """
     Convert markdown content to HTML with proper formatting.
 
@@ -34,22 +34,22 @@ def markdown_to_html(markdown_content):
     html = markdown_content
 
     # Convert headers with anchor IDs
-    def replace_h1(match):
+    def replace_h1(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h1 id="{anchor_id}">{text}</h1>'
 
-    def replace_h2(match):
+    def replace_h2(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h2 id="{anchor_id}">{text}</h2>'
 
-    def replace_h3(match):
+    def replace_h3(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h3 id="{anchor_id}">{text}</h3>'
 
-    def replace_h4(match):
+    def replace_h4(match: re.Match) -> str:
         text = match.group(1)
         anchor_id = create_anchor_id(text)
         return f'<h4 id="{anchor_id}">{text}</h4>'
@@ -69,8 +69,8 @@ def markdown_to_html(markdown_content):
     html = re.sub(r"`([^`]+)`", r"<code>\1</code>", html)
 
     # Convert code blocks
-    def replace_code_block(match):
-        lang = match.group(1) if match.group(1) else ""
+    def replace_code_block(match: re.Match) -> str:
+        lang = match.group(1) or ""
         code = match.group(2)
         # Escape HTML in code blocks
         code = code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
@@ -90,7 +90,7 @@ def markdown_to_html(markdown_content):
     table_lines = []
     result_lines = []
 
-    for i, line in enumerate(lines):
+    for _i, line in enumerate(lines):
         if "|" in line and line.strip().startswith("|"):
             if not in_table:
                 in_table = True
@@ -124,7 +124,7 @@ def markdown_to_html(markdown_content):
     return "\n".join(result_lines)
 
 
-def convert_table(table_lines):
+def convert_table(table_lines: list[str]) -> str:
     """Convert markdown table to HTML table."""
     if len(table_lines) < 2:
         return "\n".join(table_lines)
@@ -135,8 +135,7 @@ def convert_table(table_lines):
     header = table_lines[0]
     cells = [cell.strip() for cell in header.split("|")[1:-1]]
     html.append("<thead><tr>")
-    for cell in cells:
-        html.append(f"<th>{cell}</th>")
+    html.extend(f"<th>{cell}</th>" for cell in cells)
     html.append("</tr></thead>")
 
     # Data rows (skip separator line)
@@ -144,8 +143,7 @@ def convert_table(table_lines):
     for row in table_lines[2:]:
         cells = [cell.strip() for cell in row.split("|")[1:-1]]
         html.append("<tr>")
-        for cell in cells:
-            html.append(f"<td>{cell}</td>")
+        html.extend(f"<td>{cell}</td>" for cell in cells)
         html.append("</tr>")
     html.append("</tbody>")
 
@@ -153,7 +151,7 @@ def convert_table(table_lines):
     return "\n".join(html)
 
 
-def convert_lists(text):
+def convert_lists(text: str) -> str:
     """Convert markdown lists to HTML lists."""
     lines = text.split("\n")
     result = []
@@ -195,7 +193,7 @@ def convert_lists(text):
     return "\n".join(result)
 
 
-def create_html_template(content, title="PBX System - Troubleshooting Guide"):
+def create_html_template(content: str, title: str = "PBX System - Troubleshooting Guide") -> str:
     """
     Create a complete HTML document with styling.
 
@@ -444,7 +442,7 @@ def create_html_template(content, title="PBX System - Troubleshooting Guide"):
     return template
 
 
-def main():
+def main() -> None:
     """Main conversion function."""
     # Get paths
     script_dir = Path(__file__).parent
@@ -455,7 +453,7 @@ def main():
     print(f"Reading {md_file}...")
 
     # Read markdown file
-    with open(md_file, "r", encoding="utf-8") as f:
+    with open(md_file, encoding="utf-8") as f:
         markdown_content = f.read()
 
     print("Converting to HTML...")

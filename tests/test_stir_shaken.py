@@ -5,9 +5,8 @@ Tests for STIR/SHAKEN caller ID authentication
 
 import base64
 import json
-import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.stir_shaken import (
     CRYPTO_AVAILABLE,
@@ -18,7 +17,6 @@ from pbx.features.stir_shaken import (
     verify_stir_shaken_invite,
 )
 from pbx.sip.message import SIPMessage
-from pathlib import Path
 
 
 def create_test_manager() -> STIRSHAKENManager | None:
@@ -54,9 +52,9 @@ def test_manager_initialization() -> bool:
 
     manager = STIRSHAKENManager()
     assert manager is not None, "Manager should initialize"
-    assert (
-        manager.enabled == CRYPTO_AVAILABLE
-    ), "Manager enabled state should match crypto availability"
+    assert manager.enabled == CRYPTO_AVAILABLE, (
+        "Manager enabled state should match crypto availability"
+    )
 
     return True
 
@@ -185,7 +183,7 @@ def test_verify_invalid_signature() -> bool:
     tampered_passport = ".".join(parts)
 
     # Verify should fail
-    valid, payload, reason = manager.verify_passport(tampered_passport)
+    valid, _payload, _reason = manager.verify_passport(tampered_passport)
 
     assert not valid, "Tampered PASSporT should fail verification"
 

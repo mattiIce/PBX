@@ -2,18 +2,44 @@
 SIP Server implementation
 """
 
+from __future__ import annotations
+
 import socket
 import threading
+from typing import TYPE_CHECKING
 
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 from pbx.utils.logger import get_logger
 
+if TYPE_CHECKING:
+    from pbx.core.pbx import PBXCore
+
+# Type alias for network address tuples
+type AddrTuple = tuple[str, int]
+
 # Valid DTMF digits for SIP INFO validation
-VALID_DTMF_DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "#", "A", "B", "C", "D"]
+VALID_DTMF_DIGITS: list[str] = [
+    "0",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "*",
+    "#",
+    "A",
+    "B",
+    "C",
+    "D",
+]
 
 # RFC 2833 Event Code to DTMF digit mapping (for SIP INFO messages that send event codes)
 # Some phones send "Signal=11" instead of "Signal=#"
-RFC2833_EVENT_TO_DTMF = {
+RFC2833_EVENT_TO_DTMF: dict[str, str] = {
     "0": "0",
     "1": "1",
     "2": "2",
@@ -34,31 +60,36 @@ RFC2833_EVENT_TO_DTMF = {
 
 
 class SIPServer:
-    """SIP server for handling registration and calls"""
+    """SIP server for handling registration and calls."""
 
     def __init__(
         self,
-        host="0.0.0.0",
-        port=5060,
-        pbx_core=None,  # nosec B104 - SIP server needs to bind all interfaces
-    ):
+        host: str = "0.0.0.0",
+        port: int = 5060,
+        pbx_core: PBXCore | None = None,  # nosec B104 - SIP server needs to bind all interfaces
+    ) -> None:
         """
-        Initialize SIP server
+        Initialize SIP server.
 
         Args:
-            host: Host to bind to
-            port: Port to bind to
-            pbx_core: Reference to PBX core
+            host: Host to bind to.
+            port: Port to bind to.
+            pbx_core: Reference to PBX core.
         """
-        self.host = host
-        self.port = port
-        self.pbx_core = pbx_core
+        self.host: str = host
+        self.port: int = port
+        self.pbx_core: PBXCore | None = pbx_core
         self.logger = get_logger()
-        self.socket = None
-        self.running = False
+        self.socket: socket.socket | None = None
+        self.running: bool = False
 
-    def start(self):
-        """Start SIP server"""
+    def start(self) -> bool:
+        """
+        Start SIP server.
+
+        Returns:
+            True if the server started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -79,15 +110,15 @@ class SIPServer:
             self.logger.error(f"Failed to start SIP server: {e}")
             return False
 
-    def stop(self):
-        """Stop SIP server"""
+    def stop(self) -> None:
+        """Stop SIP server."""
         self.running = False
         if self.socket:
             self.socket.close()
         self.logger.info("SIP server stopped")
 
-    def _listen(self):
-        """Listen for incoming SIP messages"""
+    def _listen(self) -> None:
+        """Listen for incoming SIP messages."""
         self.logger.info("SIP server listening for messages...")
 
         while self.running:
@@ -101,7 +132,7 @@ class SIPServer:
                 handler_thread.daemon = True
                 handler_thread.start()
 
-            except socket.timeout:
+            except TimeoutError:
                 # Timeout allows us to check running flag periodically
                 continue
             except OSError as e:
@@ -110,20 +141,18 @@ class SIPServer:
 
         self.logger.info("SIP server listening thread stopped")
 
-    def _handle_message(self, raw_message, addr):
+    def _handle_message(self, raw_message: str, addr: AddrTuple) -> None:
         """
-        Handle incoming SIP message
+        Handle incoming SIP message.
 
         Args:
-            raw_message: Raw SIP message string
-            addr: Source address tuple (host, port)
+            raw_message: Raw SIP message string.
+            addr: Source address tuple (host, port).
         """
         try:
             message = SIPMessage(raw_message)
 
-            self.logger.debug(
-                f"Received {message.method or message.status_code} from {addr}"
-            )
+            self.logger.debug(f"Received {message.method or message.status_code} from {addr}")
 
             if message.is_request():
                 self._handle_request(message, addr)
@@ -133,13 +162,13 @@ class SIPServer:
         except Exception as e:
             self.logger.error(f"Error handling message: {e}")
 
-    def _handle_request(self, message, addr):
+    def _handle_request(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle SIP request
+        Handle SIP request.
 
         Args:
-            message: SIPMessage object
-            addr: Source address
+            message: SIPMessage object.
+            addr: Source address.
         """
         method = message.method
 
@@ -175,8 +204,14 @@ class SIPServer:
             self.logger.warning(f"Unhandled SIP method: {method}")
             self._send_response(405, "Method Not Allowed", message, addr)
 
-    def _handle_register(self, message, addr):
-        """Handle REGISTER request"""
+    def _handle_register(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle REGISTER request.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.info(f"REGISTER request from {addr}")
 
         # Extract extension from URI or From header
@@ -197,8 +232,14 @@ class SIPServer:
         else:
             self._send_response(200, "OK", message, addr)
 
-    def _handle_invite(self, message, addr):
-        """Handle INVITE request"""
+    def _handle_invite(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle INVITE request.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.info(f"INVITE request from {addr}")
 
         if self.pbx_core:
@@ -218,8 +259,14 @@ class SIPServer:
         else:
             self._send_response(200, "OK", message, addr)
 
-    def _handle_ack(self, message, addr):
-        """Handle ACK request"""
+    def _handle_ack(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle ACK request.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.debug(f"ACK request from {addr}")
 
         # Forward ACK to complete the three-way handshake
@@ -234,8 +281,14 @@ class SIPServer:
 
         # ACK is not responded to
 
-    def _handle_bye(self, message, addr):
-        """Handle BYE request"""
+    def _handle_bye(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle BYE request.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         call_id = message.get_header("Call-ID")
         self.logger.info("")
         self.logger.info(">>> BYE REQUEST RECEIVED <<<")
@@ -252,11 +305,9 @@ class SIPServer:
                 )
                 self.logger.info(f"  Call State: {call.state}")
                 if hasattr(call, "voicemail_extension"):
-                    self.logger.info(
-                        f"  Voicemail Extension: {call.voicemail_extension}"
-                    )
+                    self.logger.info(f"  Voicemail Extension: {call.voicemail_extension}")
                 # Determine which party sent BYE and forward to the other
-                other_party_addr = None
+                other_party_addr: AddrTuple | None = None
 
                 if call.caller_addr and call.caller_addr == addr:
                     # Caller sent BYE, forward to callee
@@ -282,21 +333,33 @@ class SIPServer:
             # End the call internally
             self.logger.info(f"  Processing BYE - ending call {call_id}")
             self.pbx_core.end_call(call_id)
-            self.logger.info(f"  ✓ Call {call_id} ended")
+            self.logger.info(f"  Call {call_id} ended")
         else:
             self.logger.info(f"  Call {call_id} not found in call manager")
 
         self._send_response(200, "OK", message, addr)
-        self.logger.info(f"  ✓ Sent 200 OK response to {addr}")
+        self.logger.info(f"  Sent 200 OK response to {addr}")
         self.logger.info("")
 
-    def _handle_cancel(self, message, addr):
-        """Handle CANCEL request"""
+    def _handle_cancel(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle CANCEL request.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.info(f"CANCEL request from {addr}")
         self._send_response(200, "OK", message, addr)
 
-    def _handle_options(self, message, addr):
-        """Handle OPTIONS request"""
+    def _handle_options(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle OPTIONS request.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.debug(f"OPTIONS request from {addr}")
         response = SIPMessageBuilder.build_response(200, "OK", message)
         response.set_header(
@@ -305,8 +368,14 @@ class SIPServer:
         )
         self._send_message(response.build(), addr)
 
-    def _handle_subscribe(self, message, addr):
-        """Handle SUBSCRIBE request for presence/event notifications"""
+    def _handle_subscribe(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle SUBSCRIBE request for presence/event notifications.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.debug(f"SUBSCRIBE request from {addr}")
 
         # Get the event type being subscribed to
@@ -326,14 +395,26 @@ class SIPServer:
         # Optionally send initial NOTIFY (would need full NOTIFY
         # implementation)
 
-    def _handle_notify(self, message, addr):
-        """Handle NOTIFY request"""
+    def _handle_notify(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle NOTIFY request.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.debug(f"NOTIFY request from {addr}")
         # Acknowledge the notification
         self._send_response(200, "OK", message, addr)
 
-    def _handle_refer(self, message, addr):
-        """Handle REFER request for call transfer"""
+    def _handle_refer(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle REFER request for call transfer.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
         self.logger.info(f"REFER request from {addr}")
 
         # Get the Refer-To header
@@ -350,13 +431,17 @@ class SIPServer:
         # In a full implementation, would initiate new call to refer-to destination
         # and send NOTIFY messages about transfer progress
 
-    def _handle_info(self, message, addr):
+    def _handle_info(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle INFO request (typically used for DTMF signaling)
+        Handle INFO request (typically used for DTMF signaling).
 
         SIP INFO can carry DTMF digits in the message body with Content-type:
         - application/dtmf-relay (RFC 2833 style)
         - application/dtmf (simple format)
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
         """
         self.logger.debug(f"INFO request from {addr}")
 
@@ -365,15 +450,13 @@ class SIPServer:
         content_type = message.get_header("Content-type")
 
         # Extract DTMF digit from message body
-        dtmf_digit = None
+        dtmf_digit: str | None = None
         if message.body and content_type:
             content_type_lower = content_type.lower()
 
             # Only process DTMF-related content types (handle charset and other
             # parameters)
-            if content_type_lower.startswith(
-                "application/dtmf-relay"
-            ) or content_type_lower.startswith("application/dtm"):
+            if content_type_lower.startswith(("application/dtmf-relay", "application/dtm")):
                 # Parse DTMF from body
                 # Format can be:
                 # Signal=1
@@ -392,14 +475,13 @@ class SIPServer:
                                 break
                             # Check if it's an RFC 2833 event code (some phones
                             # send "11" for "#")
-                            elif digit in RFC2833_EVENT_TO_DTMF:
+                            if digit in RFC2833_EVENT_TO_DTMF:
                                 dtmf_digit = RFC2833_EVENT_TO_DTMF[digit]
                                 self.logger.debug(
                                     f"Converted RFC 2833 event code {digit} to DTMF digit {dtmf_digit}"
                                 )
                                 break
-                            else:
-                                self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
+                            self.logger.warning(f"Invalid DTMF digit in SIP INFO: {digit}")
                         break
 
                 if dtmf_digit:
@@ -412,12 +494,16 @@ class SIPServer:
         # Always respond with 200 OK to INFO requests
         self._send_response(200, "OK", message, addr)
 
-    def _handle_sip_message_method(self, message, addr):
+    def _handle_sip_message_method(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle MESSAGE request for instant messaging (RFC 3428)
+        Handle MESSAGE request for instant messaging (RFC 3428).
 
         MESSAGE is used to send instant messages between SIP endpoints.
         The message body typically contains text/plain content.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
         """
         self.logger.info(f"MESSAGE request from {addr}")
 
@@ -441,12 +527,16 @@ class SIPServer:
         # Accept the message
         self._send_response(200, "OK", message, addr)
 
-    def _handle_prack(self, message, addr):
+    def _handle_prack(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle PRACK request for Provisional Response Acknowledgment (RFC 3262)
+        Handle PRACK request for Provisional Response Acknowledgment (RFC 3262).
 
         PRACK is used to acknowledge provisional responses (1xx) reliably.
         This enables reliable transmission of provisional responses like 180 Ringing.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
         """
         self.logger.debug(f"PRACK request from {addr}")
 
@@ -466,13 +556,17 @@ class SIPServer:
         # Accept the PRACK
         self._send_response(200, "OK", message, addr)
 
-    def _handle_update(self, message, addr):
+    def _handle_update(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle UPDATE request for session modification (RFC 3311)
+        Handle UPDATE request for session modification (RFC 3311).
 
         UPDATE allows modification of session parameters (like SDP) without
         changing the dialog state. Unlike re-INVITE, it cannot be used to
         change the remote target or route set.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
         """
         self.logger.info(f"UPDATE request from {addr}")
 
@@ -496,12 +590,16 @@ class SIPServer:
             self.logger.debug(f"UPDATE without SDP for call {call_id}")
             self._send_response(200, "OK", message, addr)
 
-    def _handle_publish(self, message, addr):
+    def _handle_publish(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle PUBLISH request for event state publication (RFC 3903)
+        Handle PUBLISH request for event state publication (RFC 3903).
 
         PUBLISH is used to publish event state to an event state compositor (ESC).
         Common uses include publishing presence information, dialog state, etc.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
         """
         self.logger.info(f"PUBLISH request from {addr}")
 
@@ -534,11 +632,15 @@ class SIPServer:
         response.set_header("SIP-ETag", "entity-tag-placeholder")
         self._send_message(response.build(), addr)
 
-    def _handle_response(self, message, addr):
-        """Handle SIP response"""
-        self.logger.debug(
-            f"Received response {message.status_code} from {addr}"
-        )
+    def _handle_response(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Handle SIP response.
+
+        Args:
+            message: SIPMessage object.
+            addr: Source address tuple.
+        """
+        self.logger.debug(f"Received response {message.status_code} from {addr}")
 
         # Handle responses from callee
         if self.pbx_core and message.status_code:
@@ -560,26 +662,28 @@ class SIPServer:
                 if call_id:
                     self.pbx_core.handle_callee_answer(call_id, message, addr)
 
-    def _send_response(self, status_code, status_text, request, addr):
+    def _send_response(
+        self, status_code: int, status_text: str, request: SIPMessage, addr: AddrTuple
+    ) -> None:
         """
-        Send SIP response
+        Send SIP response.
 
         Args:
-            status_code: Status code
-            status_text: Status text
-            request: Original request message
-            addr: Destination address
+            status_code: Status code.
+            status_text: Status text.
+            request: Original request message.
+            addr: Destination address.
         """
         response = SIPMessageBuilder.build_response(status_code, status_text, request)
         self._send_message(response.build(), addr)
 
-    def _send_message(self, message, addr):
+    def _send_message(self, message: str, addr: AddrTuple) -> None:
         """
-        Send SIP message
+        Send SIP message over the network.
 
         Args:
-            message: Message string
-            addr: Destination address
+            message: Message string.
+            addr: Destination address tuple (host, port).
         """
         try:
             self.socket.sendto(message.encode("utf-8"), addr)

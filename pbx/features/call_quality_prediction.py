@@ -3,11 +3,12 @@ Call Quality Prediction
 Proactive network issue detection using ML
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # ML libraries for improved prediction
 try:
@@ -34,9 +35,9 @@ class QualityLevel(Enum):
 class NetworkMetrics:
     """Network metrics for a call or endpoint"""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize network metrics"""
-        self.timestamp = datetime.now(timezone.utc)
+        self.timestamp = datetime.now(UTC)
         self.latency = 0  # milliseconds
         self.jitter = 0  # milliseconds
         self.packet_loss = 0.0  # percentage
@@ -68,7 +69,7 @@ class CallQualityPrediction:
     - Recommendation engine
     """
 
-    def __init__(self, config=None, db_backend=None):
+    def __init__(self, config: Any | None = None, db_backend: Any | None = None) -> None:
         """Initialize call quality prediction system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -125,7 +126,7 @@ class CallQualityPrediction:
         self.logger.info(f"  MOS alert threshold: {self.alert_threshold_mos}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def collect_metrics(self, call_id: str, metrics: NetworkMetrics):
+    def collect_metrics(self, call_id: str, metrics: NetworkMetrics) -> None:
         """
         Collect network metrics for a call
 
@@ -191,16 +192,16 @@ class CallQualityPrediction:
                     current.jitter,
                     current.packet_loss,
                     current.bandwidth,
-                    datetime.now(timezone.utc).hour / 24.0,  # Normalized time of day
+                    datetime.now(UTC).hour / 24.0,  # Normalized time of day
                     0.0,
                     0.0,
                     0.0,  # Codec features (would need to be passed in)
                 ]
 
                 # Normalize and predict
-                X = np.array([feature_vector])
-                X_scaled = self.scaler.transform(X)
-                predicted_mos = self.rf_model.predict(X_scaled)[0]
+                x_data = np.array([feature_vector])
+                x_scaled = self.scaler.transform(x_data)
+                predicted_mos = self.rf_model.predict(x_scaled)[0]
 
                 # Bound to valid MOS range
                 predicted_mos = max(1.0, min(5.0, predicted_mos))
@@ -218,7 +219,9 @@ class CallQualityPrediction:
         if predicted_mos is None:
             # Apply exponential weighted moving average for smoothing
             weights = [2**i for i in range(len(recent))]
-            weighted_mos = sum(m.mos_score * w for m, w in zip(recent, weights)) / sum(weights)
+            weighted_mos = sum(
+                m.mos_score * w for m, w in zip(recent, weights, strict=False)
+            ) / sum(weights)
 
             # Combine weighted average with trend for prediction
             prediction_intervals = 3  # Predict 3 intervals ahead
@@ -229,7 +232,9 @@ class CallQualityPrediction:
 
         # Predict future packet loss using similar approach
         weights_pl = [2**i for i in range(len(recent))]
-        weighted_pl = sum(m.packet_loss * w for m, w in zip(recent, weights_pl)) / sum(weights_pl)
+        weighted_pl = sum(
+            m.packet_loss * w for m, w in zip(recent, weights_pl, strict=False)
+        ) / sum(weights_pl)
         predicted_packet_loss = weighted_pl + (packet_loss_trend * prediction_intervals)
         predicted_packet_loss = max(0.0, min(100.0, predicted_packet_loss))
 
@@ -267,7 +272,7 @@ class CallQualityPrediction:
             "alert": alert,
             "alert_reasons": alert_reasons,
             "recommendations": self._generate_recommendations(predicted_mos, predicted_packet_loss),
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
 
         self.active_predictions[call_id] = prediction
@@ -343,14 +348,13 @@ class CallQualityPrediction:
         """Convert MOS score to quality level"""
         if mos >= 4.3:
             return QualityLevel.EXCELLENT
-        elif mos >= 4.0:
+        if mos >= 4.0:
             return QualityLevel.GOOD
-        elif mos >= 3.6:
+        if mos >= 3.6:
             return QualityLevel.FAIR
-        elif mos >= 3.1:
+        if mos >= 3.1:
             return QualityLevel.POOR
-        else:
-            return QualityLevel.CRITICAL
+        return QualityLevel.CRITICAL
 
     def _generate_recommendations(
         self, predicted_mos: float, predicted_packet_loss: float
@@ -385,7 +389,7 @@ class CallQualityPrediction:
         """Get current prediction for a call"""
         return self.active_predictions.get(call_id)
 
-    def clear_history(self, call_id: str):
+    def clear_history(self, call_id: str) -> None:
         """Clear metrics history for a call"""
         if call_id in self.metrics_history:
             del self.metrics_history[call_id]
@@ -427,7 +431,7 @@ class CallQualityPrediction:
 
         return np.array(features), np.array(targets)
 
-    def train_model(self, historical_data: list[dict]):
+    def train_model(self, historical_data: list[dict]) -> None:
         """
         Train ML model with historical data using RandomForest
 
@@ -448,11 +452,11 @@ class CallQualityPrediction:
         if SKLEARN_AVAILABLE:
             try:
                 # Extract features and target
-                X, y = self._extract_features_and_targets(historical_data)
+                x_data, y = self._extract_features_and_targets(historical_data)
 
                 # Normalize features for better performance
                 self.scaler = StandardScaler()
-                X_scaled = self.scaler.fit_transform(X)
+                x_scaled = self.scaler.fit_transform(x_data)
 
                 # Train RandomForest Regressor
                 self.rf_model = RandomForestRegressor(
@@ -461,11 +465,11 @@ class CallQualityPrediction:
                     random_state=42,
                     n_jobs=-1,  # Use all CPU cores
                 )
-                self.rf_model.fit(X_scaled, y)
+                self.rf_model.fit(x_scaled, y)
                 self.model_trained = True
 
                 # Validate model on training data
-                predictions = self.rf_model.predict(X_scaled)
+                predictions = self.rf_model.predict(x_scaled)
 
                 # Calculate R-squared
                 ss_res = np.sum((y - predictions) ** 2)
@@ -487,9 +491,15 @@ class CallQualityPrediction:
 
                 self.logger.info("RandomForest model training completed")
                 self.logger.info(f"  Training R-squared: {r_squared:.3f}")
-                self.logger.info(f"  Features: {X.shape[1]}")
+                self.logger.info(f"  Features: {x_data.shape[1]}")
                 self.logger.info(
-                    f"  Top features: {sorted(zip(feature_names[:len(importance)], importance), key=lambda x: x[1], reverse=True)[:3]}"
+                    f"  Top features: {
+                        sorted(
+                            zip(feature_names[: len(importance)], importance, strict=False),
+                            key=lambda x: x[1],
+                            reverse=True,
+                        )[:3]
+                    }"
                 )
 
                 return
@@ -624,7 +634,9 @@ class CallQualityPrediction:
 _quality_prediction = None
 
 
-def get_quality_prediction(config=None, db_backend=None) -> CallQualityPrediction:
+def get_quality_prediction(
+    config: Any | None = None, db_backend: Any | None = None
+) -> CallQualityPrediction:
     """Get or create call quality prediction instance"""
     global _quality_prediction
     if _quality_prediction is None:

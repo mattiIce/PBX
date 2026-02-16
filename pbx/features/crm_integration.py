@@ -3,20 +3,24 @@ CRM Integration and Screen Pop Support
 Provides caller information lookup and CRM integration capabilities
 """
 
+import contextlib
 import json
 import threading
-from datetime import datetime, timezone
-from collections.abc import Callable
+from datetime import UTC, datetime
+from typing import TYPE_CHECKING, Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from pbx.utils.logger import get_logger
 
+if TYPE_CHECKING:
+    from collections.abc import Callable
+
 
 class CallerInfo:
     """Represents caller information"""
 
-    def __init__(self, phone_number: str):
+    def __init__(self, phone_number: str) -> None:
         """
         Initialize caller info
 
@@ -71,10 +75,8 @@ class CallerInfo:
         caller_info.source = data.get("source")
 
         if data.get("last_contact"):
-            try:
+            with contextlib.suppress(BaseException):
                 caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
-            except BaseException:
-                pass
 
         return caller_info
 
@@ -82,7 +84,7 @@ class CallerInfo:
 class CRMLookupProvider:
     """Base class for CRM lookup providers"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize CRM lookup provider
 
@@ -110,7 +112,7 @@ class CRMLookupProvider:
 class PhoneBookLookupProvider(CRMLookupProvider):
     """Phone book lookup provider"""
 
-    def __init__(self, config: dict, phone_book=None):
+    def __init__(self, config: dict, phone_book: Any | None = None) -> None:
         """
         Initialize phone book lookup provider
 
@@ -149,7 +151,7 @@ class PhoneBookLookupProvider(CRMLookupProvider):
 class ActiveDirectoryLookupProvider(CRMLookupProvider):
     """Active Directory lookup provider"""
 
-    def __init__(self, config: dict, ad_integration=None):
+    def __init__(self, config: dict, ad_integration: Any | None = None) -> None:
         """
         Initialize AD lookup provider
 
@@ -187,7 +189,7 @@ class ActiveDirectoryLookupProvider(CRMLookupProvider):
 class ExternalCRMLookupProvider(CRMLookupProvider):
     """External CRM API lookup provider"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize external CRM lookup provider
 
@@ -216,9 +218,7 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
             request = Request(url, headers=headers, method="GET")
 
             # Send request
-            response = urlopen(
-                request, timeout=self.timeout
-            )  # nosec B310 - URL is constructed from validated CRM API endpoint
+            response = urlopen(request, timeout=self.timeout)  # nosec B310 - URL is constructed from validated CRM API endpoint
             data = json.loads(response.read().decode("utf-8"))
 
             # Parse response
@@ -235,10 +235,8 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
                 caller_info.source = self.name.lower()
 
                 if data.get("last_contact"):
-                    try:
+                    with contextlib.suppress(BaseException):
                         caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
-                    except BaseException:
-                        pass
 
                 if data.get("contact_count"):
                     caller_info.contact_count = int(data["contact_count"])
@@ -263,7 +261,7 @@ class CRMIntegration:
     - Priority-based lookup (try multiple sources)
     """
 
-    def __init__(self, config=None, pbx_core=None):
+    def __init__(self, config: Any | None = None, pbx_core: Any | None = None) -> None:
         """
         Initialize CRM integration
 
@@ -299,13 +297,13 @@ class CRMIntegration:
         else:
             self.logger.info("CRM integration disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
-    def _initialize_providers(self):
+    def _initialize_providers(self) -> None:
         """Initialize CRM lookup providers"""
         providers_config = self._get_config("features.crm_integration.providers", [])
 
@@ -396,8 +394,7 @@ class CRMIntegration:
         # remove separately
         normalized = re.sub(r"[^\d+]", "", phone_number)
         # Remove leading + if present
-        if normalized.startswith("+"):
-            normalized = normalized[1:]
+        normalized = normalized.removeprefix("+")
         return normalized
 
     def _get_from_cache(self, phone_number: str) -> CallerInfo | None:
@@ -405,28 +402,27 @@ class CRMIntegration:
         with self.cache_lock:
             if phone_number in self.cache:
                 caller_info, timestamp = self.cache[phone_number]
-                age = (datetime.now(timezone.utc) - timestamp).total_seconds()
+                age = (datetime.now(UTC) - timestamp).total_seconds()
 
                 if age < self.cache_timeout:
                     return caller_info
-                else:
-                    # Cache expired
-                    del self.cache[phone_number]
+                # Cache expired
+                del self.cache[phone_number]
 
         return None
 
-    def _add_to_cache(self, phone_number: str, caller_info: CallerInfo):
+    def _add_to_cache(self, phone_number: str, caller_info: CallerInfo) -> None:
         """Add caller info to cache"""
         with self.cache_lock:
-            self.cache[phone_number] = (caller_info, datetime.now(timezone.utc))
+            self.cache[phone_number] = (caller_info, datetime.now(UTC))
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear lookup cache"""
         with self.cache_lock:
             self.cache.clear()
         self.logger.info("Caller lookup cache cleared")
 
-    def trigger_screen_pop(self, phone_number: str, call_id: str, extension: str):
+    def trigger_screen_pop(self, phone_number: str, call_id: str, extension: str) -> None:
         """
         Trigger screen pop notification for incoming call
 
@@ -446,7 +442,7 @@ class CRMIntegration:
             "call_id": call_id,
             "phone_number": phone_number,
             "extension": extension,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "caller_info": caller_info.to_dict() if caller_info else None,
         }
 

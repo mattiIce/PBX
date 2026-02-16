@@ -5,10 +5,10 @@ Securely loads sensitive configuration from environment variables
 
 import os
 import re
-from typing import Any
+from pathlib import Path
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class EnvironmentLoader:
@@ -19,7 +19,7 @@ class EnvironmentLoader:
 
     # Default values for common environment variables
     # These are used when the environment variable is not set
-    DEFAULT_VALUES = {
+    DEFAULT_VALUES: ClassVar[dict[str, str]] = {
         "DB_HOST": "localhost",
         "DB_PORT": "5432",
         "DB_NAME": "pbx_system",
@@ -33,7 +33,7 @@ class EnvironmentLoader:
         "TRANSCRIPTION_API_KEY": "",
     }
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize environment loader"""
         self.logger = get_logger()
         self.loaded_vars = {}
@@ -123,7 +123,7 @@ class EnvironmentLoader:
 
         return value.strip() in complete_patterns
 
-    def _try_type_conversion(self, value: str):
+    def _try_type_conversion(self, value: str) -> str | int | float | bool:
         """
         Try to convert string value to appropriate type (int, float, bool)
 
@@ -185,16 +185,16 @@ class EnvironmentLoader:
 
         return resolved
 
-    def get_loaded_vars(self) -> list:
+    def get_loaded_vars(self) -> list[str]:
         """
         Get list of environment variables that were loaded
 
         Returns:
             list of environment variable names (values are masked)
         """
-        return list(self.loaded_vars.keys())
+        return list(self.loaded_vars)
 
-    def validate_required_vars(self, required_vars: list) -> tuple:
+    def validate_required_vars(self, required_vars: list[str]) -> tuple[bool, list[str]]:
         """
         Validate that required environment variables are set
 
@@ -204,16 +204,12 @@ class EnvironmentLoader:
         Returns:
             tuple of (all_present, missing_vars)
         """
-        missing = []
-
-        for var_name in required_vars:
-            if var_name not in os.environ:
-                missing.append(var_name)
+        missing = [var_name for var_name in required_vars if var_name not in os.environ]
 
         return len(missing) == 0, missing
 
     @staticmethod
-    def load_env_file(env_file: str = ".env"):
+    def load_env_file(env_file: str = ".env") -> int:
         """
         Load environment variables from a .env file
 
@@ -232,26 +228,26 @@ class EnvironmentLoader:
         loaded_count = 0
 
         try:
-            with open(env_file, "r") as f:
+            with Path(env_file).open() as f:
                 for line_num, line in enumerate(f, 1):
                     # Skip empty lines and comments
-                    line = line.strip()
-                    if not line or line.startswith("#"):
+                    stripped_line = line.strip()
+                    if not stripped_line or stripped_line.startswith("#"):
                         continue
 
                     # Parse KEY=VALUE format
-                    if "=" not in line:
-                        logger.warning(f"Invalid line {line_num} in {env_file}: {line}")
+                    if "=" not in stripped_line:
+                        logger.warning(f"Invalid line {line_num} in {env_file}: {stripped_line}")
                         continue
 
-                    key, value = line.split("=", 1)
+                    key, value = stripped_line.split("=", 1)
                     key = key.strip()
                     value = value.strip()
 
                     # Remove quotes from value if present
-                    if value.startswith('"') and value.endswith('"'):
-                        value = value[1:-1]
-                    elif value.startswith("'") and value.endswith("'"):
+                    if (value.startswith('"') and value.endswith('"')) or (
+                        value.startswith("'") and value.endswith("'")
+                    ):
                         value = value[1:-1]
 
                     # Only set if not already in environment

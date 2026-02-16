@@ -4,7 +4,7 @@ Provides support for Opus audio codec (RFC 6716, 7587)
 Opus is a modern, high-quality, low-latency audio codec
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -24,7 +24,7 @@ class OpusCodec:
     PAYLOAD_TYPE = 111
 
     # Opus codec parameters
-    SAMPLE_RATES = [8000, 12000, 16000, 24000, 48000]  # Supported sample rates
+    SAMPLE_RATES: ClassVar[list[int]] = [8000, 12000, 16000, 24000, 48000]  # Supported sample rates
     DEFAULT_SAMPLE_RATE = 48000  # Hz
     DEFAULT_BITRATE = 32000  # 32 kbit/s (good quality for VoIP)
     DEFAULT_FRAME_SIZE = 20  # milliseconds
@@ -38,7 +38,7 @@ class OpusCodec:
     # Complexity levels (0-10, where 10 is highest quality)
     DEFAULT_COMPLEXITY = 5  # Balance between quality and CPU
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         """
         Initialize Opus codec handler
 
@@ -84,9 +84,7 @@ class OpusCodec:
             self.sample_rate = self.DEFAULT_SAMPLE_RATE
 
         if not 6000 <= self.bitrate <= 510000:
-            self.logger.warning(
-                f"Invalid bitrate {self.bitrate}, using {self.DEFAULT_BITRATE}"
-            )
+            self.logger.warning(f"Invalid bitrate {self.bitrate}, using {self.DEFAULT_BITRATE}")
             self.bitrate = self.DEFAULT_BITRATE
 
         if self.complexity < 0 or self.complexity > 10:
@@ -165,7 +163,7 @@ class OpusCodec:
 
         return "; ".join(params)
 
-    def create_encoder(self):
+    def create_encoder(self) -> Any:
         """
         Create Opus encoder instance
 
@@ -192,15 +190,13 @@ class OpusCodec:
             self.encoder.fec = 1 if self.fec_enabled else 0
             self.encoder.dtx = 1 if self.dtx_enabled else 0
 
-            self.logger.info(
-                f"Opus encoder created: {self.sample_rate}Hz, {self.bitrate}bps"
-            )
+            self.logger.info(f"Opus encoder created: {self.sample_rate}Hz, {self.bitrate}bps")
             return self.encoder
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create Opus encoder: {e}")
             return None
 
-    def create_decoder(self):
+    def create_decoder(self) -> Any:
         """
         Create Opus decoder instance
 
@@ -311,9 +307,7 @@ class OpusCodec:
             self.logger.error(f"Opus PLC error: {e}")
             return None
 
-    def decode_with_fec(
-        self, opus_data: bytes, frame_size: int | None = None
-    ) -> bytes | None:
+    def decode_with_fec(self, opus_data: bytes, frame_size: int | None = None) -> bytes | None:
         """
         Decode Opus data with Forward Error Correction
 
@@ -339,7 +333,7 @@ class OpusCodec:
             self.logger.error(f"Opus FEC decoding error: {e}")
             return None
 
-    def reset_encoder(self):
+    def reset_encoder(self) -> None:
         """Reset encoder state"""
         if self.encoder:
             try:
@@ -348,7 +342,7 @@ class OpusCodec:
             except Exception as e:
                 self.logger.error(f"Failed to reset encoder: {e}")
 
-    def reset_decoder(self):
+    def reset_decoder(self) -> None:
         """Reset decoder state"""
         if self.decoder:
             try:
@@ -387,10 +381,9 @@ class OpusCodec:
         """Get application type name"""
         if self.application == self.APP_AUDIO:
             return "audio"
-        elif self.application == self.APP_LOWDELAY:
+        if self.application == self.APP_LOWDELAY:
             return "lowdelay"
-        else:
-            return "voip"
+        return "voip"
 
 
 class OpusCodecManager:
@@ -398,7 +391,7 @@ class OpusCodecManager:
     Manages Opus codecs for multiple calls
     """
 
-    def __init__(self, pbx):
+    def __init__(self, pbx: Any) -> None:
         """
         Initialize Opus codec manager
 
@@ -446,7 +439,7 @@ class OpusCodecManager:
         """
         return self.codecs.get(call_id)
 
-    def remove_codec(self, call_id: str):
+    def remove_codec(self, call_id: str) -> None:
         """
         Remove Opus codec for a call
 
@@ -474,8 +467,6 @@ class OpusCodecManager:
             True if opuslib is installed
         """
         try:
-            pass
-
             return True
         except ImportError:
             return False

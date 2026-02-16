@@ -3,11 +3,12 @@ Predictive Dialing
 AI-optimized outbound campaign management
 """
 
-from datetime import datetime, timedelta, timezone
+import sqlite3
+from datetime import UTC, datetime, timedelta
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class CampaignStatus(Enum):
@@ -32,7 +33,7 @@ class DialingMode(Enum):
 class Contact:
     """Represents a contact in a campaign"""
 
-    def __init__(self, contact_id: str, phone_number: str, data: dict = None):
+    def __init__(self, contact_id: str, phone_number: str, data: dict | None = None) -> None:
         """Initialize contact"""
         self.contact_id = contact_id
         self.phone_number = phone_number
@@ -46,13 +47,13 @@ class Contact:
 class Campaign:
     """Represents a dialing campaign"""
 
-    def __init__(self, campaign_id: str, name: str, dialing_mode: DialingMode):
+    def __init__(self, campaign_id: str, name: str, dialing_mode: DialingMode) -> None:
         """Initialize campaign"""
         self.campaign_id = campaign_id
         self.name = name
         self.dialing_mode = dialing_mode
         self.status = CampaignStatus.PENDING
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.started_at = None
         self.ended_at = None
         self.contacts: list[Contact] = []
@@ -80,7 +81,7 @@ class PredictiveDialer:
     - Compliance with call regulations
     """
 
-    def __init__(self, config=None, db_backend=None):
+    def __init__(self, config: Any | None = None, db_backend: Any | None = None) -> None:
         """Initialize predictive dialer"""
         self.logger = get_logger()
         self.config = config or {}
@@ -187,7 +188,7 @@ class PredictiveDialer:
         self.logger.info(f"Added {added} contacts to campaign {campaign_id}")
         return added
 
-    def start_campaign(self, campaign_id: str):
+    def start_campaign(self, campaign_id: str) -> dict:
         """
         Start a campaign
 
@@ -200,7 +201,7 @@ class PredictiveDialer:
 
         campaign = self.campaigns[campaign_id]
         campaign.status = CampaignStatus.RUNNING
-        campaign.started_at = datetime.now(timezone.utc)
+        campaign.started_at = datetime.now(UTC)
 
         self.logger.info(f"Started campaign {campaign_id}")
         self.logger.info(f"  Mode: {campaign.dialing_mode.value}")
@@ -235,7 +236,7 @@ class PredictiveDialer:
             self.logger.info(f"  Power mode: Dialing {self.lines_per_agent} lines per agent")
             # In production: Dial multiple contacts simultaneously per agent
 
-    def pause_campaign(self, campaign_id: str):
+    def pause_campaign(self, campaign_id: str) -> dict:
         """Pause a campaign"""
         if campaign_id not in self.campaigns:
             return
@@ -244,14 +245,14 @@ class PredictiveDialer:
         campaign.status = CampaignStatus.PAUSED
         self.logger.info(f"Paused campaign {campaign_id}")
 
-    def stop_campaign(self, campaign_id: str):
+    def stop_campaign(self, campaign_id: str) -> dict:
         """Stop a campaign"""
         if campaign_id not in self.campaigns:
             return
 
         campaign = self.campaigns[campaign_id]
         campaign.status = CampaignStatus.COMPLETED
-        campaign.ended_at = datetime.now(timezone.utc)
+        campaign.ended_at = datetime.now(UTC)
 
         # Calculate campaign statistics
         duration = (
@@ -381,16 +382,15 @@ class PredictiveDialer:
             return None
 
         campaign = self.campaigns[campaign_id]
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
 
         for contact in campaign.contacts:
             if contact.status == "pending":
                 return contact
-            elif contact.status == "retry":
-                if contact.last_attempt:
-                    retry_time = contact.last_attempt + timedelta(seconds=campaign.retry_interval)
-                    if now >= retry_time:
-                        return contact
+            if contact.status == "retry" and contact.last_attempt:
+                retry_time = contact.last_attempt + timedelta(seconds=campaign.retry_interval)
+                if now >= retry_time:
+                    return contact
 
         return None
 
@@ -439,7 +439,7 @@ class PredictiveDialer:
         #     call_manager.queue_for_agent(call_id, queue='outbound')
 
         contact.attempts += 1
-        contact.last_attempt = datetime.now(timezone.utc)
+        contact.last_attempt = datetime.now(UTC)
         self.total_calls_made += 1
 
         self.logger.info(f"Dialing contact {contact.contact_id}: {contact.phone_number}")
@@ -495,7 +495,9 @@ class PredictiveDialer:
 _predictive_dialer = None
 
 
-def get_predictive_dialer(config=None, db_backend=None) -> PredictiveDialer:
+def get_predictive_dialer(
+    config: Any | None = None, db_backend: Any | None = None
+) -> PredictiveDialer:
     """Get or create predictive dialer instance"""
     global _predictive_dialer
     if _predictive_dialer is None:

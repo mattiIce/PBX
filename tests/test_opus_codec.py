@@ -4,7 +4,6 @@ Tests for Opus Codec Support
 
 from typing import Any
 
-
 from pbx.features.opus_codec import OpusCodec, OpusCodecManager
 
 
@@ -246,6 +245,7 @@ class TestOpusCodec:
             codec = OpusCodec({"frame_size": size})
             assert codec.frame_size == size
 
+
 class TestOpusCodecManager:
     """Test OpusCodecManager class"""
 
@@ -335,6 +335,7 @@ class TestOpusCodecManager:
 
         # Verify half remaining
         assert len(self.manager.codecs) == 5
+
 
 class TestOpusCodecWithLibrary:
     """Test Opus codec with actual library (if available)"""

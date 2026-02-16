@@ -6,7 +6,6 @@ This script exports all built-in phone provisioning templates to the
 provisioning_templates directory for customization.
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -17,8 +16,8 @@ from pbx.features.phone_provisioning import PhoneProvisioning
 from pbx.utils.config import Config
 
 
-def main():
-    """Export all built-in templates to files"""
+def main() -> int:
+    """Export all built-in templates to files."""
     import argparse
 
     # Parse command line arguments

@@ -4,7 +4,8 @@ Provides support for overhead paging via digital-to-analog converters
 """
 
 import uuid
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -27,7 +28,7 @@ class PagingSystem:
     - Emergency override capabilities
     """
 
-    def __init__(self, config: dict, database=None):
+    def __init__(self, config: dict, database: Any | None = None) -> None:
         """
         Initialize paging system
 
@@ -81,10 +82,7 @@ class PagingSystem:
             return True
 
         # Check if it's the all-call extension
-        if extension == self.all_call_extension:
-            return True
-
-        return False
+        return extension == self.all_call_extension
 
     def get_zone_for_extension(self, extension: str) -> dict | None:
         """
@@ -125,7 +123,7 @@ class PagingSystem:
             return None
 
         # Generate page ID with UUID to ensure uniqueness
-        page_id = f"page-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}-{from_extension}-{uuid.uuid4().hex[:8]}"
+        page_id = f"page-{datetime.now(UTC).strftime('%Y%m%d%H%M%S')}-{from_extension}-{uuid.uuid4().hex[:8]}"
 
         # Determine zone(s)
         if to_extension == self.all_call_extension:
@@ -147,7 +145,7 @@ class PagingSystem:
             "to_extension": to_extension,
             "zones": zones,
             "zone_names": zone_names,
-            "started_at": datetime.now(timezone.utc),
+            "started_at": datetime.now(UTC),
             "status": "active",
         }
 
@@ -185,7 +183,7 @@ class PagingSystem:
 
         page_info = self.active_pages[page_id]
         page_info["status"] = "ended"
-        page_info["ended_at"] = datetime.now(timezone.utc)
+        page_info["ended_at"] = datetime.now(UTC)
 
         self.logger.info(f"Page ended: {page_id} ({page_info['zone_names']})")
 
@@ -240,7 +238,11 @@ class PagingSystem:
         return self.zones
 
     def add_zone(
-        self, extension: str, name: str, description: str = None, dac_device: str = None
+        self,
+        extension: str,
+        name: str,
+        description: str | None = None,
+        dac_device: str | None = None,
     ) -> bool:
         """
         Add a paging zone (runtime configuration)
@@ -262,7 +264,7 @@ class PagingSystem:
             "name": name,
             "description": description,
             "dac_device": dac_device,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
         }
 
         # Check if zone already exists
@@ -305,8 +307,8 @@ class PagingSystem:
         self,
         device_id: str,
         device_type: str,
-        sip_uri: str = None,
-        ip_address: str = None,
+        sip_uri: str | None = None,
+        ip_address: str | None = None,
         port: int = 5060,
     ) -> bool:
         """
@@ -331,7 +333,7 @@ class PagingSystem:
             "sip_uri": sip_uri,
             "ip_address": ip_address,
             "port": port,
-            "configured_at": datetime.now(timezone.utc),
+            "configured_at": datetime.now(UTC),
         }
 
         # Check if device already exists

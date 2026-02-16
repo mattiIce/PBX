@@ -12,23 +12,23 @@ Usage:
 """
 
 import argparse
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
+
+import sqlite3
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 from pbx.utils.security import get_password_manager
-import sqlite3
-from pathlib import Path
 
 
-def migrate_passwords(config_file="config.yml", dry_run=False):
+def migrate_passwords(config_file: str = "config.yml", dry_run: bool = False) -> bool:
     """
-    Migrate passwords from config.yml to database
+    Migrate passwords from config.yml to database.
 
     Args:
         config_file: Path to configuration file
@@ -245,8 +245,8 @@ def migrate_passwords(config_file="config.yml", dry_run=False):
     return errors == 0
 
 
-def main():
-    """Main function"""
+def main() -> None:
+    """Main function."""
     parser = argparse.ArgumentParser(
         description="Migrate extension passwords to secure database storage"
     )

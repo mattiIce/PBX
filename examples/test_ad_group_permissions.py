@@ -9,14 +9,13 @@ Run this example:
     python examples/test_ad_group_permissions.py
 """
 
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
-from pathlib import Path
 
 
 def example_group_permissions_configuration():

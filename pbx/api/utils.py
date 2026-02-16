@@ -17,7 +17,7 @@ class DateTimeEncoder(json.JSONEncoder):
     """Custom JSON encoder that handles datetime objects."""
 
     def default(self, obj: object) -> Any:
-        if isinstance(obj, (datetime, date)):
+        if isinstance(obj, datetime | date):
             return obj.isoformat()
         return super().default(obj)
 
@@ -39,13 +39,13 @@ def send_json(data: Any, status: int = 200) -> Response:
 
 def get_auth_token() -> str | None:
     """Extract authentication token from request headers."""
-    auth_header = request.headers.get("Authorization", "")
+    auth_header: str = request.headers.get("Authorization", "")
     if auth_header.startswith("Bearer "):
-        return auth_header[7:]
+        return str(auth_header[7:])
     return None
 
 
-def verify_authentication() -> tuple[bool, dict | None]:
+def verify_authentication() -> tuple[bool, dict[str, Any] | None]:
     """Verify authentication token and return payload.
 
     Returns:
@@ -58,7 +58,8 @@ def verify_authentication() -> tuple[bool, dict | None]:
     from pbx.utils.session_token import get_session_token_manager
 
     token_manager = get_session_token_manager()
-    return token_manager.verify_token(token)
+    result: tuple[bool, dict[str, Any] | None] = token_manager.verify_token(token)
+    return result
 
 
 def require_auth(f: Callable[..., Any]) -> Callable[..., Any]:
@@ -83,7 +84,7 @@ def require_admin(f: Callable[..., Any]) -> Callable[..., Any]:
         is_authenticated, payload = verify_authentication()
         if not is_authenticated:
             return jsonify({"error": "Authentication required"}), 401
-        if not payload.get("is_admin", False):
+        if not payload or not payload.get("is_admin", False):
             return jsonify({"error": "Admin privileges required"}), 403
         request.auth_payload = payload
         return f(*args, **kwargs)
@@ -91,14 +92,14 @@ def require_admin(f: Callable[..., Any]) -> Callable[..., Any]:
     return decorated
 
 
-def get_request_body() -> dict:
+def get_request_body() -> dict[str, Any]:
     """Get request body as JSON dict."""
     return request.get_json(silent=True) or {}
 
 
-def get_query_params() -> dict:
+def get_query_params() -> dict[str, Any]:
     """Get query parameters as a dict."""
-    return request.args
+    return dict(request.args)
 
 
 def validate_limit_param(default: int = 50, max_value: int = 1000) -> int | None:

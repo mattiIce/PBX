@@ -54,15 +54,15 @@ PAYLOAD_TYPES = {
 }
 
 
-def print_header():
-    """Print tool header"""
+def print_header() -> None:
+    """Print tool header."""
     print(f"\n{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}")
     print(f"{BOLD}{BLUE}   DTMF RFC2833 Payload Type Selector{RESET}")
     print(f"{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}\n")
 
 
-def print_payload_info(pt_num, info, is_recommended=False):
-    """Print information about a payload type"""
+def print_payload_info(pt_num: str, info: dict, is_recommended: bool = False) -> None:
+    """Print information about a payload type."""
     marker = f"{GREEN}✓{RESET}" if is_recommended else " "
     print(f"{marker} {BOLD}Payload Type {pt_num}{RESET}: {info['name']}")
     print(f"  Description: {info['description']}")
@@ -71,8 +71,8 @@ def print_payload_info(pt_num, info, is_recommended=False):
     print()
 
 
-def ask_question(question, options):
-    """Ask a yes/no question"""
+def ask_question(question: str, options: list[str]) -> int:
+    """Ask a multiple-choice question."""
     print(f"{YELLOW}{question}{RESET}")
     for i, option in enumerate(options, 1):
         print(f"  {i}. {option}")
@@ -88,8 +88,8 @@ def ask_question(question, options):
         print(f"{RED}Invalid choice. Please enter a number between 1 and {len(options)}.{RESET}")
 
 
-def recommend_payload_type():
-    """Interactive recommendation flow"""
+def recommend_payload_type() -> str:
+    """Interactive recommendation flow."""
     print_header()
 
     # Question 1: Is DTMF working?
@@ -125,14 +125,14 @@ def recommend_payload_type():
         print("If 100 doesn't work, try: 101 → 102 → 96")
         return "100"
 
-    elif equipment == 1:  # Polycom
+    if equipment == 1:  # Polycom
         print(f"\n{GREEN}✓ Recommendation: Try payload type 121 or 100{RESET}\n")
         print_payload_info("121", PAYLOAD_TYPES["121"], is_recommended=True)
         print("Polycom phones sometimes need payload type 121.")
         print("If 121 doesn't work, try: 100 → 101 → 102")
         return "121"
 
-    elif equipment == 3:  # Carrier
+    if equipment == 3:  # Carrier
         print(f"\n{GREEN}✓ Recommendation: Try payload type 102 or 100{RESET}\n")
         print_payload_info("102", PAYLOAD_TYPES["102"], is_recommended=True)
         print("Major carriers often require payload type 102 or 100.")
@@ -140,18 +140,18 @@ def recommend_payload_type():
         print(f"\n{YELLOW}TIP: Check your carrier's documentation for required payload type{RESET}")
         return "102"
 
-    else:  # Yealink/Zultys/Other
-        print(f"\n{GREEN}✓ Recommendation: Try alternatives in this order{RESET}\n")
-        print("Recommended testing order:")
-        print("  1. Payload type 100 (most common alternative)")
-        print("  2. Payload type 102 (carrier alternative)")
-        print("  3. Payload type 96 (generic fallback)")
-        print("  4. Payload type 101 (standard)")
-        return "100"
+    # Yealink/Zultys/Other
+    print(f"\n{GREEN}✓ Recommendation: Try alternatives in this order{RESET}\n")
+    print("Recommended testing order:")
+    print("  1. Payload type 100 (most common alternative)")
+    print("  2. Payload type 102 (carrier alternative)")
+    print("  3. Payload type 96 (generic fallback)")
+    print("  4. Payload type 101 (standard)")
+    return "100"
 
 
-def show_all_options():
-    """Display all available payload types"""
+def show_all_options() -> None:
+    """Display all available payload types."""
     print_header()
     print(f"{BOLD}Available Payload Types{RESET}\n")
 
@@ -166,8 +166,8 @@ def show_all_options():
     print("Custom values can be used if required by your provider.\n")
 
 
-def show_configuration_example(payload_type):
-    """Show how to configure the selected payload type"""
+def show_configuration_example(payload_type: str) -> None:
+    """Show how to configure the selected payload type."""
     print(f"\n{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}")
     print(f"{BOLD}Configuration Instructions{RESET}\n")
 
@@ -195,8 +195,8 @@ def show_configuration_example(payload_type):
     print(f"{BOLD}{BLUE}═══════════════════════════════════════════════════════════{RESET}\n")
 
 
-def main():
-    """Main entry point"""
+def main() -> None:
+    """Main entry point."""
     if len(sys.argv) > 1 and sys.argv[1] in ["--help", "-h"]:
         print_header()
         print("Usage: python dtmf_payload_selector.py [--list]")

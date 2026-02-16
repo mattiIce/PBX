@@ -3,7 +3,6 @@
 Tests for registered phones database tracking
 """
 
-
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 
@@ -158,9 +157,7 @@ def test_list_all_phones() -> None:
 
     # List all
     all_phones = phones_db.list_all()
-    assert (
-        len(all_phones) >= 3
-    ), f"Expected at least 3 phones, got {len(all_phones)}"
+    assert len(all_phones) >= 3, f"Expected at least 3 phones, got {len(all_phones)}"
 
 
 def test_mac_preservation_on_reregistration() -> None:

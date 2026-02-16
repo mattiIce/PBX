@@ -5,7 +5,8 @@ Extracts the feature subsystem initialization logic from PBXCore.__init__
 into a dedicated class for better modularity and maintainability.
 """
 
-import uuid
+import logging
+from typing import Any
 
 from pbx.features.call_parking import CallParkingSystem
 from pbx.features.call_queue import QueueSystem
@@ -27,7 +28,7 @@ class FeatureInitializer:
     """Handles initialization of all PBX feature subsystems"""
 
     @staticmethod
-    def initialize(pbx_core):
+    def initialize(pbx_core: Any) -> None:
         """
         Initialize all feature subsystems on a PBXCore instance.
 
@@ -43,7 +44,7 @@ class FeatureInitializer:
         database = pbx_core.database
 
         # Initialize advanced features
-        voicemail_path = config.get("voicemail.storage_path", "voicemail")
+        voicemail_path: str = config.get("voicemail.storage_path", "voicemail")
         pbx_core.voicemail_system = VoicemailSystem(
             storage_path=voicemail_path,
             config=config,
@@ -100,9 +101,7 @@ class FeatureInitializer:
         if config.get("features.phone_book.enabled", False):
             from pbx.features.phone_book import PhoneBook
 
-            pbx_core.phone_book = PhoneBook(
-                config, database=database if database.enabled else None
-            )
+            pbx_core.phone_book = PhoneBook(config, database=database if database.enabled else None)
             logger.info("Phone book feature initialized")
         else:
             pbx_core.phone_book = None
@@ -221,9 +220,7 @@ class FeatureInitializer:
         # Initialize Recording Announcements
         from pbx.features.recording_announcements import RecordingAnnouncements
 
-        pbx_core.recording_announcements = RecordingAnnouncements(
-            config=config, database=database
-        )
+        pbx_core.recording_announcements = RecordingAnnouncements(config=config, database=database)
         if pbx_core.recording_announcements.enabled:
             logger.info("Recording announcements initialized")
 
@@ -232,9 +229,7 @@ class FeatureInitializer:
             from pbx.features.mfa import MFAManager
 
             pbx_core.mfa_manager = MFAManager(
-                database=(
-                    database if hasattr(pbx_core, "database") and database.enabled else None
-                ),
+                database=(database if hasattr(pbx_core, "database") and database.enabled else None),
                 config=config,
             )
             logger.info("Multi-Factor Authentication (MFA) initialized")
@@ -246,9 +241,7 @@ class FeatureInitializer:
             from pbx.utils.security import get_threat_detector
 
             pbx_core.threat_detector = get_threat_detector(
-                database=(
-                    database if hasattr(pbx_core, "database") and database.enabled else None
-                ),
+                database=(database if hasattr(pbx_core, "database") and database.enabled else None),
                 config=config,
             )
             logger.info("Enhanced threat detection initialized")
@@ -270,13 +263,13 @@ class FeatureInitializer:
 
             # Get Outlook integration if available
             outlook = None
-            if (
-                hasattr(pbx_core, "integrations") and "outlook" in pbx_core.integrations
-            ):
+            if hasattr(pbx_core, "integrations") and "outlook" in pbx_core.integrations:
                 outlook = pbx_core.integrations["outlook"]
 
             pbx_core.dnd_scheduler = get_dnd_scheduler(
-                presence_system=pbx_core.presence_system if hasattr(pbx_core, "presence_system") else None,
+                presence_system=pbx_core.presence_system
+                if hasattr(pbx_core, "presence_system")
+                else None,
                 outlook_integration=outlook,
                 config=config,
             )
@@ -289,9 +282,7 @@ class FeatureInitializer:
             from pbx.features.skills_routing import get_skills_router
 
             pbx_core.skills_router = get_skills_router(
-                database=(
-                    database if hasattr(pbx_core, "database") and database.enabled else None
-                ),
+                database=(database if hasattr(pbx_core, "database") and database.enabled else None),
                 config=config,
             )
             logger.info("Skills-Based Routing initialized")
@@ -299,13 +290,13 @@ class FeatureInitializer:
             pbx_core.skills_router = None
 
     @staticmethod
-    def _init_active_directory(pbx_core, config):
+    def _init_active_directory(pbx_core: Any, config: Any) -> None:
         """Initialize Active Directory integration"""
         from pbx.integrations.active_directory import ActiveDirectoryIntegration
 
-        config_file = config._config_file if hasattr(config, "_config_file") else "config.yml"
+        config_file: str = config._config_file if hasattr(config, "_config_file") else "config.yml"
 
-        ad_config = {
+        ad_config: dict[str, Any] = {
             "integrations.active_directory.enabled": config.get(
                 "integrations.active_directory.enabled"
             ),
@@ -353,7 +344,7 @@ class FeatureInitializer:
                     )
 
                     # Handle both int and dict return types
-                    synced_count = (
+                    synced_count: int = (
                         sync_result
                         if isinstance(sync_result, int)
                         else sync_result.get("synced_count", 0)
@@ -387,7 +378,7 @@ class FeatureInitializer:
             pbx_core.ad_integration = None
 
     @staticmethod
-    def _init_open_source_integrations(pbx_core, config, logger):
+    def _init_open_source_integrations(pbx_core: Any, config: Any, _logger: logging.Logger) -> None:
         """Initialize open-source and third-party integrations"""
         # Jitsi Meet - Video conferencing
         if config.get("integrations.jitsi.enabled", False):

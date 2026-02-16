@@ -2,6 +2,7 @@
 """
 Main entry point for PBX system
 """
+
 import logging
 import sys
 import time
@@ -15,6 +16,7 @@ load_env_file(".env")
 
 from pbx.core.pbx import PBXCore
 from pbx.utils.graceful_shutdown import setup_graceful_shutdown
+
 # Get logger
 logger = logging.getLogger(__name__)
 
@@ -24,8 +26,8 @@ pbx = None
 shutdown_handler = None
 
 
-def signal_handler(sig, frame):  # noqa: ARG001
-    """Handle shutdown signal"""
+def signal_handler(sig: int, frame: object) -> None:
+    """Handle shutdown signal."""
     global running
     print("\nShutting down PBX system...")
     running = False

@@ -24,15 +24,14 @@ Requirements:
 """
 
 import argparse
-import datetime
-from datetime import timezone
 import json
 import os
 import socket
+import sqlite3
 import subprocess
 import sys
+from datetime import UTC, datetime
 from pathlib import Path
-import sqlite3
 
 try:
     import psutil
@@ -49,19 +48,19 @@ except ImportError:
 class HealthMonitor:
     """Production health monitoring and reporting."""
 
-    def __init__(self, api_url="https://localhost:9000", verify_ssl=False):
+    def __init__(self, api_url: str = "https://localhost:9000", verify_ssl: bool = False) -> None:
         self.api_url = api_url
         self.verify_ssl = verify_ssl
         self.base_dir = Path(__file__).parent.parent
         self.health_data = {
-            "timestamp": datetime.datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "hostname": socket.gethostname(),
             "checks": {},
             "alerts": [],
             "summary": {"healthy": 0, "warning": 0, "critical": 0},
         }
 
-    def check_system_resources(self):
+    def check_system_resources(self) -> None:
         """Check system resource usage."""
         checks = {}
 
@@ -112,7 +111,7 @@ class HealthMonitor:
         self.health_data["checks"]["system"] = checks
         self._update_summary(checks)
 
-    def check_pbx_service(self):
+    def check_pbx_service(self) -> None:
         """Check if PBX service is running."""
         checks = {}
 
@@ -174,7 +173,7 @@ class HealthMonitor:
         self.health_data["checks"]["pbx_service"] = checks
         self._update_summary(checks)
 
-    def check_database(self):
+    def check_database(self) -> None:
         """Check database connectivity."""
         checks = {}
 
@@ -239,7 +238,7 @@ class HealthMonitor:
         self.health_data["checks"]["database"] = checks
         self._update_summary(checks)
 
-    def check_api_endpoints(self):
+    def check_api_endpoints(self) -> None:
         """Check API endpoint availability."""
         if not requests:
             self.health_data["checks"]["api"] = {
@@ -275,7 +274,7 @@ class HealthMonitor:
         self.health_data["checks"]["api"] = checks
         self._update_summary(checks)
 
-    def check_disk_space_specific(self):
+    def check_disk_space_specific(self) -> None:
         """Check disk space for specific PBX directories."""
         checks = {}
 
@@ -300,7 +299,7 @@ class HealthMonitor:
         self.health_data["checks"]["storage"] = checks
         self._update_summary(checks)
 
-    def check_ssl_certificate(self):
+    def check_ssl_certificate(self) -> None:
         """Check SSL certificate expiration."""
         checks = {}
 
@@ -312,13 +311,16 @@ class HealthMonitor:
                     capture_output=True,
                     text=True,
                     timeout=5,
+                    check=False,
                 )
 
                 if result.returncode == 0:
                     # Parse expiration date
                     expiry_str = result.stdout.strip().split("=")[1]
-                    expiry_date = datetime.datetime.strptime(expiry_str, "%b %d %H:%M:%S %Y %Z")
-                    days_until_expiry = (expiry_date - datetime.datetime.now(timezone.utc)).days
+                    expiry_date = datetime.strptime(
+                        expiry_str, "%b %d %H:%M:%S %Y %Z"
+                    ).replace(tzinfo=UTC)
+                    days_until_expiry = (expiry_date - datetime.now(UTC)).days
 
                     if days_until_expiry < 7:
                         status = "critical"
@@ -350,23 +352,22 @@ class HealthMonitor:
         self.health_data["checks"]["ssl"] = checks
         self._update_summary(checks)
 
-    def _is_port_listening(self, port):
+    def _is_port_listening(self, port: int) -> bool:
         """Check if a port is listening."""
         for conn in psutil.net_connections(kind="inet"):
             if conn.laddr.port == port and conn.status == "LISTEN":
                 return True
         return False
 
-    def _get_status(self, value, warning_threshold, critical_threshold):
+    def _get_status(self, value: float, warning_threshold: float, critical_threshold: float) -> str:
         """Determine status based on thresholds."""
         if value >= critical_threshold:
             return "critical"
-        elif value >= warning_threshold:
+        if value >= warning_threshold:
             return "warning"
-        else:
-            return "healthy"
+        return "healthy"
 
-    def _update_summary(self, checks):
+    def _update_summary(self, checks: dict) -> None:
         """Update summary counts."""
         for check in checks.values():
             if isinstance(check, dict) and "status" in check:
@@ -378,7 +379,7 @@ class HealthMonitor:
                 elif status == "critical":
                     self.health_data["summary"]["critical"] += 1
 
-    def run_all_checks(self):
+    def run_all_checks(self) -> None:
         """Run all health checks."""
         print("Running health checks...")
         self.check_system_resources()
@@ -388,7 +389,7 @@ class HealthMonitor:
         self.check_disk_space_specific()
         self.check_ssl_certificate()
 
-    def generate_text_report(self):
+    def generate_text_report(self) -> str:
         """Generate text report."""
         lines = []
         lines.append("=" * 80)
@@ -409,8 +410,7 @@ class HealthMonitor:
         # Alerts
         if self.health_data["alerts"]:
             lines.append("ALERTS:")
-            for alert in self.health_data["alerts"]:
-                lines.append(f"  • {alert}")
+            lines.extend(f"  • {alert}" for alert in self.health_data["alerts"])
             lines.append("")
 
         # Detailed checks
@@ -429,11 +429,11 @@ class HealthMonitor:
         lines.append("=" * 80)
         return "\n".join(lines)
 
-    def generate_json_report(self):
+    def generate_json_report(self) -> str:
         """Generate JSON report."""
         return json.dumps(self.health_data, indent=2)
 
-    def generate_html_report(self):
+    def generate_html_report(self) -> str:
         """Generate HTML report."""
         html = (
             """
@@ -521,7 +521,7 @@ class HealthMonitor:
         return html
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="PBX Health Monitoring")
     parser.add_argument(
         "--format",

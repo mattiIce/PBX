@@ -14,10 +14,10 @@ Features:
 import hashlib
 import json
 import logging
-import os
 import secrets
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from enum import Enum
+from os import getenv
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -51,7 +51,7 @@ class LicenseManager:
     Supports multiple license types and feature gating.
     """
 
-    def __init__(self, config: dict | None = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize license manager.
 
@@ -109,7 +109,7 @@ class LicenseManager:
             return True
 
         # Environment variable (second priority)
-        env_enabled = os.getenv("PBX_LICENSING_ENABLED", "").lower()
+        env_enabled = getenv("PBX_LICENSING_ENABLED", "").lower()
         if env_enabled in ("true", "1", "yes", "on"):
             return True
         if env_enabled in ("false", "0", "no", "of"):
@@ -212,7 +212,7 @@ class LicenseManager:
             return
 
         try:
-            with open(self.license_path, "r") as f:
+            with Path(self.license_path).open() as f:
                 license_data = json.load(f)
 
             # Validate and decrypt license
@@ -311,12 +311,12 @@ class LicenseManager:
         Returns:
             License data dictionary
         """
-        issued_date = datetime.now(timezone.utc).isoformat()
+        issued_date = datetime.now(UTC).isoformat()
 
         # Calculate expiration
         expiration = None
         if expiration_days:
-            expiration = (datetime.now(timezone.utc) + timedelta(days=expiration_days)).isoformat()
+            expiration = (datetime.now(UTC) + timedelta(days=expiration_days)).isoformat()
 
         # Generate unique license key
         license_key = self._generate_key_string(issued_to, issued_date)
@@ -379,7 +379,7 @@ class LicenseManager:
             True if saved successfully, False otherwise
         """
         try:
-            with open(self.license_path, "w") as f:
+            with Path(self.license_path).open("w") as f:
                 json.dump(license_data, f, indent=2)
 
             logger.info(f"License saved to {self.license_path}")
@@ -411,18 +411,19 @@ class LicenseManager:
 
         try:
             lock_data = {
-                "created": datetime.now(timezone.utc).isoformat(),
+                "created": datetime.now(UTC).isoformat(),
                 "license_key": license_data.get("key", "")[:19] + "...",  # Partial key
                 "issued_to": license_data.get("issued_to", ""),
                 "type": license_data.get("type", ""),
                 "enforcement": "mandatory",
             }
 
-            with open(lock_path, "w") as f:
+            lock_file = Path(lock_path)
+            with lock_file.open("w") as f:
                 json.dump(lock_data, f, indent=2)
 
             # Restrict permissions (owner read/write only)
-            os.chmod(lock_path, 0o600)
+            lock_file.chmod(0o600)
 
             logger.info(
                 f"License lock file created at {lock_path} - licensing enforcement is now mandatory"
@@ -445,12 +446,11 @@ class LicenseManager:
 
         try:
             if Path(lock_path).exists():
-                os.remove(lock_path)
+                Path(lock_path).unlink()
                 logger.info("License lock file removed - licensing can now be disabled")
                 return True
-            else:
-                logger.warning("License lock file does not exist")
-                return False
+            logger.warning("License lock file does not exist")
+            return False
 
         except OSError as e:
             logger.error(f"Error removing license lock file: {e}")
@@ -475,7 +475,7 @@ class LicenseManager:
         expiration = self.current_license.get("expiration")
         if expiration:
             expiration_date = datetime.fromisoformat(expiration)
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             if now > expiration_date:
                 # Check grace period
@@ -486,19 +486,17 @@ class LicenseManager:
                         LicenseStatus.GRACE_PERIOD,
                         f"License expired. Grace period ends in {days_left} days",
                     )
-                else:
-                    return LicenseStatus.EXPIRED, "License has expired"
+                return LicenseStatus.EXPIRED, "License has expired"
 
         # License is active
         if expiration:
             expiration_date = datetime.fromisoformat(expiration)
-            days_until_expiration = (expiration_date - datetime.now(timezone.utc)).days
+            days_until_expiration = (expiration_date - datetime.now(UTC)).days
             return (
                 LicenseStatus.ACTIVE,
                 f"License active. Expires in {days_until_expiration} days",
             )
-        else:
-            return LicenseStatus.ACTIVE, "License active (perpetual)"
+        return LicenseStatus.ACTIVE, "License active (perpetual)"
 
     def _check_trial_eligibility(self) -> tuple[LicenseStatus, str | None]:
         """
@@ -507,13 +505,13 @@ class LicenseManager:
         Returns:
             tuple of (status, message)
         """
-        trial_marker = str(Path(self.license_path).parent / ".trial_start")
+        trial_marker = Path(self.license_path).parent / ".trial_start"
 
-        if not Path(trial_marker).exists():
+        if not trial_marker.exists():
             # Start trial
             try:
-                with open(trial_marker, "w") as f:
-                    f.write(datetime.now(timezone.utc).isoformat())
+                with trial_marker.open("w") as f:
+                    f.write(datetime.now(UTC).isoformat())
 
                 return (
                     LicenseStatus.ACTIVE,
@@ -525,17 +523,16 @@ class LicenseManager:
 
         # Check trial expiration
         try:
-            with open(trial_marker, "r") as f:
+            with trial_marker.open() as f:
                 trial_start = datetime.fromisoformat(f.read().strip())
 
             trial_end = trial_start + timedelta(days=self.trial_period_days)
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             if now <= trial_end:
                 days_left = (trial_end - now).days
                 return (LicenseStatus.ACTIVE, f"Trial mode active ({days_left} days remaining)")
-            else:
-                return LicenseStatus.EXPIRED, "Trial period has expired"
+            return LicenseStatus.EXPIRED, "Trial period has expired"
 
         except OSError as e:
             logger.error(f"Error checking trial status: {e}")
@@ -676,7 +673,7 @@ class LicenseManager:
         """
         try:
             if Path(self.license_path).exists():
-                os.remove(self.license_path)
+                Path(self.license_path).unlink()
                 logger.info("License revoked")
 
             self.current_license = None

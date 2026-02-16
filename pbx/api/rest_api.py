@@ -23,10 +23,8 @@ MAC_ADDRESS_PLACEHOLDERS = ["{mac}", "{MAC}", "{Ma}"]
 class PBXAPIHandler:
     """Deprecated stub - use Flask blueprints instead."""
 
-    pbx_core = None
+    pbx_core: object | None = None
 
 
 class PBXAPIServer:
     """Deprecated stub - use Flask app via create_app() instead."""
-
-    pass

@@ -2,14 +2,12 @@
 Test suite for Auto Attendant functionality
 """
 
-import os
 import shutil
 import tempfile
+from pathlib import Path
 from typing import Any
 
-
 from pbx.features.auto_attendant import AAState, AutoAttendant, DestinationType
-from pathlib import Path
 
 
 class TestAutoAttendant:
@@ -158,7 +156,7 @@ class TestAutoAttendant:
         session = result["session"]
 
         # Simulate multiple timeouts
-        for i in range(self.aa.max_retries):
+        for _i in range(self.aa.max_retries):
             result = self.aa.handle_timeout(session)
             session = result["session"]
 
@@ -185,6 +183,7 @@ class TestAutoAttendant:
         self.aa.end_session(session)
 
         assert session["state"] == AAState.ENDED
+
 
 class MockConfig:
     """Mock configuration object for testing"""

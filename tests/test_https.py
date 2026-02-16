@@ -5,16 +5,14 @@ Tests SSL configuration, certificate validation, and HTTPS connections
 """
 
 import json
-import os
 import ssl
 import time
 import urllib.request
+from pathlib import Path
 from typing import Any
-
 
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 class MockPBXCore:
@@ -63,7 +61,6 @@ def test_api_server_with_ssl_disabled() -> bool:
     # Create API server
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8081)
 
-
     if api_server.ssl_enabled:
         return False
 
@@ -93,7 +90,7 @@ def test_certificate_files() -> bool:
     try:
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
         context.load_cert_chain(cert_file, key_file)
-    except (OSError, ssl.SSLError) as e:
+    except (OSError, ssl.SSLError):
         return False
 
     return True
@@ -130,7 +127,6 @@ def test_api_server_with_ssl_enabled() -> bool:
 
     # Create API server
     api_server = PBXAPIServer(mock_pbx, host="127.0.0.1", port=8082)
-
 
     if not api_server.ssl_enabled:
         return False
@@ -183,7 +179,6 @@ def test_https_connection() -> bool:
     if not api_server.start():
         return False
 
-
     # Give it a moment to start
     time.sleep(1)
 
@@ -204,7 +199,7 @@ def test_https_connection() -> bool:
                 api_server.stop()
                 return False
 
-    except (OSError, ValueError, json.JSONDecodeError, ssl.SSLError) as e:
+    except (OSError, ValueError, json.JSONDecodeError, ssl.SSLError):
         import traceback
 
         traceback.print_exc()
@@ -232,17 +227,16 @@ def main() -> bool:
     passed = 0
     failed = 0
 
-    for test_name, test_func in tests:
+    for _test_name, test_func in tests:
         try:
             if test_func():
                 passed += 1
             else:
                 failed += 1
-        except Exception as e:
+        except Exception:
             failed += 1
             import traceback
 
             traceback.print_exc()
-
 
     return failed == 0

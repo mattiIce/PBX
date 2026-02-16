@@ -6,6 +6,8 @@ Collects and analyzes Real-Time Control Protocol statistics for
 call quality monitoring and troubleshooting.
 """
 
+from __future__ import annotations
+
 import math
 import time
 from dataclasses import dataclass
@@ -16,7 +18,7 @@ from pbx.utils.logger import get_logger
 
 @dataclass
 class RTCPStats:
-    """RTCP statistics for a call"""
+    """RTCP statistics for a call."""
 
     # Sender statistics
     packets_sent: int = 0
@@ -67,7 +69,7 @@ class RTCPMonitor:
     - Quality thresholds and alerting
     """
 
-    def __init__(self, call_id: str, config: dict[str, Any] | None = None):
+    def __init__(self, call_id: str, config: dict[str, Any] | None = None) -> None:
         """
         Initialize RTCP monitor
 
@@ -97,24 +99,24 @@ class RTCPMonitor:
 
         self.logger.info(f"RTCP monitor initialized for call {call_id}")
 
-    def update_sent_packet(self, size: int):
+    def update_sent_packet(self, size: int) -> None:
         """
-        Update statistics for sent packet
+        Update statistics for sent packet.
 
         Args:
-            size: Packet size in bytes
+            size: Packet size in bytes.
         """
         self.stats.packets_sent += 1
         self.stats.bytes_sent += size
 
-    def update_received_packet(self, sequence: int, timestamp: int, size: int):
+    def update_received_packet(self, sequence: int, timestamp: int, size: int) -> None:
         """
-        Update statistics for received packet
+        Update statistics for received packet.
 
         Args:
-            sequence: RTP sequence number
-            timestamp: RTP timestamp
-            size: Packet size in bytes
+            sequence: RTP sequence number.
+            timestamp: RTP timestamp.
+            size: Packet size in bytes.
         """
         arrival_time = time.time()
 
@@ -139,24 +141,24 @@ class RTCPMonitor:
         # Estimate MOS score
         self._estimate_mos()
 
-    def update_lost_packet(self):
-        """Update statistics for lost packet"""
+    def update_lost_packet(self) -> None:
+        """Update statistics for lost packet."""
         self.stats.packets_lost += 1
         self._calculate_packet_loss()
         self._estimate_mos()
 
-    def update_rtt(self, rtt_ms: float):
+    def update_rtt(self, rtt_ms: float) -> None:
         """
-        Update round-trip time
+        Update round-trip time.
 
         Args:
-            rtt_ms: Round-trip time in milliseconds
+            rtt_ms: Round-trip time in milliseconds.
         """
         self.stats.rtt_ms = rtt_ms
         self._estimate_mos()
 
-    def _update_sequence(self, sequence: int):
-        """Track sequence numbers and detect cycles"""
+    def _update_sequence(self, sequence: int) -> None:
+        """Track sequence numbers and detect cycles."""
         if self.stats.last_sequence is None:
             self.stats.last_sequence = sequence
             self.stats.highest_sequence = sequence
@@ -185,13 +187,13 @@ class RTCPMonitor:
 
         self.stats.last_sequence = sequence
 
-    def _calculate_jitter(self, timestamp: int, arrival_time: float):
+    def _calculate_jitter(self, timestamp: int, arrival_time: float) -> None:
         """
-        Calculate inter-arrival jitter (RFC 3550)
+        Calculate inter-arrival jitter (RFC 3550).
 
         Args:
-            timestamp: RTP timestamp
-            arrival_time: Packet arrival time
+            timestamp: RTP timestamp.
+            arrival_time: Packet arrival time.
         """
         if self.last_arrival_time is None:
             self.last_arrival_time = arrival_time
@@ -214,8 +216,8 @@ class RTCPMonitor:
         self.transit_time = transit
         self.last_arrival_time = arrival_time
 
-    def _calculate_packet_loss(self):
-        """Calculate packet loss percentage"""
+    def _calculate_packet_loss(self) -> None:
+        """Calculate packet loss percentage."""
         if self.stats.packets_expected > 0:
             self.stats.packet_loss_percent = (
                 self.stats.packets_lost / self.stats.packets_expected
@@ -223,9 +225,9 @@ class RTCPMonitor:
         else:
             self.stats.packet_loss_percent = 0.0
 
-    def _estimate_mos(self):
+    def _estimate_mos(self) -> None:
         """
-        Estimate MOS (Mean Opinion Score) using E-model
+        Estimate MOS (Mean Opinion Score) using E-model.
 
         Simplified E-model calculation based on:
         - Packet loss percentage
@@ -317,14 +319,13 @@ class RTCPMonitor:
 
         if mos >= 4.3:
             return "Excellent"
-        elif mos >= 4.0:
+        if mos >= 4.0:
             return "Good"
-        elif mos >= 3.6:
+        if mos >= 3.6:
             return "Fair"
-        elif mos >= 3.1:
+        if mos >= 3.1:
             return "Poor"
-        else:
-            return "Bad"
+        return "Bad"
 
     def check_quality_alerts(self) -> list[str]:
         """
@@ -365,8 +366,8 @@ class RTCPMonitor:
 
         return alerts
 
-    def reset(self):
-        """Reset statistics"""
+    def reset(self) -> None:
+        """Reset statistics."""
         self.stats = RTCPStats()
         self.transit_time = None
         self.last_arrival_time = None
@@ -375,23 +376,21 @@ class RTCPMonitor:
 
 
 class RTCPMonitorManager:
-    """
-    Manager for RTCP monitors (one per call)
-    """
+    """Manager for RTCP monitors (one per call)."""
 
-    def __init__(self, pbx):
+    def __init__(self, pbx: Any) -> None:
         """
-        Initialize RTCP monitor manager
+        Initialize RTCP monitor manager.
 
         Args:
-            pbx: PBX instance
+            pbx: PBX instance.
         """
         self.pbx = pbx
         self.logger = get_logger()
         self.monitors: dict[str, RTCPMonitor] = {}
 
         # Get global config
-        self.config = {}
+        self.config: dict[str, Any] = {}
         if hasattr(pbx, "config") and pbx.config:
             self.config = pbx.config.get("rtcp", {})
 
@@ -419,8 +418,8 @@ class RTCPMonitorManager:
         """Get monitor for a call"""
         return self.monitors.get(call_id)
 
-    def remove_monitor(self, call_id: str):
-        """Remove monitor for a call"""
+    def remove_monitor(self, call_id: str) -> None:
+        """Remove monitor for a call."""
         if call_id in self.monitors:
             del self.monitors[call_id]
             self.logger.debug(f"Removed RTCP monitor for call {call_id}")

@@ -9,11 +9,11 @@ system resource monitoring.
 import logging
 import os
 import socket
+import sqlite3
 import time
 from typing import Any
 
 import psutil
-import sqlite3
 
 logger = logging.getLogger(__name__)
 
@@ -26,7 +26,7 @@ class ProductionHealthChecker:
     (is the service ready to handle requests?) checks.
     """
 
-    def __init__(self, pbx_core=None, config=None):
+    def __init__(self, pbx_core: object = None, config: dict | None = None) -> None:
         """
         Initialize health checker.
 
@@ -258,7 +258,7 @@ class ProductionHealthChecker:
                 "cpu_percent": round(cpu_percent, 2),
                 "memory_percent": round(memory.percent, 2),
                 "disk_percent": round(disk.percent, 2),
-                "warnings": warnings if warnings else None,
+                "warnings": warnings or None,
             }
 
         except Exception as e:
@@ -324,16 +324,16 @@ def format_health_check_response(
 
         if "metrics" in details:
             for key, value in details["metrics"].items():
-                if isinstance(value, (int, float)):
+                if isinstance(value, int | float):
                     lines.append(f"# HELP pbx_{key} {key.replace('_', ' ').title()}")
                     lines.append(f"# TYPE pbx_{key} gauge")
                     lines.append(f"pbx_{key} {value}")
 
         return status_code, "\n".join(lines)
 
-    elif format_type == "plain":
+    if format_type == "plain":
         # Simple text format
         return status_code, "OK" if is_healthy else "UNHEALTHY"
 
-    else:  # json (default)
-        return status_code, json.dumps(details, indent=2)
+    # json (default)
+    return status_code, json.dumps(details, indent=2)

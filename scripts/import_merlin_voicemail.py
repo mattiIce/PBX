@@ -31,9 +31,8 @@ Usage:
 import argparse
 import csv
 import json
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path
@@ -45,7 +44,7 @@ from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
 
 
-def parse_csv_metadata(csv_path):
+def parse_csv_metadata(csv_path: str) -> tuple[list[dict], dict[str, str]]:
     """
     Parse voicemail metadata from CSV file
 
@@ -65,11 +64,11 @@ def parse_csv_metadata(csv_path):
     messages = []
     pins = {}
 
-    with open(csv_path, "r") as f:
+    with open(csv_path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Extract voicemail PIN if present
-            if "voicemail_pin" in row and row["voicemail_pin"]:
+            if row.get("voicemail_pin"):
                 pins[row["extension"]] = row["voicemail_pin"]
 
             # Parse timestamp
@@ -81,14 +80,14 @@ def parse_csv_metadata(csv_path):
                     # Try alternative formats
                     for fmt in ["%Y-%m-%d %H:%M:%S", "%m/%d/%Y %H:%M:%S", "%Y%m%d_%H%M%S"]:
                         try:
-                            timestamp = datetime.strptime(timestamp_str, fmt)
+                            timestamp = datetime.strptime(timestamp_str, fmt).replace(tzinfo=UTC)
                             break
                         except ValueError:
                             continue
                     else:
-                        timestamp = datetime.now(timezone.utc)
+                        timestamp = datetime.now(UTC)
                 except (ValueError, TypeError):
-                    timestamp = datetime.now(timezone.utc)
+                    timestamp = datetime.now(UTC)
 
             # Parse listened status
             listened = row.get("listened", "false").lower() in ("true", "1", "yes", "y")
@@ -112,7 +111,7 @@ def parse_csv_metadata(csv_path):
     return messages, pins
 
 
-def parse_json_metadata(json_path):
+def parse_json_metadata(json_path: str) -> tuple[list[dict], dict[str, str]]:
     """
     Parse voicemail metadata from JSON file
 
@@ -140,7 +139,7 @@ def parse_json_metadata(json_path):
     Returns:
         tuple: (list of messages, dict of pins)
     """
-    with open(json_path, "r") as f:
+    with open(json_path) as f:
         data = json.load(f)
 
     messages = []
@@ -150,7 +149,7 @@ def parse_json_metadata(json_path):
         try:
             timestamp = datetime.fromisoformat(timestamp_str)
         except (ValueError, AttributeError, TypeError):
-            timestamp = datetime.now(timezone.utc)
+            timestamp = datetime.now(UTC)
 
         message = {
             "extension": msg["extension"],
@@ -167,7 +166,7 @@ def parse_json_metadata(json_path):
     return messages, pins
 
 
-def parse_filename_metadata(audio_dir):
+def parse_filename_metadata(audio_dir: str) -> tuple[list[dict], dict]:
     """
     Parse voicemail metadata from WAV filenames in directory structure
 
@@ -209,9 +208,11 @@ def parse_filename_metadata(audio_dir):
                 time_str = parts[2]
 
                 try:
-                    timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+                    timestamp = datetime.strptime(
+                        f"{date_str}_{time_str}", "%Y%m%d_%H%M%S"
+                    ).replace(tzinfo=UTC)
                 except (ValueError, TypeError):
-                    timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime, tz=timezone.utc)
+                    timestamp = datetime.fromtimestamp(wav_file.stat().st_mtime, tz=UTC)
 
                 message = {
                     "extension": extension,
@@ -226,7 +227,7 @@ def parse_filename_metadata(audio_dir):
     return messages, {}
 
 
-def parse_pins_csv(csv_path):
+def parse_pins_csv(csv_path: str) -> dict[str, str]:
     """
     Parse voicemail PINs from CSV file
 
@@ -243,7 +244,7 @@ def parse_pins_csv(csv_path):
     """
     pins = {}
 
-    with open(csv_path, "r") as f:
+    with open(csv_path) as f:
         reader = csv.DictReader(f)
         for row in reader:
             extension = row["extension"]
@@ -254,7 +255,13 @@ def parse_pins_csv(csv_path):
     return pins
 
 
-def import_voicemail_messages(messages, audio_dir, config, database, dry_run=False):
+def import_voicemail_messages(
+    messages: list[dict],
+    audio_dir: str | None,
+    config: object,
+    database: object,
+    dry_run: bool = False,
+) -> tuple[int, int, int]:
     """
     Import voicemail messages into the PBX system
 
@@ -357,7 +364,9 @@ def import_voicemail_messages(messages, audio_dir, config, database, dry_run=Fal
     return imported, skipped, errors
 
 
-def import_voicemail_pins(pins, config, database, dry_run=False):
+def import_voicemail_pins(
+    pins: dict[str, str], config: object, database: object, dry_run: bool = False
+) -> tuple[int, int, int]:
     """
     Import voicemail PINs
 
@@ -405,7 +414,9 @@ def import_voicemail_pins(pins, config, database, dry_run=False):
     return imported, skipped, errors
 
 
-def import_greetings(greetings_dir, config, database, dry_run=False):
+def import_greetings(
+    greetings_dir: str, config: object, database: object, dry_run: bool = False
+) -> tuple[int, int]:
     """
     Import custom voicemail greetings
 
@@ -471,7 +482,7 @@ def import_greetings(greetings_dir, config, database, dry_run=False):
     return imported, errors
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Import voicemail data from AT&T Merlin Legend system",
         formatter_class=argparse.RawDescriptionHelpFormatter,

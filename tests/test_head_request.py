@@ -8,7 +8,6 @@ import http.client
 import time
 from pathlib import Path
 
-
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
@@ -52,7 +51,6 @@ def test_head_request_for_static_files() -> bool:
             response = conn.getresponse()
             status = response.status
 
-
             if status == 200:
                 # Verify no body is returned
                 body = response.read()
@@ -76,7 +74,6 @@ def test_head_request_for_static_files() -> bool:
             response = conn.getresponse()
             status = response.status
 
-
             if status in [200, 404]:  # 200 OK or 404 if file doesn't exist
                 # Verify no body is returned
                 body = response.read()
@@ -97,7 +94,6 @@ def test_head_request_for_static_files() -> bool:
             response = conn.getresponse()
             status = response.status
 
-
             if status == 200:
                 # Verify no body is returned
                 body = response.read()
@@ -114,7 +110,7 @@ def test_head_request_for_static_files() -> bool:
 
             return True
 
-        except (OSError, ValueError) as e:
+        except (OSError, ValueError):
             import traceback
 
             traceback.print_exc()

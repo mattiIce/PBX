@@ -5,7 +5,9 @@ Intelligent routing using free machine learning (scikit-learn)
 
 import json
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -23,7 +25,7 @@ except ImportError:
 class AICallRouting:
     """AI-powered call routing using machine learning"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize AI call routing"""
         self.logger = get_logger()
         self.config = config or {}
@@ -48,7 +50,7 @@ class AICallRouting:
             self.logger.info("AI call routing initialized")
             self._initialize_model()
 
-    def _initialize_model(self):
+    def _initialize_model(self) -> None:
         """Initialize ML model"""
         if not SKLEARN_AVAILABLE:
             return
@@ -76,7 +78,7 @@ class AICallRouting:
             return False
 
         # Extract features
-        timestamp = call_data.get("timestamp", datetime.now(timezone.utc))
+        timestamp = call_data.get("timestamp", datetime.now(UTC))
         features = {
             "hour": timestamp.hour,
             "day_of_week": timestamp.weekday(),
@@ -95,13 +97,15 @@ class AICallRouting:
         )
 
         # Retrain model if we have enough data
-        if len(self.training_data) >= self.min_training_samples:
-            if len(self.training_data) % 50 == 0:  # Retrain every 50 calls
-                self._train_model()
+        if (
+            len(self.training_data) >= self.min_training_samples
+            and len(self.training_data) % 50 == 0  # Retrain every 50 calls
+        ):
+            self._train_model()
 
         return True
 
-    def _train_model(self):
+    def _train_model(self) -> None:
         """Train the ML model on historical data"""
         if (
             not SKLEARN_AVAILABLE
@@ -112,7 +116,7 @@ class AICallRouting:
 
         try:
             # Prepare features and labels
-            X = []
+            x_data = []
             y = []
 
             for data in self.training_data[-1000:]:  # Use last 1000 samples
@@ -122,19 +126,19 @@ class AICallRouting:
                     data["call_duration"],
                     data["wait_time"],
                 ]
-                X.append(features)
+                x_data.append(features)
                 y.append(data["routed_to"])
 
-            X = np.array(X)
+            x_data = np.array(x_data)
             y = np.array(y)
 
             # Encode labels
             y_encoded = self.label_encoder.fit_transform(y)
 
             # Train model
-            self.model.fit(X, y_encoded)
+            self.model.fit(x_data, y_encoded)
 
-            self.logger.info(f"Trained ML model on {len(X)} samples")
+            self.logger.info(f"Trained ML model on {len(x_data)} samples")
 
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error training ML model: {e}")
@@ -165,7 +169,7 @@ class AICallRouting:
 
         try:
             # Extract features
-            timestamp = call_info.get("timestamp", datetime.now(timezone.utc))
+            timestamp = call_info.get("timestamp", datetime.now(UTC))
             features = [
                 [
                     timestamp.hour,
@@ -195,7 +199,9 @@ class AICallRouting:
                 "confidence": confidence,
                 "method": "ml_prediction",
                 "all_probabilities": dict(
-                    zip(self.label_encoder.classes_, [float(p) for p in probabilities])
+                    zip(
+                        self.label_encoder.classes_, [float(p) for p in probabilities], strict=False
+                    )
                 ),
             }
 
@@ -216,7 +222,7 @@ class AICallRouting:
             outcomes = self.routing_decisions.get(dest, [])
             if outcomes:
                 # Calculate success rate
-                recent = [o for o in outcomes[-100:]]  # Last 100 calls
+                recent = list(outcomes[-100:])  # Last 100 calls
                 if recent:
                     success_rate = sum(1 for o in recent if o["outcome"] == "answered") / len(
                         recent
@@ -229,7 +235,7 @@ class AICallRouting:
 
     def get_destination_performance(self, destination: str, days: int = 7) -> dict:
         """Get performance metrics for a destination"""
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
 
         outcomes = self.routing_decisions.get(destination, [])
         recent = [o for o in outcomes if o["timestamp"] > cutoff]
@@ -262,7 +268,7 @@ class AICallRouting:
                     export_item["timestamp"] = export_item["timestamp"].isoformat()
                 export_data.append(export_item)
 
-            with open(filename, "w") as f:
+            with Path(filename).open("w") as f:
                 json.dump(export_data, f, indent=2)
 
             self.logger.info(f"Exported {len(export_data)} training samples to {filename}")
@@ -274,7 +280,7 @@ class AICallRouting:
     def import_training_data(self, filename: str) -> bool:
         """Import training data from JSON file"""
         try:
-            with open(filename, "r") as f:
+            with Path(filename).open() as f:
                 import_data = json.load(f)
 
             for item in import_data:

@@ -11,7 +11,6 @@ Requirements:
 Note: Requires internet connection to use Google TTS API (free, no API key needed)
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -32,18 +31,18 @@ if not is_tts_available():
     print("=" * 70)
     print("ERROR: TTS dependencies not installed!")
     print("=" * 70)
-    print("")
+    print()
     print("Please install required packages:")
     print(f"  {get_tts_requirements()}")
-    print("")
+    print()
     print("After installation, run this script again.")
     print("=" * 70)
     sys.exit(1)
 
 
 def generate_auto_attendant_tts(
-    output_dir="auto_attendant", company_name="your company", sample_rate=8000
-):
+    output_dir: str = "auto_attendant", company_name: str = "your company", sample_rate: int = 8000
+) -> int:
     """
     Generate TTS voice prompts for auto attendant
 
@@ -62,7 +61,7 @@ def generate_auto_attendant_tts(
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text
@@ -122,7 +121,7 @@ def generate_auto_attendant_tts(
     return success_count
 
 
-def generate_voicemail_tts(output_dir="voicemail_prompts", sample_rate=8000):
+def generate_voicemail_tts(output_dir: str = "voicemail_prompts", sample_rate: int = 8000) -> int:
     """
     Generate TTS voice prompts for voicemail system
 
@@ -140,7 +139,7 @@ def generate_voicemail_tts(output_dir="voicemail_prompts", sample_rate=8000):
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts with actual text
@@ -229,8 +228,8 @@ def generate_voicemail_tts(output_dir="voicemail_prompts", sample_rate=8000):
     return success_count
 
 
-def main():
-    """Main function"""
+def main() -> None:
+    """Main function."""
     import argparse
 
     parser = argparse.ArgumentParser(

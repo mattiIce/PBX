@@ -28,15 +28,15 @@ Exit codes:
 """
 
 import argparse
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from pbx.integrations.active_directory import ActiveDirectoryIntegration
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 class Colors:
@@ -61,7 +61,7 @@ class ADIntegrationTester:
         self.ad = None
         self.test_results = []
 
-    def print_header(self, title: str):
+    def print_header(self, title: str) -> None:
         """Print a formatted header"""
         print()
         print("=" * 70)
@@ -69,7 +69,7 @@ class ADIntegrationTester:
         print("=" * 70)
         print()
 
-    def print_test(self, test_name: str, status: str, details: str = ""):
+    def print_test(self, test_name: str, status: str, details: str = "") -> None:
         """Print test result"""
         if status == "PASS":
             icon = f"{Colors.GREEN}✓{Colors.RESET}"
@@ -229,13 +229,12 @@ class ADIntegrationTester:
                 "Connect to AD server", "PASS", "Successfully connected and authenticated"
             )
             return True
-        else:
-            self.print_test(
-                "Connect to AD server",
-                "FAIL",
-                "Check server address, credentials, and network connectivity",
-            )
-            return False
+        self.print_test(
+            "Connect to AD server",
+            "FAIL",
+            "Check server address, credentials, and network connectivity",
+        )
+        return False
 
     def test_user_search(self) -> tuple[bool, list[dict]]:
         """Test 4: Test user search functionality"""
@@ -264,33 +263,31 @@ class ADIntegrationTester:
                 size_limit=100,
             )
 
-            users = []
-            for entry in self.ad.connection.entries:
-                users.append(
-                    {
-                        "username": (
-                            str(entry.sAMAccountName) if hasattr(entry, "sAMAccountName") else ""
-                        ),
-                        "display_name": (
-                            str(entry.displayName) if hasattr(entry, "displayName") else ""
-                        ),
-                        "email": str(entry.mail) if hasattr(entry, "mail") else "",
-                        "phone": (
-                            str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else ""
-                        ),
-                    }
-                )
+            users = [
+                {
+                    "username": (
+                        str(entry.sAMAccountName) if hasattr(entry, "sAMAccountName") else ""
+                    ),
+                    "display_name": (
+                        str(entry.displayName) if hasattr(entry, "displayName") else ""
+                    ),
+                    "email": str(entry.mail) if hasattr(entry, "mail") else "",
+                    "phone": (
+                        str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else ""
+                    ),
+                }
+                for entry in self.ad.connection.entries
+            ]
 
             if len(users) == 0:
                 self.print_test(
                     "Search for users", "WARN", "No users found with telephoneNumber attribute"
                 )
                 return True, []
-            else:
-                self.print_test(
-                    "Search for users", "PASS", f"Found {len(users)} users with phone numbers"
-                )
-                return True, users
+            self.print_test(
+                "Search for users", "PASS", f"Found {len(users)} users with phone numbers"
+            )
+            return True, users
 
         except (KeyError, TypeError, ValueError) as e:
             self.print_test("Search for users", "FAIL", f"Error: {e}")
@@ -471,7 +468,7 @@ class ADIntegrationTester:
         ]
 
         # Run initial tests
-        for test_name, test_func in tests:
+        for _test_name, test_func in tests:
             if not test_func():
                 self.print_summary(success=False)
                 return False
@@ -487,7 +484,7 @@ class ADIntegrationTester:
         self.print_summary(success=True)
         return True
 
-    def print_summary(self, success: bool):
+    def print_summary(self, success: bool) -> None:
         """Print test summary"""
         self.print_header("Test Summary")
 
@@ -531,7 +528,7 @@ class ADIntegrationTester:
             print("  3. Test SIP registration with a synced extension")
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(
         description="Test Active Directory integration",
         formatter_class=argparse.RawDescriptionHelpFormatter,

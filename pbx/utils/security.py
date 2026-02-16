@@ -5,12 +5,13 @@ Provides password management, rate limiting, and security validation
 
 import re
 import secrets
+import sqlite3
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import ClassVar
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class PasswordPolicy:
@@ -26,7 +27,7 @@ class PasswordPolicy:
     SPECIAL_CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?"
 
     # Common weak passwords to block (case will be normalized during check)
-    COMMON_PASSWORDS = {
+    COMMON_PASSWORDS: ClassVar[set[str]] = {
         "password",
         "password123",
         "password123!",
@@ -48,7 +49,7 @@ class PasswordPolicy:
         "p@ssw0rd",
     }
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize password policy
 
@@ -163,8 +164,7 @@ class PasswordPolicy:
         Returns:
             Strong random password meeting all requirements
         """
-        if length < self.min_length:
-            length = self.min_length
+        length = max(length, self.min_length)
 
         # Ensure we have all required character types
         chars = []
@@ -200,7 +200,7 @@ class PasswordPolicy:
 class RateLimiter:
     """Rate limiting for authentication attempts"""
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize rate limiter
 
@@ -242,11 +242,10 @@ class RateLimiter:
             if now < lockout_time:
                 remaining = int(lockout_time - now)
                 return True, remaining
-            else:
-                # Lockout expired
-                del self.lockouts[identifier]
-                if identifier in self.attempts:
-                    del self.attempts[identifier]
+            # Lockout expired
+            del self.lockouts[identifier]
+            if identifier in self.attempts:
+                del self.attempts[identifier]
 
         # Clean old attempts outside window
         if identifier in self.attempts:
@@ -264,7 +263,7 @@ class RateLimiter:
 
         return False, None
 
-    def record_attempt(self, identifier: str, successful: bool = False):
+    def record_attempt(self, identifier: str, successful: bool = False) -> None:
         """
         Record an authentication attempt
 
@@ -287,7 +286,7 @@ class RateLimiter:
             if identifier in self.lockouts:
                 del self.lockouts[identifier]
 
-    def clear_attempts(self, identifier: str):
+    def clear_attempts(self, identifier: str) -> None:
         """Clear all attempts for an identifier"""
         if identifier in self.attempts:
             del self.attempts[identifier]
@@ -308,7 +307,7 @@ class SecurityAuditor:
     EVENT_CONFIG_CHANGE = "config_change"
     EVENT_SUSPICIOUS_ACTIVITY = "suspicious_activity"
 
-    def __init__(self, database=None, config: dict = None):
+    def __init__(self, database: object = None, config: dict | None = None) -> None:
         """
         Initialize security auditor
 
@@ -325,10 +324,10 @@ class SecurityAuditor:
         self,
         event_type: str,
         identifier: str,
-        details: dict = None,
+        details: dict | None = None,
         success: bool = True,
-        ip_address: str = None,
-    ):
+        ip_address: str | None = None,
+    ) -> None:
         """
         Log a security event
 
@@ -342,7 +341,7 @@ class SecurityAuditor:
         if not self.enabled:
             return
 
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         log_entry = {
             "timestamp": timestamp,
             "event_type": event_type,
@@ -371,7 +370,7 @@ class SecurityAuditor:
             except Exception as e:
                 self.logger.error(f"Failed to store audit log: {e}")
 
-    def _store_audit_log(self, log_entry: dict):
+    def _store_audit_log(self, log_entry: dict) -> None:
         """Store audit log in database"""
         import json
 
@@ -402,7 +401,7 @@ class SecurityAuditor:
 class SecurePasswordManager:
     """Secure password storage and verification"""
 
-    def __init__(self, config: dict = None):
+    def __init__(self, config: dict | None = None) -> None:
         """
         Initialize password manager
 
@@ -475,17 +474,17 @@ class SecurePasswordManager:
         return self.policy.generate_strong_password(length)
 
 
-def get_rate_limiter(config: dict = None) -> RateLimiter:
+def get_rate_limiter(config: dict | None = None) -> RateLimiter:
     """Get rate limiter instance"""
     return RateLimiter(config)
 
 
-def get_security_auditor(database=None, config: dict = None) -> SecurityAuditor:
+def get_security_auditor(database: object = None, config: dict | None = None) -> SecurityAuditor:
     """Get security auditor instance"""
     return SecurityAuditor(database, config)
 
 
-def get_password_manager(config: dict = None) -> SecurePasswordManager:
+def get_password_manager(config: dict | None = None) -> SecurePasswordManager:
     """Get password manager instance"""
     return SecurePasswordManager(config)
 
@@ -496,7 +495,7 @@ class ThreatDetector:
     Provides advanced pattern detection, IP blocking, and anomaly detection
     """
 
-    def __init__(self, database=None, config: dict = None):
+    def __init__(self, database: object = None, config: dict | None = None) -> None:
         """
         Initialize threat detector
 
@@ -531,7 +530,7 @@ class ThreatDetector:
             self._initialize_schema()
             self._load_blocked_ips_from_database()
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: object = None) -> object:
         """
         Get config value supporting both dot notation and nested dicts
 
@@ -559,7 +558,7 @@ class ThreatDetector:
 
         return value if value is not None else default
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize threat detection database tables"""
         # Blocked IPs table
         blocked_ips_table = (
@@ -624,7 +623,7 @@ class ThreatDetector:
         except sqlite3.Error as e:
             self.logger.error(f"Failed to initialize threat detection schema: {e}")
 
-    def _get_active_blocks_query(self):
+    def _get_active_blocks_query(self) -> str:
         """Get SQL query for active blocked IPs based on database type"""
         if self.database.db_type == "postgresql":
             return """
@@ -632,14 +631,14 @@ class ThreatDetector:
             FROM security_blocked_ips
             WHERE blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
             """
-        else:  # SQLite
-            return """
+        # SQLite
+        return """
             SELECT ip_address, reason, blocked_until
             FROM security_blocked_ips
             WHERE blocked_until > datetime('now') AND unblocked_at IS NULL
             """
 
-    def _load_blocked_ips_from_database(self):
+    def _load_blocked_ips_from_database(self) -> None:
         """Load active blocked IPs from database into memory"""
         if not self.database or not self.database.enabled:
             return
@@ -656,7 +655,7 @@ class ThreatDetector:
 
                     # Convert timestamp string to unix time
                     if isinstance(blocked_until, str):
-                        dt = datetime.fromisoformat(blocked_until.replace("Z", "+00:00"))
+                        dt = datetime.fromisoformat(blocked_until)
                         blocked_until_ts = dt.timestamp()
                     else:
                         blocked_until_ts = blocked_until
@@ -664,9 +663,7 @@ class ThreatDetector:
                     # Add to in-memory cache
                     self.blocked_ips[ip_address] = {"until": blocked_until_ts, "reason": reason}
 
-                self.logger.info(
-                    f"Loaded {len(results)} blocked IPs from database"
-                )
+                self.logger.info(f"Loaded {len(results)} blocked IPs from database")
         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to load blocked IPs from database: {e}")
 
@@ -690,10 +687,9 @@ class ThreatDetector:
             block_until = self.blocked_ips[ip_address]["until"]
             if now < block_until:
                 return True, self.blocked_ips[ip_address].get("reason", "IP blocked")
-            else:
-                # Block expired
-                del self.blocked_ips[ip_address]
-                self._auto_unblock_ip(ip_address)
+            # Block expired
+            del self.blocked_ips[ip_address]
+            self._auto_unblock_ip(ip_address)
 
         # Check database for persistent blocks
         if self.database and self.database.enabled:
@@ -719,7 +715,7 @@ class ThreatDetector:
 
         return False, None
 
-    def block_ip(self, ip_address: str, reason: str, duration: int = None):
+    def block_ip(self, ip_address: str, reason: str, duration: int | None = None) -> None:
         """
         Block an IP address
 
@@ -742,10 +738,9 @@ class ThreatDetector:
 
         # Store in database
         if self.database and self.database.enabled:
-            from datetime import datetime as dt
-            from datetime import timedelta
+            from datetime import UTC, datetime as dt, timedelta
 
-            blocked_until_dt = dt.now() + timedelta(seconds=duration)
+            blocked_until_dt = dt.now(tz=UTC) + timedelta(seconds=duration)
 
             insert_query = (
                 """
@@ -763,7 +758,7 @@ class ThreatDetector:
         self.logger.warning(f"IP {ip_address} blocked: {reason} (duration: {duration}s)")
         self._log_threat_event(ip_address, "ip_blocked", "high", reason)
 
-    def unblock_ip(self, ip_address: str):
+    def unblock_ip(self, ip_address: str) -> None:
         """
         Manually unblock an IP address
 
@@ -793,7 +788,7 @@ class ThreatDetector:
 
         self.logger.info(f"IP {ip_address} manually unblocked")
 
-    def _auto_unblock_ip(self, ip_address: str):
+    def _auto_unblock_ip(self, ip_address: str) -> None:
         """Auto-unblock IP when duration expires"""
         if self.database and self.database.enabled:
             update_query = (
@@ -811,7 +806,7 @@ class ThreatDetector:
             )
             self.database.execute(update_query, (True, ip_address))
 
-    def record_failed_attempt(self, ip_address: str, reason: str):
+    def record_failed_attempt(self, ip_address: str, reason: str) -> None:
         """
         Record failed authentication attempt
 
@@ -886,7 +881,9 @@ class ThreatDetector:
 
         return False
 
-    def analyze_request_pattern(self, ip_address: str, user_agent: str = None) -> dict[str, any]:
+    def analyze_request_pattern(
+        self, ip_address: str, user_agent: str | None = None
+    ) -> dict[str, object]:
         """
         Analyze request patterns for anomalies
 
@@ -946,7 +943,9 @@ class ThreatDetector:
 
         return analysis
 
-    def _log_threat_event(self, ip_address: str, event_type: str, severity: str, details: str):
+    def _log_threat_event(
+        self, ip_address: str, event_type: str, severity: str, details: str
+    ) -> None:
         """Log threat event to database"""
         if not self.database or not self.database.enabled:
             return
@@ -967,7 +966,7 @@ class ThreatDetector:
         except sqlite3.Error as e:
             self.logger.error(f"Failed to log threat event: {e}")
 
-    def get_threat_summary(self, hours: int = 24) -> dict:
+    def get_threat_summary(self, hours: int = 24) -> dict[str, object]:
         """
         Get summary of recent threats
 
@@ -992,7 +991,7 @@ class ThreatDetector:
 
         try:
             # Validate hours parameter to prevent SQL injection
-            if not isinstance(hours, (int, float)) or hours < 0 or hours > 8760:  # Max 1 year
+            if not isinstance(hours, int | float) or hours < 0 or hours > 8760:  # Max 1 year
                 hours = 24  # Default to 24 hours if invalid
 
             # Count events by type
@@ -1039,6 +1038,6 @@ class ThreatDetector:
             return summary
 
 
-def get_threat_detector(database=None, config: dict = None) -> ThreatDetector:
+def get_threat_detector(database: object = None, config: dict | None = None) -> ThreatDetector:
     """Get threat detector instance"""
     return ThreatDetector(database, config)

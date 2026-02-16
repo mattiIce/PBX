@@ -4,16 +4,17 @@ Ring multiple devices sequentially or simultaneously
 """
 
 import json
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class FindMeFollowMe:
     """Find Me/Follow Me call routing system"""
 
-    def __init__(self, config=None, database=None):
+    def __init__(self, config: Any | None = None, database: Any | None = None) -> None:
         """Initialize Find Me/Follow Me"""
         self.logger = get_logger()
         self.config = config or {}
@@ -33,7 +34,7 @@ class FindMeFollowMe:
             self.logger.info("Find Me/Follow Me system initialized")
             self._load_configs()
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize database schema for FMFM"""
         if not self.database or not self.database.enabled:
             return
@@ -62,7 +63,7 @@ class FindMeFollowMe:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing FMFM schema: {e}")
 
-    def _load_configs(self):
+    def _load_configs(self) -> None:
         """Load FMFM configurations from database or config file"""
         # First try to load from database
         if self.database and self.database.enabled:
@@ -75,7 +76,7 @@ class FindMeFollowMe:
             if cfg["extension"] not in self.user_configs:
                 self.user_configs[cfg["extension"]] = cfg
 
-    def _load_from_database(self):
+    def _load_from_database(self) -> None:
         """Load FMFM configurations from database"""
         if not self.database or not self.database.enabled:
             return
@@ -118,7 +119,7 @@ class FindMeFollowMe:
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error loading FMFM configs from database: {e}")
 
-    def _save_to_database(self, extension: str):
+    def _save_to_database(self, extension: str) -> bool:
         """
         Save FMFM configuration to database
 
@@ -183,7 +184,7 @@ class FindMeFollowMe:
             self.logger.error(f"Error saving FMFM config to database: {e}")
             return False
 
-    def _delete_from_database(self, extension: str):
+    def _delete_from_database(self, extension: str) -> bool:
         """Delete FMFM configuration from database"""
         if not self.database or not self.database.enabled:
             return False
@@ -236,7 +237,7 @@ class FindMeFollowMe:
 
         # Add timestamp only if no database (otherwise database generates it)
         if not (self.database and self.database.enabled):
-            self.user_configs[extension]["updated_at"] = datetime.now(timezone.utc)
+            self.user_configs[extension]["updated_at"] = datetime.now(UTC)
 
         # Save to database if one is configured
         if self.database and self.database.enabled:
@@ -279,15 +280,14 @@ class FindMeFollowMe:
 
         if mode == "sequential":
             # Ring destinations one at a time
-            ring_plan = []
-            for dest in destinations:
-                ring_plan.append(
-                    {
-                        "destination": dest["number"],
-                        "ring_time": dest.get("ring_time", 20),
-                        "order": "sequential",
-                    }
-                )
+            ring_plan = [
+                {
+                    "destination": dest["number"],
+                    "ring_time": dest.get("ring_time", 20),
+                    "order": "sequential",
+                }
+                for dest in destinations
+            ]
 
             return {
                 "strategy": "sequential",
@@ -296,7 +296,7 @@ class FindMeFollowMe:
                 "call_id": call_id,
             }
 
-        elif mode == "simultaneous":
+        if mode == "simultaneous":
             # Ring all destinations at once
             ring_plan = []
             max_ring_time = 0

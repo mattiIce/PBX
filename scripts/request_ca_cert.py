@@ -5,7 +5,6 @@ Generates a CSR and submits it to the CA for signing
 """
 
 import argparse
-import os
 import sys
 from pathlib import Path
 
@@ -22,7 +21,13 @@ except ImportError as e:
     sys.exit(1)
 
 
-def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="certs", ca_cert=None):
+def request_certificate_from_ca(
+    ca_server: str,
+    ca_endpoint: str,
+    hostname: str,
+    cert_dir: str = "certs",
+    ca_cert: str | None = None,
+) -> bool:
     """
     Request certificate from in-house CA
 
@@ -69,7 +74,7 @@ def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="cert
             )
 
         # Set restrictive permissions
-        os.chmod(key_file, 0o600)
+        key_file.chmod(0o600)
         print(f"   Private key saved to: {key_file}")
 
     # Generate CSR
@@ -180,10 +185,10 @@ def request_certificate_from_ca(ca_server, ca_endpoint, hostname, cert_dir="cert
         return False
 
 
-def load_ca_config_from_yml(config_file="config.yml"):
+def load_ca_config_from_yml(config_file: str = "config.yml") -> dict:
     """Load CA configuration from config.yml"""
     try:
-        with open(config_file, "r") as f:
+        with open(config_file) as f:
             config = yaml.safe_load(f)
 
         ssl_config = config.get("api", {}).get("ssl", {})
@@ -193,7 +198,8 @@ def load_ca_config_from_yml(config_file="config.yml"):
             "server_url": ca_config.get("server_url"),
             "endpoint": ca_config.get("request_endpoint", "/api/sign-cert"),
             "ca_cert": ca_config.get("ca_cert"),
-            "cert_dir": str(Path(ssl_config.get("cert_file", "certs/server.crt").parent)) or "certs",
+            "cert_dir": str(Path(ssl_config.get("cert_file", "certs/server.crt").parent))
+            or "certs",
         }
     except (KeyError, OSError, TypeError, ValueError) as e:
         print(f"Warning: Could not load CA config from {config_file}: {e}")
@@ -236,7 +242,7 @@ if __name__ == "__main__":
     if not hostname:
         # Try to load from config.yml
         try:
-            with open(args.config, "r") as f:
+            with open(args.config) as f:
                 config = yaml.safe_load(f)
             hostname = config.get("server", {}).get("external_ip", "localhost")
         except (KeyError, OSError, TypeError, ValueError):

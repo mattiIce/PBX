@@ -3,9 +3,9 @@ Integration test for SIP Send Line and Send MAC in PBX Core
 Tests that headers are properly added during call routing
 """
 
+from pathlib import Path
 
 from pbx.sip.message import SIPMessage
-from pathlib import Path
 
 
 class TestSIPSendLineIntegration:
@@ -16,11 +16,11 @@ class TestSIPSendLineIntegration:
         import tempfile
 
         # Create a unique temporary config file
-        self.temp_config = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
-        self.temp_config_path = self.temp_config.name
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as self.temp_config:
+            self.temp_config_path = self.temp_config.name
 
-        # Create a minimal test config
-        self.temp_config.write("""
+            # Create a minimal test config
+            self.temp_config.write("""
 server:
   sip_host: 0.0.0.0
   sip_port: 5060
@@ -48,14 +48,11 @@ logging:
   level: ERROR
   console: false
 """)
-        self.temp_config.close()
 
     def teardown_method(self) -> None:
         """Clean up test environment"""
-        import os
-
         if Path(self.temp_config_path).exists():
-            os.remove(self.temp_config_path)
+            Path(self.temp_config_path).unlink(missing_ok=True)
 
     def test_invite_includes_caller_id_headers(self) -> None:
         """Test that INVITE messages include P-Asserted-Identity and Remote-Party-ID"""

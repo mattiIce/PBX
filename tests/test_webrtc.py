@@ -5,7 +5,6 @@ Test WebRTC browser calling support
 
 from typing import Any
 
-
 from pbx.features.webrtc import WebRTCGateway, WebRTCSession, WebRTCSignalingServer
 
 

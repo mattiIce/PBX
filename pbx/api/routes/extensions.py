@@ -1,16 +1,13 @@
 """Flask Blueprint for extension management routes."""
 
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, jsonify
 
 from pbx.api.utils import (
     get_pbx_core,
+    get_request_body,
+    require_admin,
     send_json,
     verify_authentication,
-    require_auth,
-    require_admin,
-    get_request_body,
-    DateTimeEncoder,
-    validate_limit_param,
 )
 from pbx.utils.config import Config
 from pbx.utils.logger import get_logger
@@ -55,8 +52,7 @@ def get_extensions() -> tuple[Response, int]:
                 for e in extensions
             ]
             return send_json(data), 200
-        else:
-            return send_json({"error": "PBX not initialized"}, 500), 500
+        return send_json({"error": "PBX not initialized"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting extensions: {e}")
         return send_json({"error": "Failed to retrieve extensions"}, 500), 500
@@ -122,25 +118,22 @@ def add_extension() -> tuple[Response, int]:
                 number=number,
                 name=name,
                 password_hash=password_hash,
-                email=email if email else None,
+                email=email or None,
                 allow_external=allow_external,
-                voicemail_pin=voicemail_pin if voicemail_pin else None,
+                voicemail_pin=voicemail_pin or None,
                 ad_synced=False,
                 ad_username=None,
                 is_admin=is_admin,
             )
         else:
             # Fall back to config.yml
-            success = pbx_core.config.add_extension(
-                number, name, email, password, allow_external
-            )
+            success = pbx_core.config.add_extension(number, name, email, password, allow_external)
 
         if success:
             # Reload extensions
             pbx_core.extension_registry.reload()
             return send_json({"success": True, "message": "Extension added successfully"}), 200
-        else:
-            return send_json({"error": "Failed to add extension"}, 500), 500
+        return send_json({"error": "Failed to add extension"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -172,13 +165,12 @@ def update_extension(number: str) -> tuple[Response, int]:
             return send_json({"error": "Password must be at least 8 characters"}, 400), 400
 
         # SECURITY: Validate voicemail PIN format if provided (4-6 digits)
-        if voicemail_pin is not None:
-            if (
-                not str(voicemail_pin).isdigit()
-                or len(str(voicemail_pin)) < 4
-                or len(str(voicemail_pin)) > 6
-            ):
-                return send_json({"error": "Voicemail PIN must be 4-6 digits"}, 400), 400
+        if voicemail_pin is not None and (
+            not str(voicemail_pin).isdigit()
+            or len(str(voicemail_pin)) < 4
+            or len(str(voicemail_pin)) > 6
+        ):
+            return send_json({"error": "Voicemail PIN must be 4-6 digits"}, 400), 400
 
         # Validate email format if provided
         if email and not Config.validate_email(email):
@@ -190,7 +182,7 @@ def update_extension(number: str) -> tuple[Response, int]:
             # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
             # Currently storing plain password; system supports both plain
             # and hashed passwords
-            password_hash = password if password else None
+            password_hash = password or None
             success = pbx_core.extension_db.update(
                 number=number,
                 name=name,
@@ -210,8 +202,7 @@ def update_extension(number: str) -> tuple[Response, int]:
             # Reload extensions
             pbx_core.extension_registry.reload()
             return send_json({"success": True, "message": "Extension updated successfully"}), 200
-        else:
-            return send_json({"error": "Failed to update extension"}, 500), 500
+        return send_json({"error": "Failed to update extension"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -242,7 +233,6 @@ def delete_extension(number: str) -> tuple[Response, int]:
             # Reload extensions
             pbx_core.extension_registry.reload()
             return send_json({"success": True, "message": "Extension deleted successfully"}), 200
-        else:
-            return send_json({"error": "Failed to delete extension"}, 500), 500
+        return send_json({"error": "Failed to delete extension"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500

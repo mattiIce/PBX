@@ -3,7 +3,7 @@ Lansweeper Integration
 Integration with Lansweeper IT asset management system (free API)
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
@@ -19,7 +19,7 @@ except ImportError:
 class LansweeperIntegration:
     """Integration with Lansweeper IT asset management"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: dict | None = None) -> None:
         """Initialize Lansweeper integration"""
         self.logger = get_logger()
         self.config = config or {}
@@ -108,7 +108,7 @@ class LansweeperIntegration:
         # Check cache
         if mac_normalized in self.asset_cache:
             cached = self.asset_cache[mac_normalized]
-            if (datetime.now(timezone.utc) - cached["cached_at"]).seconds < self.cache_ttl:
+            if (datetime.now(UTC) - cached["cached_at"]).seconds < self.cache_ttl:
                 return cached["data"]
 
         # Query Lansweeper API
@@ -117,7 +117,7 @@ class LansweeperIntegration:
 
         if result:
             # Cache result
-            self.asset_cache[mac_normalized] = {"data": result, "cached_at": datetime.now(timezone.utc)}
+            self.asset_cache[mac_normalized] = {"data": result, "cached_at": datetime.now(UTC)}
 
             self.logger.info(f"Retrieved asset info for MAC {mac_address}")
             return result
@@ -199,7 +199,7 @@ class LansweeperIntegration:
         self.phone_assets[extension] = {
             "mac_address": mac_address,
             "asset_info": asset,
-            "linked_at": datetime.now(timezone.utc),
+            "linked_at": datetime.now(UTC),
         }
 
         self.logger.info(
@@ -279,7 +279,7 @@ class LansweeperIntegration:
         success &= self.update_asset_custom_field(mac_address, "PBX_Extension", extension)
         success &= self.update_asset_custom_field(mac_address, "PBX_Model", phone_model)
         success &= self.update_asset_custom_field(
-            mac_address, "PBX_Sync_Date", datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+            mac_address, "PBX_Sync_Date", datetime.now(UTC).strftime("%Y-%m-%d %H:%M:%S")
         )
 
         return success
@@ -379,7 +379,7 @@ class LansweeperIntegration:
         phones = self.get_all_phones()
 
         report = {
-            "generated_at": datetime.now(timezone.utc).isoformat(),
+            "generated_at": datetime.now(UTC).isoformat(),
             "total_phones": len(phones),
             "by_building": {},
             "missing_location": [],
@@ -422,7 +422,7 @@ class LansweeperIntegration:
 
         return report
 
-    def clear_cache(self):
+    def clear_cache(self) -> None:
         """Clear asset cache"""
         self.asset_cache.clear()
         self.logger.info("Cleared Lansweeper asset cache")

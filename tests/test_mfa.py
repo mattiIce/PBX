@@ -2,9 +2,10 @@
 """
 Tests for Multi-Factor Authentication (MFA) feature
 """
-import os
-import time
 
+import contextlib
+import time
+from pathlib import Path
 
 from pbx.features.mfa import (
     FIDO2Verifier,
@@ -13,7 +14,6 @@ from pbx.features.mfa import (
     YubiKeyOTPVerifier,
 )
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_totp_generation() -> bool:
@@ -30,7 +30,6 @@ def test_totp_generation() -> bool:
     # Verify code is 6 digits
     assert len(code) == 6, f"Expected 6 digits, got {len(code)}"
     assert code.isdigit(), f"Expected numeric code, got {code}"
-
 
     # Verify the same code is generated for the same timestamp
     code2 = totp.generate(timestamp)
@@ -59,9 +58,9 @@ def test_totp_verification() -> bool:
     # Verify code works within time window
     past_timestamp = timestamp - 30  # 1 period ago
     past_code = totp.generate(past_timestamp)
-    assert totp.verify(
-        past_code, timestamp, window=1
-    ), "Code from previous period should verify with window=1"
+    assert totp.verify(past_code, timestamp, window=1), (
+        "Code from previous period should verify with window=1"
+    )
 
     return True
 
@@ -103,7 +102,7 @@ def test_mfa_enrollment_without_db() -> bool:
     mfa = MFAManager(database=None, config=config)
 
     # Enrollment should work but won't persist without database
-    success, uri, codes = mfa.enroll_user("1001")
+    _success, _uri, _codes = mfa.enroll_user("1001")
 
     # Without database, enrollment will succeed but won't store
     # We just check that the method executes without error
@@ -117,9 +116,8 @@ def test_mfa_with_database() -> bool:
     # Create temporary SQLite database
     import tempfile
 
-    db_file = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    db_path = db_file.name
-    db_file.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as db_file:
+        db_path = db_file.name
 
     try:
         # Create database config
@@ -151,14 +149,12 @@ def test_mfa_with_database() -> bool:
         assert backup_codes is not None, "Backup codes should be provided"
         # Config dict doesn't support dot notation, so it uses the default of
         # 10
-        assert (
-            len(backup_codes) == 10
-        ), f"Expected 10 backup codes, got {len(backup_codes)}"
+        assert len(backup_codes) == 10, f"Expected 10 backup codes, got {len(backup_codes)}"
 
         # MFA should not be enabled yet (requires verification)
-        assert not mfa.is_enabled_for_user(
-            extension
-        ), "MFA should not be enabled before verification"
+        assert not mfa.is_enabled_for_user(extension), (
+            "MFA should not be enabled before verification"
+        )
 
         # Extract secret from URI to generate valid code
         import base64
@@ -196,17 +192,15 @@ def test_mfa_with_database() -> bool:
 
         # Clean up
         db.connection.close()
-        os.unlink(db_path)
+        Path(db_path).unlink(missing_ok=True)
 
         return True
 
     except OSError as e:
         # Clean up on error
         if Path(db_path).exists():
-            try:
-                os.unlink(db_path)
-            except BaseException:
-                pass
+            with contextlib.suppress(BaseException):
+                Path(db_path).unlink(missing_ok=True)
         raise e
 
 
@@ -234,7 +228,6 @@ def test_backup_code_format() -> bool:
             assert "O" not in part, "Should not contain O"
             assert "I" not in part, "Should not contain I"
             assert "1" not in part, "Should not contain 1"
-
 
     return True
 
@@ -279,7 +272,7 @@ def test_yubikey_otp_verification_without_api() -> bool:
 
     # Note: Without valid API credentials and a real OTP, this will fail at the API level
     # but the format validation and code path will be exercised
-    valid, error = verifier.verify_otp(test_otp)
+    valid, _error = verifier.verify_otp(test_otp)
 
     # We expect this to fail since we don't have real credentials/OTP
     # but it should fail gracefully with an appropriate error message
@@ -305,7 +298,6 @@ def test_fido2_challenge_generation() -> bool:
     assert "=" not in challenge, "Challenge should not have padding"
     assert "+" not in challenge, "Challenge should be URL-safe"
     assert "/" not in challenge, "Challenge should be URL-safe"
-
 
     # Verify uniqueness
     challenge2 = verifier.create_challenge()
@@ -344,7 +336,7 @@ def test_fido2_assertion_verification() -> bool:
     verifier = FIDO2Verifier()
 
     # Test with missing data
-    success, error = verifier.verify_assertion("test_cred", {}, b"public_key")
+    success, _error = verifier.verify_assertion("test_cred", {}, b"public_key")
     assert not success, "Verification should fail with missing data"
 
     # Test with simulated valid data (basic mode without full crypto)
@@ -365,7 +357,7 @@ def test_fido2_assertion_verification() -> bool:
 
     # This will use basic verification mode since we don't have a real FIDO2
     # setup
-    success, error = verifier.verify_assertion("test_cred", assertion_data, public_key)
+    success, _error = verifier.verify_assertion("test_cred", assertion_data, public_key)
 
     # In basic mode, this should succeed since all data is present and valid
     # length

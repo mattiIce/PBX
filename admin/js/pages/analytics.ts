@@ -63,10 +63,14 @@ export async function loadAnalytics(): Promise<void> {
 
 function updateAnalyticsOverview(data: AnalyticsOverview): void {
     const el = (id: string): HTMLElement | null => document.getElementById(id);
-    if (el('analytics-total-calls')) (el('analytics-total-calls') as HTMLElement).textContent = String(data.total_calls || 0);
-    if (el('analytics-avg-duration')) (el('analytics-avg-duration') as HTMLElement).textContent = `${data.avg_duration || 0}s`;
-    if (el('analytics-answer-rate')) (el('analytics-answer-rate') as HTMLElement).textContent = `${data.answer_rate || 0}%`;
-    if (el('analytics-active-now')) (el('analytics-active-now') as HTMLElement).textContent = String(data.active_calls || 0);
+    const totalCalls = el('analytics-total-calls');
+    const avgDuration = el('analytics-avg-duration');
+    const answerRate = el('analytics-answer-rate');
+    const activeNow = el('analytics-active-now');
+    if (totalCalls) totalCalls.textContent = String(data.total_calls ?? 0);
+    if (avgDuration) avgDuration.textContent = `${data.avg_duration ?? 0}s`;
+    if (answerRate) answerRate.textContent = `${data.answer_rate ?? 0}%`;
+    if (activeNow) activeNow.textContent = String(data.active_calls ?? 0);
 }
 
 function renderDailyTrendsChart(trends: ChartData): void {
@@ -136,11 +140,14 @@ export async function loadQoSMetrics(): Promise<void> {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: QoSData = await response.json();
 
-        const el = (id: string): HTMLElement | null => document.getElementById(id);
-        if (el('qos-mos')) (el('qos-mos') as HTMLElement).textContent = data.avg_mos?.toFixed(2) || 'N/A';
-        if (el('qos-jitter')) (el('qos-jitter') as HTMLElement).textContent = `${data.avg_jitter || 0}ms`;
-        if (el('qos-packet-loss')) (el('qos-packet-loss') as HTMLElement).textContent = `${data.avg_packet_loss || 0}%`;
-        if (el('qos-latency')) (el('qos-latency') as HTMLElement).textContent = `${data.avg_latency || 0}ms`;
+        const mosEl = document.getElementById('qos-mos');
+        const jitterEl = document.getElementById('qos-jitter');
+        const packetLossEl = document.getElementById('qos-packet-loss');
+        const latencyEl = document.getElementById('qos-latency');
+        if (mosEl) mosEl.textContent = data.avg_mos?.toFixed(2) ?? 'N/A';
+        if (jitterEl) jitterEl.textContent = `${data.avg_jitter ?? 0}ms`;
+        if (packetLossEl) packetLossEl.textContent = `${data.avg_packet_loss ?? 0}%`;
+        if (latencyEl) latencyEl.textContent = `${data.avg_latency ?? 0}ms`;
     } catch (error: unknown) {
         console.error('Error loading QoS metrics:', error);
     }

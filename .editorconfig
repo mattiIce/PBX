@@ -9,12 +9,19 @@ end_of_line = lf
 insert_final_newline = true
 charset = utf-8
 trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
 
 # Python files
 [*.py]
 indent_style = space
 indent_size = 4
 max_line_length = 100
+
+# TypeScript and JavaScript files
+[*.{ts,tsx,js,jsx,mjs,cjs}]
+indent_style = space
+indent_size = 2
 
 # YAML files
 [*.{yml,yaml}]
@@ -26,8 +33,23 @@ indent_size = 2
 indent_style = space
 indent_size = 2
 
+# TOML files
+[*.toml]
+indent_style = space
+indent_size = 4
+
 # Shell scripts
 [*.sh]
+indent_style = space
+indent_size = 2
+
+# HTML and CSS files
+[*.{html,css,scss,less}]
+indent_style = space
+indent_size = 2
+
+# XML and SVG files
+[*.{xml,svg}]
 indent_style = space
 indent_size = 2
 
@@ -39,3 +61,28 @@ max_line_length = off
 # Makefiles
 [Makefile]
 indent_style = tab
+
+# Dockerfile
+[Dockerfile*]
+indent_style = space
+indent_size = 4
+
+# Docker Compose
+[docker-compose*.yml]
+indent_style = space
+indent_size = 2
+
+# INI files (alembic.ini, etc.)
+[*.ini]
+indent_style = space
+indent_size = 4
+
+# Configuration files
+[*.{cfg,conf}]
+indent_style = space
+indent_size = 4
+
+# Git config files
+[.git*]
+indent_style = space
+indent_size = 4

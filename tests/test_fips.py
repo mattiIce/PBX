@@ -3,7 +3,6 @@
 FIPS compliance tests
 """
 
-
 from pbx.utils.encryption import get_encryption
 
 
@@ -20,11 +19,9 @@ def test_fips_password_hashing() -> None:
     assert salt, "Salt should not be empty"
     assert len(salt) > 0, "Salt should have length"
 
-
     # Test password verification
     is_valid = enc.verify_password(password, hash1, salt)
     assert is_valid, "Password verification should succeed"
-
 
     # Test wrong password
     is_invalid = enc.verify_password("WrongPassword", hash1, salt)
@@ -42,7 +39,7 @@ def test_fips_data_encryption() -> None:
         password = "SecureEncryptionPassword123!"
 
         # Derive proper 32-byte key from password
-        key, salt = enc.derive_key(password, key_length=32)
+        key, _salt = enc.derive_key(password, key_length=32)
 
         encrypted, nonce, tag = enc.encrypt_data(data, key)
 
@@ -50,11 +47,9 @@ def test_fips_data_encryption() -> None:
         assert nonce, "Nonce should not be empty"
         assert tag, "Tag should not be empty"
 
-
         # Test decryption
         decrypted = enc.decrypt_data(encrypted, nonce, tag, key)
         assert decrypted.decode() == data, "Decrypted data should match original"
-
 
     except ImportError:
         pass
@@ -100,7 +95,7 @@ def test_extension_authentication() -> None:
         registry = ExtensionRegistry(config)
 
         # Test authentication (will use plain-text fallback if not hashed)
-        result = registry.authenticate("1001", "password1001")
+        registry.authenticate("1001", "password1001")
 
         # Should work with either plain text or hashed
 

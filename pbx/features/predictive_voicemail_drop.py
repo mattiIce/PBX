@@ -3,7 +3,8 @@ Predictive Voicemail Drop
 Auto-leave message on voicemail detection
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -21,7 +22,7 @@ class VoicemailDropSystem:
     - Campaign-specific messages
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize voicemail drop system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -83,10 +84,10 @@ class VoicemailDropSystem:
                 "beep_detected": False,
                 "detection_time": 0.0,
                 "detection_method": "insufficient_data",
-                "detected_at": datetime.now(timezone.utc).isoformat(),
+                "detected_at": datetime.now(UTC).isoformat(),
             }
 
-        start_time = datetime.now(timezone.utc)
+        start_time = datetime.now(UTC)
 
         # Convert audio bytes to samples (assuming 16-bit PCM)
         try:
@@ -133,7 +134,7 @@ class VoicemailDropSystem:
         # Determine if voicemail based on threshold
         is_voicemail = confidence >= self.detection_threshold
 
-        detection_time = (datetime.now(timezone.utc) - start_time).total_seconds()
+        detection_time = (datetime.now(UTC) - start_time).total_seconds()
 
         detection_result = {
             "call_id": call_id,
@@ -142,7 +143,7 @@ class VoicemailDropSystem:
             "beep_detected": beep_detected,
             "detection_time": round(detection_time, 3),
             "detection_method": detection_method,
-            "detected_at": datetime.now(timezone.utc).isoformat(),
+            "detected_at": datetime.now(UTC).isoformat(),
         }
 
         self.logger.info(
@@ -164,10 +165,10 @@ class VoicemailDropSystem:
             bool: True if beep detected
         """
         # Constants for beep detection
-        BEEP_DURATION_WINDOWS = 40  # 40 windows = ~800ms (800ms beep duration)
-        WINDOW_SIZE = 160  # 20ms windows at 8kHz
-        ENERGY_THRESHOLD_MULTIPLIER = 3.0
-        ENERGY_SUSTAIN_THRESHOLD = 0.7  # 70% of original energy
+        beep_duration_windows = 40  # 40 windows = ~800ms (800ms beep duration)
+        window_size = 160  # 20ms windows at 8kHz
+        energy_threshold_multiplier = 3.0
+        energy_sustain_threshold = 0.7  # 70% of original energy
 
         # Simple energy-based beep detection
         # A beep is characterized by:
@@ -175,28 +176,28 @@ class VoicemailDropSystem:
         # - Sustained tone (0.5-1 second)
         # - Followed by silence or decrease
 
-        for i in range(0, len(samples) - WINDOW_SIZE * 50, WINDOW_SIZE):
+        for i in range(0, len(samples) - window_size * 50, window_size):
             # Calculate energy of current window
-            window = samples[i : i + WINDOW_SIZE]
-            current_energy = sum(abs(s) for s in window) / WINDOW_SIZE
+            window = samples[i : i + window_size]
+            current_energy = sum(abs(s) for s in window) / window_size
 
             # Calculate energy of previous window
             if i > 0:
-                prev_window = samples[i - WINDOW_SIZE : i]
-                prev_energy = sum(abs(s) for s in prev_window) / WINDOW_SIZE
+                prev_window = samples[i - window_size : i]
+                prev_energy = sum(abs(s) for s in prev_window) / window_size
 
                 # Check for sudden increase (potential beep start)
-                if current_energy > prev_energy * ENERGY_THRESHOLD_MULTIPLIER:
+                if current_energy > prev_energy * energy_threshold_multiplier:
                     # Check if energy sustains for beep duration
                     sustained = True
-                    for j in range(1, BEEP_DURATION_WINDOWS):  # Check next 800ms
-                        if i + (j * WINDOW_SIZE) + WINDOW_SIZE <= len(samples):
+                    for j in range(1, beep_duration_windows):  # Check next 800ms
+                        if i + (j * window_size) + window_size <= len(samples):
                             check_window = samples[
-                                i + (j * WINDOW_SIZE) : i + (j * WINDOW_SIZE) + WINDOW_SIZE
+                                i + (j * window_size) : i + (j * window_size) + window_size
                             ]
-                            check_energy = sum(abs(s) for s in check_window) / WINDOW_SIZE
+                            check_energy = sum(abs(s) for s in check_window) / window_size
                             if (
-                                check_energy < current_energy * ENERGY_SUSTAIN_THRESHOLD
+                                check_energy < current_energy * energy_sustain_threshold
                             ):  # Energy drops significantly
                                 sustained = False
                                 break
@@ -256,11 +257,11 @@ class VoicemailDropSystem:
             "message_id": message_id,
             "message_name": message["name"],
             "duration": message["duration"],
-            "dropped_at": datetime.now(timezone.utc).isoformat(),
+            "dropped_at": datetime.now(UTC).isoformat(),
         }
 
     def add_message(
-        self, message_id: str, name: str, audio_path: str, duration: float = None
+        self, message_id: str, name: str, audio_path: str, duration: float | None = None
     ) -> dict:
         """
         Add pre-recorded message
@@ -279,7 +280,7 @@ class VoicemailDropSystem:
             "name": name,
             "audio_path": audio_path,
             "duration": duration or 0.0,
-            "created_at": datetime.now(timezone.utc),
+            "created_at": datetime.now(UTC),
             "use_count": 0,
         }
 
@@ -313,7 +314,7 @@ class VoicemailDropSystem:
             for msg in self.messages.values()
         ]
 
-    def tune_detection(self, threshold: float, max_time: int):
+    def tune_detection(self, threshold: float, max_time: int) -> None:
         """
         Tune detection parameters
 
@@ -349,7 +350,7 @@ class VoicemailDropSystem:
 _voicemail_drop = None
 
 
-def get_voicemail_drop(config=None) -> VoicemailDropSystem:
+def get_voicemail_drop(config: Any | None = None) -> VoicemailDropSystem:
     """Get or create voicemail drop instance"""
     global _voicemail_drop
     if _voicemail_drop is None:

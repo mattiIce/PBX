@@ -28,14 +28,14 @@ RESET = "\033[0m"
 class ProductionValidator:
     """Validate production readiness."""
 
-    def __init__(self, verbose=False, skip_integration=False):
+    def __init__(self, verbose: bool = False, skip_integration: bool = False) -> None:
         self.verbose = verbose
         self.skip_integration = skip_integration
         self.results = {"passed": 0, "failed": 0, "skipped": 0, "tests": []}
         self.base_dir = Path(__file__).parent.parent
         self.api_url = os.getenv("API_URL", "http://localhost:9000")
 
-    def log(self, message: str, level: str = "info"):
+    def log(self, message: str, level: str = "info") -> None:
         """Log a message."""
         if level == "pass":
             print(f"{GREEN}✓{RESET} {message}")
@@ -61,6 +61,7 @@ class ProductionValidator:
                 text=True,
                 timeout=timeout,
                 cwd=self.base_dir,
+                check=False,
             )
             return result.returncode == 0, result.stdout + result.stderr
         except subprocess.TimeoutExpired:
@@ -80,7 +81,7 @@ class ProductionValidator:
 
     # ===== Configuration Tests =====
 
-    def test_configuration_files(self):
+    def test_configuration_files(self) -> None:
         """Test that required configuration files exist and are valid."""
         print(f"\n{BLUE}=== Configuration Tests ==={RESET}")
 
@@ -114,12 +115,12 @@ class ProductionValidator:
 
     # ===== Security Tests =====
 
-    def test_security_configuration(self):
+    def test_security_configuration(self) -> None:
         """Test security configuration."""
         print(f"\n{BLUE}=== Security Tests ==={RESET}")
 
         # Check for secrets validation
-        success, output = self.run_command(
+        success, _output = self.run_command(
             [sys.executable, str(self.base_dir / "scripts" / "verify_fips.py")]
         )
         if success:
@@ -140,7 +141,7 @@ class ProductionValidator:
 
     # ===== Database Tests =====
 
-    def test_database_connectivity(self):
+    def test_database_connectivity(self) -> None:
         """Test database connectivity."""
         print(f"\n{BLUE}=== Database Tests ==={RESET}")
 
@@ -156,7 +157,7 @@ class ProductionValidator:
 
     # ===== API Tests =====
 
-    def test_api_endpoints(self):
+    def test_api_endpoints(self) -> None:
         """Test critical API endpoints."""
         print(f"\n{BLUE}=== API Tests ==={RESET}")
 
@@ -174,7 +175,7 @@ class ProductionValidator:
 
     # ===== Service Tests =====
 
-    def test_service_status(self):
+    def test_service_status(self) -> None:
         """Test service status."""
         print(f"\n{BLUE}=== Service Tests ==={RESET}")
 
@@ -187,7 +188,7 @@ class ProductionValidator:
 
     # ===== Performance Tests =====
 
-    def test_performance_baseline(self):
+    def test_performance_baseline(self) -> None:
         """Test that performance baselines are acceptable."""
         print(f"\n{BLUE}=== Performance Tests ==={RESET}")
 
@@ -205,7 +206,7 @@ class ProductionValidator:
 
     # ===== Backup Tests =====
 
-    def test_backup_configuration(self):
+    def test_backup_configuration(self) -> None:
         """Test backup configuration."""
         print(f"\n{BLUE}=== Backup Tests ==={RESET}")
 
@@ -221,7 +222,7 @@ class ProductionValidator:
 
     # ===== Monitoring Tests =====
 
-    def test_monitoring_setup(self):
+    def test_monitoring_setup(self) -> None:
         """Test monitoring configuration."""
         print(f"\n{BLUE}=== Monitoring Tests ==={RESET}")
 
@@ -241,7 +242,7 @@ class ProductionValidator:
 
     # ===== Integration Tests =====
 
-    def test_integrations(self):
+    def test_integrations(self) -> None:
         """Test external integrations."""
         if self.skip_integration:
             print(f"\n{BLUE}=== Integration Tests (SKIPPED) ==={RESET}")
@@ -255,7 +256,7 @@ class ProductionValidator:
 
     # ===== Documentation Tests =====
 
-    def test_documentation(self):
+    def test_documentation(self) -> None:
         """Test that required documentation exists."""
         print(f"\n{BLUE}=== Documentation Tests ==={RESET}")
 
@@ -276,7 +277,7 @@ class ProductionValidator:
 
     # ===== Main Test Runner =====
 
-    def run_all_tests(self):
+    def run_all_tests(self) -> None:
         """Run all validation tests."""
         print(f"{BLUE}{'=' * 70}{RESET}")
         print(f"{BLUE}Production Validation Test Suite{RESET}")
@@ -302,7 +303,7 @@ class ProductionValidator:
                 print(f"{RED}Error running {test_suite.__name__}: {e}{RESET}")
                 self.results["failed"] += 1
 
-    def print_summary(self):
+    def print_summary(self) -> int:
         """Print test summary."""
         print(f"\n{BLUE}{'=' * 70}{RESET}")
         print(f"{BLUE}Test Summary{RESET}")
@@ -319,15 +320,14 @@ class ProductionValidator:
         if self.results["failed"] == 0:
             print(f"\n{GREEN}✓ PRODUCTION READY{RESET}")
             return 0
-        elif self.results["failed"] <= 2:
+        if self.results["failed"] <= 2:
             print(f"\n{YELLOW}⚠ MOSTLY READY (review {self.results['failed']} failures){RESET}")
             return 1
-        else:
-            print(f"\n{RED}✗ NOT PRODUCTION READY ({self.results['failed']} failures){RESET}")
-            return 2
+        print(f"\n{RED}✗ NOT PRODUCTION READY ({self.results['failed']} failures){RESET}")
+        return 2
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Production Validation Test Suite")
     parser.add_argument("-v", "--verbose", action="store_true", help="Verbose output")
     parser.add_argument("--skip-integration", action="store_true", help="Skip integration tests")

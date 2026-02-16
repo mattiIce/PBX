@@ -3,10 +3,15 @@ RTP Media Handler
 Handles real-time audio/video streaming
 """
 
+from __future__ import annotations
+
+import contextlib
 import socket
 import struct
 import threading
 import time
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 from pbx.utils.audio import (
     WAV_FORMAT_ALAW,
@@ -15,33 +20,49 @@ from pbx.utils.audio import (
     WAV_FORMAT_ULAW,
 )
 from pbx.utils.logger import get_logger
-from pathlib import Path
+
+if TYPE_CHECKING:
+    from pbx.features.qos_monitoring import QoSMetrics, QoSMonitor
+    from pbx.rtp.rfc2833 import RFC2833Receiver
+
+# Type alias for network address tuples
+type AddrTuple = tuple[str, int]
 
 
 class RTPHandler:
-    """Handle RTP media streams"""
+    """Handle RTP media streams."""
 
-    def __init__(self, local_port, remote_host=None, remote_port=None):
+    def __init__(
+        self,
+        local_port: int,
+        remote_host: str | None = None,
+        remote_port: int | None = None,
+    ) -> None:
         """
-        Initialize RTP handler
+        Initialize RTP handler.
 
         Args:
-            local_port: Local port to bind to
-            remote_host: Remote host to send to
-            remote_port: Remote port to send to
+            local_port: Local port to bind to.
+            remote_host: Remote host to send to.
+            remote_port: Remote port to send to.
         """
-        self.local_port = local_port
-        self.remote_host = remote_host
-        self.remote_port = remote_port
+        self.local_port: int = local_port
+        self.remote_host: str | None = remote_host
+        self.remote_port: int | None = remote_port
         self.logger = get_logger()
-        self.socket = None
-        self.running = False
-        self.sequence_number = 0
-        self.timestamp = 0
-        self.ssrc = 0x12345678  # Synchronization source identifier
+        self.socket: socket.socket | None = None
+        self.running: bool = False
+        self.sequence_number: int = 0
+        self.timestamp: int = 0
+        self.ssrc: int = 0x12345678  # Synchronization source identifier
 
-    def start(self):
-        """Start RTP handler"""
+    def start(self) -> bool:
+        """
+        Start RTP handler.
+
+        Returns:
+            True if the handler started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -62,15 +83,15 @@ class RTPHandler:
             self.logger.error(f"Failed to start RTP handler: {e}")
             return False
 
-    def stop(self):
-        """Stop RTP handler"""
+    def stop(self) -> None:
+        """Stop RTP handler."""
         self.running = False
         if self.socket:
             self.socket.close()
         self.logger.info(f"RTP handler stopped on port {self.local_port}")
 
-    def _receive_loop(self):
-        """Receive RTP packets"""
+    def _receive_loop(self) -> None:
+        """Receive RTP packets in a loop."""
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
@@ -79,13 +100,13 @@ class RTPHandler:
                 if self.running:
                     self.logger.error(f"Error receiving RTP packet: {e}")
 
-    def _handle_rtp_packet(self, data, addr):
+    def _handle_rtp_packet(self, data: bytes, addr: AddrTuple) -> None:
         """
-        Handle incoming RTP packet
+        Handle incoming RTP packet.
 
         Args:
-            data: Packet data
-            addr: Source address
+            data: Packet data.
+            addr: Source address.
         """
         if len(data) < 12:
             return
@@ -114,17 +135,17 @@ class RTPHandler:
         # 3. Mix/route audio to other participants
         # 4. Handle packet loss and jitter
 
-    def send_packet(self, payload, payload_type=0, marker=False):
+    def send_packet(self, payload: bytes, payload_type: int = 0, marker: bool = False) -> bool:
         """
-        Send RTP packet
+        Send RTP packet.
 
         Args:
-            payload: Audio/video payload data
-            payload_type: RTP payload type (codec identifier)
-            marker: Marker bit
+            payload: Audio/video payload data.
+            payload_type: RTP payload type (codec identifier).
+            marker: Marker bit.
 
         Returns:
-            True if sent successfully
+            True if sent successfully.
         """
         if not self.remote_host or not self.remote_port:
             return False
@@ -160,35 +181,43 @@ class RTPHandler:
 
 class RTPRelay:
     """
-    RTP relay for connecting two endpoints
+    RTP relay for connecting two endpoints.
+
     Used for call forwarding, conferencing, etc.
     """
 
-    def __init__(self, port_range_start=10000, port_range_end=20000, qos_monitor=None):
+    def __init__(
+        self,
+        port_range_start: int = 10000,
+        port_range_end: int = 20000,
+        qos_monitor: QoSMonitor | None = None,
+    ) -> None:
         """
-        Initialize RTP relay
+        Initialize RTP relay.
 
         Args:
-            port_range_start: Start of port range for RTP
-            port_range_end: End of port range for RTP
-            qos_monitor: Optional QoS monitor for tracking call quality
+            port_range_start: Start of port range for RTP.
+            port_range_end: End of port range for RTP.
+            qos_monitor: Optional QoS monitor for tracking call quality.
         """
-        self.port_range_start = port_range_start
-        self.port_range_end = port_range_end
-        self.active_relays = {}
+        self.port_range_start: int = port_range_start
+        self.port_range_end: int = port_range_end
+        self.active_relays: dict[str, dict[str, Any]] = {}
         self.logger = get_logger()
-        self.port_pool = list(range(port_range_start, port_range_end, 2))  # Even ports for RTP
-        self.qos_monitor = qos_monitor
+        self.port_pool: list[int] = list(
+            range(port_range_start, port_range_end, 2)
+        )  # Even ports for RTP
+        self.qos_monitor: QoSMonitor | None = qos_monitor
 
-    def allocate_relay(self, call_id):
+    def allocate_relay(self, call_id: str) -> tuple[int, int] | None:
         """
-        Allocate RTP relay for a call
+        Allocate RTP relay for a call.
 
         Args:
-            call_id: Unique call identifier
+            call_id: Unique call identifier.
 
         Returns:
-            tuple of (rtp_port, rtcp_port) or None if allocation failed
+            Tuple of (rtp_port, rtcp_port) or None if allocation failed.
         """
         if not self.port_pool:
             self.logger.error("No available ports for RTP relay")
@@ -208,30 +237,29 @@ class RTPRelay:
                 f"Allocated RTP relay for call {call_id}: ports {rtp_port}/{rtcp_port}"
             )
             return (rtp_port, rtcp_port)
-        else:
-            self.port_pool.insert(0, rtp_port)
-            return None
+        self.port_pool.insert(0, rtp_port)
+        return None
 
-    def set_endpoints(self, call_id, endpoint_a, endpoint_b):
+    def set_endpoints(self, call_id: str, endpoint_a: AddrTuple, endpoint_b: AddrTuple) -> None:
         """
-        set both endpoints for RTP relay
+        Set both endpoints for RTP relay.
 
         Args:
-            call_id: Call identifier
-            endpoint_a: tuple of (host, port) for first endpoint
-            endpoint_b: tuple of (host, port) for second endpoint
+            call_id: Call identifier.
+            endpoint_a: Tuple of (host, port) for first endpoint.
+            endpoint_b: Tuple of (host, port) for second endpoint.
         """
         if call_id in self.active_relays:
-            handler = self.active_relays[call_id]["handler"]
+            handler: RTPRelayHandler = self.active_relays[call_id]["handler"]
             handler.set_endpoints(endpoint_a, endpoint_b)
             self.logger.info(f"RTP relay {call_id}: {endpoint_a} <-> {endpoint_b}")
 
-    def release_relay(self, call_id):
+    def release_relay(self, call_id: str) -> None:
         """
-        Release RTP relay for a call
+        Release RTP relay for a call.
 
         Args:
-            call_id: Call identifier
+            call_id: Call identifier.
         """
         if call_id in self.active_relays:
             relay = self.active_relays[call_id]
@@ -243,38 +271,41 @@ class RTPRelay:
 
 
 class RTPRelayHandler:
-    """
-    RTP relay handler that forwards packets between two endpoints
-    """
+    """RTP relay handler that forwards packets between two endpoints."""
 
-    def __init__(self, local_port, call_id, qos_monitor=None):
+    def __init__(
+        self,
+        local_port: int,
+        call_id: str,
+        qos_monitor: QoSMonitor | None = None,
+    ) -> None:
         """
-        Initialize RTP relay handler
+        Initialize RTP relay handler.
 
         Args:
-            local_port: Local port to bind to
-            call_id: Call identifier for logging
-            qos_monitor: Optional QoS monitor for tracking call quality
+            local_port: Local port to bind to.
+            call_id: Call identifier for logging.
+            qos_monitor: Optional QoS monitor for tracking call quality.
         """
-        self.local_port = local_port
-        self.call_id = call_id
+        self.local_port: int = local_port
+        self.call_id: str = call_id
         self.logger = get_logger()
-        self.socket = None
-        self.running = False
-        self.endpoint_a = None  # (host, port) - Expected endpoint from SDP
-        self.endpoint_b = None  # (host, port) - Expected endpoint from SDP
+        self.socket: socket.socket | None = None
+        self.running: bool = False
+        self.endpoint_a: AddrTuple | None = None  # (host, port) - Expected endpoint from SDP
+        self.endpoint_b: AddrTuple | None = None  # (host, port) - Expected endpoint from SDP
         # (host, port) - Actual source learned from first packet
-        self.learned_a = None
+        self.learned_a: AddrTuple | None = None
         # (host, port) - Actual source learned from first packet
-        self.learned_b = None
-        self.lock = threading.Lock()
-        self.qos_monitor = qos_monitor
+        self.learned_b: AddrTuple | None = None
+        self.lock: threading.Lock = threading.Lock()
+        self.qos_monitor: QoSMonitor | None = qos_monitor
         # Track QoS separately for each direction to avoid mixing sequence
         # numbers
-        self.qos_metrics_a_to_b = None  # Metrics for packets from A to B
-        self.qos_metrics_b_to_a = None  # Metrics for packets from B to A
-        self._learning_timeout = 10.0  # Seconds to allow endpoint learning
-        self._start_time = None  # Track when relay started for timeout
+        self.qos_metrics_a_to_b: QoSMetrics | None = None  # Metrics for packets from A to B
+        self.qos_metrics_b_to_a: QoSMetrics | None = None  # Metrics for packets from B to A
+        self._learning_timeout: float = 10.0  # Seconds to allow endpoint learning
+        self._start_time: float | None = None  # Track when relay started for timeout
 
         # Start QoS monitoring if monitor is available
         # We track each direction separately since they have independent RTP
@@ -284,17 +315,17 @@ class RTPRelayHandler:
             self.qos_metrics_b_to_a = self.qos_monitor.start_monitoring(f"{call_id}_b_to_a")
             self.logger.debug("QoS monitoring started for call %s (both directions)", call_id)
 
-    def set_endpoints(self, endpoint_a, endpoint_b):
+    def set_endpoints(self, endpoint_a: AddrTuple | None, endpoint_b: AddrTuple | None) -> None:
         """
-        set the two endpoints to relay between
+        Set the two endpoints to relay between.
 
         Either or both endpoints can be None initially. The relay will learn
         endpoints from actual RTP packets (symmetric RTP) or wait until both
         are explicitly set.
 
         Args:
-            endpoint_a: tuple of (host, port) or None
-            endpoint_b: tuple of (host, port) or None
+            endpoint_a: Tuple of (host, port) or None.
+            endpoint_b: Tuple of (host, port) or None.
         """
         with self.lock:
             # Only update if not None, preserving existing values
@@ -303,8 +334,13 @@ class RTPRelayHandler:
             if endpoint_b is not None:
                 self.endpoint_b = endpoint_b
 
-    def start(self):
-        """Start RTP relay handler"""
+    def start(self) -> bool:
+        """
+        Start RTP relay handler.
+
+        Returns:
+            True if the handler started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -328,8 +364,8 @@ class RTPRelayHandler:
             self.logger.error(f"Failed to start RTP relay handler: {e}")
             return False
 
-    def stop(self):
-        """Stop RTP relay handler"""
+    def stop(self) -> None:
+        """Stop RTP relay handler."""
         self.running = False
         if self.socket:
             self.socket.close()
@@ -341,12 +377,10 @@ class RTPRelayHandler:
             if self.qos_metrics_b_to_a:
                 self.qos_monitor.stop_monitoring(f"{self.call_id}_b_to_a")
 
-        self.logger.info(
-            f"RTP relay handler stopped on port {self.local_port}"
-        )
+        self.logger.info(f"RTP relay handler stopped on port {self.local_port}")
 
-    def _relay_loop(self):
-        """Relay RTP packets between endpoints with symmetric RTP support"""
+    def _relay_loop(self) -> None:
+        """Relay RTP packets between endpoints with symmetric RTP support."""
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
@@ -455,9 +489,9 @@ class RTPRelayHandler:
                     # Forward packet to the other endpoint and update QoS metrics
                     # Parse RTP header once for QoS tracking (only if we have
                     # valid data)
-                    seq_num = None
-                    timestamp = None
-                    payload_size = None
+                    seq_num: int | None = None
+                    timestamp: int | None = None
+                    payload_size: int | None = None
                     if len(data) >= 12:
                         try:
                             header = struct.unpack("!BBHII", data[:12])
@@ -530,32 +564,43 @@ class RTPRelayHandler:
 
 class RTPRecorder:
     """
-    RTP recorder for voicemail recording
-    Records incoming RTP audio stream
-    Automatically filters out RFC 2833 telephone-event packets (payload type 101)
+    RTP recorder for voicemail recording.
+
+    Records incoming RTP audio stream.
+    Automatically filters out RFC 2833 telephone-event packets (payload type 101).
     """
 
-    def __init__(self, local_port, call_id, rfc2833_handler=None):
+    def __init__(
+        self,
+        local_port: int,
+        call_id: str,
+        rfc2833_handler: RFC2833Receiver | None = None,
+    ) -> None:
         """
-        Initialize RTP recorder
+        Initialize RTP recorder.
 
         Args:
-            local_port: Local port to bind to
-            call_id: Call identifier for logging
-            rfc2833_handler: Optional RFC 2833 receiver for DTMF event handling
+            local_port: Local port to bind to.
+            call_id: Call identifier for logging.
+            rfc2833_handler: Optional RFC 2833 receiver for DTMF event handling.
         """
-        self.local_port = local_port
-        self.call_id = call_id
+        self.local_port: int = local_port
+        self.call_id: str = call_id
         self.logger = get_logger()
-        self.socket = None
-        self.running = False
-        self.recorded_data = []
-        self.lock = threading.Lock()
-        self.remote_endpoint = None  # Will be learned from first packet
-        self.rfc2833_handler = rfc2833_handler  # Optional RFC 2833 receiver
+        self.socket: socket.socket | None = None
+        self.running: bool = False
+        self.recorded_data: list[bytes] = []
+        self.lock: threading.Lock = threading.Lock()
+        self.remote_endpoint: AddrTuple | None = None  # Will be learned from first packet
+        self.rfc2833_handler: RFC2833Receiver | None = rfc2833_handler  # Optional RFC 2833 receiver
 
-    def start(self):
-        """Start RTP recorder"""
+    def start(self) -> bool:
+        """
+        Start RTP recorder.
+
+        Returns:
+            True if the recorder started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -579,8 +624,8 @@ class RTPRecorder:
             self.logger.error(f"Failed to start RTP recorder: {e}")
             return False
 
-    def stop(self):
-        """Stop RTP recorder"""
+    def stop(self) -> None:
+        """Stop RTP recorder."""
         self.running = False
         if self.socket:
             try:
@@ -589,8 +634,8 @@ class RTPRecorder:
                 self.logger.debug(f"Error closing socket: {e}")
         self.logger.info(f"RTP recorder stopped on port {self.local_port}")
 
-    def _record_loop(self):
-        """Record RTP packets"""
+    def _record_loop(self) -> None:
+        """Record RTP packets in a loop."""
         while self.running:
             try:
                 data, addr = self.socket.recvfrom(2048)
@@ -627,35 +672,36 @@ class RTPRecorder:
                         f"Recorded {len(payload)} bytes (PT {payload_type}) from call {self.call_id}"
                     )
 
-            except socket.timeout:
+            except TimeoutError:
                 # Timeout is normal, just continue
                 continue
             except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
                 if self.running:
                     self.logger.error(f"Error in RTP record loop: {e}")
 
-    def get_recorded_audio(self):
+    def get_recorded_audio(self) -> bytes:
         """
-        Get all recorded audio data
+        Get all recorded audio data.
 
         Returns:
-            bytes: Combined audio data
+            Combined audio data as bytes.
         """
         with self.lock:
             # Combine all recorded payloads
             return b"".join(self.recorded_data)
 
-    def get_duration(self):
+    def get_duration(self) -> int:
         """
-        Estimate recording duration based on packets received
-        Assumes 20ms per packet (typical for G.711)
+        Estimate recording duration based on packets received.
+
+        Assumes 20ms per packet (typical for G.711).
 
         Note: This is an approximation. For accurate duration calculation,
         we would need to track RTP timestamps and account for packet timing
         variations, lost packets, or different packetization intervals.
 
         Returns:
-            int: Duration in seconds (estimated)
+            Duration in seconds (estimated).
         """
         with self.lock:
             num_packets = len(self.recorded_data)
@@ -666,34 +712,46 @@ class RTPRecorder:
 
 class RTPPlayer:
     """
-    RTP Player - Sends audio to remote endpoint
+    RTP Player - Sends audio to remote endpoint.
+
     Used for playing tones, announcements, music on hold, etc.
     """
 
-    def __init__(self, local_port, remote_host, remote_port, call_id=None):
+    def __init__(
+        self,
+        local_port: int,
+        remote_host: str,
+        remote_port: int,
+        call_id: str | None = None,
+    ) -> None:
         """
-        Initialize RTP player
+        Initialize RTP player.
 
         Args:
-            local_port: Local UDP port to send from
-            remote_host: Remote host IP address
-            remote_port: Remote UDP port
-            call_id: Optional call identifier for logging
+            local_port: Local UDP port to send from.
+            remote_host: Remote host IP address.
+            remote_port: Remote UDP port.
+            call_id: Optional call identifier for logging.
         """
-        self.local_port = local_port
-        self.remote_host = remote_host
-        self.remote_port = remote_port
-        self.call_id = call_id or "unknown"
+        self.local_port: int = local_port
+        self.remote_host: str = remote_host
+        self.remote_port: int = remote_port
+        self.call_id: str = call_id or "unknown"
         self.logger = get_logger()
-        self.socket = None
-        self.running = False
-        self.sequence_number = 0
-        self.timestamp = 0
-        self.ssrc = 0x87654321  # Synchronization source identifier
-        self.lock = threading.Lock()
+        self.socket: socket.socket | None = None
+        self.running: bool = False
+        self.sequence_number: int = 0
+        self.timestamp: int = 0
+        self.ssrc: int = 0x87654321  # Synchronization source identifier
+        self.lock: threading.Lock = threading.Lock()
 
-    def start(self):
-        """Start RTP player"""
+    def start(self) -> bool:
+        """
+        Start RTP player.
+
+        Returns:
+            True if the player started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -713,32 +771,39 @@ class RTPPlayer:
             self.logger.error(f"Failed to start RTP player: {e}")
             return False
 
-    def stop(self):
-        """Stop RTP player"""
+    def stop(self) -> None:
+        """Stop RTP player."""
         self.running = False
         if self.socket:
-            try:
+            with contextlib.suppress(OSError):
                 self.socket.close()
-            except OSError:
-                pass  # Socket already closed
             self.socket = None
         self.logger.info(f"RTP player stopped for call {self.call_id}")
 
-    def send_audio(self, audio_data, payload_type=0, samples_per_packet=160, bytes_per_sample=None):
+    def send_audio(
+        self,
+        audio_data: bytes,
+        payload_type: int = 0,
+        samples_per_packet: int = 160,
+        bytes_per_sample: int | None = None,
+    ) -> bool:
         """
-        Send audio data via RTP packets
+        Send audio data via RTP packets.
 
         Args:
-            audio_data: Raw audio data (format depends on payload_type)
-                        - For PCMU/PCMA (PT 0/8): 8-bit samples (1 byte per sample)
-                        - For G.722 (PT 9): 8-bit encoded samples (1 byte per sample)
-                        - For PCM (PT 10/11): 16-bit samples (2 bytes per sample)
-            payload_type: RTP payload type (0 = PCMU, 8 = PCMA, 9 = G.722, 10 = L16 stereo, 11 = L16 mono)
-            samples_per_packet: Number of samples per RTP packet (default 160 = 20ms at 8kHz)
-            bytes_per_sample: Bytes per sample (None=auto-detect, 1 for G.711/G.722, 2 for 16-bit PCM)
+            audio_data: Raw audio data (format depends on payload_type).
+                - For PCMU/PCMA (PT 0/8): 8-bit samples (1 byte per sample).
+                - For G.722 (PT 9): 8-bit encoded samples (1 byte per sample).
+                - For PCM (PT 10/11): 16-bit samples (2 bytes per sample).
+            payload_type: RTP payload type (0 = PCMU, 8 = PCMA, 9 = G.722,
+                10 = L16 stereo, 11 = L16 mono).
+            samples_per_packet: Number of samples per RTP packet
+                (default 160 = 20ms at 8kHz).
+            bytes_per_sample: Bytes per sample (None=auto-detect, 1 for
+                G.711/G.722, 2 for 16-bit PCM).
 
         Returns:
-            bool: True if successful
+            True if successful.
         """
         if not self.running or not self.socket:
             self.logger.warning("Cannot send audio - RTP player not running")
@@ -778,25 +843,23 @@ class RTPPlayer:
                 # Small delay to pace packets (20ms for 160 samples at 8kHz)
                 time.sleep(0.020)
 
-            self.logger.info(
-                f"Sent {num_packets} RTP packets for call {self.call_id}"
-            )
+            self.logger.info(f"Sent {num_packets} RTP packets for call {self.call_id}")
             return True
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending audio: {e}")
             return False
 
-    def _build_rtp_packet(self, payload, payload_type=0):
+    def _build_rtp_packet(self, payload: bytes, payload_type: int = 0) -> bytes:
         """
-        Build an RTP packet
+        Build an RTP packet.
 
         Args:
-            payload: Audio payload bytes
-            payload_type: RTP payload type
+            payload: Audio payload bytes.
+            payload_type: RTP payload type.
 
         Returns:
-            bytes: Complete RTP packet
+            Complete RTP packet as bytes.
         """
         # RTP header (12 bytes)
         # Byte 0: V(2), P(1), X(1), CC(4)
@@ -814,16 +877,16 @@ class RTPPlayer:
 
         return header + payload
 
-    def play_beep(self, frequency=1000, duration_ms=500):
+    def play_beep(self, frequency: int = 1000, duration_ms: int = 500) -> bool:
         """
-        Play a beep tone
+        Play a beep tone.
 
         Args:
-            frequency: Frequency in Hz
-            duration_ms: Duration in milliseconds
+            frequency: Frequency in Hz.
+            duration_ms: Duration in milliseconds.
 
         Returns:
-            bool: True if successful
+            True if successful.
         """
         # Note: Import here to avoid circular dependency with audio module
         try:
@@ -831,29 +894,28 @@ class RTPPlayer:
 
             # Generate PCM tone (16-bit samples)
             pcm_data = generate_beep_tone(frequency, duration_ms, sample_rate=8000)
-            # Convert to μ-law for PCMU codec (payload type 0)
+            # Convert to u-law for PCMU codec (payload type 0)
             ulaw_data = pcm16_to_ulaw(pcm_data)
             return self.send_audio(ulaw_data, payload_type=0)
         except ImportError:
             self.logger.error("Audio utilities not available")
             return False
 
-    def play_file(self, file_path):
+    def play_file(self, file_path: str | Path) -> bool:
         """
-        Play an audio file from a WAV file
+        Play an audio file from a WAV file.
 
         Supports WAV files with:
-        - G.711 μ-law (8-bit, 8kHz) - legacy format
+        - G.711 u-law (8-bit, 8kHz) - legacy format
         - G.711 A-law (8-bit, 8kHz) - legacy format
         - PCM (16-bit, 8kHz/16kHz) - converted to G.722 for HD audio
 
         Args:
-            file_path: Path to WAV file
+            file_path: Path to WAV file.
 
         Returns:
-            bool: True if successful
+            True if successful.
         """
-        import os
         import struct
 
         if not Path(file_path).exists():
@@ -861,7 +923,7 @@ class RTPPlayer:
             return False
 
         try:
-            with open(file_path, "rb") as f:
+            with Path(file_path).open("rb") as f:
                 # Read WAV header
                 riff = f.read(4)
                 if riff != b"RIFF" or len(riff) < 4:
@@ -880,6 +942,12 @@ class RTPPlayer:
                     return False
 
                 # Find fmt chunk
+                audio_format: int = 0
+                num_channels: int = 0
+                sample_rate: int = 0
+                payload_type: int = 0
+                convert_to_pcmu: bool = False
+
                 while True:
                     chunk_id = f.read(4)
                     if not chunk_id or len(chunk_id) < 4:
@@ -909,7 +977,7 @@ class RTPPlayer:
                         num_channels = struct.unpack("<H", fmt_data[2:4])[0]
                         sample_rate = struct.unpack("<I", fmt_data[4:8])[0]
                         # Skip byte_rate and block_align - not needed for playback
-                        bits_per_sample = struct.unpack("<H", fmt_data[14:16])[0]
+                        struct.unpack("<H", fmt_data[14:16])[0]
 
                         # Skip any extra format bytes
                         if chunk_size > 16:
@@ -918,7 +986,7 @@ class RTPPlayer:
                         # Determine payload type based on format
                         convert_to_pcmu = False
                         if audio_format == WAV_FORMAT_ULAW:
-                            payload_type = 0  # PCMU (μ-law)
+                            payload_type = 0  # PCMU (u-law)
                         elif audio_format == WAV_FORMAT_ALAW:
                             payload_type = 8  # PCMA (A-law)
                         elif audio_format == WAV_FORMAT_G722:
@@ -927,13 +995,13 @@ class RTPPlayer:
                             payload_type = 9  # G.722
                             self.logger.info("G.722 format detected - already encoded for VoIP.")
                         elif audio_format == WAV_FORMAT_PCM:
-                            # PCM format - convert to PCMU (G.711 μ-law) for maximum compatibility
+                            # PCM format - convert to PCMU (G.711 u-law) for maximum compatibility
                             # Note: Previously converted to G.722, but G.722
                             # has implementation issues
                             payload_type = 0  # PCMU
                             convert_to_pcmu = True
                             self.logger.info(
-                                "PCM format detected - will convert to PCMU (G.711 μ-law) "
+                                "PCM format detected - will convert to PCMU (G.711 u-law) "
                                 "for maximum compatibility."
                             )
                         else:
@@ -942,17 +1010,16 @@ class RTPPlayer:
 
                         self.logger.info(
                             f"WAV file: format={audio_format}, channels={num_channels}, "
-                            f"rate={sample_rate}Hz, bits={bits_per_sample}"
+                            f"rate={sample_rate}Hz, bits={struct.unpack('<H', fmt_data[14:16])[0]}"
                         )
                         break
 
-                    elif chunk_id == b"data":
+                    if chunk_id == b"data":
                         # Found data before fmt - invalid
                         self.logger.error("Invalid WAV structure")
                         return False
-                    else:
-                        # Skip unknown chunk
-                        f.read(chunk_size)
+                    # Skip unknown chunk
+                    f.read(chunk_size)
 
                 # Find data chunk
                 while True:
@@ -1027,10 +1094,10 @@ class RTPPlayer:
                                         f"Downsampled from 16kHz to 8kHz: {original_size} bytes -> {len(audio_data)} bytes"
                                     )
 
-                                # Convert to μ-law
+                                # Convert to u-law
                                 audio_data = pcm16_to_ulaw(audio_data)
                                 self.logger.info(
-                                    f"Converted PCM to PCMU: {len(audio_data)} bytes (μ-law)"
+                                    f"Converted PCM to PCMU: {len(audio_data)} bytes (u-law)"
                                 )
                             except (KeyError, TypeError, ValueError) as e:
                                 self.logger.error(f"Failed to convert PCM to PCMU: {e}")
@@ -1051,14 +1118,13 @@ class RTPPlayer:
                         )
                         return self.send_audio(audio_data, payload_type, samples_per_packet)
 
-                    else:
-                        # Skip this chunk (with size validation)
-                        if chunk_size > 100 * 1024 * 1024:  # 100MB limit
-                            self.logger.error(
-                                f"Chunk size too large ({chunk_size} bytes) in WAV file: {file_path}"
-                            )
-                            return False
-                        f.read(chunk_size)
+                    # Skip this chunk (with size validation)
+                    if chunk_size > 100 * 1024 * 1024:  # 100MB limit
+                        self.logger.error(
+                            f"Chunk size too large ({chunk_size} bytes) in WAV file: {file_path}"
+                        )
+                        return False
+                    f.read(chunk_size)
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error playing audio file {file_path}: {e}")
@@ -1070,42 +1136,48 @@ class RTPPlayer:
 
 class RTPDTMFListener:
     """
-    RTP DTMF Listener - Receives RTP audio and detects DTMF tones
-    Used for interactive voice response (IVR) and auto attendant systems
+    RTP DTMF Listener - Receives RTP audio and detects DTMF tones.
+
+    Used for interactive voice response (IVR) and auto attendant systems.
     """
 
-    def __init__(self, local_port, call_id=None):
+    def __init__(self, local_port: int, call_id: str | None = None) -> None:
         """
-        Initialize RTP DTMF listener
+        Initialize RTP DTMF listener.
 
         Args:
-            local_port: Local UDP port to receive RTP packets
-            call_id: Optional call identifier for logging
+            local_port: Local UDP port to receive RTP packets.
+            call_id: Optional call identifier for logging.
         """
-        self.local_port = local_port
-        self.call_id = call_id or "unknown"
+        self.local_port: int = local_port
+        self.call_id: str = call_id or "unknown"
         self.logger = get_logger()
-        self.socket = None
-        self.running = False
-        self.detected_digits = []
-        self.lock = threading.Lock()
-        self.audio_buffer = []
-        self.sample_rate = 8000  # Standard for telephony
+        self.socket: socket.socket | None = None
+        self.running: bool = False
+        self.detected_digits: list[str] = []
+        self.lock: threading.Lock = threading.Lock()
+        self.audio_buffer: list[float] = []
+        self.sample_rate: int = 8000  # Standard for telephony
 
         # DTMF detection frame sizes (based on DTMFDetector default of 205 samples per frame)
         # We need ~2x frame size for reliable detection with overlap
-        self.dtmf_frame_size = 205  # Samples per DTMF detection frame
+        self.dtmf_frame_size: int = 205  # Samples per DTMF detection frame
         # Buffer size for detection (2x frame size)
-        self.dtmf_buffer_size = 410
-        self.dtmf_slide_size = 205  # Sliding window size
+        self.dtmf_buffer_size: int = 410
+        self.dtmf_slide_size: int = 205  # Sliding window size
 
         # Initialize DTMF detector
         from pbx.utils.dtmf import DTMFDetector
 
         self.dtmf_detector = DTMFDetector(sample_rate=self.sample_rate)
 
-    def start(self):
-        """Start RTP DTMF listener"""
+    def start(self) -> bool:
+        """
+        Start RTP DTMF listener.
+
+        Returns:
+            True if the listener started successfully, False otherwise.
+        """
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -1132,8 +1204,8 @@ class RTPDTMFListener:
             self.logger.error(f"Failed to start RTP DTMF listener: {e}")
             return False
 
-    def stop(self):
-        """Stop RTP DTMF listener"""
+    def stop(self) -> None:
+        """Stop RTP DTMF listener."""
         self.running = False
         if self.socket:
             try:
@@ -1143,12 +1215,12 @@ class RTPDTMFListener:
             self.socket = None
         self.logger.info(f"RTP DTMF listener stopped for call {self.call_id}")
 
-    def _listen_loop(self):
-        """Listen for RTP packets and detect DTMF tones"""
+    def _listen_loop(self) -> None:
+        """Listen for RTP packets and detect DTMF tones."""
 
         while self.running:
             try:
-                data, addr = self.socket.recvfrom(2048)
+                data, _addr = self.socket.recvfrom(2048)
 
                 # Extract audio payload from RTP packet
                 if len(data) >= 12:
@@ -1158,7 +1230,7 @@ class RTPDTMFListener:
                     payload = data[12:]
 
                     # Convert audio payload to samples for DTMF detection
-                    # Assuming G.711 μ-law (payload type 0) or A-law (payload
+                    # Assuming G.711 u-law (payload type 0) or A-law (payload
                     # type 8)
                     if payload_type in [0, 8]:
                         # Convert G.711 to linear PCM samples
@@ -1174,42 +1246,38 @@ class RTPDTMFListener:
                                     self.audio_buffer[: self.dtmf_buffer_size]
                                 )
 
-                                if digit:
-                                    # Check if this is a new digit (not a
-                                    # repeat)
-                                    if (
-                                        not self.detected_digits
-                                        or self.detected_digits[-1] != digit
-                                    ):
-                                        self.detected_digits.append(digit)
-                                        self.logger.info(f"DTMF digit detected: {digit}")
+                                if digit and (
+                                    not self.detected_digits or self.detected_digits[-1] != digit
+                                ):
+                                    self.detected_digits.append(digit)
+                                    self.logger.info(f"DTMF digit detected: {digit}")
 
                                 # Keep a sliding window of audio
                                 self.audio_buffer = self.audio_buffer[self.dtmf_slide_size :]
 
-            except socket.timeout:
+            except TimeoutError:
                 # Timeout is normal, just continue
                 continue
             except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
                 if self.running:
                     self.logger.error(f"Error in RTP DTMF listen loop: {e}")
 
-    def _decode_g711(self, payload, payload_type):
+    def _decode_g711(self, payload: bytes, payload_type: int) -> list[float]:
         """
-        Decode G.711 audio to linear PCM samples
+        Decode G.711 audio to linear PCM samples.
 
         Args:
-            payload: G.711 encoded audio bytes
-            payload_type: 0 for μ-law, 8 for A-law
+            payload: G.711 encoded audio bytes.
+            payload_type: 0 for u-law, 8 for A-law.
 
         Returns:
-            list: Linear PCM samples normalized to [-1.0, 1.0]
+            Linear PCM samples normalized to [-1.0, 1.0].
         """
-        samples = []
+        samples: list[float] = []
 
         for byte in payload:
-            if payload_type == 0:  # μ-law
-                # Simplified μ-law decode
+            if payload_type == 0:  # u-law
+                # Simplified u-law decode
                 sample = self._ulaw_to_linear(byte)
             else:  # A-law (payload_type == 8)
                 # Simplified A-law decode
@@ -1220,40 +1288,39 @@ class RTPDTMFListener:
 
         return samples
 
-    def _ulaw_to_linear(self, ulaw_byte):
+    def _ulaw_to_linear(self, ulaw_byte: int) -> int:
         """
-        Convert μ-law byte to linear PCM sample
+        Convert u-law byte to linear PCM sample.
 
         Args:
-            ulaw_byte: μ-law encoded byte
+            ulaw_byte: u-law encoded byte.
 
         Returns:
-            int: Linear PCM sample (-32768 to 32767)
+            Linear PCM sample (-32768 to 32767).
         """
-        # μ-law decompression algorithm (ITU-T G.711)
+        # u-law decompression algorithm (ITU-T G.711)
         ulaw_byte = ~ulaw_byte & 0xFF
         sign = (ulaw_byte & 0x80) >> 7
         exponent = (ulaw_byte & 0x70) >> 4
         mantissa = ulaw_byte & 0x0F
 
         # Calculate linear value
-        # 0x84 (132) is the bias value added to mantissa in μ-law encoding
+        # 0x84 (132) is the bias value added to mantissa in u-law encoding
         linear = ((mantissa << 3) + 0x84) << exponent
 
         if sign:
             return -linear
-        else:
-            return linear
+        return linear
 
-    def _alaw_to_linear(self, alaw_byte):
+    def _alaw_to_linear(self, alaw_byte: int) -> int:
         """
-        Convert A-law byte to linear PCM sample
+        Convert A-law byte to linear PCM sample.
 
         Args:
-            alaw_byte: A-law encoded byte
+            alaw_byte: A-law encoded byte.
 
         Returns:
-            int: Linear PCM sample (-32768 to 32767)
+            Linear PCM sample (-32768 to 32767).
         """
         # A-law decompression algorithm (ITU-T G.711)
         alaw_byte ^= 0x55  # XOR with 0x55 per A-law spec
@@ -1269,21 +1336,18 @@ class RTPDTMFListener:
 
         if sign:
             return -linear
-        else:
-            return linear
+        return linear
 
-    def get_digit(self, timeout=1.0):
+    def get_digit(self, timeout: float = 1.0) -> str | None:
         """
-        Get the next detected DTMF digit
+        Get the next detected DTMF digit.
 
         Args:
-            timeout: Maximum time to wait for a digit (seconds)
+            timeout: Maximum time to wait for a digit (seconds).
 
         Returns:
-            str: Detected digit ('0'-'9', '*', '#', 'A'-'D') or None
+            Detected digit ('0'-'9', '*', '#', 'A'-'D') or None if timeout.
         """
-        import time
-
         start_time = time.time()
 
         while (time.time() - start_time) < timeout:
@@ -1296,7 +1360,7 @@ class RTPDTMFListener:
 
         return None
 
-    def clear_digits(self):
-        """Clear all detected digits from the buffer"""
+    def clear_digits(self) -> None:
+        """Clear all detected digits from the buffer."""
         with self.lock:
             self.detected_digits.clear()

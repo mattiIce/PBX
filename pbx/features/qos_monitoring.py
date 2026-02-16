@@ -3,19 +3,20 @@ QoS (Quality of Service) Monitoring System
 Tracks call quality metrics including jitter, packet loss, latency, and MOS scores
 """
 
+import sqlite3
 import threading
 import time
 from collections import deque
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class QoSMetrics:
     """Container for QoS metrics for a single call"""
 
-    def __init__(self, call_id: str):
+    def __init__(self, call_id: str) -> None:
         """
         Initialize QoS metrics for a call
 
@@ -23,7 +24,7 @@ class QoSMetrics:
             call_id: Unique identifier for the call
         """
         self.call_id = call_id
-        self.start_time = datetime.now(timezone.utc)
+        self.start_time = datetime.now(UTC)
         self.end_time = None
 
         # Packet statistics
@@ -110,8 +111,7 @@ class QoSMetrics:
                 self.jitter_samples.append(jitter)
 
                 # Update max jitter
-                if jitter > self.max_jitter:
-                    self.max_jitter = jitter
+                self.max_jitter = max(self.max_jitter, jitter)
 
                 # Calculate average jitter
                 self.avg_jitter = sum(self.jitter_samples) / len(self.jitter_samples)
@@ -141,8 +141,7 @@ class QoSMetrics:
             # Deque automatically maintains maxlen=100
             self.latency_samples.append(latency_ms)
 
-            if latency_ms > self.max_latency:
-                self.max_latency = latency_ms
+            self.max_latency = max(self.max_latency, latency_ms)
 
             self.avg_latency = sum(self.latency_samples) / len(self.latency_samples)
 
@@ -180,9 +179,8 @@ class QoSMetrics:
                 r_factor -= (one_way_delay - 160) * 0.3
 
         # Impact of jitter
-        if self.jitter_samples:
-            if self.avg_jitter > 30:  # Noticeable jitter threshold
-                r_factor -= (self.avg_jitter - 30) * 0.1
+        if self.jitter_samples and self.avg_jitter > 30:  # Noticeable jitter threshold
+            r_factor -= (self.avg_jitter - 30) * 0.1
 
         # Convert R-factor to MOS
         # MOS = 1 + 0.035*R + 7E-6*R*(R-60)*(100-R)
@@ -201,7 +199,7 @@ class QoSMetrics:
     def end_call(self) -> None:
         """Mark the call as ended"""
         with self.lock:
-            self.end_time = datetime.now(timezone.utc)
+            self.end_time = datetime.now(UTC)
             # Ensure MOS score is calculated at call end
             self._calculate_mos()
 
@@ -217,7 +215,7 @@ class QoSMetrics:
             if self.end_time:
                 duration = (self.end_time - self.start_time).total_seconds()
             else:
-                duration = (datetime.now(timezone.utc) - self.start_time).total_seconds()
+                duration = (datetime.now(UTC) - self.start_time).total_seconds()
 
             # Calculate packet loss percentage
             total_packets = self.packets_received + self.packets_lost
@@ -252,14 +250,13 @@ class QoSMetrics:
         """
         if self.mos_score >= 4.3:
             return "Excellent"
-        elif self.mos_score >= 4.0:
+        if self.mos_score >= 4.0:
             return "Good"
-        elif self.mos_score >= 3.6:
+        if self.mos_score >= 3.6:
             return "Fair"
-        elif self.mos_score >= 3.1:
+        if self.mos_score >= 3.1:
             return "Poor"
-        else:
-            return "Bad"
+        return "Bad"
 
 
 class QoSMonitor:
@@ -267,7 +264,7 @@ class QoSMonitor:
     QoS monitoring system for tracking call quality across the PBX
     """
 
-    def __init__(self, pbx):
+    def __init__(self, pbx: Any) -> None:
         """
         Initialize QoS monitor
 
@@ -375,9 +372,7 @@ class QoSMonitor:
         with self.lock:
             return [metrics.get_summary() for metrics in self.active_calls.values()]
 
-    def get_historical_metrics(
-        self, limit: int = 100, min_mos: float | None = None
-    ) -> list[dict]:
+    def get_historical_metrics(self, limit: int = 100, min_mos: float | None = None) -> list[dict]:
         """
         Get historical QoS metrics
 
@@ -471,7 +466,7 @@ class QoSMonitor:
                     "severity": "warning",
                     "message": f"Low MOS score: {summary['mos_score']} (threshold: {self.alert_thresholds['mos_min']})",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
             )
 
@@ -483,7 +478,7 @@ class QoSMonitor:
                     "severity": "error",
                     "message": f"High packet loss: {summary['packet_loss_percentage']}% (threshold: {self.alert_thresholds['packet_loss_max']}%)",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
             )
 
@@ -495,7 +490,7 @@ class QoSMonitor:
                     "severity": "warning",
                     "message": f"High jitter: {summary['jitter_avg_ms']}ms (threshold: {self.alert_thresholds['jitter_max']}ms)",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
             )
 
@@ -507,7 +502,7 @@ class QoSMonitor:
                     "severity": "warning",
                     "message": f"High latency: {summary['latency_avg_ms']}ms (threshold: {self.alert_thresholds['latency_max']}ms)",
                     "call_id": summary["call_id"],
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 }
             )
 
@@ -557,9 +552,7 @@ class QoSMonitor:
                 )
 
                 self.pbx.db.execute(query, params)
-                self.logger.debug(
-                    f"Stored QoS metrics for call {summary['call_id']} in database"
-                )
+                self.logger.debug(f"Stored QoS metrics for call {summary['call_id']} in database")
         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
             self.logger.error(f"Failed to store QoS metrics in database: {e}")
 
@@ -572,6 +565,4 @@ class QoSMonitor:
         """
         with self.lock:
             self.alert_thresholds.update(thresholds)
-            self.logger.info(
-                f"Updated QoS alert thresholds: {self.alert_thresholds}"
-            )
+            self.logger.info(f"Updated QoS alert thresholds: {self.alert_thresholds}")

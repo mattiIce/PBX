@@ -1,16 +1,18 @@
 {
   "name": "pbx-admin-panel",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
-  "description": "PBX Admin Panel",
+  "description": "Warden VoIP PBX Admin Panel",
   "scripts": {
     "dev": "vite admin",
-    "build": "vite build admin",
+    "build": "tsc --noEmit -p admin/tsconfig.json && vite build admin",
     "preview": "vite preview admin",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
-    "typecheck": "tsc --noEmit -p admin/tsconfig.json"
+    "typecheck": "tsc --noEmit -p admin/tsconfig.json",
+    "lint": "tsc --noEmit -p admin/tsconfig.json"
   },
   "devDependencies": {
     "@jest/globals": "^30.2.0",
@@ -27,16 +29,26 @@
     "transform": {},
     "collectCoverageFrom": [
       "admin/js/**/*.{js,ts}",
-      "!admin/js/**/*.d.ts"
+      "!admin/js/**/*.d.ts",
+      "!admin/js/**/*.min.js"
     ],
     "coverageDirectory": "coverage",
     "coverageReporters": [
       "text",
+      "text-summary",
       "lcov",
       "html"
-    ]
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 50,
+        "functions": 50,
+        "lines": 50,
+        "statements": 50
+      }
+    }
   },
   "engines": {
-    "node": ">=20"
+    "node": ">=22"
   }
 }

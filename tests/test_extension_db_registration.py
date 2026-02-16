@@ -4,7 +4,6 @@ Test for database-based extension registration validation
 Verifies that extensions in the database can register even if not in config.yml
 """
 
-
 from pbx.core.pbx import PBXCore
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, ExtensionDB, RegisteredPhonesDB
@@ -73,7 +72,7 @@ def test_config_extension_still_works() -> None:
         return
 
     # Get the first available extension from the loaded extensions
-    test_ext_number = list(pbx.extension_registry.extensions.keys())[0]
+    test_ext_number = next(iter(pbx.extension_registry.extensions.keys()))
     test_ext_name = pbx.extension_registry.extensions[test_ext_number].name
 
     # Try to register this existing database extension

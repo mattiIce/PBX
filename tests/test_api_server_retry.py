@@ -7,7 +7,6 @@ Tests that the API server properly retries when port is in use
 import socket
 import time
 
-
 from pbx.api.rest_api import PBXAPIServer
 from pbx.utils.config import Config
 
@@ -33,7 +32,6 @@ def test_socket_reuse_options() -> bool:
 
     # Start the server
     if api_server.start():
-
         # Check socket options
         server_socket = api_server.server.socket
 
@@ -51,7 +49,6 @@ def test_socket_reuse_options() -> bool:
                     pass
             except Exception:
                 pass
-            pass
         else:
             pass
 
@@ -59,15 +56,14 @@ def test_socket_reuse_options() -> bool:
         api_server.stop()
         time.sleep(0.5)
         return True
-    else:
-        return False
+    return False
 
 
 def test_retry_on_port_in_use() -> bool:
     """Test that API server retries when port is already in use"""
 
     # Minimum expected time for retry logic (1s + 2s = 3s, with 0.5s margin for processing)
-    MIN_RETRY_TIME = 2.5
+    min_retry_time = 2.5
 
     config = Config("test_config.yml")
     mock_pbx = MockPBXCore(config)
@@ -92,7 +88,7 @@ def test_retry_on_port_in_use() -> bool:
         elapsed = time.time() - start_time
 
         if not result:
-            if elapsed >= MIN_RETRY_TIME:
+            if elapsed >= min_retry_time:
                 pass
             api_server.stop()
             return False
@@ -110,8 +106,7 @@ def test_retry_on_port_in_use() -> bool:
         api_server2.stop()
         time.sleep(0.5)
         return True
-    else:
-        return False
+    return False
 
 
 def test_rapid_restart() -> bool:
@@ -139,8 +134,7 @@ def test_rapid_restart() -> bool:
         api_server2.stop()
         time.sleep(0.5)
         return True
-    else:
-        return False
+    return False
 
 
 def main() -> bool:
@@ -161,11 +155,10 @@ def main() -> bool:
                 passed += 1
             else:
                 failed += 1
-        except Exception as e:
+        except Exception:
             import traceback
 
             traceback.print_exc()
             failed += 1
-
 
     return failed == 0

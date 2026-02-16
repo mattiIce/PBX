@@ -13,7 +13,6 @@ import tempfile
 from pathlib import Path
 from unittest.mock import Mock, patch
 
-
 # Import the setup wizard from scripts/
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 from setup_ubuntu import SetupWizard
@@ -127,7 +126,7 @@ def test_run_command_failure() -> None:
         mock_result.stderr = "Error output"
         mock_run.return_value = mock_result
 
-        ret, stdout, stderr = wizard.run_command("false", "Test failing command", check=False)
+        ret, _stdout, stderr = wizard.run_command("false", "Test failing command", check=False)
 
         assert ret == 1, "Should return error code"
         assert stderr == "Error output", "Should return stderr"
@@ -159,7 +158,7 @@ def test_setup_environment_file() -> None:
         assert wizard.env_file.exists(), "Env file should exist"
 
         # Verify file contents
-        with open(wizard.env_file, "r", encoding="utf-8") as f:
+        with open(wizard.env_file, encoding="utf-8") as f:
             content = f.read()
             assert "DB_NAME=test_db" in content, "Should contain database name"
             assert "DB_USER=test_user" in content, "Should contain database user"
@@ -167,7 +166,7 @@ def test_setup_environment_file() -> None:
             assert "DB_HOST=localhost" in content, "Should contain host"
 
         # Verify file permissions are restrictive (600)
-        file_mode = os.stat(wizard.env_file).st_mode & 0o777
+        file_mode = Path(wizard.env_file).stat().st_mode & 0o777
         assert file_mode == 0o600, f"File should have 600 permissions, got {oct(file_mode)}"
 
     finally:

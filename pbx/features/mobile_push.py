@@ -4,10 +4,11 @@ Call and voicemail alerts using FCM (Firebase Cloud Messaging - free)
 """
 
 import json
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # Try to import Firebase Admin SDK (free)
 try:
@@ -22,7 +23,7 @@ except ImportError:
 class MobilePushNotifications:
     """Mobile push notification service using Firebase (free)"""
 
-    def __init__(self, config=None, database=None):
+    def __init__(self, config: Any | None = None, database: Any | None = None) -> None:
         """Initialize mobile push notifications"""
         self.logger = get_logger()
         self.config = config or {}
@@ -55,7 +56,7 @@ class MobilePushNotifications:
             self.logger.warning("Mobile push enabled but firebase-admin not installed")
             self.logger.info("  Install with: pip install firebase-admin")
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize database schema for mobile push notifications"""
         if not self.database or not self.database.enabled:
             return
@@ -144,7 +145,7 @@ class MobilePushNotifications:
         except sqlite3.Error as e:
             self.logger.error(f"Error initializing mobile push schema: {e}")
 
-    def _load_devices_from_database(self):
+    def _load_devices_from_database(self) -> None:
         """Load device registrations from database"""
         if not self.database or not self.database.enabled:
             return
@@ -190,14 +191,14 @@ class MobilePushNotifications:
         except sqlite3.Error as e:
             self.logger.error(f"Error loading mobile devices from database: {e}")
 
-    def _save_device_to_database(self, user_id: str, device_token: str, platform: str):
+    def _save_device_to_database(self, user_id: str, device_token: str, platform: str) -> bool:
         """Save device registration to database"""
         if not self.database or not self.database.enabled:
             return False
 
         try:
             cursor = self.database.connection.cursor()
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
 
             if self.database.db_type == "postgresql":
                 cursor.execute(
@@ -227,7 +228,7 @@ class MobilePushNotifications:
             self.logger.error(f"Error saving device to database: {e}")
             return False
 
-    def _remove_device_from_database(self, user_id: str, device_token: str):
+    def _remove_device_from_database(self, user_id: str, device_token: str) -> bool:
         """Remove device from database (soft delete)"""
         if not self.database or not self.database.enabled:
             return False
@@ -242,7 +243,7 @@ class MobilePushNotifications:
                     SET enabled = FALSE, updated_at = %s
                     WHERE user_id = %s AND device_token = %s
                 """,
-                    (datetime.now(timezone.utc), user_id, device_token),
+                    (datetime.now(UTC), user_id, device_token),
                 )
             else:
                 cursor.execute(
@@ -251,7 +252,7 @@ class MobilePushNotifications:
                     SET enabled = 0, updated_at = ?
                     WHERE user_id = ? AND device_token = ?
                 """,
-                    (datetime.now(timezone.utc), user_id, device_token),
+                    (datetime.now(UTC), user_id, device_token),
                 )
 
             self.database.connection.commit()
@@ -269,8 +270,8 @@ class MobilePushNotifications:
         body: str,
         data: dict,
         success: bool,
-        error_message: str = None,
-    ):
+        error_message: str | None = None,
+    ) -> None:
         """Save notification history to database"""
         if not self.database or not self.database.enabled:
             return
@@ -291,7 +292,7 @@ class MobilePushNotifications:
                         title,
                         body,
                         data_json,
-                        datetime.now(timezone.utc),
+                        datetime.now(UTC),
                         success,
                         error_message,
                     ),
@@ -308,7 +309,7 @@ class MobilePushNotifications:
                         title,
                         body,
                         data_json,
-                        datetime.now(timezone.utc),
+                        datetime.now(UTC),
                         1 if success else 0,
                         error_message,
                     ),
@@ -341,7 +342,7 @@ class MobilePushNotifications:
         for token_info in self.device_tokens[user_id]:
             if token_info["token"] == device_token:
                 # Update last seen
-                token_info["last_seen"] = datetime.now(timezone.utc)
+                token_info["last_seen"] = datetime.now(UTC)
                 return True
 
         # Add new device
@@ -349,8 +350,8 @@ class MobilePushNotifications:
             {
                 "token": device_token,
                 "platform": platform,
-                "registered_at": datetime.now(timezone.utc),
-                "last_seen": datetime.now(timezone.utc),
+                "registered_at": datetime.now(UTC),
+                "last_seen": datetime.now(UTC),
             }
         )
 
@@ -411,7 +412,7 @@ class MobilePushNotifications:
                 "type": "incoming_call",
                 "caller_id": caller_id,
                 "caller_name": caller_name or "",
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -440,7 +441,7 @@ class MobilePushNotifications:
                 "message_id": message_id,
                 "caller_id": caller_id,
                 "duration": str(duration),
-                "timestamp": datetime.now(timezone.utc).isoformat(),
+                "timestamp": datetime.now(UTC).isoformat(),
             },
         )
 
@@ -467,7 +468,7 @@ class MobilePushNotifications:
             data={
                 "type": "missed_call",
                 "caller_id": caller_id,
-                "call_time": (call_time or datetime.now(timezone.utc)).isoformat(),
+                "call_time": (call_time or datetime.now(UTC)).isoformat(),
             },
         )
 
@@ -504,7 +505,7 @@ class MobilePushNotifications:
                     "user_id": user_id,
                     "title": title,
                     "body": body,
-                    "sent_at": datetime.now(timezone.utc),
+                    "sent_at": datetime.now(UTC),
                     "success_count": response.success_count,
                     "failure_count": response.failure_count,
                 }
@@ -543,14 +544,14 @@ class MobilePushNotifications:
             for d in devices
         ]
 
-    def cleanup_stale_devices(self, days: int = 90):
+    def cleanup_stale_devices(self, days: int = 90) -> None:
         """Remove devices not seen in X days"""
         from datetime import timedelta
 
-        cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+        cutoff = datetime.now(UTC) - timedelta(days=days)
 
         removed_count = 0
-        for user_id in list(self.device_tokens.keys()):
+        for user_id in list(self.device_tokens):
             original_count = len(self.device_tokens[user_id])
             self.device_tokens[user_id] = [
                 t for t in self.device_tokens[user_id] if t["last_seen"] > cutoff
@@ -571,7 +572,7 @@ class MobilePushNotifications:
             [
                 n
                 for n in self.notification_history
-                if (datetime.now(timezone.utc) - n["sent_at"]).total_seconds() < 86400
+                if (datetime.now(UTC) - n["sent_at"]).total_seconds() < 86400
             ]
         )
 
@@ -597,5 +598,5 @@ class MobilePushNotifications:
             user_id,
             "Test Notification",
             "This is a test push notification from PBX Admin Panel",
-            {"type": "test", "timestamp": datetime.now(timezone.utc).isoformat()},
+            {"type": "test", "timestamp": datetime.now(UTC).isoformat()},
         )

@@ -1,8 +1,9 @@
 """Tests for Flask API routes."""
 
+from unittest.mock import MagicMock
+
 import pytest
 from flask.testing import FlaskClient
-from unittest.mock import MagicMock
 
 
 class TestHealthRoutes:

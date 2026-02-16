@@ -37,12 +37,12 @@ export async function loadVoicemailTab(): Promise<void> {
         if (!select) return;
         select.innerHTML = '<option value="">Select Extension</option>';
 
-        extensions.forEach(ext => {
+        for (const ext of extensions) {
             const option = document.createElement('option');
             option.value = ext.number;
             option.textContent = `${ext.number} - ${ext.name}`;
             select.appendChild(option);
-        });
+        }
     } catch (error: unknown) {
         console.error('Error loading voicemail tab:', error);
         showNotification('Failed to load extensions', 'error');
@@ -52,17 +52,17 @@ export async function loadVoicemailTab(): Promise<void> {
 export async function loadVoicemailForExtension(): Promise<void> {
     const extension = (document.getElementById('vm-extension-select') as HTMLSelectElement | null)?.value;
     if (!extension) {
-        ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview'].forEach(id => {
+        for (const id of ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview']) {
             const el = document.getElementById(id) as HTMLElement | null;
             if (el) el.style.display = 'none';
-        });
+        }
         return;
     }
 
-    ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview'].forEach(id => {
+    for (const id of ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview']) {
         const el = document.getElementById(id) as HTMLElement | null;
         if (el) el.style.display = 'block';
-    });
+    }
 
     const currentExt = document.getElementById('vm-current-extension') as HTMLElement | null;
     if (currentExt) currentExt.textContent = extension;

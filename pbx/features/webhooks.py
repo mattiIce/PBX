@@ -9,7 +9,8 @@ import json
 import queue
 import threading
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
@@ -48,7 +49,7 @@ class WebhookEvent:
     CONFERENCE_PARTICIPANT_LEFT = "conference.participant_left"
     CONFERENCE_ENDED = "conference.ended"
 
-    def __init__(self, event_type: str, data: dict):
+    def __init__(self, event_type: str, data: dict) -> None:
         """
         Initialize webhook event
 
@@ -58,7 +59,7 @@ class WebhookEvent:
         """
         self.event_type = event_type
         self.data = data
-        self.timestamp = datetime.now(timezone.utc).isoformat()
+        self.timestamp = datetime.now(UTC).isoformat()
         self.event_id = f"{event_type}-{int(time.time() * 1000)}"
 
     def to_dict(self) -> dict:
@@ -81,7 +82,7 @@ class WebhookSubscription:
         secret: str | None = None,
         headers: dict[str, str] | None = None,
         enabled: bool = True,
-    ):
+    ) -> None:
         """
         Initialize webhook subscription
 
@@ -97,7 +98,7 @@ class WebhookSubscription:
         self.secret = secret
         self.headers = headers or {}
         self.enabled = enabled
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.last_sent = None
         self.success_count = 0
         self.failure_count = 0
@@ -112,7 +113,7 @@ class WebhookSubscription:
 class WebhookDeliveryQueue:
     """Queue for asynchronous webhook delivery"""
 
-    def __init__(self, max_size: int = 1000):
+    def __init__(self, max_size: int = 1000) -> None:
         """
         Initialize delivery queue
 
@@ -122,7 +123,7 @@ class WebhookDeliveryQueue:
         self.queue = queue.Queue(maxsize=max_size)
         self.logger = get_logger()
 
-    def enqueue(self, event: WebhookEvent, subscription: WebhookSubscription):
+    def enqueue(self, event: WebhookEvent, subscription: WebhookSubscription) -> None:
         """Add event to delivery queue"""
         try:
             self.queue.put_nowait((event, subscription))
@@ -149,7 +150,7 @@ class WebhookSystem:
     - Delivery status tracking
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """
         Initialize webhook system
 
@@ -187,13 +188,13 @@ class WebhookSystem:
         else:
             self.logger.info("Webhook system disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
-    def _load_subscriptions(self):
+    def _load_subscriptions(self) -> None:
         """Load webhook subscriptions from configuration"""
         webhooks_config = self._get_config("features.webhooks.subscriptions", [])
 
@@ -211,7 +212,7 @@ class WebhookSystem:
                     f"Loaded webhook subscription: {subscription.url} (events: {subscription.events})"
                 )
 
-    def _start_workers(self):
+    def _start_workers(self) -> None:
         """Start webhook delivery worker threads"""
         self.running = True
         for i in range(self.worker_threads):
@@ -220,11 +221,9 @@ class WebhookSystem:
             )
             worker.start()
             self.workers.append(worker)
-        self.logger.info(
-            f"Started {self.worker_threads} webhook delivery workers"
-        )
+        self.logger.info(f"Started {self.worker_threads} webhook delivery workers")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the webhook system"""
         self.logger.info("Stopping webhook system...")
         self.running = False
@@ -233,7 +232,7 @@ class WebhookSystem:
                 worker.join(timeout=5)
         self.logger.info("Webhook system stopped")
 
-    def _delivery_worker(self):
+    def _delivery_worker(self) -> None:
         """Worker thread for delivering webhooks"""
         while self.running:
             item = self.delivery_queue.dequeue(timeout=1.0)
@@ -241,7 +240,7 @@ class WebhookSystem:
                 event, subscription = item
                 self._deliver_webhook(event, subscription)
 
-    def _deliver_webhook(self, event: WebhookEvent, subscription: WebhookSubscription):
+    def _deliver_webhook(self, event: WebhookEvent, subscription: WebhookSubscription) -> None:
         """
         Deliver webhook to subscription with retry logic
 
@@ -275,12 +274,10 @@ class WebhookSystem:
                 request = Request(subscription.url, data=payload, headers=headers, method="POST")
 
                 # Send request
-                response = urlopen(
-                    request, timeout=self.timeout
-                )  # nosec B310 - URL is from configured webhook subscription
+                response = urlopen(request, timeout=self.timeout)  # nosec B310 - URL is from configured webhook subscription
 
                 # Success
-                subscription.last_sent = datetime.now(timezone.utc)
+                subscription.last_sent = datetime.now(UTC)
                 subscription.success_count += 1
                 self.logger.info(
                     f"Webhook delivered: {event.event_type} -> {subscription.url} (status: {response.status})"
@@ -306,7 +303,7 @@ class WebhookSystem:
                 self.logger.debug("Webhook delivery error details", exc_info=True)
                 break
 
-    def trigger_event(self, event_type: str, data: dict):
+    def trigger_event(self, event_type: str, data: dict) -> None:
         """
         Trigger a webhook event
 

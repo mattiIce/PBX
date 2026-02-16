@@ -12,20 +12,20 @@ Example:
     python scripts/update_phone_extension.py 001565123456 1002
 """
 
-import os
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
+
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
-from pathlib import Path
 
 
-def update_phone_extension(mac_address: str, new_extension: str):
+def update_phone_extension(mac_address: str, new_extension: str) -> bool:
     """
-    Update a phone's extension in the registered_phones table
+    Update a phone's extension in the registered_phones table.
 
     Args:
         mac_address: MAC address of the phone
@@ -112,11 +112,11 @@ def update_phone_extension(mac_address: str, new_extension: str):
         print("1. Update the phone provisioning configuration:")
         print("   - Via Admin Panel: Phone Provisioning tab")
         print("   - Or in config.yml: Update the device's extension")
-        print("")
+        print()
         print("2. Reboot the phone to fetch new configuration:")
         print("   - Power cycle the phone")
         print("   - Or use phone menu to reboot")
-        print("")
+        print()
         print("3. Verify the phone registers with new extension")
         print("=" * 60)
     else:
@@ -127,16 +127,15 @@ def update_phone_extension(mac_address: str, new_extension: str):
     return success
 
 
-def main():
-    """Main entry point"""
-
+def main() -> None:
+    """Main entry point."""
     if len(sys.argv) != 3:
         print("Usage: python scripts/update_phone_extension.py <mac_address> <new_extension>")
-        print("")
+        print()
         print("Examples:")
         print("  python scripts/update_phone_extension.py 001565123456 1002")
         print("  python scripts/update_phone_extension.py 00:15:65:12:34:56 1002")
-        print("")
+        print()
         print("Note: MAC address format doesn't matter (colons optional)")
         sys.exit(1)
 

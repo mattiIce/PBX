@@ -4,19 +4,19 @@ Database initialization script for PBX system
 """
 
 import os
+import sqlite3
 import sys
 
 import psycopg2
-import sqlite3
 
 
 # Database configuration
 # NOTE: For production use, set these environment variables:
 #   - DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD
-def get_db_config():
-    """Get database configuration from environment variables with validation"""
+def get_db_config() -> dict[str, str | int]:
+    """Get database configuration from environment variables with validation."""
     try:
-        port = int(os.environ.get("DB_PORT", 5432))
+        port = int(os.environ.get("DB_PORT", "5432"))
     except ValueError:
         print("✗ Error: DB_PORT must be a valid integer")
         sys.exit(1)
@@ -39,8 +39,8 @@ def get_db_config():
 DB_CONFIG = get_db_config()
 
 
-def test_connection():
-    """Test database connection"""
+def test_connection() -> bool:
+    """Test database connection."""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
@@ -56,8 +56,8 @@ def test_connection():
         return False
 
 
-def verify_tables():
-    """Verify all tables exist"""
+def verify_tables() -> bool:
+    """Verify all tables exist."""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()
@@ -89,8 +89,8 @@ def verify_tables():
         return False
 
 
-def add_sample_data():
-    """Add sample VIP caller data for testing"""
+def add_sample_data() -> bool:
+    """Add sample VIP caller data for testing."""
     try:
         conn = psycopg2.connect(**DB_CONFIG)
         cur = conn.cursor()

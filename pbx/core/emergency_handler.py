@@ -5,20 +5,29 @@ Extracts emergency call handling logic from PBXCore into a dedicated class,
 implementing Kari's Law compliance for direct 911 dialing and routing.
 """
 
+from typing import Any
+
 
 class EmergencyHandler:
     """Handles emergency calls (911) according to Kari's Law"""
 
-    def __init__(self, pbx_core):
+    def __init__(self, pbx_core: Any) -> None:
         """
         Initialize EmergencyHandler with reference to PBXCore.
 
         Args:
             pbx_core: The PBXCore instance
         """
-        self.pbx_core = pbx_core
+        self.pbx_core: Any = pbx_core
 
-    def handle_emergency_call(self, from_ext, to_ext, call_id, message, from_addr):
+    def handle_emergency_call(
+        self,
+        from_ext: str,
+        to_ext: str,
+        call_id: str,
+        message: Any,
+        from_addr: tuple[str, int],
+    ) -> bool:
         """
         Handle emergency call (911) according to Kari's Law
 
@@ -44,6 +53,8 @@ class EmergencyHandler:
         pbx.logger.critical("=" * 70)
 
         # Handle via Kari's Law compliance module
+        success: bool
+        routing_info: dict[str, Any]
         success, routing_info = pbx.karis_law.handle_emergency_call(
             caller_extension=from_ext, dialed_number=to_ext, call_id=call_id, from_addr=from_addr
         )
@@ -64,7 +75,7 @@ class EmergencyHandler:
             return True
 
         # Parse SDP from caller's INVITE
-        caller_sdp = None
+        caller_sdp: dict[str, Any] | None = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
@@ -74,7 +85,7 @@ class EmergencyHandler:
                 pbx.logger.critical(f"Caller RTP: {caller_sdp['address']}:{caller_sdp['port']}")
 
         # Create call record for tracking
-        normalized_number = routing_info.get("destination", "911")
+        normalized_number: str = routing_info.get("destination", "911")
         call = pbx.call_manager.create_call(call_id, from_ext, normalized_number)
         call.start()
         call.original_invite = message
@@ -93,7 +104,10 @@ class EmergencyHandler:
 
             # set caller's endpoint if we have RTP info
             if caller_sdp:
-                caller_endpoint = (caller_sdp["address"], caller_sdp["port"])
+                caller_endpoint: tuple[str, int] = (
+                    caller_sdp["address"],
+                    caller_sdp["port"],
+                )
                 relay_info = pbx.rtp_relay.active_relays.get(call_id)
                 if relay_info:
                     handler = relay_info["handler"]
@@ -108,15 +122,16 @@ class EmergencyHandler:
 
         # For now, send 200 OK to acknowledge the call was processed
         # The trunk system will handle actual routing
-        server_ip = pbx._get_server_ip()
+        server_ip: str = pbx._get_server_ip()
 
         # Build SDP for response
+        caller_codecs: list[str]
         if caller_sdp:
             caller_codecs = caller_sdp.get("formats", ["0", "8"])
         else:
             caller_codecs = ["0", "8"]
 
-        rtp_port = rtp_ports[0] if rtp_ports else 10000
+        rtp_port: int = rtp_ports[0] if rtp_ports else 10000
         response_sdp = SDPBuilder.build_audio_sdp(
             local_ip=server_ip,
             local_port=rtp_port,

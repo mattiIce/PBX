@@ -2,7 +2,8 @@
 Extension management and registry
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
@@ -11,7 +12,7 @@ from pbx.utils.logger import get_logger
 class Extension:
     """Represents a registered extension"""
 
-    def __init__(self, number, name, config):
+    def __init__(self, number: str, name: str, config: str) -> None:
         """
         Initialize extension
 
@@ -27,7 +28,7 @@ class Extension:
         self.address = None
         self.registration_time = None
 
-    def register(self, address):
+    def register(self, address: tuple) -> None:
         """
         Register extension
 
@@ -36,15 +37,15 @@ class Extension:
         """
         self.registered = True
         self.address = address
-        self.registration_time = datetime.now(timezone.utc)
+        self.registration_time = datetime.now(UTC)
 
-    def unregister(self):
+    def unregister(self) -> None:
         """Unregister extension"""
         self.registered = False
         self.address = None
         self.registration_time = None
 
-    def __str__(self):
+    def __str__(self) -> str:
         status = "registered" if self.registered else "unregistered"
         return f"Extension {self.number} ({self.name}) - {status}"
 
@@ -52,7 +53,7 @@ class Extension:
 class ExtensionRegistry:
     """Registry of all extensions"""
 
-    def __init__(self, config, database=None):
+    def __init__(self, config: Any, database: Any | None = None) -> None:
         """
         Initialize extension registry
 
@@ -73,7 +74,7 @@ class ExtensionRegistry:
         self._load_extensions()
 
     @staticmethod
-    def create_extension_from_db(db_extension):
+    def create_extension_from_db(db_extension: dict) -> Any | None:
         """
         Create an Extension object from database data
 
@@ -101,7 +102,7 @@ class ExtensionRegistry:
 
         return Extension(number, name, ext_config)
 
-    def _load_extensions(self):
+    def _load_extensions(self) -> None:
         """Load extensions from database only (for security)"""
         # SECURITY: Extensions must be loaded from database only.
         # Loading from config.yml is insecure as it exposes passwords in plain
@@ -125,9 +126,7 @@ class ExtensionRegistry:
             db_extensions = ext_db.get_all()
 
             if db_extensions:
-                self.logger.info(
-                    f"Loading {len(db_extensions)} extensions from database"
-                )
+                self.logger.info(f"Loading {len(db_extensions)} extensions from database")
                 for ext_data in db_extensions:
                     number = ext_data["number"]
                     name = ext_data["name"]
@@ -150,7 +149,7 @@ class ExtensionRegistry:
 
             self.logger.error(traceback.format_exc())
 
-    def reload(self):
+    def reload(self) -> None:
         """Reload extensions from database or configuration"""
         if not self.database or not self.database.enabled:
             # Only reload config if not using database
@@ -158,11 +157,11 @@ class ExtensionRegistry:
         self.extensions.clear()
         self._load_extensions()
 
-    def reload_extensions(self):
+    def reload_extensions(self) -> None:
         """Alias for reload() - reload extensions from database or configuration"""
         self.reload()
 
-    def get(self, number):
+    def get(self, number: str) -> Any | None:
         """
         Get extension by number
 
@@ -174,7 +173,7 @@ class ExtensionRegistry:
         """
         return self.extensions.get(str(number))
 
-    def get_extension(self, number):
+    def get_extension(self, number: str) -> Any | None:
         """
         Get extension by number (alias for get() for backward compatibility)
 
@@ -186,7 +185,7 @@ class ExtensionRegistry:
         """
         return self.get(number)
 
-    def register(self, number, address):
+    def register(self, number: str, address: tuple) -> bool:
         """
         Register extension
 
@@ -204,7 +203,7 @@ class ExtensionRegistry:
             return True
         return False
 
-    def unregister(self, number):
+    def unregister(self, number: str) -> bool:
         """
         Unregister extension
 
@@ -221,7 +220,7 @@ class ExtensionRegistry:
             return True
         return False
 
-    def is_registered(self, number):
+    def is_registered(self, number: str) -> bool:
         """
         Check if extension is registered
 
@@ -234,7 +233,7 @@ class ExtensionRegistry:
         extension = self.get(number)
         return extension.registered if extension else False
 
-    def get_registered(self):
+    def get_registered(self) -> list:
         """
         Get all registered extensions
 
@@ -243,15 +242,15 @@ class ExtensionRegistry:
         """
         return [ext for ext in self.extensions.values() if ext.registered]
 
-    def get_registered_count(self):
+    def get_registered_count(self) -> int:
         """Get count of registered extensions"""
         return len(self.get_registered())
 
-    def get_all(self):
+    def get_all(self) -> list:
         """Get all extensions"""
         return list(self.extensions.values())
 
-    def authenticate(self, number, password):
+    def authenticate(self, number: str, password: str) -> bool:
         """
         Authenticate extension using FIPS-compliant password verification
 
@@ -293,7 +292,7 @@ class ExtensionRegistry:
                 return secrets.compare_digest(password, config_password)
         return False
 
-    def hash_extension_password(self, number, password):
+    def hash_extension_password(self, number: str, password: str) -> bool:
         """
         Hash an extension's password using FIPS-compliant algorithm
 

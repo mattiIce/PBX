@@ -5,6 +5,7 @@ Automatic server failover using DNS SRV records
 
 import random
 import socket
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -12,7 +13,7 @@ from pbx.utils.logger import get_logger
 class SRVRecord:
     """Represents a DNS SRV record"""
 
-    def __init__(self, priority: int, weight: int, port: int, target: str):
+    def __init__(self, priority: int, weight: int, port: int, target: str) -> None:
         """Initialize SRV record"""
         self.priority = priority
         self.weight = weight
@@ -36,7 +37,7 @@ class DNSSRVFailover:
     - Health monitoring
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize DNS SRV failover"""
         self.logger = get_logger()
         self.config = config or {}
@@ -60,7 +61,9 @@ class DNSSRVFailover:
         self.logger.info(f"  Max failures: {self.max_failures}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def lookup_srv(self, service: str, protocol: str = "tcp", domain: str = None) -> list[dict]:
+    def lookup_srv(
+        self, service: str, protocol: str = "tcp", domain: str | None = None
+    ) -> list[dict]:
         """
         Lookup DNS SRV records
 
@@ -165,7 +168,7 @@ class DNSSRVFailover:
         ]
 
     def select_server(
-        self, service: str, protocol: str = "tcp", domain: str = None
+        self, service: str, protocol: str = "tcp", domain: str | None = None
     ) -> dict | None:
         """
         Select best available server from SRV records
@@ -269,10 +272,9 @@ class DNSSRVFailover:
                 # Connection successful
                 self.logger.debug(f"Health check passed: {target}:{port}")
                 return True
-            else:
-                # Connection failed
-                self.logger.warning(f"Health check failed: {target}:{port} (error {result})")
-                return False
+            # Connection failed
+            self.logger.warning(f"Health check failed: {target}:{port} (error {result})")
+            return False
         except socket.gaierror:
             # DNS resolution failed
             self.logger.error(f"Cannot resolve hostname: {target}")
@@ -282,7 +284,9 @@ class DNSSRVFailover:
             self.logger.error(f"Health check error for {target}:{port}: {e}")
             return False
 
-    def mark_server_failed(self, service: str, protocol: str, domain: str, target: str, port: int):
+    def mark_server_failed(
+        self, service: str, protocol: str, domain: str, target: str, port: int
+    ) -> None:
         """
         Mark server as failed
 
@@ -314,7 +318,7 @@ class DNSSRVFailover:
 
                 break
 
-    def _trigger_failover(self, srv_name: str):
+    def _trigger_failover(self, srv_name: str) -> None:
         """Trigger failover to next available server"""
         self.logger.warning(f"Triggering failover for {srv_name}")
 
@@ -323,7 +327,7 @@ class DNSSRVFailover:
 
     def mark_server_recovered(
         self, service: str, protocol: str, domain: str, target: str, port: int
-    ):
+    ) -> None:
         """Mark server as recovered"""
         srv_name = f"_{service}._{protocol}.{domain}"
 
@@ -338,7 +342,9 @@ class DNSSRVFailover:
                 self.logger.info(f"Server recovered: {target}:{port}")
                 break
 
-    def clear_cache(self, service: str = None, protocol: str = None, domain: str = None):
+    def clear_cache(
+        self, service: str | None = None, protocol: str | None = None, domain: str | None = None
+    ) -> None:
         """Clear SRV cache"""
         if service and protocol and domain:
             srv_name = f"_{service}._{protocol}.{domain}"
@@ -367,7 +373,7 @@ class DNSSRVFailover:
 _dns_srv_failover = None
 
 
-def get_dns_srv_failover(config=None) -> DNSSRVFailover:
+def get_dns_srv_failover(config: Any | None = None) -> DNSSRVFailover:
     """Get or create DNS SRV failover instance"""
     global _dns_srv_failover
     if _dns_srv_failover is None:

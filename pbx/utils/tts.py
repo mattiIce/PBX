@@ -3,12 +3,11 @@ Text-to-Speech utilities for PBX voice prompt generation
 Uses gTTS (Google Text-to-Speech) for natural American English voices
 """
 
-import os
 import subprocess
 import tempfile
+from pathlib import Path
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 # Try to import TTS dependencies
 try:
@@ -24,17 +23,17 @@ except ImportError as e:
 logger = get_logger()
 
 
-def is_tts_available():
+def is_tts_available() -> bool:
     """Check if TTS dependencies are available"""
     return GTTS_AVAILABLE
 
 
-def get_tts_requirements():
+def get_tts_requirements() -> str:
     """Get installation instructions for TTS dependencies"""
     return "pip install gTTS pydub"
 
 
-def _generate_mp3(text, language, tld, slow):
+def _generate_mp3(text: str, language: str, tld: str, slow: bool) -> str:
     """
     Generate MP3 file from text using gTTS
 
@@ -54,7 +53,7 @@ def _generate_mp3(text, language, tld, slow):
     return temp_mp3_path
 
 
-def _convert_to_telephony_audio(mp3_path, sample_rate):
+def _convert_to_telephony_audio(mp3_path: str, sample_rate: int) -> object:
     """
     Convert MP3 to telephony format audio (16-bit, mono, specified sample rate)
 
@@ -72,7 +71,7 @@ def _convert_to_telephony_audio(mp3_path, sample_rate):
     return audio
 
 
-def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
+def _encode_g722_with_ffmpeg(pcm_wav_path: str, output_file: str, sample_rate: int) -> bool:
     """
     Encode PCM WAV to G.722 using ffmpeg
 
@@ -102,6 +101,7 @@ def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
             capture_output=True,
             text=True,
             timeout=30,
+            check=False,
         )
 
         if result.returncode != 0:
@@ -124,7 +124,9 @@ def _encode_g722_with_ffmpeg(pcm_wav_path, output_file, sample_rate):
         return False
 
 
-def _export_audio(audio, output_file, convert_to_g722, sample_rate):
+def _export_audio(
+    audio: object, output_file: str, convert_to_g722: bool, sample_rate: int
+) -> str | None:
     """
     Export audio to output file, optionally converting to G.722
 
@@ -157,8 +159,14 @@ def _export_audio(audio, output_file, convert_to_g722, sample_rate):
 
 
 def text_to_wav_telephony(
-    text, output_file, language="en", tld="com", slow=False, sample_rate=8000, convert_to_g722=False
-):
+    text: str,
+    output_file: str | Path,
+    language: str = "en",
+    tld: str = "com",
+    slow: bool = False,
+    sample_rate: int = 8000,
+    convert_to_g722: bool = False,
+) -> bool:
     """
     Convert text to WAV file in telephony format using gTTS (Google Text-to-Speech)
 
@@ -211,12 +219,17 @@ def text_to_wav_telephony(
     finally:
         # Clean up temp files
         if temp_mp3_path and Path(temp_mp3_path).exists():
-            os.unlink(temp_mp3_path)
+            Path(temp_mp3_path).unlink()
         if temp_wav_path and Path(temp_wav_path).exists():
-            os.unlink(temp_wav_path)
+            Path(temp_wav_path).unlink()
 
 
-def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
+def generate_prompts(
+    prompts: dict[str, str],
+    output_dir: str,
+    company_name: str | None = None,
+    sample_rate: int = 8000,
+) -> tuple[int, int]:
     """
     Generate multiple voice prompts from text
 
@@ -237,7 +250,7 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
 
     # Create output directory if needed
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     success_count = 0
@@ -245,14 +258,15 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
 
     for filename, text in prompts.items():
         # Substitute company name if present
-        if company_name and "{company_name}" in text:
-            text = text.replace("{company_name}", company_name)
+        prompt_text = text
+        if company_name and "{company_name}" in prompt_text:
+            prompt_text = prompt_text.replace("{company_name}", company_name)
 
-        output_file = Path(output_dir) / filename if filename.endswith(".wav" else f"{filename}.wav"
-        )
+        wav_name = filename if filename.endswith(".wav") else f"{filename}.wav"
+        output_file = Path(output_dir) / wav_name
 
         try:
-            if text_to_wav_telephony(text, output_file, sample_rate=sample_rate):
+            if text_to_wav_telephony(prompt_text, output_file, sample_rate=sample_rate):
                 file_size = Path(output_file).stat().st_size
                 logger.info(f"Generated {filename}: {file_size:,} bytes")
                 success_count += 1

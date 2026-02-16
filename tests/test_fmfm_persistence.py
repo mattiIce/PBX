@@ -2,13 +2,11 @@
 Test Find Me/Follow Me database persistence
 """
 
-import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.find_me_follow_me import FindMeFollowMe
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 class TestFMFMPersistence:
@@ -16,8 +14,8 @@ class TestFMFMPersistence:
 
     def setup_method(self) -> None:
         """Set up test database"""
-        self.temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-        self.temp_db.close()
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as self.temp_db:
+            pass
 
         self.config = {
             "database.type": "sqlite",
@@ -33,7 +31,7 @@ class TestFMFMPersistence:
         if hasattr(self, "database") and self.database.connection:
             self.database.connection.close()
         if Path(self.temp_db.name).exists():
-            os.unlink(self.temp_db.name)
+            Path(self.temp_db.name).unlink(missing_ok=True)
 
     def test_database_persistence(self) -> None:
         """Test that FMFM configs are saved and loaded from database"""

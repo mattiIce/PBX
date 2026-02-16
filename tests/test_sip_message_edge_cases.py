@@ -3,7 +3,6 @@
 Test edge cases for SIP message parsing to prevent list index out of range errors
 """
 
-
 from pbx.sip.message import SIPMessage
 
 

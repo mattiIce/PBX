@@ -3,8 +3,9 @@ Call Blending
 Mix inbound and outbound calls for agent efficiency
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -28,7 +29,7 @@ class AgentMode(Enum):
 class Agent:
     """Represents an agent"""
 
-    def __init__(self, agent_id: str, extension: str):
+    def __init__(self, agent_id: str, extension: str) -> None:
         """Initialize agent"""
         self.agent_id = agent_id
         self.extension = extension
@@ -52,7 +53,7 @@ class CallBlending:
     - Real-time workload balancing
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize call blending"""
         self.logger = get_logger()
         self.config = config or {}
@@ -102,11 +103,11 @@ class CallBlending:
         # Determine which call to assign based on mode and priority
         if agent.mode == AgentMode.INBOUND_ONLY:
             return self._get_inbound_call()
-        elif agent.mode == AgentMode.OUTBOUND_ONLY:
+        if agent.mode == AgentMode.OUTBOUND_ONLY:
             return self._get_outbound_call()
-        elif agent.mode == AgentMode.BLENDED:
+        if agent.mode == AgentMode.BLENDED:
             return self._blend_call(agent)
-        elif agent.mode == AgentMode.AUTO:
+        if agent.mode == AgentMode.AUTO:
             return self._auto_blend_call(agent)
 
         return None
@@ -140,7 +141,7 @@ class CallBlending:
         # Always prioritize inbound if queue is building
         if self.inbound_priority and self.inbound_queue:
             oldest_inbound = self.inbound_queue[0]
-            wait_time = (datetime.now(timezone.utc) - oldest_inbound["queued_at"]).total_seconds()
+            wait_time = (datetime.now(UTC) - oldest_inbound["queued_at"]).total_seconds()
 
             if wait_time > self.max_inbound_wait:
                 return self._get_inbound_call()
@@ -195,7 +196,7 @@ class CallBlending:
         # Otherwise use normal blending
         return self._blend_call(agent)
 
-    def queue_call(self, call: dict, direction: str):
+    def queue_call(self, call: dict, direction: str) -> None:
         """
         Queue a call for blending
 
@@ -203,7 +204,7 @@ class CallBlending:
             call: Call information
             direction: Call direction (inbound/outbound)
         """
-        call["queued_at"] = datetime.now(timezone.utc)
+        call["queued_at"] = datetime.now(UTC)
 
         if direction == "inbound":
             self.inbound_queue.append(call)
@@ -212,7 +213,7 @@ class CallBlending:
             self.outbound_queue.append(call)
             self.logger.debug(f"Queued outbound call, queue size: {len(self.outbound_queue)}")
 
-    def set_agent_available(self, agent_id: str, available: bool):
+    def set_agent_available(self, agent_id: str, available: bool) -> bool:
         """set agent availability"""
         if not self.enabled:
             self.logger.error("Cannot set agent availability: Call blending feature is not enabled")
@@ -349,7 +350,7 @@ class CallBlending:
 _call_blending = None
 
 
-def get_call_blending(config=None) -> CallBlending:
+def get_call_blending(config: Any | None = None) -> CallBlending:
     """Get or create call blending instance"""
     global _call_blending
     if _call_blending is None:

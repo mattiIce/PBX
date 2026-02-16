@@ -4,7 +4,6 @@ Test Phase 3 Authentication and Authorization
 
 from unittest.mock import MagicMock, patch
 
-
 from pbx.utils.session_token import SessionToken, get_session_token_manager
 
 
@@ -104,11 +103,11 @@ class TestSessionToken:
         manager2 = SessionToken()
         assert manager.secret_key != manager2.secret_key
 
+
 class TestAuthenticationEndpoint:
     """Test authentication API endpoint"""
 
     @patch("pbx.api.rest_api.PBXAPIHandler")
-
     def test_login_success(self, mock_handler: MagicMock) -> None:
         """Test successful login"""
         # This is a placeholder - actual integration test would require

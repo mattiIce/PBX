@@ -4,7 +4,7 @@ declare global {
     interface Window {
         // api/client.ts
         fetchWithTimeout: (url: string, options?: RequestInit, timeout?: number) => Promise<Response>;
-        getAuthHeaders: () => { 'Content-Type': string; Authorization?: string };
+        getAuthHeaders: () => Record<string, string>;
         getApiBaseUrl: () => string;
         DEFAULT_FETCH_TIMEOUT: number;
 
@@ -77,26 +77,42 @@ declare global {
         loadProvisioningSettings: () => Promise<void>;
         loadPhonebookSettings: () => Promise<void>;
         deleteDevice: (macAddress: string) => Promise<void>;
-        viewTemplate: (name: string) => void;
+        viewTemplate: (...args: string[]) => void | Promise<void>;
 
         // pages/phones.ts
         loadRegisteredPhones: () => Promise<void>;
         loadRegisteredATAs: () => Promise<void>;
 
-        // pages/security.ts
+        // pages/recordings.ts
         loadFraudAlerts: () => Promise<void>;
+        showAddBlockedPatternModal: () => void;
+        closeAddBlockedPatternModal: () => void;
+        addBlockedPattern: (event: Event) => Promise<void>;
+        deleteBlockedPattern: (patternIndex: number, pattern: string) => Promise<void>;
         loadCallbackQueue: () => Promise<void>;
+        showRequestCallbackModal: () => void;
+        closeRequestCallbackModal: () => void;
+        requestCallback: (event: Event) => Promise<void>;
         startCallback: (callbackId: string) => Promise<void>;
+        completeCallback: (callbackId: string, success: boolean) => Promise<void>;
         cancelCallback: (callbackId: string) => Promise<void>;
         loadMobilePushDevices: () => Promise<void>;
+        showRegisterDeviceModal: () => void;
+        closeRegisterDeviceModal: () => void;
+        registerDevice: (event: Event) => Promise<void>;
+        showTestNotificationModal: () => void;
+        closeTestNotificationModal: () => void;
+        sendTestNotificationForm: (event: Event) => void;
+        sendTestNotification: (userId: string) => Promise<void>;
+        loadRecordingAnnouncementsStats: () => Promise<void>;
         loadSpeechAnalyticsConfigs: () => Promise<void>;
+        loadCRMActivityLog: (() => Promise<void>) | (() => void);
+        clearCRMActivityLog: () => Promise<void>;
 
         // pages/emergency.ts
         loadEmergencyContacts: () => Promise<void>;
         loadEmergencyHistory: () => Promise<void>;
         deleteEmergencyContact: (contactId: string) => Promise<void>;
-        loadE911Sites: () => Promise<void>;
-        loadExtensionLocations: () => Promise<void>;
 
         // pages/phone_book.ts
         loadPhoneBook: () => Promise<void>;
@@ -108,6 +124,9 @@ declare global {
         loadPagingDevices: () => Promise<void>;
         loadActivePages: () => Promise<void>;
         deletePagingZone: (zoneId: string) => Promise<void>;
+        showAddZoneModal: () => Promise<void>;
+        showAddDeviceModal: () => Promise<void>;
+        deletePagingDevice: (deviceId: string) => Promise<void>;
 
         // pages/license.ts
         loadLicenseStatus: () => Promise<void>;
@@ -119,9 +138,32 @@ declare global {
         loadAnalytics: () => Promise<void>;
         loadQoSMetrics: () => Promise<void>;
 
+        // pages/click-to-dial.ts
+        loadClickToDialConfigs: () => Promise<void>;
+        toggleClickToDialConfigSections: (showConfig: boolean) => void;
+        loadClickToDialConfig: () => Promise<void>;
+        saveClickToDialConfig: (event: Event) => Promise<void>;
+        editClickToDialConfig: (extension: string) => Promise<void>;
+        initiateClickToDial: () => Promise<void>;
+        loadClickToDialHistory: () => Promise<void>;
+        loadWebRTCPhoneConfig: (() => Promise<void>) | (() => void);
+        saveWebRTCPhoneConfig: (event: Event) => Promise<void>;
+
+        // pages/speech-analytics.ts
+        loadE911Sites: () => Promise<void>;
+        loadExtensionLocations: () => Promise<void>;
+        loadLocationHistory: () => Promise<void>;
+        showAddE911SiteModal: () => void;
+        editE911Site: ((siteId: number) => void) | ((siteId: string) => void);
+        deleteE911Site: ((siteId: number) => void) | ((siteId: string) => void);
+        showUpdateLocationModal: () => void;
+        updateExtensionLocation: (extension: string) => void;
+        showAddSpeechAnalyticsConfigModal: () => void;
+        editSpeechAnalyticsConfig: (extension: string) => void;
+        deleteSpeechAnalyticsConfig: (extension: string) => void;
+
         // Functions referenced in tabs.ts from .js modules (not yet ported to .ts)
         loadAutoAttendantConfig?: () => void;
-        loadWebRTCPhoneConfig?: () => void;
         loadSIPTrunks?: () => void;
         loadTrunkHealth?: () => void;
         loadLCRRates?: () => void;
@@ -140,14 +182,9 @@ declare global {
         loadMobilePushConfig?: () => void;
         loadRecordingAnnouncements?: () => void;
         loadComplianceData?: () => void;
-        loadCRMActivityLog?: () => void;
         loadOpenSourceIntegrations?: () => void;
 
         // pages/phone_book.ts — referenced in onclick handlers
         editPhoneBookEntry?: (entryId: string) => void;
-
-        // pages/emergency.ts — referenced in onclick handlers
-        editE911Site?: (siteId: string) => void;
-        deleteE911Site?: (siteId: string) => void;
     }
 }

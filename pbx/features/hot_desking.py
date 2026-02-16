@@ -4,7 +4,8 @@ Allows users to log in from any phone and retain their settings
 """
 
 import threading
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -12,7 +13,7 @@ from pbx.utils.logger import get_logger
 class HotDeskSession:
     """Represents a hot desk session"""
 
-    def __init__(self, extension: str, device_id: str, ip_address: str):
+    def __init__(self, extension: str, device_id: str, ip_address: str) -> None:
         """
         Initialize hot desk session
 
@@ -24,13 +25,13 @@ class HotDeskSession:
         self.extension = extension
         self.device_id = device_id
         self.ip_address = ip_address
-        self.logged_in_at = datetime.now(timezone.utc)
-        self.last_activity = datetime.now(timezone.utc)
+        self.logged_in_at = datetime.now(UTC)
+        self.last_activity = datetime.now(UTC)
         self.auto_logout_enabled = True
 
-    def update_activity(self):
+    def update_activity(self) -> None:
         """Update last activity timestamp"""
-        self.last_activity = datetime.now(timezone.utc)
+        self.last_activity = datetime.now(UTC)
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
@@ -56,7 +57,7 @@ class HotDeskingSystem:
     - Extension profile migration
     """
 
-    def __init__(self, config=None, pbx_core=None):
+    def __init__(self, config: Any | None = None, pbx_core: Any | None = None) -> None:
         """
         Initialize hot-desking system
 
@@ -94,13 +95,13 @@ class HotDeskingSystem:
         else:
             self.logger.info("Hot-desking system disabled")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get configuration value"""
         if hasattr(self.config, "get"):
             return self.config.get(key, default)
         return default
 
-    def _start_cleanup_thread(self):
+    def _start_cleanup_thread(self) -> None:
         """Start auto-logout cleanup thread"""
         self.running = True
         self.cleanup_thread = threading.Thread(
@@ -109,7 +110,7 @@ class HotDeskingSystem:
         self.cleanup_thread.start()
         self.logger.info("Started hot-desking auto-logout thread")
 
-    def stop(self):
+    def stop(self) -> None:
         """Stop the hot-desking system"""
         self.logger.info("Stopping hot-desking system...")
         self.running = False
@@ -117,7 +118,7 @@ class HotDeskingSystem:
             self.cleanup_thread.join(timeout=5)
         self.logger.info("Hot-desking system stopped")
 
-    def _cleanup_worker(self):
+    def _cleanup_worker(self) -> None:
         """Worker thread for auto-logout"""
         import time
 
@@ -125,10 +126,10 @@ class HotDeskingSystem:
             time.sleep(60)  # Check every minute
             self._auto_logout_inactive_sessions()
 
-    def _auto_logout_inactive_sessions(self):
+    def _auto_logout_inactive_sessions(self) -> None:
         """Automatically log out inactive sessions"""
         with self.lock:
-            now = datetime.now(timezone.utc)
+            now = datetime.now(UTC)
             sessions_to_logout = []
 
             for device_id, session in self.sessions.items():
@@ -200,17 +201,15 @@ class HotDeskingSystem:
                     self._logout_internal(device_id)
 
             # Check if extension is already logged in elsewhere
-            if not self.allow_concurrent_logins:
-                if (
-                    extension in self.extension_devices
-                    and len(self.extension_devices[extension]) > 0
-                ):
-                    existing_devices = self.extension_devices[extension]
-                    self.logger.info(
-                        f"Extension {extension} already logged in at {existing_devices}, logging out..."
-                    )
-                    for dev_id in existing_devices.copy():
-                        self._logout_internal(dev_id)
+            if not self.allow_concurrent_logins and (
+                extension in self.extension_devices and len(self.extension_devices[extension]) > 0
+            ):
+                existing_devices = self.extension_devices[extension]
+                self.logger.info(
+                    f"Extension {extension} already logged in at {existing_devices}, logging out..."
+                )
+                for dev_id in existing_devices.copy():
+                    self._logout_internal(dev_id)
 
             # Create new session
             session = HotDeskSession(extension, device_id, ip_address)
@@ -281,7 +280,7 @@ class HotDeskingSystem:
                 {
                     "extension": extension,
                     "device_id": device_id,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(UTC).isoformat(),
                 },
             )
 
@@ -335,7 +334,7 @@ class HotDeskingSystem:
                 extension in self.extension_devices and len(self.extension_devices[extension]) > 0
             )
 
-    def update_session_activity(self, device_id: str):
+    def update_session_activity(self, device_id: str) -> None:
         """Update session activity timestamp"""
         with self.lock:
             session = self.sessions.get(device_id)

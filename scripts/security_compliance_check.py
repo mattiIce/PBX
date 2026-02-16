@@ -12,10 +12,9 @@ This script provides:
 """
 
 import json
-import os
 import subprocess
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path
@@ -25,7 +24,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 class SecurityComplianceChecker:
     """Comprehensive security compliance checker"""
 
-    def __init__(self, verbose=True, json_output=False):
+    def __init__(self, verbose: bool = True, json_output: bool = False) -> None:
         """
         Initialize security compliance checker
 
@@ -36,14 +35,14 @@ class SecurityComplianceChecker:
         self.verbose = verbose
         self.json_output = json_output
         self.results = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "fips": {},
             "soc2": {},
             "security": {},
             "overall": {},
         }
 
-    def print_section(self, title: str):
+    def print_section(self, title: str) -> None:
         """Print section header"""
         if not self.verbose or self.json_output:
             return
@@ -51,7 +50,7 @@ class SecurityComplianceChecker:
         print(f"  {title}")
         print("=" * 80)
 
-    def print_status(self, test_name: str, passed: bool, details: str = ""):
+    def print_status(self, test_name: str, passed: bool, details: str = "") -> None:
         """Print test status with color coding"""
         if not self.verbose or self.json_output:
             return
@@ -66,7 +65,7 @@ class SecurityComplianceChecker:
                 if line.strip():
                     print(f"       {line}")
 
-    def check_fips_compliance(self) -> Dict:
+    def check_fips_compliance(self) -> dict:
         """Check FIPS 140-2 compliance"""
         self.print_section("FIPS 140-2 Compliance Check")
 
@@ -74,7 +73,7 @@ class SecurityComplianceChecker:
 
         # Check 1: Kernel FIPS mode
         try:
-            with open("/proc/sys/crypto/fips_enabled", "r") as f:
+            with open("/proc/sys/crypto/fips_enabled") as f:
                 kernel_fips = f.read().strip() == "1"
                 fips_results["checks"]["kernel_fips"] = kernel_fips
                 self.print_status(
@@ -96,7 +95,11 @@ class SecurityComplianceChecker:
         # Check 2: OpenSSL FIPS provider
         try:
             result = subprocess.run(
-                ["openssl", "list", "-providers"], capture_output=True, text=True, timeout=5
+                ["openssl", "list", "-providers"],
+                capture_output=True,
+                text=True,
+                timeout=5,
+                check=False,
             )
             openssl_fips = "fips" in result.stdout.lower()
             fips_results["checks"]["openssl_fips"] = openssl_fips
@@ -189,7 +192,7 @@ class SecurityComplianceChecker:
             # Test AES-256-GCM (if crypto available)
             if CRYPTO_AVAILABLE:
                 try:
-                    key, key_salt = enc.derive_key("encryption_password", key_length=32)
+                    key, _key_salt = enc.derive_key("encryption_password", key_length=32)
                     encrypted, nonce, tag = enc.encrypt_data("test data", key)
                     decrypted = enc.decrypt_data(encrypted, nonce, tag, key)
                     aes_ok = decrypted.decode() == "test data"
@@ -216,7 +219,7 @@ class SecurityComplianceChecker:
         self.results["fips"] = fips_results
         return fips_results
 
-    def check_soc2_compliance(self) -> Dict:
+    def check_soc2_compliance(self) -> dict:
         """Check SOC 2 Type 2 compliance"""
         self.print_section("SOC 2 Type 2 Compliance Check")
 
@@ -289,7 +292,7 @@ class SecurityComplianceChecker:
             self.print_status(
                 "Implementation Status",
                 implemented == total,
-                f"Implemented: {implemented}/{total} ({implemented/total*100 if total > 0 else 0:.1f}%)",
+                f"Implemented: {implemented}/{total} ({implemented / total * 100 if total > 0 else 0:.1f}%)",
             )
 
             self.print_status(
@@ -330,7 +333,7 @@ class SecurityComplianceChecker:
         self.results["soc2"] = soc2_results
         return soc2_results
 
-    def check_security_configuration(self) -> Dict:
+    def check_security_configuration(self) -> dict:
         """Check security configuration and best practices"""
         self.print_section("Security Configuration Review")
 
@@ -447,7 +450,7 @@ class SecurityComplianceChecker:
 
         return self.results, exit_code
 
-    def print_summary(self):
+    def print_summary(self) -> None:
         """Print compliance summary"""
         if self.json_output:
             print(json.dumps(self.results, indent=2))
@@ -504,7 +507,7 @@ class SecurityComplianceChecker:
         print("=" * 80 + "\n")
 
 
-def main():
+def main() -> int:
     """Main entry point"""
     import argparse
 

@@ -233,7 +233,7 @@ window.deleteCustomGreeting = async function() {
             loadVoicemailForExtension();
         } else {
             const error = await response.json();
-            showNotification(error.error || 'Failed to delete greeting', 'error');
+            showNotification(error.error ?? 'Failed to delete greeting', 'error');
         }
     } catch (error) {
         console.error('Error deleting greeting:', error);

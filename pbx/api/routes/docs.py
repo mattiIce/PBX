@@ -4,7 +4,7 @@ Serves Swagger UI for interactive API documentation and the
 OpenAPI JSON specification.
 """
 
-from flask import Blueprint, jsonify, Response
+from flask import Blueprint, Response, jsonify
 
 from pbx.api.openapi import get_openapi_spec
 

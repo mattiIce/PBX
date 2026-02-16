@@ -3,13 +3,11 @@
 Test voicemail greeting recording functionality
 """
 
-import os
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
-from pathlib import Path
 
 
 def create_fake_audio() -> bytes:
@@ -138,9 +136,9 @@ def test_ivr_save_recorded_greeting() -> None:
         # mailbox
         mailbox = vm_system.get_mailbox("1001")
         mailbox.save_greeting(fake_audio)
-        assert (
-            mailbox.has_custom_greeting()
-        ), "Mailbox should have custom greeting after confirmation"
+        assert mailbox.has_custom_greeting(), (
+            "Mailbox should have custom greeting after confirmation"
+        )
 
 
 def test_main_menu_to_options() -> None:

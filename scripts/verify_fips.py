@@ -4,26 +4,26 @@ FIPS 140-2 Compliance Verification Script
 Verifies that the PBX system is running in FIPS-compliant mode
 """
 
-import os
 import subprocess
 import sys
+from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+
 from pbx.utils.config import Config
 from pbx.utils.encryption import CRYPTO_AVAILABLE, get_encryption
-from pathlib import Path
 
 
-def print_header(text):
+def print_header(text: str) -> None:
     """Print section header"""
     print("\n" + "=" * 70)
     print(text)
     print("=" * 70)
 
 
-def print_status(test_name, passed, message=""):
+def print_status(test_name: str, passed: bool, message: str = "") -> None:
     """Print test status"""
     status = "✓ PASS" if passed else "✗ FAIL"
     color = "\033[92m" if passed else "\033[91m"
@@ -34,7 +34,7 @@ def print_status(test_name, passed, message=""):
         print(f"       {message}")
 
 
-def check_system_fips():
+def check_system_fips() -> bool:
     """Check if system-level FIPS is enabled"""
     print_header("System FIPS Configuration")
 
@@ -42,7 +42,7 @@ def check_system_fips():
 
     # Check kernel FIPS mode
     try:
-        with open("/proc/sys/crypto/fips_enabled", "r") as f:
+        with open("/proc/sys/crypto/fips_enabled") as f:
             fips_enabled = f.read().strip() == "1"
             print_status("Kernel FIPS mode", fips_enabled, f"Value: {fips_enabled}")
             if not fips_enabled:
@@ -53,7 +53,9 @@ def check_system_fips():
 
     # Check OpenSSL FIPS
     try:
-        result = subprocess.run(["openssl", "list", "-providers"], capture_output=True, text=True)
+        result = subprocess.run(
+            ["openssl", "list", "-providers"], capture_output=True, text=True, check=False
+        )
         has_fips = "fips" in result.stdout.lower()
         print_status("OpenSSL FIPS provider", has_fips)
         if not has_fips:
@@ -86,7 +88,7 @@ def check_system_fips():
     return all_passed
 
 
-def check_cryptography_library():
+def check_cryptography_library() -> bool:
     """Check cryptography library configuration"""
     print_header("Cryptography Library")
 
@@ -142,7 +144,7 @@ def check_cryptography_library():
     return all_passed
 
 
-def check_pbx_configuration():
+def check_pbx_configuration() -> bool:
     """Check PBX FIPS configuration"""
     print_header("Warden Voip System Configuration")
 
@@ -185,7 +187,7 @@ def check_pbx_configuration():
     return all_passed
 
 
-def test_encryption_operations():
+def test_encryption_operations() -> bool:
     """Test FIPS-compliant encryption operations"""
     print_header("Encryption Operations Test")
 
@@ -264,7 +266,7 @@ def test_encryption_operations():
     return all_passed
 
 
-def check_dependencies():
+def check_dependencies() -> bool:
     """Check Python dependencies for FIPS compliance"""
     print_header("Python Dependencies")
 
@@ -312,7 +314,7 @@ def check_dependencies():
     return all_passed
 
 
-def generate_report():
+def generate_report() -> int:
     """Generate comprehensive FIPS compliance report"""
     print("\n" + "=" * 70)
     print("FIPS 140-2 COMPLIANCE VERIFICATION REPORT")
@@ -354,36 +356,35 @@ def generate_report():
         print("\nThe PBX system is configured for FIPS 140-2 compliance.")
         print("All cryptographic operations use FIPS-approved algorithms.")
         return 0
-    else:
-        print("\033[91m" + "=" * 70)
-        print("✗ FIPS 140-2 COMPLIANCE: ISSUES FOUND")
-        print("=" * 70 + "\033[0m")
-        print("\nThe following issues need to be addressed:")
-        print()
+    print("\033[91m" + "=" * 70)
+    print("✗ FIPS 140-2 COMPLIANCE: ISSUES FOUND")
+    print("=" * 70 + "\033[0m")
+    print("\nThe following issues need to be addressed:")
+    print()
 
-        if not results["system"]:
-            print("• System FIPS mode is not properly enabled")
-            print("  Run: sudo ./scripts/enable_fips_ubuntu.sh")
+    if not results["system"]:
+        print("• System FIPS mode is not properly enabled")
+        print("  Run: sudo ./scripts/enable_fips_ubuntu.sh")
 
-        if not results["cryptography"]:
-            print("• Cryptography library issues detected")
-            print("  Install: pip install cryptography>=41.0.0")
+    if not results["cryptography"]:
+        print("• Cryptography library issues detected")
+        print("  Install: pip install cryptography>=41.0.0")
 
-        if not results["pbx_config"]:
-            print("• PBX configuration needs adjustment")
-            print("  Edit config.yml and set security.fips_mode = true")
+    if not results["pbx_config"]:
+        print("• PBX configuration needs adjustment")
+        print("  Edit config.yml and set security.fips_mode = true")
 
-        if not results["encryption"]:
-            print("• Encryption operations test failed")
-            print("  Check system FIPS configuration")
+    if not results["encryption"]:
+        print("• Encryption operations test failed")
+        print("  Check system FIPS configuration")
 
-        if not results["dependencies"]:
-            print("• Missing required dependencies")
-            print("  Install: pip install -r requirements.txt")
+    if not results["dependencies"]:
+        print("• Missing required dependencies")
+        print("  Install: pip install -r requirements.txt")
 
-        print()
-        print("After fixing issues, run this script again to verify compliance.")
-        return 1
+    print()
+    print("After fixing issues, run this script again to verify compliance.")
+    return 1
 
 
 if __name__ == "__main__":

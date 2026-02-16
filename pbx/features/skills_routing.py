@@ -3,16 +3,17 @@ Skills-Based Routing (SBR) System
 Routes calls to agents based on their skills and expertise
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class Skill:
     """Represents a skill that agents can have"""
 
-    def __init__(self, skill_id: str, name: str, description: str = ""):
+    def __init__(self, skill_id: str, name: str, description: str = "") -> None:
         """
         Initialize skill
 
@@ -33,7 +34,7 @@ class Skill:
 class AgentSkill:
     """Represents an agent's proficiency in a skill"""
 
-    def __init__(self, agent_extension: str, skill_id: str, proficiency: int = 5):
+    def __init__(self, agent_extension: str, skill_id: str, proficiency: int = 5) -> None:
         """
         Initialize agent skill
 
@@ -45,7 +46,7 @@ class AgentSkill:
         self.agent_extension = agent_extension
         self.skill_id = skill_id
         self.proficiency = max(1, min(10, proficiency))  # Clamp to 1-10
-        self.assigned_at = datetime.now(timezone.utc)
+        self.assigned_at = datetime.now(UTC)
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
@@ -60,7 +61,7 @@ class AgentSkill:
 class SkillRequirement:
     """Represents a skill requirement for a call or queue"""
 
-    def __init__(self, skill_id: str, min_proficiency: int = 1, required: bool = True):
+    def __init__(self, skill_id: str, min_proficiency: int = 1, required: bool = True) -> None:
         """
         Initialize skill requirement
 
@@ -88,7 +89,7 @@ class SkillsBasedRouter:
     Routes calls to agents based on required skills and agent proficiency
     """
 
-    def __init__(self, database=None, config: dict = None):
+    def __init__(self, database: Any | None = None, config: dict | None = None) -> None:
         """
         Initialize skills-based router
 
@@ -121,7 +122,7 @@ class SkillsBasedRouter:
         if self.enabled:
             self.logger.info("Skills-Based Routing initialized")
 
-    def _get_config(self, key: str, default=None):
+    def _get_config(self, key: str, default: Any | None = None) -> Any:
         """Get config value supporting both dot notation and nested dicts"""
         if hasattr(self.config, "get") and "." in key:
             value = self.config.get(key, None)
@@ -138,11 +139,10 @@ class SkillsBasedRouter:
 
         return value if value is not None else default
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize skills routing database tables"""
         # Skills table
-        skills_table = (
-            """
+        skills_table = """
         CREATE TABLE IF NOT EXISTS skills (
             skill_id VARCHAR(50) PRIMARY KEY,
             name VARCHAR(100) NOT NULL,
@@ -150,16 +150,6 @@ class SkillsBasedRouter:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS skills (
-            skill_id VARCHAR(50) PRIMARY KEY,
-            name VARCHAR(100) NOT NULL,
-            description TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         # Agent skills table
         agent_skills_table = (
@@ -408,9 +398,7 @@ class SkillsBasedRouter:
             except sqlite3.Error as e:
                 self.logger.error(f"Failed to store queue requirements in database: {e}")
 
-        self.logger.info(
-            f"set {len(skill_reqs)} skill requirements for queue {queue_number}"
-        )
+        self.logger.info(f"set {len(skill_reqs)} skill requirements for queue {queue_number}")
         return True
 
     def find_best_agents(
@@ -565,6 +553,6 @@ class SkillsBasedRouter:
         return reqs
 
 
-def get_skills_router(database=None, config: dict = None) -> SkillsBasedRouter:
+def get_skills_router(database: Any | None = None, config: dict | None = None) -> SkillsBasedRouter:
     """Get skills-based router instance"""
     return SkillsBasedRouter(database, config)

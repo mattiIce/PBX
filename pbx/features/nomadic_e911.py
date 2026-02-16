@@ -4,9 +4,10 @@ Location-based emergency routing for remote workers
 """
 
 import ipaddress
+import sqlite3
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class NomadicE911Engine:
@@ -15,7 +16,7 @@ class NomadicE911Engine:
     Tracks and updates emergency locations for mobile/remote workers
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize Nomadic E911 engine
 
@@ -354,27 +355,26 @@ class NomadicE911Engine:
         try:
             result = self.db.execute("SELECT * FROM multi_site_e911_configs ORDER BY site_name")
 
-            sites = []
-            for row in result or []:
-                sites.append(
-                    {
-                        "id": row[0],
-                        "site_name": row[1],
-                        "ip_range_start": row[2],
-                        "ip_range_end": row[3],
-                        "emergency_trunk": row[4],
-                        "psap_number": row[5],
-                        "elin": row[6],
-                        "street_address": row[7] if len(row) > 7 else "",
-                        "city": row[8] if len(row) > 8 else "",
-                        "state": row[9] if len(row) > 9 else "",
-                        "postal_code": row[10] if len(row) > 10 else "",
-                        "country": row[11] if len(row) > 11 else "USA",
-                        "building": row[12] if len(row) > 12 else "",
-                        "floor": row[13] if len(row) > 13 else "",
-                        "created_at": row[14] if len(row) > 14 else None,
-                    }
-                )
+            sites = [
+                {
+                    "id": row[0],
+                    "site_name": row[1],
+                    "ip_range_start": row[2],
+                    "ip_range_end": row[3],
+                    "emergency_trunk": row[4],
+                    "psap_number": row[5],
+                    "elin": row[6],
+                    "street_address": row[7] if len(row) > 7 else "",
+                    "city": row[8] if len(row) > 8 else "",
+                    "state": row[9] if len(row) > 9 else "",
+                    "postal_code": row[10] if len(row) > 10 else "",
+                    "country": row[11] if len(row) > 11 else "USA",
+                    "building": row[12] if len(row) > 12 else "",
+                    "floor": row[13] if len(row) > 13 else "",
+                    "created_at": row[14] if len(row) > 14 else None,
+                }
+                for row in result or []
+            ]
 
             return sites
 
@@ -407,16 +407,15 @@ class NomadicE911Engine:
                 (extension, limit),
             )
 
-            history = []
-            for row in result or []:
-                history.append(
-                    {
-                        "old_location": row[2],
-                        "new_location": row[3],
-                        "update_source": row[4],
-                        "updated_at": row[5],
-                    }
-                )
+            history = [
+                {
+                    "old_location": row[2],
+                    "new_location": row[3],
+                    "update_source": row[4],
+                    "updated_at": row[5],
+                }
+                for row in result or []
+            ]
 
             return history
 

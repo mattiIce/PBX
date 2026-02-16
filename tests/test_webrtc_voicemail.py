@@ -6,7 +6,6 @@ Verifies that WebRTC clients can access voicemail with audio prompts
 
 from unittest.mock import MagicMock, patch
 
-
 from pbx.core.call import Call, CallState
 from pbx.features.webrtc import WebRTCGateway
 
@@ -72,9 +71,9 @@ class TestWebRTCVoicemailAccess:
 
             # Verify voicemail attributes were set
             assert mock_call.voicemail_access, "Call should be marked as voicemail access"
-            assert (
-                mock_call.voicemail_extension == "1001"
-            ), "Voicemail extension should be extracted"
+            assert mock_call.voicemail_extension == "1001", (
+                "Voicemail extension should be extracted"
+            )
 
             # Verify call was marked as connected
             mock_call.connect.assert_called_once()

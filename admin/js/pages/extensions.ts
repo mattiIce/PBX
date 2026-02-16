@@ -91,13 +91,13 @@ export function closeAddExtensionModal(): void {
 }
 
 export function editExtension(number: string): void {
-    const ext = (window.currentExtensions || []).find((e: Extension) => e.number === number);
+    const ext = ((window.currentExtensions ?? []) as Extension[]).find((e) => e.number === number);
     if (!ext) return;
 
     const el = (id: string): HTMLElement | null => document.getElementById(id);
     if (el('edit-ext-number')) (el('edit-ext-number') as HTMLInputElement).value = ext.number;
     if (el('edit-ext-name')) (el('edit-ext-name') as HTMLInputElement).value = ext.name;
-    if (el('edit-ext-email')) (el('edit-ext-email') as HTMLInputElement).value = ext.email || '';
+    if (el('edit-ext-email')) (el('edit-ext-email') as HTMLInputElement).value = ext.email ?? '';
     if (el('edit-ext-allow-external')) (el('edit-ext-allow-external') as HTMLInputElement).checked = Boolean(ext.allow_external);
     if (el('edit-ext-is-admin')) (el('edit-ext-is-admin') as HTMLInputElement).checked = Boolean(ext.is_admin);
     if (el('edit-ext-password')) (el('edit-ext-password') as HTMLInputElement).value = '';

@@ -7,7 +7,6 @@ import logging
 from io import StringIO
 from typing import Any
 
-
 from pbx.features.webrtc import WebRTCGateway, WebRTCSignalingServer
 
 
@@ -71,9 +70,9 @@ def test_verbose_logging_enabled() -> bool:
     log_output = log_stream.getvalue()
 
     # Verify verbose logging output exists
-    assert (
-        "[VERBOSE]" in log_output or "verbose logging ENABLED" in log_output.lower()
-    ), f"Should have verbose log messages. Log output: {log_output}"
+    assert "[VERBOSE]" in log_output or "verbose logging ENABLED" in log_output.lower(), (
+        f"Should have verbose log messages. Log output: {log_output}"
+    )
 
     signaling.stop()
     logger.removeHandler(handler)
@@ -127,9 +126,9 @@ a=rtpmap:0 PCMU/8000
 
     # Verify verbose logging output includes SDP details
     assert "[VERBOSE]" in log_output, f"Should have [VERBOSE] tag in logs. Log output: {log_output}"
-    assert (
-        "SDP offer received" in log_output or "Full SDP offer" in log_output
-    ), f"Should have SDP offer details in logs. Log output: {log_output}"
+    assert "SDP offer received" in log_output or "Full SDP offer" in log_output, (
+        f"Should have SDP offer details in logs. Log output: {log_output}"
+    )
 
     signaling.stop()
     logger.removeHandler(handler)
@@ -174,9 +173,9 @@ def test_gateway_verbose_logging() -> bool:
     log_output = log_stream.getvalue()
 
     # Verify gateway initialization logged correctly
-    assert (
-        "[VERBOSE]" in log_output or "verbose logging ENABLED" in log_output.lower()
-    ), f"Gateway should log verbose mode. Log output: {log_output}"
+    assert "[VERBOSE]" in log_output or "verbose logging ENABLED" in log_output.lower(), (
+        f"Gateway should log verbose mode. Log output: {log_output}"
+    )
 
     signaling.stop()
     logger.removeHandler(handler)

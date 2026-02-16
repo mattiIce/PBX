@@ -3,17 +3,15 @@ Call Recording Analytics
 AI analysis of recorded calls using FREE open-source libraries
 """
 
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 # Import Vosk for FREE offline transcription (already integrated)
 try:
-    pass
-
     from vosk import Model
 
     VOSK_AVAILABLE = True
@@ -65,7 +63,7 @@ class RecordingAnalytics:
     - Custom ML models (compliance, quality)
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize recording analytics"""
         self.logger = get_logger()
         self.config = config or {}
@@ -97,7 +95,7 @@ class RecordingAnalytics:
         self.logger.info(f"  spaCy available: {SPACY_AVAILABLE}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_models(self):
+    def _initialize_models(self) -> None:
         """Initialize NLP models for analysis"""
         # Initialize Vosk for transcription
         if VOSK_AVAILABLE:
@@ -125,7 +123,7 @@ class RecordingAnalytics:
                 self.logger.info("Download with: python -m spacy download en_core_web_sm")
 
     def analyze_recording(
-        self, recording_id: str, audio_path: str, analysis_types: list[str] = None
+        self, recording_id: str, audio_path: str, analysis_types: list[str] | None = None
     ) -> dict:
         """
         Analyze a call recording
@@ -142,7 +140,7 @@ class RecordingAnalytics:
 
         results = {
             "recording_id": recording_id,
-            "analyzed_at": datetime.now(timezone.utc).isoformat(),
+            "analyzed_at": datetime.now(UTC).isoformat(),
             "analyses": {},
         }
 
@@ -172,7 +170,7 @@ class RecordingAnalytics:
 
         return results
 
-    def _load_vosk_model(self):
+    def _load_vosk_model(self) -> None:
         """Load Vosk speech recognition model"""
         from vosk import Model
 
@@ -181,15 +179,14 @@ class RecordingAnalytics:
         try:
             if Path(model_path).exists():
                 return Model(model_path)
-            else:
-                self.logger.warning(f"Vosk model not found at {model_path}")
-                self.logger.info("Download from: https://alphacephei.com/vosk/models")
+            self.logger.warning(f"Vosk model not found at {model_path}")
+            self.logger.info("Download from: https://alphacephei.com/vosk/models")
         except OSError as e:
             self.logger.warning(f"Could not load Vosk model: {e}")
 
         return None
 
-    def _process_vosk_audio(self, recognizer, wf):
+    def _process_vosk_audio(self, recognizer: Any, wf: Any) -> str:
         """Process audio file with Vosk recognizer"""
         import json
 
@@ -462,19 +459,19 @@ class RecordingAnalytics:
             transcript_lower = transcript.lower()
 
             # Detect competitor mentions
-            for keyword in competitor_keywords:
-                if keyword in transcript_lower:
-                    competitor_mentions.append(keyword)
+            competitor_mentions.extend(
+                keyword for keyword in competitor_keywords if keyword in transcript_lower
+            )
 
             # Detect product mentions
-            for keyword in product_keywords:
-                if keyword in transcript_lower:
-                    product_mentions.append(keyword)
+            product_mentions.extend(
+                keyword for keyword in product_keywords if keyword in transcript_lower
+            )
 
             # Detect issue keywords
-            for keyword in issue_keywords:
-                if keyword in transcript_lower:
-                    issue_keywords_found.append(keyword)
+            issue_keywords_found.extend(
+                keyword for keyword in issue_keywords if keyword in transcript_lower
+            )
 
             # Combine all for general keywords
             all_keyword_sets = [
@@ -538,9 +535,9 @@ class RecordingAnalytics:
             transcript_lower = transcript.lower()
 
             # Check for required phrases
-            for phrase in required_phrases:
-                if phrase in transcript_lower:
-                    required_found.append(phrase)
+            required_found.extend(
+                phrase for phrase in required_phrases if phrase in transcript_lower
+            )
 
             # Check for prohibited phrases
             for phrase in prohibited_phrases:
@@ -703,9 +700,11 @@ class RecordingAnalytics:
 
             # Look for action items (sentences with action verbs)
             action_verbs = ["will", "need to", "must", "should", "going to", "have to"]
-            for sentence in sentences:
-                if any(verb in sentence.lower() for verb in action_verbs):
-                    action_items.append(sentence)
+            action_items.extend(
+                sentence
+                for sentence in sentences
+                if any(verb in sentence.lower() for verb in action_verbs)
+            )
 
             # Look for outcomes (sentences with resolution indicators)
             outcome_indicators = [
@@ -716,9 +715,11 @@ class RecordingAnalytics:
                 "finished",
                 "successful",
             ]
-            for sentence in sentences:
-                if any(indicator in sentence.lower() for indicator in outcome_indicators):
-                    outcomes.append(sentence)
+            outcomes.extend(
+                sentence
+                for sentence in sentences
+                if any(indicator in sentence.lower() for indicator in outcome_indicators)
+            )
 
             # Generate key points from first few sentences and important indicators
             important_keywords = [
@@ -732,9 +733,11 @@ class RecordingAnalytics:
                 "resolution",
                 "next steps",
             ]
-            for sentence in sentences[:5]:  # First 5 sentences
-                if any(keyword in sentence.lower() for keyword in important_keywords):
-                    key_points.append(sentence)
+            key_points.extend(
+                sentence
+                for sentence in sentences[:5]  # First 5 sentences
+                if any(keyword in sentence.lower() for keyword in important_keywords)
+            )
 
             # Create summary from key points
             if key_points:
@@ -936,7 +939,7 @@ class RecordingAnalytics:
 _recording_analytics = None
 
 
-def get_recording_analytics(config=None) -> RecordingAnalytics:
+def get_recording_analytics(config: Any | None = None) -> RecordingAnalytics:
     """Get or create recording analytics instance"""
     global _recording_analytics
     if _recording_analytics is None:

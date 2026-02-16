@@ -50,7 +50,7 @@ def handle_get_emergency_contacts() -> Response:
 
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting emergency contacts: {e}")
-        return send_json({"error": f"Error getting emergency contacts: {str(e)}"}, 500)
+        return send_json({"error": f"Error getting emergency contacts: {e!s}"}, 500)
 
 
 @emergency_bp.route("/history", methods=["GET"])
@@ -71,7 +71,7 @@ def handle_get_emergency_history() -> Response:
 
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error getting emergency history: {e}")
-        return send_json({"error": f"Error getting emergency history: {str(e)}"}, 500)
+        return send_json({"error": f"Error getting emergency history: {e!s}"}, 500)
 
 
 @emergency_bp.route("/test", methods=["GET"])
@@ -88,7 +88,7 @@ def handle_test_emergency_notification() -> Response:
 
     except Exception as e:
         logger.error(f"Error testing emergency notification: {e}")
-        return send_json({"error": f"Error testing emergency notification: {str(e)}"}, 500)
+        return send_json({"error": f"Error testing emergency notification: {e!s}"}, 500)
 
 
 @emergency_bp.route("/contacts", methods=["POST"])
@@ -121,7 +121,7 @@ def handle_add_emergency_contact() -> Response:
 
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error adding emergency contact: {e}")
-        return send_json({"error": f"Error adding emergency contact: {str(e)}"}, 500)
+        return send_json({"error": f"Error adding emergency contact: {e!s}"}, 500)
 
 
 @emergency_bp.route("/trigger", methods=["POST"])
@@ -144,9 +144,7 @@ def handle_trigger_emergency_notification() -> Response:
 
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error triggering emergency notification: {e}")
-        return send_json(
-            {"error": f"Error triggering emergency notification: {str(e)}"}, 500
-        )
+        return send_json({"error": f"Error triggering emergency notification: {e!s}"}, 500)
 
 
 @emergency_bp.route("/contacts/<contact_id>", methods=["DELETE"])
@@ -161,12 +159,9 @@ def handle_delete_emergency_contact(contact_id: str) -> Response:
         success = emergency_system.remove_emergency_contact(contact_id)
 
         if success:
-            return send_json(
-                {"success": True, "message": "Emergency contact removed successfully"}
-            )
-        else:
-            return send_json({"error": "Contact not found"}, 404)
+            return send_json({"success": True, "message": "Emergency contact removed successfully"})
+        return send_json({"error": "Contact not found"}, 404)
 
     except Exception as e:
         logger.error(f"Error deleting emergency contact: {e}")
-        return send_json({"error": f"Error deleting emergency contact: {str(e)}"}, 500)
+        return send_json({"error": f"Error deleting emergency contact: {e!s}"}, 500)

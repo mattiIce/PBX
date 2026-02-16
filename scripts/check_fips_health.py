@@ -6,26 +6,25 @@ Can be run as a cron job or service health check
 """
 
 import json
-import os
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 
-def check_kernel_fips():
-    """Check if kernel FIPS mode is enabled"""
+def check_kernel_fips() -> bool:
+    """Check if kernel FIPS mode is enabled."""
     try:
-        with open("/proc/sys/crypto/fips_enabled", "r") as f:
+        with open("/proc/sys/crypto/fips_enabled") as f:
             return f.read().strip() == "1"
     except FileNotFoundError:
         return False
 
 
-def check_python_fips():
-    """Check if Python hashlib is in FIPS mode"""
+def check_python_fips() -> bool:
+    """Check if Python hashlib is in FIPS mode."""
     try:
         import hashlib
 
@@ -37,8 +36,8 @@ def check_python_fips():
         return False
 
 
-def check_cryptography():
-    """Check if cryptography library is FIPS-enabled"""
+def check_cryptography() -> bool:
+    """Check if cryptography library is FIPS-enabled."""
     try:
         from cryptography.hazmat.backends import default_backend
 
@@ -49,8 +48,8 @@ def check_cryptography():
         return False
 
 
-def check_pbx_config():
-    """Check if PBX is configured for FIPS mode"""
+def check_pbx_config() -> tuple[bool, bool]:
+    """Check if PBX is configured for FIPS mode."""
     try:
         from pbx.utils.config import Config
 
@@ -62,8 +61,8 @@ def check_pbx_config():
         return False, False
 
 
-def check_encryption_operations():
-    """Test basic encryption operations"""
+def check_encryption_operations() -> bool:
+    """Test basic encryption operations."""
     try:
         from pbx.utils.encryption import get_encryption
 
@@ -79,9 +78,9 @@ def check_encryption_operations():
         return False
 
 
-def generate_health_report():
-    """Generate health check report"""
-    timestamp = datetime.now(timezone.utc).isoformat()
+def generate_health_report() -> tuple[dict, int]:
+    """Generate health check report."""
+    timestamp = datetime.now(UTC).isoformat()
 
     # Perform all checks
     kernel_fips = check_kernel_fips()
@@ -146,8 +145,8 @@ def generate_health_report():
     return report, exit_code
 
 
-def print_report(report):
-    """Print human-readable report"""
+def print_report(report: dict) -> None:
+    """Print human-readable report."""
     print("\n" + "=" * 60)
     print("FIPS HEALTH CHECK REPORT")
     print("=" * 60)
@@ -169,8 +168,8 @@ def print_report(report):
     print("=" * 60 + "\n")
 
 
-def main():
-    """Main entry point"""
+def main() -> int:
+    """Main entry point."""
     import argparse
 
     parser = argparse.ArgumentParser(description="FIPS Health Check")

@@ -68,9 +68,9 @@ def test_extension_registry_reload_after_ad_sync() -> None:
     assert ext_2002.config.get("ad_synced") is True, "Extension 2002 should be marked as AD-synced"
 
     final_count = len(registry.extensions)
-    assert (
-        final_count == initial_count + 2
-    ), f"Expected {initial_count + 2} extensions, got {final_count}"
+    assert final_count == initial_count + 2, (
+        f"Expected {initial_count + 2} extensions, got {final_count}"
+    )
 
 
 def test_reload_preserves_registration_state() -> None:

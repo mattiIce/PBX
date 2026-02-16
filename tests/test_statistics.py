@@ -3,17 +3,16 @@ Tests for Statistics and Analytics System
 """
 
 import json
-import os
 import shutil
 import tempfile
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any
-import pytest
 
+import pytest
 
 from pbx.features.cdr import CallDisposition, CDRSystem
 from pbx.features.statistics import StatisticsEngine
-from pathlib import Path
 
 
 class MockPBXCore:
@@ -22,7 +21,7 @@ class MockPBXCore:
     def __init__(self) -> None:
         self.calls: list[Any] = []
         self.extensions: dict[str, Any] = {}
-        self.start_time = datetime.now(timezone.utc) - timedelta(hours=5)
+        self.start_time = datetime.now(UTC) - timedelta(hours=5)
 
 
 class TestStatisticsEngine:
@@ -45,7 +44,7 @@ class TestStatisticsEngine:
 
     def _create_sample_cdr_data(self) -> None:
         """Create sample CDR records for testing"""
-        today = datetime.now(timezone.utc)
+        today = datetime.now(UTC)
 
         # Create CDR records for the last 3 days
         for day_offset in range(3):

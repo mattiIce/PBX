@@ -6,7 +6,6 @@ This test validates that when accessing voicemail via *xxxx, the Contact header
 in the 200 OK response uses the extension number without the asterisk prefix.
 """
 
-import os
 from pathlib import Path
 
 
@@ -21,7 +20,7 @@ def test_voicemail_access_contact_header_code_review() -> None:
     # Read the source code
     pbx_file = str(Path(__file__).parent.parent / "pbx" / "core" / "pbx.py")
 
-    with open(pbx_file, "r") as f:
+    with open(pbx_file) as f:
         content = f.read()
 
     # Find the _handle_voicemail_access method
@@ -35,15 +34,16 @@ def test_voicemail_access_contact_header_code_review() -> None:
     method_content = content[start_idx:method_end]
 
     # Find where target_ext is defined (removing asterisk)
-    assert (
-        "target_ext = to_ext[1:]" in method_content
-    ), "Should define target_ext by removing asterisk from to_ext"
+    assert "target_ext = to_ext[1:]" in method_content, (
+        "Should define target_ext by removing asterisk from to_ext"
+    )
 
     # Find where Contact header is built
-    contact_header_lines = []
-    for line in method_content.split("\n"):
-        if "contact_uri" in line.lower() and "sip:" in line:
-            contact_header_lines.append(line.strip())
+    contact_header_lines = [
+        line.strip()
+        for line in method_content.split("\n")
+        if "contact_uri" in line.lower() and "sip:" in line
+    ]
 
     assert len(contact_header_lines) > 0, "Should have Contact header construction"
 
@@ -51,14 +51,14 @@ def test_voicemail_access_contact_header_code_review() -> None:
     contact_line = contact_header_lines[0]
 
     # The bug was using to_ext (with asterisk), fix should use target_ext
-    assert (
-        "target_ext" in contact_line
-    ), f"Contact header should use target_ext (without asterisk), found: {contact_line}"
+    assert "target_ext" in contact_line, (
+        f"Contact header should use target_ext (without asterisk), found: {contact_line}"
+    )
 
     # Check that to_ext is not used in the f-string interpolation
-    assert (
-        "to_ext}" not in contact_line and "to_ext @" not in contact_line
-    ), f"Contact header should NOT use to_ext (with asterisk), found: {contact_line}"
+    assert "to_ext}" not in contact_line and "to_ext @" not in contact_line, (
+        f"Contact header should NOT use to_ext (with asterisk), found: {contact_line}"
+    )
 
 
 def test_contact_header_pattern_consistency() -> None:
@@ -69,7 +69,7 @@ def test_contact_header_pattern_consistency() -> None:
     # Read the source code
     pbx_file = str(Path(__file__).parent.parent / "pbx" / "core" / "pbx.py")
 
-    with open(pbx_file, "r") as f:
+    with open(pbx_file) as f:
         content = f.read()
 
     # Check various voicemail-related methods use extension without prefix
@@ -78,7 +78,7 @@ def test_contact_header_pattern_consistency() -> None:
         ("_handle_voicemail_deposit", "to_extension"),
     ]
 
-    for method_name, expected_var in methods_to_check:
+    for method_name, _expected_var in methods_to_check:
         start_idx = content.find(f"def {method_name}(")
         if start_idx == -1:
             continue

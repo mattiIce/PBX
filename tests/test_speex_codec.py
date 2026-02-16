@@ -5,7 +5,6 @@ Tests codec initialization, SDP negotiation, and encoding/decoding
 
 from unittest.mock import Mock
 
-
 from pbx.features.speex_codec import SpeexCodec, SpeexCodecManager
 
 
@@ -132,14 +131,14 @@ class TestSpeexCodec:
         codec = SpeexCodec({"mode": "wb", "vbr": True, "payload_type": 99})
         fmtp = codec.get_fmtp()
 
-        assert 'mode="1 in any"', fmtp
+        assert 'mode="1 in any"' in fmtp
 
     def test_get_fmtp_ultrawideband(self) -> None:
         """Test FMTP for ultra-wideband mode"""
         codec = SpeexCodec({"mode": "uwb", "vbr": True, "payload_type": 100})
         fmtp = codec.get_fmtp()
 
-        assert 'mode="2 in any"', fmtp
+        assert 'mode="2 in any"' in fmtp
 
     def test_get_fmtp_no_vbr(self) -> None:
         """Test FMTP without VBR"""
@@ -238,6 +237,7 @@ class TestSpeexCodec:
         codec.reset_decoder()
 
         assert codec is not None
+
 
 class TestSpeexCodecManager:
     """Test Speex codec manager functionality"""
@@ -344,6 +344,7 @@ class TestSpeexCodecManager:
         available = manager.is_speex_available()
 
         assert isinstance(available, bool)
+
 
 class TestSpeexSDP:
     """Test Speex SDP integration"""

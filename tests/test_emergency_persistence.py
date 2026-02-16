@@ -2,15 +2,14 @@
 """
 Test to verify emergency contacts persist across restarts
 """
-import os
+
 import shutil
 import tempfile
-
+from pathlib import Path
 
 from pbx.features.emergency_notification import EmergencyNotificationSystem
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_emergency_contact_persistence_across_restarts() -> None:
@@ -53,9 +52,7 @@ def test_emergency_contact_persistence_across_restarts() -> None:
 
         # Verify no contacts initially
         contacts = emergency_system.get_emergency_contacts()
-        assert (
-            len(contacts) == 0
-        ), f"Expected 0 contacts initially, got {len(contacts)}"
+        assert len(contacts) == 0, f"Expected 0 contacts initially, got {len(contacts)}"
 
         # Add emergency contacts (simulating admin UI)
         contact1 = emergency_system.add_emergency_contact(
@@ -122,9 +119,7 @@ def test_emergency_contact_persistence_across_restarts() -> None:
 
         # Verify contacts were loaded from database
         contacts = emergency_system2.get_emergency_contacts()
-        assert (
-            len(contacts) == 3
-        ), f"Expected 3 contacts after restart, got {len(contacts)}"
+        assert len(contacts) == 3, f"Expected 3 contacts after restart, got {len(contacts)}"
 
         # Verify contact details
         contact_names = [c["name"] for c in contacts]
@@ -138,7 +133,7 @@ def test_emergency_contact_persistence_across_restarts() -> None:
         assert contacts[2]["priority"] == 3, "Third contact should have priority 3"
 
         # Verify contact details for Security Officer
-        security_contact = [c for c in contacts if c["name"] == "Security Officer"][0]
+        security_contact = next(c for c in contacts if c["name"] == "Security Officer")
         assert security_contact["extension"] == "1001", "Extension mismatch"
         assert security_contact["phone"] == "555-1234", "Phone mismatch"
         assert security_contact["email"] == "security@example.com", "Email mismatch"
@@ -151,15 +146,13 @@ def test_emergency_contact_persistence_across_restarts() -> None:
         # ========================================
 
         # Remove one contact
-        manager_id = [c["id"] for c in contacts if c["name"] == "Manager"][0]
+        manager_id = next(c["id"] for c in contacts if c["name"] == "Manager")
         removed = emergency_system2.remove_emergency_contact(manager_id)
         assert removed is True, "Failed to remove contact"
 
         # Verify removal
         contacts = emergency_system2.get_emergency_contacts()
-        assert (
-            len(contacts) == 2
-        ), f"Expected 2 contacts after removal, got {len(contacts)}"
+        assert len(contacts) == 2, f"Expected 2 contacts after removal, got {len(contacts)}"
 
         # Clean up
         db2.disconnect()
@@ -177,9 +170,7 @@ def test_emergency_contact_persistence_across_restarts() -> None:
 
         # Verify only 2 contacts remain
         contacts = emergency_system3.get_emergency_contacts()
-        assert (
-            len(contacts) == 2
-        ), f"Expected 2 contacts after restart, got {len(contacts)}"
+        assert len(contacts) == 2, f"Expected 2 contacts after restart, got {len(contacts)}"
 
         contact_names = [c["name"] for c in contacts]
         assert "Security Officer" in contact_names, "Security Officer should remain"
@@ -187,7 +178,6 @@ def test_emergency_contact_persistence_across_restarts() -> None:
         assert "Manager" not in contact_names, "Manager should be removed"
 
         db3.disconnect()
-
 
     finally:
         # Clean up

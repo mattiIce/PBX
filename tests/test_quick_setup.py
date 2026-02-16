@@ -16,13 +16,12 @@ def test_config_structure() -> bool:
     if not config_path.exists():
         return False
 
-    with open(config_path, "r") as f:
+    with open(config_path) as f:
         config = yaml.safe_load(f)
 
     # Check integrations section exists
     if "integrations" not in config:
         return False
-
 
     # Check each integration
     required_integrations = ["jitsi", "matrix", "espocrm"]
@@ -30,7 +29,7 @@ def test_config_structure() -> bool:
         if integration in config["integrations"]:
             int_config = config["integrations"][integration]
             if "enabled" in int_config:
-                status = "enabled" if int_config["enabled"] else "disabled"
+                "enabled" if int_config["enabled"] else "disabled"
 
     return True
 
@@ -64,7 +63,7 @@ def test_default_configs() -> bool:
         },
     }
 
-    for integration, config in defaults.items():
+    for config in defaults.values():
         # Verify each config is valid JSON-serializable
         json.dumps(config, indent=2)
 
@@ -78,15 +77,11 @@ def test_env_example() -> bool:
     if not env_example_path.exists():
         return False
 
-    with open(env_example_path, "r") as f:
+    with open(env_example_path) as f:
         content = f.read()
 
     required_vars = ["MATRIX_BOT_PASSWORD", "ESPOCRM_API_KEY"]
-    missing = []
-
-    for var in required_vars:
-        if var not in content:
-            missing.append(var)
+    missing = [var for var in required_vars if var not in content]
 
     return len(missing) == 0
 
@@ -98,7 +93,7 @@ def test_admin_html() -> bool:
     if not admin_html_path.exists():
         return False
 
-    with open(admin_html_path, "r") as f:
+    with open(admin_html_path) as f:
         content = f.read()
 
     required_elements = [
@@ -112,10 +107,7 @@ def test_admin_html() -> bool:
         "espocrm-status-badge",
     ]
 
-    missing = []
-    for element in required_elements:
-        if element not in content:
-            missing.append(element)
+    missing = [element for element in required_elements if element not in content]
 
     return len(missing) == 0
 
@@ -127,7 +119,7 @@ def test_javascript() -> bool:
     if not js_path.exists():
         return False
 
-    with open(js_path, "r") as f:
+    with open(js_path) as f:
         content = f.read()
 
     required_functions = [
@@ -137,10 +129,11 @@ def test_javascript() -> bool:
         "disableIntegration",
     ]
 
-    missing = []
-    for func in required_functions:
-        if f"function {func}" not in content or f"async function {func}" in content:
-            missing.append(func)
+    missing = [
+        func
+        for func in required_functions
+        if f"function {func}" not in content or f"async function {func}" in content
+    ]
 
     # Check for correct API endpoint
     if "/api/config/section" not in content:
@@ -165,7 +158,7 @@ def main() -> int:
         try:
             result = test_func()
             results.append((name, result))
-        except Exception as e:
+        except Exception:
             import traceback
 
             traceback.print_exc()
@@ -176,11 +169,9 @@ def main() -> int:
     passed = sum(1 for _, result in results if result)
     total = len(results)
 
-    for name, result in results:
-        status = "✅ PASS" if result else "❌ FAIL"
-
+    for _name, _result in results:
+        pass
 
     if passed == total:
         return 0
-    else:
-        return 1
+    return 1

@@ -3,10 +3,11 @@ Conversational AI Assistant
 Auto-responses and smart call handling using AI
 """
 
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 # NLTK for natural language processing
 try:
@@ -23,7 +24,7 @@ except ImportError:
 class ConversationContext:
     """Represents a conversation context for AI processing"""
 
-    def __init__(self, call_id: str, caller_id: str):
+    def __init__(self, call_id: str, caller_id: str) -> None:
         """
         Initialize conversation context
 
@@ -33,15 +34,15 @@ class ConversationContext:
         """
         self.call_id = call_id
         self.caller_id = caller_id
-        self.started_at = datetime.now(timezone.utc)
+        self.started_at = datetime.now(UTC)
         self.messages = []
         self.intent = None
         self.entities = {}
 
-    def add_message(self, role: str, content: str):
+    def add_message(self, role: str, content: str) -> None:
         """Add a message to the conversation"""
         self.messages.append(
-            {"role": role, "content": content, "timestamp": datetime.now(timezone.utc).isoformat()}
+            {"role": role, "content": content, "timestamp": datetime.now(UTC).isoformat()}
         )
 
 
@@ -57,7 +58,7 @@ class ConversationalAI:
     - Microsoft Azure Bot Service
     """
 
-    def __init__(self, config=None, db_backend=None):
+    def __init__(self, config: Any | None = None, db_backend: Any | None = None) -> None:
         """Initialize conversational AI system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -107,7 +108,7 @@ class ConversationalAI:
         self.logger.info(f"  NLTK available: {NLTK_AVAILABLE}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_nltk(self):
+    def _initialize_nltk(self) -> None:
         """Initialize NLTK components for NLP processing"""
         if not NLTK_AVAILABLE:
             self.logger.info("NLTK not available - install with: pip install nltk")
@@ -203,8 +204,10 @@ class ConversationalAI:
         if self.db and call_id in self.conversation_ids:
             conversation_id = self.conversation_ids[call_id]
             # Save messages
-            self.db.save_message(conversation_id, "user", user_input, datetime.now(timezone.utc))
-            self.db.save_message(conversation_id, "assistant", response["response"], datetime.now(timezone.utc))
+            self.db.save_message(conversation_id, "user", user_input, datetime.now(UTC))
+            self.db.save_message(
+                conversation_id, "assistant", response["response"], datetime.now(UTC)
+            )
             # Save intent
             if response["intent"] and response["intent"] != "general_inquiry":
                 confidence = response.get("confidence", 0.9)
@@ -213,7 +216,7 @@ class ConversationalAI:
                     response["intent"],
                     confidence,
                     response["entities"],
-                    datetime.now(timezone.utc),
+                    datetime.now(UTC),
                 )
 
         # Track intents
@@ -222,10 +225,10 @@ class ConversationalAI:
 
         return response
 
-    def _build_response_handlers(self):
+    def _build_response_handlers(self) -> None:
         """Build intent-to-response handler mapping"""
         return {
-            "emergency_request": lambda entities: (
+            "emergency_request": lambda _entities: (
                 "I'm connecting you to emergency services immediately.",
                 1.0,
             ),
@@ -233,31 +236,31 @@ class ConversationalAI:
                 f"I'll transfer you to the {entities.get('departments', ['general'])[0] if entities.get('departments') else 'general'} department right away.",
                 None,
             ),
-            "sales_department": lambda entities: (
+            "sales_department": lambda _entities: (
                 "Let me connect you with our sales team. They'll be happy to help you.",
                 None,
             ),
-            "support_department": lambda entities: (
+            "support_department": lambda _entities: (
                 "I'll transfer you to technical support. They're ready to assist you.",
                 None,
             ),
-            "billing_department": lambda entities: (
+            "billing_department": lambda _entities: (
                 "Connecting you to our billing department now.",
                 None,
             ),
-            "business_hours_inquiry": lambda entities: (
+            "business_hours_inquiry": lambda _entities: (
                 "Our business hours are Monday through Friday, 9 AM to 5 PM. Is there anything else you'd like to know?",
                 None,
             ),
-            "location_inquiry": lambda entities: (
+            "location_inquiry": lambda _entities: (
                 "We're located at our main office. Would you like me to provide the full address?",
                 None,
             ),
-            "pricing_inquiry": lambda entities: (
+            "pricing_inquiry": lambda _entities: (
                 "I can help you with pricing information. Let me connect you with our sales team who can provide detailed quotes.",
                 None,
             ),
-            "voicemail_request": lambda entities: (
+            "voicemail_request": lambda _entities: (
                 "I'll direct you to voicemail where you can leave a detailed message.",
                 None,
             ),
@@ -269,11 +272,11 @@ class ConversationalAI:
                 ),
                 None,
             ),
-            "complaint": lambda entities: (
+            "complaint": lambda _entities: (
                 "I'm sorry to hear about your experience. Let me connect you with a supervisor who can help resolve this.",
                 None,
             ),
-            "cancel_request": lambda entities: (
+            "cancel_request": lambda _entities: (
                 "No problem at all. Is there anything else I can help you with today?",
                 None,
             ),
@@ -344,12 +347,11 @@ class ConversationalAI:
             else:
                 response = "I understand. What would you like me to do instead?"
 
-        else:  # general_inquiry
-            # Provide helpful fallback based on conversation stage
-            if message_count <= 2:
-                response = "I'm here to help! You can ask about our hours, location, or I can connect you with sales, support, or billing."
-            else:
-                response = "I understand. How else can I assist you today?"
+        # Provide helpful fallback based on conversation stage
+        elif message_count <= 2:
+            response = "I'm here to help! You can ask about our hours, location, or I can connect you with sales, support, or billing."
+        else:
+            response = "I understand. How else can I assist you today?"
 
         return {
             "response": response,
@@ -591,7 +593,7 @@ class ConversationalAI:
             self.logger.error(f"NLTK tokenization error: {e}")
             return text.lower().split()
 
-    def end_conversation(self, call_id: str):
+    def end_conversation(self, call_id: str) -> dict:
         """
         End a conversation
 
@@ -600,7 +602,7 @@ class ConversationalAI:
         """
         if call_id in self.active_conversations:
             context = self.active_conversations[call_id]
-            duration = (datetime.now(timezone.utc) - context.started_at).total_seconds()
+            duration = (datetime.now(UTC) - context.started_at).total_seconds()
 
             # Save to database
             if self.db:
@@ -652,7 +654,7 @@ class ConversationalAI:
             return self.db.get_conversation_history(limit)
         return []
 
-    def configure_provider(self, provider: str, api_key: str = None, **kwargs):
+    def configure_provider(self, provider: str, api_key: str | None = None, **kwargs) -> bool:
         """
         Configure AI provider with secure API key storage
 
@@ -736,7 +738,9 @@ class ConversationalAI:
 _conversational_ai = None
 
 
-def get_conversational_ai(config=None, db_backend=None) -> ConversationalAI:
+def get_conversational_ai(
+    config: Any | None = None, db_backend: Any | None = None
+) -> ConversationalAI:
     """Get or create conversational AI instance"""
     global _conversational_ai
     if _conversational_ai is None:

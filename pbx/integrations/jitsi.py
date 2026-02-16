@@ -5,13 +5,11 @@ Enables video conferencing, screen sharing, and recording
 
 import re
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from pbx.utils.logger import get_logger
 
 try:
-    pass
-
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
@@ -27,7 +25,7 @@ except ImportError:
 class JitsiIntegration:
     """Jitsi Meet integration handler (100% Free & Open Source)"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Jitsi integration
 
@@ -75,11 +73,11 @@ class JitsiIntegration:
 
     def create_meeting(
         self,
-        room_name: str = None,
-        subject: str = None,
-        moderator_name: str = None,
-        participant_names: list[str] = None,
-        scheduled_time: datetime = None,
+        room_name: str | None = None,
+        subject: str | None = None,
+        moderator_name: str | None = None,
+        participant_names: list[str] | None = None,
+        scheduled_time: datetime | None = None,
         duration_minutes: int = 60,
     ) -> dict:
         """
@@ -138,9 +136,9 @@ class JitsiIntegration:
                 "url": meeting_url,
                 "moderator_url": moderator_url,
                 "subject": subject or f"Meeting - {room_name}",
-                "scheduled_time": scheduled_time or datetime.now(timezone.utc),
+                "scheduled_time": scheduled_time or datetime.now(UTC),
                 "duration": duration_minutes,
-                "created_at": datetime.now(timezone.utc),
+                "created_at": datetime.now(UTC),
                 "server": self.server_url,
                 "moderator": moderator_name,
                 "participants": participant_names or [],
@@ -180,7 +178,7 @@ class JitsiIntegration:
 
         return url
 
-    def create_instant_meeting(self, extension: str, contact_name: str = None) -> dict:
+    def create_instant_meeting(self, extension: str, contact_name: str | None = None) -> dict:
         """
         Create instant meeting for call escalation
 
@@ -206,8 +204,8 @@ class JitsiIntegration:
         organizer_extension: str,
         scheduled_time: datetime,
         duration_minutes: int = 60,
-        subject: str = None,
-        participants: list[str] = None,
+        subject: str | None = None,
+        participants: list[str] | None = None,
     ) -> dict:
         """
         Create scheduled meeting for future time
@@ -354,7 +352,7 @@ class JitsiIntegration:
         """
         # Would need Jitsi Videobridge API or Prosody query
         self.logger.debug(
-            f"Participant list for {room_name} requires " "self-hosted Jitsi with API access"
+            f"Participant list for {room_name} requires self-hosted Jitsi with API access"
         )
         return []
 

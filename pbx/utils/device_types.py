@@ -34,9 +34,8 @@ def detect_device_type(vendor: str, model: str) -> str:
     model_lower = model.lower()
 
     # Check if model is an ATA via exact match
-    if vendor_lower in ATA_MODELS:
-        if model_lower in ATA_MODELS[vendor_lower]:
-            return "ata"
+    if vendor_lower in ATA_MODELS and model_lower in ATA_MODELS[vendor_lower]:
+        return "ata"
 
     # Check for common ATA keywords in model name (for unknown/new models)
     for keyword in ATA_KEYWORDS:

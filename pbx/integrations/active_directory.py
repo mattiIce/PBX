@@ -19,7 +19,7 @@ except ImportError:
 class ActiveDirectoryIntegration:
     """Active Directory / LDAP integration handler"""
 
-    def __init__(self, config: dict):
+    def __init__(self, config: dict) -> None:
         """
         Initialize Active Directory integration
 
@@ -68,9 +68,7 @@ class ActiveDirectoryIntegration:
             return False
 
         try:
-            self.logger.info(
-                f"Connecting to Active Directory: {self.ldap_server}"
-            )
+            self.logger.info(f"Connecting to Active Directory: {self.ldap_server}")
 
             # Create server object
             self.server = Server(self.ldap_server, get_info=ALL, use_ssl=self.use_ssl)
@@ -87,9 +85,8 @@ class ActiveDirectoryIntegration:
             if self.connection.bound:
                 self.logger.info("Successfully connected to Active Directory")
                 return True
-            else:
-                self.logger.error("Failed to bind to Active Directory")
-                return False
+            self.logger.error("Failed to bind to Active Directory")
+            return False
 
         except (OSError, ValueError) as e:
             self.logger.error(f"Error connecting to Active Directory: {e}")
@@ -168,15 +165,19 @@ class ActiveDirectoryIntegration:
                         else []
                     ),
                 }
-            else:
-                self.logger.warning(f"Authentication failed for user: {username}")
-                return None
+            self.logger.warning(f"Authentication failed for user: {username}")
+            return None
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
 
-    def sync_users(self, extension_registry=None, extension_db=None, phone_provisioning=None):
+    def sync_users(
+        self,
+        extension_registry: object | None = None,
+        extension_db: object | None = None,
+        phone_provisioning: object | None = None,
+    ) -> dict | int:
         """
         Synchronize users from Active Directory
 
@@ -426,8 +427,7 @@ class ActiveDirectoryIntegration:
                                     "ad_synced": True,
                                 }
                                 # Apply permissions to config
-                                for perm_key, perm_value in permissions.items():
-                                    ext_config[perm_key] = perm_value
+                                ext_config.update(permissions)
 
                                 new_ext = Extension(extension_number, display_name, ext_config)
                                 extension_registry.extensions[extension_number] = new_ext
@@ -442,7 +442,7 @@ class ActiveDirectoryIntegration:
                             self.logger.warning(f"Failed to create extension {extension_number}")
 
                 except (KeyError, TypeError, ValueError) as e:
-                    user_desc = username if username else "unknown"
+                    user_desc = username or "unknown"
                     self.logger.error(f"Error syncing user {user_desc}: {e}")
                     continue
 
@@ -462,31 +462,32 @@ class ActiveDirectoryIntegration:
                     ext_number = ext.get("number")
                     # Only check extensions that could be AD-synced (numeric,
                     # reasonable length)
-                    if ext_number and ext_number.isdigit() and len(ext_number) >= 3:
-                        if ext_number not in ad_extension_numbers:
-                            # Check if extension has AD metadata marker
-                            if ext.get("ad_synced", False):
-                                self.logger.info(
-                                    f"Deactivating extension {ext_number} (user removed from AD)"
-                                )
-                                # Mark as inactive instead of deleting
-                                # Keep ad_synced=True so we know it was
-                                # previously managed by AD
+                    if (
+                        ext_number
+                        and ext_number.isdigit()
+                        and len(ext_number) >= 3
+                        and ext_number not in ad_extension_numbers
+                        and ext.get("ad_synced", False)
+                    ):
+                        self.logger.info(
+                            f"Deactivating extension {ext_number} (user removed from AD)"
+                        )
+                        # Mark as inactive instead of deleting
+                        # Keep ad_synced=True so we know it was
+                        # previously managed by AD
 
-                                if use_database:
-                                    extension_db.update(number=ext_number, allow_external=False)
-                                else:
-                                    pbx_config.update_extension(
-                                        number=ext_number, allow_external=False
-                                    )
+                        if use_database:
+                            extension_db.update(number=ext_number, allow_external=False)
+                        else:
+                            pbx_config.update_extension(number=ext_number, allow_external=False)
 
-                                if extension_registry:
-                                    registry_ext = extension_registry.get(ext_number)
-                                    if registry_ext:
-                                        registry_ext.config["allow_external"] = False
-                                        # Keep ad_synced=True to maintain
-                                        # history
-                                deactivated_count += 1
+                        if extension_registry:
+                            registry_ext = extension_registry.get(ext_number)
+                            if registry_ext:
+                                registry_ext.config["allow_external"] = False
+                                # Keep ad_synced=True to maintain
+                                # history
+                        deactivated_count += 1
 
             # Save all changes (only needed for config.yml mode)
             if not use_database:
@@ -509,10 +510,11 @@ class ActiveDirectoryIntegration:
                 # Find extensions that have provisioned devices and were updated
                 # Use set for O(1) lookup performance with many devices
                 ad_extension_set = set(ad_extension_numbers)
-                devices_to_reboot = []
-                for device in phone_provisioning.get_all_devices():
-                    if device.extension_number in ad_extension_set:
-                        devices_to_reboot.append(device.extension_number)
+                devices_to_reboot = [
+                    device.extension_number
+                    for device in phone_provisioning.get_all_devices()
+                    if device.extension_number in ad_extension_set
+                ]
 
                 if devices_to_reboot:
                     self.logger.info(
@@ -522,10 +524,9 @@ class ActiveDirectoryIntegration:
                     # This will be picked up by the sync caller to trigger
                     # actual reboots
                     return {"synced_count": synced_count, "extensions_to_reboot": devices_to_reboot}
-                else:
-                    self.logger.info(
-                        "Auto-provisioning: No provisioned devices found for updated extensions"
-                    )
+                self.logger.info(
+                    "Auto-provisioning: No provisioned devices found for updated extensions"
+                )
 
             return {"synced_count": synced_count, "extensions_to_reboot": []}
 
@@ -592,7 +593,7 @@ class ActiveDirectoryIntegration:
 
         return permissions
 
-    def get_user_groups(self, username: str):
+    def get_user_groups(self, username: str) -> list[str]:
         """
         Get Active Directory groups for a user
 
@@ -697,24 +698,21 @@ class ActiveDirectoryIntegration:
                 size_limit=max_results,
             )
 
-            results = []
-            for entry in self.connection.entries:
-                results.append(
-                    {
-                        "username": str(entry.sAMAccountName),
-                        "display_name": (
-                            str(entry.displayName)
-                            if hasattr(entry, "displayName")
-                            else str(entry.sAMAccountName)
-                        ),
-                        "email": str(entry.mail) if hasattr(entry, "mail") else None,
-                        "phone": (
-                            str(entry.telephoneNumber)
-                            if hasattr(entry, "telephoneNumber")
-                            else None
-                        ),
-                    }
-                )
+            results = [
+                {
+                    "username": str(entry.sAMAccountName),
+                    "display_name": (
+                        str(entry.displayName)
+                        if hasattr(entry, "displayName")
+                        else str(entry.sAMAccountName)
+                    ),
+                    "email": str(entry.mail) if hasattr(entry, "mail") else None,
+                    "phone": (
+                        str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else None
+                    ),
+                }
+                for entry in self.connection.entries
+            ]
 
             self.logger.info(f"Found {len(results)} users matching: {query}")
             return results
@@ -723,7 +721,7 @@ class ActiveDirectoryIntegration:
             self.logger.error(f"Error searching users: {e}")
             return []
 
-    def get_user_photo(self, username: str):
+    def get_user_photo(self, username: str) -> bytes | None:
         """
         Get user's photo from Active Directory
 
@@ -767,13 +765,10 @@ class ActiveDirectoryIntegration:
             # Return photo bytes if available
             if hasattr(user_entry, "thumbnailPhoto") and user_entry.thumbnailPhoto.value:
                 photo_data = user_entry.thumbnailPhoto.value
-                self.logger.info(
-                    f"Retrieved photo for user {username} ({len(photo_data)} bytes)"
-                )
+                self.logger.info(f"Retrieved photo for user {username} ({len(photo_data)} bytes)")
                 return photo_data
-            else:
-                self.logger.info(f"No photo available for user {username}")
-                return None
+            self.logger.info(f"No photo available for user {username}")
+            return None
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error getting photo for user {username}: {e}")

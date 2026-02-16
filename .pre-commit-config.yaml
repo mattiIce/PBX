@@ -1,10 +1,13 @@
 # Pre-commit hooks for PBX System
 # Install: pip install pre-commit && pre-commit install
 
+default_language_version:
+  python: python3.13
+
 repos:
   # General file checks
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v6.0.0
+    rev: v5.0.0
     hooks:
       - id: trailing-whitespace
         exclude: '\.md$'
@@ -14,17 +17,24 @@ repos:
         args: ['--unsafe']
       - id: check-json
       - id: check-toml
+      - id: check-xml
       - id: check-added-large-files
         args: ['--maxkb=1000']
       - id: check-merge-conflict
       - id: check-case-conflict
       - id: check-docstring-first
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      - id: check-symlinks
       - id: debug-statements
+      - id: detect-private-key
       - id: mixed-line-ending
         args: ['--fix=lf']
       - id: name-tests-test
         args: ['--pytest-test-first']
         exclude: '^tests/conftest\.py$'
+      - id: no-commit-to-branch
+        args: ['--branch', 'main']
 
   # Ruff - replaces Black, isort, flake8, and pylint
   - repo: https://github.com/astral-sh/ruff-pre-commit
@@ -36,18 +46,19 @@ repos:
 
   # Type checking with mypy
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+    rev: v1.15.0
     hooks:
       - id: mypy
         args: ['--config-file=pyproject.toml']
         additional_dependencies:
           - types-PyYAML
           - types-requests
+          - types-redis
         exclude: '^(tests/|setup\.py|run_tests\.py)'
 
   # Security linting with bandit
   - repo: https://github.com/PyCQA/bandit
-    rev: 1.9.3
+    rev: 1.9.0
     hooks:
       - id: bandit
         args: ['-c', 'pyproject.toml', '-r', '.']
@@ -56,20 +67,26 @@ repos:
 
   # YAML linting
   - repo: https://github.com/adrienverge/yamllint
-    rev: v1.38.0
+    rev: v1.35.1
     hooks:
       - id: yamllint
-        args: ['-d', '{extends: default, rules: {line-length: {max: 120}, document-start: disable}}']
+        args: ['-d', '{extends: default, rules: {line-length: {max: 120}, document-start: disable, truthy: {check-keys: false}}}']
         exclude: '(config.*\.yml|test_config\.yml)'
 
   # Markdown linting
   - repo: https://github.com/DavidAnson/markdownlint-cli2
-    rev: v0.17.1
+    rev: v0.17.2
     hooks:
       - id: markdownlint-cli2
-        language_version: '22.12.0'
         args: ['--config', '.markdownlint.json']
         exclude: '^(CHANGELOG\.md|docs/)'
+
+  # Shell script linting
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+        args: ['--severity=warning']
 
 ci:
   autofix_commit_msg: |
@@ -81,3 +98,4 @@ ci:
   autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
   autoupdate_schedule: weekly
   submodules: false
+  skip: [mypy]  # mypy needs project dependencies, skip in CI

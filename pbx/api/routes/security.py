@@ -1,17 +1,13 @@
 """Security, Hot-Desking, MFA, Threat Detection, and DND Blueprint routes."""
 
-import json
-
-from flask import Blueprint, Response, jsonify, request, current_app
+from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
     get_pbx_core,
-    send_json,
-    verify_authentication,
-    require_auth,
-    require_admin,
     get_request_body,
-    DateTimeEncoder,
+    require_admin,
+    require_auth,
+    send_json,
 )
 from pbx.utils.logger import get_logger
 
@@ -49,13 +45,12 @@ def handle_get_hot_desk_session(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "Hot-desking not available"}, 500), 500
 
     try:
-        device_id = subpath.split("/")[-1]
+        device_id = subpath.rsplit("/", maxsplit=1)[-1]
         session = pbx_core.hot_desking.get_session(device_id)
 
         if session:
             return send_json(session.to_dict()), 200
-        else:
-            return send_json({"error": "No session found for device"}, 404), 404
+        return send_json({"error": "No session found for device"}, 404), 404
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -69,7 +64,7 @@ def handle_get_hot_desk_extension(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "Hot-desking not available"}, 500), 500
 
     try:
-        extension = subpath.split("/")[-1]
+        extension = subpath.rsplit("/", maxsplit=1)[-1]
         devices = pbx_core.hot_desking.get_extension_devices(extension)
         sessions = []
 
@@ -119,8 +114,7 @@ def handle_hot_desk_login() -> tuple[Response, int]:
                     "profile": profile,
                 }
             ), 200
-        else:
-            return send_json({"error": "Login failed"}, 401), 401
+        return send_json({"error": "Login failed"}, 401), 401
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -145,9 +139,8 @@ def handle_hot_desk_logout() -> tuple[Response, int]:
                 return send_json(
                     {"success": True, "message": f"Logged out from device {device_id}"}
                 ), 200
-            else:
-                return send_json({"error": "No active session for device"}, 404), 404
-        elif extension:
+            return send_json({"error": "No active session for device"}, 404), 404
+        if extension:
             count = pbx_core.hot_desking.logout_extension(extension)
             return send_json(
                 {
@@ -155,8 +148,7 @@ def handle_hot_desk_logout() -> tuple[Response, int]:
                     "message": f"Extension {extension} logged out from {count} device(s)",
                 }
             ), 200
-        else:
-            return send_json({"error": "device_id or extension is required"}, 400), 400
+        return send_json({"error": "device_id or extension is required"}, 400), 400
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -175,7 +167,7 @@ def handle_get_mfa_status(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "MFA not available"}, 500), 500
 
     try:
-        extension = subpath.split("/")[-1]
+        extension = subpath.rsplit("/", maxsplit=1)[-1]
         enabled = pbx_core.mfa_manager.is_enabled_for_user(extension)
 
         return send_json(
@@ -198,7 +190,7 @@ def handle_get_mfa_methods(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "MFA not available"}, 500), 500
 
     try:
-        extension = subpath.split("/")[-1]
+        extension = subpath.rsplit("/", maxsplit=1)[-1]
         methods = pbx_core.mfa_manager.get_enrolled_methods(extension)
 
         return send_json({"extension": extension, "methods": methods}), 200
@@ -221,9 +213,7 @@ def handle_mfa_enroll() -> tuple[Response, int]:
         if not extension_number:
             return send_json({"error": "extension is required"}, 400), 400
 
-        success, provisioning_uri, backup_codes = pbx_core.mfa_manager.enroll_user(
-            extension_number
-        )
+        success, provisioning_uri, backup_codes = pbx_core.mfa_manager.enroll_user(extension_number)
 
         if success:
             return send_json(
@@ -234,8 +224,7 @@ def handle_mfa_enroll() -> tuple[Response, int]:
                     "message": "MFA enrollment initiated. Scan QR code and verify with first code.",
                 }
             ), 200
-        else:
-            return send_json({"error": "MFA enrollment failed"}, 500), 500
+        return send_json({"error": "MFA enrollment failed"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -260,8 +249,7 @@ def handle_mfa_verify_enrollment() -> tuple[Response, int]:
 
         if success:
             return send_json({"success": True, "message": "MFA successfully activated"}), 200
-        else:
-            return send_json({"error": "Invalid code"}, 401), 401
+        return send_json({"error": "Invalid code"}, 401), 401
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -286,8 +274,7 @@ def handle_mfa_verify() -> tuple[Response, int]:
 
         if success:
             return send_json({"success": True, "message": "MFA verification successful"}), 200
-        else:
-            return send_json({"error": "Invalid code"}, 401), 401
+        return send_json({"error": "Invalid code"}, 401), 401
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -311,8 +298,7 @@ def handle_mfa_disable() -> tuple[Response, int]:
 
         if success:
             return send_json({"success": True, "message": "MFA disabled successfully"}), 200
-        else:
-            return send_json({"error": "Failed to disable MFA"}, 500), 500
+        return send_json({"error": "Failed to disable MFA"}, 500), 500
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -334,14 +320,11 @@ def handle_mfa_enroll_yubikey() -> tuple[Response, int]:
         if not extension_number or not otp:
             return send_json({"error": "extension and otp are required"}, 400), 400
 
-        success, error = pbx_core.mfa_manager.enroll_yubikey(
-            extension_number, otp, device_name
-        )
+        success, error = pbx_core.mfa_manager.enroll_yubikey(extension_number, otp, device_name)
 
         if success:
             return send_json({"success": True, "message": "YubiKey enrolled successfully"}), 200
-        else:
-            return send_json({"error": error or "YubiKey enrollment failed"}, 400), 400
+        return send_json({"error": error or "YubiKey enrollment failed"}, 400), 400
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -371,8 +354,7 @@ def handle_mfa_enroll_fido2() -> tuple[Response, int]:
             return send_json(
                 {"success": True, "message": "FIDO2 credential enrolled successfully"}
             ), 200
-        else:
-            return send_json({"error": error or "FIDO2 enrollment failed"}, 400), 400
+        return send_json({"error": error or "FIDO2 enrollment failed"}, 400), 400
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -441,7 +423,7 @@ def handle_check_ip(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "Threat detection not available"}, 500), 500
 
     try:
-        ip_address = subpath.split("/")[-1]
+        ip_address = subpath.rsplit("/", maxsplit=1)[-1]
         is_blocked, reason = pbx_core.threat_detector.is_ip_blocked(ip_address)
 
         return send_json(
@@ -470,9 +452,7 @@ def handle_block_ip() -> tuple[Response, int]:
 
         pbx_core.threat_detector.block_ip(ip_address, reason, duration)
 
-        return send_json(
-            {"success": True, "message": f"IP {ip_address} blocked successfully"}
-        ), 200
+        return send_json({"success": True, "message": f"IP {ip_address} blocked successfully"}), 200
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -515,7 +495,7 @@ def handle_get_dnd_status(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "DND Scheduler not available"}, 500), 500
 
     try:
-        extension = subpath.split("/")[-1]
+        extension = subpath.rsplit("/", maxsplit=1)[-1]
         status = pbx_core.dnd_scheduler.get_status(extension)
 
         return send_json(status), 200
@@ -532,7 +512,7 @@ def handle_get_dnd_rules(subpath: str) -> tuple[Response, int]:
         return send_json({"error": "DND Scheduler not available"}, 500), 500
 
     try:
-        extension = subpath.split("/")[-1]
+        extension = subpath.rsplit("/", maxsplit=1)[-1]
         rules = pbx_core.dnd_scheduler.get_rules(extension)
 
         return send_json({"extension": extension, "rules": rules}), 200
@@ -616,13 +596,9 @@ def handle_dnd_override() -> tuple[Response, int]:
         except ValueError:
             return send_json({"error": f"Invalid status: {status}"}, 400), 400
 
-        pbx_core.dnd_scheduler.set_manual_override(
-            extension, status_enum, duration_minutes
-        )
+        pbx_core.dnd_scheduler.set_manual_override(extension, status_enum, duration_minutes)
 
-        return send_json(
-            {"success": True, "message": f"Manual override set for {extension}"}
-        ), 200
+        return send_json({"success": True, "message": f"Manual override set for {extension}"}), 200
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -640,8 +616,7 @@ def handle_delete_dnd_rule(rule_id: str) -> tuple[Response, int]:
 
         if success:
             return send_json({"success": True, "message": "DND rule deleted successfully"}), 200
-        else:
-            return send_json({"error": "Rule not found"}, 404), 404
+        return send_json({"error": "Rule not found"}, 404), 404
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500
 
@@ -657,8 +632,6 @@ def handle_clear_dnd_override(extension: str) -> tuple[Response, int]:
     try:
         pbx_core.dnd_scheduler.clear_manual_override(extension)
 
-        return send_json(
-            {"success": True, "message": f"Override cleared for {extension}"}
-        ), 200
+        return send_json({"success": True, "message": f"Override cleared for {extension}"}), 200
     except Exception as e:
         return send_json({"error": str(e)}, 500), 500

@@ -4,22 +4,20 @@ Tests for extensions table schema migration
 Tests that voicemail_pin_hash and voicemail_pin_salt columns are added during migration
 """
 
-import os
 import sqlite3
 import tempfile
-
+from pathlib import Path
 
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
-from pathlib import Path
 
 
 def test_extensions_columns_migration() -> None:
     """Test that missing voicemail PIN columns are added during migration"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # First, create an old version of the extensions table without
@@ -78,27 +76,26 @@ def test_extensions_columns_migration() -> None:
         columns_after = [row[1] for row in cursor.fetchall()]
         conn.close()
 
-        assert (
-            "voicemail_pin_hash" in columns_after
-        ), "voicemail_pin_hash should exist after migration"
-        assert (
-            "voicemail_pin_salt" in columns_after
-        ), "voicemail_pin_salt should exist after migration"
+        assert "voicemail_pin_hash" in columns_after, (
+            "voicemail_pin_hash should exist after migration"
+        )
+        assert "voicemail_pin_salt" in columns_after, (
+            "voicemail_pin_salt should exist after migration"
+        )
         assert "password_salt" in columns_after, "password_salt should exist after migration"
-
 
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_extensions_columns_already_exist() -> None:
     """Test that migration handles existing columns gracefully"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # Create a test config for SQLite
@@ -131,15 +128,15 @@ def test_extensions_columns_already_exist() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)
 
 
 def test_insert_with_voicemail_pin() -> None:
     """Test that we can insert extensions with voicemail PIN after migration"""
 
     # Create temporary database for testing
-    temp_db = tempfile.NamedTemporaryFile(delete=False, suffix=".db")
-    temp_db.close()
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".db") as temp_db:
+        pass
 
     try:
         # First, create old schema without voicemail_pin columns
@@ -204,4 +201,4 @@ def test_insert_with_voicemail_pin() -> None:
     finally:
         # Cleanup
         if Path(temp_db.name).exists():
-            os.unlink(temp_db.name)
+            Path(temp_db.name).unlink(missing_ok=True)

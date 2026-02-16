@@ -3,8 +3,9 @@ Call Tagging & Categorization
 AI-powered call classification and tagging
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -53,12 +54,12 @@ class TagSource(Enum):
 class CallTag:
     """Represents a tag on a call"""
 
-    def __init__(self, tag: str, source: TagSource, confidence: float = 1.0):
+    def __init__(self, tag: str, source: TagSource, confidence: float = 1.0) -> None:
         """Initialize call tag"""
         self.tag = tag
         self.source = source
         self.confidence = confidence
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
 
 
 class CallTagging:
@@ -74,7 +75,7 @@ class CallTagging:
     - Tag analytics and reporting
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize call tagging system"""
         self.logger = get_logger()
         self.config = config or {}
@@ -120,7 +121,7 @@ class CallTagging:
         self.logger.info(f"  spaCy NLP: {self.nlp_model is not None}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
-    def _initialize_default_rules(self):
+    def _initialize_default_rules(self) -> None:
         """Initialize default tagging rules"""
         # Keyword-based rules
         self.tagging_rules.extend(
@@ -152,7 +153,7 @@ class CallTagging:
             ]
         )
 
-    def _initialize_ml_classifier(self):
+    def _initialize_ml_classifier(self) -> None:
         """Initialize ML classifier with training data"""
         if not SKLEARN_AVAILABLE:
             self.logger.info("scikit-learn not available, using rule-based classification only")
@@ -263,7 +264,7 @@ class CallTagging:
             )
 
             # Transform training texts
-            X_train = self.tfidf_vectorizer.fit_transform(training_texts)
+            x_train = self.tfidf_vectorizer.fit_transform(training_texts)
 
             # Initialize label encoder
             self.label_encoder = LabelEncoder()
@@ -271,7 +272,7 @@ class CallTagging:
 
             # Train Naive Bayes classifier (fast and effective for text)
             self.ml_classifier = MultinomialNB(alpha=1.0)
-            self.ml_classifier.fit(X_train, y_train)
+            self.ml_classifier.fit(x_train, y_train)
 
             self.logger.info(f"ML classifier trained with {len(training_texts)} examples")
             self.logger.info(f"Categories: {list(self.label_encoder.classes_)}")
@@ -280,7 +281,7 @@ class CallTagging:
             self.logger.warning(f"Could not initialize ML classifier: {e}")
             self.ml_classifier = None
 
-    def _initialize_spacy(self):
+    def _initialize_spacy(self) -> None:
         """Initialize spaCy NLP model for advanced text analysis"""
         if not SPACY_AVAILABLE:
             self.logger.info("spaCy not available - install with: pip install spacy")
@@ -336,7 +337,7 @@ class CallTagging:
         return True
 
     def auto_tag_call(
-        self, call_id: str, transcript: str = None, metadata: dict = None
+        self, call_id: str, transcript: str | None = None, metadata: dict | None = None
     ) -> list[str]:
         """
         Automatically tag a call based on content
@@ -362,16 +363,17 @@ class CallTagging:
         if transcript:
             ai_tags = self._classify_with_ai(transcript)
             for tag, confidence in ai_tags:
-                if confidence >= self.min_confidence:
-                    if self.tag_call(call_id, tag, TagSource.AUTO, confidence):
-                        tags_added.append(tag)
+                if confidence >= self.min_confidence and self.tag_call(
+                    call_id, tag, TagSource.AUTO, confidence
+                ):
+                    tags_added.append(tag)
 
         # Metadata-based tagging
         if metadata:
             meta_tags = self._tag_from_metadata(metadata)
-            for tag in meta_tags:
-                if self.tag_call(call_id, tag, TagSource.RULE, 1.0):
-                    tags_added.append(tag)
+            tags_added.extend(
+                tag for tag in meta_tags if self.tag_call(call_id, tag, TagSource.RULE, 1.0)
+            )
 
         if tags_added:
             self.total_calls_tagged += 1
@@ -434,10 +436,10 @@ class CallTagging:
 
         try:
             # Transform transcript using TF-IDF
-            X = self.tfidf_vectorizer.transform([transcript])
+            x_data = self.tfidf_vectorizer.transform([transcript])
 
             # Get probability predictions for all classes
-            probabilities = self.ml_classifier.predict_proba(X)[0]
+            probabilities = self.ml_classifier.predict_proba(x_data)[0]
 
             # Get class labels
             classes = self.label_encoder.classes_
@@ -605,7 +607,7 @@ class CallTagging:
                 category_scores[category] = confidence
 
         # Convert to results list sorted by confidence
-        results = [(category, confidence) for category, confidence in category_scores.items()]
+        results = list(category_scores.items())
         results.sort(key=lambda x: x[1], reverse=True)
 
         # Return top classifications with confidence > 0.3
@@ -672,7 +674,7 @@ class CallTagging:
 
     def add_tagging_rule(
         self, name: str, keywords: list[str], tag: str, category: CallCategory = None
-    ):
+    ) -> bool:
         """
         Add custom tagging rule
 
@@ -782,7 +784,7 @@ class CallTagging:
         return rule_id
 
     def classify_call(
-        self, call_id: str, transcript: str = None, metadata: dict = None
+        self, call_id: str, transcript: str | None = None, metadata: dict | None = None
     ) -> list[str]:
         """
         Classify a call and return applicable tags
@@ -805,9 +807,11 @@ class CallTagging:
         metadata = metadata or {}
 
         # Apply rule-based tagging with actual condition evaluation
-        for rule in self.tagging_rules:
-            if self._evaluate_rule(rule, transcript_lower, metadata):
-                tags.append(rule["tag"])
+        tags.extend(
+            rule["tag"]
+            for rule in self.tagging_rules
+            if self._evaluate_rule(rule, transcript_lower, metadata)
+        )
 
         # Add tags from metadata (queue, disposition, etc.)
         metadata_tags = self._tag_from_metadata(metadata)
@@ -860,14 +864,15 @@ class CallTagging:
             conditions = rule["conditions"]
 
             # Check queue condition
-            if "queue" in conditions:
-                if metadata.get("queue") == conditions["queue"]:
-                    return True
+            if "queue" in conditions and metadata.get("queue") == conditions["queue"]:
+                return True
 
             # Check disposition condition
-            if "disposition" in conditions:
-                if metadata.get("disposition") == conditions["disposition"]:
-                    return True
+            if (
+                "disposition" in conditions
+                and metadata.get("disposition") == conditions["disposition"]
+            ):
+                return True
 
             # Check duration condition (in seconds)
             if "min_duration" in conditions:
@@ -1003,10 +1008,11 @@ class CallTagging:
             doc = self.nlp_model(text)
 
             # Extract noun chunks as key phrases
-            phrases = []
-            for chunk in doc.noun_chunks:
-                if len(chunk.text.split()) >= 2:  # Only multi-word phrases
-                    phrases.append(chunk.text.lower())
+            phrases = [
+                chunk.text.lower()
+                for chunk in doc.noun_chunks
+                if len(chunk.text.split()) >= 2  # Only multi-word phrases
+            ]
 
             # Remove duplicates while preserving order
             seen = set()
@@ -1040,7 +1046,7 @@ class CallTagging:
 _call_tagging = None
 
 
-def get_call_tagging(config=None) -> CallTagging:
+def get_call_tagging(config: Any | None = None) -> CallTagging:
     """Get or create call tagging instance"""
     global _call_tagging
     if _call_tagging is None:

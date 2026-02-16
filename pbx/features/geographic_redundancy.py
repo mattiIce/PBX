@@ -4,12 +4,13 @@ Multi-region trunk registration for disaster recovery
 """
 
 import socket
+import sqlite3
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class RegionStatus(Enum):
@@ -24,7 +25,7 @@ class RegionStatus(Enum):
 class GeographicRegion:
     """Represents a geographic region"""
 
-    def __init__(self, region_id: str, name: str, location: str):
+    def __init__(self, region_id: str, name: str, location: str) -> None:
         """Initialize region"""
         self.region_id = region_id
         self.name = name
@@ -49,7 +50,7 @@ class GeographicRedundancy:
     - Data replication
     """
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize geographic redundancy"""
         self.logger = get_logger()
         self.config = config or {}
@@ -80,7 +81,7 @@ class GeographicRedundancy:
         name: str,
         location: str,
         priority: int = 100,
-        trunks: list[str] = None,
+        trunks: list[str] | None = None,
     ) -> dict:
         """
         Add geographic region
@@ -145,7 +146,7 @@ class GeographicRedundancy:
             # Assume healthy if can't check
             return True
 
-    def _check_network_latency(self, target_host: str = None) -> float:
+    def _check_network_latency(self, target_host: str | None = None) -> float:
         """
         Check network latency to region
 
@@ -172,9 +173,8 @@ class GeographicRedundancy:
                 # Connection successful
                 latency_ms = (end_time - start_time) * 1000
                 return latency_ms
-            else:
-                # Connection failed
-                return 9999.0  # High latency indicates failure
+            # Connection failed
+            return 9999.0  # High latency indicates failure
         except OSError as e:
             self.logger.warning(f"Network latency check failed: {e}")
             return 9999.0
@@ -199,7 +199,7 @@ class GeographicRedundancy:
                         cursor.fetchone()
                         cursor.close()
                         return True
-                    elif db.db_type == "sqlite":
+                    if db.db_type == "sqlite":
                         cursor = db.connection.cursor()
                         cursor.execute("SELECT 1")
                         cursor.fetchone()
@@ -224,8 +224,6 @@ class GeographicRedundancy:
         """
         # Check if we can import critical modules
         try:
-            pass
-
             # If imports succeed, services are available
             return True
         except Exception as e:
@@ -272,7 +270,7 @@ class GeographicRedundancy:
             health_score -= 0.4
 
         region.health_score = health_score
-        region.last_health_check = datetime.now(timezone.utc)
+        region.last_health_check = datetime.now(UTC)
 
         healthy = health_score >= 0.7
 
@@ -286,10 +284,10 @@ class GeographicRedundancy:
             "healthy": healthy,
             "health_score": health_score,
             "checks": health_checks,
-            "checked_at": datetime.now(timezone.utc).isoformat(),
+            "checked_at": datetime.now(UTC).isoformat(),
         }
 
-    def _trigger_failover(self, failed_region_id: str, reason: str):
+    def _trigger_failover(self, failed_region_id: str, reason: str) -> None:
         """
         Trigger failover to backup region
 
@@ -317,7 +315,7 @@ class GeographicRedundancy:
             "from_region": failed_region_id,
             "to_region": backup_region,
             "reason": reason,
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
         }
         self.failover_history.append(failover_event)
 
@@ -432,17 +430,15 @@ class GeographicRedundancy:
 
         return {"success": True, "region_id": region_id, "name": name, "location": location}
 
-    def trigger_failover(self, target_region_id: str = None) -> dict:
+    def trigger_failover(self, target_region_id: str | None = None) -> dict:
         """Trigger manual failover to specified region or auto-select"""
         if target_region_id:
             return self.manual_failover(target_region_id)
-        else:
-            # Auto-select best region
-            best_region_id = self._select_backup_region(self.active_region)
-            if best_region_id:
-                return self.manual_failover(best_region_id)
-            else:
-                return {"success": False, "error": "No available regions for failover"}
+        # Auto-select best region
+        best_region_id = self._select_backup_region(self.active_region)
+        if best_region_id:
+            return self.manual_failover(best_region_id)
+        return {"success": False, "error": "No available regions for failover"}
 
     def get_statistics(self) -> dict:
         """Get redundancy statistics"""
@@ -460,7 +456,7 @@ class GeographicRedundancy:
 _geographic_redundancy = None
 
 
-def get_geographic_redundancy(config=None) -> GeographicRedundancy:
+def get_geographic_redundancy(config: Any | None = None) -> GeographicRedundancy:
     """Get or create geographic redundancy instance"""
     global _geographic_redundancy
     if _geographic_redundancy is None:

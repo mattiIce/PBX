@@ -4,10 +4,11 @@ Provides persistence for voice profiles, enrollments, and verifications
 """
 
 import json
-from datetime import datetime, timezone
+import sqlite3
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class VoiceBiometricsDatabase:
@@ -16,7 +17,7 @@ class VoiceBiometricsDatabase:
     Stores voice profiles, enrollment data, and verification history
     """
 
-    def __init__(self, db_backend):
+    def __init__(self, db_backend: Any | None) -> None:
         """
         Initialize database layer
 
@@ -26,7 +27,7 @@ class VoiceBiometricsDatabase:
         self.logger = get_logger()
         self.db = db_backend
 
-    def create_tables(self):
+    def create_tables(self) -> bool:
         """Create tables for voice biometrics"""
         try:
             # Voice profiles table
@@ -200,14 +201,14 @@ class VoiceBiometricsDatabase:
 
             if row:
                 columns = [desc[0] for desc in cursor.description]
-                return dict(zip(columns, row))
+                return dict(zip(columns, row, strict=False))
             return None
 
         except sqlite3.Error as e:
             self.logger.error(f"Error getting voice profile: {e}")
             return None
 
-    def update_enrollment_progress(self, user_id: str, samples: int):
+    def update_enrollment_progress(self, user_id: str, samples: int) -> None:
         """Update enrollment progress"""
         try:
             cursor = self.db.connection.cursor()
@@ -231,7 +232,9 @@ class VoiceBiometricsDatabase:
         except sqlite3.Error as e:
             self.logger.error(f"Error updating enrollment progress: {e}")
 
-    def save_verification(self, user_id: str, call_id: str, verified: bool, confidence: float):
+    def save_verification(
+        self, user_id: str, call_id: str, verified: bool, confidence: float
+    ) -> None:
         """Save verification result"""
         try:
             # Get profile ID
@@ -246,7 +249,7 @@ class VoiceBiometricsDatabase:
                 INSERT INTO voice_verifications (profile_id, call_id, verified, confidence, timestamp)
                 VALUES (%s, %s, %s, %s, %s)
                 """
-                params = (profile["id"], call_id, verified, confidence, datetime.now(timezone.utc))
+                params = (profile["id"], call_id, verified, confidence, datetime.now(UTC))
             else:
                 sql = """
                 INSERT INTO voice_verifications (profile_id, call_id, verified, confidence, timestamp)
@@ -257,7 +260,7 @@ class VoiceBiometricsDatabase:
                     call_id,
                     1 if verified else 0,
                     confidence,
-                    datetime.now(timezone.utc).isoformat(),
+                    datetime.now(UTC).isoformat(),
                 )
 
             cursor.execute(sql, params)
@@ -268,11 +271,10 @@ class VoiceBiometricsDatabase:
                     update_sql = "UPDATE voice_profiles SET successful_verifications = successful_verifications + 1 WHERE user_id = %s"
                 else:
                     update_sql = "UPDATE voice_profiles SET failed_verifications = failed_verifications + 1 WHERE user_id = %s"
+            elif verified:
+                update_sql = "UPDATE voice_profiles SET successful_verifications = successful_verifications + 1 WHERE user_id = ?"
             else:
-                if verified:
-                    update_sql = "UPDATE voice_profiles SET successful_verifications = successful_verifications + 1 WHERE user_id = ?"
-                else:
-                    update_sql = "UPDATE voice_profiles SET failed_verifications = failed_verifications + 1 WHERE user_id = ?"
+                update_sql = "UPDATE voice_profiles SET failed_verifications = failed_verifications + 1 WHERE user_id = ?"
 
             cursor.execute(update_sql, (user_id,))
             self.db.connection.commit()
@@ -287,7 +289,7 @@ class VoiceBiometricsDatabase:
         fraud_detected: bool,
         risk_score: float,
         indicators: list[str],
-    ):
+    ) -> None:
         """Save fraud detection result"""
         try:
             cursor = self.db.connection.cursor()
@@ -303,7 +305,7 @@ class VoiceBiometricsDatabase:
                     fraud_detected,
                     risk_score,
                     json.dumps(indicators),
-                    datetime.now(timezone.utc),
+                    datetime.now(UTC),
                 )
             else:
                 sql = """
@@ -316,7 +318,7 @@ class VoiceBiometricsDatabase:
                     1 if fraud_detected else 0,
                     risk_score,
                     json.dumps(indicators),
-                    datetime.now(timezone.utc).isoformat(),
+                    datetime.now(UTC).isoformat(),
                 )
 
             cursor.execute(sql, params)

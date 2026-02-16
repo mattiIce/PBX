@@ -43,7 +43,7 @@ export async function loadRegisteredPhones(): Promise<void> {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: RegisteredPhonesResponse = await response.json();
-        const phones = data.phones || [];
+        const phones = data.phones ?? [];
 
         if (phones.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6">No registered phones</td></tr>';
@@ -77,7 +77,7 @@ export async function loadRegisteredATAs(): Promise<void> {
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: RegisteredATAsResponse = await response.json();
-        const atas = data.atas || [];
+        const atas = data.atas ?? [];
 
         if (atas.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">No registered ATAs</td></tr>';

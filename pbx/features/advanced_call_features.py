@@ -3,7 +3,8 @@ Advanced Call Features
 Call whisper, barge-in, and supervisor monitoring
 """
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -11,7 +12,7 @@ from pbx.utils.logger import get_logger
 class AdvancedCallFeatures:
     """Advanced call features for supervisor monitoring and intervention"""
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize advanced call features"""
         self.logger = get_logger()
         self.config = config or {}
@@ -27,7 +28,7 @@ class AdvancedCallFeatures:
             self.logger.info("Advanced call features initialized")
             self._load_supervisor_permissions()
 
-    def _load_supervisor_permissions(self):
+    def _load_supervisor_permissions(self) -> None:
         """Load supervisor monitoring permissions from config"""
         perms = (
             self.config.get("features", {}).get("advanced_call_features", {}).get("supervisors", [])
@@ -68,7 +69,7 @@ class AdvancedCallFeatures:
             "mode": "whisper",
             "supervisor_id": supervisor_id,
             "agent_extension": agent_extension,
-            "started_at": datetime.now(timezone.utc),
+            "started_at": datetime.now(UTC),
             "audio_mode": "supervisor_to_agent_only",
         }
 
@@ -100,7 +101,7 @@ class AdvancedCallFeatures:
             "mode": "barge",
             "supervisor_id": supervisor_id,
             "agent_extension": agent_extension,
-            "started_at": datetime.now(timezone.utc),
+            "started_at": datetime.now(UTC),
             "audio_mode": "three_way_conference",
         }
 
@@ -132,7 +133,7 @@ class AdvancedCallFeatures:
             "mode": "monitor",
             "supervisor_id": supervisor_id,
             "agent_extension": agent_extension,
-            "started_at": datetime.now(timezone.utc),
+            "started_at": datetime.now(UTC),
             "audio_mode": "supervisor_listen_only",
         }
 
@@ -166,12 +167,12 @@ class AdvancedCallFeatures:
                         "mode": info["mode"],
                         "supervisor_id": info["supervisor_id"],
                         "agent_extension": info["agent_extension"],
-                        "duration": (datetime.now(timezone.utc) - info["started_at"]).total_seconds(),
+                        "duration": (datetime.now(UTC) - info["started_at"]).total_seconds(),
                     }
                 )
         return calls
 
-    def add_supervisor_permission(self, supervisor_id: str, extensions: list[str]):
+    def add_supervisor_permission(self, supervisor_id: str, extensions: list[str]) -> bool:
         """Add monitoring permissions for a supervisor"""
         if not self.enabled:
             self.logger.error(
@@ -185,7 +186,7 @@ class AdvancedCallFeatures:
         self.logger.info(f"Added monitoring permissions for {supervisor_id}: {extensions}")
         return True
 
-    def remove_supervisor_permission(self, supervisor_id: str, extensions: list[str]):
+    def remove_supervisor_permission(self, supervisor_id: str, extensions: list[str]) -> bool:
         """Remove monitoring permissions for a supervisor"""
         if not self.enabled:
             self.logger.error(

@@ -3,16 +3,14 @@
 Tests for stub feature implementations
 """
 
-import os
 import tempfile
+from pathlib import Path
 from typing import Any
-
 
 from pbx.features.operator_console import OperatorConsole
 from pbx.features.voicemail import VoicemailIVR, VoicemailSystem
 from pbx.utils.config import Config
 from pbx.utils.dtmf import DTMFDetector, DTMFGenerator
-from pathlib import Path
 
 
 class MockPBXCore:
@@ -124,7 +122,6 @@ def test_dtmf_detection() -> None:
         samples = generator.generate_tone(digit, duration_ms=100)
         detected = detector.detect_tone(samples)
         assert detected == digit, f"Expected {digit}, got {detected}"
-
 
     # Test sequence detection
     test_sequence = "12345"
@@ -413,9 +410,9 @@ def test_ad_group_permissions_mapping() -> None:
     ]
     permissions = ad._map_groups_to_permissions(user_groups)
     assert permissions.get("admin") is True, "Admin permission should be granted"
-    assert (
-        permissions.get("manage_extensions") is True
-    ), "Manage extensions permission should be granted"
+    assert permissions.get("manage_extensions") is True, (
+        "Manage extensions permission should be granted"
+    )
     assert permissions.get("view_cdr") is True, "View CDR permission should be granted"
     assert "external_calling" not in permissions, "External calling should not be granted"
 
@@ -423,9 +420,9 @@ def test_ad_group_permissions_mapping() -> None:
     user_groups = ["CN=Sales,OU=Groups,DC=test,DC=local", "CN=Support,OU=Groups,DC=test,DC=local"]
     permissions = ad._map_groups_to_permissions(user_groups)
     assert permissions.get("external_calling") is True, "External calling should be granted"
-    assert (
-        permissions.get("international_calling") is True
-    ), "International calling should be granted"
+    assert permissions.get("international_calling") is True, (
+        "International calling should be granted"
+    )
     assert permissions.get("call_recording") is True, "Call recording should be granted"
     assert permissions.get("call_queues") is True, "Call queues should be granted"
     assert "admin" not in permissions, "Admin permission should not be granted"

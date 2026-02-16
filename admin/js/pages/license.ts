@@ -41,13 +41,13 @@ export async function loadLicenseStatus(): Promise<void> {
         if (data.success && data.license) {
             const license = data.license;
             const el = (id: string): HTMLElement | null => document.getElementById(id);
-            if (el('license-type')) (el('license-type') as HTMLElement).textContent = license.type || 'Unknown';
+            if (el('license-type')) (el('license-type') as HTMLElement).textContent = license.type ?? 'Unknown';
             if (el('license-status')) {
                 (el('license-status') as HTMLElement).textContent = license.valid ? 'Valid' : 'Invalid';
                 (el('license-status') as HTMLElement).className = `status-badge ${license.valid ? 'enabled' : 'disabled'}`;
             }
-            if (el('license-expires')) (el('license-expires') as HTMLElement).textContent = license.expires_at || 'Never';
-            if (el('license-extensions')) (el('license-extensions') as HTMLElement).textContent = `${license.used_extensions || 0} / ${license.max_extensions || 'Unlimited'}`;
+            if (el('license-expires')) (el('license-expires') as HTMLElement).textContent = license.expires_at ?? 'Never';
+            if (el('license-extensions')) (el('license-extensions') as HTMLElement).textContent = `${license.used_extensions ?? 0} / ${license.max_extensions ?? 'Unlimited'}`;
         }
     } catch (error: unknown) {
         console.error('Error loading license status:', error);
@@ -71,7 +71,7 @@ export async function loadLicenseFeatures(): Promise<void> {
             return;
         }
 
-        const features = data.features || {};
+        const features = data.features ?? {};
         container.innerHTML = Object.entries(features).map(([name, enabled]) =>
             `<div class="feature-item">
                 <span>${name.replace(/_/g, ' ')}</span>
@@ -105,7 +105,7 @@ export async function installLicense(): Promise<void> {
             loadLicenseStatus();
             loadLicenseFeatures();
         } else {
-            showNotification(data.error || 'Failed to install license', 'error');
+            showNotification(data.error ?? 'Failed to install license', 'error');
         }
     } catch (error: unknown) {
         console.error('Error installing license:', error);

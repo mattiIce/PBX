@@ -5,12 +5,12 @@ For development and testing purposes only
 """
 
 import ipaddress
-import os
 import sys
+from datetime import UTC
 from pathlib import Path
 
 try:
-    from datetime import datetime, timedelta, timezone
+    from datetime import datetime, timedelta
 
     from cryptography import x509
     from cryptography.hazmat.primitives import hashes, serialization
@@ -22,9 +22,11 @@ except ImportError:
     sys.exit(1)
 
 
-def generate_self_signed_cert(cert_dir="certs", hostname="localhost", days_valid=365):
+def generate_self_signed_cert(
+    cert_dir: str = "certs", hostname: str = "localhost", days_valid: int = 365
+) -> None:
     """
-    Generate a self-signed SSL certificate
+    Generate a self-signed SSL certificate.
 
     Args:
         cert_dir: Directory to store certificate files
@@ -64,8 +66,8 @@ def generate_self_signed_cert(cert_dir="certs", hostname="localhost", days_valid
         .issuer_name(issuer)
         .public_key(private_key.public_key())
         .serial_number(x509.random_serial_number())
-        .not_valid_before(datetime.now(tz=timezone.utc))
-        .not_valid_after(datetime.now(tz=timezone.utc) + timedelta(days=days_valid))
+        .not_valid_before(datetime.now(tz=UTC))
+        .not_valid_after(datetime.now(tz=UTC) + timedelta(days=days_valid))
         .add_extension(
             x509.SubjectAlternativeName(
                 [
@@ -92,7 +94,7 @@ def generate_self_signed_cert(cert_dir="certs", hostname="localhost", days_valid
         )
 
     # Set restrictive permissions on private key
-    os.chmod(key_file, 0o600)
+    key_file.chmod(0o600)
 
     # Write certificate to file
     cert_file = cert_path / "server.crt"

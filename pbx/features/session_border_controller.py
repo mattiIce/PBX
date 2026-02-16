@@ -7,8 +7,9 @@ import re
 import socket
 import time
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from enum import Enum
+from typing import Any
 
 from pbx.utils.logger import get_logger
 
@@ -42,7 +43,7 @@ class SessionBorderController:
     IP_PATTERN = r"(\d+\.\d+\.\d+\.\d+)"
     PACKETS_PER_SECOND = 50  # Assumed packets per second for VoIP bandwidth calculation
 
-    def __init__(self, config=None):
+    def __init__(self, config: Any | None = None) -> None:
         """Initialize SBC"""
         self.logger = get_logger()
         self.config = config or {}
@@ -144,9 +145,7 @@ class SessionBorderController:
 
         # Get SBC public IP (use configured or detect)
         sbc_public_ip = (
-            self.config.get("features", {})
-            .get("sbc", {})
-            .get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
+            self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
         )
 
         # Create a copy to avoid modifying original
@@ -326,9 +325,7 @@ class SessionBorderController:
             if octets[0] == 172 and 16 <= octets[1] <= 31:
                 return True
             # 192.168.0.0/16
-            if octets[0] == 192 and octets[1] == 168:
-                return True
-            return False
+            return bool(octets[0] == 192 and octets[1] == 168)
         except (ValueError, IndexError):
             return False
 
@@ -362,9 +359,7 @@ class SessionBorderController:
 
         # Get SBC public IP
         relay_ip = (
-            self.config.get("features", {})
-            .get("sbc", {})
-            .get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
+            self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
         )
 
         relay_info = {
@@ -374,7 +369,7 @@ class SessionBorderController:
             "rtcp_port": rtcp_port,
             "relay_ip": relay_ip,
             "codec": codec,
-            "allocated_at": datetime.now(timezone.utc).isoformat(),
+            "allocated_at": datetime.now(UTC).isoformat(),
         }
 
         self.relay_sessions[call_id] = relay_info
@@ -384,7 +379,7 @@ class SessionBorderController:
 
         return relay_info
 
-    def release_relay(self, call_id: str):
+    def release_relay(self, call_id: str) -> None:
         """Release relay ports for a call"""
         if call_id in self.relay_sessions:
             session = self.relay_sessions[call_id]
@@ -458,7 +453,7 @@ class SessionBorderController:
 
         return {"admit": True, "allocated_bandwidth": estimated_bandwidth}
 
-    def release_call_resources(self, call_id: str):
+    def release_call_resources(self, call_id: str) -> None:
         """Release resources for a completed call"""
         # Release bandwidth
         if call_id in self.bandwidth_by_call:
@@ -516,7 +511,7 @@ class SessionBorderController:
 
         return True
 
-    def add_to_blacklist(self, ip: str):
+    def add_to_blacklist(self, ip: str) -> bool:
         """Add IP to blacklist"""
         if not self.enabled:
             self.logger.error(
@@ -528,7 +523,7 @@ class SessionBorderController:
         self.logger.warning(f"Added {ip} to blacklist")
         return True
 
-    def add_to_whitelist(self, ip: str):
+    def add_to_whitelist(self, ip: str) -> bool:
         """Add IP to whitelist"""
         if not self.enabled:
             self.logger.error(
@@ -559,7 +554,7 @@ class SessionBorderController:
 _sbc = None
 
 
-def get_sbc(config=None) -> SessionBorderController:
+def get_sbc(config: Any | None = None) -> SessionBorderController:
     """Get or create SBC instance"""
     global _sbc
     if _sbc is None:

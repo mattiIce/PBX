@@ -3,7 +3,6 @@
 Test framework implementations for planned features
 """
 
-
 from pbx.features.bi_integration import BIIntegration
 from pbx.features.call_blending import CallBlending
 from pbx.features.call_quality_prediction import CallQualityPrediction

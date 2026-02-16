@@ -3,9 +3,10 @@ Team Messaging Framework
 Built-in chat platform for team collaboration
 """
 
+import sqlite3
+from typing import Any
 
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class TeamMessagingEngine:
@@ -14,7 +15,7 @@ class TeamMessagingEngine:
     Provides chat channels and direct messaging
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize team messaging engine
 
@@ -194,17 +195,16 @@ class TeamMessagingEngine:
                 (channel_id, limit),
             )
 
-            messages = []
-            for row in result or []:
-                messages.append(
-                    {
-                        "id": row[0],
-                        "sender_extension": row[2],
-                        "message_text": row[3],
-                        "message_type": row[4],
-                        "sent_at": row[5],
-                    }
-                )
+            messages = [
+                {
+                    "id": row[0],
+                    "sender_extension": row[2],
+                    "message_text": row[3],
+                    "message_type": row[4],
+                    "sent_at": row[5],
+                }
+                for row in result or []
+            ]
 
             return list(reversed(messages))  # Return in chronological order
 
@@ -238,18 +238,17 @@ class TeamMessagingEngine:
                 (extension,),
             )
 
-            channels = []
-            for row in result or []:
-                channels.append(
-                    {
-                        "id": row[0],
-                        "channel_name": row[1],
-                        "description": row[2],
-                        "is_private": bool(row[3]),
-                        "created_by": row[4],
-                        "created_at": row[5],
-                    }
-                )
+            channels = [
+                {
+                    "id": row[0],
+                    "channel_name": row[1],
+                    "description": row[2],
+                    "is_private": bool(row[3]),
+                    "created_by": row[4],
+                    "created_at": row[5],
+                }
+                for row in result or []
+            ]
 
             return channels
 
@@ -276,17 +275,16 @@ class TeamMessagingEngine:
                 (False,),
             )
 
-            channels = []
-            for row in result or []:
-                channels.append(
-                    {
-                        "id": row[0],
-                        "channel_name": row[1],
-                        "description": row[2],
-                        "created_by": row[4],
-                        "created_at": row[5],
-                    }
-                )
+            channels = [
+                {
+                    "id": row[0],
+                    "channel_name": row[1],
+                    "description": row[2],
+                    "created_by": row[4],
+                    "created_at": row[5],
+                }
+                for row in result or []
+            ]
 
             return channels
 
@@ -301,7 +299,7 @@ class FileShareEngine:
     Secure document collaboration
     """
 
-    def __init__(self, db_backend, config: dict):
+    def __init__(self, db_backend: Any | None, config: dict) -> None:
         """
         Initialize file share engine
 
@@ -399,20 +397,19 @@ class FileShareEngine:
                 (extension, f"%{extension}%"),
             )
 
-            files = []
-            for row in result or []:
-                files.append(
-                    {
-                        "id": row[0],
-                        "file_name": row[1],
-                        "file_size": row[3],
-                        "mime_type": row[4],
-                        "uploaded_by": row[5],
-                        "description": row[7],
-                        "uploaded_at": row[8],
-                        "expires_at": row[9],
-                    }
-                )
+            files = [
+                {
+                    "id": row[0],
+                    "file_name": row[1],
+                    "file_size": row[3],
+                    "mime_type": row[4],
+                    "uploaded_by": row[5],
+                    "description": row[7],
+                    "uploaded_at": row[8],
+                    "expires_at": row[9],
+                }
+                for row in result or []
+            ]
 
             return files
 

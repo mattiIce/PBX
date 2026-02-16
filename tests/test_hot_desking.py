@@ -6,7 +6,6 @@ Test hot-desking feature
 import time
 from typing import Any
 
-
 from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
 

@@ -6,7 +6,7 @@ This script helps configure environment variables required for production,
 validates their format, and checks for security issues.
 """
 
-import os
+import contextlib
 import re
 import secrets
 import subprocess
@@ -17,7 +17,7 @@ from pathlib import Path
 class EnvSetup:
     """Environment variable setup and validation"""
 
-    def __init__(self, env_file=".env"):
+    def __init__(self, env_file: str = ".env") -> None:
         """
         Initialize environment setup.
 
@@ -28,7 +28,7 @@ class EnvSetup:
         self.env_example = ".env.example"
         self.variables = {}
 
-    def run_interactive_setup(self):
+    def run_interactive_setup(self) -> bool:
         """Run interactive setup to configure environment variables."""
         print("=" * 70)
         print("PBX Environment Variable Setup")
@@ -136,22 +136,23 @@ class EnvSetup:
         # Check required variables for PostgreSQL
         if "DB_HOST" in self.variables:  # Assume PostgreSQL if DB_HOST is set
             required = ["DB_HOST", "DB_PORT", "DB_NAME", "DB_USER", "DB_PASSWORD"]
-            for var in required:
-                if var not in self.variables or not self.variables[var]:
-                    errors.append(f"Missing required variable: {var}")
+            errors.extend(
+                f"Missing required variable: {var}"
+                for var in required
+                if var not in self.variables or not self.variables[var]
+            )
 
         # Validate formats
-        if "DB_PORT" in self.variables:
-            if not self._validate_port(self.variables["DB_PORT"]):
-                errors.append("Invalid DB_PORT (must be 1-65535)")
+        if "DB_PORT" in self.variables and not self._validate_port(self.variables["DB_PORT"]):
+            errors.append("Invalid DB_PORT (must be 1-65535)")
 
-        if "SMTP_PORT" in self.variables:
-            if not self._validate_port(self.variables["SMTP_PORT"]):
-                errors.append("Invalid SMTP_PORT (must be 1-65535)")
+        if "SMTP_PORT" in self.variables and not self._validate_port(self.variables["SMTP_PORT"]):
+            errors.append("Invalid SMTP_PORT (must be 1-65535)")
 
-        if "SMTP_FROM_ADDRESS" in self.variables:
-            if not self._validate_email(self.variables["SMTP_FROM_ADDRESS"]):
-                warnings.append("SMTP_FROM_ADDRESS may not be a valid email")
+        if "SMTP_FROM_ADDRESS" in self.variables and not self._validate_email(
+            self.variables["SMTP_FROM_ADDRESS"]
+        ):
+            warnings.append("SMTP_FROM_ADDRESS may not be a valid email")
 
         # Check for weak passwords
         if "DB_PASSWORD" in self.variables:
@@ -203,10 +204,9 @@ class EnvSetup:
 
             value = input(prompt).strip() or default
 
-            if validator:
-                if not validator(value):
-                    print(f"Invalid value for {name}")
-                    continue
+            if validator and not validator(value):
+                print(f"Invalid value for {name}")
+                continue
 
             return value
 
@@ -274,37 +274,37 @@ class EnvSetup:
         password = "".join(secrets.choice(alphabet) for _ in range(length))
         return password
 
-    def _load_env_file(self):
+    def _load_env_file(self) -> None:
         """Load existing environment file."""
         self.variables = {}
 
         if not Path(self.env_file).exists():
             return
 
-        with open(self.env_file, "r") as f:
+        with open(self.env_file) as f:
             for line in f:
-                line = line.strip()
-                if not line or line.startswith("#"):
+                stripped_line = line.strip()
+                if not stripped_line or stripped_line.startswith("#"):
                     continue
 
-                if "=" in line:
-                    key, value = line.split("=", 1)
+                if "=" in stripped_line:
+                    key, value = stripped_line.split("=", 1)
                     # Remove quotes if present
                     value = value.strip('"').strip("'")
                     self.variables[key.strip()] = value
 
-    def _write_env_file(self):
+    def _write_env_file(self) -> None:
         """Write environment variables to file."""
         # Set secure permissions first (Unix-like systems)
-        try:
+        with contextlib.suppress(OSError):
             # Create file with restricted permissions
             Path(self.env_file).touch(mode=0o600)
-        except OSError:
-            pass  # Windows doesn't support chmod
 
         with open(self.env_file, "w") as f:
             f.write("# PBX Environment Configuration\n")
-            f.write(f"# Generated on: {subprocess.run(['date'], capture_output=True, text=True, check=False).stdout.strip()}\n")
+            f.write(
+                f"# Generated on: {subprocess.run(['date'], capture_output=True, text=True, check=False).stdout.strip()}\n"
+            )
             f.write("#\n")
             f.write("# SECURITY: Keep this file secure!\n")
             f.write("# - Never commit to version control\n")
@@ -314,12 +314,11 @@ class EnvSetup:
 
             for key, value in self.variables.items():
                 # Quote values with spaces
-                if " " in value:
-                    value = f'"{value}"'
-                f.write(f"{key}={value}\n")
+                quoted_value = f'"{value}"' if " " in value else value
+                f.write(f"{key}={quoted_value}\n")
 
 
-def main():
+def main() -> None:
     """Main entry point"""
     setup = EnvSetup()
 
@@ -340,10 +339,9 @@ def main():
             print("  python scripts/setup_production_env.py interactive   # Interactive setup")
             print("  python scripts/setup_production_env.py validate      # Validate existing .env")
             sys.exit(1)
-    else:
-        # Default: interactive setup
-        if not setup.run_interactive_setup():
-            sys.exit(1)
+    # Default: interactive setup
+    elif not setup.run_interactive_setup():
+        sys.exit(1)
 
 
 if __name__ == "__main__":

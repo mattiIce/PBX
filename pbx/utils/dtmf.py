@@ -35,7 +35,7 @@ DTMF_HIGH_FREQS = [1209, 1336, 1477, 1633]
 class DTMFDetector:
     """DTMF tone detector using Goertzel algorithm"""
 
-    def __init__(self, sample_rate: int = 8000, samples_per_frame: int = 205):
+    def __init__(self, sample_rate: int = 8000, samples_per_frame: int = 205) -> None:
         """
         Initialize DTMF detector
 
@@ -52,7 +52,7 @@ class DTMFDetector:
         for freq in DTMF_LOW_FREQS + DTMF_HIGH_FREQS:
             # Calculate the nearest DFT bin for this frequency
             # 0.5 added for proper rounding to nearest integer
-            k = int(round(samples_per_frame * freq / sample_rate))
+            k = round(samples_per_frame * freq / sample_rate)
             omega = (2.0 * math.pi * k) / samples_per_frame
             self.coefficients[freq] = 2.0 * math.cos(omega)
 
@@ -243,7 +243,7 @@ class DTMFDetector:
 class DTMFGenerator:
     """Generate DTMF tones for testing"""
 
-    def __init__(self, sample_rate: int = 8000):
+    def __init__(self, sample_rate: int = 8000) -> None:
         """
         Initialize DTMF generator
 
@@ -303,7 +303,5 @@ class DTMFGenerator:
             samples.extend(tone_samples)
             samples.extend(gap_samples)
 
-        self.logger.info(
-            f"Generated DTMF sequence: {digits} ({len(samples)} samples)"
-        )
+        self.logger.info(f"Generated DTMF sequence: {digits} ({len(samples)} samples)")
         return samples

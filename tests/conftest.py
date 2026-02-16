@@ -1,12 +1,11 @@
 """Shared pytest fixtures for PBX test suite."""
 
-import os
 from collections.abc import Callable, Generator
 from typing import Any
+from unittest.mock import MagicMock, patch
 
 import pytest
 from flask.testing import FlaskClient
-from unittest.mock import MagicMock, patch
 
 
 @pytest.fixture
@@ -85,7 +84,7 @@ def mock_pbx_core(mock_config: MagicMock, mock_database: MagicMock) -> MagicMock
 
 
 @pytest.fixture
-def api_client(mock_pbx_core: MagicMock) -> Generator[FlaskClient, None, None]:
+def api_client(mock_pbx_core: MagicMock) -> Generator[FlaskClient]:
     """Provide a Flask test client for API testing."""
     from pbx.api.app import create_app
 
@@ -99,8 +98,13 @@ def api_client(mock_pbx_core: MagicMock) -> Generator[FlaskClient, None, None]:
 @pytest.fixture
 def sip_message_factory() -> Callable[..., str]:
     """Factory fixture to create SIP messages for testing."""
-    def make_sip_message(method: str = "INVITE", uri: str = "sip:1002@pbx.local",
-                          from_ext: str = "1001", to_ext: str = "1002") -> str:
+
+    def make_sip_message(
+        method: str = "INVITE",
+        uri: str = "sip:1002@pbx.local",
+        from_ext: str = "1001",
+        to_ext: str = "1002",
+    ) -> str:
         return (
             f"{method} {uri} SIP/2.0\r\n"
             f"Via: SIP/2.0/UDP 192.168.1.100:5060;branch=z9hG4bK776asdhds\r\n"
@@ -110,4 +114,5 @@ def sip_message_factory() -> Callable[..., str]:
             f"CSeq: 314159 {method}\r\n"
             f"Content-Length: 0\r\n\r\n"
         )
+
     return make_sip_message

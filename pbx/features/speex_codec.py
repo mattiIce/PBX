@@ -19,7 +19,7 @@ Note: Speex is being gradually superseded by Opus for new applications,
 but it remains widely deployed and supported.
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -44,18 +44,22 @@ class SpeexCodec:
     DEFAULT_MODE = MODE_NARROWBAND
 
     # Sample rates for each mode
-    SAMPLE_RATES = {MODE_NARROWBAND: 8000, MODE_WIDEBAND: 16000, MODE_ULTRA_WIDEBAND: 32000}
+    SAMPLE_RATES: ClassVar[dict[str, int]] = {
+        MODE_NARROWBAND: 8000,
+        MODE_WIDEBAND: 16000,
+        MODE_ULTRA_WIDEBAND: 32000,
+    }
 
     # Payload types (RFC 5574)
     # Ensure no conflicts with iLBC (PT 97)
-    PAYLOAD_TYPES = {
+    PAYLOAD_TYPES: ClassVar[dict[str, int]] = {
         MODE_NARROWBAND: 98,  # PT 98 for narrowband (8kHz)
         MODE_WIDEBAND: 99,  # PT 99 for wideband (16kHz)
         MODE_ULTRA_WIDEBAND: 100,  # PT 100 for ultra-wideband (32kHz)
     }
 
     # Typical bitrates (VBR can vary)
-    BITRATES = {
+    BITRATES: ClassVar[dict[str, dict[str, int]]] = {
         MODE_NARROWBAND: {
             "min": 2150,  # 2.15 kbps
             "typical": 8000,  # 8 kbps
@@ -76,7 +80,7 @@ class SpeexCodec:
     # Frame sizes (20ms is standard)
     FRAME_DURATION_MS = 20
 
-    def __init__(self, config: dict[str, Any] | None = None):
+    def __init__(self, config: dict[str, Any] | None = None) -> None:
         """
         Initialize Speex codec handler
 
@@ -129,8 +133,6 @@ class SpeexCodec:
 
         # Check if speex library is available
         try:
-            pass
-
             self.speex_available = True
             self.logger.info(
                 f"Speex codec initialized (mode: {self.mode}, "
@@ -246,7 +248,7 @@ class SpeexCodec:
 
         return params
 
-    def create_encoder(self):
+    def create_encoder(self) -> Any:
         """
         Create Speex encoder
 
@@ -284,7 +286,7 @@ class SpeexCodec:
             self.logger.error(f"Failed to create Speex encoder: {e}")
             self.encoder = None
 
-    def create_decoder(self):
+    def create_decoder(self) -> Any:
         """
         Create Speex decoder
 
@@ -329,7 +331,7 @@ class SpeexCodec:
         expected_bytes = self.frame_size * 2  # 16-bit samples
         if len(pcm_data) != expected_bytes:
             self.logger.error(
-                f"Invalid PCM data size: got {len(pcm_data)}, " f"expected {expected_bytes} bytes"
+                f"Invalid PCM data size: got {len(pcm_data)}, expected {expected_bytes} bytes"
             )
             return None
 
@@ -363,12 +365,12 @@ class SpeexCodec:
             self.logger.error(f"Speex decoding failed: {e}")
             return None
 
-    def reset_encoder(self):
+    def reset_encoder(self) -> None:
         """Reset encoder state"""
         if self.encoder:
             self.create_encoder()  # Recreate encoder
 
-    def reset_decoder(self):
+    def reset_decoder(self) -> None:
         """Reset decoder state"""
         if self.decoder:
             self.create_decoder()  # Recreate decoder
@@ -381,7 +383,7 @@ class SpeexCodecManager:
     Manages multiple Speex codec instances for different calls.
     """
 
-    def __init__(self, pbx):
+    def __init__(self, pbx: Any) -> None:
         """
         Initialize Speex codec manager
 
@@ -433,7 +435,7 @@ class SpeexCodecManager:
         """
         return self.codecs.get(call_id)
 
-    def remove_codec(self, call_id: str):
+    def remove_codec(self, call_id: str) -> None:
         """
         Remove codec instance for a call
 
@@ -461,8 +463,6 @@ class SpeexCodecManager:
             bool: True if speex library is available
         """
         try:
-            pass
-
             return True
         except ImportError:
             return False

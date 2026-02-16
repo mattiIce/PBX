@@ -21,8 +21,10 @@ import sys
 import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -114,10 +116,9 @@ class SIPLoadTester:
                 # Check if registration was successful (200 OK)
                 if "200 OK" in response or "SIP/2.0 200" in response:
                     return True, response_time
-                else:
-                    self.logger.debug(f"Registration failed for user {user_id}: {response[:100]}")
-                    return False, response_time
-            except socket.timeout:
+                self.logger.debug(f"Registration failed for user {user_id}: {response[:100]}")
+                return False, response_time
+            except TimeoutError:
                 self.logger.warning(f"Registration timeout for user {user_id}")
                 return False, time.time() - start
             finally:
@@ -169,7 +170,7 @@ class SIPLoadTester:
 
                 response_time = time.time() - start
                 return success, response_time
-            except socket.timeout:
+            except TimeoutError:
                 return False, time.time() - start
             finally:
                 sock.close()
@@ -178,7 +179,7 @@ class SIPLoadTester:
             self.logger.error(f"Error during call {call_id}: {e}")
             return False, time.time() - start
 
-    async def run_registration_test(self):
+    async def run_registration_test(self) -> None:
         """Run registration load test"""
         self.logger.info(f"Starting registration load test: {self.config.users_count} users")
         self.start_time = time.time()
@@ -211,7 +212,7 @@ class SIPLoadTester:
 
         self.end_time = time.time()
 
-    async def run_call_test(self):
+    async def run_call_test(self) -> None:
         """Run call load test"""
         self.logger.info(
             f"Starting call load test: {self.config.concurrent_calls} concurrent, "
@@ -235,8 +236,9 @@ class SIPLoadTester:
 
                 # Update peak concurrent
                 self.results["concurrent_active"] = len(active_tasks)
-                if self.results["concurrent_active"] > self.results["peak_concurrent"]:
-                    self.results["peak_concurrent"] = self.results["concurrent_active"]
+                self.results["peak_concurrent"] = max(
+                    self.results["peak_concurrent"], self.results["concurrent_active"]
+                )
 
             # Wait for at least one call to complete
             if active_tasks:
@@ -267,7 +269,7 @@ class SIPLoadTester:
 
         self.end_time = time.time()
 
-    async def run_mixed_test(self):
+    async def run_mixed_test(self) -> None:
         """Run mixed load test (registrations + calls)"""
         self.logger.info("Starting mixed load test")
         self.start_time = time.time()
@@ -294,7 +296,7 @@ class SIPLoadTester:
 
         return LoadTestResults(
             test_type=self.config.test_type,
-            timestamp=datetime.now(timezone.utc).isoformat(),
+            timestamp=datetime.now(UTC).isoformat(),
             duration=duration,
             total_attempts=total_attempts,
             successful=self.results["successful"],
@@ -312,7 +314,7 @@ class SIPLoadTester:
         )
 
 
-def print_results(results: LoadTestResults):
+def print_results(results: LoadTestResults) -> None:
     """Print formatted test results"""
     print("\n" + "=" * 70)
     print("LOAD TEST RESULTS")
@@ -325,9 +327,9 @@ def print_results(results: LoadTestResults):
     print("Performance Metrics:")
     print(f"  Total Attempts: {results.total_attempts}")
     print(
-        f"  Successful: {results.successful} ({results.successful/results.total_attempts*100:.1f}%)"
+        f"  Successful: {results.successful} ({results.successful / results.total_attempts * 100:.1f}%)"
     )
-    print(f"  Failed: {results.failed} ({results.failed/results.total_attempts*100:.1f}%)")
+    print(f"  Failed: {results.failed} ({results.failed / results.total_attempts * 100:.1f}%)")
     print(f"  Timeouts: {results.timeouts}")
     print(f"  Requests/sec: {results.requests_per_second:.2f}")
     print(f"  Peak Concurrent: {results.concurrent_peak}")
@@ -365,7 +367,7 @@ def print_results(results: LoadTestResults):
     print("=" * 70 + "\n")
 
 
-async def main():
+async def main() -> None:
     """Main entry point"""
     parser = argparse.ArgumentParser(description="Load testing tool for Warden VoIP PBX System")
     parser.add_argument(
@@ -454,7 +456,7 @@ async def main():
         print("\n\nTest interrupted by user")
         sys.exit(1)
     except (KeyError, OSError, TypeError, ValueError, json.JSONDecodeError) as e:
-        logging.error(f"Test failed with error: {e}", exc_info=True)
+        logger.error(f"Test failed with error: {e}", exc_info=True)
         sys.exit(1)
 
 

@@ -315,19 +315,18 @@ function loadClickToDialTab() {
     `;
 
     // Load configurations
-    setTimeout(() => {
-        fetch('/api/framework/click-to-dial/configs')
-            .then(r => r.json())
-            .then(data => {
-                displayClickToDialConfigs(data.configs || []);
-            })
-            .catch(err => {
-                const errorContainer = document.getElementById('click-to-dial-configs-list');
-                if (errorContainer) {
-                    errorContainer.innerHTML =
-                        `<div class="error-box">Error loading configurations: ${err.message}</div>`;
-                }
-            });
+    setTimeout(async () => {
+        try {
+            const r = await fetch('/api/framework/click-to-dial/configs');
+            const data = await r.json();
+            displayClickToDialConfigs(data.configs ?? []);
+        } catch (err) {
+            const errorContainer = document.getElementById('click-to-dial-configs-list');
+            if (errorContainer) {
+                errorContainer.innerHTML =
+                    `<div class="error-box">Error loading configurations: ${err.message}</div>`;
+            }
+        }
     }, 100);
 
     return content;
@@ -377,51 +376,50 @@ function displayClickToDialConfigs(configs) {
     container.innerHTML = html;
 }
 
-function viewClickToDialHistory(extension) {
-    fetch(`/api/framework/click-to-dial/history/${extension}`)
-        .then(r => r.json())
-        .then(data => {
-            const history = data.history || [];
-            const container = document.getElementById('click-to-dial-history');
+const viewClickToDialHistory = async (extension) => {
+    try {
+        const r = await fetch(`/api/framework/click-to-dial/history/${extension}`);
+        const data = await r.json();
+        const history = data.history ?? [];
+        const container = document.getElementById('click-to-dial-history');
 
-            if (history.length === 0) {
-                container.innerHTML = `<p>No call history for extension ${extension}</p>`;
-                return;
-            }
+        if (history.length === 0) {
+            container.innerHTML = `<p>No call history for extension ${extension}</p>`;
+            return;
+        }
 
-            const html = `
-                <h4>Call History for Extension ${extension}</h4>
-                <table class="data-table">
-                    <thead>
+        const html = `
+            <h4>Call History for Extension ${extension}</h4>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Destination</th>
+                        <th>Source</th>
+                        <th>Status</th>
+                        <th>Initiated</th>
+                        <th>Connected</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${history.map(call => `
                         <tr>
-                            <th>Destination</th>
-                            <th>Source</th>
-                            <th>Status</th>
-                            <th>Initiated</th>
-                            <th>Connected</th>
+                            <td>${call.destination}</td>
+                            <td>${call.source}</td>
+                            <td><span class="status-badge status-${call.status}">${call.status}</span></td>
+                            <td>${new Date(call.initiated_at).toLocaleString()}</td>
+                            <td>${call.connected_at ? new Date(call.connected_at).toLocaleString() : '-'}</td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        ${history.map(call => `
-                            <tr>
-                                <td>${call.destination}</td>
-                                <td>${call.source}</td>
-                                <td><span class="status-badge status-${call.status}">${call.status}</span></td>
-                                <td>${new Date(call.initiated_at).toLocaleString()}</td>
-                                <td>${call.connected_at ? new Date(call.connected_at).toLocaleString() : '-'}</td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
 
-            container.innerHTML = html;
-        })
-        .catch(err => {
-            document.getElementById('click-to-dial-history').innerHTML =
-                `<div class="error-box">Error loading history: ${err.message}</div>`;
-        });
-}
+        container.innerHTML = html;
+    } catch (err) {
+        document.getElementById('click-to-dial-history').innerHTML =
+            `<div class="error-box">Error loading history: ${err.message}</div>`;
+    }
+};
 
 // Video Conferencing Tab
 function loadVideoConferencingTab() {
@@ -491,17 +489,16 @@ function loadVideoConferencingTab() {
     return content;
 }
 
-function loadVideoRooms() {
-    fetch('/api/framework/video-conference/rooms')
-        .then(r => r.json())
-        .then(data => {
-            displayVideoRooms(data.rooms || []);
-        })
-        .catch(err => {
-            document.getElementById('video-rooms-list').innerHTML =
-                `<div class="error-box">Error loading rooms: ${err.message}</div>`;
-        });
-}
+const loadVideoRooms = async () => {
+    try {
+        const r = await fetch('/api/framework/video-conference/rooms');
+        const data = await r.json();
+        displayVideoRooms(data.rooms ?? []);
+    } catch (err) {
+        document.getElementById('video-rooms-list').innerHTML =
+            `<div class="error-box">Error loading rooms: ${err.message}</div>`;
+    }
+};
 
 function displayVideoRooms(rooms) {
     const container = document.getElementById('video-rooms-list');
@@ -543,11 +540,11 @@ function displayVideoRooms(rooms) {
     container.innerHTML = html;
 }
 
-function showCreateRoomDialog() {
+const showCreateRoomDialog = () => {
     document.getElementById('create-room-dialog').style.display = 'flex';
 
     // Setup form submission
-    document.getElementById('create-room-form').onsubmit = function(e) {
+    document.getElementById('create-room-form').onsubmit = async function(e) {
         e.preventDefault();
 
         const formData = new FormData(e.target);
@@ -560,26 +557,25 @@ function showCreateRoomDialog() {
             recording_enabled: formData.get('recording_enabled') === 'on'
         };
 
-        fetch('/api/framework/video-conference/create-room', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify(data)
-        })
-        .then(r => r.json())
-        .then(result => {
+        try {
+            const r = await fetch('/api/framework/video-conference/create-room', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await r.json();
             if (result.success) {
                 alert('Room created successfully!');
                 hideCreateRoomDialog();
                 loadVideoRooms();
             } else {
-                alert('Error creating room: ' + (result.error || 'Unknown error'));
+                alert(`Error creating room: ${result.error ?? 'Unknown error'}`);
             }
-        })
-        .catch(err => {
+        } catch (err) {
             alert('Error creating room: ' + err.message);
-        });
+        }
     };
-}
+};
 
 function hideCreateRoomDialog() {
     document.getElementById('create-room-dialog').style.display = 'none';
@@ -676,42 +672,40 @@ features:
     `;
 }
 
-function loadConversationalAIStats() {
+const loadConversationalAIStats = async () => {
     const statsDiv = document.getElementById('ai-statistics');
     statsDiv.innerHTML = '<p>Loading statistics...</p>';
 
-    // Call the API endpoint to get actual statistics
-    fetch('/api/framework/conversational-ai/stats')
-        .then(r => r.json())
-        .then(data => {
-            const stats = data.statistics || {};
-            statsDiv.innerHTML = `
-                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.total_conversations || 0}</div>
-                        <div class="stat-label">Total Conversations</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.active_conversations || 0}</div>
-                        <div class="stat-label">Active</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.total_messages || 0}</div>
-                        <div class="stat-label">Messages Processed</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.intents_detected || 0}</div>
-                        <div class="stat-label">Intents Detected</div>
-                    </div>
+    try {
+        const r = await fetch('/api/framework/conversational-ai/stats');
+        const data = await r.json();
+        const stats = data.statistics ?? {};
+        statsDiv.innerHTML = `
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));">
+                <div class="stat-card">
+                    <div class="stat-value">${stats.total_conversations || 0}</div>
+                    <div class="stat-label">Total Conversations</div>
                 </div>
-                ${stats.total_conversations === 0 ? '<p style="margin-top: 15px; color: #666;"><em>Note: No conversations yet. Statistics will appear when the feature is enabled and in use.</em></p>' : ''}
-            `;
-        })
-        .catch(err => {
-            // API endpoint not yet implemented or feature not enabled - show friendly message
-            statsDiv.innerHTML = `<p style="color: #666;"><em>Statistics unavailable. The API endpoint (/api/framework/conversational-ai/stats) will be available when the feature is enabled with an AI provider configured.</em></p>`;
-        });
-}
+                <div class="stat-card">
+                    <div class="stat-value">${stats.active_conversations || 0}</div>
+                    <div class="stat-label">Active</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.total_messages || 0}</div>
+                    <div class="stat-label">Messages Processed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.intents_detected || 0}</div>
+                    <div class="stat-label">Intents Detected</div>
+                </div>
+            </div>
+            ${stats.total_conversations === 0 ? '<p style="margin-top: 15px; color: #666;"><em>Note: No conversations yet. Statistics will appear when the feature is enabled and in use.</em></p>' : ''}
+        `;
+    } catch (err) {
+        // API endpoint not yet implemented or feature not enabled - show friendly message
+        statsDiv.innerHTML = `<p style="color: #666;"><em>Statistics unavailable. The API endpoint (/api/framework/conversational-ai/stats) will be available when the feature is enabled with an AI provider configured.</em></p>`;
+    }
+};
 
 // Predictive Dialing Tab
 function loadPredictiveDialingTab() {
@@ -805,83 +799,84 @@ function loadPredictiveDialingTab() {
     return content;
 }
 
-function loadPredictiveDialingCampaigns() {
-    fetch('/api/framework/predictive-dialing/campaigns')
-        .then(r => r.json())
-        .then(data => {
-            const campaigns = data.campaigns || [];
-            const container = document.getElementById('campaigns-list');
+const loadPredictiveDialingCampaigns = async () => {
+    try {
+        const r = await fetch('/api/framework/predictive-dialing/campaigns');
+        const data = await r.json();
+        const campaigns = data.campaigns ?? [];
+        const container = document.getElementById('campaigns-list');
 
-            if (campaigns.length === 0) {
-                container.innerHTML = '<p style="color: #666;">No campaigns created yet. Framework ready for campaign management.</p>';
-                return;
-            }
+        if (campaigns.length === 0) {
+            container.innerHTML = '<p style="color: #666;">No campaigns created yet. Framework ready for campaign management.</p>';
+            return;
+        }
 
-            const html = `
-                <table class="data-table">
-                    <thead>
+        const html = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Campaign Name</th>
+                        <th>Mode</th>
+                        <th>Status</th>
+                        <th>Contacts</th>
+                        <th>Dialed</th>
+                        <th>Connected</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${campaigns.map(c => `
                         <tr>
-                            <th>Campaign Name</th>
-                            <th>Mode</th>
-                            <th>Status</th>
-                            <th>Contacts</th>
-                            <th>Dialed</th>
-                            <th>Connected</th>
-                            <th>Actions</th>
+                            <td><strong>${c.name}</strong></td>
+                            <td>${c.mode}</td>
+                            <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                            <td>${c.total_contacts || 0}</td>
+                            <td>${c.dialed || 0}</td>
+                            <td>${c.connected || 0}</td>
+                            <td>
+                                <button onclick="toggleCampaign('${c.id}')" class="btn-secondary btn-sm">
+                                    ${c.status === 'active' ? 'Pause' : 'Start'}
+                                </button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        ${campaigns.map(c => `
-                            <tr>
-                                <td><strong>${c.name}</strong></td>
-                                <td>${c.mode}</td>
-                                <td><span class="status-badge status-${c.status}">${c.status}</span></td>
-                                <td>${c.total_contacts || 0}</td>
-                                <td>${c.dialed || 0}</td>
-                                <td>${c.connected || 0}</td>
-                                <td>
-                                    <button onclick="toggleCampaign('${c.id}')" class="btn-secondary btn-sm">
-                                        ${c.status === 'active' ? 'Pause' : 'Start'}
-                                    </button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            container.innerHTML = html;
-        })
-        .catch(err => {
-            document.getElementById('campaigns-list').innerHTML =
-                '<p style="color: #666;">Framework ready. Campaigns will appear when feature is enabled.</p>';
-        });
-}
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        container.innerHTML = html;
+    } catch (err) {
+        document.getElementById('campaigns-list').innerHTML =
+            '<p style="color: #666;">Framework ready. Campaigns will appear when feature is enabled.</p>';
+    }
+};
 
-function loadPredictiveDialingStats() {
-    fetch('/api/framework/predictive-dialing/statistics')
-        .then(r => r.json())
-        .then(data => {
-            const stats = data.statistics || {};
-            document.getElementById('total-campaigns').textContent = stats.total_campaigns || 0;
-            document.getElementById('active-campaigns').textContent = stats.active_campaigns || 0;
-            document.getElementById('calls-today').textContent = stats.calls_today || 0;
-            document.getElementById('contact-rate').textContent = (stats.contact_rate || 0) + '%';
-        })
-        .catch(err => {
-            // Silent failure is acceptable - statistics will show 0 values
-            // This occurs when the feature is not yet enabled or API endpoint not implemented
-        });
-}
+const loadPredictiveDialingStats = async () => {
+    try {
+        const r = await fetch('/api/framework/predictive-dialing/statistics');
+        const data = await r.json();
+        const stats = data.statistics ?? {};
+        document.getElementById('total-campaigns').textContent = stats.total_campaigns || 0;
+        document.getElementById('active-campaigns').textContent = stats.active_campaigns || 0;
+        document.getElementById('calls-today').textContent = stats.calls_today || 0;
+        document.getElementById('contact-rate').textContent = `${stats.contact_rate ?? 0}%`;
+    } catch (err) {
+        // Silent failure is acceptable - statistics will show 0 values
+        // This occurs when the feature is not yet enabled or API endpoint not implemented
+    }
+};
 
 function showCreateCampaignDialog() {
     alert('Campaign creation UI coming soon.\n\nCampaigns support:\n- Multiple dialing modes\n- Contact list import\n- Agent assignment\n- Schedule configuration\n- Compliance settings');
 }
 
-function toggleCampaign(campaignId) {
-    fetch(`/api/framework/predictive-dialing/campaigns/${campaignId}/toggle`, { method: 'POST' })
-        .then(() => loadPredictiveDialingCampaigns())
-        .catch(err => alert(`Error: ${err.message}`));
-}
+const toggleCampaign = async (campaignId) => {
+    try {
+        await fetch(`/api/framework/predictive-dialing/campaigns/${campaignId}/toggle`, { method: 'POST' });
+        await loadPredictiveDialingCampaigns();
+    } catch (err) {
+        alert(`Error: ${err.message}`);
+    }
+};
 
 // Voice Biometrics Tab
 function loadVoiceBiometricsTab() {
@@ -958,83 +953,84 @@ function loadVoiceBiometricsTab() {
     return content;
 }
 
-function loadVoiceBiometricProfiles() {
-    fetch('/api/framework/voice-biometrics/profiles')
-        .then(r => r.json())
-        .then(data => {
-            const profiles = data.profiles || [];
-            const container = document.getElementById('biometric-profiles-list');
+const loadVoiceBiometricProfiles = async () => {
+    try {
+        const r = await fetch('/api/framework/voice-biometrics/profiles');
+        const data = await r.json();
+        const profiles = data.profiles ?? [];
+        const container = document.getElementById('biometric-profiles-list');
 
-            if (profiles.length === 0) {
-                container.innerHTML = '<p style="color: #666;">No users enrolled yet. Framework ready for voice enrollment.</p>';
-                return;
-            }
+        if (profiles.length === 0) {
+            container.innerHTML = '<p style="color: #666;">No users enrolled yet. Framework ready for voice enrollment.</p>';
+            return;
+        }
 
-            const html = `
-                <table class="data-table">
-                    <thead>
+        const html = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Extension</th>
+                        <th>User Name</th>
+                        <th>Enrollment Date</th>
+                        <th>Verifications</th>
+                        <th>Last Verified</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${profiles.map(p => `
                         <tr>
-                            <th>Extension</th>
-                            <th>User Name</th>
-                            <th>Enrollment Date</th>
-                            <th>Verifications</th>
-                            <th>Last Verified</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <td>${p.extension}</td>
+                            <td>${p.name}</td>
+                            <td>${new Date(p.enrolled_at).toLocaleDateString()}</td>
+                            <td>${p.verification_count || 0}</td>
+                            <td>${p.last_verified ? new Date(p.last_verified).toLocaleString() : 'Never'}</td>
+                            <td><span class="status-badge status-${p.status}">${p.status}</span></td>
+                            <td>
+                                <button onclick="deleteVoiceProfile('${p.id}')" class="btn-danger btn-sm">Delete</button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        ${profiles.map(p => `
-                            <tr>
-                                <td>${p.extension}</td>
-                                <td>${p.name}</td>
-                                <td>${new Date(p.enrolled_at).toLocaleDateString()}</td>
-                                <td>${p.verification_count || 0}</td>
-                                <td>${p.last_verified ? new Date(p.last_verified).toLocaleString() : 'Never'}</td>
-                                <td><span class="status-badge status-${p.status}">${p.status}</span></td>
-                                <td>
-                                    <button onclick="deleteVoiceProfile('${p.id}')" class="btn-danger btn-sm">Delete</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            container.innerHTML = html;
-        })
-        .catch(err => {
-            document.getElementById('biometric-profiles-list').innerHTML =
-                '<p style="color: #666;">Framework ready. Voice profiles will appear when feature is enabled.</p>';
-        });
-}
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        container.innerHTML = html;
+    } catch (err) {
+        document.getElementById('biometric-profiles-list').innerHTML =
+            '<p style="color: #666;">Framework ready. Voice profiles will appear when feature is enabled.</p>';
+    }
+};
 
-function loadVoiceBiometricStats() {
-    fetch('/api/framework/voice-biometrics/statistics')
-        .then(r => r.json())
-        .then(data => {
-            const stats = data.statistics || {};
-            document.getElementById('enrolled-users').textContent = stats.enrolled_users || 0;
-            document.getElementById('verifications-today').textContent = stats.verifications_today || 0;
-            document.getElementById('success-rate').textContent = (stats.success_rate || 0) + '%';
-            document.getElementById('fraud-attempts').textContent = stats.fraud_attempts || 0;
-        })
-        .catch(err => {
-            // Silent failure is acceptable - statistics will show 0 values
-            // This occurs when the feature is not yet enabled or API endpoint not implemented
-        });
-}
+const loadVoiceBiometricStats = async () => {
+    try {
+        const r = await fetch('/api/framework/voice-biometrics/statistics');
+        const data = await r.json();
+        const stats = data.statistics ?? {};
+        document.getElementById('enrolled-users').textContent = stats.enrolled_users || 0;
+        document.getElementById('verifications-today').textContent = stats.verifications_today || 0;
+        document.getElementById('success-rate').textContent = `${stats.success_rate ?? 0}%`;
+        document.getElementById('fraud-attempts').textContent = stats.fraud_attempts || 0;
+    } catch (err) {
+        // Silent failure is acceptable - statistics will show 0 values
+        // This occurs when the feature is not yet enabled or API endpoint not implemented
+    }
+};
 
 function showEnrollUserDialog() {
     alert('Voice enrollment UI coming soon.\n\nEnrollment process:\n1. Select extension\n2. Record voice samples (3-5 phrases)\n3. Submit to biometric engine\n4. Activate profile');
 }
 
-function deleteVoiceProfile(profileId) {
+const deleteVoiceProfile = async (profileId) => {
     if (confirm('Are you sure you want to delete this voice profile?')) {
-        fetch(`/api/framework/voice-biometrics/profiles/${profileId}`, { method: 'DELETE' })
-            .then(() => loadVoiceBiometricProfiles())
-            .catch(err => alert(`Error: ${err.message}`));
+        try {
+            await fetch(`/api/framework/voice-biometrics/profiles/${profileId}`, { method: 'DELETE' });
+            await loadVoiceBiometricProfiles();
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
     }
-}
+};
 
 // Call Quality Prediction Tab
 function loadCallQualityPredictionTab() {
@@ -1098,9 +1094,10 @@ function loadVideoCodecTab() {
 // BI Integration Tab
 function loadBIIntegrationTab() {
     // Load statistics on tab load
-    fetch('/api/framework/bi-integration/statistics')
-        .then(r => r.json())
-        .then(stats => {
+    (async () => {
+        try {
+            const r = await fetch('/api/framework/bi-integration/statistics');
+            const stats = await r.json();
             document.getElementById('bi-stats-display').innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1120,8 +1117,10 @@ function loadBIIntegrationTab() {
                     </div>
                 </div>
             `;
-        })
-        .catch(err => console.error('Error loading BI statistics:', err));
+        } catch (err) {
+            console.error('Error loading BI statistics:', err);
+        }
+    })();
 
     const content = `
         <h2>📈 Business Intelligence Integration</h2>
@@ -1219,7 +1218,7 @@ POST /api/framework/bi-integration/test-connection</pre>
     return content;
 }
 
-function exportBIDataset(dataset) {
+const exportBIDataset = async (dataset) => {
     const format = document.getElementById('bi-export-format')?.value || 'csv';
     const dateRange = document.getElementById('bi-date-range')?.value || 'last7days';
 
@@ -1229,39 +1228,37 @@ function exportBIDataset(dataset) {
     exportBtn.textContent = 'Exporting...';
     exportBtn.disabled = true;
 
-    // Call the new API endpoint
-    fetch('/api/framework/bi-integration/export', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            dataset: dataset,
-            format: format,
-            date_range: dateRange
-        })
-    })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) {
-                alert(`✅ Export successful!\n\nDataset: ${result.dataset}\nFormat: ${result.format}\nFile: ${result.file_path}\n\nThe export has been created on the server.`);
-            } else {
-                alert(`❌ Export failed: ${result.error}`);
-            }
-        })
-        .catch(err => {
-            alert(`❌ Export error: ${err.message}`);
-        })
-        .finally(() => {
-            exportBtn.textContent = originalText;
-            exportBtn.disabled = false;
+    try {
+        const r = await fetch('/api/framework/bi-integration/export', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                dataset: dataset,
+                format: format,
+                date_range: dateRange
+            })
         });
-}
+        const result = await r.json();
+        if (result.success) {
+            alert(`✅ Export successful!\n\nDataset: ${result.dataset}\nFormat: ${result.format}\nFile: ${result.file_path}\n\nThe export has been created on the server.`);
+        } else {
+            alert(`❌ Export failed: ${result.error}`);
+        }
+    } catch (err) {
+        alert(`❌ Export error: ${err.message}`);
+    } finally {
+        exportBtn.textContent = originalText;
+        exportBtn.disabled = false;
+    }
+};
 
 // Call Tagging Tab
 function loadCallTaggingTab() {
     // Load tags and statistics
-    fetch('/api/framework/call-tagging/statistics')
-        .then(r => r.json())
-        .then(stats => {
+    (async () => {
+        try {
+            const r = await fetch('/api/framework/call-tagging/statistics');
+            const stats = await r.json();
             document.getElementById('tagging-stats-display').innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1281,8 +1278,10 @@ function loadCallTaggingTab() {
                     </div>
                 </div>
             `;
-        })
-        .catch(err => console.error('Error loading tagging statistics:', err));
+        } catch (err) {
+            console.error('Error loading tagging statistics:', err);
+        }
+    })();
 
     const content = `
         <h2>🏷️ Call Tagging & Categorization</h2>
@@ -1357,103 +1356,100 @@ POST /api/framework/call-tagging/classify/{call_id}</pre>
     return content;
 }
 
-function loadCallTags() {
-    fetch('/api/framework/call-tagging/tags')
-        .then(r => r.json())
-        .then(data => {
-            const tags = data.tags || [];
-            const container = document.getElementById('tags-list');
+const loadCallTags = async () => {
+    try {
+        const r = await fetch('/api/framework/call-tagging/tags');
+        const data = await r.json();
+        const tags = data.tags ?? [];
+        const container = document.getElementById('tags-list');
 
-            if (tags.length === 0) {
-                container.innerHTML = '<p style="color: #666;">No tags created yet. Click "+ Create Tag" to add your first tag.</p>';
-                return;
-            }
+        if (tags.length === 0) {
+            container.innerHTML = '<p style="color: #666;">No tags created yet. Click "+ Create Tag" to add your first tag.</p>';
+            return;
+        }
 
-            const html = `
-                <div style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    ${tags.map(tag => `
-                        <div class="tag-badge" style="background: ${tag.color || '#4caf50'}; color: white; padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
-                            <span>${tag.name}</span>
-                            <span style="font-size: 11px; opacity: 0.8;">(${tag.count || 0} calls)</span>
-                            <button onclick="deleteTag('${tag.id}')" style="background: none; border: none; color: white; cursor: pointer; padding: 0 5px;">×</button>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-            container.innerHTML = html;
-        })
-        .catch(err => {
-            // Expected when feature is not yet enabled or API endpoint not implemented
-            // Fallback shows framework ready message with 0 values
-            document.getElementById('tags-list').innerHTML =
-                `<p class="text-muted">Framework ready. Tags will appear when feature is enabled.</p>`;
-        });
-}
+        const html = `
+            <div style="display: flex; flex-wrap: wrap; gap: 10px;">
+                ${tags.map(tag => `
+                    <div class="tag-badge" style="background: ${tag.color || '#4caf50'}; color: white; padding: 8px 15px; border-radius: 20px; display: flex; align-items: center; gap: 8px;">
+                        <span>${tag.name}</span>
+                        <span style="font-size: 11px; opacity: 0.8;">(${tag.count || 0} calls)</span>
+                        <button onclick="deleteTag('${tag.id}')" style="background: none; border: none; color: white; cursor: pointer; padding: 0 5px;">×</button>
+                    </div>
+                `).join('')}
+            </div>
+        `;
+        container.innerHTML = html;
+    } catch (err) {
+        // Expected when feature is not yet enabled or API endpoint not implemented
+        // Fallback shows framework ready message with 0 values
+        document.getElementById('tags-list').innerHTML =
+            `<p class="text-muted">Framework ready. Tags will appear when feature is enabled.</p>`;
+    }
+};
 
-function loadTaggingRules() {
-    fetch('/api/framework/call-tagging/rules')
-        .then(r => r.json())
-        .then(data => {
-            const rules = data.rules || [];
-            const container = document.getElementById('tagging-rules-list');
+const loadTaggingRules = async () => {
+    try {
+        const r = await fetch('/api/framework/call-tagging/rules');
+        const data = await r.json();
+        const rules = data.rules ?? [];
+        const container = document.getElementById('tagging-rules-list');
 
-            if (rules.length === 0) {
-                container.innerHTML = '<p style="color: #666;">No auto-tagging rules created yet.</p>';
-                return;
-            }
+        if (rules.length === 0) {
+            container.innerHTML = '<p style="color: #666;">No auto-tagging rules created yet.</p>';
+            return;
+        }
 
-            const html = `
-                <table class="data-table">
-                    <thead>
+        const html = `
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Rule Name</th>
+                        <th>Condition</th>
+                        <th>Tag</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${rules.map(rule => `
                         <tr>
-                            <th>Rule Name</th>
-                            <th>Condition</th>
-                            <th>Tag</th>
-                            <th>Status</th>
-                            <th>Actions</th>
+                            <td>${rule.name}</td>
+                            <td>${rule.condition}</td>
+                            <td><span class="tag-badge" style="background: ${rule.tag_color}; color: white; padding: 4px 10px; border-radius: 12px;">${rule.tag_name}</span></td>
+                            <td>${rule.enabled ? '✅ Active' : '❌ Disabled'}</td>
+                            <td>
+                                <button onclick="toggleRule('${rule.id}')" class="btn-secondary btn-sm">${rule.enabled ? 'Disable' : 'Enable'}</button>
+                                <button onclick="deleteRule('${rule.id}')" class="btn-danger btn-sm">Delete</button>
+                            </td>
                         </tr>
-                    </thead>
-                    <tbody>
-                        ${rules.map(rule => `
-                            <tr>
-                                <td>${rule.name}</td>
-                                <td>${rule.condition}</td>
-                                <td><span class="tag-badge" style="background: ${rule.tag_color}; color: white; padding: 4px 10px; border-radius: 12px;">${rule.tag_name}</span></td>
-                                <td>${rule.enabled ? '✅ Active' : '❌ Disabled'}</td>
-                                <td>
-                                    <button onclick="toggleRule('${rule.id}')" class="btn-secondary btn-sm">${rule.enabled ? 'Disable' : 'Enable'}</button>
-                                    <button onclick="deleteRule('${rule.id}')" class="btn-danger btn-sm">Delete</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            container.innerHTML = html;
-        })
-        .catch(err => {
-            // Expected when feature is not yet enabled or API endpoint not implemented
-            // Fallback shows framework ready message
-            document.getElementById('tagging-rules-list').innerHTML =
-                `<p class="text-muted">Framework ready. Rules will appear when feature is enabled.</p>`;
-        });
-}
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+        container.innerHTML = html;
+    } catch (err) {
+        // Expected when feature is not yet enabled or API endpoint not implemented
+        // Fallback shows framework ready message
+        document.getElementById('tagging-rules-list').innerHTML =
+            `<p class="text-muted">Framework ready. Rules will appear when feature is enabled.</p>`;
+    }
+};
 
-function loadTagStatistics() {
-    fetch('/api/framework/call-tagging/statistics')
-        .then(r => r.json())
-        .then(data => {
-            const stats = data.statistics || {};
-            document.getElementById('total-tags').textContent = stats.total_tags || 0;
-            document.getElementById('tagged-calls').textContent = stats.tagged_calls || 0;
-            document.getElementById('active-rules').textContent = stats.active_rules || 0;
-            document.getElementById('auto-tagged').textContent = stats.auto_tagged_today || 0;
-        })
-        .catch(err => {
-            // Expected when feature is not yet enabled or API endpoint not implemented
-            // Fallback shows 0 values which is acceptable for framework-only features
-        });
-}
+const loadTagStatistics = async () => {
+    try {
+        const r = await fetch('/api/framework/call-tagging/statistics');
+        const data = await r.json();
+        const stats = data.statistics ?? {};
+        document.getElementById('total-tags').textContent = stats.total_tags || 0;
+        document.getElementById('tagged-calls').textContent = stats.tagged_calls || 0;
+        document.getElementById('active-rules').textContent = stats.active_rules || 0;
+        document.getElementById('auto-tagged').textContent = stats.auto_tagged_today || 0;
+    } catch (err) {
+        // Expected when feature is not yet enabled or API endpoint not implemented
+        // Fallback shows 0 values which is acceptable for framework-only features
+    }
+};
 
 function showCreateTagDialog() {
     const tagName = prompt('Enter tag name:');
@@ -1466,27 +1462,36 @@ function showCreateRuleDialog() {
     alert('Rule creation UI coming soon.\n\nRules allow automatic tagging based on:\n- Call duration\n- Caller/callee patterns\n- Keywords in transcription\n- Time of day\n- Call outcome');
 }
 
-function deleteTag(tagId) {
+const deleteTag = async (tagId) => {
     if (confirm('Are you sure you want to delete this tag?')) {
-        fetch(`/api/framework/call-tagging/tags/${tagId}`, { method: 'DELETE' })
-            .then(() => loadCallTags())
-            .catch(err => alert(`Error: ${err.message}`));
+        try {
+            await fetch(`/api/framework/call-tagging/tags/${tagId}`, { method: 'DELETE' });
+            await loadCallTags();
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
     }
-}
+};
 
-function deleteRule(ruleId) {
+const deleteRule = async (ruleId) => {
     if (confirm('Are you sure you want to delete this rule?')) {
-        fetch(`/api/framework/call-tagging/rules/${ruleId}`, { method: 'DELETE' })
-            .then(() => loadTaggingRules())
-            .catch(err => alert(`Error: ${err.message}`));
+        try {
+            await fetch(`/api/framework/call-tagging/rules/${ruleId}`, { method: 'DELETE' });
+            await loadTaggingRules();
+        } catch (err) {
+            alert(`Error: ${err.message}`);
+        }
     }
-}
+};
 
-function toggleRule(ruleId) {
-    fetch(`/api/framework/call-tagging/rules/${ruleId}/toggle`, { method: 'POST' })
-        .then(() => loadTaggingRules())
-        .catch(err => alert(`Error: ${err.message}`));
-}
+const toggleRule = async (ruleId) => {
+    try {
+        await fetch(`/api/framework/call-tagging/rules/${ruleId}/toggle`, { method: 'POST' });
+        await loadTaggingRules();
+    } catch (err) {
+        alert(`Error: ${err.message}`);
+    }
+};
 
 // Mobile Apps Tab
 function loadMobileAppsTab() {
@@ -1572,95 +1577,94 @@ function loadMobileAppsTab() {
     `;
 }
 
-function loadMobileAppsStats() {
+const loadMobileAppsStats = async () => {
     const devicesDiv = document.getElementById('mobile-devices-list');
     devicesDiv.innerHTML = '<p>Loading device statistics...</p>';
 
-    fetch('/api/mobile-push/devices')
-        .then(r => r.json())
-        .then(data => {
-            const devices = data.devices || [];
-            const stats = data.statistics || {};
+    try {
+        const r = await fetch('/api/mobile-push/devices');
+        const data = await r.json();
+        const devices = data.devices ?? [];
+        const stats = data.statistics ?? {};
 
-            let html = `
-                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.total_devices || devices.length || 0}</div>
-                        <div class="stat-label">Total Devices</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.ios_devices || 0}</div>
-                        <div class="stat-label">iOS Devices</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.android_devices || 0}</div>
-                        <div class="stat-label">Android Devices</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">${stats.active_devices || 0}</div>
-                        <div class="stat-label">Active</div>
-                    </div>
+        let html = `
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value">${stats.total_devices || devices.length || 0}</div>
+                    <div class="stat-label">Total Devices</div>
                 </div>
-            `;
+                <div class="stat-card">
+                    <div class="stat-value">${stats.ios_devices || 0}</div>
+                    <div class="stat-label">iOS Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.android_devices || 0}</div>
+                    <div class="stat-label">Android Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">${stats.active_devices || 0}</div>
+                    <div class="stat-label">Active</div>
+                </div>
+            </div>
+        `;
 
-            if (devices.length > 0) {
-                html += `
-                    <h4>Registered Devices</h4>
-                    <table class="data-table">
-                        <thead>
+        if (devices.length > 0) {
+            html += `
+                <h4>Registered Devices</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Extension</th>
+                            <th>Platform</th>
+                            <th>Device Model</th>
+                            <th>Push Token</th>
+                            <th>Registered</th>
+                            <th>Last Seen</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${devices.map(device => `
                             <tr>
-                                <th>Extension</th>
-                                <th>Platform</th>
-                                <th>Device Model</th>
-                                <th>Push Token</th>
-                                <th>Registered</th>
-                                <th>Last Seen</th>
+                                <td>${device.extension}</td>
+                                <td>${device.platform === 'ios' ? '📱 iOS' : '🤖 Android'}</td>
+                                <td>${device.device_model || 'Unknown'}</td>
+                                <td><code style="font-size: 11px;">${(device.push_token || '').substring(0, 20)}...</code></td>
+                                <td>${new Date(device.registered_at).toLocaleString()}</td>
+                                <td>${device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never'}</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            ${devices.map(device => `
-                                <tr>
-                                    <td>${device.extension}</td>
-                                    <td>${device.platform === 'ios' ? '📱 iOS' : '🤖 Android'}</td>
-                                    <td>${device.device_model || 'Unknown'}</td>
-                                    <td><code style="font-size: 11px;">${(device.push_token || '').substring(0, 20)}...</code></td>
-                                    <td>${new Date(device.registered_at).toLocaleString()}</td>
-                                    <td>${device.last_seen ? new Date(device.last_seen).toLocaleString() : 'Never'}</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
-            } else {
-                html += '<p><em>No devices registered yet. Devices will appear here once the mobile apps are deployed and users register.</em></p>';
-            }
-
-            devicesDiv.innerHTML = html;
-        })
-        .catch(err => {
-            devicesDiv.innerHTML = `
-                <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Total Devices</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">iOS Devices</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Android Devices</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-value">0</div>
-                        <div class="stat-label">Active</div>
-                    </div>
-                </div>
-                <p style="color: #666;"><em>Framework ready. Devices will appear when mobile apps are deployed and users register.</em></p>
+                        `).join('')}
+                    </tbody>
+                </table>
             `;
-        });
-}
+        } else {
+            html += '<p><em>No devices registered yet. Devices will appear here once the mobile apps are deployed and users register.</em></p>';
+        }
+
+        devicesDiv.innerHTML = html;
+    } catch (err) {
+        devicesDiv.innerHTML = `
+            <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Total Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">iOS Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Android Devices</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">0</div>
+                    <div class="stat-label">Active</div>
+                </div>
+            </div>
+            <p style="color: #666;"><em>Framework ready. Devices will appear when mobile apps are deployed and users register.</em></p>
+        `;
+    }
+};
 
 // Mobile Number Portability Tab
 function loadMobileNumberPortabilityTab() {
@@ -1723,9 +1727,10 @@ function loadRecordingAnalyticsTab() {
 // Call Blending Tab
 function loadCallBlendingTab() {
     // Load statistics on tab load
-    fetch('/api/framework/call-blending/statistics')
-        .then(r => r.json())
-        .then(stats => {
+    (async () => {
+        try {
+            const r = await fetch('/api/framework/call-blending/statistics');
+            const stats = await r.json();
             document.getElementById('blending-stats-display').innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1750,14 +1755,17 @@ function loadCallBlendingTab() {
                     </div>
                 </div>
             `;
-        })
-        .catch(err => console.error('Error loading blending statistics:', err));
+        } catch (err) {
+            console.error('Error loading blending statistics:', err);
+        }
+    })();
 
     // Load agents list
-    fetch('/api/framework/call-blending/agents')
-        .then(r => r.json())
-        .then(data => {
-            const agents = data.agents || [];
+    (async () => {
+        try {
+            const r = await fetch('/api/framework/call-blending/agents');
+            const data = await r.json();
+            const agents = data.agents ?? [];
             const container = document.getElementById('blending-agents-list');
 
             if (agents.length === 0) {
@@ -1807,11 +1815,11 @@ function loadCallBlendingTab() {
                 </table>
             `;
             container.innerHTML = html;
-        })
-        .catch(err => {
+        } catch (err) {
             console.error('Error loading agents:', err);
             document.getElementById('blending-agents-list').innerHTML = '<p style="color: #666;">No agents available.</p>';
-        });
+        }
+    })();
 
     return `
         <h2>🔀 Call Blending</h2>
@@ -1861,31 +1869,33 @@ POST /api/framework/call-blending/agent/{agent_id}/mode</pre>
     `;
 }
 
-function changeAgentMode(agentId, newMode) {
-    fetch(`/api/framework/call-blending/agent/${agentId}/mode`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({mode: newMode})
-    })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) {
-                alert(`✅ Agent mode updated to ${newMode}`);
-            } else {
-                alert(`❌ Failed to update mode: ${result.error}`);
-            }
-        })
-        .catch(err => alert(`❌ Error: ${err.message}`));
-}
+const changeAgentMode = async (agentId, newMode) => {
+    try {
+        const r = await fetch(`/api/framework/call-blending/agent/${agentId}/mode`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({mode: newMode})
+        });
+        const result = await r.json();
+        if (result.success) {
+            alert(`✅ Agent mode updated to ${newMode}`);
+        } else {
+            alert(`❌ Failed to update mode: ${result.error}`);
+        }
+    } catch (err) {
+        alert(`❌ Error: ${err.message}`);
+    }
+};
 
-function viewAgentDetails(agentId) {
-    fetch(`/api/framework/call-blending/agent/${agentId}`)
-        .then(r => r.json())
-        .then(agent => {
-            alert(`Agent Details:\n\nAgent ID: ${agent.agent_id}\nExtension: ${agent.extension}\nMode: ${agent.mode}\nStatus: ${agent.available ? 'Available' : 'Unavailable'}\nInbound Calls: ${agent.inbound_calls_handled}\nOutbound Calls: ${agent.outbound_calls_handled}`);
-        })
-        .catch(err => alert(`❌ Error loading agent: ${err.message}`));
-}
+const viewAgentDetails = async (agentId) => {
+    try {
+        const r = await fetch(`/api/framework/call-blending/agent/${agentId}`);
+        const agent = await r.json();
+        alert(`Agent Details:\n\nAgent ID: ${agent.agent_id}\nExtension: ${agent.extension}\nMode: ${agent.mode}\nStatus: ${agent.available ? 'Available' : 'Unavailable'}\nInbound Calls: ${agent.inbound_calls_handled}\nOutbound Calls: ${agent.outbound_calls_handled}`);
+    } catch (err) {
+        alert(`❌ Error loading agent: ${err.message}`);
+    }
+};
 
 // Voicemail Drop Tab
 function loadVoicemailDropTab() {
@@ -1919,9 +1929,10 @@ function loadVoicemailDropTab() {
 // Geographic Redundancy Tab
 function loadGeographicRedundancyTab() {
     // Load statistics on tab load
-    fetch('/api/framework/geo-redundancy/statistics')
-        .then(r => r.json())
-        .then(stats => {
+    (async () => {
+        try {
+            const r = await fetch('/api/framework/geo-redundancy/statistics');
+            const stats = await r.json();
             document.getElementById('geo-stats-display').innerHTML = `
                 <div class="stats-grid">
                     <div class="stat-card">
@@ -1946,14 +1957,17 @@ function loadGeographicRedundancyTab() {
                     </div>
                 </div>
             `;
-        })
-        .catch(err => console.error('Error loading geo statistics:', err));
+        } catch (err) {
+            console.error('Error loading geo statistics:', err);
+        }
+    })();
 
     // Load regions list
-    fetch('/api/framework/geo-redundancy/regions')
-        .then(r => r.json())
-        .then(data => {
-            const regions = data.regions || [];
+    (async () => {
+        try {
+            const r = await fetch('/api/framework/geo-redundancy/regions');
+            const data = await r.json();
+            const regions = data.regions ?? [];
             const container = document.getElementById('geo-regions-list');
 
             if (regions.length === 0) {
@@ -2008,11 +2022,11 @@ function loadGeographicRedundancyTab() {
                 </table>
             `;
             container.innerHTML = html;
-        })
-        .catch(err => {
+        } catch (err) {
             console.error('Error loading regions:', err);
             document.getElementById('geo-regions-list').innerHTML = '<p style="color: #666;">No regions available.</p>';
-        });
+        }
+    })();
 
     return `
         <h2>🌍 Geographic Redundancy</h2>
@@ -2063,7 +2077,7 @@ POST /api/framework/geo-redundancy/region/{region_id}/failover</pre>
     `;
 }
 
-function showCreateRegionDialog() {
+const showCreateRegionDialog = async () => {
     const regionId = prompt('Enter Region ID (e.g., us-east-1):');
     if (!regionId) return;
 
@@ -2073,53 +2087,55 @@ function showCreateRegionDialog() {
     const location = prompt('Enter Region Location (e.g., Virginia, USA):');
     if (!location) return;
 
-    fetch('/api/framework/geo-redundancy/region', {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            region_id: regionId,
-            name: name,
-            location: location
-        })
-    })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) {
-                alert(`✅ Region created successfully!`);
-                // Reload the tab
-                switchTab('geo-redundancy');
-            } else {
-                alert(`❌ Failed to create region: ${result.error}`);
-            }
-        })
-        .catch(err => alert(`❌ Error: ${err.message}`));
-}
+    try {
+        const r = await fetch('/api/framework/geo-redundancy/region', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({
+                region_id: regionId,
+                name: name,
+                location: location
+            })
+        });
+        const result = await r.json();
+        if (result.success) {
+            alert(`✅ Region created successfully!`);
+            // Reload the tab
+            switchTab('geo-redundancy');
+        } else {
+            alert(`❌ Failed to create region: ${result.error}`);
+        }
+    } catch (err) {
+        alert(`❌ Error: ${err.message}`);
+    }
+};
 
-function triggerFailover(regionId) {
+const triggerFailover = async (regionId) => {
     if (!confirm(`Are you sure you want to failover to region ${regionId}?`)) return;
 
-    fetch(`/api/framework/geo-redundancy/region/${regionId}/failover`, {
-        method: 'POST',
-        headers: {'Content-Type': 'application/json'}
-    })
-        .then(r => r.json())
-        .then(result => {
-            if (result.success) {
-                alert(`✅ Failover successful!\nFrom: ${result.from_region}\nTo: ${result.to_region}`);
-                // Reload the tab
-                switchTab('geo-redundancy');
-            } else {
-                alert(`❌ Failover failed: ${result.error}`);
-            }
-        })
-        .catch(err => alert(`❌ Error: ${err.message}`));
-}
+    try {
+        const r = await fetch(`/api/framework/geo-redundancy/region/${regionId}/failover`, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'}
+        });
+        const result = await r.json();
+        if (result.success) {
+            alert(`✅ Failover successful!\nFrom: ${result.from_region}\nTo: ${result.to_region}`);
+            // Reload the tab
+            switchTab('geo-redundancy');
+        } else {
+            alert(`❌ Failover failed: ${result.error}`);
+        }
+    } catch (err) {
+        alert(`❌ Error: ${err.message}`);
+    }
+};
 
-function viewRegionDetails(regionId) {
-    fetch(`/api/framework/geo-redundancy/region/${regionId}`)
-        .then(r => r.json())
-        .then(region => {
-            const details = `Region Details:
+const viewRegionDetails = async (regionId) => {
+    try {
+        const r = await fetch(`/api/framework/geo-redundancy/region/${regionId}`);
+        const region = await r.json();
+        const details = `Region Details:
 
 Region ID: ${region.region_id}
 Name: ${region.name}
@@ -2131,10 +2147,11 @@ Priority: ${region.priority}
 Is Active: ${region.is_active ? 'Yes' : 'No'}
 Last Health Check: ${region.last_health_check || 'Never'}`;
 
-            alert(details);
-        })
-        .catch(err => alert(`❌ Error loading region: ${err.message}`));
-}
+        alert(details);
+    } catch (err) {
+        alert(`❌ Error loading region: ${err.message}`);
+    }
+};
 
 // DNS SRV Failover Tab
 function loadDNSSRVFailoverTab() {
@@ -2344,8 +2361,8 @@ window.frameworkFeatures = {
 // 2. Refresh all functionality (refreshAllData function calls loadXXX functions)
 // We filter to only export 'load*' functions to avoid polluting global namespace with
 // helper functions like dialog creators, delete handlers, etc.
-Object.keys(window.frameworkFeatures).forEach(funcName => {
+for (const funcName of Object.keys(window.frameworkFeatures)) {
     if (funcName.startsWith('load') && typeof window.frameworkFeatures[funcName] === 'function') {
         window[funcName] = window.frameworkFeatures[funcName];
     }
-});
+}

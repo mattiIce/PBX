@@ -4,7 +4,6 @@ Integration test for phone registration tracking
 Tests the full flow from SIP REGISTER to database storage
 """
 
-
 from pbx.core.pbx import PBXCore
 
 
@@ -70,7 +69,7 @@ def test_registration_storage() -> None:
     # Add extension to database with a simple hash for testing
     import hashlib
 
-    password_hash = hashlib.sha256("testpass".encode()).hexdigest()
+    password_hash = hashlib.sha256(b"testpass").hexdigest()
     pbx.extension_db.add(
         number="1001", name="Test User", email="test@test.com", password_hash=password_hash
     )
@@ -94,7 +93,6 @@ def test_registration_storage() -> None:
     assert phone["ip_address"] == "192.168.1.100", "Wrong IP"
     assert phone["mac_address"] == "001565123456", "Wrong MAC"
     assert phone["user_agent"] == user_agent, "Wrong User-Agent"
-
 
     # Test re-registration (should update, not create new)
     user_agent2 = "Yealink SIP-T46S 66.85.0.10 00:15:65:12:34:56"
@@ -130,7 +128,7 @@ def test_ip_based_tracking() -> None:
     pbx.extension_db = ExtensionDB(db)
     import hashlib
 
-    password_hash = hashlib.sha256("testpass".encode()).hexdigest()
+    password_hash = hashlib.sha256(b"testpass").hexdigest()
     pbx.extension_db.add(
         number="1002", name="Generic User", email="test2@test.com", password_hash=password_hash
     )

@@ -14,15 +14,16 @@ import hmac
 import json
 import random
 import secrets
+import sqlite3
 import struct
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
+from typing import Any, ClassVar
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
-import sqlite3
 
 
 class TOTPGenerator:
@@ -31,7 +32,7 @@ class TOTPGenerator:
     Implements RFC 6238 TOTP algorithm
     """
 
-    def __init__(self, secret: bytes = None, period: int = 30, digits: int = 6):
+    def __init__(self, secret: bytes | None = None, period: int = 30, digits: int = 6) -> None:
         """
         Initialize TOTP generator
 
@@ -131,7 +132,7 @@ class TOTPGenerator:
             return False
 
         result = 0
-        for x, y in zip(a, b):
+        for x, y in zip(a, b, strict=False):
             result |= ord(x) ^ ord(y)
 
         return result == 0
@@ -161,7 +162,7 @@ class YubiKeyOTPVerifier:
     """
 
     # YubiCloud validation servers
-    YUBICO_SERVERS = [
+    YUBICO_SERVERS: ClassVar[list[str]] = [
         "https://api.yubico.com/wsapi/2.0/verify",
         "https://api2.yubico.com/wsapi/2.0/verify",
         "https://api3.yubico.com/wsapi/2.0/verify",
@@ -169,7 +170,7 @@ class YubiKeyOTPVerifier:
         "https://api5.yubico.com/wsapi/2.0/verify",
     ]
 
-    def __init__(self, client_id: str = None, api_key: str = None):
+    def __init__(self, client_id: str | None = None, api_key: str | None = None) -> None:
         """
         Initialize YubiKey OTP verifier
 
@@ -283,9 +284,7 @@ class YubiKeyOTPVerifier:
 
             # Make HTTP request with timeout
             request = urllib.request.Request(full_url)
-            with urllib.request.urlopen(
-                request, timeout=5
-            ) as response:  # nosec B310 - URL is from configured MFA provider
+            with urllib.request.urlopen(request, timeout=5) as response:  # nosec B310 - URL is from configured MFA provider
                 response_data = response.read().decode("utf-8")
 
             # Parse response (key=value pairs separated by newlines)
@@ -340,25 +339,23 @@ class YubiKeyOTPVerifier:
                     if response_dict.get("otp") == otp:
                         self.logger.info(f"YubiKey OTP verified successfully via {server_url}")
                         return True, None
-                    else:
-                        return False, "OTP mismatch in response"
-                elif status == "REPLAYED_OTP":
+                    return False, "OTP mismatch in response"
+                if status == "REPLAYED_OTP":
                     return False, "OTP has been used before (replay detected)"
-                elif status == "BAD_OTP":
+                if status == "BAD_OTP":
                     return False, "Invalid OTP format or signature"
-                elif status == "NO_SUCH_CLIENT":
+                if status == "NO_SUCH_CLIENT":
                     return False, "Invalid client ID"
-                elif status == "BAD_SIGNATURE":
+                if status == "BAD_SIGNATURE":
                     return False, "Invalid request signature"
-                elif status == "MISSING_PARAMETER":
+                if status == "MISSING_PARAMETER":
                     return False, "Missing required parameter"
-                elif status == "OPERATION_NOT_ALLOWED":
+                if status == "OPERATION_NOT_ALLOWED":
                     return False, "Operation not allowed for this client"
-                else:
-                    # Backend errors - try next server
-                    last_error = f"Backend error: {status}"
-                    self.logger.warning(f"YubiCloud server {server_url} returned: {status}")
-                    continue
+                # Backend errors - try next server
+                last_error = f"Backend error: {status}"
+                self.logger.warning(f"YubiCloud server {server_url} returned: {status}")
+                continue
 
             # If we get here, all servers failed
             return False, last_error or "All YubiCloud servers unavailable"
@@ -374,7 +371,7 @@ class FIDO2Verifier:
     Supports YubiKey and other FIDO2-compliant devices
     """
 
-    def __init__(self, rp_id: str = "pbx.local", rp_name: str = "Warden Voip"):
+    def __init__(self, rp_id: str = "pbx.local", rp_name: str = "Warden Voip") -> None:
         """
         Initialize FIDO2 verifier
 
@@ -443,7 +440,7 @@ class FIDO2Verifier:
                         f"FIDO2 credential validated and registered for extension {extension_number}"
                     )
                 except Exception as e:
-                    return False, f"Invalid credential format: {str(e)}"
+                    return False, f"Invalid credential format: {e!s}"
             else:
                 self.logger.info(
                     f"FIDO2 credential registered for extension {extension_number} (basic mode)"
@@ -456,7 +453,11 @@ class FIDO2Verifier:
             return False, str(e)
 
     def verify_assertion(
-        self, credential_id: str, assertion_data: dict, public_key: bytes, challenge: str = None
+        self,
+        credential_id: str,
+        assertion_data: dict,
+        public_key: bytes,
+        challenge: str | None = None,
     ) -> tuple[bool, str | None]:
         """
         Verify FIDO2 authentication assertion
@@ -501,7 +502,7 @@ class FIDO2Verifier:
                 if isinstance(public_key, str):
                     public_key = base64.b64decode(public_key)
             except Exception as e:
-                return False, f"Failed to decode assertion data: {str(e)}"
+                return False, f"Failed to decode assertion data: {e!s}"
 
             # If FIDO2 library is available, perform full verification
             if self.fido2_available:
@@ -517,7 +518,7 @@ class FIDO2Verifier:
                     except (json_lib.JSONDecodeError, UnicodeDecodeError, ValueError) as e:
                         return (
                             False,
-                            f"Invalid client_data_json format: {str(e)}",
+                            f"Invalid client_data_json format: {e!s}",
                         )
 
                     # Verify challenge if provided
@@ -529,9 +530,7 @@ class FIDO2Verifier:
                     # Verify origin (check if it matches rp_id)
                     origin = client_data.get("origin", "")
                     if self.rp_id not in origin:
-                        self.logger.warning(
-                            f"Origin {origin} does not match RP ID {self.rp_id}"
-                        )
+                        self.logger.warning(f"Origin {origin} does not match RP ID {self.rp_id}")
 
                     # Parse authenticator data
                     auth_data = AuthenticatorData(authenticator_data)
@@ -550,7 +549,7 @@ class FIDO2Verifier:
                         cose_key = CoseKey.parse(public_key)
                     except Exception as e:
                         # If parsing fails, return error
-                        return False, f"Invalid public key format: {str(e)}"
+                        return False, f"Invalid public key format: {e!s}"
 
                     # Verify signature
                     # The signed data is: authenticator_data ||
@@ -567,12 +566,12 @@ class FIDO2Verifier:
                     except Exception as e:
                         return (
                             False,
-                            f"Signature verification failed: {str(e)}",
+                            f"Signature verification failed: {e!s}",
                         )
 
                 except (KeyError, TypeError, ValueError) as e:
                     self.logger.error(f"FIDO2 verification error: {e}")
-                    return False, f"Verification error: {str(e)}"
+                    return False, f"Verification error: {e!s}"
             else:
                 # Basic verification without fido2 library
                 # At minimum, check that all required data is present and looks
@@ -611,7 +610,7 @@ class MFAManager:
     Manages MFA enrollment, verification, and backup codes
     """
 
-    def __init__(self, database=None, config: dict = None):
+    def __init__(self, database: Any | None = None, config: dict | None = None) -> None:
         """
         Initialize MFA manager
 
@@ -659,7 +658,7 @@ class MFAManager:
         if self.database and self.database.enabled:
             self._initialize_schema()
 
-    def _initialize_schema(self):
+    def _initialize_schema(self) -> None:
         """Initialize MFA database tables"""
         # MFA secrets table
         mfa_secrets_table = (
@@ -970,9 +969,7 @@ class MFAManager:
 
         # Check if user has MFA enabled
         if not self.is_enabled_for_user(extension_number):
-            if self.required:
-                return False  # MFA required but not enabled
-            return True  # MFA not required
+            return not self.required  # False if MFA required but not enabled
 
         try:
             # Try TOTP code first (Google Authenticator, Microsoft
@@ -986,15 +983,15 @@ class MFAManager:
                     return True
 
             # Try YubiKey OTP (44 character code)
-            if self.yubikey_enabled and len(code) == 44:
-                if self._verify_yubikey_otp(extension_number, code):
-                    return True
-
-            # Try backup code
-            if self._verify_backup_code(extension_number, code):
+            if (
+                self.yubikey_enabled
+                and len(code) == 44
+                and self._verify_yubikey_otp(extension_number, code)
+            ):
                 return True
 
-            return False
+            # Try backup code
+            return bool(self._verify_backup_code(extension_number, code))
 
         except Exception as e:
             self.logger.error(f"MFA verification failed for {extension_number}: {e}")
@@ -1067,7 +1064,7 @@ class MFAManager:
             return False
 
     def enroll_yubikey(
-        self, extension_number: str, otp: str, device_name: str = None
+        self, extension_number: str, otp: str, device_name: str | None = None
     ) -> tuple[bool, str | None]:
         """
         Enroll YubiKey device for user
@@ -1136,7 +1133,7 @@ class MFAManager:
             return False, str(e)
 
     def enroll_fido2(
-        self, extension_number: str, credential_data: dict, device_name: str = None
+        self, extension_number: str, credential_data: dict, device_name: str | None = None
     ) -> tuple[bool, str | None]:
         """
         Enroll FIDO2/WebAuthn credential for user
@@ -1179,7 +1176,7 @@ class MFAManager:
             """
             )
             # Convert public_key to JSON string if it's a dict/bytes
-            if isinstance(public_key, (dict, bytes)):
+            if isinstance(public_key, dict | bytes):
                 public_key = (
                     json.dumps(public_key)
                     if isinstance(public_key, dict)
@@ -1315,7 +1312,7 @@ class MFAManager:
                 return False
 
             # Verify OTP with YubiCloud
-            valid, error = self.yubikey_verifier.verify_otp(otp)
+            valid, _error = self.yubikey_verifier.verify_otp(otp)
             if valid:
                 # Update last used timestamp
                 update_query = (
@@ -1496,7 +1493,7 @@ class MFAManager:
             self.logger.error(f"Failed to verify backup code for {extension_number}: {e}")
             return False
 
-    def _update_last_used(self, extension_number: str):
+    def _update_last_used(self, extension_number: str) -> None:
         """Update last used timestamp"""
         if not self.database or not self.database.enabled:
             return
@@ -1519,7 +1516,7 @@ class MFAManager:
         except sqlite3.Error as e:
             self.logger.error(f"Failed to update last used for {extension_number}: {e}")
 
-    def _generate_backup_codes(self, count: int = None) -> list:
+    def _generate_backup_codes(self, count: int | None = None) -> list:
         """Generate random backup codes"""
         if count is None:
             count = self.backup_codes_count
@@ -1537,6 +1534,6 @@ class MFAManager:
         return codes
 
 
-def get_mfa_manager(database=None, config: dict = None) -> MFAManager:
+def get_mfa_manager(database: Any | None = None, config: dict | None = None) -> MFAManager:
     """Get MFA manager instance"""
     return MFAManager(database, config)

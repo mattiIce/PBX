@@ -16,6 +16,7 @@ Supports all G.726 bitrate variants:
 """
 
 import struct
+from typing import ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -26,22 +27,106 @@ from pbx.utils.logger import get_logger
 # Step-size index adjustment table, indexed by the ADPCM code (0..7 for the
 # magnitude portion of each nibble).
 _INDEX_TABLE: list[int] = [
-    -1, -1, -1, -1, 2, 4, 6, 8,
+    -1,
+    -1,
+    -1,
+    -1,
+    2,
+    4,
+    6,
+    8,
 ]
 
 # Quantiser step-size table, indexed by the step-size index (0..88).
 _STEP_SIZE_TABLE: list[int] = [
-    7, 8, 9, 10, 11, 12, 13, 14,
-    16, 17, 19, 21, 23, 25, 28, 31,
-    34, 37, 41, 45, 50, 55, 60, 66,
-    73, 80, 88, 97, 107, 118, 130, 143,
-    157, 173, 190, 209, 230, 253, 279, 307,
-    337, 371, 408, 449, 494, 544, 598, 658,
-    724, 796, 876, 963, 1060, 1166, 1282, 1411,
-    1552, 1707, 1878, 2066, 2272, 2499, 2749, 3024,
-    3327, 3660, 4026, 4428, 4871, 5358, 5894, 6484,
-    7132, 7845, 8630, 9493, 10442, 11487, 12635, 13899,
-    15289, 16818, 18500, 20350, 22385, 24623, 27086, 29794,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    16,
+    17,
+    19,
+    21,
+    23,
+    25,
+    28,
+    31,
+    34,
+    37,
+    41,
+    45,
+    50,
+    55,
+    60,
+    66,
+    73,
+    80,
+    88,
+    97,
+    107,
+    118,
+    130,
+    143,
+    157,
+    173,
+    190,
+    209,
+    230,
+    253,
+    279,
+    307,
+    337,
+    371,
+    408,
+    449,
+    494,
+    544,
+    598,
+    658,
+    724,
+    796,
+    876,
+    963,
+    1060,
+    1166,
+    1282,
+    1411,
+    1552,
+    1707,
+    1878,
+    2066,
+    2272,
+    2499,
+    2749,
+    3024,
+    3327,
+    3660,
+    4026,
+    4428,
+    4871,
+    5358,
+    5894,
+    6484,
+    7132,
+    7845,
+    8630,
+    9493,
+    10442,
+    11487,
+    12635,
+    13899,
+    15289,
+    16818,
+    18500,
+    20350,
+    22385,
+    24623,
+    27086,
+    29794,
     32767,
 ]
 
@@ -63,7 +148,10 @@ def _clamp(value: int, lo: int, hi: int) -> int:
 # that existing callers continue to work without modification.
 # ---------------------------------------------------------------------------
 
-def _ima_adpcm_encode(pcm_data: bytes, state: tuple[int, int] | None = None) -> tuple[bytes, tuple[int, int]]:
+
+def _ima_adpcm_encode(
+    pcm_data: bytes, state: tuple[int, int] | None = None
+) -> tuple[bytes, tuple[int, int]]:
     """Encode 16-bit signed LE PCM data to 4-bit IMA ADPCM.
 
     Args:
@@ -113,7 +201,7 @@ def _ima_adpcm_encode(pcm_data: bytes, state: tuple[int, int] | None = None) -> 
         # Decode the nibble back to update predicted value (keeps encoder and
         # decoder in sync).
         code = nibble & 0x07
-        delta = (step >> 3)
+        delta = step >> 3
         if code & 4:
             delta += step
         if code & 2:
@@ -145,7 +233,9 @@ def _ima_adpcm_encode(pcm_data: bytes, state: tuple[int, int] | None = None) -> 
     return bytes(output), (predicted, index)
 
 
-def _ima_adpcm_decode(adpcm_data: bytes, sample_width: int, state: tuple[int, int] | None = None) -> tuple[bytes, tuple[int, int]]:
+def _ima_adpcm_decode(
+    adpcm_data: bytes, sample_width: int, state: tuple[int, int] | None = None
+) -> tuple[bytes, tuple[int, int]]:
     """Decode 4-bit IMA ADPCM to 16-bit signed LE PCM data.
 
     Args:
@@ -205,6 +295,7 @@ def _ima_adpcm_decode(adpcm_data: bytes, sample_width: int, state: tuple[int, in
 # G.726 codec class
 # ---------------------------------------------------------------------------
 
+
 class G726Codec:
     """
     G.726 ADPCM codec implementation
@@ -224,7 +315,7 @@ class G726Codec:
 
     # Payload type mapping (RFC 3551)
     # Note: Only G.726-32 has a static payload type
-    PAYLOAD_TYPES: dict[int, int | None] = {
+    PAYLOAD_TYPES: ClassVar[dict[int, int | None]] = {
         16: None,  # No static type, use dynamic (96-127)
         24: None,  # No static type, use dynamic (96-127)
         32: 2,  # G721 (G.726-32) - standard static type
@@ -232,10 +323,10 @@ class G726Codec:
     }
 
     # Default dynamic payload types (when static not available)
-    DEFAULT_DYNAMIC_TYPES: dict[int, int] = {16: 112, 24: 113, 32: 2, 40: 114}
+    DEFAULT_DYNAMIC_TYPES: ClassVar[dict[int, int]] = {16: 112, 24: 113, 32: 2, 40: 114}
 
     # Bits per sample for each bitrate
-    BITS_PER_SAMPLE: dict[int, int] = {16: 2, 24: 3, 32: 4, 40: 5}
+    BITS_PER_SAMPLE: ClassVar[dict[int, int]] = {16: 2, 24: 3, 32: 4, 40: 5}
 
     def __init__(self, bitrate: int = 32000) -> None:
         """
@@ -254,8 +345,7 @@ class G726Codec:
 
         if self.bitrate_kbps not in (16, 24, 32, 40):
             raise ValueError(
-                f"Unsupported G.726 bitrate: {bitrate}. "
-                "Must be 16000, 24000, 32000, or 40000"
+                f"Unsupported G.726 bitrate: {bitrate}. Must be 16000, 24000, 32000, or 40000"
             )
 
         self.bitrate = bitrate
@@ -285,16 +375,15 @@ class G726Codec:
         try:
             if self.bitrate_kbps == 32:
                 adpcm_data, self._encode_state = _ima_adpcm_encode(
-                    pcm_data, self._encode_state,
+                    pcm_data,
+                    self._encode_state,
                 )
                 return adpcm_data
-            else:
-                # For 16, 24, 40 kbit/s variants a specialised library is needed
-                self.logger.warning(
-                    f"G.726-{self.bitrate_kbps} encoding not implemented. "
-                    "Only G.726-32 is supported."
-                )
-                return None
+            # For 16, 24, 40 kbit/s variants a specialised library is needed
+            self.logger.warning(
+                f"G.726-{self.bitrate_kbps} encoding not implemented. Only G.726-32 is supported."
+            )
+            return None
         except Exception as e:
             self.logger.error(f"G.726 encoding error: {e}")
             return None
@@ -316,16 +405,16 @@ class G726Codec:
 
             if self.bitrate_kbps == 32:
                 pcm_data, self._decode_state = _ima_adpcm_decode(
-                    g726_data, 2, self._decode_state,
+                    g726_data,
+                    2,
+                    self._decode_state,
                 )
                 return pcm_data
-            else:
-                # For 16, 24, 40 kbit/s variants a specialised library is needed
-                self.logger.warning(
-                    f"G.726-{self.bitrate_kbps} decoding not implemented. "
-                    "Only G.726-32 is supported."
-                )
-                return None
+            # For 16, 24, 40 kbit/s variants a specialised library is needed
+            self.logger.warning(
+                f"G.726-{self.bitrate_kbps} decoding not implemented. Only G.726-32 is supported."
+            )
+            return None
         except Exception as e:
             self.logger.error(f"G.726 decoding error: {e}")
             return None
@@ -377,8 +466,7 @@ class G726Codec:
         if self.bitrate_kbps == 32:
             # G.726-32 can also be advertised as G721
             return f"rtpmap:{self.payload_type} G726-32/{self.SAMPLE_RATE}"
-        else:
-            return f"rtpmap:{self.payload_type} G726-{self.bitrate_kbps}/{self.SAMPLE_RATE}"
+        return f"rtpmap:{self.payload_type} G726-{self.bitrate_kbps}/{self.SAMPLE_RATE}"
 
     def get_fmtp_params(self) -> str | None:
         """
@@ -405,11 +493,8 @@ class G726Codec:
         bitrate_kbps = bitrate // 1000
 
         # G.726-32 is fully supported via the pure-Python ADPCM implementation
-        if bitrate_kbps == 32:
-            return True
-
         # Other bitrates would need a specialised library
-        return False
+        return bitrate_kbps == 32
 
     @staticmethod
     def get_capabilities() -> dict:

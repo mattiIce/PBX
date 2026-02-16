@@ -12,18 +12,18 @@ Manual reboot options if needed:
 - API: POST /api/phones/reboot or POST /api/phones/{extension}/reboot
 """
 
-import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
-from pathlib import Path
 
 
 class PhoneTemplate:
     """Represents a phone configuration template"""
 
-    def __init__(self, vendor, model, template_content):
+    def __init__(self, vendor: str, model: str, template_content: str) -> None:
         """
         Initialize phone template
 
@@ -36,7 +36,7 @@ class PhoneTemplate:
         self.model = model.lower()
         self.template_content = template_content
 
-    def generate_config(self, extension_config, server_config):
+    def generate_config(self, extension_config: str, server_config: dict) -> str:
         """
         Generate configuration from template
 
@@ -101,7 +101,7 @@ class PhoneTemplate:
         return config
 
 
-def normalize_mac_address(mac):
+def normalize_mac_address(mac: str) -> str:
     """
     Normalize MAC address to consistent format
 
@@ -120,8 +120,14 @@ class ProvisioningDevice:
     """Represents a provisioned phone device"""
 
     def __init__(
-        self, mac_address, extension_number, vendor, model, device_type=None, config_url=None
-    ):
+        self,
+        mac_address: str,
+        extension_number: str,
+        vendor: str,
+        model: str,
+        device_type: str | None = None,
+        config_url: str | None = None,
+    ) -> None:
         """
         Initialize provisioning device
 
@@ -143,7 +149,7 @@ class ProvisioningDevice:
         else:
             self.device_type = device_type
         self.config_url = config_url
-        self.created_at = datetime.now(timezone.utc)
+        self.created_at = datetime.now(UTC)
         self.last_provisioned = None
 
     def _detect_device_type(self, vendor: str, model: str) -> str:
@@ -163,11 +169,11 @@ class ProvisioningDevice:
         """Check if device is an ATA"""
         return self.device_type == "ata"
 
-    def mark_provisioned(self):
+    def mark_provisioned(self) -> None:
         """Mark device as provisioned"""
-        self.last_provisioned = datetime.now(timezone.utc)
+        self.last_provisioned = datetime.now(UTC)
 
-    def to_dict(self):
+    def to_dict(self) -> dict:
         """Convert to dictionary"""
         return {
             "mac_address": self.mac_address,
@@ -186,7 +192,7 @@ class ProvisioningDevice:
 class PhoneProvisioning:
     """Phone provisioning management"""
 
-    def __init__(self, config, database=None):
+    def __init__(self, config: Any, database: Any | None = None) -> None:
         """
         Initialize phone provisioning
 
@@ -228,9 +234,7 @@ class PhoneProvisioning:
         self.logger.info(
             f"Server external IP: {self.config.get('server.external_ip', 'Not configured')}"
         )
-        self.logger.info(
-            f"API port: {self.config.get('api.port', 'Not configured')}"
-        )
+        self.logger.info(f"API port: {self.config.get('api.port', 'Not configured')}")
 
         # Check SSL status for provisioning URL generation
         ssl_enabled = self.config.get("api.ssl.enabled", False)
@@ -245,7 +249,7 @@ class PhoneProvisioning:
                 "To use HTTP for provisioning: set provisioning.url_format to http://... in config.yml"
             )
 
-    def _load_devices_from_database(self):
+    def _load_devices_from_database(self) -> None:
         """Load provisioned devices from database into memory"""
         if not self.devices_db:
             return
@@ -260,12 +264,12 @@ class PhoneProvisioning:
                     model=db_device["model"],
                     device_type=db_device.get("device_type"),  # Load device_type from DB
                 )
-                
+
                 # Regenerate config_url to reflect current configuration
                 # This ensures the URL uses the current api.port and server.external_ip
                 # even if they changed since the device was originally registered
                 device.config_url = self._generate_config_url(device.mac_address)
-                
+
                 # Restore timestamps if available
                 if db_device.get("created_at"):
                     device.created_at = db_device["created_at"]
@@ -274,13 +278,11 @@ class PhoneProvisioning:
 
                 self.devices[device.mac_address] = device
 
-            self.logger.info(
-                f"Loaded {len(db_devices)} provisioned devices from database"
-            )
+            self.logger.info(f"Loaded {len(db_devices)} provisioned devices from database")
         except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading devices from database: {e}")
 
-    def _load_builtin_templates(self):
+    def _load_builtin_templates(self) -> None:
         """Load built-in phone templates"""
 
         # Zultys ZIP 33G template (basic SIP phone)
@@ -1040,22 +1042,23 @@ P2351 = 1
 
         self.logger.info(f"Loaded {len(self.templates)} built-in phone templates (including ATAs)")
 
-    def _load_custom_templates(self):
+    def _load_custom_templates(self) -> None:
         """Load custom templates from configuration"""
         custom_templates_dir = self.config.get("provisioning.custom_templates_dir", None)
 
         if custom_templates_dir and Path(custom_templates_dir).exists():
             try:
-                for filename in os.listdir(custom_templates_dir):
+                for entry in Path(custom_templates_dir).iterdir():
+                    filename = entry.name
                     if filename.endswith(".template"):
-                        filepath = Path(custom_templates_dir) / filename
+                        filepath = entry
                         # Parse filename: vendor_model.template
                         parts = filename.replace(".template", "").split("_")
                         if len(parts) >= 2:
                             vendor = parts[0]
                             model = "_".join(parts[1:])
 
-                            with open(filepath, "r") as f:
+                            with filepath.open() as f:
                                 template_content = f.read()
 
                             self.add_template(vendor, model, template_content)
@@ -1063,7 +1066,7 @@ P2351 = 1
             except OSError as e:
                 self.logger.error(f"Error loading custom templates: {e}")
 
-    def add_template(self, vendor, model, template_content):
+    def add_template(self, vendor: str, model: str, template_content: str) -> None:
         """
         Add a phone template
 
@@ -1075,7 +1078,7 @@ P2351 = 1
         key = (vendor.lower(), model.lower())
         self.templates[key] = PhoneTemplate(vendor, model, template_content)
 
-    def get_template(self, vendor, model):
+    def get_template(self, vendor: str, model: str) -> Any | None:
         """
         Get phone template
 
@@ -1089,7 +1092,9 @@ P2351 = 1
         key = (vendor.lower(), model.lower())
         return self.templates.get(key)
 
-    def register_device(self, mac_address, extension_number, vendor, model):
+    def register_device(
+        self, mac_address: str, extension_number: str, vendor: str, model: str
+    ) -> Any:
         """
         Register a device for provisioning
 
@@ -1136,7 +1141,7 @@ P2351 = 1
 
         return device
 
-    def unregister_device(self, mac_address):
+    def unregister_device(self, mac_address: str) -> bool:
         """
         Unregister a device
 
@@ -1168,7 +1173,7 @@ P2351 = 1
             return True
         return False
 
-    def get_device(self, mac_address):
+    def get_device(self, mac_address: str) -> Any | None:
         """
         Get device by MAC address
 
@@ -1181,7 +1186,7 @@ P2351 = 1
         normalized_mac = normalize_mac_address(mac_address)
         return self.devices.get(normalized_mac)
 
-    def get_all_devices(self):
+    def get_all_devices(self) -> list:
         """
         Get all registered devices
 
@@ -1190,7 +1195,7 @@ P2351 = 1
         """
         return list(self.devices.values())
 
-    def get_atas(self):
+    def get_atas(self) -> list:
         """
         Get all registered ATA devices
 
@@ -1199,7 +1204,7 @@ P2351 = 1
         """
         return [device for device in self.devices.values() if device.is_ata()]
 
-    def get_phones(self):
+    def get_phones(self) -> list:
         """
         Get all registered phone devices (excluding ATAs)
 
@@ -1208,7 +1213,7 @@ P2351 = 1
         """
         return [device for device in self.devices.values() if not device.is_ata()]
 
-    def _build_ldap_phonebook_config(self):
+    def _build_ldap_phonebook_config(self) -> dict:
         """
         Build LDAP phonebook configuration from AD credentials or explicit config
 
@@ -1331,7 +1336,9 @@ P2351 = 1
             "display_name": "Directory",
         }
 
-    def generate_config(self, mac_address, extension_registry, request_info=None):
+    def generate_config(
+        self, mac_address: str, extension_registry: str, request_info: dict | None = None
+    ) -> tuple:
         """
         Generate configuration for a device
 
@@ -1345,7 +1352,7 @@ P2351 = 1
         """
         # Log the provisioning request for troubleshooting
         request_log = {
-            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "timestamp": datetime.now(UTC).isoformat(),
             "mac_address": mac_address,
             "normalized_mac": normalize_mac_address(mac_address),
             "ip_address": request_info.get("ip") if request_info else None,
@@ -1356,9 +1363,7 @@ P2351 = 1
 
         self.logger.info(f"Provisioning request received for MAC: {mac_address}")
         if request_info:
-            self.logger.info(
-                f"  Request from IP: {request_info.get('ip', 'Unknown')}"
-            )
+            self.logger.info(f"  Request from IP: {request_info.get('ip', 'Unknown')}")
             self.logger.info(f"  User-Agent: {request_info.get('user_agent', 'Unknown')}")
 
         device = self.get_device(mac_address)
@@ -1367,9 +1372,7 @@ P2351 = 1
             error_msg = f"Device {mac_address} not registered in provisioning system"
             self.logger.warning(error_msg)
             self.logger.warning(f"  Normalized MAC: {normalized}")
-            self.logger.warning(
-                f"  Registered devices: {list(self.devices.keys())}"
-            )
+            self.logger.warning(f"  Registered devices: {list(self.devices)}")
 
             # Provide helpful guidance
             # Determine protocol based on actual API configuration
@@ -1396,7 +1399,7 @@ P2351 = 1
 
             # Check if there are similar MACs (might be a format issue)
             mac_prefix = normalized[:6]  # First 6 chars (OUI)
-            similar_macs = [m for m in self.devices.keys() if m.startswith(mac_prefix)]
+            similar_macs = [m for m in self.devices if m.startswith(mac_prefix)]
             if similar_macs:
                 self.logger.warning(f"  → Similar MACs found (same vendor): {similar_macs}")
                 self.logger.warning("     This might be a typo in the MAC address")
@@ -1414,9 +1417,7 @@ P2351 = 1
         if not template:
             error_msg = f"Template not found for {device.vendor} {device.model}"
             self.logger.warning(error_msg)
-            self.logger.warning(
-                f"  Available templates: {list(self.templates.keys())}"
-            )
+            self.logger.warning(f"  Available templates: {list(self.templates)}")
             request_log["error"] = error_msg
             self._add_request_log(request_log)
             return None, None
@@ -1433,9 +1434,7 @@ P2351 = 1
             self._add_request_log(request_log)
             return None, None
 
-        self.logger.info(
-            f"  Extension found: {extension.number} ({extension.name})"
-        )
+        self.logger.info(f"  Extension found: {extension.number} ({extension.name})")
 
         # Build extension config dict
         extension_config = {
@@ -1493,14 +1492,14 @@ P2351 = 1
 
         return config_content, content_type
 
-    def _add_request_log(self, request_log):
+    def _add_request_log(self, request_log: dict) -> None:
         """Add request to history, keeping only recent requests"""
         self.provision_requests.append(request_log)
         # Keep only the last N requests
         if len(self.provision_requests) > self.max_request_history:
             self.provision_requests = self.provision_requests[-self.max_request_history :]
 
-    def get_request_history(self, limit=None):
+    def get_request_history(self, limit: int | None = None) -> list:
         """
         Get provisioning request history
 
@@ -1514,7 +1513,7 @@ P2351 = 1
             return self.provision_requests[-limit:]
         return self.provision_requests
 
-    def _generate_config_url(self, mac_address):
+    def _generate_config_url(self, mac_address: str) -> str:
         """
         Generate provisioning config URL for a device
 
@@ -1546,7 +1545,7 @@ P2351 = 1
 
         return config_url
 
-    def get_supported_vendors(self):
+    def get_supported_vendors(self) -> list:
         """
         Get list of supported vendors
 
@@ -1554,11 +1553,11 @@ P2351 = 1
             list of vendor names
         """
         vendors = set()
-        for vendor, model in self.templates.keys():
+        for vendor, _model in self.templates:
             vendors.add(vendor)
-        return sorted(list(vendors))
+        return sorted(vendors)
 
-    def get_supported_models(self, vendor=None):
+    def get_supported_models(self, vendor: str | None = None) -> list:
         """
         Get list of supported models
 
@@ -1571,23 +1570,22 @@ P2351 = 1
         if vendor:
             models = []
             vendor = vendor.lower()
-            for v, m in self.templates.keys():
+            for v, m in self.templates:
                 if v == vendor:
                     models.append(m)
             return sorted(models)
-        else:
-            # Return dict of vendor -> models
-            result = {}
-            for v, m in self.templates.keys():
-                if v not in result:
-                    result[v] = []
-                result[v].append(m)
-            # Sort each vendor's models
-            for v in result:
-                result[v] = sorted(result[v])
-            return result
+        # Return dict of vendor -> models
+        result = {}
+        for v, m in self.templates:
+            if v not in result:
+                result[v] = []
+            result[v].append(m)
+        # Sort each vendor's models
+        for v, models in result.items():
+            result[v] = sorted(models)
+        return result
 
-    def reboot_phone(self, extension_number, sip_server):
+    def reboot_phone(self, extension_number: str, sip_server: Any) -> bool:
         """
         Send SIP NOTIFY to reboot a phone
 
@@ -1617,7 +1615,7 @@ P2351 = 1
                 uri=f"sip:{extension_number}@{extension.address[0]}:{extension.address[1]}",
                 from_addr=f"<sip:{server_ip}:{sip_port}>",
                 to_addr=f"<sip:{extension_number}@{server_ip}>",
-                call_id=f"notify-reboot-{extension_number}-{datetime.now(timezone.utc).timestamp()}",
+                call_id=f"notify-reboot-{extension_number}-{datetime.now(UTC).timestamp()}",
                 cseq=1,
             )
 
@@ -1638,7 +1636,7 @@ P2351 = 1
             self.logger.error(f"Error sending reboot NOTIFY to extension {extension_number}: {e}")
             return False
 
-    def reboot_all_phones(self, sip_server):
+    def reboot_all_phones(self, sip_server: Any) -> dict:
         """
         Send SIP NOTIFY to reboot all registered phones
 
@@ -1667,7 +1665,7 @@ P2351 = 1
         )
         return results
 
-    def list_all_templates(self):
+    def list_all_templates(self) -> list:
         """
         list all available templates (both built-in and custom)
 
@@ -1699,7 +1697,7 @@ P2351 = 1
 
         return sorted(templates_list, key=lambda x: (x["vendor"], x["model"]))
 
-    def get_template_content(self, vendor, model):
+    def get_template_content(self, vendor: str, model: str) -> Any | None:
         """
         Get the content of a specific template
 
@@ -1715,7 +1713,7 @@ P2351 = 1
             return template.template_content
         return None
 
-    def export_template_to_file(self, vendor, model):
+    def export_template_to_file(self, vendor: str, model: str) -> tuple:
         """
         Export a template to the custom templates directory
 
@@ -1748,7 +1746,7 @@ P2351 = 1
         # Create directory if it doesn't exist
         if not Path(custom_dir).exists():
             try:
-                os.makedirs(custom_dir)
+                Path(custom_dir).mkdir(parents=True, exist_ok=True)
                 self.logger.info(f"Created custom templates directory: {custom_dir}")
             except OSError as e:
                 return False, f"Failed to create directory: {e}", None
@@ -1758,7 +1756,7 @@ P2351 = 1
         template_path = Path(custom_dir) / template_filename
 
         try:
-            with open(template_path, "w") as f:
+            with template_path.open("w") as f:
                 f.write(template.template_content)
 
             self.logger.info(f"Exported template to: {template_path}")
@@ -1767,7 +1765,7 @@ P2351 = 1
             self.logger.error(f"Failed to export template: {e}")
             return False, f"Failed to export template: {e}", None
 
-    def update_template(self, vendor, model, content):
+    def update_template(self, vendor: str, model: str, content: str) -> tuple:
         """
         Update a template with new content
 
@@ -1796,7 +1794,7 @@ P2351 = 1
         # Create directory if it doesn't exist
         if not Path(custom_dir).exists():
             try:
-                os.makedirs(custom_dir)
+                Path(custom_dir).mkdir(parents=True, exist_ok=True)
             except OSError as e:
                 return False, f"Failed to create directory: {e}"
 
@@ -1805,7 +1803,7 @@ P2351 = 1
         template_path = Path(custom_dir) / template_filename
 
         try:
-            with open(template_path, "w") as f:
+            with template_path.open("w") as f:
                 f.write(content)
 
             # Update in memory
@@ -1817,7 +1815,7 @@ P2351 = 1
             self.logger.error(f"Failed to update template: {e}")
             return False, f"Failed to update template: {e}"
 
-    def set_static_ip(self, mac_address, static_ip):
+    def set_static_ip(self, mac_address: str, static_ip: str) -> tuple:
         """
         set static IP address for a device
 
@@ -1842,15 +1840,14 @@ P2351 = 1
                 if success:
                     self.logger.info(f"set static IP {static_ip} for device {mac_address}")
                     return True, f"Static IP {static_ip} set for device {mac_address}"
-                else:
-                    return False, "Failed to update static IP in database"
+                return False, "Failed to update static IP in database"
             except Exception as e:
                 self.logger.error(f"Failed to set static IP: {e}")
                 return False, f"Failed to set static IP: {e}"
         else:
             return False, "Database not available - static IP mapping requires database"
 
-    def get_static_ip(self, mac_address):
+    def get_static_ip(self, mac_address: str) -> Any | None:
         """
         Get static IP address for a device
 
@@ -1872,7 +1869,7 @@ P2351 = 1
 
         return None
 
-    def reload_templates(self):
+    def reload_templates(self) -> tuple:
         """
         Reload all templates from disk
 
