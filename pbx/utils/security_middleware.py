@@ -5,13 +5,14 @@ Provides security headers, rate limiting, and request validation.
 
 import threading
 import time
+from typing import ClassVar
 
 
 class SecurityHeaders:
     """Add security headers to HTTP responses."""
 
     # Security headers for production
-    SECURITY_HEADERS = {
+    SECURITY_HEADERS: ClassVar[dict[str, str]] = {
         # Prevent clickjacking
         "X-Frame-Options": "DENY",
         # Prevent MIME type sniffing
@@ -191,7 +192,7 @@ class RequestValidator:
     MAX_BODY_SIZE = 10 * 1024 * 1024
 
     # Suspicious patterns in request paths
-    SUSPICIOUS_PATTERNS = [
+    SUSPICIOUS_PATTERNS: ClassVar[list[str]] = [
         "../",  # Path traversal
         "..\\",  # Path traversal (Windows)
         "%2e%2e",  # Encoded path traversal
@@ -263,12 +264,12 @@ class RequestValidator:
 class SecretValidator:
     """Validate that secrets are properly configured."""
 
-    REQUIRED_SECRETS = [
+    REQUIRED_SECRETS: ClassVar[list[str]] = [
         "DB_PASSWORD",
         "JWT_SECRET",
     ]
 
-    OPTIONAL_SECRETS = [
+    OPTIONAL_SECRETS: ClassVar[list[str]] = [
         "REDIS_PASSWORD",
         "API_KEY",
         "WEBHOOK_SECRET",

@@ -9,7 +9,7 @@ import json
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSystem
 
@@ -19,7 +19,7 @@ from pbx.features.webhooks import WebhookEvent, WebhookSubscription, WebhookSyst
 class MockWebhookReceiver(BaseHTTPRequestHandler):
     """Mock HTTP server to receive webhooks"""
 
-    received_webhooks = []
+    received_webhooks: ClassVar[list] = []
 
     def do_POST(self) -> None:
         content_length = int(self.headers["Content-Length"])

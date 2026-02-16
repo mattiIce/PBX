@@ -8,6 +8,7 @@ import secrets
 import sqlite3
 import time
 from datetime import UTC, datetime
+from typing import ClassVar
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
@@ -26,7 +27,7 @@ class PasswordPolicy:
     SPECIAL_CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?"
 
     # Common weak passwords to block (case will be normalized during check)
-    COMMON_PASSWORDS = {
+    COMMON_PASSWORDS: ClassVar[set[str]] = {
         "password",
         "password123",
         "password123!",

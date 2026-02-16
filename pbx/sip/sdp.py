@@ -30,8 +30,8 @@ class SDPSession:
         current_media: dict[str, Any] | None = None
 
         for line in lines:
-            line = line.strip()
-            if not line or "=" not in line:
+            stripped_line = line.strip()
+            if not stripped_line or "=" not in stripped_line:
                 continue
 
             type_char = line[0]

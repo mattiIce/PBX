@@ -8,6 +8,7 @@ It can be run interactively or with command-line arguments.
 
 import argparse
 from pathlib import Path
+from typing import ClassVar
 
 import yaml
 
@@ -15,7 +16,7 @@ import yaml
 class IntegrationSetup:
     """Setup tool for PBX open-source integrations"""
 
-    INTEGRATIONS = {
+    INTEGRATIONS: ClassVar[dict[str, dict]] = {
         "jitsi": {
             "name": "Jitsi Meet",
             "description": "Video conferencing (Free Zoom alternative)",
