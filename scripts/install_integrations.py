@@ -25,14 +25,14 @@ from pathlib import Path
 class IntegrationInstaller:
     """Automated installer for PBX integrations"""
 
-    def __init__(self, verbose=False, dry_run=False):
+    def __init__(self, verbose: bool = False, dry_run: bool = False) -> None:
         self.verbose = verbose
         self.dry_run = dry_run
         self.base_path = Path(__file__).parent.parent
         self.is_root = os.geteuid() == 0 if hasattr(os, "geteuid") else False
 
-    def log(self, message, level="INFO"):
-        """Log a message"""
+    def log(self, message: str, level: str = "INFO") -> None:
+        """Log a message."""
         prefix = {
             "INFO": "ℹ️ ",
             "SUCCESS": "✅",
@@ -42,7 +42,7 @@ class IntegrationInstaller:
         }.get(level, "")
         print(f"{prefix} {message}")
 
-    def run_command(self, cmd, check=True, capture=False, show_output=True):
+    def run_command(self, cmd: list[str] | str, check: bool = True, capture: bool = False, show_output: bool = True) -> bool | str:
         """
         Run a command safely using subprocess without shell=True.
 
@@ -84,7 +84,7 @@ class IntegrationInstaller:
                 self.log(f"Error: {e}", "ERROR")
             return False
 
-    def run_shell_command(self, cmd, check=True, capture=False, show_output=True):
+    def run_shell_command(self, cmd: str, check: bool = True, capture: bool = False, show_output: bool = True) -> bool | str:
         """
         Run a shell command that requires pipes/redirections (trusted input only).
         This is kept separate to clearly mark which commands need shell=True.
@@ -116,13 +116,13 @@ class IntegrationInstaller:
                 self.log(f"Error: {e}", "ERROR")
             return False
 
-    def check_command_exists(self, command):
-        """Check if a command exists using Python's shutil.which for cross-platform compatibility"""
+    def check_command_exists(self, command: str) -> bool:
+        """Check if a command exists using Python's shutil.which for cross-platform compatibility."""
         result = shutil.which(command)
         return result is not None
 
-    def detect_os(self):
-        """Detect the operating system"""
+    def detect_os(self) -> str:
+        """Detect the operating system."""
         system = platform.system().lower()
         if system == "linux":
             # Try to detect specific distro

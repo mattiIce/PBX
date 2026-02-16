@@ -865,7 +865,7 @@ function loadPredictiveDialingStats() {
             document.getElementById('total-campaigns').textContent = stats.total_campaigns || 0;
             document.getElementById('active-campaigns').textContent = stats.active_campaigns || 0;
             document.getElementById('calls-today').textContent = stats.calls_today || 0;
-            document.getElementById('contact-rate').textContent = (stats.contact_rate || 0) + '%';
+            document.getElementById('contact-rate').textContent = `${stats.contact_rate ?? 0}%`;
         })
         .catch(err => {
             // Silent failure is acceptable - statistics will show 0 values
@@ -2344,8 +2344,8 @@ window.frameworkFeatures = {
 // 2. Refresh all functionality (refreshAllData function calls loadXXX functions)
 // We filter to only export 'load*' functions to avoid polluting global namespace with
 // helper functions like dialog creators, delete handlers, etc.
-Object.keys(window.frameworkFeatures).forEach(funcName => {
+for (const funcName of Object.keys(window.frameworkFeatures)) {
     if (funcName.startsWith('load') && typeof window.frameworkFeatures[funcName] === 'function') {
         window[funcName] = window.frameworkFeatures[funcName];
     }
-});
+}

@@ -27,7 +27,7 @@ class GracefulShutdownHandler:
     - Provides shutdown timeout for forced termination
     """
 
-    def __init__(self, pbx_core=None, shutdown_timeout: int = 30):
+    def __init__(self, pbx_core: object = None, shutdown_timeout: int = 30) -> None:
         """
         Initialize shutdown handler.
 
@@ -42,7 +42,7 @@ class GracefulShutdownHandler:
         self._original_sigint = None
         self._original_sigterm = None
 
-    def setup_handlers(self):
+    def setup_handlers(self) -> None:
         """Setup signal handlers for graceful shutdown."""
         # Store original handlers
         self._original_sigint = signal.signal(signal.SIGINT, self._signal_handler)
@@ -50,7 +50,7 @@ class GracefulShutdownHandler:
 
         logger.info("Graceful shutdown handlers registered")
 
-    def _signal_handler(self, signum, frame):
+    def _signal_handler(self, signum: int, frame: object) -> None:
         """Handle shutdown signals."""
         signal_name = "SIGTERM" if signum == signal.SIGTERM else "SIGINT"
 
@@ -66,7 +66,7 @@ class GracefulShutdownHandler:
         shutdown_thread.daemon = False
         shutdown_thread.start()
 
-    def _execute_shutdown(self):
+    def _execute_shutdown(self) -> None:
         """Execute the actual shutdown sequence."""
         try:
             start_time = time.time()
@@ -102,7 +102,7 @@ class GracefulShutdownHandler:
             traceback.print_exc()
             sys.exit(1)
 
-    def _wait_for_calls_to_complete(self, timeout: int = 20):
+    def _wait_for_calls_to_complete(self, timeout: int = 20) -> None:
         """
         Wait for active calls to complete.
 
@@ -139,7 +139,7 @@ class GracefulShutdownHandler:
                 except Exception as e:
                     logger.error(f"Error ending call {call.call_id}: {e}")
 
-    def _stop_services(self):
+    def _stop_services(self) -> None:
         """Stop PBX services in proper order."""
         if not self.pbx_core:
             return
@@ -160,14 +160,14 @@ class GracefulShutdownHandler:
             except Exception as e:
                 logger.error(f"Error stopping {service_name}: {e}")
 
-    def _stop_if_exists(self, attr_name: str):
+    def _stop_if_exists(self, attr_name: str) -> None:
         """Stop a service if it exists and has a stop method."""
         if hasattr(self.pbx_core, attr_name):
             service = getattr(self.pbx_core, attr_name)
             if service and hasattr(service, "stop"):
                 service.stop()
 
-    def _cleanup_resources(self):
+    def _cleanup_resources(self) -> None:
         """Cleanup resources before exit."""
         if not self.pbx_core:
             return
@@ -201,7 +201,7 @@ class GracefulShutdownHandler:
             logger.error(f"Error during resource cleanup: {e}")
 
 
-def setup_graceful_shutdown(pbx_core, timeout: int = 30) -> GracefulShutdownHandler:
+def setup_graceful_shutdown(pbx_core: object, timeout: int = 30) -> GracefulShutdownHandler:
     """
     Setup graceful shutdown handling for the PBX system.
 
