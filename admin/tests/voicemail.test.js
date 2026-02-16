@@ -2,11 +2,28 @@
  * @jest-environment jsdom
  */
 
-import { describe, it, expect, beforeEach } from '@jest/globals';
+// Mock dependency modules before importing the module under test.
+// jest.mock() calls are hoisted above require() by the CJS transform,
+// ensuring mocks are registered before voicemail.ts loads its imports.
+jest.mock('../js/api/client.ts', () => ({
+  getAuthHeaders: jest.fn(() => ({
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer test-token'
+  })),
+  getApiBaseUrl: jest.fn(() => 'http://localhost:9000')
+}));
 
-// Mock fetch and DOM
+jest.mock('../js/ui/notifications.ts', () => ({
+  showNotification: jest.fn()
+}));
+
+import { describe, it, expect, beforeEach } from '@jest/globals';
+import { loadVoicemailTab, loadVoicemailForExtension } from '../js/pages/voicemail.ts';
+import { getAuthHeaders } from '../js/api/client.ts';
+import { showNotification } from '../js/ui/notifications.ts';
+
+// Mock fetch globally
 global.fetch = jest.fn();
-global.localStorage = { getItem: jest.fn(), setItem: jest.fn(), clear: jest.fn() };
 
 // Set up DOM
 document.body.innerHTML = `
@@ -18,38 +35,9 @@ document.body.innerHTML = `
   <div id="voicemail-cards-view"></div>
 `;
 
-// Mock dependencies that voicemail.js imports
-// Since the modules use window.* backward compatibility exports,
-// we can set up global mocks and then use dynamic import
-global.getAuthHeaders = jest.fn(() => ({
-  'Content-Type': 'application/json',
-  'Authorization': 'Bearer test-token'
-}));
-global.showNotification = jest.fn();
-global.getApiBaseUrl = jest.fn(() => 'http://localhost:9000');
-
-// The page modules self-register on window.*, so we can use the window globals
-// after loading the module, or we test the window.* exports directly
-//
-// NOTE: The voicemail module (admin/js/pages/voicemail.js) exports:
-//   - loadVoicemailTab()
-//   - loadVoicemailForExtension() - reads extension from DOM #vm-extension-select
-//   - playVoicemail(), downloadVoicemail(), deleteVoicemail(), markVoicemailRead()
-//
-// These are also registered as window.* for backward compatibility.
-// Since Jest/jsdom doesn't natively support ES module imports, we test
-// the functions via window.* globals set by the module's backward-compat layer.
-// The functions are loaded by requiring the module after globals are set up.
-
-// Since the actual ES module uses import { getAuthHeaders, getApiBaseUrl } from '../api/client.js'
-// and import { showNotification } from '../ui/notifications.js', but in the test environment
-// these resolve to window.* globals, we define stub modules or rely on the global fallbacks.
-// For now, we test the core logic by calling the window-registered functions.
-
 // Helper: set vm-extension-select value (the module reads extension from DOM)
 function setExtensionSelectValue(value) {
   const select = document.getElementById('vm-extension-select');
-  // Clear existing options and add a matching option so .value works in jsdom
   select.innerHTML = '';
   if (value) {
     const option = document.createElement('option');
@@ -62,9 +50,13 @@ function setExtensionSelectValue(value) {
 
 describe('Voicemail Management', () => {
   beforeEach(() => {
-    // Clear all mocks before each test
     jest.clearAllMocks();
-    // Reset select element
+    // Re-setup default mock returns after clearAllMocks
+    getAuthHeaders.mockReturnValue({
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer test-token'
+    });
+    // Reset DOM select element
     document.getElementById('vm-extension-select').innerHTML = '';
     // Reset section visibility
     for (const id of ['voicemail-pin-section', 'voicemail-messages-section', 'voicemail-box-overview']) {
@@ -85,7 +77,7 @@ describe('Voicemail Management', () => {
         json: async () => mockExtensions
       });
 
-      await window.loadVoicemailTab();
+      await loadVoicemailTab();
 
       expect(fetch).toHaveBeenCalledWith(
         'http://localhost:9000/api/extensions',
@@ -107,7 +99,7 @@ describe('Voicemail Management', () => {
         json: async () => ({ error: 'Authentication required' })
       });
 
-      await window.loadVoicemailTab();
+      await loadVoicemailTab();
 
       expect(showNotification).toHaveBeenCalledWith('Failed to load extensions', 'error');
 
@@ -123,7 +115,7 @@ describe('Voicemail Management', () => {
         json: async () => ({ error: 'Internal server error' })
       });
 
-      await window.loadVoicemailTab();
+      await loadVoicemailTab();
 
       expect(showNotification).toHaveBeenCalledWith('Failed to load extensions', 'error');
     });
@@ -131,7 +123,7 @@ describe('Voicemail Management', () => {
     it('should handle network errors gracefully', async () => {
       global.fetch.mockRejectedValueOnce(new Error('Network error'));
 
-      await window.loadVoicemailTab();
+      await loadVoicemailTab();
 
       expect(showNotification).toHaveBeenCalledWith('Failed to load extensions', 'error');
     });
@@ -142,7 +134,7 @@ describe('Voicemail Management', () => {
         json: async () => []
       });
 
-      await window.loadVoicemailTab();
+      await loadVoicemailTab();
 
       expect(getAuthHeaders).toHaveBeenCalled();
       expect(fetch).toHaveBeenCalledWith(
@@ -161,7 +153,7 @@ describe('Voicemail Management', () => {
       // Set select to empty value (no extension selected)
       setExtensionSelectValue('');
 
-      await window.loadVoicemailForExtension();
+      await loadVoicemailForExtension();
 
       expect(document.getElementById('voicemail-pin-section').style.display).toBe('none');
       expect(document.getElementById('voicemail-messages-section').style.display).toBe('none');
@@ -180,10 +172,9 @@ describe('Voicemail Management', () => {
         json: async () => mockData
       });
 
-      // Set the extension in the DOM select (module reads from DOM)
       setExtensionSelectValue('1001');
 
-      await window.loadVoicemailForExtension();
+      await loadVoicemailForExtension();
 
       expect(fetch).toHaveBeenCalledWith(
         'http://localhost:9000/api/voicemail/1001',
@@ -201,7 +192,7 @@ describe('Voicemail Management', () => {
 
       setExtensionSelectValue('1001');
 
-      await window.loadVoicemailForExtension();
+      await loadVoicemailForExtension();
 
       expect(showNotification).toHaveBeenCalledWith('Failed to load voicemail messages', 'error');
     });
@@ -215,7 +206,7 @@ describe('Voicemail Management', () => {
 
       setExtensionSelectValue('1001');
 
-      await window.loadVoicemailForExtension();
+      await loadVoicemailForExtension();
 
       expect(showNotification).toHaveBeenCalledWith('Failed to load voicemail messages', 'error');
     });
@@ -228,7 +219,7 @@ describe('Voicemail Management', () => {
 
       setExtensionSelectValue('1001');
 
-      await window.loadVoicemailForExtension();
+      await loadVoicemailForExtension();
 
       expect(getAuthHeaders).toHaveBeenCalled();
       expect(fetch).toHaveBeenCalledWith(
@@ -249,7 +240,7 @@ describe('Voicemail Management', () => {
 
       setExtensionSelectValue('1001');
 
-      await window.loadVoicemailForExtension();
+      await loadVoicemailForExtension();
 
       expect(document.getElementById('voicemail-pin-section').style.display).toBe('block');
       expect(document.getElementById('voicemail-messages-section').style.display).toBe('block');

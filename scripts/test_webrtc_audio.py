@@ -420,7 +420,7 @@ WEBRTC AUDIO TROUBLESHOOTING CHECKLIST
         guide_path = str(Path(__file__).parent.parent / "WEBRTC_AUDIO_TROUBLESHOOTING.md")
 
         try:
-            with open(guide_path, "w") as f:
+            with Path(guide_path).open("w") as f:
                 f.write("# WebRTC Audio Troubleshooting Guide\n\n")
                 f.write(f"Generated: {datetime.now(UTC).isoformat()}\n\n")
                 f.write(guide)

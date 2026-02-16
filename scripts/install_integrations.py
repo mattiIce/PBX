@@ -527,7 +527,7 @@ class IntegrationInstaller:
 
                     # Execute SQL file - password is in file, not command line or process args
                     self.log("Setting up database and user with secure password...", "STEP")
-                    with open(mysql_sql_path) as sql_input:
+                    with Path(mysql_sql_path).open() as sql_input:
                         subprocess.run(
                             ["mysql", f"--defaults-file={mysql_config_path}"],
                             stdin=sql_input,

@@ -14,6 +14,7 @@ import sys
 import time
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 
@@ -54,7 +55,7 @@ class PerformanceBenchmark:
 
         # Get CPU info
         try:
-            with open("/proc/cpuinfo") as f:
+            with Path("/proc/cpuinfo").open() as f:
                 cpu_lines = [line for line in f if "model name" in line.lower()]
                 if cpu_lines:
                     info["cpu_model"] = cpu_lines[0].split(":")[1].strip()
@@ -67,7 +68,7 @@ class PerformanceBenchmark:
 
         # Get memory info
         try:
-            with open("/proc/meminfo") as f:
+            with Path("/proc/meminfo").open() as f:
                 for line in f:
                     if "MemTotal" in line:
                         mem_kb = int(line.split()[1])
@@ -90,7 +91,7 @@ class PerformanceBenchmark:
 
         # Get OS info
         try:
-            with open("/etc/os-release") as f:
+            with Path("/etc/os-release").open() as f:
                 for line in f:
                     if line.startswith("PRETTY_NAME"):
                         info["os"] = line.split("=")[1].strip().strip('"')
@@ -263,7 +264,7 @@ class PerformanceBenchmark:
 
         # Memory usage
         try:
-            with open("/proc/meminfo") as f:
+            with Path("/proc/meminfo").open() as f:
                 mem_total = 0
                 mem_available = 0
                 for line in f:
@@ -452,7 +453,7 @@ class PerformanceBenchmark:
             results: BenchmarkResults object
             filename: Output filename
         """
-        with open(filename, "w") as f:
+        with Path(filename).open("w") as f:
             json.dump(asdict(results), f, indent=2)
         print(f"Results saved to {filename}")
 

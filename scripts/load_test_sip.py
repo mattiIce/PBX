@@ -22,6 +22,7 @@ import time
 from collections import defaultdict
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 logger = logging.getLogger(__name__)
@@ -442,7 +443,7 @@ async def main() -> None:
 
         # Save report if requested
         if args.save_report:
-            with open(args.save_report, "w") as f:
+            with Path(args.save_report).open("w") as f:
                 json.dump(asdict(results), f, indent=2)
             print(f"Results saved to {args.save_report}")
 

@@ -73,7 +73,7 @@ class SecurityComplianceChecker:
 
         # Check 1: Kernel FIPS mode
         try:
-            with open("/proc/sys/crypto/fips_enabled") as f:
+            with Path("/proc/sys/crypto/fips_enabled").open() as f:
                 kernel_fips = f.read().strip() == "1"
                 fips_results["checks"]["kernel_fips"] = kernel_fips
                 self.print_status(
@@ -532,7 +532,7 @@ def main() -> int:
 
         # Write to file if requested
         if args.output:
-            with open(args.output, "w") as f:
+            with Path(args.output).open("w") as f:
                 json.dump(results, f, indent=2)
             if not args.quiet and not args.json:
                 print(f"Report saved to: {args.output}")

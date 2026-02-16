@@ -61,7 +61,7 @@ def test_moh_system() -> bool:
             return False
 
         # Check if it's a WAV file
-        with open(filepath, "rb") as f:
+        with Path(filepath).open("rb") as f:
             header = f.read(12)
             if not (header[0:4] == b"RIFF" and header[8:12] == b"WAVE"):
                 print("       ✗ ERROR: Not a valid WAV file!")

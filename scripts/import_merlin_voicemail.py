@@ -64,7 +64,7 @@ def parse_csv_metadata(csv_path: str) -> tuple[list[dict], dict[str, str]]:
     messages = []
     pins = {}
 
-    with open(csv_path) as f:
+    with Path(csv_path).open() as f:
         reader = csv.DictReader(f)
         for row in reader:
             # Extract voicemail PIN if present
@@ -139,7 +139,7 @@ def parse_json_metadata(json_path: str) -> tuple[list[dict], dict[str, str]]:
     Returns:
         tuple: (list of messages, dict of pins)
     """
-    with open(json_path) as f:
+    with Path(json_path).open() as f:
         data = json.load(f)
 
     messages = []
@@ -244,7 +244,7 @@ def parse_pins_csv(csv_path: str) -> dict[str, str]:
     """
     pins = {}
 
-    with open(csv_path) as f:
+    with Path(csv_path).open() as f:
         reader = csv.DictReader(f)
         for row in reader:
             extension = row["extension"]
@@ -325,7 +325,7 @@ def import_voicemail_messages(
 
         # Read audio data
         try:
-            with open(audio_path, "rb") as f:
+            with Path(audio_path).open("rb") as f:
                 audio_data = f.read()
         except (FileNotFoundError, PermissionError, OSError) as e:
             print(f"  ✗ Error reading audio file: {e}")
@@ -456,7 +456,7 @@ def import_greetings(
 
         # Read audio data
         try:
-            with open(greeting_file, "rb") as f:
+            with greeting_file.open("rb") as f:
                 audio_data = f.read()
         except (FileNotFoundError, PermissionError, OSError) as e:
             print(f"  ✗ Error reading greeting file: {e}")

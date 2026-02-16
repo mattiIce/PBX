@@ -17,7 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 def check_kernel_fips() -> bool:
     """Check if kernel FIPS mode is enabled."""
     try:
-        with open("/proc/sys/crypto/fips_enabled") as f:
+        with Path("/proc/sys/crypto/fips_enabled").open() as f:
             return f.read().strip() == "1"
     except FileNotFoundError:
         return False

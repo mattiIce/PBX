@@ -42,7 +42,7 @@ def check_system_fips() -> bool:
 
     # Check kernel FIPS mode
     try:
-        with open("/proc/sys/crypto/fips_enabled") as f:
+        with Path("/proc/sys/crypto/fips_enabled").open() as f:
             fips_enabled = f.read().strip() == "1"
             print_status("Kernel FIPS mode", fips_enabled, f"Value: {fips_enabled}")
             if not fips_enabled:

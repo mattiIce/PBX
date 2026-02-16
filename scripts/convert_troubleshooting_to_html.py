@@ -453,7 +453,7 @@ def main() -> None:
     print(f"Reading {md_file}...")
 
     # Read markdown file
-    with open(md_file, encoding="utf-8") as f:
+    with md_file.open(encoding="utf-8") as f:
         markdown_content = f.read()
 
     print("Converting to HTML...")
@@ -465,7 +465,7 @@ def main() -> None:
     full_html = create_html_template(html_content)
 
     # Write HTML file
-    with open(html_file, "w", encoding="utf-8") as f:
+    with html_file.open("w", encoding="utf-8") as f:
         f.write(full_html)
 
     print(f"✓ Created {html_file}")

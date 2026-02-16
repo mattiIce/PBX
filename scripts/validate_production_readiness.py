@@ -73,7 +73,7 @@ class ProductionValidator:
         if platform.system() == "Linux":
             self.log("Operating System: Linux", "pass")
             try:
-                with open("/etc/os-release") as f:
+                with Path("/etc/os-release").open() as f:
                     os_info = f.read()
                     if "Ubuntu" in os_info:
                         self.log("Distribution: Ubuntu detected", "pass")
@@ -170,7 +170,7 @@ class ProductionValidator:
 
             config_path = self.base_dir / "config.yml"
             if config_path.exists():
-                with open(config_path) as f:
+                with config_path.open() as f:
                     config = yaml.safe_load(f)
 
                 db_config = config.get("database", {})

@@ -281,7 +281,7 @@ class EnvSetup:
         if not Path(self.env_file).exists():
             return
 
-        with open(self.env_file) as f:
+        with Path(self.env_file).open() as f:
             for line in f:
                 stripped_line = line.strip()
                 if not stripped_line or stripped_line.startswith("#"):
@@ -300,7 +300,7 @@ class EnvSetup:
             # Create file with restricted permissions
             Path(self.env_file).touch(mode=0o600)
 
-        with open(self.env_file, "w") as f:
+        with Path(self.env_file).open("w") as f:
             f.write("# PBX Environment Configuration\n")
             f.write(
                 f"# Generated on: {subprocess.run(['date'], capture_output=True, text=True, check=False).stdout.strip()}\n"

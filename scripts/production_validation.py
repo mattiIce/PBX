@@ -91,7 +91,7 @@ class ProductionValidator:
             try:
                 import yaml
 
-                with open(config_file) as f:
+                with config_file.open() as f:
                     yaml.safe_load(f)
                 self.log("config.yml is valid", "pass")
             except OSError as e:

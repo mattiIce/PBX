@@ -107,7 +107,7 @@ class PhoneProvisioningSetup:
     def load_config(self) -> bool:
         """Load the PBX configuration file"""
         try:
-            with open(self.config_path) as f:
+            with Path(self.config_path).open() as f:
                 self.config = yaml.safe_load(f)
             return True
         except FileNotFoundError:
@@ -120,7 +120,7 @@ class PhoneProvisioningSetup:
     def save_config(self) -> bool:
         """Save the PBX configuration file"""
         try:
-            with open(self.config_path, "w") as f:
+            with Path(self.config_path).open("w") as f:
                 yaml.dump(self.config, f, default_flow_style=False, sort_keys=False)
             return True
         except OSError as e:

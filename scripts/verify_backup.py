@@ -95,7 +95,7 @@ class BackupVerifier:
         # For SQL backups, check basic structure
         if backup_file.endswith(".sql"):
             try:
-                with open(backup_file) as f:
+                with Path(backup_file).open() as f:
                     first_lines = [next(f) for _ in range(10)]
                     content = "".join(first_lines)
 
@@ -146,7 +146,7 @@ class BackupVerifier:
             self.log_check("Create temporary database", True, f"Database: {temp_db}")
 
             # Restore backup to temporary database
-            with open(backup_file) as f:
+            with Path(backup_file).open() as f:
                 result = subprocess.run(
                     ["sudo", "-u", "postgres", "psql", temp_db],
                     stdin=f,
@@ -307,7 +307,7 @@ class BackupVerifier:
 
     def save_report(self, output_file: str) -> None:
         """Save verification report."""
-        with open(output_file, "w") as f:
+        with Path(output_file).open("w") as f:
             json.dump(self.results, f, indent=2)
         print(f"\nReport saved to: {output_file}")
 
