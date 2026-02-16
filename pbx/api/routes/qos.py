@@ -53,7 +53,7 @@ def handle_get_qos_alerts() -> tuple[Response, int]:
     except ValueError as e:
         logger.error(f"Invalid parameter for QoS alerts: {e}")
         return send_json({"error": "Invalid limit parameter, must be an integer"}, 400), 400
-    except (KeyError, TypeError, ValueError) as e:
+    except (KeyError, TypeError) as e:
         logger.error(f"Error getting QoS alerts: {e}")
         return send_json({"error": f"Error getting QoS alerts: {e!s}"}, 500), 500
 
@@ -88,7 +88,7 @@ def handle_get_qos_history() -> tuple[Response, int]:
         return send_json(
             {"error": "Invalid parameters, check limit (integer) and min_mos (float)"}, 400
         ), 400
-    except (KeyError, TypeError, ValueError) as e:
+    except (KeyError, TypeError) as e:
         logger.error(f"Error getting QoS history: {e}")
         return send_json({"error": f"Error getting QoS history: {e!s}"}, 500), 500
 
@@ -200,5 +200,5 @@ def handle_update_qos_thresholds() -> tuple[Response, int]:
     except ValueError as e:
         logger.error(f"Invalid threshold value: {e}")
         return send_json({"error": "Invalid threshold values, must be valid numbers"}, 400), 400
-    except (KeyError, TypeError, ValueError) as e:
+    except (KeyError, TypeError) as e:
         return send_json({"error": str(e)}, 500), 500

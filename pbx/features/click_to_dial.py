@@ -274,18 +274,17 @@ class ClickToDialEngine:
                 (extension, limit),
             )
 
-            history = []
-            for row in result or []:
-                history.append(
-                    {
-                        "destination": row[2],
-                        "call_id": row[3],
-                        "source": row[4],
-                        "initiated_at": row[5],
-                        "connected_at": row[6],
-                        "status": row[7],
-                    }
-                )
+            history = [
+                {
+                    "destination": row[2],
+                    "call_id": row[3],
+                    "source": row[4],
+                    "initiated_at": row[5],
+                    "connected_at": row[6],
+                    "status": row[7],
+                }
+                for row in result or []
+            ]
 
             return history
 
@@ -303,17 +302,16 @@ class ClickToDialEngine:
         try:
             result = self.db.execute("SELECT * FROM click_to_dial_configs ORDER BY extension")
 
-            configs = []
-            for row in result or []:
-                configs.append(
-                    {
-                        "extension": row[1],
-                        "enabled": bool(row[2]),
-                        "default_caller_id": row[3],
-                        "auto_answer": bool(row[4]),
-                        "browser_notification": bool(row[5]),
-                    }
-                )
+            configs = [
+                {
+                    "extension": row[1],
+                    "enabled": bool(row[2]),
+                    "default_caller_id": row[3],
+                    "auto_answer": bool(row[4]),
+                    "browser_notification": bool(row[5]),
+                }
+                for row in result or []
+            ]
 
             return configs
 

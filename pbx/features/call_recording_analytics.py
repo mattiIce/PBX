@@ -459,19 +459,19 @@ class RecordingAnalytics:
             transcript_lower = transcript.lower()
 
             # Detect competitor mentions
-            for keyword in competitor_keywords:
-                if keyword in transcript_lower:
-                    competitor_mentions.append(keyword)
+            competitor_mentions.extend(
+                keyword for keyword in competitor_keywords if keyword in transcript_lower
+            )
 
             # Detect product mentions
-            for keyword in product_keywords:
-                if keyword in transcript_lower:
-                    product_mentions.append(keyword)
+            product_mentions.extend(
+                keyword for keyword in product_keywords if keyword in transcript_lower
+            )
 
             # Detect issue keywords
-            for keyword in issue_keywords:
-                if keyword in transcript_lower:
-                    issue_keywords_found.append(keyword)
+            issue_keywords_found.extend(
+                keyword for keyword in issue_keywords if keyword in transcript_lower
+            )
 
             # Combine all for general keywords
             all_keyword_sets = [
@@ -535,9 +535,9 @@ class RecordingAnalytics:
             transcript_lower = transcript.lower()
 
             # Check for required phrases
-            for phrase in required_phrases:
-                if phrase in transcript_lower:
-                    required_found.append(phrase)
+            required_found.extend(
+                phrase for phrase in required_phrases if phrase in transcript_lower
+            )
 
             # Check for prohibited phrases
             for phrase in prohibited_phrases:
@@ -700,9 +700,11 @@ class RecordingAnalytics:
 
             # Look for action items (sentences with action verbs)
             action_verbs = ["will", "need to", "must", "should", "going to", "have to"]
-            for sentence in sentences:
-                if any(verb in sentence.lower() for verb in action_verbs):
-                    action_items.append(sentence)
+            action_items.extend(
+                sentence
+                for sentence in sentences
+                if any(verb in sentence.lower() for verb in action_verbs)
+            )
 
             # Look for outcomes (sentences with resolution indicators)
             outcome_indicators = [
@@ -713,9 +715,11 @@ class RecordingAnalytics:
                 "finished",
                 "successful",
             ]
-            for sentence in sentences:
-                if any(indicator in sentence.lower() for indicator in outcome_indicators):
-                    outcomes.append(sentence)
+            outcomes.extend(
+                sentence
+                for sentence in sentences
+                if any(indicator in sentence.lower() for indicator in outcome_indicators)
+            )
 
             # Generate key points from first few sentences and important indicators
             important_keywords = [
@@ -729,9 +733,11 @@ class RecordingAnalytics:
                 "resolution",
                 "next steps",
             ]
-            for sentence in sentences[:5]:  # First 5 sentences
-                if any(keyword in sentence.lower() for keyword in important_keywords):
-                    key_points.append(sentence)
+            key_points.extend(
+                sentence
+                for sentence in sentences[:5]  # First 5 sentences
+                if any(keyword in sentence.lower() for keyword in important_keywords)
+            )
 
             # Create summary from key points
             if key_points:

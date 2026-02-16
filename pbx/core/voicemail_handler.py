@@ -543,9 +543,11 @@ class VoicemailHandler:
                         time.sleep(0.1)
 
                         # Check for recorded audio (DTMF tones from user)
-                        if hasattr(recorder, "recorded_data") and recorder.recorded_data:
-                            # Get recent audio data
-                            if len(recorder.recorded_data) > 0:
+                        if (
+                            hasattr(recorder, "recorded_data")
+                            and recorder.recorded_data
+                            and len(recorder.recorded_data) > 0
+                        ):
                                 # Collect last portion of audio for DTMF
                                 # detection
                                 recent_audio = b"".join(
@@ -649,10 +651,8 @@ class VoicemailHandler:
                                 player.play_file(prompt_file)
                                 pbx.logger.info(f"[VM IVR] ✓ Prompt '{prompt_type}' played")
                             finally:
-                                try:
+                                with contextlib.suppress(OSError):
                                     Path(prompt_file).unlink()
-                                except OSError:
-                                    pass  # File already deleted or doesn't exist
 
                             time.sleep(0.3)
 
@@ -681,10 +681,8 @@ class VoicemailHandler:
                             try:
                                 player.play_file(prompt_file)
                             finally:
-                                try:
+                                with contextlib.suppress(OSError):
                                     Path(prompt_file).unlink()
-                                except OSError:
-                                    pass  # File already deleted or doesn't exist
 
                             time.sleep(1)
                             ivr_active = False
@@ -944,39 +942,41 @@ class VoicemailHandler:
                 time.sleep(0.1)
 
                 # Check for recorded audio (DTMF tones from caller)
-                if hasattr(recorder, "recorded_data") and recorder.recorded_data:
-                    # Get recent audio data
-                    if len(recorder.recorded_data) > 0:
-                        # Collect last portion of audio for DTMF detection
-                        recent_audio = b"".join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
+                if (
+                    hasattr(recorder, "recorded_data")
+                    and recorder.recorded_data
+                    and len(recorder.recorded_data) > 0
+                ):
+                    # Collect last portion of audio for DTMF detection
+                    recent_audio = b"".join(recorder.recorded_data[-DTMF_DETECTION_PACKETS:])
 
-                        if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
-                            # Convert bytes to audio samples for DTMF detection
-                            # G.711 u-law is 8-bit samples, one byte per sample
-                            # Use struct.unpack for efficient batch conversion
-                            samples: list[float] = []
-                            # Process in chunks for efficiency
-                            chunk_size: int = min(
-                                len(recent_audio), 8192
-                            )  # Process up to 8KB at once
-                            for i in range(0, len(recent_audio), chunk_size):
-                                chunk = recent_audio[i : i + chunk_size]
-                                # Unpack bytes and convert to float samples
-                                unpacked = struct.unpack(f"{len(chunk)}B", chunk)
-                                # Convert unsigned byte to signed float (-1.0
-                                # to 1.0)
-                                samples.extend([(b - 128) / 128.0 for b in unpacked])
+                    if len(recent_audio) > MIN_AUDIO_BYTES_FOR_DTMF:
+                        # Convert bytes to audio samples for DTMF detection
+                        # G.711 u-law is 8-bit samples, one byte per sample
+                        # Use struct.unpack for efficient batch conversion
+                        samples: list[float] = []
+                        # Process in chunks for efficiency
+                        chunk_size: int = min(
+                            len(recent_audio), 8192
+                        )  # Process up to 8KB at once
+                        for i in range(0, len(recent_audio), chunk_size):
+                            chunk = recent_audio[i : i + chunk_size]
+                            # Unpack bytes and convert to float samples
+                            unpacked = struct.unpack(f"{len(chunk)}B", chunk)
+                            # Convert unsigned byte to signed float (-1.0
+                            # to 1.0)
+                            samples.extend([(b - 128) / 128.0 for b in unpacked])
 
-                            # Detect DTMF
-                            digit: str | None = dtmf_detector.detect_tone(samples)
+                        # Detect DTMF
+                        digit: str | None = dtmf_detector.detect_tone(samples)
 
-                            if digit == "#":
-                                pbx.logger.info(
-                                    f"Detected # key press during voicemail recording on call {call_id}"
-                                )
-                                # Complete the voicemail recording
-                                self.complete_voicemail_recording(call_id)
-                                return
+                        if digit == "#":
+                            pbx.logger.info(
+                                f"Detected # key press during voicemail recording on call {call_id}"
+                            )
+                            # Complete the voicemail recording
+                            self.complete_voicemail_recording(call_id)
+                            return
 
             pbx.logger.debug(f"DTMF monitoring ended for voicemail recording on call {call_id}")
 

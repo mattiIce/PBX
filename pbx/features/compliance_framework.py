@@ -513,18 +513,17 @@ class SOC2ComplianceEngine:
         try:
             result = self.db.fetch_all("SELECT * FROM soc2_controls ORDER BY control_id")
 
-            controls = []
-            for row in result or []:
-                controls.append(
-                    {
-                        "control_id": row.get("control_id"),
-                        "control_category": row.get("control_category"),
-                        "description": row.get("description"),
-                        "implementation_status": row.get("implementation_status"),
-                        "last_tested": row.get("last_tested"),
-                        "test_results": row.get("test_results"),
-                    }
-                )
+            controls = [
+                {
+                    "control_id": row.get("control_id"),
+                    "control_category": row.get("control_category"),
+                    "description": row.get("description"),
+                    "implementation_status": row.get("implementation_status"),
+                    "last_tested": row.get("last_tested"),
+                    "test_results": row.get("test_results"),
+                }
+                for row in result or []
+            ]
 
             return controls
 
@@ -556,18 +555,17 @@ class SOC2ComplianceEngine:
                 (category,),
             )
 
-            controls = []
-            for row in result or []:
-                controls.append(
-                    {
-                        "control_id": row.get("control_id"),
-                        "control_category": row.get("control_category"),
-                        "description": row.get("description"),
-                        "implementation_status": row.get("implementation_status"),
-                        "last_tested": row.get("last_tested"),
-                        "test_results": row.get("test_results"),
-                    }
-                )
+            controls = [
+                {
+                    "control_id": row.get("control_id"),
+                    "control_category": row.get("control_category"),
+                    "description": row.get("description"),
+                    "implementation_status": row.get("implementation_status"),
+                    "last_tested": row.get("last_tested"),
+                    "test_results": row.get("test_results"),
+                }
+                for row in result or []
+            ]
 
             return controls
 

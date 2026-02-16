@@ -224,18 +224,17 @@ class VideoConferencingEngine:
                 (room_id,),
             )
 
-            participants = []
-            for row in result or []:
-                participants.append(
-                    {
-                        "extension": row[2],
-                        "display_name": row[3],
-                        "joined_at": row[4],
-                        "video_enabled": bool(row[6]),
-                        "audio_enabled": bool(row[7]),
-                        "screen_sharing": bool(row[8]),
-                    }
-                )
+            participants = [
+                {
+                    "extension": row[2],
+                    "display_name": row[3],
+                    "joined_at": row[4],
+                    "video_enabled": bool(row[6]),
+                    "audio_enabled": bool(row[7]),
+                    "screen_sharing": bool(row[8]),
+                }
+                for row in result or []
+            ]
 
             return participants
 
@@ -328,20 +327,19 @@ class VideoConferencingEngine:
                 "SELECT * FROM video_conference_rooms ORDER BY created_at DESC"
             )
 
-            rooms = []
-            for row in result or []:
-                rooms.append(
-                    {
-                        "id": row[0],
-                        "room_name": row[1],
-                        "owner_extension": row[2],
-                        "max_participants": row[3],
-                        "enable_4k": bool(row[4]),
-                        "enable_screen_share": bool(row[5]),
-                        "recording_enabled": bool(row[6]),
-                        "created_at": row[8],
-                    }
-                )
+            rooms = [
+                {
+                    "id": row[0],
+                    "room_name": row[1],
+                    "owner_extension": row[2],
+                    "max_participants": row[3],
+                    "enable_4k": bool(row[4]),
+                    "enable_screen_share": bool(row[5]),
+                    "recording_enabled": bool(row[6]),
+                    "created_at": row[8],
+                }
+                for row in result or []
+            ]
 
             return rooms
 

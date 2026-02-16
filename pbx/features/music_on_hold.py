@@ -56,11 +56,11 @@ class MusicOnHold:
             list of audio file paths
         """
         audio_extensions = [".wav", ".mp3", ".ogg", ".flac", ".aac"]
-        audio_files = []
-
-        for entry in Path(directory).iterdir():
-            if any(entry.name.lower().endswith(ext) for ext in audio_extensions):
-                audio_files.append(entry)
+        audio_files = [
+            entry
+            for entry in Path(directory).iterdir()
+            if any(entry.name.lower().endswith(ext) for ext in audio_extensions)
+        ]
 
         return sorted(audio_files)
 

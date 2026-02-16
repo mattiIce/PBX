@@ -173,8 +173,9 @@ class CallManager:
         Returns:
             list of Call objects
         """
-        calls = []
-        for call in self.active_calls.values():
-            if extension in (call.from_extension, call.to_extension):
-                calls.append(call)
+        calls = [
+            call
+            for call in self.active_calls.values()
+            if extension in (call.from_extension, call.to_extension)
+        ]
         return calls

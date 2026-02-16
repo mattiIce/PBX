@@ -673,17 +673,16 @@ class ZendeskIntegration:
                 (limit,),
             )
 
-            activities = []
-            for row in result or []:
-                activities.append(
-                    {
-                        "integration_type": row[1],
-                        "action": row[2],
-                        "status": row[3],
-                        "details": row[4],
-                        "created_at": row[5],
-                    }
-                )
+            activities = [
+                {
+                    "integration_type": row[1],
+                    "action": row[2],
+                    "status": row[3],
+                    "details": row[4],
+                    "created_at": row[5],
+                }
+                for row in result or []
+            ]
 
             return activities
 

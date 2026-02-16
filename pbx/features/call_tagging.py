@@ -370,9 +370,11 @@ class CallTagging:
         # Metadata-based tagging
         if metadata:
             meta_tags = self._tag_from_metadata(metadata)
-            for tag in meta_tags:
-                if self.tag_call(call_id, tag, TagSource.RULE, 1.0):
-                    tags_added.append(tag)
+            tags_added.extend(
+                tag
+                for tag in meta_tags
+                if self.tag_call(call_id, tag, TagSource.RULE, 1.0)
+            )
 
         if tags_added:
             self.total_calls_tagged += 1
@@ -806,9 +808,11 @@ class CallTagging:
         metadata = metadata or {}
 
         # Apply rule-based tagging with actual condition evaluation
-        for rule in self.tagging_rules:
-            if self._evaluate_rule(rule, transcript_lower, metadata):
-                tags.append(rule["tag"])
+        tags.extend(
+            rule["tag"]
+            for rule in self.tagging_rules
+            if self._evaluate_rule(rule, transcript_lower, metadata)
+        )
 
         # Add tags from metadata (queue, disposition, etc.)
         metadata_tags = self._tag_from_metadata(metadata)
@@ -1003,10 +1007,11 @@ class CallTagging:
             doc = self.nlp_model(text)
 
             # Extract noun chunks as key phrases
-            phrases = []
-            for chunk in doc.noun_chunks:
-                if len(chunk.text.split()) >= 2:  # Only multi-word phrases
-                    phrases.append(chunk.text.lower())
+            phrases = [
+                chunk.text.lower()
+                for chunk in doc.noun_chunks
+                if len(chunk.text.split()) >= 2  # Only multi-word phrases
+            ]
 
             # Remove duplicates while preserving order
             seen = set()

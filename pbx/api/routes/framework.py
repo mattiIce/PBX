@@ -650,17 +650,16 @@ def get_integration_activity() -> tuple[Response, int]:
                    ORDER BY created_at DESC LIMIT 100"""
             )
 
-            activities = []
-            for row in result or []:
-                activities.append(
-                    {
-                        "integration_type": row[1],
-                        "action": row[2],
-                        "status": row[3],
-                        "details": row[4],
-                        "created_at": row[5],
-                    }
-                )
+            activities = [
+                {
+                    "integration_type": row[1],
+                    "action": row[2],
+                    "status": row[3],
+                    "details": row[4],
+                    "created_at": row[5],
+                }
+                for row in result or []
+            ]
 
             return send_json({"activities": activities}), 200
         except sqlite3.Error as e:

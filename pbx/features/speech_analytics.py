@@ -462,12 +462,9 @@ class SpeechAnalyticsEngine:
         Returns:
             list of detected keywords
         """
-        detected = []
-        text_lower = text.lower()
-
-        for keyword in keywords:
-            if keyword.lower() in text_lower:
-                detected.append(keyword)
+        detected = [
+            keyword for keyword in keywords if keyword.lower() in text.lower()
+        ]
 
         return detected
 
@@ -481,19 +478,18 @@ class SpeechAnalyticsEngine:
         try:
             result = self.db.execute("SELECT * FROM speech_analytics_configs ORDER BY extension")
 
-            configs = []
-            for row in result or []:
-                configs.append(
-                    {
-                        "extension": row[1],
-                        "enabled": bool(row[2]),
-                        "transcription_enabled": bool(row[3]),
-                        "sentiment_enabled": bool(row[4]),
-                        "summarization_enabled": bool(row[5]),
-                        "keywords": row[6],
-                        "alert_threshold": float(row[7]) if row[7] else 0.7,
-                    }
-                )
+            configs = [
+                {
+                    "extension": row[1],
+                    "enabled": bool(row[2]),
+                    "transcription_enabled": bool(row[3]),
+                    "sentiment_enabled": bool(row[4]),
+                    "summarization_enabled": bool(row[5]),
+                    "keywords": row[6],
+                    "alert_threshold": float(row[7]) if row[7] else 0.7,
+                }
+                for row in result or []
+            ]
 
             return configs
 

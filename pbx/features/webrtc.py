@@ -530,21 +530,17 @@ class WebRTCSignalingServer:
             Dictionary with ICE servers configuration, codec preferences,
             audio settings, and DTMF configuration (matches Zultys ZIP33G)
         """
-        ice_servers = []
-
-        # Add STUN servers
-        for stun_url in self.stun_servers:
-            ice_servers.append({"urls": stun_url})
+        ice_servers = [{"urls": stun_url} for stun_url in self.stun_servers]
 
         # Add TURN servers
-        for turn_config in self.turn_servers:
-            ice_servers.append(
-                {
-                    "urls": turn_config.get("url"),
-                    "username": turn_config.get("username"),
-                    "credential": turn_config.get("credential"),
-                }
-            )
+        ice_servers.extend(
+            {
+                "urls": turn_config.get("url"),
+                "username": turn_config.get("username"),
+                "credential": turn_config.get("credential"),
+            }
+            for turn_config in self.turn_servers
+        )
 
         return {
             "iceServers": ice_servers,

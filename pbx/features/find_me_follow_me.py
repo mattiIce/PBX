@@ -280,15 +280,14 @@ class FindMeFollowMe:
 
         if mode == "sequential":
             # Ring destinations one at a time
-            ring_plan = []
-            for dest in destinations:
-                ring_plan.append(
-                    {
-                        "destination": dest["number"],
-                        "ring_time": dest.get("ring_time", 20),
-                        "order": "sequential",
-                    }
-                )
+            ring_plan = [
+                {
+                    "destination": dest["number"],
+                    "ring_time": dest.get("ring_time", 20),
+                    "order": "sequential",
+                }
+                for dest in destinations
+            ]
 
             return {
                 "strategy": "sequential",

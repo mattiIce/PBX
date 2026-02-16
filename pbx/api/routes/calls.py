@@ -85,7 +85,7 @@ def get_advanced_analytics() -> tuple[Response, int]:
 
         except ValueError as e:
             return send_json({"error": f"Invalid date format: {e!s}"}, 400), 400
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError) as e:
             logger.error(f"Error getting advanced analytics: {e}")
             return send_json({"error": f"Error getting advanced analytics: {e!s}"}, 500), 500
     else:

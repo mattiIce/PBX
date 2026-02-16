@@ -868,31 +868,29 @@ def get_lcr_rates() -> tuple[Response, int]:
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "lcr"):
         try:
-            rates = []
-            for rate_entry in pbx_core.lcr.rate_entries:
-                rates.append(
-                    {
-                        "trunk_id": rate_entry.trunk_id,
-                        "pattern": rate_entry.pattern.pattern,
-                        "description": rate_entry.pattern.description,
-                        "rate_per_minute": rate_entry.rate_per_minute,
-                        "connection_fee": rate_entry.connection_fee,
-                        "minimum_seconds": rate_entry.minimum_seconds,
-                        "billing_increment": rate_entry.billing_increment,
-                    }
-                )
+            rates = [
+                {
+                    "trunk_id": rate_entry.trunk_id,
+                    "pattern": rate_entry.pattern.pattern,
+                    "description": rate_entry.pattern.description,
+                    "rate_per_minute": rate_entry.rate_per_minute,
+                    "connection_fee": rate_entry.connection_fee,
+                    "minimum_seconds": rate_entry.minimum_seconds,
+                    "billing_increment": rate_entry.billing_increment,
+                }
+                for rate_entry in pbx_core.lcr.rate_entries
+            ]
 
-            time_rates = []
-            for time_rate in pbx_core.lcr.time_based_rates:
-                time_rates.append(
-                    {
-                        "name": time_rate.name,
-                        "start_time": time_rate.start_time.strftime("%H:%M"),
-                        "end_time": time_rate.end_time.strftime("%H:%M"),
-                        "days_of_week": time_rate.days_of_week,
-                        "rate_multiplier": time_rate.rate_multiplier,
-                    }
-                )
+            time_rates = [
+                {
+                    "name": time_rate.name,
+                    "start_time": time_rate.start_time.strftime("%H:%M"),
+                    "end_time": time_rate.end_time.strftime("%H:%M"),
+                    "days_of_week": time_rate.days_of_week,
+                    "rate_multiplier": time_rate.rate_multiplier,
+                }
+                for time_rate in pbx_core.lcr.time_based_rates
+            ]
 
             return send_json({"rates": rates, "time_rates": time_rates, "count": len(rates)}), 200
 
@@ -1836,17 +1834,16 @@ def get_all_devices() -> tuple[Response, int]:
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "mobile_push"):
         try:
-            all_devices = []
-            for user_id, devices in pbx_core.mobile_push.device_tokens.items():
-                for device in devices:
-                    all_devices.append(
-                        {
-                            "user_id": user_id,
-                            "platform": device["platform"],
-                            "registered_at": device["registered_at"].isoformat(),
-                            "last_seen": device["last_seen"].isoformat(),
-                        }
-                    )
+            all_devices = [
+                {
+                    "user_id": user_id,
+                    "platform": device["platform"],
+                    "registered_at": device["registered_at"].isoformat(),
+                    "last_seen": device["last_seen"].isoformat(),
+                }
+                for user_id, devices in pbx_core.mobile_push.device_tokens.items()
+                for device in devices
+            ]
 
             # Sort by last_seen descending
             all_devices.sort(key=lambda x: x["last_seen"], reverse=True)
@@ -1925,18 +1922,17 @@ def get_push_history() -> tuple[Response, int]:
     if pbx_core and hasattr(pbx_core, "mobile_push"):
         try:
             # Get recent notification history
-            history = []
-            for notif in pbx_core.mobile_push.notification_history[-100:]:  # Last 100
-                history.append(
-                    {
-                        "user_id": notif["user_id"],
-                        "title": notif["title"],
-                        "body": notif["body"],
-                        "sent_at": notif["sent_at"].isoformat(),
-                        "success_count": notif.get("success_count", 0),
-                        "failure_count": notif.get("failure_count", 0),
-                    }
-                )
+            history = [
+                {
+                    "user_id": notif["user_id"],
+                    "title": notif["title"],
+                    "body": notif["body"],
+                    "sent_at": notif["sent_at"].isoformat(),
+                    "success_count": notif.get("success_count", 0),
+                    "failure_count": notif.get("failure_count", 0),
+                }
+                for notif in pbx_core.mobile_push.notification_history[-100:]  # Last 100
+            ]
 
             # Sort by sent_at descending
             history.sort(key=lambda x: x["sent_at"], reverse=True)

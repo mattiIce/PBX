@@ -164,12 +164,27 @@ ignore = [
     "SIM108",  # ternary operator (readability preference)
     "PTH123",  # open() vs Path.open() (acceptable pattern)
     "ISC001",  # single-line implicit string concat (conflicts with formatter)
+    "ERA001",  # commented-out code (documentation/examples that should stay)
+    "RUF001",  # ambiguous Unicode characters (intentional: checkmarks, arrows in logs)
 ]
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/*" = ["F401", "F811", "ARG", "PLR", "PT", "B011"]
+"tests/*" = ["F401", "F811", "ARG", "PLR", "PT", "B011", "PLC0415"]
 "pbx/api/rest_api.py" = ["ALL"]  # deprecated file
+"pbx/features/*" = ["PLC0415"]  # lazy imports are intentional for dynamic feature loading
+"pbx/core/*" = ["PLC0415"]  # lazy imports for circular import avoidance
+"pbx/api/routes/*" = ["PLC0415"]  # lazy imports in route handlers
+"pbx/api/app.py" = ["PLC0415"]  # lazy blueprint imports
+"pbx/api/server.py" = ["PLC0415"]  # lazy imports
+"pbx/api/utils.py" = ["PLC0415"]  # lazy imports
+"pbx/api/license_api.py" = ["PLC0415"]  # lazy imports
+"pbx/api/opensource_integration_api.py" = ["PLC0415"]  # lazy imports
+"pbx/rtp/handler.py" = ["PLC0415"]  # lazy imports for optional codecs
+"pbx/main.py" = ["PLC0415"]  # lazy imports for startup sequence
+"pbx/utils/*" = ["PLC0415"]  # lazy imports for optional dependencies
+"pbx/integrations/*" = ["PLC0415"]  # lazy imports for optional integrations
+"scripts/*" = ["PLC0415", "PLW1510"]  # scripts use lazy imports and subprocess without check
 
 [tool.ruff.lint.isort]
 known-first-party = ["pbx"]

@@ -50,17 +50,16 @@ def handle_get_voicemail(subpath: str) -> Response:
         if len(parts) == 1:
             # list all messages
             messages = mailbox.get_messages()
-            data = []
-            for msg in messages:
-                data.append(
-                    {
-                        "id": msg["id"],
-                        "caller_id": msg["caller_id"],
-                        "timestamp": msg["timestamp"].isoformat() if msg["timestamp"] else None,
-                        "listened": msg["listened"],
-                        "duration": msg["duration"],
-                    }
-                )
+            data = [
+                {
+                    "id": msg["id"],
+                    "caller_id": msg["caller_id"],
+                    "timestamp": msg["timestamp"].isoformat() if msg["timestamp"] else None,
+                    "listened": msg["listened"],
+                    "duration": msg["duration"],
+                }
+                for msg in messages
+            ]
             return send_json({"messages": data})
         if len(parts) == 2:
             # Get specific message or download audio

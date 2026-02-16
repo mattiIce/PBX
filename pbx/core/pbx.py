@@ -1217,8 +1217,12 @@ class PBXCore:
 
             # Automatically sync phone book from AD if enabled
             phone_book_synced = 0
-            if hasattr(self, "phone_book") and self.phone_book and self.phone_book.enabled:
-                if self.phone_book.auto_sync_from_ad:
+            if (
+                hasattr(self, "phone_book")
+                and self.phone_book
+                and self.phone_book.enabled
+                and self.phone_book.auto_sync_from_ad
+            ):
                     self.logger.info(
                         "Auto-syncing phone book from Active Directory after AD user sync"
                     )
