@@ -17,7 +17,7 @@ References:
 
 import re
 from datetime import UTC, datetime
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -42,7 +42,7 @@ class KarisLawCompliance:
     """
 
     # Emergency number patterns (Kari's Law)
-    EMERGENCY_PATTERNS = [
+    EMERGENCY_PATTERNS: ClassVar[list[str]] = [
         r"^911$",  # Standard 911
         r"^9911$",  # Legacy prefix (should be deprecated but supported)
         r"^9-911$",  # Legacy prefix with dash

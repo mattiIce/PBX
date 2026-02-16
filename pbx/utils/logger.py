@@ -4,13 +4,14 @@ Logging configuration for PBX system
 
 import logging
 from pathlib import Path
+from typing import ClassVar
 
 
 class PBXLogger:
     """Centralized logging for PBX system"""
 
     _instance: "PBXLogger | None" = None
-    _sub_loggers: dict[str, logging.Logger] = {}
+    _sub_loggers: ClassVar[dict[str, logging.Logger]] = {}
 
     def __new__(cls) -> "PBXLogger":
         if cls._instance is None:

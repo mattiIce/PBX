@@ -16,6 +16,7 @@ Supports all G.726 bitrate variants:
 """
 
 import struct
+from typing import ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -314,7 +315,7 @@ class G726Codec:
 
     # Payload type mapping (RFC 3551)
     # Note: Only G.726-32 has a static payload type
-    PAYLOAD_TYPES: dict[int, int | None] = {
+    PAYLOAD_TYPES: ClassVar[dict[int, int | None]] = {
         16: None,  # No static type, use dynamic (96-127)
         24: None,  # No static type, use dynamic (96-127)
         32: 2,  # G721 (G.726-32) - standard static type
@@ -322,10 +323,10 @@ class G726Codec:
     }
 
     # Default dynamic payload types (when static not available)
-    DEFAULT_DYNAMIC_TYPES: dict[int, int] = {16: 112, 24: 113, 32: 2, 40: 114}
+    DEFAULT_DYNAMIC_TYPES: ClassVar[dict[int, int]] = {16: 112, 24: 113, 32: 2, 40: 114}
 
     # Bits per sample for each bitrate
-    BITS_PER_SAMPLE: dict[int, int] = {16: 2, 24: 3, 32: 4, 40: 5}
+    BITS_PER_SAMPLE: ClassVar[dict[int, int]] = {16: 2, 24: 3, 32: 4, 40: 5}
 
     def __init__(self, bitrate: int = 32000) -> None:
         """

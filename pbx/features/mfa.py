@@ -20,7 +20,7 @@ import time
 import urllib.error
 import urllib.parse
 import urllib.request
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.utils.encryption import get_encryption
 from pbx.utils.logger import get_logger
@@ -162,7 +162,7 @@ class YubiKeyOTPVerifier:
     """
 
     # YubiCloud validation servers
-    YUBICO_SERVERS = [
+    YUBICO_SERVERS: ClassVar[list[str]] = [
         "https://api.yubico.com/wsapi/2.0/verify",
         "https://api2.yubico.com/wsapi/2.0/verify",
         "https://api3.yubico.com/wsapi/2.0/verify",

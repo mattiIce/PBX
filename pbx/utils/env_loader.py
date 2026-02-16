@@ -6,7 +6,7 @@ Securely loads sensitive configuration from environment variables
 import os
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -19,7 +19,7 @@ class EnvironmentLoader:
 
     # Default values for common environment variables
     # These are used when the environment variable is not set
-    DEFAULT_VALUES = {
+    DEFAULT_VALUES: ClassVar[dict[str, str]] = {
         "DB_HOST": "localhost",
         "DB_PORT": "5432",
         "DB_NAME": "pbx_system",

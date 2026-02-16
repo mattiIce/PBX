@@ -19,7 +19,7 @@ Note: Speex is being gradually superseded by Opus for new applications,
 but it remains widely deployed and supported.
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -44,18 +44,18 @@ class SpeexCodec:
     DEFAULT_MODE = MODE_NARROWBAND
 
     # Sample rates for each mode
-    SAMPLE_RATES = {MODE_NARROWBAND: 8000, MODE_WIDEBAND: 16000, MODE_ULTRA_WIDEBAND: 32000}
+    SAMPLE_RATES: ClassVar[dict[str, int]] = {MODE_NARROWBAND: 8000, MODE_WIDEBAND: 16000, MODE_ULTRA_WIDEBAND: 32000}
 
     # Payload types (RFC 5574)
     # Ensure no conflicts with iLBC (PT 97)
-    PAYLOAD_TYPES = {
+    PAYLOAD_TYPES: ClassVar[dict[str, int]] = {
         MODE_NARROWBAND: 98,  # PT 98 for narrowband (8kHz)
         MODE_WIDEBAND: 99,  # PT 99 for wideband (16kHz)
         MODE_ULTRA_WIDEBAND: 100,  # PT 100 for ultra-wideband (32kHz)
     }
 
     # Typical bitrates (VBR can vary)
-    BITRATES = {
+    BITRATES: ClassVar[dict[str, dict[str, int]]] = {
         MODE_NARROWBAND: {
             "min": 2150,  # 2.15 kbps
             "typical": 8000,  # 8 kbps

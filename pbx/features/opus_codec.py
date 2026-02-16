@@ -4,7 +4,7 @@ Provides support for Opus audio codec (RFC 6716, 7587)
 Opus is a modern, high-quality, low-latency audio codec
 """
 
-from typing import Any
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -24,7 +24,7 @@ class OpusCodec:
     PAYLOAD_TYPE = 111
 
     # Opus codec parameters
-    SAMPLE_RATES = [8000, 12000, 16000, 24000, 48000]  # Supported sample rates
+    SAMPLE_RATES: ClassVar[list[int]] = [8000, 12000, 16000, 24000, 48000]  # Supported sample rates
     DEFAULT_SAMPLE_RATE = 48000  # Hz
     DEFAULT_BITRATE = 32000  # 32 kbit/s (good quality for VoIP)
     DEFAULT_FRAME_SIZE = 20  # milliseconds

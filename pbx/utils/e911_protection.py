@@ -6,6 +6,7 @@ during development and testing scenarios.
 
 import os
 import re
+from typing import ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -22,7 +23,7 @@ class E911Protection:
     """
 
     # Patterns that match E911/emergency numbers
-    E911_PATTERNS = [
+    E911_PATTERNS: ClassVar[list[str]] = [
         r"^911$",  # Standard 911
         r"^[0-9]*911$",  # Enhanced 911 with numeric prefix
         r"^\*911$",  # Asterisk prefix (e.g., *911)
