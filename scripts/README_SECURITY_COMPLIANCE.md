@@ -233,7 +233,7 @@ security:
 #### 3. Install Required Libraries
 
 ```bash
-uv pip install cryptography>=41.0.0
+uv pip install cryptography>=46.0.5
 ```
 
 #### 4. Verify Compliance
@@ -328,7 +328,7 @@ cat /proc/sys/crypto/fips_enabled
 uv pip show cryptography
 
 # Upgrade if needed
-uv pip install --upgrade 'cryptography>=41.0.0'
+uv pip install --upgrade 'cryptography>=46.0.5'
 
 # Test encryption
 python -c "from pbx.utils.encryption import get_encryption; enc = get_encryption(fips_mode=True); print('OK')"

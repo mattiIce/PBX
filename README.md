@@ -81,7 +81,7 @@
 ```bash
 git clone https://github.com/mattiIce/PBX.git
 cd PBX
-sudo python3 setup_ubuntu.py
+sudo python3 scripts/setup_ubuntu.py
 ```
 
 The wizard installs dependencies, sets up PostgreSQL, generates SSL certificates, creates voice prompts, and initializes the database. See **[COMPLETE_GUIDE.md - Section 1](COMPLETE_GUIDE.md#1-quick-start)** for details.

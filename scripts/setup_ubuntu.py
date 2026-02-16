@@ -6,7 +6,7 @@ This script provides an easy-to-use setup experience for installing
 the Warden VoIP PBX system on Ubuntu 24.04 LTS.
 
 Usage:
-    sudo python3 setup_ubuntu.py
+    sudo python3 scripts/setup_ubuntu.py
 
 Features:
     - System dependency installation
