@@ -130,7 +130,7 @@ async function refreshAllData() {
         // Check for any failures and show summary
         const failures = results.filter(r => r.status === 'rejected');
         if (failures.length > 0) {
-            console.info(`${failures.length} refresh operation(s) failed (expected for unavailable features):`, failures.map(f => f.reason?.message || f.reason));
+            console.info(`${failures.length} refresh operation(s) failed (expected for unavailable features):`, failures.map(f => f.reason?.message ?? f.reason));
             showNotification('✅ All tabs refreshed successfully', 'success');
         } else {
             showNotification('✅ All tabs refreshed successfully', 'success');
@@ -160,9 +160,9 @@ describe('Refresh All Data', () => {
     refreshBtn.disabled = false;
     
     // Reset active tab
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    for (const tab of document.querySelectorAll('.tab-content')) {
       tab.classList.remove('active');
-    });
+    }
     document.getElementById('dashboard').classList.add('active');
   });
 
@@ -194,9 +194,9 @@ describe('Refresh All Data', () => {
 
   it('should refresh all tabs even when different tab is active', async () => {
     // Change active tab to analytics
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    for (const tab of document.querySelectorAll('.tab-content')) {
       tab.classList.remove('active');
-    });
+    }
     document.getElementById('analytics').classList.add('active');
     
     expect(document.getElementById('analytics').classList.contains('active')).toBe(true);
@@ -216,9 +216,9 @@ describe('Refresh All Data', () => {
 
   it('should refresh all tabs even when no tab is active', async () => {
     // Remove all active classes
-    document.querySelectorAll('.tab-content').forEach(tab => {
+    for (const tab of document.querySelectorAll('.tab-content')) {
       tab.classList.remove('active');
-    });
+    }
     
     // Call refreshAllData
     await refreshAllData();

@@ -505,12 +505,12 @@ class LicenseManager:
         Returns:
             tuple of (status, message)
         """
-        trial_marker = str(Path(self.license_path).parent / ".trial_start")
+        trial_marker = Path(self.license_path).parent / ".trial_start"
 
-        if not Path(trial_marker).exists():
+        if not trial_marker.exists():
             # Start trial
             try:
-                with open(trial_marker, "w") as f:
+                with trial_marker.open("w") as f:
                     f.write(datetime.now(UTC).isoformat())
 
                 return (
@@ -523,7 +523,7 @@ class LicenseManager:
 
         # Check trial expiration
         try:
-            with open(trial_marker) as f:
+            with trial_marker.open() as f:
                 trial_start = datetime.fromisoformat(f.read().strip())
 
             trial_end = trial_start + timedelta(days=self.trial_period_days)
