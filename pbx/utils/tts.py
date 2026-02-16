@@ -237,7 +237,7 @@ def generate_prompts(prompts, output_dir, company_name=None, sample_rate=8000):
 
     # Create output directory if needed
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     success_count = 0

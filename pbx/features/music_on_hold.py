@@ -3,7 +3,6 @@ Music on Hold (MOH) System
 Plays audio while calls are on hold
 """
 
-import os
 import random
 from pathlib import Path
 
@@ -27,20 +26,20 @@ class MusicOnHold:
         self.logger = get_logger()
         self.active_sessions = {}  # call_id -> current playing file
 
-        os.makedirs(moh_directory, exist_ok=True)
+        Path(moh_directory).mkdir(parents=True, exist_ok=True)
         self._load_classes()
 
     def _load_classes(self):
         """Load MOH classes and files"""
         # Create default class if it doesn't exist
         default_path = Path(self.moh_directory) / self.default_class
-        os.makedirs(default_path, exist_ok=True)
+        Path(default_path).mkdir(parents=True, exist_ok=True)
 
         # Scan for MOH classes (subdirectories)
         if Path(self.moh_directory).exists():
-            for item in os.listdir(self.moh_directory):
-                class_path = Path(self.moh_directory) / item
-                if Path(class_path).is_dir():
+            for class_path in Path(self.moh_directory).iterdir():
+                item = class_path.name
+                if class_path.is_dir():
                     audio_files = self._scan_audio_files(class_path)
                     if audio_files:
                         self.classes[item] = audio_files
@@ -59,9 +58,9 @@ class MusicOnHold:
         audio_extensions = [".wav", ".mp3", ".ogg", ".flac", ".aac"]
         audio_files = []
 
-        for filename in os.listdir(directory):
-            if any(filename.lower().endswith(ext) for ext in audio_extensions):
-                audio_files.append(Path(directory) / filename)
+        for entry in Path(directory).iterdir():
+            if any(entry.name.lower().endswith(ext) for ext in audio_extensions):
+                audio_files.append(entry)
 
         return sorted(audio_files)
 

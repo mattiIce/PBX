@@ -4,7 +4,6 @@ Provides automated call answering and menu navigation
 """
 
 import contextlib
-import os
 import sqlite3
 import time
 from enum import Enum
@@ -105,7 +104,7 @@ class AutoAttendant:
 
         # Create audio directory if it doesn't exist
         if not Path(self.audio_path).exists():
-            os.makedirs(self.audio_path)
+            Path(self.audio_path).mkdir(parents=True, exist_ok=True)
             self.logger.info(f"Created auto attendant audio directory: {self.audio_path}")
 
         self.logger.info(f"Auto Attendant initialized on extension {self.extension}")
@@ -1142,7 +1141,7 @@ def generate_auto_attendant_prompts(output_dir="auto_attendant"):
 
     # Create output directory
     if not Path(output_dir).exists():
-        os.makedirs(output_dir)
+        Path(output_dir).mkdir(parents=True, exist_ok=True)
         logger.info(f"Created directory: {output_dir}")
 
     # Define prompts to generate

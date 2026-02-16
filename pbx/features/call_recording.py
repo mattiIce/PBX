@@ -3,7 +3,6 @@ Call recording system
 Records audio from calls for compliance, quality assurance, and training
 """
 
-import os
 import wave
 from datetime import UTC, datetime
 from pathlib import Path
@@ -30,7 +29,7 @@ class CallRecording:
         self.start_time = None
         self.audio_buffer = []
 
-        os.makedirs(recording_path, exist_ok=True)
+        Path(recording_path).mkdir(parents=True, exist_ok=True)
 
     def start(self, from_ext, to_ext):
         """
@@ -117,7 +116,7 @@ class CallRecordingSystem:
         self.recording_metadata = []
         self.logger = get_logger()
 
-        os.makedirs(recording_path, exist_ok=True)
+        Path(recording_path).mkdir(parents=True, exist_ok=True)
 
     def start_recording(self, call_id, from_ext, to_ext):
         """

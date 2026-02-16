@@ -8,21 +8,29 @@ including session management, DTMF input handling, and menu navigation.
 import contextlib
 import time
 from pathlib import Path
+from typing import Any
 
 
 class AutoAttendantHandler:
     """Handles auto-attendant call sessions with menu and DTMF input"""
 
-    def __init__(self, pbx_core):
+    def __init__(self, pbx_core: Any) -> None:
         """
         Initialize AutoAttendantHandler with reference to PBXCore.
 
         Args:
             pbx_core: The PBXCore instance
         """
-        self.pbx_core = pbx_core
+        self.pbx_core: Any = pbx_core
 
-    def handle_auto_attendant(self, from_ext, to_ext, call_id, message, from_addr):
+    def handle_auto_attendant(
+        self,
+        from_ext: str,
+        to_ext: str,
+        call_id: str,
+        message: Any,
+        from_addr: tuple[str, int],
+    ) -> bool:
         """
         Handle auto attendant calls (extension 0)
 
@@ -46,8 +54,8 @@ class AutoAttendantHandler:
         pbx.logger.info(f"Auto attendant call: {from_ext} -> {to_ext}")
 
         # Parse SDP from caller's INVITE
-        caller_sdp = None
-        caller_codecs = None
+        caller_sdp: dict[str, Any] | None = None
+        caller_codecs: list[str] | None = None
         if message.body:
             caller_sdp_obj = SDPSession()
             caller_sdp_obj.parse(message.body)
@@ -74,12 +82,12 @@ class AutoAttendantHandler:
         # Instead, we directly play audio to the caller and listen for DTMF.
         # Find an available port from the RTP port pool.
         try:
-            rtp_port = pbx.rtp_relay.port_pool.pop(0)
+            rtp_port: int = pbx.rtp_relay.port_pool.pop(0)
         except IndexError:
             pbx.logger.error(f"No available RTP ports for auto attendant {call_id}")
             return False
 
-        rtcp_port = rtp_port + 1
+        rtcp_port: int = rtp_port + 1
         call.rtp_ports = (rtp_port, rtcp_port)
         pbx.logger.info(
             f"Allocated RTP port {rtp_port} for auto attendant {call_id} (no relay needed)"
@@ -89,12 +97,12 @@ class AutoAttendantHandler:
         call.aa_rtp_port = rtp_port
 
         # Send 180 Ringing first to provide ring-back tone to caller
-        server_ip = pbx._get_server_ip()
+        server_ip: str = pbx._get_server_ip()
         ringing_response = SIPMessageBuilder.build_response(180, "Ringing", call.original_invite)
 
         # Build Contact header for ringing response
-        sip_port = pbx.config.get("server.sip_port", 5060)
-        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+        sip_port: int = pbx.config.get("server.sip_port", 5060)
+        contact_uri: str = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
         ringing_response.set_header("Contact", contact_uri)
 
         # Send ringing response to caller
@@ -164,7 +172,9 @@ class AutoAttendantHandler:
 
         return True
 
-    def _auto_attendant_session(self, call_id, call, session):
+    def _auto_attendant_session(
+        self, call_id: str, call: Any, session: dict[str, Any]
+    ) -> None:
         """
         Handle auto attendant session with menu and DTMF input
 
@@ -223,10 +233,10 @@ class AutoAttendantHandler:
 
             # Play welcome greeting
             action = session.get("session")
-            audio_file = session.get("file")
+            audio_file: str | None = session.get("file")
 
             pbx.logger.info(f"[Auto Attendant] Starting audio playback for call {call_id}")
-            audio_played = False
+            audio_played: bool = False
 
             if audio_file and Path(audio_file).exists():
                 pbx.logger.info(f"[Auto Attendant] Playing welcome file: {audio_file}")
@@ -261,7 +271,7 @@ class AutoAttendantHandler:
 
             # Play main menu
             pbx.logger.info(f"[Auto Attendant] Playing main menu for call {call_id}")
-            menu_audio = pbx.auto_attendant._get_audio_file("main_menu")
+            menu_audio: str | None = pbx.auto_attendant._get_audio_file("main_menu")
             if menu_audio and Path(menu_audio).exists():
                 pbx.logger.info(f"[Auto Attendant] Playing menu file: {menu_audio}")
                 audio_played = player.play_file(menu_audio)
@@ -290,13 +300,13 @@ class AutoAttendantHandler:
                         os.unlink(temp_file_path)
 
             # Main loop - wait for DTMF input
-            session_active = True
-            timeout = pbx.auto_attendant.timeout
-            start_time = time.time()
+            session_active: bool = True
+            timeout: int = pbx.auto_attendant.timeout
+            start_time: float = time.time()
 
             while session_active and (time.time() - start_time) < timeout:
                 # Check for DTMF input from SIP INFO or in-band
-                digit = None
+                digit: str | None = None
 
                 # Priority 1: Check SIP INFO queue
                 if hasattr(call, "dtmf_info_queue") and call.dtmf_info_queue:
@@ -312,15 +322,19 @@ class AutoAttendantHandler:
                     pbx.logger.info(f"Auto attendant received DTMF: {digit}")
 
                     # Handle the input
-                    result = pbx.auto_attendant.handle_dtmf(session["session"], digit)
+                    result: dict[str, Any] = pbx.auto_attendant.handle_dtmf(
+                        session["session"], digit
+                    )
                     action = result.get("action")
 
                     if action == "transfer":
-                        destination = result.get("destination")
+                        destination: str | None = result.get("destination")
                         pbx.logger.info(f"Auto attendant transferring to {destination}")
 
                         # Play transfer message
-                        transfer_audio = pbx.auto_attendant._get_audio_file("transferring")
+                        transfer_audio: str | None = pbx.auto_attendant._get_audio_file(
+                            "transferring"
+                        )
                         if transfer_audio and Path(transfer_audio).exists():
                             player.play_file(transfer_audio)
                         else:

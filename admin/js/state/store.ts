@@ -25,8 +25,10 @@ class Store<T extends Record<string, unknown>> {
 
     set<K extends keyof T>(key: K, value: T[K]): void {
         this._state[key] = value;
-        const listeners = this._listeners.get(key) || [];
-        listeners.forEach((fn) => fn(value));
+        const listeners = this._listeners.get(key) ?? [];
+        for (const fn of listeners) {
+            fn(value);
+        }
     }
 
     /**

@@ -167,7 +167,7 @@ class Config:
             logger.error("Error adding extension: %s", e)
             return False
 
-    def update_extension(self, number, name=None, email=None, password=None, allow_external=None):
+    def update_extension(self, number: str | int, name: str | None = None, email: str | None = None, password: str | None = None, allow_external: bool | None = None) -> bool:
         """
         Update an existing extension
 
@@ -208,7 +208,7 @@ class Config:
             logger.error("Error updating extension: %s", e)
             return False
 
-    def delete_extension(self, number):
+    def delete_extension(self, number: str | int) -> bool:
         """
         Delete an extension from configuration
 
@@ -236,7 +236,7 @@ class Config:
             logger.error("Error deleting extension: %s", e)
             return False
 
-    def update_email_config(self, config_data):
+    def update_email_config(self, config_data: dict) -> bool:
         """
         Update email/SMTP configuration
 
@@ -283,7 +283,7 @@ class Config:
             logger.error("Error updating email config: %s", e)
             return False
 
-    def update_voicemail_pin(self, extension_number, pin):
+    def update_voicemail_pin(self, extension_number: str | int, pin: str | int) -> bool:
         """
         Update voicemail PIN for an extension
 
@@ -314,7 +314,7 @@ class Config:
             logger.error("Error updating voicemail PIN: %s", e)
             return False
 
-    def get_dtmf_config(self):
+    def get_dtmf_config(self) -> dict | None:
         """
         Get DTMF configuration
 
@@ -337,7 +337,7 @@ class Config:
             logger.error("Error getting DTMF config: %s", e)
             return None
 
-    def _ensure_dtmf_config_structure(self):
+    def _ensure_dtmf_config_structure(self) -> dict:
         """Ensure DTMF config structure exists"""
         if "features" not in self.config:
             self.config["features"] = {}
@@ -347,7 +347,7 @@ class Config:
             self.config["features"]["webrtc"]["dtmf"] = {}
         return self.config["features"]["webrtc"]["dtmf"]
 
-    def _update_dtmf_simple_fields(self, dtmf_config, dtmf):
+    def _update_dtmf_simple_fields(self, dtmf_config: dict, dtmf: dict) -> None:
         """Update simple boolean/string DTMF fields"""
         if "mode" in dtmf:
             dtmf_config["mode"] = dtmf["mode"]

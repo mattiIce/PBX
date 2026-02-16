@@ -211,7 +211,7 @@ class CallQueue:
 
         elif self.strategy == QueueStrategy.LEAST_RECENT:
             # Agent who hasn't taken a call longest
-            agent = min(available_agents, key=lambda a: a.last_call_time or datetime.min)
+            agent = min(available_agents, key=lambda a: a.last_call_time or datetime.min.replace(tzinfo=UTC))
             return agent
 
         elif self.strategy == QueueStrategy.FEWEST_CALLS:

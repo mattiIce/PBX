@@ -3,7 +3,7 @@
 Tests for Do Not Disturb (DND) Scheduling
 """
 
-from datetime import datetime
+from datetime import UTC, datetime
 
 from pbx.features.dnd_scheduling import CalendarMonitor, DNDRule, DNDScheduler
 from pbx.features.presence import PresenceStatus, PresenceSystem
@@ -42,11 +42,11 @@ def test_time_based_rule() -> bool:
     rule = DNDRule("rule1", "1001", "time_based", config)
 
     # Test during work hours on Monday
-    test_time = datetime(2025, 12, 8, 10, 0)  # Monday 10:00 AM
+    test_time = datetime(2025, 12, 8, 10, 0, tzinfo=UTC)  # Monday 10:00 AM
     assert rule.should_apply(test_time), "Should apply during work hours on Monday"
 
     # Test outside work hours
-    test_time = datetime(2025, 12, 8, 18, 0)  # Monday 6:00 PM
+    test_time = datetime(2025, 12, 8, 18, 0, tzinfo=UTC)  # Monday 6:00 PM
     assert not rule.should_apply(test_time), "Should not apply outside work hours"
 
     # Test wrong day

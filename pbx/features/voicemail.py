@@ -546,7 +546,7 @@ class VoicemailBox:
                     time_str = parts[2]
 
                     try:
-                        timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S")
+                        timestamp = datetime.strptime(f"{date_str}_{time_str}", "%Y%m%d_%H%M%S").replace(tzinfo=UTC)
 
                         message = {
                             "id": name_without_ext,
