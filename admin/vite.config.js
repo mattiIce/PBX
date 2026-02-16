@@ -8,6 +8,7 @@ export default defineConfig({
   root: resolve(__dirname),
   build: {
     outDir: 'dist',
+    target: 'es2024',
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),

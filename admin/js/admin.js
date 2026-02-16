@@ -103,9 +103,9 @@ function escapeHtml(text) {
 function displayError(error, context = '') {
     if (!ERROR_DISPLAY_CONFIG.enabled) return;
 
-    const errorId = 'error-' + Date.now();
-    const errorMessage = error.message || error.toString();
-    const errorStack = error.stack || '';
+    const errorId = `error-${Date.now()}`;
+    const errorMessage = error.message ?? error.toString();
+    const errorStack = error.stack ?? '';
 
     // Add to queue
     errorQueue.push({
@@ -1933,7 +1933,7 @@ function initializeForms() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    const msg = 'Device registered successfully! Config URL: ' + data.device.config_url;
+                    const msg = `Device registered successfully! Config URL: ${data.device.config_url}`;
                     showNotification(msg, 'success');
                     // Reset form and reload devices list
                     addDeviceForm.reset();
