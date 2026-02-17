@@ -64,7 +64,7 @@ class TestMapNumberToMobile:
             "mobile_first": True,
             "business_hours_only": True,
         }
-        result = mnp.map_number_to_mobile("5551234", "100", "mobile-001", settings=settings)
+        _result = mnp.map_number_to_mobile("5551234", "100", "mobile-001", settings=settings)
         mapping = mnp.number_mappings["5551234"]
         assert mapping["simultaneous_ring"] is False
         assert mapping["mobile_first"] is True
@@ -338,6 +338,7 @@ class TestGetMobileNumberPortabilitySingleton:
 
     def test_creates_instance(self) -> None:
         import pbx.features.mobile_number_portability as mod
+
         original = mod._mobile_number_portability
         mod._mobile_number_portability = None
         try:
@@ -349,6 +350,7 @@ class TestGetMobileNumberPortabilitySingleton:
 
     def test_returns_same_instance(self) -> None:
         import pbx.features.mobile_number_portability as mod
+
         original = mod._mobile_number_portability
         mod._mobile_number_portability = None
         try:

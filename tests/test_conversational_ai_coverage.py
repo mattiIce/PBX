@@ -24,7 +24,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # Helper: since NLTK may not be installed, the module-level names
 # (nltk, WordNetLemmatizer, stopwords, word_tokenize) will not exist as
@@ -269,7 +268,7 @@ class TestNLTKInitialization:
             True,
         ]
 
-        ai = ConversationalAI()
+        _ai = ConversationalAI()
 
         mock_nltk.download.assert_called_once_with("stopwords", quiet=True)
 
@@ -293,7 +292,7 @@ class TestNLTKInitialization:
             LookupError("wordnet not found"),
         ]
 
-        ai = ConversationalAI()
+        _ai = ConversationalAI()
 
         mock_nltk.download.assert_called_once_with("wordnet", quiet=True)
 
@@ -316,7 +315,7 @@ class TestNLTKInitialization:
             LookupError("wordnet"),
         ]
 
-        ai = ConversationalAI()
+        _ai = ConversationalAI()
 
         assert mock_nltk.download.call_count == 3
 
@@ -1430,8 +1429,7 @@ class TestGenerateResponse:
 
         assert result["intent"] == "negation"
         assert (
-            "information" in result["response"].lower()
-            or "provide" in result["response"].lower()
+            "information" in result["response"].lower() or "provide" in result["response"].lower()
         )
 
     @patch(f"{MODULE}.get_logger")
@@ -1565,7 +1563,7 @@ class TestBuildResponseHandlers:
 
         ai = ConversationalAI()
         handlers = ai._build_response_handlers()
-        response, confidence = handlers["transfer_request"]({"departments": []})
+        response, _confidence = handlers["transfer_request"]({"departments": []})
 
         assert "general" in response.lower()
 
@@ -1576,9 +1574,7 @@ class TestBuildResponseHandlers:
 
         ai = ConversationalAI()
         handlers = ai._build_response_handlers()
-        response, confidence = handlers["callback_request"](
-            {"phone_numbers": ["555-123-4567"]}
-        )
+        response, confidence = handlers["callback_request"]({"phone_numbers": ["555-123-4567"]})
 
         assert "555-123-4567" in response
         assert confidence is None
@@ -1602,7 +1598,7 @@ class TestBuildResponseHandlers:
 
         ai = ConversationalAI()
         handlers = ai._build_response_handlers()
-        response, confidence = handlers["callback_request"]({"phone_numbers": [None]})
+        response, _confidence = handlers["callback_request"]({"phone_numbers": [None]})
 
         assert "best number" in response.lower()
 
@@ -1864,9 +1860,7 @@ class TestConfigureProvider:
         ai = ConversationalAI(config=config)
 
         with patch("pbx.utils.encryption.encrypt_data", create=True, return_value=b"encrypted"):
-            result = ai.configure_provider(
-                "dialogflow", api_key="df-key", project_id="my-project"
-            )
+            result = ai.configure_provider("dialogflow", api_key="df-key", project_id="my-project")
 
         assert result is True
         assert ai.provider == "dialogflow"
@@ -1880,9 +1874,7 @@ class TestConfigureProvider:
         ai = ConversationalAI(config=config)
 
         with patch("pbx.utils.encryption.encrypt_data", create=True, return_value=b"encrypted"):
-            result = ai.configure_provider(
-                "lex", api_key="lex-key", region="us-west-2"
-            )
+            result = ai.configure_provider("lex", api_key="lex-key", region="us-west-2")
 
         assert result is True
         assert ai.provider == "lex"

@@ -345,6 +345,7 @@ class TestVideoConferencingLeaveRoom:
 
         call_args = self.db.execute.call_args[0][1]
         from datetime import datetime
+
         assert isinstance(call_args[0], datetime)
 
 

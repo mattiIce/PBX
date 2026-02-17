@@ -26,7 +26,9 @@ class TestRecordingAnnouncementsInit:
         assert ra.enabled is False
         assert ra.announcement_type == "both"
         assert ra.audio_path == "audio/recording_announcement.wav"
-        assert ra.announcement_text == "This call may be recorded for quality and training purposes."
+        assert (
+            ra.announcement_text == "This call may be recorded for quality and training purposes."
+        )
         assert ra.require_consent is False
         assert ra.consent_timeout == 10
         assert ra.announcements_played == 0
@@ -126,7 +128,7 @@ class TestRecordingAnnouncementsInit:
             mock_logger_fn.return_value = MagicMock()
             from pbx.features.recording_announcements import RecordingAnnouncements
 
-            ra = RecordingAnnouncements(config=config, database=mock_db)
+            _ra = RecordingAnnouncements(config=config, database=mock_db)
 
         # Should have called cursor.execute for table creation and index
         assert mock_cursor.execute.call_count == 2
@@ -144,7 +146,7 @@ class TestRecordingAnnouncementsInit:
             mock_logger_fn.return_value = MagicMock()
             from pbx.features.recording_announcements import RecordingAnnouncements
 
-            ra = RecordingAnnouncements(config=config, database=mock_db)
+            _ra = RecordingAnnouncements(config=config, database=mock_db)
 
         mock_db.connection.cursor.assert_not_called()
 
@@ -202,10 +204,12 @@ class TestRecordingAnnouncementsInit:
             from pbx.features.recording_announcements import RecordingAnnouncements
 
             # Should not raise
-            ra = RecordingAnnouncements(config=config, database=mock_db)
+            _ra = RecordingAnnouncements(config=config, database=mock_db)
 
         mock_logger.error.assert_called_once()
-        assert "Error initializing recording announcements schema" in mock_logger.error.call_args[0][0]
+        assert (
+            "Error initializing recording announcements schema" in mock_logger.error.call_args[0][0]
+        )
 
 
 @pytest.mark.unit
@@ -489,7 +493,7 @@ class TestRecordingAnnouncementsLogAnnouncement:
 
     def test_log_announcement_postgresql(self) -> None:
         """Test logging announcement with postgresql"""
-        ra, mock_db, mock_cursor = self._make_ra_with_db("postgresql")
+        ra, _mock_db, mock_cursor = self._make_ra_with_db("postgresql")
 
         ra._log_announcement("call-1", "caller", True, True, True, False)
 
@@ -525,7 +529,7 @@ class TestRecordingAnnouncementsLogAnnouncement:
 
     def test_log_announcement_db_error(self) -> None:
         """Test logging announcement with db error"""
-        ra, mock_db, mock_cursor = self._make_ra_with_db("sqlite")
+        ra, _mock_db, mock_cursor = self._make_ra_with_db("sqlite")
         mock_cursor.execute.side_effect = sqlite3.Error("db error")
 
         # Should not raise
@@ -535,7 +539,7 @@ class TestRecordingAnnouncementsLogAnnouncement:
 
     def test_log_announcement_sqlite_consent_values(self) -> None:
         """Test sqlite boolean conversion for consent values"""
-        ra, mock_db, mock_cursor = self._make_ra_with_db("sqlite")
+        ra, _mock_db, mock_cursor = self._make_ra_with_db("sqlite")
 
         ra._log_announcement("call-1", "caller", True, True, True, False)
 
@@ -547,7 +551,7 @@ class TestRecordingAnnouncementsLogAnnouncement:
 
     def test_log_announcement_sqlite_consent_false(self) -> None:
         """Test sqlite boolean conversion for consent_given=False"""
-        ra, mock_db, mock_cursor = self._make_ra_with_db("sqlite")
+        ra, _mock_db, mock_cursor = self._make_ra_with_db("sqlite")
 
         ra._log_announcement("call-1", "caller", True, True, False, False)
 
@@ -556,7 +560,7 @@ class TestRecordingAnnouncementsLogAnnouncement:
 
     def test_log_announcement_sqlite_consent_none(self) -> None:
         """Test sqlite boolean conversion for consent_given=None"""
-        ra, mock_db, mock_cursor = self._make_ra_with_db("sqlite")
+        ra, _mock_db, mock_cursor = self._make_ra_with_db("sqlite")
 
         ra._log_announcement("call-1", "caller", True, True, None, False)
 

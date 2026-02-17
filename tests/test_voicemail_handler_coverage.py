@@ -360,7 +360,7 @@ class TestVoicemailIVRSession:
         """If RTP player fails to start, should end the call."""
         from pbx.core.call import CallState
 
-        mock_player_cls, mock_recorder_cls, mock_dtmf_cls, _ = _setup_rtp_mocks()
+        mock_player_cls, _mock_recorder_cls, _mock_dtmf_cls, _ = _setup_rtp_mocks()
         mock_player = MagicMock()
         mock_player.start.return_value = False
         mock_player_cls.return_value = mock_player
@@ -378,7 +378,7 @@ class TestVoicemailIVRSession:
         """If RTP recorder fails to start, should stop player and end call."""
         from pbx.core.call import CallState
 
-        mock_player_cls, mock_recorder_cls, mock_dtmf_cls, _ = _setup_rtp_mocks()
+        mock_player_cls, mock_recorder_cls, _mock_dtmf_cls, _ = _setup_rtp_mocks()
         mock_player = MagicMock()
         mock_player.start.return_value = True
         mock_player_cls.return_value = mock_player
@@ -664,7 +664,7 @@ class TestMonitorVoicemailDTMF:
         recorder.running = True
         recorder.recorded_data = [b"\x80" * 100]
 
-        with patch.object(handler, "complete_voicemail_recording") as mock_complete:
+        with patch.object(handler, "complete_voicemail_recording") as _mock_complete:
             handler.monitor_voicemail_dtmf("call-1", call_obj, recorder)
             mock_detector.detect_tone.assert_not_called()
 

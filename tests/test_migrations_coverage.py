@@ -1,16 +1,16 @@
 """Comprehensive tests for pbx/utils/migrations.py database migration system."""
 
 import sqlite3
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
 from pbx.utils.migrations import MigrationManager, register_all_migrations
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_db_backend(db_type: str = "sqlite") -> MagicMock:
     """Return a mock database backend configured for the given db_type."""
@@ -164,7 +164,9 @@ class TestRegisterMigration:
         mgr.register_migration(1, "first", "CREATE TABLE t1 (id INT)")
         assert len(mgr.migrations) == 1
         assert mgr.migrations[0] == {
-            "version": 1, "name": "first", "sql": "CREATE TABLE t1 (id INT)"
+            "version": 1,
+            "name": "first",
+            "sql": "CREATE TABLE t1 (id INT)",
         }
 
     @patch("pbx.utils.migrations.get_logger")

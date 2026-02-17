@@ -16,7 +16,6 @@ from pbx.utils.database import (
     get_database,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -131,11 +130,13 @@ class TestDatabaseBackendConnect:
         mock_psycopg2.connect.return_value = mock_conn
         with patch("pbx.utils.database.POSTGRES_AVAILABLE", True):
             db = DatabaseBackend(config)
-        with patch.dict("sys.modules", {"psycopg2": mock_psycopg2, "psycopg2.extras": MagicMock()}):
-            with patch("pbx.utils.database.POSTGRES_AVAILABLE", True):
-                # Patch psycopg2 at module level using create=True
-                with patch("pbx.utils.database.psycopg2", mock_psycopg2, create=True):
-                    result = db.connect()
+        with (
+            patch.dict("sys.modules", {"psycopg2": mock_psycopg2, "psycopg2.extras": MagicMock()}),
+            patch("pbx.utils.database.POSTGRES_AVAILABLE", True),
+            # Patch psycopg2 at module level using create=True
+            patch("pbx.utils.database.psycopg2", mock_psycopg2, create=True),
+        ):
+            result = db.connect()
         assert result is True
         assert db.enabled is True
         assert db._autocommit is True
@@ -156,9 +157,11 @@ class TestDatabaseBackendConnect:
         mock_psycopg2.connect.side_effect = KeyError("bad config")
         with patch("pbx.utils.database.POSTGRES_AVAILABLE", True):
             db = DatabaseBackend(config)
-        with patch("pbx.utils.database.POSTGRES_AVAILABLE", True):
-            with patch("pbx.utils.database.psycopg2", mock_psycopg2, create=True):
-                result = db.connect()
+        with (
+            patch("pbx.utils.database.POSTGRES_AVAILABLE", True),
+            patch("pbx.utils.database.psycopg2", mock_psycopg2, create=True),
+        ):
+            result = db.connect()
         assert result is False
 
     @patch("pbx.utils.database.get_logger")
@@ -591,13 +594,13 @@ class TestDatabaseBackendCreateTables:
         def side_effect(query, context="query", params=None, critical=True):
             call_count[0] += 1
             # Fail on the first table creation
-            if call_count[0] == 1:
-                return False
-            return True
+            return call_count[0] != 1
 
-        with patch.object(db, "_execute_with_context", side_effect=side_effect):
-            with patch.object(db, "_migrate_schema"):
-                result = db.create_tables()
+        with (
+            patch.object(db, "_execute_with_context", side_effect=side_effect),
+            patch.object(db, "_migrate_schema"),
+        ):
+            result = db.create_tables()
         assert result is False
 
 
@@ -621,9 +624,11 @@ class TestDatabaseBackendMigrateSchema:
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
         mock_cursor.fetchone.return_value = None
-        with patch.object(db, "_execute_with_context", return_value=True) as mock_exec:
-            with patch.object(db, "_apply_framework_migrations"):
-                db._migrate_schema()
+        with (
+            patch.object(db, "_execute_with_context", return_value=True) as mock_exec,
+            patch.object(db, "_apply_framework_migrations"),
+        ):
+            db._migrate_schema()
         # Should be called for each missing column (5 transcription + 4 extensions + 1 device_type)
         assert mock_exec.call_count >= 10
 
@@ -854,7 +859,7 @@ class TestRegisteredPhonesDB:
 
         backend.fetch_one = MagicMock(side_effect=fetch_one_side_effect)
         backend.execute = MagicMock(return_value=True)
-        success, mac = phones_db.register_phone("1001", "192.168.1.10", "AA:BB:CC:DD:EE:FF")
+        success, _mac = phones_db.register_phone("1001", "192.168.1.10", "AA:BB:CC:DD:EE:FF")
         assert success is True
         # Should have called execute for delete + insert
         assert backend.execute.call_count >= 2
@@ -881,7 +886,7 @@ class TestRegisteredPhonesDB:
 
         backend.fetch_one = MagicMock(side_effect=fetch_one_side_effect)
         backend.execute = MagicMock(return_value=True)
-        success, mac = phones_db.register_phone("1001", "192.168.1.10")
+        success, _mac = phones_db.register_phone("1001", "192.168.1.10")
         assert success is True
 
     def test_register_phone_update_preserves_existing_values(self) -> None:
@@ -911,14 +916,14 @@ class TestRegisteredPhonesDB:
         backend.execute = MagicMock(return_value=True)
 
         # Pass None for user_agent and contact_uri to test preservation
-        success, mac = phones_db.register_phone("1001", "192.168.1.10", None, None, None)
+        success, _mac = phones_db.register_phone("1001", "192.168.1.10", None, None, None)
         assert success is True
 
     def test_register_phone_postgresql_syntax(self) -> None:
         phones_db, backend = self._make_phones_db("postgresql")
         backend.fetch_one = MagicMock(return_value=None)
         backend.execute = MagicMock(return_value=True)
-        success, mac = phones_db.register_phone("1001", "192.168.1.10", "AA:BB:CC:DD:EE:FF")
+        success, _mac = phones_db.register_phone("1001", "192.168.1.10", "AA:BB:CC:DD:EE:FF")
         assert success is True
         args = backend.execute.call_args
         assert "%s" in args[0][0]
@@ -1017,7 +1022,7 @@ class TestRegisteredPhonesDB:
         assert result is True
 
     def test_update_phone_extension_no_mac(self) -> None:
-        phones_db, backend = self._make_phones_db()
+        phones_db, _backend = self._make_phones_db()
         result = phones_db.update_phone_extension("", "1002")
         assert result is False
 
@@ -1139,7 +1144,7 @@ class TestExtensionDB:
         assert result is True
 
     def test_add_extension_pin_hash_failure(self) -> None:
-        ext_db, backend = self._make_ext_db()
+        ext_db, _backend = self._make_ext_db()
         mock_encryption_module = MagicMock()
         mock_encryption_module.get_encryption = MagicMock(side_effect=Exception("fail"))
         with patch.dict("sys.modules", {"pbx.utils.encryption": mock_encryption_module}):
@@ -1204,7 +1209,7 @@ class TestExtensionDB:
         assert args[0][1] == (True,)
 
     def test_update_no_fields(self) -> None:
-        ext_db, backend = self._make_ext_db()
+        ext_db, _backend = self._make_ext_db()
         result = ext_db.update("1001")
         assert result is True  # Nothing to update
 
@@ -1245,7 +1250,7 @@ class TestExtensionDB:
         assert result is True
 
     def test_update_voicemail_pin_hash_failure(self) -> None:
-        ext_db, backend = self._make_ext_db()
+        ext_db, _backend = self._make_ext_db()
         mock_encryption_module = MagicMock()
         mock_encryption_module.get_encryption = MagicMock(side_effect=Exception("fail"))
         with patch.dict("sys.modules", {"pbx.utils.encryption": mock_encryption_module}):
@@ -1372,9 +1377,7 @@ class TestExtensionDBConfig:
 
     def test_get_config_bool_type_true(self) -> None:
         ext_db, backend = self._make_ext_db()
-        backend.fetch_one = MagicMock(
-            return_value={"config_value": "true", "config_type": "bool"}
-        )
+        backend.fetch_one = MagicMock(return_value={"config_value": "true", "config_type": "bool"})
         result = ext_db.get_config("key")
         assert result is True
 
@@ -1392,9 +1395,7 @@ class TestExtensionDBConfig:
 
     def test_get_config_bool_type_false(self) -> None:
         ext_db, backend = self._make_ext_db()
-        backend.fetch_one = MagicMock(
-            return_value={"config_value": "false", "config_type": "bool"}
-        )
+        backend.fetch_one = MagicMock(return_value={"config_value": "false", "config_type": "bool"})
         result = ext_db.get_config("key")
         assert result is False
 
@@ -1420,9 +1421,7 @@ class TestExtensionDBConfig:
 
     def test_get_config_string_empty_value_returns_default(self) -> None:
         ext_db, backend = self._make_ext_db()
-        backend.fetch_one = MagicMock(
-            return_value={"config_value": "", "config_type": "string"}
-        )
+        backend.fetch_one = MagicMock(return_value={"config_value": "", "config_type": "string"})
         result = ext_db.get_config("key", "default")
         assert result == "default"
 
@@ -1491,7 +1490,7 @@ class TestExtensionDBConfig:
         assert result is True
 
     def test_set_config_serialization_error(self) -> None:
-        ext_db, backend = self._make_ext_db()
+        ext_db, _backend = self._make_ext_db()
         # Create an object that json.dumps will fail on
         obj = object()
         result = ext_db.set_config("key", obj, config_type="json")
@@ -1678,13 +1677,13 @@ class TestProvisionedDevicesDB:
         assert args[0][1] == ("phone",)
 
     def test_detect_device_type_phone(self) -> None:
-        prov_db, backend = self._make_prov_db()
+        prov_db, _backend = self._make_prov_db()
         with patch("pbx.utils.database.detect_device_type", return_value="phone"):
             result = prov_db._detect_device_type("cisco", "7960")
         assert result == "phone"
 
     def test_detect_device_type_ata(self) -> None:
-        prov_db, backend = self._make_prov_db()
+        prov_db, _backend = self._make_prov_db()
         with patch("pbx.utils.database.detect_device_type", return_value="ata"):
             result = prov_db._detect_device_type("grandstream", "ht801")
         assert result == "ata"
@@ -1929,9 +1928,7 @@ class TestDatabaseBackendEdgeCases:
         with patch("pbx.utils.database.get_logger"):
             ext_db = ExtensionDB(backend)
         # bool type with non-string value that doesn't have .lower()
-        backend.fetch_one = MagicMock(
-            return_value={"config_value": 123, "config_type": "bool"}
-        )
+        backend.fetch_one = MagicMock(return_value={"config_value": 123, "config_type": "bool"})
         result = ext_db.get_config("key", "default")
         # 123 is truthy and not a string, so the isinstance check fails -> returns default
         assert result == "default"
@@ -1941,9 +1938,7 @@ class TestDatabaseBackendEdgeCases:
         backend = _make_enabled_backend()
         with patch("pbx.utils.database.get_logger"):
             ext_db = ExtensionDB(backend)
-        backend.fetch_one = MagicMock(
-            return_value={"config_value": None, "config_type": "bool"}
-        )
+        backend.fetch_one = MagicMock(return_value={"config_value": None, "config_type": "bool"})
         result = ext_db.get_config("key", "default")
         assert result == "default"
 

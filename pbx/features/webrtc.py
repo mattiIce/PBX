@@ -816,9 +816,7 @@ class WebRTCGateway:
                 if self.verbose_logging:
                     self.logger.error("[VERBOSE] Session lookup failed:")
                     if webrtc_signaling:
-                        self.logger.error(
-                            f"  Active sessions: {list(webrtc_signaling.sessions)}"
-                        )
+                        self.logger.error(f"  Active sessions: {list(webrtc_signaling.sessions)}")
                     else:
                         self.logger.error("  No signaling server provided")
                 return None

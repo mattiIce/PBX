@@ -342,9 +342,7 @@ class TestAuditLogger:
         """Test log_extension_create convenience method."""
         audit_logger, mock_logger = self._create_test_logger()
 
-        audit_logger.log_extension_create(
-            "admin", "1001", {"name": "Alice"}, "10.0.0.1"
-        )
+        audit_logger.log_extension_create("admin", "1001", {"name": "Alice"}, "10.0.0.1")
 
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args[0][0]
@@ -356,9 +354,7 @@ class TestAuditLogger:
         """Test log_extension_update convenience method."""
         audit_logger, mock_logger = self._create_test_logger()
 
-        audit_logger.log_extension_update(
-            "admin", "1001", {"name": "Bob"}, "10.0.0.1"
-        )
+        audit_logger.log_extension_update("admin", "1001", {"name": "Bob"}, "10.0.0.1")
 
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args[0][0]
@@ -379,9 +375,7 @@ class TestAuditLogger:
         """Test log_config_change convenience method."""
         audit_logger, mock_logger = self._create_test_logger()
 
-        audit_logger.log_config_change(
-            "admin", "sip.port", {"old": 5060, "new": 5061}, "10.0.0.1"
-        )
+        audit_logger.log_config_change("admin", "sip.port", {"old": 5060, "new": 5061}, "10.0.0.1")
 
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args[0][0]
@@ -405,9 +399,7 @@ class TestAuditLogger:
         """Test log_permission_change convenience method."""
         audit_logger, mock_logger = self._create_test_logger()
 
-        audit_logger.log_permission_change(
-            "admin", "user1", {"role": "operator"}, "10.0.0.1"
-        )
+        audit_logger.log_permission_change("admin", "user1", {"role": "operator"}, "10.0.0.1")
 
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args[0][0]
@@ -418,9 +410,7 @@ class TestAuditLogger:
         """Test log_security_event convenience method (always success=False)."""
         audit_logger, mock_logger = self._create_test_logger()
 
-        audit_logger.log_security_event(
-            "brute_force", "unknown", {"attempts": 100}, "10.0.0.99"
-        )
+        audit_logger.log_security_event("brute_force", "unknown", {"attempts": 100}, "10.0.0.99")
 
         # Security events use success=False, so warning should be called
         mock_logger.warning.assert_called_once()
@@ -432,9 +422,7 @@ class TestAuditLogger:
         """Test log_data_export convenience method."""
         audit_logger, mock_logger = self._create_test_logger()
 
-        audit_logger.log_data_export(
-            "admin", "call_records", {"format": "csv"}, "10.0.0.1"
-        )
+        audit_logger.log_data_export("admin", "call_records", {"format": "csv"}, "10.0.0.1")
 
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args[0][0]
@@ -446,9 +434,7 @@ class TestAuditLogger:
         """Test log_backup_operation convenience method."""
         audit_logger, mock_logger = self._create_test_logger()
 
-        audit_logger.log_backup_operation(
-            "system", "create", {"size": "1.2GB"}
-        )
+        audit_logger.log_backup_operation("system", "create", {"size": "1.2GB"})
 
         mock_logger.info.assert_called_once()
         call_args = mock_logger.info.call_args[0][0]

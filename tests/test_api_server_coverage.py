@@ -92,9 +92,7 @@ class TestConfigureSSL:
         cert_file = tmp_path / "server.crt"
         cert_file.write_text("cert data")
         key_file = str(tmp_path / "nonexistent.key")
-        pbx_core = _make_pbx_core(
-            ssl_enabled=True, cert_file=str(cert_file), key_file=key_file
-        )
+        pbx_core = _make_pbx_core(ssl_enabled=True, cert_file=str(cert_file), key_file=key_file)
         server = PBXFlaskServer(pbx_core)
         assert server.ssl_enabled is False
 
@@ -125,9 +123,7 @@ class TestConfigureSSL:
             key_file=key_file,
             ca_config=ca_config,
         )
-        with patch.object(
-            PBXFlaskServer, "_request_certificate_from_ca", return_value=False
-        ):
+        with patch.object(PBXFlaskServer, "_request_certificate_from_ca", return_value=False):
             server = PBXFlaskServer(pbx_core)
         # Cert file doesn't exist after failed CA request, so SSL remains off
         assert server.ssl_enabled is False
@@ -362,9 +358,11 @@ class TestServerRun:
         pbx_core = _make_pbx_core()
         server = PBXFlaskServer(pbx_core)
 
-        with patch.dict("os.environ", {"FLASK_DEBUG": "1"}):
-            with patch.object(server.app, "run") as mock_run:
-                server._run()
+        with (
+            patch.dict("os.environ", {"FLASK_DEBUG": "1"}),
+            patch.object(server.app, "run") as mock_run,
+        ):
+            server._run()
 
         call_kwargs = mock_run.call_args
         assert call_kwargs[1]["debug"] is True

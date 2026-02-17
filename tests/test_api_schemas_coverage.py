@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 from pydantic import ValidationError
 
-
 # ---------------------------------------------------------------------------
 # Extension Schemas
 # ---------------------------------------------------------------------------
@@ -105,7 +104,9 @@ class TestExtensionCreate:
                 voicemail_pin="abcd",
             )
         errors = exc_info.value.errors()
-        assert any("pin" in str(e["msg"]).lower() or "digits" in str(e["msg"]).lower() for e in errors)
+        assert any(
+            "pin" in str(e["msg"]).lower() or "digits" in str(e["msg"]).lower() for e in errors
+        )
 
     def test_voicemail_pin_too_short(self) -> None:
         from pbx.api.schemas.extensions import ExtensionCreate
@@ -672,7 +673,9 @@ class TestProvisionDevice:
                 extension="1001",
             )
         errors = exc_info.value.errors()
-        assert any("mac" in str(e["msg"]).lower() or "invalid" in str(e["msg"]).lower() for e in errors)
+        assert any(
+            "mac" in str(e["msg"]).lower() or "invalid" in str(e["msg"]).lower() for e in errors
+        )
 
     def test_model_cannot_be_empty(self) -> None:
         from pbx.api.schemas.provisioning import ProvisionDevice

@@ -135,7 +135,7 @@ class TestCallQueue:
         assignments = q.process_queue()
 
         assert len(assignments) == 2
-        for call, agent in assignments:
+        for _call, agent in assignments:
             assert agent.status == AgentStatus.BUSY
         assert len(q.queue) == 0
 

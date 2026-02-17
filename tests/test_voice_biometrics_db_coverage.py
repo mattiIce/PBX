@@ -84,9 +84,7 @@ class TestVoiceBiometricsDatabaseCreateTables:
         """Test table creation logs success message."""
         self.mock_db.db_type = "sqlite"
         self.db.create_tables()
-        self.db.logger.info.assert_called_once_with(
-            "Voice biometrics tables created successfully"
-        )
+        self.db.logger.info.assert_called_once_with("Voice biometrics tables created successfully")
 
     def test_create_tables_error(self) -> None:
         """Test table creation handles sqlite3.Error."""
@@ -158,8 +156,12 @@ class TestVoiceBiometricsDatabaseGetProfile:
         self.mock_db.db_type = "sqlite"
         self.mock_cursor.fetchone.return_value = (1, "user-001", "1001", "enrolled", 3, 3)
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
-            ("enrollment_samples",), ("required_samples",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
+            ("enrollment_samples",),
+            ("required_samples",),
         ]
         result = self.db.get_profile("user-001")
         assert result is not None
@@ -173,7 +175,10 @@ class TestVoiceBiometricsDatabaseGetProfile:
         self.mock_db.db_type = "postgresql"
         self.mock_cursor.fetchone.return_value = (1, "user-001", "1001", "enrolled")
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
         ]
         result = self.db.get_profile("user-001")
         assert result is not None
@@ -254,12 +259,25 @@ class TestVoiceBiometricsDatabaseSaveVerification:
         self.mock_db.db_type = "sqlite"
         # Mock get_profile to return a profile
         self.mock_cursor.fetchone.return_value = (
-            1, "user-001", "1001", "enrolled", 3, 3, None, 5, 1,
+            1,
+            "user-001",
+            "1001",
+            "enrolled",
+            3,
+            3,
+            None,
+            5,
+            1,
         )
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
-            ("enrollment_samples",), ("required_samples",),
-            ("voiceprint_data",), ("successful_verifications",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
+            ("enrollment_samples",),
+            ("required_samples",),
+            ("voiceprint_data",),
+            ("successful_verifications",),
             ("failed_verifications",),
         ]
         self.db.save_verification("user-001", "call-001", True, 0.95)
@@ -284,12 +302,25 @@ class TestVoiceBiometricsDatabaseSaveVerification:
         """Test saving failed verification with SQLite backend."""
         self.mock_db.db_type = "sqlite"
         self.mock_cursor.fetchone.return_value = (
-            1, "user-001", "1001", "enrolled", 3, 3, None, 5, 1,
+            1,
+            "user-001",
+            "1001",
+            "enrolled",
+            3,
+            3,
+            None,
+            5,
+            1,
         )
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
-            ("enrollment_samples",), ("required_samples",),
-            ("voiceprint_data",), ("successful_verifications",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
+            ("enrollment_samples",),
+            ("required_samples",),
+            ("voiceprint_data",),
+            ("successful_verifications",),
             ("failed_verifications",),
         ]
         self.db.save_verification("user-001", "call-001", False, 0.3)
@@ -304,12 +335,25 @@ class TestVoiceBiometricsDatabaseSaveVerification:
         """Test saving successful verification with PostgreSQL backend."""
         self.mock_db.db_type = "postgresql"
         self.mock_cursor.fetchone.return_value = (
-            1, "user-001", "1001", "enrolled", 3, 3, None, 5, 1,
+            1,
+            "user-001",
+            "1001",
+            "enrolled",
+            3,
+            3,
+            None,
+            5,
+            1,
         )
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
-            ("enrollment_samples",), ("required_samples",),
-            ("voiceprint_data",), ("successful_verifications",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
+            ("enrollment_samples",),
+            ("required_samples",),
+            ("voiceprint_data",),
+            ("successful_verifications",),
             ("failed_verifications",),
         ]
         self.db.save_verification("user-001", "call-001", True, 0.92)
@@ -326,12 +370,25 @@ class TestVoiceBiometricsDatabaseSaveVerification:
         """Test saving failed verification with PostgreSQL backend."""
         self.mock_db.db_type = "postgresql"
         self.mock_cursor.fetchone.return_value = (
-            1, "user-001", "1001", "enrolled", 3, 3, None, 5, 1,
+            1,
+            "user-001",
+            "1001",
+            "enrolled",
+            3,
+            3,
+            None,
+            5,
+            1,
         )
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
-            ("enrollment_samples",), ("required_samples",),
-            ("voiceprint_data",), ("successful_verifications",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
+            ("enrollment_samples",),
+            ("required_samples",),
+            ("voiceprint_data",),
+            ("successful_verifications",),
             ("failed_verifications",),
         ]
         self.db.save_verification("user-001", "call-001", False, 0.2)
@@ -369,7 +426,10 @@ class TestVoiceBiometricsDatabaseSaveVerification:
         self.mock_db.db_type = "sqlite"
         self.mock_cursor.fetchone.return_value = (1, "user-001", "1001", "enrolled")
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
         ]
         # Make the second execute raise TypeError
         self.mock_cursor.execute.side_effect = [
@@ -384,7 +444,10 @@ class TestVoiceBiometricsDatabaseSaveVerification:
         self.mock_db.db_type = "sqlite"
         self.mock_cursor.fetchone.return_value = (1, "user-001", "1001", "enrolled")
         self.mock_cursor.description = [
-            ("id",), ("user_id",), ("extension",), ("status",),
+            ("id",),
+            ("user_id",),
+            ("extension",),
+            ("status",),
         ]
         self.mock_cursor.execute.side_effect = [
             None,
@@ -410,9 +473,7 @@ class TestVoiceBiometricsDatabaseSaveFraudDetection:
         """Test saving fraud detection with fraud=True using SQLite."""
         self.mock_db.db_type = "sqlite"
         indicators = ["voice_mismatch", "unusual_pattern"]
-        self.db.save_fraud_detection(
-            "call-001", "5551234567", True, 0.85, indicators
-        )
+        self.db.save_fraud_detection("call-001", "5551234567", True, 0.85, indicators)
         self.mock_cursor.execute.assert_called_once()
         sql = self.mock_cursor.execute.call_args[0][0]
         assert "?" in sql
@@ -435,9 +496,7 @@ class TestVoiceBiometricsDatabaseSaveFraudDetection:
         """Test saving fraud detection with PostgreSQL backend."""
         self.mock_db.db_type = "postgresql"
         indicators = ["spoofed_caller_id"]
-        self.db.save_fraud_detection(
-            "call-001", "5551234567", True, 0.9, indicators
-        )
+        self.db.save_fraud_detection("call-001", "5551234567", True, 0.9, indicators)
         sql = self.mock_cursor.execute.call_args[0][0]
         assert "%s" in sql
         params = self.mock_cursor.execute.call_args[0][1]
@@ -488,11 +547,11 @@ class TestVoiceBiometricsDatabaseGetStatistics:
         """Test getting statistics with SQLite backend."""
         self.mock_db.db_type = "sqlite"
         self.mock_cursor.fetchone.side_effect = [
-            (50,),   # total_profiles
-            (30,),   # enrolled
+            (50,),  # total_profiles
+            (30,),  # enrolled
             (200,),  # total_verifications
             (180,),  # successful
-            (5,),    # fraud_detected
+            (5,),  # fraud_detected
         ]
         result = self.db.get_statistics()
         assert result["total_profiles"] == 50

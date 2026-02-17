@@ -76,7 +76,7 @@ class TestSOC2ComplianceEngineInit:
             mock_logger_fn.return_value = MagicMock()
             from pbx.features.compliance_framework import SOC2ComplianceEngine
 
-            engine = SOC2ComplianceEngine(mock_db, config)
+            _engine = SOC2ComplianceEngine(mock_db, config)
 
         # Should have called execute for each default control INSERT
         # 16 default controls, each calls fetch_one + execute (insert)

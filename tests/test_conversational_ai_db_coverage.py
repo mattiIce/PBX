@@ -84,9 +84,7 @@ class TestConversationalAIDatabaseCreateTables:
         """Test table creation logs success message."""
         self.mock_db.db_type = "sqlite"
         self.db.create_tables()
-        self.db.logger.info.assert_called_once_with(
-            "Conversational AI tables created successfully"
-        )
+        self.db.logger.info.assert_called_once_with("Conversational AI tables created successfully")
 
     def test_create_tables_error(self) -> None:
         """Test table creation handles sqlite3.Error."""
@@ -372,7 +370,10 @@ class TestConversationalAIDatabaseGetConversationHistory:
         """Test getting conversation history with SQLite backend."""
         self.mock_db.db_type = "sqlite"
         self.mock_cursor.description = [
-            ("id",), ("call_id",), ("caller_id",), ("msg_count",),
+            ("id",),
+            ("call_id",),
+            ("caller_id",),
+            ("msg_count",),
         ]
         self.mock_cursor.fetchall.return_value = [
             (1, "call-001", "5551234567", 5),
@@ -417,7 +418,11 @@ class TestConversationalAIDatabaseGetConversationHistory:
         """Test PostgreSQL path processes columns from cursor.description."""
         self.mock_db.db_type = "postgresql"
         self.mock_cursor.description = [
-            ("id",), ("call_id",), ("caller_id",), ("started_at",), ("msg_count",),
+            ("id",),
+            ("call_id",),
+            ("caller_id",),
+            ("started_at",),
+            ("msg_count",),
         ]
         self.mock_cursor.fetchall.return_value = [
             (1, "call-001", "5551234567", "2026-01-15T10:30:00", 5),

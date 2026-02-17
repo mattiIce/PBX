@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask.testing import FlaskClient
 
-
 AUTH_ADMIN = (True, {"extension": "1001", "is_admin": True})
 AUTH_USER = (True, {"extension": "1001", "is_admin": False})
 AUTH_NONE = (False, None)
@@ -181,9 +180,7 @@ class TestGetRegisteredAtas:
         self, api_client: FlaskClient, mock_pbx_core: MagicMock
     ) -> None:
         mock_pbx_core.registered_phones_db = MagicMock()
-        mock_pbx_core.registered_phones_db.list_all.return_value = [
-            {"extension_number": "1001"}
-        ]
+        mock_pbx_core.registered_phones_db.list_all.return_value = [{"extension_number": "1001"}]
         if hasattr(mock_pbx_core, "phone_provisioning"):
             del mock_pbx_core.phone_provisioning
 
@@ -555,7 +552,9 @@ class TestProvisioningRequest:
         mock_pbx_core.registered_phones_db = MagicMock()
         mock_pbx_core.registered_phones_db.register_phone.return_value = (True, "AABBCCDDEEFF")
 
-        with patch("pbx.api.routes.provisioning.normalize_mac_address", return_value="AABBCCDDEEFF"):
+        with patch(
+            "pbx.api.routes.provisioning.normalize_mac_address", return_value="AABBCCDDEEFF"
+        ):
             resp = api_client.get("/provision/AABBCCDDEEFF.cfg")
         assert resp.status_code == 200
         assert b"<config/>" in resp.data
@@ -575,9 +574,7 @@ class TestProvisioningRequest:
     ) -> None:
         mock_pbx_core.phone_provisioning = MagicMock()
 
-        resp = api_client.get(
-            "/provision/{mac}.cfg", headers={"User-Agent": "Yealink SIP-T54W"}
-        )
+        resp = api_client.get("/provision/{mac}.cfg", headers={"User-Agent": "Yealink SIP-T54W"})
         assert resp.status_code == 400
 
     def test_mac_placeholder_cisco_user_agent(
@@ -585,9 +582,7 @@ class TestProvisioningRequest:
     ) -> None:
         mock_pbx_core.phone_provisioning = MagicMock()
 
-        resp = api_client.get(
-            "/provision/{mac}.cfg", headers={"User-Agent": "Cisco SPA504G"}
-        )
+        resp = api_client.get("/provision/{mac}.cfg", headers={"User-Agent": "Cisco SPA504G"})
         assert resp.status_code == 400
 
     def test_mac_placeholder_polycom_user_agent(
@@ -595,9 +590,7 @@ class TestProvisioningRequest:
     ) -> None:
         mock_pbx_core.phone_provisioning = MagicMock()
 
-        resp = api_client.get(
-            "/provision/{mac}.cfg", headers={"User-Agent": "Polycom VVX-300"}
-        )
+        resp = api_client.get("/provision/{mac}.cfg", headers={"User-Agent": "Polycom VVX-300"})
         assert resp.status_code == 400
 
     def test_mac_placeholder_grandstream_user_agent(
@@ -605,9 +598,7 @@ class TestProvisioningRequest:
     ) -> None:
         mock_pbx_core.phone_provisioning = MagicMock()
 
-        resp = api_client.get(
-            "/provision/{mac}.cfg", headers={"User-Agent": "Grandstream GXP2170"}
-        )
+        resp = api_client.get("/provision/{mac}.cfg", headers={"User-Agent": "Grandstream GXP2170"})
         assert resp.status_code == 400
 
     def test_mac_placeholder_zultys_user_agent(
@@ -615,9 +606,7 @@ class TestProvisioningRequest:
     ) -> None:
         mock_pbx_core.phone_provisioning = MagicMock()
 
-        resp = api_client.get(
-            "/provision/{mac}.cfg", headers={"User-Agent": "Zultys ZIP36G"}
-        )
+        resp = api_client.get("/provision/{mac}.cfg", headers={"User-Agent": "Zultys ZIP36G"})
         assert resp.status_code == 400
 
     def test_mac_placeholder_unknown_user_agent(
@@ -625,9 +614,7 @@ class TestProvisioningRequest:
     ) -> None:
         mock_pbx_core.phone_provisioning = MagicMock()
 
-        resp = api_client.get(
-            "/provision/{mac}.cfg", headers={"User-Agent": "UnknownPhoneBrand"}
-        )
+        resp = api_client.get("/provision/{mac}.cfg", headers={"User-Agent": "UnknownPhoneBrand"})
         assert resp.status_code == 400
 
     def test_device_not_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
@@ -672,7 +659,9 @@ class TestProvisioningRequest:
         mock_pbx_core.registered_phones_db = MagicMock()
         mock_pbx_core.registered_phones_db.register_phone.side_effect = ValueError("db fail")
 
-        with patch("pbx.api.routes.provisioning.normalize_mac_address", return_value="AABBCCDDEEFF"):
+        with patch(
+            "pbx.api.routes.provisioning.normalize_mac_address", return_value="AABBCCDDEEFF"
+        ):
             resp = api_client.get("/provision/AABBCCDDEEFF.cfg")
         assert resp.status_code == 200
 
@@ -700,12 +689,14 @@ class TestRegisterDevice:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/provisioning/devices",
-                data=json.dumps({
-                    "mac_address": "AA:BB:CC:DD:EE:FF",
-                    "extension_number": "1001",
-                    "vendor": "yealink",
-                    "model": "t54w",
-                }),
+                data=json.dumps(
+                    {
+                        "mac_address": "AA:BB:CC:DD:EE:FF",
+                        "extension_number": "1001",
+                        "vendor": "yealink",
+                        "model": "t54w",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -723,12 +714,14 @@ class TestRegisterDevice:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/provisioning/devices",
-                data=json.dumps({
-                    "mac_address": "AA:BB:CC:DD:EE:FF",
-                    "extension_number": "1001",
-                    "vendor": "yealink",
-                    "model": "t54w",
-                }),
+                data=json.dumps(
+                    {
+                        "mac_address": "AA:BB:CC:DD:EE:FF",
+                        "extension_number": "1001",
+                        "vendor": "yealink",
+                        "model": "t54w",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -753,12 +746,14 @@ class TestRegisterDevice:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/provisioning/devices",
-                data=json.dumps({
-                    "mac_address": "AA:BB:CC:DD:EE:FF",
-                    "extension_number": "1001",
-                    "vendor": "yealink",
-                    "model": "t54w",
-                }),
+                data=json.dumps(
+                    {
+                        "mac_address": "AA:BB:CC:DD:EE:FF",
+                        "extension_number": "1001",
+                        "vendor": "yealink",
+                        "model": "t54w",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500
@@ -770,12 +765,14 @@ class TestRegisterDevice:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/provisioning/devices",
-                data=json.dumps({
-                    "mac_address": "AA:BB:CC:DD:EE:FF",
-                    "extension_number": "1001",
-                    "vendor": "yealink",
-                    "model": "t54w",
-                }),
+                data=json.dumps(
+                    {
+                        "mac_address": "AA:BB:CC:DD:EE:FF",
+                        "extension_number": "1001",
+                        "vendor": "yealink",
+                        "model": "t54w",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500
@@ -794,12 +791,14 @@ class TestRegisterDevice:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/provisioning/devices",
-                data=json.dumps({
-                    "mac_address": "AA:BB:CC:DD:EE:FF",
-                    "extension_number": "1001",
-                    "vendor": "yealink",
-                    "model": "t54w",
-                }),
+                data=json.dumps(
+                    {
+                        "mac_address": "AA:BB:CC:DD:EE:FF",
+                        "extension_number": "1001",
+                        "vendor": "yealink",
+                        "model": "t54w",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200

@@ -141,7 +141,7 @@ class TestPcm16ToG722:
             mock_codec = MagicMock()
             mock_codec.encode.return_value = b"\x42"
             mock_codec_cls.return_value = mock_codec
-            result = pcm16_to_g722(pcm_data, sample_rate=16000)
+            _result = pcm16_to_g722(pcm_data, sample_rate=16000)
 
     @patch("pbx.features.g722_codec.G722Codec")
     def test_16khz_no_upsampling(self, mock_codec_cls) -> None:
@@ -153,7 +153,7 @@ class TestPcm16ToG722:
         from pbx.utils.audio import pcm16_to_g722
 
         pcm_data = struct.pack("<hh", 1000, 2000)
-        result = pcm16_to_g722(pcm_data, sample_rate=16000)
+        _result = pcm16_to_g722(pcm_data, sample_rate=16000)
         # encode is called with original data (no upsampling)
         mock_codec.encode.assert_called_once_with(pcm_data)
 
@@ -168,7 +168,7 @@ class TestPcm16ToG722:
 
         # 4 samples at 8kHz -> 8 samples at 16kHz
         pcm_data = struct.pack("<hhhh", 100, 200, 300, 400)
-        result = pcm16_to_g722(pcm_data, sample_rate=8000)
+        _result = pcm16_to_g722(pcm_data, sample_rate=8000)
         # Verify encoder was called with upsampled data (longer)
         called_data = mock_codec.encode.call_args[0][0]
         assert len(called_data) > len(pcm_data)

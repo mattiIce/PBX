@@ -362,7 +362,7 @@ class TestAddEnrollmentSample:
         vb.start_enrollment("user1")
 
         audio = self._make_audio_data()
-        for i in range(3):
+        for _ in range(3):
             result = vb.add_enrollment_sample("user1", audio)
 
         assert result["enrollment_complete"] is True
@@ -622,7 +622,12 @@ class TestDetectFraud:
         with patch.object(
             vb,
             "_extract_voice_features",
-            return_value={"energy_variance": 0.05, "spectral_flatness": 0.3, "pitch": 150.0, "zero_crossing_rate": 0.1},
+            return_value={
+                "energy_variance": 0.05,
+                "spectral_flatness": 0.3,
+                "pitch": 150.0,
+                "zero_crossing_rate": 0.1,
+            },
         ):
             result = vb.detect_fraud(b"\x00" * 200, {"caller_id": "1001"})
 
@@ -638,7 +643,12 @@ class TestDetectFraud:
         with patch.object(
             vb,
             "_extract_voice_features",
-            return_value={"energy_variance": 1.0, "spectral_flatness": 0.9, "pitch": 150.0, "zero_crossing_rate": 0.1},
+            return_value={
+                "energy_variance": 1.0,
+                "spectral_flatness": 0.9,
+                "pitch": 150.0,
+                "zero_crossing_rate": 0.1,
+            },
         ):
             result = vb.detect_fraud(b"\x00" * 200, {"caller_id": "1001"})
 
@@ -669,7 +679,12 @@ class TestDetectFraud:
         with patch.object(
             vb,
             "_extract_voice_features",
-            return_value={"energy_variance": 1.0, "spectral_flatness": 0.3, "pitch": 30.0, "zero_crossing_rate": 0.1},
+            return_value={
+                "energy_variance": 1.0,
+                "spectral_flatness": 0.3,
+                "pitch": 30.0,
+                "zero_crossing_rate": 0.1,
+            },
         ):
             result = vb.detect_fraud(b"\x00" * 200, {"caller_id": "1001"})
 
@@ -684,7 +699,12 @@ class TestDetectFraud:
         with patch.object(
             vb,
             "_extract_voice_features",
-            return_value={"energy_variance": 1.0, "spectral_flatness": 0.3, "pitch": 500.0, "zero_crossing_rate": 0.1},
+            return_value={
+                "energy_variance": 1.0,
+                "spectral_flatness": 0.3,
+                "pitch": 500.0,
+                "zero_crossing_rate": 0.1,
+            },
         ):
             result = vb.detect_fraud(b"\x00" * 200, {"caller_id": "1001"})
 
@@ -699,7 +719,12 @@ class TestDetectFraud:
         with patch.object(
             vb,
             "_extract_voice_features",
-            return_value={"energy_variance": 1.0, "spectral_flatness": 0.3, "pitch": 150.0, "zero_crossing_rate": 0.005},
+            return_value={
+                "energy_variance": 1.0,
+                "spectral_flatness": 0.3,
+                "pitch": 150.0,
+                "zero_crossing_rate": 0.005,
+            },
         ):
             result = vb.detect_fraud(b"\x00" * 200, {"caller_id": "1001"})
 
@@ -714,7 +739,12 @@ class TestDetectFraud:
         with patch.object(
             vb,
             "_extract_voice_features",
-            return_value={"energy_variance": 1.0, "spectral_flatness": 0.3, "pitch": 150.0, "zero_crossing_rate": 0.6},
+            return_value={
+                "energy_variance": 1.0,
+                "spectral_flatness": 0.3,
+                "pitch": 150.0,
+                "zero_crossing_rate": 0.6,
+            },
         ):
             result = vb.detect_fraud(b"\x00" * 200, {"caller_id": "1001"})
 
@@ -738,7 +768,7 @@ class TestDetectFraud:
             },
         ):
             # Also create repetitive audio for pattern detection
-            chunk = b"\xAB\xCD" * 500
+            chunk = b"\xab\xcd" * 500
             audio = chunk * 20
             result = vb.detect_fraud(audio, {"caller_id": "1001"})
 
@@ -1252,9 +1282,7 @@ class TestCreateVoiceprint:
         assert abs(vb.profiles["user1"].voiceprint_features["pitch"] - 151.0) < 0.01
 
     @patch("pbx.features.voice_biometrics.get_logger")
-    def test_voiceprint_with_non_numeric_features_skipped(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_voiceprint_with_non_numeric_features_skipped(self, mock_get_logger: MagicMock) -> None:
         from pbx.features.voice_biometrics import VoiceBiometrics
 
         vb = VoiceBiometrics()
@@ -1393,7 +1421,7 @@ class TestCalculateMatchScore:
     def test_match_score_no_features(
         self, mock_random: MagicMock, mock_get_logger: MagicMock
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.85
         vb = VoiceBiometrics()
@@ -1409,7 +1437,7 @@ class TestCalculateMatchScore:
     def test_match_score_empty_stored_features(
         self, mock_random: MagicMock, mock_get_logger: MagicMock
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.88
         vb = VoiceBiometrics()
@@ -1425,7 +1453,7 @@ class TestCalculateMatchScore:
     def test_match_score_distance_based_identical(
         self, mock_random: MagicMock, mock_get_logger: MagicMock
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0  # No variation
         vb = VoiceBiometrics()
@@ -1443,7 +1471,7 @@ class TestCalculateMatchScore:
     def test_match_score_distance_based_different(
         self, mock_random: MagicMock, mock_get_logger: MagicMock
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0
         vb = VoiceBiometrics()
@@ -1461,7 +1489,7 @@ class TestCalculateMatchScore:
     def test_match_score_no_overlapping_keys(
         self, mock_random: MagicMock, mock_get_logger: MagicMock
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.85
         vb = VoiceBiometrics()
@@ -1478,7 +1506,7 @@ class TestCalculateMatchScore:
     def test_match_score_non_numeric_values_skipped(
         self, mock_random: MagicMock, mock_get_logger: MagicMock
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.85
         vb = VoiceBiometrics()
@@ -1486,9 +1514,7 @@ class TestCalculateMatchScore:
         profile.voiceprint_features = {"label": "voice", "pitch": 150.0}
 
         # Non-numeric stored value for "label" is skipped
-        score = vb._calculate_match_score(
-            profile, {"label": "voice", "pitch": 150.0}
-        )
+        score = vb._calculate_match_score(profile, {"label": "voice", "pitch": 150.0})
 
         # "label" is skipped as it's a string, pitch matches
         assert 0.0 <= score <= 1.0
@@ -1503,7 +1529,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0
         mock_np.array.return_value = MagicMock()
@@ -1528,7 +1554,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0
         mock_np.array.return_value = MagicMock()
@@ -1553,7 +1579,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0
         mock_np.array.return_value = MagicMock()
@@ -1578,7 +1604,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0
         mock_np.array.return_value = MagicMock()
@@ -1603,7 +1629,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0
         mock_np.array.return_value = MagicMock()
@@ -1628,7 +1654,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_random.uniform.return_value = 0.0
         mock_np.array.return_value = MagicMock()
@@ -1653,7 +1679,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         mock_np.array.side_effect = ValueError("numpy error")
         mock_random.uniform.return_value = 0.85
@@ -1678,7 +1704,7 @@ class TestCalculateMatchScore:
         mock_np: MagicMock,
         mock_get_logger: MagicMock,
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         # Large positive variation that could push score above 1.0
         mock_random.uniform.return_value = 0.1
@@ -1700,7 +1726,7 @@ class TestCalculateMatchScore:
     def test_match_score_distance_variation_clamped(
         self, mock_random: MagicMock, mock_get_logger: MagicMock
     ) -> None:
-        from pbx.features.voice_biometrics import VoiceProfile, VoiceBiometrics
+        from pbx.features.voice_biometrics import VoiceBiometrics, VoiceProfile
 
         # Negative variation on a near-zero similarity should clamp to 0.0
         mock_random.uniform.return_value = -0.02
@@ -1927,7 +1953,7 @@ class TestGetVoiceBiometrics:
         config2 = {"features": {"voice_biometrics": {"provider": "pindrop"}}}
 
         with patch.object(vb_module, "get_logger"):
-            instance1 = vb_module.get_voice_biometrics(config=config1)
+            _instance1 = vb_module.get_voice_biometrics(config=config1)
             instance2 = vb_module.get_voice_biometrics(config=config2)
 
         assert instance2.provider == "nuance"
@@ -1961,7 +1987,7 @@ class TestGenerateSessionId:
         fixed_dt = datetime(2025, 1, 1, tzinfo=UTC)
         with patch("pbx.features.voice_biometrics.datetime") as mock_dt:
             mock_dt.now.return_value = fixed_dt
-            mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
+            mock_dt.side_effect = datetime
             id1 = vb._generate_session_id("user1")
             id2 = vb._generate_session_id("user2")
 

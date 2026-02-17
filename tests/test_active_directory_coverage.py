@@ -24,7 +24,7 @@ sys.modules.setdefault("ldap3.utils", _mock_ldap3.utils)
 sys.modules.setdefault("ldap3.utils.conv", _mock_ldap3.utils.conv)
 
 # Now import the module under test; LDAP3_AVAILABLE will be True
-from pbx.integrations.active_directory import ActiveDirectoryIntegration  # noqa: E402
+from pbx.integrations.active_directory import ActiveDirectoryIntegration
 
 # Module path for patching
 MOD = "pbx.integrations.active_directory"
@@ -166,6 +166,7 @@ def _make_ldap_entry(
 # Tests: Initialisation
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestActiveDirectoryInit:
     """Tests for ActiveDirectoryIntegration.__init__."""
@@ -195,17 +196,21 @@ class TestActiveDirectoryInit:
 
     def test_init_server_fallback(self) -> None:
         """Falls back to ldap_server key when server key is absent."""
-        ad = _make_ad({
-            "integrations.active_directory.server": _REMOVE,
-            "integrations.active_directory.ldap_server": "ldap://fallback.example.com",
-        })
+        ad = _make_ad(
+            {
+                "integrations.active_directory.server": _REMOVE,
+                "integrations.active_directory.ldap_server": "ldap://fallback.example.com",
+            }
+        )
         assert ad.ldap_server == "ldap://fallback.example.com"
 
     def test_init_defaults_for_optional_fields(self) -> None:
-        ad = _make_ad({
-            "integrations.active_directory.use_ssl": _REMOVE,
-            "integrations.active_directory.auto_provision": _REMOVE,
-        })
+        ad = _make_ad(
+            {
+                "integrations.active_directory.use_ssl": _REMOVE,
+                "integrations.active_directory.auto_provision": _REMOVE,
+            }
+        )
         assert ad.use_ssl is True
         assert ad.auto_provision is False
 
@@ -213,6 +218,7 @@ class TestActiveDirectoryInit:
 # ---------------------------------------------------------------------------
 # Tests: connect()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestConnect:
@@ -277,7 +283,9 @@ class TestConnect:
 
     @patch(f"{MOD}.Connection")
     @patch(f"{MOD}.Server")
-    def test_connect_value_error(self, mock_server_cls: MagicMock, mock_conn_cls: MagicMock) -> None:
+    def test_connect_value_error(
+        self, mock_server_cls: MagicMock, mock_conn_cls: MagicMock
+    ) -> None:
         mock_conn_cls.side_effect = ValueError("bad value")
 
         ad = _make_ad()
@@ -288,6 +296,7 @@ class TestConnect:
 # ---------------------------------------------------------------------------
 # Tests: authenticate_user()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestAuthenticateUser:
@@ -302,7 +311,7 @@ class TestAuthenticateUser:
         assert ad.authenticate_user("user", "pass") is None
 
     def test_auth_user_not_found(self) -> None:
-        ad, conn = _make_ad_connected(entries=[])
+        ad, _conn = _make_ad_connected(entries=[])
         result = ad.authenticate_user("jdoe", "password123")
         assert result is None
 
@@ -312,6 +321,7 @@ class TestAuthenticateUser:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         user_conn = MagicMock()
@@ -334,6 +344,7 @@ class TestAuthenticateUser:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         user_conn = MagicMock()
@@ -355,6 +366,7 @@ class TestAuthenticateUser:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         user_conn = MagicMock()
@@ -381,12 +393,15 @@ class TestAuthenticateUser:
 
     def test_auth_uses_custom_search_base(self) -> None:
         entry = _make_ldap_entry(groups=["CN=G,OU=G,DC=d,DC=c"])
-        ad, conn = _make_ad_connected(config_overrides={
-            "integrations.active_directory.user_search_base": "OU=Staff,DC=example,DC=com"
-        })
+        ad, conn = _make_ad_connected(
+            config_overrides={
+                "integrations.active_directory.user_search_base": "OU=Staff,DC=example,DC=com"
+            }
+        )
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         user_conn = MagicMock()
@@ -402,6 +417,7 @@ class TestAuthenticateUser:
 # ---------------------------------------------------------------------------
 # Tests: _map_groups_to_permissions()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestMapGroupsToPermissions:
@@ -419,92 +435,94 @@ class TestMapGroupsToPermissions:
 
     def test_match_by_full_dn(self) -> None:
         group_dn = "CN=PBX-Admins,OU=Groups,DC=example,DC=com"
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                group_dn: ["admin", "external_calling"]
+        ad = _make_ad(
+            {
+                "integrations.active_directory.group_permissions": {
+                    group_dn: ["admin", "external_calling"]
+                }
             }
-        })
+        )
         result = ad._map_groups_to_permissions([group_dn])
         assert result == {"admin": True, "external_calling": True}
 
     def test_match_by_cn_extraction(self) -> None:
         group_dn = "CN=Managers,OU=Groups,DC=example,DC=com"
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                group_dn: ["manage_users"]
-            }
-        })
+        ad = _make_ad(
+            {"integrations.active_directory.group_permissions": {group_dn: ["manage_users"]}}
+        )
         result = ad._map_groups_to_permissions([group_dn])
         assert result == {"manage_users": True}
 
     def test_match_cn_only_config(self) -> None:
         """Config group is just a name (no CN= prefix), user group has CN=."""
         user_group = "CN=Sales,OU=Groups,DC=example,DC=com"
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                "Sales": ["view_reports"]
-            }
-        })
+        ad = _make_ad(
+            {"integrations.active_directory.group_permissions": {"Sales": ["view_reports"]}}
+        )
         result = ad._map_groups_to_permissions([user_group])
         assert result == {"view_reports": True}
 
     def test_no_match(self) -> None:
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                "CN=Finance,OU=Groups,DC=example,DC=com": ["view_reports"]
+        ad = _make_ad(
+            {
+                "integrations.active_directory.group_permissions": {
+                    "CN=Finance,OU=Groups,DC=example,DC=com": ["view_reports"]
+                }
             }
-        })
+        )
         result = ad._map_groups_to_permissions(["CN=Sales,OU=Groups,DC=example,DC=com"])
         assert result == {}
 
     def test_non_list_perms_skipped(self) -> None:
         group_dn = "CN=PBX-Admins,OU=Groups,DC=example,DC=com"
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                group_dn: "admin"  # string, not list
+        ad = _make_ad(
+            {
+                "integrations.active_directory.group_permissions": {
+                    group_dn: "admin"  # string, not list
+                }
             }
-        })
+        )
         result = ad._map_groups_to_permissions([group_dn])
         assert result == {}
 
     def test_user_group_without_cn_prefix(self) -> None:
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                "Developers": ["deploy"]
-            }
-        })
+        ad = _make_ad(
+            {"integrations.active_directory.group_permissions": {"Developers": ["deploy"]}}
+        )
         result = ad._map_groups_to_permissions(["Developers"])
         assert result == {"deploy": True}
 
     def test_config_group_cn_no_comma(self) -> None:
         """Config group starts with CN= but has no comma."""
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                "CN=Admins": ["admin"]
-            }
-        })
+        ad = _make_ad({"integrations.active_directory.group_permissions": {"CN=Admins": ["admin"]}})
         result = ad._map_groups_to_permissions(["CN=Admins"])
         assert result == {"admin": True}
 
     def test_multiple_groups_multiple_permissions(self) -> None:
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"],
-                "CN=Sales,OU=Groups,DC=example,DC=com": ["external_calling"],
+        ad = _make_ad(
+            {
+                "integrations.active_directory.group_permissions": {
+                    "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"],
+                    "CN=Sales,OU=Groups,DC=example,DC=com": ["external_calling"],
+                }
             }
-        })
-        result = ad._map_groups_to_permissions([
-            "CN=Admins,OU=Groups,DC=example,DC=com",
-            "CN=Sales,OU=Groups,DC=example,DC=com",
-        ])
+        )
+        result = ad._map_groups_to_permissions(
+            [
+                "CN=Admins,OU=Groups,DC=example,DC=com",
+                "CN=Sales,OU=Groups,DC=example,DC=com",
+            ]
+        )
         assert result == {"admin": True, "external_calling": True}
 
     def test_empty_user_groups(self) -> None:
-        ad = _make_ad({
-            "integrations.active_directory.group_permissions": {
-                "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+        ad = _make_ad(
+            {
+                "integrations.active_directory.group_permissions": {
+                    "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+                }
             }
-        })
+        )
         result = ad._map_groups_to_permissions([])
         assert result == {}
 
@@ -512,6 +530,7 @@ class TestMapGroupsToPermissions:
 # ---------------------------------------------------------------------------
 # Tests: get_user_groups()
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestGetUserGroups:
@@ -526,20 +545,23 @@ class TestGetUserGroups:
         assert ad.get_user_groups("jdoe") == []
 
     def test_user_not_found(self) -> None:
-        ad, conn = _make_ad_connected(entries=[])
+        ad, _conn = _make_ad_connected(entries=[])
         result = ad.get_user_groups("unknown")
         assert result == []
 
     def test_returns_group_names(self) -> None:
-        entry = _make_ldap_entry(groups=[
-            "CN=Sales,OU=Groups,DC=example,DC=com",
-            "CN=IT,OU=Groups,DC=example,DC=com",
-        ])
+        entry = _make_ldap_entry(
+            groups=[
+                "CN=Sales,OU=Groups,DC=example,DC=com",
+                "CN=IT,OU=Groups,DC=example,DC=com",
+            ]
+        )
 
         ad, conn = _make_ad_connected()
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         result = ad.get_user_groups("jdoe")
@@ -553,6 +575,7 @@ class TestGetUserGroups:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         result = ad.get_user_groups("jdoe")
@@ -560,15 +583,18 @@ class TestGetUserGroups:
 
     def test_groups_non_cn_entries_skipped(self) -> None:
         """Group DNs not starting with CN= are skipped."""
-        entry = _make_ldap_entry(groups=[
-            "OU=Sales,OU=Groups,DC=example,DC=com",  # not CN=
-            "CN=IT,OU=Groups,DC=example,DC=com",
-        ])
+        entry = _make_ldap_entry(
+            groups=[
+                "OU=Sales,OU=Groups,DC=example,DC=com",  # not CN=
+                "CN=IT,OU=Groups,DC=example,DC=com",
+            ]
+        )
 
         ad, conn = _make_ad_connected()
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         result = ad.get_user_groups("jdoe")
@@ -593,6 +619,7 @@ class TestGetUserGroups:
 # Tests: search_users()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestSearchUsers:
     """Tests for ActiveDirectoryIntegration.search_users."""
@@ -612,6 +639,7 @@ class TestSearchUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         results = ad.search_users("john")
@@ -629,6 +657,7 @@ class TestSearchUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         results = ad.search_users("john")
@@ -654,7 +683,7 @@ class TestSearchUsers:
         assert call_kwargs["size_limit"] == 10
 
     def test_search_empty_results(self) -> None:
-        ad, conn = _make_ad_connected(entries=[])
+        ad, _conn = _make_ad_connected(entries=[])
 
         results = ad.search_users("nonexistent")
         assert results == []
@@ -671,6 +700,7 @@ class TestSearchUsers:
 # Tests: get_user_photo()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetUserPhoto:
     """Tests for ActiveDirectoryIntegration.get_user_photo."""
@@ -684,7 +714,7 @@ class TestGetUserPhoto:
         assert ad.get_user_photo("jdoe") is None
 
     def test_user_not_found(self) -> None:
-        ad, conn = _make_ad_connected(entries=[])
+        ad, _conn = _make_ad_connected(entries=[])
         result = ad.get_user_photo("jdoe")
         assert result is None
 
@@ -699,6 +729,7 @@ class TestGetUserPhoto:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         result = ad.get_user_photo("jdoe")
@@ -712,6 +743,7 @@ class TestGetUserPhoto:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         result = ad.get_user_photo("jdoe")
@@ -726,6 +758,7 @@ class TestGetUserPhoto:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         result = ad.get_user_photo("jdoe")
@@ -750,6 +783,7 @@ class TestGetUserPhoto:
 # Tests: sync_users()
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestSyncUsers:
     """Tests for ActiveDirectoryIntegration.sync_users."""
@@ -767,17 +801,20 @@ class TestSyncUsers:
         assert ad.sync_users() == 0
 
     def test_no_users_found(self) -> None:
-        ad, conn = _make_ad_connected()
+        ad, _conn = _make_ad_connected()
         result = ad.sync_users()
         assert result == 0
 
     def test_sync_creates_new_extension_in_db(self) -> None:
-        entry = _make_ldap_entry(sam="jdoe", display="John Doe", mail="jdoe@example.com", phone="1001")
+        entry = _make_ldap_entry(
+            sam="jdoe", display="John Doe", mail="jdoe@example.com", phone="1001"
+        )
 
         ad, conn = _make_ad_connected()
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -796,12 +833,15 @@ class TestSyncUsers:
         assert call_kwargs["ad_username"] == "jdoe"
 
     def test_sync_updates_existing_extension_in_db(self) -> None:
-        entry = _make_ldap_entry(sam="jdoe", display="John Doe", mail="jdoe@example.com", phone="1001")
+        entry = _make_ldap_entry(
+            sam="jdoe", display="John Doe", mail="jdoe@example.com", phone="1001"
+        )
 
         ad, conn = _make_ad_connected()
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -818,12 +858,15 @@ class TestSyncUsers:
         assert call_kwargs["ad_synced"] is True
 
     def test_sync_updates_live_registry(self) -> None:
-        entry = _make_ldap_entry(sam="jdoe", display="John Doe", mail="jdoe@example.com", phone="1001")
+        entry = _make_ldap_entry(
+            sam="jdoe", display="John Doe", mail="jdoe@example.com", phone="1001"
+        )
 
         ad, conn = _make_ad_connected()
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -851,6 +894,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -866,6 +910,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -881,6 +926,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -897,6 +943,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -917,6 +964,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -929,8 +977,7 @@ class TestSyncUsers:
         ad.sync_users(extension_db=extension_db)
 
         deactivation_calls = [
-            c for c in extension_db.update.call_args_list
-            if c[1].get("number") == "1002"
+            c for c in extension_db.update.call_args_list if c[1].get("number") == "1002"
         ]
         assert len(deactivation_calls) == 1
         assert deactivation_calls[0][1]["allow_external"] is False
@@ -942,6 +989,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -967,6 +1015,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -979,8 +1028,7 @@ class TestSyncUsers:
         ad.sync_users(extension_db=extension_db)
 
         deactivation_calls = [
-            c for c in extension_db.update.call_args_list
-            if c[1].get("number") == "1002"
+            c for c in extension_db.update.call_args_list if c[1].get("number") == "1002"
         ]
         assert len(deactivation_calls) == 0
 
@@ -991,6 +1039,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         mock_pbx_config = MagicMock()
@@ -1012,6 +1061,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         existing_ext = {"number": "1001", "name": "Old Name"}
@@ -1034,6 +1084,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         mock_pbx_config = MagicMock()
@@ -1055,6 +1106,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1082,6 +1134,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1107,6 +1160,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1124,6 +1178,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1151,6 +1206,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [bad_entry, good_entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1176,6 +1232,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1189,9 +1246,7 @@ class TestSyncUsers:
         with patch("pbx.features.extensions.Extension") as mock_ext_cls:
             mock_ext_instance = MagicMock()
             mock_ext_cls.return_value = mock_ext_instance
-            result = ad.sync_users(
-                extension_registry=extension_registry, extension_db=extension_db
-            )
+            result = ad.sync_users(extension_registry=extension_registry, extension_db=extension_db)
 
         assert result["synced_count"] == 1
         assert "1001" in extension_registry.extensions
@@ -1202,14 +1257,17 @@ class TestSyncUsers:
             groups=["CN=PBX-Admins,OU=Groups,DC=example,DC=com"],
         )
 
-        ad, conn = _make_ad_connected(config_overrides={
-            "integrations.active_directory.group_permissions": {
-                "CN=PBX-Admins,OU=Groups,DC=example,DC=com": ["admin", "external_calling"]
+        ad, conn = _make_ad_connected(
+            config_overrides={
+                "integrations.active_directory.group_permissions": {
+                    "CN=PBX-Admins,OU=Groups,DC=example,DC=com": ["admin", "external_calling"]
+                }
             }
-        })
+        )
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1234,14 +1292,17 @@ class TestSyncUsers:
             groups=["CN=Sales,OU=Groups,DC=example,DC=com"],
         )
 
-        ad, conn = _make_ad_connected(config_overrides={
-            "integrations.active_directory.group_permissions": {
-                "CN=Sales,OU=Groups,DC=example,DC=com": ["view_reports"]
+        ad, conn = _make_ad_connected(
+            config_overrides={
+                "integrations.active_directory.group_permissions": {
+                    "CN=Sales,OU=Groups,DC=example,DC=com": ["view_reports"]
+                }
             }
-        })
+        )
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         mock_pbx_config = MagicMock()
@@ -1270,6 +1331,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         mock_pbx_config = MagicMock()
@@ -1289,6 +1351,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         mock_pbx_config = MagicMock()
@@ -1304,12 +1367,15 @@ class TestSyncUsers:
     def test_sync_deactivate_removed_users_disabled(self) -> None:
         entry = _make_ldap_entry(phone="1001")
 
-        ad, conn = _make_ad_connected(config_overrides={
-            "integrations.active_directory.deactivate_removed_users": False,
-        })
+        ad, conn = _make_ad_connected(
+            config_overrides={
+                "integrations.active_directory.deactivate_removed_users": False,
+            }
+        )
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1328,6 +1394,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1347,14 +1414,17 @@ class TestSyncUsers:
             groups=["CN=Admins,OU=Groups,DC=example,DC=com"],
         )
 
-        ad, conn = _make_ad_connected(config_overrides={
-            "integrations.active_directory.group_permissions": {
-                "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+        ad, conn = _make_ad_connected(
+            config_overrides={
+                "integrations.active_directory.group_permissions": {
+                    "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+                }
             }
-        })
+        )
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1372,6 +1442,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         mock_pbx_config = MagicMock()
@@ -1404,6 +1475,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1425,6 +1497,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1447,14 +1520,17 @@ class TestSyncUsers:
             groups=["CN=Admins,OU=Groups,DC=example,DC=com"],
         )
 
-        ad, conn = _make_ad_connected(config_overrides={
-            "integrations.active_directory.group_permissions": {
-                "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+        ad, conn = _make_ad_connected(
+            config_overrides={
+                "integrations.active_directory.group_permissions": {
+                    "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+                }
             }
-        })
+        )
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         existing_ext = {"number": "1001", "name": "Old Name"}
@@ -1477,14 +1553,17 @@ class TestSyncUsers:
             groups=["CN=Admins,OU=Groups,DC=example,DC=com"],
         )
 
-        ad, conn = _make_ad_connected(config_overrides={
-            "integrations.active_directory.group_permissions": {
-                "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+        ad, conn = _make_ad_connected(
+            config_overrides={
+                "integrations.active_directory.group_permissions": {
+                    "CN=Admins,OU=Groups,DC=example,DC=com": ["admin"]
+                }
             }
-        })
+        )
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         new_ext_config = {"number": "1001"}
@@ -1508,6 +1587,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1534,6 +1614,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1546,8 +1627,7 @@ class TestSyncUsers:
         ad.sync_users(extension_db=extension_db)
 
         deactivation_calls = [
-            c for c in extension_db.update.call_args_list
-            if c[1].get("number") == "abc"
+            c for c in extension_db.update.call_args_list if c[1].get("number") == "abc"
         ]
         assert len(deactivation_calls) == 0
 
@@ -1558,6 +1638,7 @@ class TestSyncUsers:
 
         def do_search(**kwargs):
             conn.entries = [entry]
+
         conn.search.side_effect = do_search
 
         extension_db = MagicMock()
@@ -1570,8 +1651,7 @@ class TestSyncUsers:
         ad.sync_users(extension_db=extension_db)
 
         deactivation_calls = [
-            c for c in extension_db.update.call_args_list
-            if c[1].get("number") == "12"
+            c for c in extension_db.update.call_args_list if c[1].get("number") == "12"
         ]
         assert len(deactivation_calls) == 0
 

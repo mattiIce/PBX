@@ -111,9 +111,7 @@ class TestCreateTablesPostgreSQL:
         mock_db.connection.commit.assert_called_once()
 
     @patch("pbx.features.predictive_dialing_db.get_logger")
-    def test_create_tables_postgresql_sql_contains_serial(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_create_tables_postgresql_sql_contains_serial(self, mock_get_logger: MagicMock) -> None:
         mock_get_logger.return_value = MagicMock()
 
         mock_db = MagicMock()
@@ -130,9 +128,7 @@ class TestCreateTablesPostgreSQL:
         assert "AUTOINCREMENT" not in first_call_sql
 
     @patch("pbx.features.predictive_dialing_db.get_logger")
-    def test_create_tables_postgresql_contacts_has_jsonb(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_create_tables_postgresql_contacts_has_jsonb(self, mock_get_logger: MagicMock) -> None:
         mock_get_logger.return_value = MagicMock()
 
         mock_db = MagicMock()
@@ -299,7 +295,9 @@ class TestSaveCampaign:
         mock_db.connection.cursor.side_effect = TypeError("bad type")
 
         db = PredictiveDialingDatabase(mock_db)
-        result = db.save_campaign({"campaign_id": "c1", "name": "t", "dialing_mode": "p", "status": "a"})
+        result = db.save_campaign(
+            {"campaign_id": "c1", "name": "t", "dialing_mode": "p", "status": "a"}
+        )
 
         assert result is False
 
@@ -682,14 +680,36 @@ class TestGetCampaign:
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
         mock_cursor.fetchone.return_value = (
-            1, "camp-1", "Test Campaign", "predictive", "active", 3, 3600,
-            "2026-01-01", None, None, 100, 50, 40, 10,
+            1,
+            "camp-1",
+            "Test Campaign",
+            "predictive",
+            "active",
+            3,
+            3600,
+            "2026-01-01",
+            None,
+            None,
+            100,
+            50,
+            40,
+            10,
         )
         mock_cursor.description = [
-            ("id",), ("campaign_id",), ("name",), ("dialing_mode",), ("status",),
-            ("max_attempts",), ("retry_interval",), ("created_at",), ("started_at",),
-            ("ended_at",), ("total_contacts",), ("contacts_completed",),
-            ("successful_calls",), ("failed_calls",),
+            ("id",),
+            ("campaign_id",),
+            ("name",),
+            ("dialing_mode",),
+            ("status",),
+            ("max_attempts",),
+            ("retry_interval",),
+            ("created_at",),
+            ("started_at",),
+            ("ended_at",),
+            ("total_contacts",),
+            ("contacts_completed",),
+            ("successful_calls",),
+            ("failed_calls",),
         ]
 
         db = PredictiveDialingDatabase(mock_db)
@@ -714,7 +734,11 @@ class TestGetCampaign:
         mock_db.connection.cursor.return_value = mock_cursor
         mock_cursor.fetchone.return_value = (1, "camp-1", "PG Campaign", "power", "running")
         mock_cursor.description = [
-            ("id",), ("campaign_id",), ("name",), ("dialing_mode",), ("status",),
+            ("id",),
+            ("campaign_id",),
+            ("name",),
+            ("dialing_mode",),
+            ("status",),
         ]
 
         db = PredictiveDialingDatabase(mock_db)
@@ -843,7 +867,11 @@ class TestGetCampaignContacts:
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
         mock_cursor.description = [
-            ("id",), ("campaign_id",), ("contact_id",), ("phone_number",), ("status",),
+            ("id",),
+            ("campaign_id",),
+            ("contact_id",),
+            ("phone_number",),
+            ("status",),
         ]
         mock_cursor.fetchall.return_value = [
             (1, "camp-1", "c1", "5551111", "pending"),
@@ -925,10 +953,18 @@ class TestGetStatistics:
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
         mock_cursor.fetchone.return_value = (
-            1, "camp-1", "Campaign", "predictive", "active",
+            1,
+            "camp-1",
+            "Campaign",
+            "predictive",
+            "active",
         )
         mock_cursor.description = [
-            ("id",), ("campaign_id",), ("name",), ("dialing_mode",), ("status",),
+            ("id",),
+            ("campaign_id",),
+            ("name",),
+            ("dialing_mode",),
+            ("status",),
         ]
 
         db = PredictiveDialingDatabase(mock_db)
@@ -960,9 +996,7 @@ class TestGetStatistics:
         assert "%s" in sql
 
     @patch("pbx.features.predictive_dialing_db.get_logger")
-    def test_get_statistics_campaign_specific_not_found(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_get_statistics_campaign_specific_not_found(self, mock_get_logger: MagicMock) -> None:
         mock_get_logger.return_value = MagicMock()
 
         mock_db = MagicMock()
@@ -1167,23 +1201,31 @@ class TestDatabaseIntegrationWithRealSQLite:
         db = PredictiveDialingDatabase(mock_db)
         db.create_tables()
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Test",
-            "dialing_mode": "power",
-            "status": "active",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Test",
+                "dialing_mode": "power",
+                "status": "active",
+            }
+        )
 
-        db.save_contact("camp-1", {
-            "contact_id": "c1",
-            "phone_number": "5551111",
-            "data": {"name": "Alice"},
-        })
-        db.save_contact("camp-1", {
-            "contact_id": "c2",
-            "phone_number": "5552222",
-            "data": {"name": "Bob"},
-        })
+        db.save_contact(
+            "camp-1",
+            {
+                "contact_id": "c1",
+                "phone_number": "5551111",
+                "data": {"name": "Alice"},
+            },
+        )
+        db.save_contact(
+            "camp-1",
+            {
+                "contact_id": "c2",
+                "phone_number": "5552222",
+                "data": {"name": "Bob"},
+            },
+        )
 
         contacts = db.get_campaign_contacts("camp-1")
         assert len(contacts) == 2
@@ -1198,26 +1240,35 @@ class TestDatabaseIntegrationWithRealSQLite:
         db = PredictiveDialingDatabase(mock_db)
         db.create_tables()
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Test",
-            "dialing_mode": "power",
-            "status": "active",
-        })
-        db.save_contact("camp-1", {
-            "contact_id": "c1",
-            "phone_number": "5551111",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Test",
+                "dialing_mode": "power",
+                "status": "active",
+            }
+        )
+        db.save_contact(
+            "camp-1",
+            {
+                "contact_id": "c1",
+                "phone_number": "5551111",
+            },
+        )
 
-        db.save_attempt("camp-1", "c1", {
-            "call_id": "call-1",
-            "attempt_number": 1,
-            "timestamp": "2026-01-15T10:00:00",
-            "result": "answered",
-            "duration": 60,
-            "agent_id": "agent-1",
-            "status": "completed",
-        })
+        db.save_attempt(
+            "camp-1",
+            "c1",
+            {
+                "call_id": "call-1",
+                "attempt_number": 1,
+                "timestamp": "2026-01-15T10:00:00",
+                "result": "answered",
+                "duration": 60,
+                "agent_id": "agent-1",
+                "status": "completed",
+            },
+        )
 
         contacts = db.get_campaign_contacts("camp-1")
         assert len(contacts) == 1
@@ -1226,28 +1277,31 @@ class TestDatabaseIntegrationWithRealSQLite:
         assert contacts[0]["status"] == "completed"
 
     @patch("pbx.features.predictive_dialing_db.get_logger")
-    def test_update_campaign_stats_and_get_stats_real_db(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_update_campaign_stats_and_get_stats_real_db(self, mock_get_logger: MagicMock) -> None:
         mock_get_logger.return_value = MagicMock()
 
         mock_db = self._make_db_backend()
         db = PredictiveDialingDatabase(mock_db)
         db.create_tables()
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Test",
-            "dialing_mode": "power",
-            "status": "active",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Test",
+                "dialing_mode": "power",
+                "status": "active",
+            }
+        )
 
-        db.update_campaign_stats("camp-1", {
-            "total_contacts": 100,
-            "contacts_completed": 75,
-            "successful_calls": 60,
-            "failed_calls": 15,
-        })
+        db.update_campaign_stats(
+            "camp-1",
+            {
+                "total_contacts": 100,
+                "contacts_completed": 75,
+                "successful_calls": 60,
+                "failed_calls": 15,
+            },
+        )
 
         stats = db.get_statistics(campaign_id="camp-1")
         assert stats["total_contacts"] == 100
@@ -1264,12 +1318,14 @@ class TestDatabaseIntegrationWithRealSQLite:
         db.create_tables()
 
         for i in range(3):
-            db.save_campaign({
-                "campaign_id": f"camp-{i}",
-                "name": f"Campaign {i}",
-                "dialing_mode": "predictive",
-                "status": "active",
-            })
+            db.save_campaign(
+                {
+                    "campaign_id": f"camp-{i}",
+                    "name": f"Campaign {i}",
+                    "dialing_mode": "predictive",
+                    "status": "active",
+                }
+            )
 
         campaigns = db.get_all_campaigns()
         assert len(campaigns) == 3
@@ -1282,29 +1338,39 @@ class TestDatabaseIntegrationWithRealSQLite:
         db = PredictiveDialingDatabase(mock_db)
         db.create_tables()
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Campaign 1",
-            "dialing_mode": "predictive",
-            "status": "active",
-        })
-        db.save_campaign({
-            "campaign_id": "camp-2",
-            "name": "Campaign 2",
-            "dialing_mode": "power",
-            "status": "active",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Campaign 1",
+                "dialing_mode": "predictive",
+                "status": "active",
+            }
+        )
+        db.save_campaign(
+            {
+                "campaign_id": "camp-2",
+                "name": "Campaign 2",
+                "dialing_mode": "power",
+                "status": "active",
+            }
+        )
 
-        db.update_campaign_stats("camp-1", {
-            "total_contacts": 50,
-            "successful_calls": 30,
-            "failed_calls": 10,
-        })
-        db.update_campaign_stats("camp-2", {
-            "total_contacts": 100,
-            "successful_calls": 60,
-            "failed_calls": 20,
-        })
+        db.update_campaign_stats(
+            "camp-1",
+            {
+                "total_contacts": 50,
+                "successful_calls": 30,
+                "failed_calls": 10,
+            },
+        )
+        db.update_campaign_stats(
+            "camp-2",
+            {
+                "total_contacts": 100,
+                "successful_calls": 60,
+                "failed_calls": 20,
+            },
+        )
 
         stats = db.get_statistics()
         assert stats["total_campaigns"] == 2
@@ -1331,19 +1397,23 @@ class TestDatabaseIntegrationWithRealSQLite:
         db = PredictiveDialingDatabase(mock_db)
         db.create_tables()
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Original Name",
-            "dialing_mode": "predictive",
-            "status": "active",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Original Name",
+                "dialing_mode": "predictive",
+                "status": "active",
+            }
+        )
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Updated Name",
-            "dialing_mode": "power",
-            "status": "paused",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Updated Name",
+                "dialing_mode": "power",
+                "status": "paused",
+            }
+        )
 
         result = db.get_campaign("camp-1")
         assert result is not None
@@ -1362,22 +1432,30 @@ class TestDatabaseIntegrationWithRealSQLite:
         db = PredictiveDialingDatabase(mock_db)
         db.create_tables()
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Test",
-            "dialing_mode": "power",
-            "status": "active",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Test",
+                "dialing_mode": "power",
+                "status": "active",
+            }
+        )
 
-        db.save_contact("camp-1", {
-            "contact_id": "c1",
-            "phone_number": "5551111",
-        })
+        db.save_contact(
+            "camp-1",
+            {
+                "contact_id": "c1",
+                "phone_number": "5551111",
+            },
+        )
 
-        db.save_contact("camp-1", {
-            "contact_id": "c1",
-            "phone_number": "5559999",
-        })
+        db.save_contact(
+            "camp-1",
+            {
+                "contact_id": "c1",
+                "phone_number": "5559999",
+            },
+        )
 
         contacts = db.get_campaign_contacts("camp-1")
         assert len(contacts) == 1
@@ -1391,34 +1469,47 @@ class TestDatabaseIntegrationWithRealSQLite:
         db = PredictiveDialingDatabase(mock_db)
         db.create_tables()
 
-        db.save_campaign({
-            "campaign_id": "camp-1",
-            "name": "Test",
-            "dialing_mode": "power",
-            "status": "active",
-        })
-        db.save_contact("camp-1", {
-            "contact_id": "c1",
-            "phone_number": "5551111",
-        })
+        db.save_campaign(
+            {
+                "campaign_id": "camp-1",
+                "name": "Test",
+                "dialing_mode": "power",
+                "status": "active",
+            }
+        )
+        db.save_contact(
+            "camp-1",
+            {
+                "contact_id": "c1",
+                "phone_number": "5551111",
+            },
+        )
 
         # First attempt
-        db.save_attempt("camp-1", "c1", {
-            "call_id": "call-1",
-            "attempt_number": 1,
-            "timestamp": "2026-01-15T10:00:00",
-            "result": "no_answer",
-            "status": "attempted",
-        })
+        db.save_attempt(
+            "camp-1",
+            "c1",
+            {
+                "call_id": "call-1",
+                "attempt_number": 1,
+                "timestamp": "2026-01-15T10:00:00",
+                "result": "no_answer",
+                "status": "attempted",
+            },
+        )
 
         # Second attempt
-        db.save_attempt("camp-1", "c1", {
-            "call_id": "call-2",
-            "attempt_number": 2,
-            "timestamp": "2026-01-15T11:00:00",
-            "result": "answered",
-            "status": "completed",
-        })
+        db.save_attempt(
+            "camp-1",
+            "c1",
+            {
+                "call_id": "call-2",
+                "attempt_number": 2,
+                "timestamp": "2026-01-15T11:00:00",
+                "result": "answered",
+                "status": "completed",
+            },
+        )
 
         contacts = db.get_campaign_contacts("camp-1")
         assert contacts[0]["attempts"] == 2

@@ -54,7 +54,7 @@ class TestImaAdpcmEncode:
 
         # Single 16-bit sample: value 0
         pcm_data = struct.pack("<h", 0)
-        result, state = _ima_adpcm_encode(pcm_data)
+        result, _state = _ima_adpcm_encode(pcm_data)
         assert isinstance(result, bytes)
         assert len(result) == 1  # One nibble -> one byte (flushed)
 
@@ -64,7 +64,7 @@ class TestImaAdpcmEncode:
 
         # Two 16-bit samples
         pcm_data = struct.pack("<hh", 1000, -1000)
-        result, state = _ima_adpcm_encode(pcm_data)
+        result, _state = _ima_adpcm_encode(pcm_data)
         assert isinstance(result, bytes)
         assert len(result) == 1  # Two nibbles pack into one byte
 
@@ -85,7 +85,7 @@ class TestImaAdpcmEncode:
         # 10 samples
         samples = [int(32767 * (i / 10)) for i in range(10)]
         pcm_data = struct.pack(f"<{len(samples)}h", *samples)
-        result, state = _ima_adpcm_encode(pcm_data)
+        result, _state = _ima_adpcm_encode(pcm_data)
         assert isinstance(result, bytes)
         assert len(result) == 5  # 10 nibbles = 5 bytes
 
@@ -94,7 +94,7 @@ class TestImaAdpcmEncode:
         from pbx.features.g726_codec import _ima_adpcm_encode
 
         pcm_data = struct.pack("<hh", -10000, -20000)
-        result, state = _ima_adpcm_encode(pcm_data)
+        result, _state = _ima_adpcm_encode(pcm_data)
         assert isinstance(result, bytes)
 
     def test_encode_max_min_samples(self) -> None:
@@ -102,7 +102,7 @@ class TestImaAdpcmEncode:
         from pbx.features.g726_codec import _ima_adpcm_encode
 
         pcm_data = struct.pack("<hh", 32767, -32768)
-        result, state = _ima_adpcm_encode(pcm_data)
+        result, _state = _ima_adpcm_encode(pcm_data)
         assert isinstance(result, bytes)
 
     def test_encode_continuity(self) -> None:
@@ -110,10 +110,10 @@ class TestImaAdpcmEncode:
         from pbx.features.g726_codec import _ima_adpcm_encode
 
         pcm1 = struct.pack("<hh", 1000, 2000)
-        result1, state1 = _ima_adpcm_encode(pcm1)
+        _result1, state1 = _ima_adpcm_encode(pcm1)
 
         pcm2 = struct.pack("<hh", 3000, 4000)
-        result2, state2 = _ima_adpcm_encode(pcm2, state1)
+        _result2, state2 = _ima_adpcm_encode(pcm2, state1)
 
         # State should have progressed
         assert state2 != (0, 0)
@@ -142,7 +142,7 @@ class TestImaAdpcmDecode:
         """Test decoding a single byte (two nibbles -> two samples)."""
         from pbx.features.g726_codec import _ima_adpcm_decode
 
-        result, state = _ima_adpcm_decode(b"\x00", 2)
+        result, _state = _ima_adpcm_decode(b"\x00", 2)
         assert isinstance(result, bytes)
         assert len(result) == 4  # 2 samples * 2 bytes each
 
@@ -163,10 +163,10 @@ class TestImaAdpcmDecode:
         pcm_data = struct.pack(f"<{len(samples)}h", *samples)
 
         # Encode
-        encoded, enc_state = _ima_adpcm_encode(pcm_data)
+        encoded, _enc_state = _ima_adpcm_encode(pcm_data)
 
         # Decode
-        decoded, dec_state = _ima_adpcm_decode(encoded, 2)
+        decoded, _dec_state = _ima_adpcm_decode(encoded, 2)
 
         # The decoded data should have the same length as the original
         assert len(decoded) == len(pcm_data)
@@ -176,7 +176,7 @@ class TestImaAdpcmDecode:
         from pbx.features.g726_codec import _ima_adpcm_decode
 
         adpcm_data = bytes([0x37, 0x48, 0x59])
-        result, state = _ima_adpcm_decode(adpcm_data, 2)
+        result, _state = _ima_adpcm_decode(adpcm_data, 2)
         # 3 bytes * 2 nibbles per byte * 2 bytes per sample = 12 bytes
         assert len(result) == 12
 
@@ -230,7 +230,7 @@ class TestG726Codec:
         """Test G726Codec initialization with invalid bitrate."""
         from pbx.features.g726_codec import G726Codec
 
-        with pytest.raises(ValueError, match="Unsupported G.726 bitrate"):
+        with pytest.raises(ValueError, match=r"Unsupported G\.726 bitrate"):
             G726Codec(bitrate=48000)
 
     @patch("pbx.features.g726_codec.get_logger")
@@ -351,9 +351,7 @@ class TestG726Codec:
         assert info["implementation"] == "Framework Only"
 
     @patch("pbx.features.g726_codec.get_logger")
-    def test_get_quality_description_all_bitrates(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_get_quality_description_all_bitrates(self, mock_get_logger: MagicMock) -> None:
         """Test quality descriptions for all bitrates."""
         from pbx.features.g726_codec import G726Codec
 
@@ -465,9 +463,7 @@ class TestG726CodecManager:
         assert manager.default_bitrate == 32000
 
     @patch("pbx.features.g726_codec.get_logger")
-    def test_init_enabled_unsupported_bitrate_warns(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_init_enabled_unsupported_bitrate_warns(self, mock_get_logger: MagicMock) -> None:
         """Test manager warns when enabled with unsupported bitrate."""
         from pbx.features.g726_codec import G726CodecManager
 

@@ -76,34 +76,20 @@ class TestSDPSessionParse:
 
     def test_parse_media_attributes(self) -> None:
         sdp = SDPSession()
-        sdp.parse(
-            "v=0\n"
-            "m=audio 10000 RTP/AVP 0\n"
-            "a=rtpmap:0 PCMU/8000\n"
-            "a=sendrecv\n"
-        )
+        sdp.parse("v=0\nm=audio 10000 RTP/AVP 0\na=rtpmap:0 PCMU/8000\na=sendrecv\n")
         assert len(sdp.media) == 1
         assert "rtpmap:0 PCMU/8000" in sdp.media[0]["attributes"]
         assert "sendrecv" in sdp.media[0]["attributes"]
 
     def test_parse_media_level_connection(self) -> None:
         sdp = SDPSession()
-        sdp.parse(
-            "v=0\n"
-            "c=IN IP4 10.0.0.1\n"
-            "m=audio 10000 RTP/AVP 0\n"
-            "c=IN IP4 192.168.1.200\n"
-        )
+        sdp.parse("v=0\nc=IN IP4 10.0.0.1\nm=audio 10000 RTP/AVP 0\nc=IN IP4 192.168.1.200\n")
         assert sdp.connection["address"] == "10.0.0.1"
         assert sdp.media[0]["connection"]["address"] == "192.168.1.200"
 
     def test_parse_multiple_media(self) -> None:
         sdp = SDPSession()
-        sdp.parse(
-            "v=0\n"
-            "m=audio 10000 RTP/AVP 0\n"
-            "m=video 20000 RTP/AVP 96\n"
-        )
+        sdp.parse("v=0\nm=audio 10000 RTP/AVP 0\nm=video 20000 RTP/AVP 96\n")
         assert len(sdp.media) == 2
         assert sdp.media[0]["type"] == "audio"
         assert sdp.media[1]["type"] == "video"
@@ -188,11 +174,7 @@ class TestSDPSessionGetAudioInfo:
 
     def test_get_audio_info_with_session_level_connection(self) -> None:
         sdp = SDPSession()
-        sdp.parse(
-            "v=0\n"
-            "c=IN IP4 192.168.1.100\n"
-            "m=audio 10000 RTP/AVP 0 8\n"
-        )
+        sdp.parse("v=0\nc=IN IP4 192.168.1.100\nm=audio 10000 RTP/AVP 0 8\n")
         info = sdp.get_audio_info()
         assert info is not None
         assert info["address"] == "192.168.1.100"
@@ -201,12 +183,7 @@ class TestSDPSessionGetAudioInfo:
 
     def test_get_audio_info_with_media_level_connection(self) -> None:
         sdp = SDPSession()
-        sdp.parse(
-            "v=0\n"
-            "c=IN IP4 10.0.0.1\n"
-            "m=audio 10000 RTP/AVP 0\n"
-            "c=IN IP4 192.168.1.200\n"
-        )
+        sdp.parse("v=0\nc=IN IP4 10.0.0.1\nm=audio 10000 RTP/AVP 0\nc=IN IP4 192.168.1.200\n")
         info = sdp.get_audio_info()
         assert info is not None
         # Media-level connection takes precedence
@@ -214,12 +191,7 @@ class TestSDPSessionGetAudioInfo:
 
     def test_get_audio_info_first_audio_media(self) -> None:
         sdp = SDPSession()
-        sdp.parse(
-            "v=0\n"
-            "c=IN IP4 10.0.0.1\n"
-            "m=audio 10000 RTP/AVP 0\n"
-            "m=audio 20000 RTP/AVP 8\n"
-        )
+        sdp.parse("v=0\nc=IN IP4 10.0.0.1\nm=audio 10000 RTP/AVP 0\nm=audio 20000 RTP/AVP 8\n")
         info = sdp.get_audio_info()
         assert info is not None
         assert info["port"] == 10000
@@ -273,13 +245,15 @@ class TestSDPSessionBuild:
 
     def test_build_with_media(self) -> None:
         sdp = SDPSession()
-        sdp.media.append({
-            "type": "audio",
-            "port": 10000,
-            "protocol": "RTP/AVP",
-            "formats": ["0", "8"],
-            "attributes": ["rtpmap:0 PCMU/8000", "sendrecv"],
-        })
+        sdp.media.append(
+            {
+                "type": "audio",
+                "port": 10000,
+                "protocol": "RTP/AVP",
+                "formats": ["0", "8"],
+                "attributes": ["rtpmap:0 PCMU/8000", "sendrecv"],
+            }
+        )
         result = sdp.build()
         assert "m=audio 10000 RTP/AVP 0 8\r\n" in result
         assert "a=rtpmap:0 PCMU/8000\r\n" in result
@@ -287,18 +261,20 @@ class TestSDPSessionBuild:
 
     def test_build_with_media_level_connection(self) -> None:
         sdp = SDPSession()
-        sdp.media.append({
-            "type": "audio",
-            "port": 10000,
-            "protocol": "RTP/AVP",
-            "formats": ["0"],
-            "attributes": [],
-            "connection": {
-                "network_type": "IN",
-                "address_type": "IP4",
-                "address": "192.168.1.200",
-            },
-        })
+        sdp.media.append(
+            {
+                "type": "audio",
+                "port": 10000,
+                "protocol": "RTP/AVP",
+                "formats": ["0"],
+                "attributes": [],
+                "connection": {
+                    "network_type": "IN",
+                    "address_type": "IP4",
+                    "address": "192.168.1.200",
+                },
+            }
+        )
         result = sdp.build()
         assert "c=IN IP4 192.168.1.200\r\n" in result
 
@@ -309,20 +285,24 @@ class TestSDPSessionBuild:
 
     def test_build_multiple_media(self) -> None:
         sdp = SDPSession()
-        sdp.media.append({
-            "type": "audio",
-            "port": 10000,
-            "protocol": "RTP/AVP",
-            "formats": ["0"],
-            "attributes": [],
-        })
-        sdp.media.append({
-            "type": "video",
-            "port": 20000,
-            "protocol": "RTP/AVP",
-            "formats": ["96"],
-            "attributes": [],
-        })
+        sdp.media.append(
+            {
+                "type": "audio",
+                "port": 10000,
+                "protocol": "RTP/AVP",
+                "formats": ["0"],
+                "attributes": [],
+            }
+        )
+        sdp.media.append(
+            {
+                "type": "video",
+                "port": 20000,
+                "protocol": "RTP/AVP",
+                "formats": ["96"],
+                "attributes": [],
+            }
+        )
         result = sdp.build()
         assert "m=audio 10000 RTP/AVP 0" in result
         assert "m=video 20000 RTP/AVP 96" in result
@@ -381,9 +361,7 @@ class TestSDPBuilderBuildAudioSdp:
         assert "a=sendrecv" in result
 
     def test_custom_codecs(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["0", "101"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["0", "101"])
         assert "rtpmap:0 PCMU/8000" in result
         assert "rtpmap:101 telephone-event/8000" in result
         # These should NOT be present since we only requested 0 and 101
@@ -391,74 +369,52 @@ class TestSDPBuilderBuildAudioSdp:
         assert "rtpmap:9 G722/8000" not in result
 
     def test_custom_session_id(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, session_id="99999"
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, session_id="99999")
         assert "99999" in result
 
     def test_custom_dtmf_payload_type(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, dtmf_payload_type=96
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, dtmf_payload_type=96)
         assert "rtpmap:96 telephone-event/8000" in result
         assert "fmtp:96 0-16" in result
 
     def test_g726_40_dynamic_codec(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["114"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["114"])
         assert "rtpmap:114 G726-40/8000" in result
 
     def test_g726_24_dynamic_codec(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["113"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["113"])
         assert "rtpmap:113 G726-24/8000" in result
 
     def test_g726_16_dynamic_codec(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["112"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["112"])
         assert "rtpmap:112 G726-16/8000" in result
 
     def test_ilbc_codec(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["97"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["97"])
         assert "rtpmap:97 iLBC/8000" in result
         assert "fmtp:97 mode=30" in result
 
     def test_ilbc_codec_custom_mode(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["97"], ilbc_mode=20
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["97"], ilbc_mode=20)
         assert "fmtp:97 mode=20" in result
 
     def test_speex_narrowband_codec(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["98"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["98"])
         assert "rtpmap:98 SPEEX/8000" in result
 
     def test_speex_wideband_codec(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["99"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["99"])
         assert "rtpmap:99 SPEEX/16000" in result
         assert 'fmtp:99 vbr=on;mode="1,any"' in result
 
     def test_speex_ultra_wideband_codec(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["100"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["100"])
         assert "rtpmap:100 SPEEX/32000" in result
         assert 'fmtp:100 vbr=on;mode="2,any"' in result
 
     def test_all_codecs_together(self) -> None:
         codecs = ["0", "8", "9", "18", "2", "114", "113", "112", "97", "98", "99", "100", "101"]
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=codecs
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=codecs)
         assert "rtpmap:0 PCMU/8000" in result
         assert "rtpmap:8 PCMA/8000" in result
         assert "rtpmap:9 G722/8000" in result
@@ -484,9 +440,7 @@ class TestSDPBuilderBuildAudioSdp:
         assert info["port"] == 10000
 
     def test_codecs_without_dtmf(self) -> None:
-        result = SDPBuilder.build_audio_sdp(
-            "192.168.1.1", 10000, codecs=["0", "8"]
-        )
+        result = SDPBuilder.build_audio_sdp("192.168.1.1", 10000, codecs=["0", "8"])
         assert "telephone-event" not in result
 
     def test_origin_address_matches_local_ip(self) -> None:

@@ -130,7 +130,7 @@ class TestCheckTrunkHealth:
 
     @patch("pbx.features.geographic_redundancy.get_logger")
     def test_trunk_health_with_mock_trunk_manager(self, mock_logger: MagicMock) -> None:
-        gr = GeographicRedundancy()
+        _gr = GeographicRedundancy()
         region = GeographicRegion("test", "Test", "Test")
         region.trunks = ["trunk-1"]
 
@@ -152,7 +152,9 @@ class TestCheckNetworkLatency:
 
     @patch("pbx.features.geographic_redundancy.get_logger")
     @patch("pbx.features.geographic_redundancy.socket.socket")
-    def test_successful_latency_check(self, mock_socket_cls: MagicMock, mock_logger: MagicMock) -> None:
+    def test_successful_latency_check(
+        self, mock_socket_cls: MagicMock, mock_logger: MagicMock
+    ) -> None:
         gr = GeographicRedundancy()
         mock_sock = MagicMock()
         mock_sock.connect_ex.return_value = 0
@@ -173,7 +175,9 @@ class TestCheckNetworkLatency:
 
     @patch("pbx.features.geographic_redundancy.get_logger")
     @patch("pbx.features.geographic_redundancy.socket.socket")
-    def test_exception_latency_check(self, mock_socket_cls: MagicMock, mock_logger: MagicMock) -> None:
+    def test_exception_latency_check(
+        self, mock_socket_cls: MagicMock, mock_logger: MagicMock
+    ) -> None:
         gr = GeographicRedundancy()
         mock_socket_cls.side_effect = OSError("Network error")
         latency = gr._check_network_latency()
@@ -209,6 +213,7 @@ class TestCheckDatabaseConnectivity:
     @patch("pbx.features.geographic_redundancy.get_logger")
     def test_db_check_sqlite_error(self, mock_logger: MagicMock) -> None:
         import sqlite3
+
         gr = GeographicRedundancy()
         with patch("pbx.utils.database.get_database", side_effect=sqlite3.Error("db err")):
             # Caught by outer except sqlite3.Error, returns True (assume OK)
@@ -241,10 +246,12 @@ class TestCheckRegionHealth:
     def test_region_healthy(self, mock_logger: MagicMock) -> None:
         gr = GeographicRedundancy()
         gr.add_region("us-east", "US East", "Virginia", trunks=["t1"])
-        with patch.object(gr, "_check_trunk_health", return_value=True), \
-             patch.object(gr, "_check_network_latency", return_value=10.0), \
-             patch.object(gr, "_check_database_connectivity", return_value=True), \
-             patch.object(gr, "_check_services_running", return_value=True):
+        with (
+            patch.object(gr, "_check_trunk_health", return_value=True),
+            patch.object(gr, "_check_network_latency", return_value=10.0),
+            patch.object(gr, "_check_database_connectivity", return_value=True),
+            patch.object(gr, "_check_services_running", return_value=True),
+        ):
             result = gr.check_region_health("us-east")
             assert result["healthy"] is True
             assert result["health_score"] == 1.0
@@ -255,10 +262,12 @@ class TestCheckRegionHealth:
         gr.auto_failover = True
         gr.add_region("us-east", "US East", "Virginia", trunks=["t1"])
         gr.add_region("us-west", "US West", "Oregon", trunks=["t2"])
-        with patch.object(gr, "_check_trunk_health", return_value=False), \
-             patch.object(gr, "_check_network_latency", return_value=9999.0), \
-             patch.object(gr, "_check_database_connectivity", return_value=False), \
-             patch.object(gr, "_check_services_running", return_value=False):
+        with (
+            patch.object(gr, "_check_trunk_health", return_value=False),
+            patch.object(gr, "_check_network_latency", return_value=9999.0),
+            patch.object(gr, "_check_database_connectivity", return_value=False),
+            patch.object(gr, "_check_services_running", return_value=False),
+        ):
             result = gr.check_region_health("us-east")
             assert result["healthy"] is False
             # Should have triggered failover
@@ -269,10 +278,12 @@ class TestCheckRegionHealth:
         gr = GeographicRedundancy()
         gr.auto_failover = False
         gr.add_region("us-east", "US East", "Virginia", trunks=["t1"])
-        with patch.object(gr, "_check_trunk_health", return_value=False), \
-             patch.object(gr, "_check_network_latency", return_value=9999.0), \
-             patch.object(gr, "_check_database_connectivity", return_value=False), \
-             patch.object(gr, "_check_services_running", return_value=False):
+        with (
+            patch.object(gr, "_check_trunk_health", return_value=False),
+            patch.object(gr, "_check_network_latency", return_value=9999.0),
+            patch.object(gr, "_check_database_connectivity", return_value=False),
+            patch.object(gr, "_check_services_running", return_value=False),
+        ):
             result = gr.check_region_health("us-east")
             assert result["healthy"] is False
             assert gr.active_region == "us-east"  # No failover
@@ -486,6 +497,7 @@ class TestGetGeographicRedundancySingleton:
 
     def test_creates_instance(self) -> None:
         import pbx.features.geographic_redundancy as mod
+
         original = mod._geographic_redundancy
         mod._geographic_redundancy = None
         try:
@@ -497,6 +509,7 @@ class TestGetGeographicRedundancySingleton:
 
     def test_returns_same_instance(self) -> None:
         import pbx.features.geographic_redundancy as mod
+
         original = mod._geographic_redundancy
         mod._geographic_redundancy = None
         try:

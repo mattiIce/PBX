@@ -218,7 +218,7 @@ class TestHotDeskingLogin:
     @patch("pbx.features.hot_desking.get_logger")
     def test_login_replaces_existing_session(self, mock_get_logger: MagicMock) -> None:
         """Test login replaces existing session on same device."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         ext = {"voicemail_pin": "1234"}
         pbx_core = MagicMock()
@@ -237,9 +237,7 @@ class TestHotDeskingLogin:
         assert system.sessions["device-1"].extension == "1002"
 
     @patch("pbx.features.hot_desking.get_logger")
-    def test_login_concurrent_not_allowed_logs_out_other(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_login_concurrent_not_allowed_logs_out_other(self, mock_get_logger: MagicMock) -> None:
         """Test login without concurrent logins logs out other device."""
         from pbx.features.hot_desking import HotDeskingSystem
 
@@ -301,7 +299,7 @@ class TestHotDeskingLogout:
     @patch("pbx.features.hot_desking.get_logger")
     def test_logout_success(self, mock_get_logger: MagicMock) -> None:
         """Test successful logout."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         system.enabled = True
@@ -319,7 +317,7 @@ class TestHotDeskingLogout:
     @patch("pbx.features.hot_desking.get_logger")
     def test_logout_triggers_webhook(self, mock_get_logger: MagicMock) -> None:
         """Test logout triggers webhook."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         pbx_core = MagicMock()
         system = HotDeskingSystem(pbx_core=pbx_core)
@@ -336,7 +334,7 @@ class TestHotDeskingLogout:
     @patch("pbx.features.hot_desking.get_logger")
     def test_logout_extension(self, mock_get_logger: MagicMock) -> None:
         """Test logout extension from all devices."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         system.enabled = True
@@ -368,7 +366,7 @@ class TestHotDeskingQueries:
     @patch("pbx.features.hot_desking.get_logger")
     def test_get_session(self, mock_get_logger: MagicMock) -> None:
         """Test get session by device ID."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         session = HotDeskSession("1001", "device-1", "192.168.1.1")
@@ -390,7 +388,7 @@ class TestHotDeskingQueries:
     @patch("pbx.features.hot_desking.get_logger")
     def test_get_extension_session(self, mock_get_logger: MagicMock) -> None:
         """Test get session by extension."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         session = HotDeskSession("1001", "device-1", "192.168.1.1")
@@ -463,7 +461,7 @@ class TestHotDeskingQueries:
     @patch("pbx.features.hot_desking.get_logger")
     def test_update_session_activity(self, mock_get_logger: MagicMock) -> None:
         """Test updating session activity."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         session = HotDeskSession("1001", "device-1", "192.168.1.1")
@@ -489,7 +487,7 @@ class TestHotDeskingQueries:
     @patch("pbx.features.hot_desking.get_logger")
     def test_set_auto_logout_true(self, mock_get_logger: MagicMock) -> None:
         """Test enabling auto-logout."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         session = HotDeskSession("1001", "device-1", "192.168.1.1")
@@ -512,7 +510,7 @@ class TestHotDeskingQueries:
     @patch("pbx.features.hot_desking.get_logger")
     def test_get_active_sessions(self, mock_get_logger: MagicMock) -> None:
         """Test getting all active sessions."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         system.sessions["device-1"] = HotDeskSession("1001", "device-1", "192.168.1.1")
@@ -526,7 +524,7 @@ class TestHotDeskingQueries:
     @patch("pbx.features.hot_desking.get_logger")
     def test_get_session_count(self, mock_get_logger: MagicMock) -> None:
         """Test getting session count."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         system.sessions["device-1"] = HotDeskSession("1001", "device-1", "192.168.1.1")
@@ -592,7 +590,7 @@ class TestHotDeskingAutoLogout:
     @patch("pbx.features.hot_desking.get_logger")
     def test_auto_logout_inactive_sessions(self, mock_get_logger: MagicMock) -> None:
         """Test auto-logout of inactive sessions."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         system.auto_logout_timeout = 10  # 10 seconds
@@ -610,7 +608,7 @@ class TestHotDeskingAutoLogout:
     @patch("pbx.features.hot_desking.get_logger")
     def test_auto_logout_skips_disabled(self, mock_get_logger: MagicMock) -> None:
         """Test auto-logout skips sessions with auto_logout disabled."""
-        from pbx.features.hot_desking import HotDeskSession, HotDeskingSystem
+        from pbx.features.hot_desking import HotDeskingSystem, HotDeskSession
 
         system = HotDeskingSystem()
         system.auto_logout_timeout = 10

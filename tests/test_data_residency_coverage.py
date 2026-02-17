@@ -88,7 +88,7 @@ class TestInitializeDefaultRegions:
     @patch("pbx.features.data_residency_controls.get_logger")
     def test_default_regions_have_paths(self, mock_logger: MagicMock) -> None:
         drc = DataResidencyControls()
-        for region_id, config in drc.region_configs.items():
+        for config in drc.region_configs.values():
             assert "storage_path" in config
             assert "name" in config
 
@@ -236,13 +236,11 @@ class TestTransferDataBetweenRegions:
     def test_transfer_blocked_by_validation(self, mock_logger: MagicMock) -> None:
         drc = DataResidencyControls()
         # EU to non-EU blocked
-        result = drc.transfer_data_between_regions(
-            "data-1", "user_data", "eu-west", "us-east"
-        )
+        _result = drc.transfer_data_between_regions("data-1", "user_data", "eu-west", "us-east")
         # validate_storage_operation doesn't take user_region here
         # so it may or may not be blocked. Let's test with strict mode
         config = {"features": {"data_residency": {"strict_mode": True}}}
-        drc2 = DataResidencyControls(config=config)
+        _drc2 = DataResidencyControls(config=config)
         # This will fail because validate_storage_operation is called without user_region
         # so strict mode won't block. Let's test a scenario that blocks.
         # EU user data to US is blocked by GDPR check even without user_region
@@ -272,9 +270,7 @@ class TestTransferDataBetweenRegions:
         mock_db.enabled = False
         mock_db.connection = None
         with patch("pbx.utils.database.get_database", return_value=mock_db):
-            result = drc.transfer_data_between_regions(
-                "data-1", "cdr", "us-east", "us-west"
-            )
+            result = drc.transfer_data_between_regions("data-1", "cdr", "us-east", "us-west")
             assert result["success"] is False
 
     @patch("pbx.features.data_residency_controls.get_logger")
@@ -284,9 +280,7 @@ class TestTransferDataBetweenRegions:
             "pbx.utils.database.get_database",
             side_effect=Exception("DB error"),
         ):
-            result = drc.transfer_data_between_regions(
-                "data-1", "cdr", "us-east", "us-west"
-            )
+            result = drc.transfer_data_between_regions("data-1", "cdr", "us-east", "us-west")
             assert result["success"] is False
 
     @patch("pbx.features.data_residency_controls.get_logger")
@@ -392,6 +386,7 @@ class TestGetDataResidencySingleton:
 
     def test_creates_instance(self) -> None:
         import pbx.features.data_residency_controls as mod
+
         original = mod._data_residency
         mod._data_residency = None
         try:
@@ -403,6 +398,7 @@ class TestGetDataResidencySingleton:
 
     def test_returns_same_instance(self) -> None:
         import pbx.features.data_residency_controls as mod
+
         original = mod._data_residency
         mod._data_residency = None
         try:

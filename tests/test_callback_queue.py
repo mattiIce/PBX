@@ -103,7 +103,7 @@ class TestCallbackQueueInit:
         mock_db.connection.cursor.return_value = mock_cursor
         mock_cursor.fetchall.return_value = []
 
-        queue = CallbackQueue(database=mock_db)
+        _queue = CallbackQueue(database=mock_db)
 
         # Verify schema initialization was called
         assert mock_db.connection.cursor.called
@@ -115,7 +115,7 @@ class TestCallbackQueueInit:
         mock_db = MagicMock()
         mock_db.enabled = False
 
-        queue = CallbackQueue(database=mock_db)
+        _queue = CallbackQueue(database=mock_db)
 
         mock_db.connection.cursor.assert_not_called()
 
@@ -135,7 +135,7 @@ class TestCallbackQueueInit:
             }
         }
 
-        queue = CallbackQueue(config=config)
+        _queue = CallbackQueue(config=config)
 
         mock_logger.info.assert_any_call("Callback queue system initialized")
 
@@ -165,7 +165,7 @@ class TestInitializeSchema:
         mock_db.connection.cursor.return_value = mock_cursor
         mock_cursor.fetchall.return_value = []
 
-        queue = CallbackQueue(database=mock_db)
+        _queue = CallbackQueue(database=mock_db)
 
         # 4 execute calls for schema init: 1 CREATE TABLE + 3 CREATE INDEX
         # plus 1 for _load_callbacks_from_database SELECT
@@ -253,14 +253,30 @@ class TestLoadCallbacksFromDatabase:
         now = datetime.now(UTC)
         rows = [
             (
-                "cb_001", "queue_1", "5551234", "John Doe",
-                now, now + timedelta(minutes=10), "scheduled",
-                0, 3, None, None,
+                "cb_001",
+                "queue_1",
+                "5551234",
+                "John Doe",
+                now,
+                now + timedelta(minutes=10),
+                "scheduled",
+                0,
+                3,
+                None,
+                None,
             ),
             (
-                "cb_002", "queue_1", "5555678", "Jane Smith",
-                now, now + timedelta(minutes=20), "in_progress",
-                1, 3, "agent_1", now,
+                "cb_002",
+                "queue_1",
+                "5555678",
+                "Jane Smith",
+                now,
+                now + timedelta(minutes=20),
+                "in_progress",
+                1,
+                3,
+                "agent_1",
+                now,
             ),
         ]
         mock_cursor.fetchall.return_value = rows
@@ -303,9 +319,17 @@ class TestLoadCallbacksFromDatabase:
         now = datetime.now(UTC)
         rows = [
             (
-                "cb_bad", "queue_x", "5559999", "Bad Status",
-                now, now, "nonexistent_status",
-                0, 3, None, None,
+                "cb_bad",
+                "queue_x",
+                "5559999",
+                "Bad Status",
+                now,
+                now,
+                "nonexistent_status",
+                0,
+                3,
+                None,
+                None,
             ),
         ]
         mock_cursor.fetchall.return_value = rows
@@ -339,12 +363,30 @@ class TestLoadCallbacksFromDatabase:
         now = datetime.now(UTC)
         rows = [
             (
-                "cb_a", "queue_alpha", "5551111", "Alice",
-                now, now, "scheduled", 0, 3, None, None,
+                "cb_a",
+                "queue_alpha",
+                "5551111",
+                "Alice",
+                now,
+                now,
+                "scheduled",
+                0,
+                3,
+                None,
+                None,
             ),
             (
-                "cb_b", "queue_beta", "5552222", "Bob",
-                now, now, "pending", 0, 3, None, None,
+                "cb_b",
+                "queue_beta",
+                "5552222",
+                "Bob",
+                now,
+                now,
+                "pending",
+                0,
+                3,
+                None,
+                None,
             ),
         ]
         mock_cursor.fetchall.return_value = rows
@@ -554,7 +596,7 @@ class TestSaveCallbackToDatabase:
         save_cursor = MagicMock()
         save_cursor.execute.side_effect = sqlite3.Error("write error")
         # First cursor calls are from __init__; subsequent ones from _save
-        call_count = mock_db.connection.cursor.call_count
+        _call_count = mock_db.connection.cursor.call_count
         mock_db.connection.cursor.return_value = save_cursor
 
         result = queue._save_callback_to_database("cb_err")
@@ -631,9 +673,7 @@ class TestRequestCallback:
         assert expected_min <= callback_time <= expected_max
 
     @patch("pbx.features.callback_queue.get_logger")
-    def test_request_callback_adds_to_queue_callbacks(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_request_callback_adds_to_queue_callbacks(self, mock_get_logger: MagicMock) -> None:
         """Test that request adds callback to queue_callbacks"""
         config = {"features": {"callback_queue": {"enabled": True}}}
         queue = CallbackQueue(config=config)
@@ -900,9 +940,7 @@ class TestCompleteCallback:
         self, mock_get_logger: MagicMock
     ) -> None:
         """Test failing a callback with retries remaining reschedules it"""
-        config = {
-            "features": {"callback_queue": {"enabled": True, "retry_interval_minutes": 10}}
-        }
+        config = {"features": {"callback_queue": {"enabled": True, "retry_interval_minutes": 10}}}
         queue = CallbackQueue(config=config)
         now = datetime.now(UTC)
         queue.callbacks["cb_retry"] = {
@@ -962,9 +1000,7 @@ class TestCompleteCallback:
         assert "cb_final_fail" not in queue.queue_callbacks["queue_1"]
 
     @patch("pbx.features.callback_queue.get_logger")
-    def test_complete_callback_success_removes_from_queue(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_complete_callback_success_removes_from_queue(self, mock_get_logger: MagicMock) -> None:
         """Test completing successfully removes callback from queue"""
         queue = CallbackQueue()
         now = datetime.now(UTC)
@@ -1115,9 +1151,7 @@ class TestCancelCallback:
         assert queue.queue_callbacks["queue_1"] == ["cb_c2"]
 
     @patch("pbx.features.callback_queue.get_logger")
-    def test_cancel_callback_queue_not_in_queue_callbacks(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_cancel_callback_queue_not_in_queue_callbacks(self, mock_get_logger: MagicMock) -> None:
         """Test cancel when queue_id is not in queue_callbacks does not raise"""
         queue = CallbackQueue()
         now = datetime.now(UTC)
@@ -1331,9 +1365,7 @@ class TestListQueueCallbacks:
         assert result == []
 
     @patch("pbx.features.callback_queue.get_logger")
-    def test_list_callbacks_skips_missing_callback_data(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_list_callbacks_skips_missing_callback_data(self, mock_get_logger: MagicMock) -> None:
         """Test listing callbacks skips orphaned IDs"""
         queue = CallbackQueue()
         now = datetime.now(UTC)
@@ -1643,7 +1675,7 @@ class TestGetStatistics:
         config = {"features": {"callback_queue": {"enabled": True}}}
         queue = CallbackQueue(config=config)
 
-        now = datetime.now(UTC)
+        _now = datetime.now(UTC)
         queue.callbacks["cb_1"] = {"status": CallbackStatus.SCHEDULED}
         queue.callbacks["cb_2"] = {"status": CallbackStatus.SCHEDULED}
         queue.callbacks["cb_3"] = {"status": CallbackStatus.IN_PROGRESS}

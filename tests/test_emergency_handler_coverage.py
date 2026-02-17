@@ -150,9 +150,7 @@ class TestHandleEmergencyCall:
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
-    def test_no_sdp_body(
-        self, mock_sip_builder, mock_sdp_builder, mock_sdp_session
-    ) -> None:
+    def test_no_sdp_body(self, mock_sip_builder, mock_sdp_builder, mock_sdp_session) -> None:
         """When INVITE has no SDP body, should still handle the call."""
         pbx = _make_pbx_core()
         handler = EmergencyHandler(pbx)
@@ -219,9 +217,7 @@ class TestHandleEmergencyCall:
         pbx.rtp_relay.allocate_relay.return_value = (20000, 20001)
 
         mock_handler = MagicMock()
-        pbx.rtp_relay.active_relays = {
-            "call-1": {"handler": mock_handler}
-        }
+        pbx.rtp_relay.active_relays = {"call-1": {"handler": mock_handler}}
 
         result = handler.handle_emergency_call(
             "1001", "911", "call-1", message, ("192.168.1.10", 5060)
@@ -245,9 +241,7 @@ class TestHandleEmergencyCall:
         pbx.rtp_relay.allocate_relay.return_value = (20000, 20001)
 
         mock_handler = MagicMock()
-        pbx.rtp_relay.active_relays = {
-            "call-1": {"handler": mock_handler}
-        }
+        pbx.rtp_relay.active_relays = {"call-1": {"handler": mock_handler}}
 
         result = handler.handle_emergency_call(
             "1001", "911", "call-1", message, ("192.168.1.10", 5060)
@@ -308,7 +302,11 @@ class TestHandleEmergencyCall:
         # SDPBuilder.build_audio_sdp should be called with the caller's codecs
         mock_sdp_builder.build_audio_sdp.assert_called_once()
         call_kwargs = mock_sdp_builder.build_audio_sdp.call_args
-        assert call_kwargs[1]["codecs"] == ["0", "8", "9"] or call_kwargs[0][3] == ["0", "8", "9"] or True
+        assert (
+            call_kwargs[1]["codecs"] == ["0", "8", "9"]
+            or call_kwargs[0][3] == ["0", "8", "9"]
+            or True
+        )
 
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
@@ -335,9 +333,7 @@ class TestHandleEmergencyCall:
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
-    def test_cdr_record_started(
-        self, mock_sip_builder, mock_sdp_builder, mock_sdp_session
-    ) -> None:
+    def test_cdr_record_started(self, mock_sip_builder, mock_sdp_builder, mock_sdp_session) -> None:
         """CDR record should be started for the emergency call."""
         pbx = _make_pbx_core()
         handler = EmergencyHandler(pbx)
@@ -348,9 +344,7 @@ class TestHandleEmergencyCall:
         pbx.rtp_relay.allocate_relay.return_value = (20000, 20001)
         pbx.rtp_relay.active_relays = {}
 
-        handler.handle_emergency_call(
-            "1001", "911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "911", "call-1", message, ("192.168.1.10", 5060))
         pbx.cdr_system.start_record.assert_called_once_with("call-1", "1001", "911")
 
     @patch("pbx.sip.sdp.SDPSession")
@@ -372,9 +366,7 @@ class TestHandleEmergencyCall:
         call_obj = MagicMock()
         pbx.call_manager.create_call.return_value = call_obj
 
-        handler.handle_emergency_call(
-            "1001", "911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "911", "call-1", message, ("192.168.1.10", 5060))
         assert call_obj.is_emergency is True
         assert call_obj.emergency_routing == routing_info
 
@@ -417,9 +409,7 @@ class TestHandleEmergencyCall:
         pbx.rtp_relay.allocate_relay.return_value = (20000, 20001)
         pbx.rtp_relay.active_relays = {}
 
-        handler.handle_emergency_call(
-            "1001", "9911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "9911", "call-1", message, ("192.168.1.10", 5060))
         pbx.call_manager.create_call.assert_called_once_with("call-1", "1001", "9911")
 
     @patch("pbx.sip.sdp.SDPSession")
@@ -438,9 +428,7 @@ class TestHandleEmergencyCall:
         pbx.rtp_relay.allocate_relay.return_value = (20000, 20001)
         pbx.rtp_relay.active_relays = {}
 
-        handler.handle_emergency_call(
-            "1001", "911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "911", "call-1", message, ("192.168.1.10", 5060))
         pbx.call_manager.create_call.assert_called_once_with("call-1", "1001", "911")
 
     @patch("pbx.sip.sdp.SDPSession")
@@ -475,9 +463,7 @@ class TestHandleEmergencyCall:
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
-    def test_karis_law_params(
-        self, mock_sip_builder, mock_sdp_builder, mock_sdp_session
-    ) -> None:
+    def test_karis_law_params(self, mock_sip_builder, mock_sdp_builder, mock_sdp_session) -> None:
         """karis_law.handle_emergency_call should receive correct parameters."""
         pbx = _make_pbx_core()
         handler = EmergencyHandler(pbx)
@@ -521,14 +507,15 @@ class TestHandleEmergencyCall:
         # SDPBuilder should be called with port 10000
         mock_sdp_builder.build_audio_sdp.assert_called_once()
         sdp_call = mock_sdp_builder.build_audio_sdp.call_args
-        assert sdp_call.kwargs.get("local_port", sdp_call[0][1] if len(sdp_call[0]) > 1 else None) is not None
+        assert (
+            sdp_call.kwargs.get("local_port", sdp_call[0][1] if len(sdp_call[0]) > 1 else None)
+            is not None
+        )
 
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
-    def test_trunk_name_logged(
-        self, mock_sip_builder, mock_sdp_builder, mock_sdp_session
-    ) -> None:
+    def test_trunk_name_logged(self, mock_sip_builder, mock_sdp_builder, mock_sdp_session) -> None:
         """Trunk name should be logged in the critical log messages."""
         pbx = _make_pbx_core()
         handler = EmergencyHandler(pbx)
@@ -539,9 +526,7 @@ class TestHandleEmergencyCall:
         pbx.rtp_relay.allocate_relay.return_value = (20000, 20001)
         pbx.rtp_relay.active_relays = {}
 
-        handler.handle_emergency_call(
-            "1001", "911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "911", "call-1", message, ("192.168.1.10", 5060))
         # Check that at least one critical log contains the trunk name
         critical_calls = [str(c) for c in pbx.logger.critical.call_args_list]
         assert any("sip_911_trunk" in c for c in critical_calls)
@@ -565,9 +550,7 @@ class TestHandleEmergencyCall:
         call_obj = MagicMock()
         pbx.call_manager.create_call.return_value = call_obj
 
-        handler.handle_emergency_call(
-            "1001", "911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "911", "call-1", message, ("192.168.1.10", 5060))
         call_obj.start.assert_called_once()
 
     @patch("pbx.sip.sdp.SDPSession")
@@ -584,9 +567,7 @@ class TestHandleEmergencyCall:
         routing_info = {"error": "Trunk configuration missing"}
         pbx.karis_law.handle_emergency_call.return_value = (False, routing_info)
 
-        handler.handle_emergency_call(
-            "1001", "911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "911", "call-1", message, ("192.168.1.10", 5060))
         error_calls = [str(c) for c in pbx.logger.error.call_args_list]
         assert any("Trunk configuration missing" in c for c in error_calls)
 
@@ -604,9 +585,7 @@ class TestHandleEmergencyCall:
         routing_info = {}  # No 'error' key
         pbx.karis_law.handle_emergency_call.return_value = (False, routing_info)
 
-        handler.handle_emergency_call(
-            "1001", "911", "call-1", message, ("192.168.1.10", 5060)
-        )
+        handler.handle_emergency_call("1001", "911", "call-1", message, ("192.168.1.10", 5060))
         error_calls = [str(c) for c in pbx.logger.error.call_args_list]
         assert any("Unknown error" in c for c in error_calls)
 

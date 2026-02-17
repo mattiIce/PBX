@@ -332,17 +332,17 @@ class TestRequestValidatorValidatePath:
         assert error is not None
 
     def test_xss_onerror(self) -> None:
-        valid, error = RequestValidator.validate_path('/api?img=x onerror=alert(1)')
+        valid, error = RequestValidator.validate_path("/api?img=x onerror=alert(1)")
         assert valid is False
         assert error is not None
 
     def test_xss_onload(self) -> None:
-        valid, error = RequestValidator.validate_path('/api?body=x onload=alert(1)')
+        valid, error = RequestValidator.validate_path("/api?body=x onload=alert(1)")
         assert valid is False
         assert error is not None
 
     def test_case_insensitive_check(self) -> None:
-        valid, error = RequestValidator.validate_path("/api/<SCRIPT>alert(1)</SCRIPT>")
+        valid, _error = RequestValidator.validate_path("/api/<SCRIPT>alert(1)</SCRIPT>")
         assert valid is False
 
     def test_empty_path(self) -> None:
@@ -383,16 +383,12 @@ class TestRequestValidatorValidateContentLength:
         assert error is None
 
     def test_exactly_max_content_length(self) -> None:
-        valid, error = RequestValidator.validate_content_length(
-            RequestValidator.MAX_BODY_SIZE
-        )
+        valid, error = RequestValidator.validate_content_length(RequestValidator.MAX_BODY_SIZE)
         assert valid is True
         assert error is None
 
     def test_exceeds_max_content_length(self) -> None:
-        valid, error = RequestValidator.validate_content_length(
-            RequestValidator.MAX_BODY_SIZE + 1
-        )
+        valid, error = RequestValidator.validate_content_length(RequestValidator.MAX_BODY_SIZE + 1)
         assert valid is False
         assert error is not None
         assert "too large" in error.lower()
@@ -495,7 +491,7 @@ class TestSecretValidatorValidateSecrets:
             {"DB_PASSWORD": "changeme", "JWT_SECRET": "a_valid_secret_key_1234"},
             clear=True,
         ):
-            valid, missing = SecretValidator.validate_secrets({})
+            _valid, missing = SecretValidator.validate_secrets({})
             assert "DB_PASSWORD" in missing
 
     def test_short_secret_rejected(self) -> None:
@@ -504,7 +500,7 @@ class TestSecretValidatorValidateSecrets:
             {"DB_PASSWORD": "short", "JWT_SECRET": "a_valid_secret_key_1234"},
             clear=True,
         ):
-            valid, missing = SecretValidator.validate_secrets({})
+            _valid, missing = SecretValidator.validate_secrets({})
             assert "DB_PASSWORD" in missing
 
     def test_valid_long_secrets(self) -> None:
@@ -526,7 +522,7 @@ class TestSecretValidatorValidateSecrets:
             {"DB_PASSWORD": "                    ", "JWT_SECRET": "a_valid_secret_key_1234"},
             clear=True,
         ):
-            valid, missing = SecretValidator.validate_secrets({})
+            _valid, missing = SecretValidator.validate_secrets({})
             assert "DB_PASSWORD" in missing
 
 

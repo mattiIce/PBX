@@ -226,13 +226,13 @@ class TestEmergencyNotificationSystemInit:
             pbx_core=mock_pbx_core, config=base_config, database=mock_database
         )
         # Contact from db with null methods gets default ["call"]
-        db_contact = next(
-            (c for c in ens.emergency_contacts if c.name == "DB Null"), None
-        )
+        db_contact = next((c for c in ens.emergency_contacts if c.name == "DB Null"), None)
         assert db_contact is not None
         assert db_contact.notification_methods == ["call"]
 
-    def test_init_db_contacts_duplicate_not_added(self, mock_pbx_core, base_config, mock_database) -> None:
+    def test_init_db_contacts_duplicate_not_added(
+        self, mock_pbx_core, base_config, mock_database
+    ) -> None:
         from pbx.features.emergency_notification import EmergencyNotificationSystem
 
         # Return a contact with same id as config contact
@@ -494,7 +494,7 @@ class TestNotifyContact:
 
         mock_pbx_core.initiate_call = MagicMock(side_effect=TypeError("error"))
         contact = EmergencyContact(name="ErrTest", extension="1001", notification_methods=["call"])
-        record = {"contacts_notified": [], "methods_used": []}
+        _record = {"contacts_notified": [], "methods_used": []}
         # _send_call_notification catches error
         ens._send_call_notification(contact, "911_call", {})
 
@@ -649,9 +649,7 @@ class TestNotifyContact:
         from pbx.features.emergency_notification import EmergencyContact
 
         mock_pbx_core.config.get.return_value = False
-        contact = EmergencyContact(
-            name="Test", phone="+15551234567", notification_methods=["sms"]
-        )
+        contact = EmergencyContact(name="Test", phone="+15551234567", notification_methods=["sms"])
         ens._send_sms_notification(contact, "911_call", {})
 
     def test_send_sms_notification_twilio(self, ens, mock_pbx_core) -> None:
@@ -669,14 +667,16 @@ class TestNotifyContact:
 
         mock_pbx_core.config.get.side_effect = config_get
 
-        contact = EmergencyContact(
-            name="Test", phone="+15551234567", notification_methods=["sms"]
-        )
+        contact = EmergencyContact(name="Test", phone="+15551234567", notification_methods=["sms"])
 
-        with patch.dict("sys.modules", {"twilio": MagicMock(), "twilio.rest": MagicMock()}):
-            with patch("pbx.features.emergency_notification.EmergencyNotificationSystem._send_sms_twilio") as mock_twilio:
-                ens._send_sms_notification(contact, "911_call", {})
-                mock_twilio.assert_called_once()
+        with (
+            patch.dict("sys.modules", {"twilio": MagicMock(), "twilio.rest": MagicMock()}),
+            patch(
+                "pbx.features.emergency_notification.EmergencyNotificationSystem._send_sms_twilio"
+            ) as mock_twilio,
+        ):
+            ens._send_sms_notification(contact, "911_call", {})
+            mock_twilio.assert_called_once()
 
     def test_send_sms_notification_aws(self, ens, mock_pbx_core) -> None:
         from pbx.features.emergency_notification import EmergencyContact
@@ -690,9 +690,7 @@ class TestNotifyContact:
 
         mock_pbx_core.config.get.side_effect = config_get
 
-        contact = EmergencyContact(
-            name="Test", phone="+15551234567", notification_methods=["sms"]
-        )
+        contact = EmergencyContact(name="Test", phone="+15551234567", notification_methods=["sms"])
 
         with patch.object(ens, "_send_sms_aws") as mock_aws:
             ens._send_sms_notification(contact, "911_call", {})
@@ -710,9 +708,7 @@ class TestNotifyContact:
 
         mock_pbx_core.config.get.side_effect = config_get
 
-        contact = EmergencyContact(
-            name="Test", phone="+15551234567", notification_methods=["sms"]
-        )
+        contact = EmergencyContact(name="Test", phone="+15551234567", notification_methods=["sms"])
         # Should not raise
         ens._send_sms_notification(contact, "911_call", {})
 
@@ -720,9 +716,7 @@ class TestNotifyContact:
         from pbx.features.emergency_notification import EmergencyContact
 
         mock_pbx_core.config.get.side_effect = KeyError("config missing")
-        contact = EmergencyContact(
-            name="Test", phone="+15551234567", notification_methods=["sms"]
-        )
+        contact = EmergencyContact(name="Test", phone="+15551234567", notification_methods=["sms"])
         # Should catch the error
         ens._send_sms_notification(contact, "911_call", {})
 

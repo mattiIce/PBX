@@ -295,9 +295,7 @@ class TestTeamsSyncPresence:
         integration.enabled = True
         integration.access_token = "test-token"
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -323,9 +321,7 @@ class TestTeamsSyncPresence:
         integration.enabled = True
         integration.access_token = "test-token"
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -351,9 +347,7 @@ class TestTeamsSyncPresence:
         integration.enabled = True
         integration.access_token = "test-token"
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_response = MagicMock()
         mock_response.status_code = 403
@@ -382,9 +376,7 @@ class TestTeamsSyncPresence:
         integration.enabled = True
         integration.access_token = "test-token"
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_requests.post.side_effect = real_requests.RequestException("Network error")
         mock_requests.RequestException = real_requests.RequestException
@@ -596,9 +588,7 @@ class TestTeamsSendChat:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         chat_response = MagicMock()
         chat_response.status_code = 201
@@ -628,9 +618,7 @@ class TestTeamsSendChat:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         chat_create_response = MagicMock()
         chat_create_response.status_code = 409  # Conflict - chat already exists
@@ -672,9 +660,7 @@ class TestTeamsSendChat:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         chat_create_response = MagicMock()
         chat_create_response.status_code = 500
@@ -705,9 +691,7 @@ class TestTeamsSendChat:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         chat_response = MagicMock()
         chat_response.status_code = 201
@@ -755,9 +739,7 @@ class TestTeamsCreateMeeting:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_response = MagicMock()
         mock_response.status_code = 201
@@ -793,9 +775,7 @@ class TestTeamsCreateMeeting:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_response = MagicMock()
         mock_response.status_code = 201
@@ -825,9 +805,7 @@ class TestTeamsCreateMeeting:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_response = MagicMock()
         mock_response.status_code = 500
@@ -855,9 +833,7 @@ class TestTeamsCreateMeeting:
         integration = TeamsIntegration(config)
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "test-token"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "test-token"}
 
         mock_requests.post.side_effect = real_requests.RequestException("Connection error")
         mock_requests.RequestException = real_requests.RequestException

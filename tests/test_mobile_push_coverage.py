@@ -86,9 +86,13 @@ class TestMobilePushNotifications:
 
         self._ensure_firebase_attrs()
 
-        cfg = config if config is not None else self._make_config(
-            enabled=enabled,
-            fcm_credentials_path=fcm_credentials_path,
+        cfg = (
+            config
+            if config is not None
+            else self._make_config(
+                enabled=enabled,
+                fcm_credentials_path=fcm_credentials_path,
+            )
         )
 
         original_flag = mp_module.FIREBASE_AVAILABLE
@@ -96,21 +100,17 @@ class TestMobilePushNotifications:
 
         try:
             if firebase_available and enabled and fcm_credentials_path:
-                with patch.object(mp_module, "credentials") as mock_creds, \
-                     patch.object(mp_module, "firebase_admin") as mock_fb:
+                with (
+                    patch.object(mp_module, "credentials") as _mock_creds,
+                    patch.object(mp_module, "firebase_admin") as mock_fb,
+                ):
                     if firebase_init_fails:
                         mock_fb.initialize_app.side_effect = RuntimeError("boom")
                     else:
-                        mock_fb.initialize_app.return_value = MagicMock(
-                            name="firebase_app"
-                        )
-                    instance = MobilePushNotifications(
-                        config=cfg, database=database
-                    )
+                        mock_fb.initialize_app.return_value = MagicMock(name="firebase_app")
+                    instance = MobilePushNotifications(config=cfg, database=database)
             else:
-                instance = MobilePushNotifications(
-                    config=cfg, database=database
-                )
+                instance = MobilePushNotifications(config=cfg, database=database)
         finally:
             mp_module.FIREBASE_AVAILABLE = original_flag
 
@@ -122,6 +122,7 @@ class TestMobilePushNotifications:
         Usage::
 
             from pbx.features import mobile_push as mp_module
+
             with self._with_firebase(instance):
                 ...
 
@@ -189,7 +190,7 @@ class TestMobilePushNotifications:
     def test_init_with_database_enabled(self) -> None:
         """When a database is provided and enabled, schema + device load runs."""
         db = self._make_database()
-        instance = self._build_instance(enabled=False, database=db)
+        _instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         # At minimum the CREATE TABLE calls + indexes + SELECT for loading
@@ -199,7 +200,7 @@ class TestMobilePushNotifications:
     def test_init_with_database_disabled(self) -> None:
         """Database present but disabled -> skip schema init."""
         db = self._make_database(enabled=False)
-        instance = self._build_instance(enabled=False, database=db)
+        _instance = self._build_instance(enabled=False, database=db)
         db.connection.cursor.assert_not_called()
 
     # ------------------------------------------------------------------ #
@@ -209,7 +210,7 @@ class TestMobilePushNotifications:
     def test_initialize_schema_sqlite(self) -> None:
         """Schema init creates tables and indexes for sqlite."""
         db = self._make_database(db_type="sqlite")
-        instance = self._build_instance(enabled=False, database=db)
+        _instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         # 2 CREATE TABLE + 2 CREATE INDEX = 4 execute calls for schema
@@ -220,7 +221,7 @@ class TestMobilePushNotifications:
     def test_initialize_schema_postgresql(self) -> None:
         """Schema init creates postgresql-specific tables."""
         db = self._make_database(db_type="postgresql")
-        instance = self._build_instance(enabled=False, database=db)
+        _instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         found_serial = False
@@ -234,9 +235,7 @@ class TestMobilePushNotifications:
     def test_initialize_schema_db_error(self) -> None:
         """sqlite3.Error during schema init is caught and logged."""
         db = self._make_database()
-        db.connection.cursor.return_value.execute.side_effect = sqlite3.Error(
-            "fail"
-        )
+        db.connection.cursor.return_value.execute.side_effect = sqlite3.Error("fail")
         # Should not raise
         instance = self._build_instance(enabled=False, database=db)
         assert instance is not None
@@ -289,7 +288,7 @@ class TestMobilePushNotifications:
     def test_load_devices_postgresql_uses_true(self) -> None:
         """PostgreSQL path uses WHERE enabled = TRUE."""
         db = self._make_database(db_type="postgresql")
-        instance = self._build_instance(enabled=False, database=db)
+        _instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         found_true = False
@@ -302,7 +301,7 @@ class TestMobilePushNotifications:
     def test_load_devices_sqlite_uses_1(self) -> None:
         """SQLite path uses WHERE enabled = 1."""
         db = self._make_database(db_type="sqlite")
-        instance = self._build_instance(enabled=False, database=db)
+        _instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         found_one = False
@@ -461,9 +460,7 @@ class TestMobilePushNotifications:
         """Early-returns when no database."""
         instance = self._build_instance(enabled=False)
         # Should not raise
-        instance._save_notification_to_database(
-            "u1", "call", "Title", "Body", {"key": "val"}, True
-        )
+        instance._save_notification_to_database("u1", "call", "Title", "Body", {"key": "val"}, True)
 
     def test_save_notification_sqlite_success(self) -> None:
         """SQLite path stores success=1."""
@@ -473,9 +470,7 @@ class TestMobilePushNotifications:
         cursor = db.connection.cursor.return_value
         cursor.execute.reset_mock()
 
-        instance._save_notification_to_database(
-            "u1", "call", "Title", "Body", {"key": "val"}, True
-        )
+        instance._save_notification_to_database("u1", "call", "Title", "Body", {"key": "val"}, True)
         sql_used = cursor.execute.call_args[0][0]
         assert "INSERT INTO push_notifications" in sql_used
         params = cursor.execute.call_args[0][1]
@@ -505,9 +500,7 @@ class TestMobilePushNotifications:
         cursor = db.connection.cursor.return_value
         cursor.execute.reset_mock()
 
-        instance._save_notification_to_database(
-            "u1", "voicemail", "VM", "body", {"a": 1}, True
-        )
+        instance._save_notification_to_database("u1", "voicemail", "VM", "body", {"a": 1}, True)
         sql_used = cursor.execute.call_args[0][0]
         assert "%s" in sql_used
 
@@ -519,9 +512,7 @@ class TestMobilePushNotifications:
         cursor = db.connection.cursor.return_value
         cursor.execute.reset_mock()
 
-        instance._save_notification_to_database(
-            "u1", "call", "T", "B", {}, True
-        )
+        instance._save_notification_to_database("u1", "call", "T", "B", {}, True)
         params = cursor.execute.call_args[0][1]
         # Empty dict is falsy -> data_json is None
         assert params[4] is None
@@ -550,9 +541,7 @@ class TestMobilePushNotifications:
         cursor.execute.side_effect = sqlite3.Error("save fail")
 
         # Should not raise
-        instance._save_notification_to_database(
-            "u1", "call", "T", "B", {}, True
-        )
+        instance._save_notification_to_database("u1", "call", "T", "B", {}, True)
 
     def test_save_notification_value_error(self) -> None:
         """ValueError during save is caught and logged."""
@@ -564,9 +553,7 @@ class TestMobilePushNotifications:
         cursor.execute.side_effect = ValueError("bad value")
 
         # Should not raise
-        instance._save_notification_to_database(
-            "u1", "call", "T", "B", {"k": "v"}, True
-        )
+        instance._save_notification_to_database("u1", "call", "T", "B", {"k": "v"}, True)
 
     # ------------------------------------------------------------------ #
     # register_device tests
@@ -712,9 +699,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                result = instance.send_call_notification(
-                    "u1", "5551234", caller_name="Alice"
-                )
+                result = instance.send_call_notification("u1", "5551234", caller_name="Alice")
 
             assert result["success"] is True
             assert result["success_count"] == 1
@@ -784,9 +769,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                result = instance.send_voicemail_notification(
-                    "u1", "msg_42", "5559999", 45
-                )
+                result = instance.send_voicemail_notification("u1", "msg_42", "5559999", 45)
 
             assert result["success"] is True
             assert result["success_count"] == 1
@@ -860,9 +843,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                result = instance.send_missed_call_notification(
-                    "u1", "5551234"
-                )
+                result = instance.send_missed_call_notification("u1", "5551234")
 
             assert result["success"] is True
         finally:
@@ -942,9 +923,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                result = instance._send_notification(
-                    "u1", "Test", "Body", {"type": "test"}
-                )
+                result = instance._send_notification("u1", "Test", "Body", {"type": "test"})
 
             assert result["success"] is True
             assert result["success_count"] == 2
@@ -975,9 +954,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                result = instance._send_notification(
-                    "u1", "Test", "Body", data=None
-                )
+                result = instance._send_notification("u1", "Test", "Body", data=None)
 
             assert result["success"] is True
         finally:
@@ -996,12 +973,8 @@ class TestMobilePushNotifications:
         mp_module.FIREBASE_AVAILABLE = True
         try:
             with patch.object(mp_module, "messaging") as mock_messaging:
-                mock_messaging.MulticastMessage.side_effect = ValueError(
-                    "bad msg"
-                )
-                result = instance._send_notification(
-                    "u1", "Test", "Body", {"type": "test"}
-                )
+                mock_messaging.MulticastMessage.side_effect = ValueError("bad msg")
+                result = instance._send_notification("u1", "Test", "Body", {"type": "test"})
 
             assert "error" in result
             assert "bad msg" in result["error"]
@@ -1021,12 +994,8 @@ class TestMobilePushNotifications:
         mp_module.FIREBASE_AVAILABLE = True
         try:
             with patch.object(mp_module, "messaging") as mock_messaging:
-                mock_messaging.MulticastMessage.side_effect = TypeError(
-                    "type err"
-                )
-                result = instance._send_notification(
-                    "u1", "Test", "Body", {"type": "test"}
-                )
+                mock_messaging.MulticastMessage.side_effect = TypeError("type err")
+                result = instance._send_notification("u1", "Test", "Body", {"type": "test"})
 
             assert "error" in result
             assert "type err" in result["error"]
@@ -1046,12 +1015,8 @@ class TestMobilePushNotifications:
         mp_module.FIREBASE_AVAILABLE = True
         try:
             with patch.object(mp_module, "messaging") as mock_messaging:
-                mock_messaging.MulticastMessage.side_effect = KeyError(
-                    "missing"
-                )
-                result = instance._send_notification(
-                    "u1", "Test", "Body", {"type": "test"}
-                )
+                mock_messaging.MulticastMessage.side_effect = KeyError("missing")
+                result = instance._send_notification("u1", "Test", "Body", {"type": "test"})
 
             assert "error" in result
         finally:
@@ -1070,14 +1035,12 @@ class TestMobilePushNotifications:
         original_flag = mp_module.FIREBASE_AVAILABLE
         mp_module.FIREBASE_AVAILABLE = True
         try:
-            with patch.object(mp_module, "messaging") as mock_messaging, \
-                 patch.object(
-                     instance, "_save_notification_to_database"
-                 ) as mock_save:
+            with (
+                patch.object(mp_module, "messaging") as mock_messaging,
+                patch.object(instance, "_save_notification_to_database") as mock_save,
+            ):
                 mock_messaging.MulticastMessage.side_effect = ValueError("err")
-                instance._send_notification(
-                    "u1", "T", "B", {"type": "missed_call"}
-                )
+                instance._send_notification("u1", "T", "B", {"type": "missed_call"})
 
                 mock_save.assert_called_once()
                 call_args = mock_save.call_args
@@ -1103,14 +1066,12 @@ class TestMobilePushNotifications:
             mock_response.success_count = 1
             mock_response.failure_count = 0
 
-            with patch.object(mp_module, "messaging") as mock_messaging, \
-                 patch.object(
-                     instance, "_save_notification_to_database"
-                 ) as mock_save:
+            with (
+                patch.object(mp_module, "messaging") as mock_messaging,
+                patch.object(instance, "_save_notification_to_database") as mock_save,
+            ):
                 mock_messaging.send_multicast.return_value = mock_response
-                instance._send_notification(
-                    "u1", "T", "B", {"type": "incoming_call"}
-                )
+                instance._send_notification("u1", "T", "B", {"type": "incoming_call"})
 
                 mock_save.assert_called_once()
                 call_args = mock_save.call_args
@@ -1132,10 +1093,10 @@ class TestMobilePushNotifications:
         original_flag = mp_module.FIREBASE_AVAILABLE
         mp_module.FIREBASE_AVAILABLE = True
         try:
-            with patch.object(mp_module, "messaging") as mock_messaging, \
-                 patch.object(
-                     instance, "_save_notification_to_database"
-                 ) as mock_save:
+            with (
+                patch.object(mp_module, "messaging") as mock_messaging,
+                patch.object(instance, "_save_notification_to_database") as mock_save,
+            ):
                 mock_messaging.MulticastMessage.side_effect = ValueError("err")
                 instance._send_notification("u1", "T", "B", data=None)
 
@@ -1194,10 +1155,18 @@ class TestMobilePushNotifications:
         new_time = datetime.now(UTC) - timedelta(days=10)
 
         instance.device_tokens["u1"] = [
-            {"token": "old_tok", "platform": "android",
-             "registered_at": old_time, "last_seen": old_time},
-            {"token": "new_tok", "platform": "ios",
-             "registered_at": new_time, "last_seen": new_time},
+            {
+                "token": "old_tok",
+                "platform": "android",
+                "registered_at": old_time,
+                "last_seen": old_time,
+            },
+            {
+                "token": "new_tok",
+                "platform": "ios",
+                "registered_at": new_time,
+                "last_seen": new_time,
+            },
         ]
 
         instance.cleanup_stale_devices(days=90)
@@ -1211,8 +1180,12 @@ class TestMobilePushNotifications:
 
         old_time = datetime.now(UTC) - timedelta(days=200)
         instance.device_tokens["u_gone"] = [
-            {"token": "tok_1", "platform": "android",
-             "registered_at": old_time, "last_seen": old_time},
+            {
+                "token": "tok_1",
+                "platform": "android",
+                "registered_at": old_time,
+                "last_seen": old_time,
+            },
         ]
 
         instance.cleanup_stale_devices(days=90)
@@ -1224,9 +1197,12 @@ class TestMobilePushNotifications:
 
         time_50_days_ago = datetime.now(UTC) - timedelta(days=50)
         instance.device_tokens["u1"] = [
-            {"token": "tok_1", "platform": "android",
-             "registered_at": time_50_days_ago,
-             "last_seen": time_50_days_ago},
+            {
+                "token": "tok_1",
+                "platform": "android",
+                "registered_at": time_50_days_ago,
+                "last_seen": time_50_days_ago,
+            },
         ]
 
         # 60 days -> device is NOT stale
@@ -1243,8 +1219,7 @@ class TestMobilePushNotifications:
 
         recent = datetime.now(UTC) - timedelta(days=1)
         instance.device_tokens["u1"] = [
-            {"token": "tok", "platform": "ios",
-             "registered_at": recent, "last_seen": recent},
+            {"token": "tok", "platform": "ios", "registered_at": recent, "last_seen": recent},
         ]
 
         instance.cleanup_stale_devices(days=90)
@@ -1264,12 +1239,20 @@ class TestMobilePushNotifications:
         new_time = datetime.now(UTC) - timedelta(days=5)
 
         instance.device_tokens["u1"] = [
-            {"token": "tok_old", "platform": "android",
-             "registered_at": old_time, "last_seen": old_time},
+            {
+                "token": "tok_old",
+                "platform": "android",
+                "registered_at": old_time,
+                "last_seen": old_time,
+            },
         ]
         instance.device_tokens["u2"] = [
-            {"token": "tok_new", "platform": "ios",
-             "registered_at": new_time, "last_seen": new_time},
+            {
+                "token": "tok_new",
+                "platform": "ios",
+                "registered_at": new_time,
+                "last_seen": new_time,
+            },
         ]
 
         instance.cleanup_stale_devices(days=90)
@@ -1309,11 +1292,22 @@ class TestMobilePushNotifications:
 
         now = datetime.now(UTC)
         instance.notification_history = [
-            {"user_id": "u1", "title": "T", "body": "B",
-             "sent_at": now, "success_count": 1, "failure_count": 0},
-            {"user_id": "u2", "title": "T2", "body": "B2",
-             "sent_at": now - timedelta(hours=12),
-             "success_count": 1, "failure_count": 0},
+            {
+                "user_id": "u1",
+                "title": "T",
+                "body": "B",
+                "sent_at": now,
+                "success_count": 1,
+                "failure_count": 0,
+            },
+            {
+                "user_id": "u2",
+                "title": "T2",
+                "body": "B2",
+                "sent_at": now - timedelta(hours=12),
+                "success_count": 1,
+                "failure_count": 0,
+            },
         ]
 
         stats = instance.get_statistics()
@@ -1325,8 +1319,14 @@ class TestMobilePushNotifications:
 
         old = datetime.now(UTC) - timedelta(hours=25)
         instance.notification_history = [
-            {"user_id": "u1", "title": "Old", "body": "B",
-             "sent_at": old, "success_count": 1, "failure_count": 0},
+            {
+                "user_id": "u1",
+                "title": "Old",
+                "body": "B",
+                "sent_at": old,
+                "success_count": 1,
+                "failure_count": 0,
+            },
         ]
 
         stats = instance.get_statistics()
@@ -1407,9 +1407,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                result = instance.send_call_notification(
-                    "u1", "5551234", "Bob"
-                )
+                result = instance.send_call_notification("u1", "5551234", "Bob")
 
             assert result["success"] is True
         finally:
@@ -1443,9 +1441,7 @@ class TestMobilePushNotifications:
                 mock_messaging.send_multicast.return_value = mock_response
 
                 r1 = instance.send_call_notification("u1", "111")
-                r2 = instance.send_voicemail_notification(
-                    "u1", "m1", "222", 15
-                )
+                r2 = instance.send_voicemail_notification("u1", "m1", "222", 15)
                 r3 = instance.send_missed_call_notification("u1", "333")
 
             assert r1["success"] is True
@@ -1473,9 +1469,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                instance._send_notification(
-                    "u1", "Title", "Body", {"type": "test"}
-                )
+                instance._send_notification("u1", "Title", "Body", {"type": "test"})
 
             entry = instance.notification_history[0]
             assert entry["user_id"] == "u1"
@@ -1498,9 +1492,7 @@ class TestMobilePushNotifications:
         """Config with empty mobile_push section defaults to disabled."""
         from pbx.features.mobile_push import MobilePushNotifications
 
-        instance = MobilePushNotifications(
-            config={"features": {"mobile_push": {}}}
-        )
+        instance = MobilePushNotifications(config={"features": {"mobile_push": {}}})
         assert instance.enabled is False
         assert instance.fcm_credentials_path is None
 
@@ -1523,9 +1515,7 @@ class TestMobilePushNotifications:
 
             with patch.object(mp_module, "messaging") as mock_messaging:
                 mock_messaging.send_multicast.return_value = mock_response
-                result = instance._send_notification(
-                    "u1", "Test", "Body", {"type": "test"}
-                )
+                result = instance._send_notification("u1", "Test", "Body", {"type": "test"})
 
             assert result["success"] is True
             assert result["success_count"] == 1

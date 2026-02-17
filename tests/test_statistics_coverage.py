@@ -12,8 +12,10 @@ def _make_cdr_system(records_by_date=None, default_records=None):
     """Helper to create a mock CDR system."""
     mock_cdr = MagicMock()
     if records_by_date is not None:
+
         def get_records(date, limit=10000):
             return records_by_date.get(date, [])
+
         mock_cdr.get_records.side_effect = get_records
     elif default_records is not None:
         mock_cdr.get_records.return_value = default_records
@@ -165,9 +167,7 @@ class TestStatisticsEngineTopCallers:
 
     @patch("pbx.features.statistics.get_logger")
     def test_top_callers_limit(self, mock_get_logger) -> None:
-        records = [
-            {"from_extension": f"100{i}", "duration": 60} for i in range(20)
-        ]
+        records = [{"from_extension": f"100{i}", "duration": 60} for i in range(20)]
         mock_cdr = _make_cdr_system(default_records=records)
         engine = StatisticsEngine(mock_cdr)
         result = engine._get_top_callers(1, limit=5)
@@ -341,11 +341,36 @@ class TestStatisticsEngineCallQualityMetrics:
             "calls_with_issues": 10,
         }
         pbx_core.qos_monitor.get_historical_metrics.return_value = [
-            {"mos_score": 4.5, "jitter_avg_ms": 10.0, "packet_loss_percentage": 0.5, "latency_avg_ms": 30.0},
-            {"mos_score": 4.1, "jitter_avg_ms": 20.0, "packet_loss_percentage": 1.0, "latency_avg_ms": 50.0},
-            {"mos_score": 3.8, "jitter_avg_ms": 30.0, "packet_loss_percentage": 2.0, "latency_avg_ms": 80.0},
-            {"mos_score": 3.3, "jitter_avg_ms": 40.0, "packet_loss_percentage": 3.0, "latency_avg_ms": 120.0},
-            {"mos_score": 2.5, "jitter_avg_ms": 60.0, "packet_loss_percentage": 5.0, "latency_avg_ms": 200.0},
+            {
+                "mos_score": 4.5,
+                "jitter_avg_ms": 10.0,
+                "packet_loss_percentage": 0.5,
+                "latency_avg_ms": 30.0,
+            },
+            {
+                "mos_score": 4.1,
+                "jitter_avg_ms": 20.0,
+                "packet_loss_percentage": 1.0,
+                "latency_avg_ms": 50.0,
+            },
+            {
+                "mos_score": 3.8,
+                "jitter_avg_ms": 30.0,
+                "packet_loss_percentage": 2.0,
+                "latency_avg_ms": 80.0,
+            },
+            {
+                "mos_score": 3.3,
+                "jitter_avg_ms": 40.0,
+                "packet_loss_percentage": 3.0,
+                "latency_avg_ms": 120.0,
+            },
+            {
+                "mos_score": 2.5,
+                "jitter_avg_ms": 60.0,
+                "packet_loss_percentage": 5.0,
+                "latency_avg_ms": 200.0,
+            },
         ]
 
         result = engine.get_call_quality_metrics(pbx_core=pbx_core)
@@ -464,8 +489,7 @@ class TestStatisticsEngineAdvancedAnalytics:
         mock_cdr = _make_cdr_system(default_records=records)
         engine = StatisticsEngine(mock_cdr)
         result = engine.get_advanced_analytics(
-            "2024-01-01", "2024-01-01",
-            filters={"extension": "1001"}
+            "2024-01-01", "2024-01-01", filters={"extension": "1001"}
         )
         assert result["summary"]["total_calls"] == 1
 
@@ -478,8 +502,7 @@ class TestStatisticsEngineAdvancedAnalytics:
         mock_cdr = _make_cdr_system(default_records=records)
         engine = StatisticsEngine(mock_cdr)
         result = engine.get_advanced_analytics(
-            "2024-01-01", "2024-01-01",
-            filters={"disposition": "answered"}
+            "2024-01-01", "2024-01-01", filters={"disposition": "answered"}
         )
         assert result["summary"]["total_calls"] == 1
         assert result["summary"]["answered"] == 1
@@ -493,8 +516,7 @@ class TestStatisticsEngineAdvancedAnalytics:
         mock_cdr = _make_cdr_system(default_records=records)
         engine = StatisticsEngine(mock_cdr)
         result = engine.get_advanced_analytics(
-            "2024-01-01", "2024-01-01",
-            filters={"min_duration": 60}
+            "2024-01-01", "2024-01-01", filters={"min_duration": 60}
         )
         assert result["summary"]["total_calls"] == 1
 
@@ -586,9 +608,17 @@ class TestStatisticsEngineExportCSV:
         mock_path_cls.return_value.open.return_value = mock_file
 
         records = [
-            {"timestamp": "2024-01-01", "from_ext": "1001", "to_ext": "1002",
-             "caller_id": "Test", "called_number": "1002", "disposition": "answered",
-             "duration": 60, "wait_time": 5, "queue": "sales"},
+            {
+                "timestamp": "2024-01-01",
+                "from_ext": "1001",
+                "to_ext": "1002",
+                "caller_id": "Test",
+                "called_number": "1002",
+                "disposition": "answered",
+                "duration": 60,
+                "wait_time": 5,
+                "queue": "sales",
+            },
         ]
         result = engine.export_to_csv(records, "/tmp/test.csv")
         assert result is True
@@ -648,8 +678,7 @@ class TestStatisticsEngineGenerateReport:
         mock_cdr = _make_cdr_system(default_records=[])
         engine = StatisticsEngine(mock_cdr)
         result = engine.generate_report(
-            "custom",
-            {"start_date": "2024-01-01", "end_date": "2024-01-15"}
+            "custom", {"start_date": "2024-01-01", "end_date": "2024-01-15"}
         )
         assert result["date_range"]["start"] == "2024-01-01"
         assert result["date_range"]["end"] == "2024-01-15"

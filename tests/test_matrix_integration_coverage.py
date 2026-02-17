@@ -563,9 +563,7 @@ class TestSendVoicemailNotification:
     """Tests for send_voicemail_notification."""
 
     @patch("pbx.integrations.matrix.requests")
-    def test_send_voicemail_notification_with_transcription(
-        self, mock_requests: MagicMock
-    ) -> None:
+    def test_send_voicemail_notification_with_transcription(self, mock_requests: MagicMock) -> None:
         """Test voicemail notification with transcription."""
         mock_response = MagicMock()
         mock_response.status_code = 200
@@ -712,7 +710,7 @@ class TestCreateRoom:
 
         integration = _create_integration_with_token()
 
-        result = integration.create_room("Simple Room")
+        _result = integration.create_room("Simple Room")
 
         call_kwargs = mock_requests.request.call_args
         data = call_kwargs.kwargs["json"]

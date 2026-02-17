@@ -134,15 +134,17 @@ class TestAudioProcessorProcessFrame:
     def test_process_frame_noise_suppression_only(self) -> None:
         """Test frame processing with only noise suppression"""
         with patch("pbx.features.audio_processing.get_logger"):
-            processor = AudioProcessor({
-                "features": {
-                    "audio_processing": {
-                        "noise_suppression": True,
-                        "echo_cancellation": False,
-                        "auto_gain": False,
+            processor = AudioProcessor(
+                {
+                    "features": {
+                        "audio_processing": {
+                            "noise_suppression": True,
+                            "echo_cancellation": False,
+                            "auto_gain": False,
+                        }
                     }
                 }
-            })
+            )
 
         audio_data = np.array([1000, -2000, 3000, -4000], dtype=np.int16).tobytes()
 
@@ -155,15 +157,17 @@ class TestAudioProcessorProcessFrame:
     def test_process_frame_echo_cancellation_only(self) -> None:
         """Test frame processing with only echo cancellation"""
         with patch("pbx.features.audio_processing.get_logger"):
-            processor = AudioProcessor({
-                "features": {
-                    "audio_processing": {
-                        "noise_suppression": False,
-                        "echo_cancellation": True,
-                        "auto_gain": False,
+            processor = AudioProcessor(
+                {
+                    "features": {
+                        "audio_processing": {
+                            "noise_suppression": False,
+                            "echo_cancellation": True,
+                            "auto_gain": False,
+                        }
                     }
                 }
-            })
+            )
 
         audio_data = np.array([1000, -2000, 3000, -4000], dtype=np.int16).tobytes()
 
@@ -175,15 +179,17 @@ class TestAudioProcessorProcessFrame:
     def test_process_frame_far_end_skips_echo_cancel(self) -> None:
         """Test that far-end audio skips echo cancellation"""
         with patch("pbx.features.audio_processing.get_logger"):
-            processor = AudioProcessor({
-                "features": {
-                    "audio_processing": {
-                        "noise_suppression": False,
-                        "echo_cancellation": True,
-                        "auto_gain": False,
+            processor = AudioProcessor(
+                {
+                    "features": {
+                        "audio_processing": {
+                            "noise_suppression": False,
+                            "echo_cancellation": True,
+                            "auto_gain": False,
+                        }
                     }
                 }
-            })
+            )
 
         audio_data = np.array([1000, -2000, 3000], dtype=np.int16).tobytes()
 
@@ -195,19 +201,23 @@ class TestAudioProcessorProcessFrame:
     def test_process_frame_near_end_applies_echo_cancel(self) -> None:
         """Test that near-end audio applies echo cancellation"""
         with patch("pbx.features.audio_processing.get_logger"):
-            processor = AudioProcessor({
-                "features": {
-                    "audio_processing": {
-                        "noise_suppression": False,
-                        "echo_cancellation": True,
-                        "auto_gain": False,
+            processor = AudioProcessor(
+                {
+                    "features": {
+                        "audio_processing": {
+                            "noise_suppression": False,
+                            "echo_cancellation": True,
+                            "auto_gain": False,
+                        }
                     }
                 }
-            })
+            )
 
         audio_data = np.array([1000, -2000, 3000], dtype=np.int16).tobytes()
 
-        with patch.object(processor, "_cancel_echo", return_value=np.array([1000, -2000, 3000], dtype=np.int16)) as mock_cancel:
+        with patch.object(
+            processor, "_cancel_echo", return_value=np.array([1000, -2000, 3000], dtype=np.int16)
+        ) as mock_cancel:
             processor.process_frame(audio_data, is_far_end=False)
             mock_cancel.assert_called_once()
 
@@ -215,15 +225,17 @@ class TestAudioProcessorProcessFrame:
     def test_process_frame_agc_only(self) -> None:
         """Test frame processing with only auto gain control"""
         with patch("pbx.features.audio_processing.get_logger"):
-            processor = AudioProcessor({
-                "features": {
-                    "audio_processing": {
-                        "noise_suppression": False,
-                        "echo_cancellation": False,
-                        "auto_gain": True,
+            processor = AudioProcessor(
+                {
+                    "features": {
+                        "audio_processing": {
+                            "noise_suppression": False,
+                            "echo_cancellation": False,
+                            "auto_gain": True,
+                        }
                     }
                 }
-            })
+            )
 
         audio_data = np.array([1000, -2000, 3000, -4000], dtype=np.int16).tobytes()
 
@@ -235,15 +247,17 @@ class TestAudioProcessorProcessFrame:
     def test_process_frame_all_disabled(self) -> None:
         """Test frame processing with all features disabled"""
         with patch("pbx.features.audio_processing.get_logger"):
-            processor = AudioProcessor({
-                "features": {
-                    "audio_processing": {
-                        "noise_suppression": False,
-                        "echo_cancellation": False,
-                        "auto_gain": False,
+            processor = AudioProcessor(
+                {
+                    "features": {
+                        "audio_processing": {
+                            "noise_suppression": False,
+                            "echo_cancellation": False,
+                            "auto_gain": False,
+                        }
                     }
                 }
-            })
+            )
 
         audio_data = np.array([1000, -2000, 3000], dtype=np.int16).tobytes()
 
@@ -556,15 +570,17 @@ class TestAudioProcessorGetStatistics:
     def test_get_statistics_custom_config(self) -> None:
         """Test statistics with custom config settings"""
         with patch("pbx.features.audio_processing.get_logger"):
-            processor = AudioProcessor({
-                "features": {
-                    "audio_processing": {
-                        "noise_suppression": False,
-                        "echo_cancellation": False,
-                        "auto_gain": False,
+            processor = AudioProcessor(
+                {
+                    "features": {
+                        "audio_processing": {
+                            "noise_suppression": False,
+                            "echo_cancellation": False,
+                            "auto_gain": False,
+                        }
                     }
                 }
-            })
+            )
 
         stats = processor.get_statistics()
 

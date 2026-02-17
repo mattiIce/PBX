@@ -273,9 +273,7 @@ class TestAutoAttendantSession:
     @patch("pbx.core.auto_attendant_handler.time")
     @patch("pbx.rtp.handler.RTPDTMFListener")
     @patch("pbx.rtp.handler.RTPPlayer")
-    def test_dtmf_listener_start_failure(
-        self, mock_player_cls, mock_dtmf_cls, mock_time
-    ) -> None:
+    def test_dtmf_listener_start_failure(self, mock_player_cls, mock_dtmf_cls, mock_time) -> None:
         """If DTMF listener fails to start, should stop player and end call."""
         pbx = _make_pbx_core()
         handler = AutoAttendantHandler(pbx)

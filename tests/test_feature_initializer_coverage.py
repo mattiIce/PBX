@@ -196,9 +196,7 @@ class TestFeatureInitializerInitialize:
 
     def test_custom_voicemail_path(self) -> None:
         """Voicemail uses a custom storage path from config."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"voicemail.storage_path": "/custom/vm/path"}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"voicemail.storage_path": "/custom/vm/path"})
         mocks = _run_initialize_with_all_patches(pbx_core)
 
         mocks["VoicemailSystem"].assert_called_once_with(
@@ -209,9 +207,7 @@ class TestFeatureInitializerInitialize:
 
     def test_call_recording_enabled(self) -> None:
         """CallRecordingSystem receives auto_record=True from config."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.call_recording": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.call_recording": True})
         mocks = _run_initialize_with_all_patches(pbx_core)
 
         mocks["CallRecordingSystem"].assert_called_once_with(auto_record=True)
@@ -224,9 +220,7 @@ class TestFeatureInitializerInitialize:
         mock_aa_cls = MagicMock()
         mock_aa_cls.return_value.get_extension.return_value = "100"
 
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.auto_attendant": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.auto_attendant": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -238,9 +232,7 @@ class TestFeatureInitializerInitialize:
 
     def test_auto_attendant_disabled(self) -> None:
         """Auto attendant is None when feature flag is False."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.auto_attendant": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.auto_attendant": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.auto_attendant is None
 
@@ -284,9 +276,7 @@ class TestFeatureInitializerInitialize:
     def test_phone_book_enabled(self) -> None:
         """PhoneBook is created when feature flag is True."""
         mock_pb_cls = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.phone_book.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.phone_book.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -298,9 +288,7 @@ class TestFeatureInitializerInitialize:
 
     def test_phone_book_disabled(self) -> None:
         """PhoneBook is None when feature flag is False."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.phone_book.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.phone_book.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.phone_book is None
 
@@ -338,9 +326,7 @@ class TestFeatureInitializerInitialize:
     def test_paging_enabled(self) -> None:
         """PagingSystem is created when enabled."""
         mock_paging_cls = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.paging.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.paging.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -353,9 +339,7 @@ class TestFeatureInitializerInitialize:
 
     def test_paging_disabled(self) -> None:
         """PagingSystem is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.paging.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.paging.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.paging_system is None
 
@@ -365,9 +349,7 @@ class TestFeatureInitializerInitialize:
     def test_e911_enabled(self) -> None:
         """E911LocationService is created when enabled."""
         mock_e911_cls = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.e911.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.e911.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -381,9 +363,7 @@ class TestFeatureInitializerInitialize:
 
     def test_e911_disabled(self) -> None:
         """E911 is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.e911.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.e911.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.e911_location is None
 
@@ -393,9 +373,7 @@ class TestFeatureInitializerInitialize:
     def test_karis_law_enabled(self) -> None:
         """KarisLawCompliance is created when enabled."""
         mock_kl_cls = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.karis_law.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.karis_law.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -407,9 +385,7 @@ class TestFeatureInitializerInitialize:
 
     def test_karis_law_disabled(self) -> None:
         """Karis Law is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.karis_law.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.karis_law.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.karis_law is None
 
@@ -420,9 +396,7 @@ class TestFeatureInitializerInitialize:
         """WebRTC gateway and signaling server are created when enabled."""
         mock_ws_cls = MagicMock()
         mock_gw_cls = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.webrtc.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.webrtc.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -439,9 +413,7 @@ class TestFeatureInitializerInitialize:
 
     def test_webrtc_disabled(self) -> None:
         """WebRTC fields are None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.webrtc.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.webrtc.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.webrtc_signaling is None
         assert pbx_core.webrtc_gateway is None
@@ -452,9 +424,7 @@ class TestFeatureInitializerInitialize:
     def test_crm_integration_enabled(self) -> None:
         """CRM integration is created when enabled."""
         mock_crm_cls = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.crm_integration.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.crm_integration.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -468,9 +438,7 @@ class TestFeatureInitializerInitialize:
 
     def test_crm_integration_disabled(self) -> None:
         """CRM integration is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.crm_integration.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.crm_integration.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.crm_integration is None
 
@@ -480,9 +448,7 @@ class TestFeatureInitializerInitialize:
     def test_hot_desking_enabled(self) -> None:
         """HotDeskingSystem is created when enabled."""
         mock_hd_cls = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.hot_desking.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.hot_desking.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -496,9 +462,7 @@ class TestFeatureInitializerInitialize:
 
     def test_hot_desking_disabled(self) -> None:
         """HotDesking is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.hot_desking.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.hot_desking.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.hot_desking is None
 
@@ -544,9 +508,7 @@ class TestFeatureInitializerInitialize:
 
     def test_mfa_disabled(self) -> None:
         """MFA manager is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"security.mfa.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"security.mfa.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.mfa_manager is None
 
@@ -556,9 +518,7 @@ class TestFeatureInitializerInitialize:
     def test_threat_detection_enabled(self) -> None:
         """Threat detector is created when enabled."""
         mock_td_fn = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"security.threat_detection.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"security.threat_detection.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -570,9 +530,7 @@ class TestFeatureInitializerInitialize:
 
     def test_threat_detection_disabled(self) -> None:
         """Threat detector is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"security.threat_detection.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"security.threat_detection.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.threat_detector is None
 
@@ -583,9 +541,7 @@ class TestFeatureInitializerInitialize:
         """DND scheduler is created with Outlook integration when available."""
         mock_dnd_fn = MagicMock()
         mock_outlook = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.dnd_scheduling.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.dnd_scheduling.enabled": True})
         pbx_core.integrations = {"outlook": mock_outlook}
 
         _run_initialize_with_all_patches(
@@ -603,9 +559,7 @@ class TestFeatureInitializerInitialize:
     def test_dnd_scheduling_enabled_without_outlook(self) -> None:
         """DND scheduler is created with outlook=None when no outlook integration."""
         mock_dnd_fn = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.dnd_scheduling.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.dnd_scheduling.enabled": True})
         # Remove integrations attribute entirely
         if hasattr(pbx_core, "integrations"):
             del pbx_core.integrations
@@ -622,9 +576,7 @@ class TestFeatureInitializerInitialize:
 
     def test_dnd_scheduling_disabled(self) -> None:
         """DND scheduler is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.dnd_scheduling.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.dnd_scheduling.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.dnd_scheduler is None
 
@@ -634,9 +586,7 @@ class TestFeatureInitializerInitialize:
     def test_skills_routing_enabled(self) -> None:
         """Skills router is created when enabled."""
         mock_sr_fn = MagicMock()
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.skills_routing.enabled": True}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.skills_routing.enabled": True})
 
         _run_initialize_with_all_patches(
             pbx_core,
@@ -650,9 +600,7 @@ class TestFeatureInitializerInitialize:
 
     def test_skills_routing_disabled(self) -> None:
         """Skills router is None when disabled."""
-        pbx_core = _make_pbx_core(
-            config_overrides={"features.skills_routing.enabled": False}
-        )
+        pbx_core = _make_pbx_core(config_overrides={"features.skills_routing.enabled": False})
         _run_initialize_with_all_patches(pbx_core)
         assert pbx_core.skills_router is None
 
@@ -792,14 +740,10 @@ class TestFeatureInitializerActiveDirectory:
 
         mock_ad_cls.assert_called_once()
         assert pbx_core.ad_integration == mock_ad
-        pbx_core._log_startup.assert_called_once_with(
-            "Active Directory integration initialized"
-        )
+        pbx_core._log_startup.assert_called_once_with("Active Directory integration initialized")
 
     @patch("pbx.integrations.active_directory.ActiveDirectoryIntegration")
-    def test_ad_auto_provision_syncs_users_int_result(
-        self, mock_ad_cls: MagicMock
-    ) -> None:
+    def test_ad_auto_provision_syncs_users_int_result(self, mock_ad_cls: MagicMock) -> None:
         """Auto-provisioning syncs users when sync_users returns an int."""
         from pbx.core.feature_initializer import FeatureInitializer
 
@@ -816,9 +760,7 @@ class TestFeatureInitializerActiveDirectory:
         pbx_core.extension_registry.reload.assert_called_once()
 
     @patch("pbx.integrations.active_directory.ActiveDirectoryIntegration")
-    def test_ad_auto_provision_syncs_users_dict_result(
-        self, mock_ad_cls: MagicMock
-    ) -> None:
+    def test_ad_auto_provision_syncs_users_dict_result(self, mock_ad_cls: MagicMock) -> None:
         """Auto-provisioning handles dict return from sync_users."""
         from pbx.core.feature_initializer import FeatureInitializer
 

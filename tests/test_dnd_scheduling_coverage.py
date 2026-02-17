@@ -3,24 +3,24 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+if TYPE_CHECKING:
+    from pbx.features.dnd_scheduling import DNDRule
 
 
 @pytest.mark.unit
 class TestDNDRule:
     """Tests for DNDRule class."""
 
-    def _make_rule(
-        self, rule_type: str = "time_based", config: dict | None = None
-    ) -> "DNDRule":
+    def _make_rule(self, rule_type: str = "time_based", config: dict | None = None) -> DNDRule:
         from pbx.features.dnd_scheduling import DNDRule
 
         config = config or {"enabled": True, "priority": 5}
-        return DNDRule(
-            rule_id="rule-1", extension="1001", rule_type=rule_type, config=config
-        )
+        return DNDRule(rule_id="rule-1", extension="1001", rule_type=rule_type, config=config)
 
     def test_init_defaults(self) -> None:
         from pbx.features.dnd_scheduling import DNDRule
@@ -164,9 +164,7 @@ class TestCalendarMonitor:
 
             self.outlook = MagicMock()
             self.outlook.enabled = True
-            self.monitor = CalendarMonitor(
-                outlook_integration=self.outlook, check_interval=5
-            )
+            self.monitor = CalendarMonitor(outlook_integration=self.outlook, check_interval=5)
 
     def test_register_user(self) -> None:
         self.monitor.register_user("1001", "user@example.com")
@@ -409,7 +407,7 @@ class TestDNDScheduler:
             from pbx.features.dnd_scheduling import DNDScheduler
 
             sched = DNDScheduler(config=mock_config)
-            val = sched._get_config("features.dnd_scheduling.enabled", False)
+            _val = sched._get_config("features.dnd_scheduling.enabled", False)
             # The mock config.get was called
             assert mock_config.get.called
 
@@ -486,15 +484,13 @@ class TestDNDScheduler:
         status, until = self.scheduler.manual_overrides["1001"]
         assert status == PresenceStatus.DO_NOT_DISTURB
         assert until is not None
-        self.presence.set_status.assert_called_once_with(
-            "1001", PresenceStatus.DO_NOT_DISTURB
-        )
+        self.presence.set_status.assert_called_once_with("1001", PresenceStatus.DO_NOT_DISTURB)
 
     def test_set_manual_override_indefinite(self) -> None:
         from pbx.features.presence import PresenceStatus
 
         self.scheduler.set_manual_override("1001", PresenceStatus.DO_NOT_DISTURB)
-        status, until = self.scheduler.manual_overrides["1001"]
+        _status, until = self.scheduler.manual_overrides["1001"]
         assert until is None
 
     def test_set_manual_override_no_presence(self) -> None:
@@ -622,11 +618,9 @@ class TestDNDScheduler:
             },
         )
 
-        with patch(
-            "pbx.features.dnd_scheduling.datetime"
-        ) as mock_dt:
+        with patch("pbx.features.dnd_scheduling.datetime") as mock_dt:
             mock_dt.now.return_value = now
-            mock_dt.side_effect = lambda *a, **kw: datetime(*a, **kw)
+            mock_dt.side_effect = datetime
             self.scheduler._check_all_rules()
 
     def test_check_all_rules_removes_dnd(self) -> None:
@@ -696,9 +690,7 @@ class TestDNDScheduler:
         mock_user = MagicMock()
         mock_user.status = PresenceStatus.IN_MEETING
         self.presence.users = {"1001": mock_user}
-        self.scheduler.calendar_monitor.active_meetings["1001"] = {
-            "subject": "Standup"
-        }
+        self.scheduler.calendar_monitor.active_meetings["1001"] = {"subject": "Standup"}
 
         status = self.scheduler.get_status("1001")
         assert status["in_meeting"] is True

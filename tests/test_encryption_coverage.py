@@ -28,9 +28,7 @@ class TestFIPSEncryptionInit:
 
     @patch("pbx.utils.encryption.CRYPTO_AVAILABLE", False)
     @patch("pbx.utils.encryption.get_logger")
-    def test_init_fips_enabled_no_crypto_no_enforce(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_init_fips_enabled_no_crypto_no_enforce(self, mock_get_logger: MagicMock) -> None:
         """Test FIPS mode enabled without crypto library (no enforce)."""
         from pbx.utils.encryption import FIPSEncryption
 
@@ -40,9 +38,7 @@ class TestFIPSEncryptionInit:
 
     @patch("pbx.utils.encryption.CRYPTO_AVAILABLE", False)
     @patch("pbx.utils.encryption.get_logger")
-    def test_init_fips_enabled_no_crypto_enforce(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_init_fips_enabled_no_crypto_enforce(self, mock_get_logger: MagicMock) -> None:
         """Test FIPS mode enabled without crypto library (enforce)."""
         from pbx.utils.encryption import FIPSEncryption
 
@@ -116,9 +112,7 @@ class TestHashPassword:
         assert isinstance(salt, str)
 
     @patch("pbx.utils.encryption.get_logger")
-    def test_hash_password_with_provided_salt(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_hash_password_with_provided_salt(self, mock_get_logger: MagicMock) -> None:
         """Test password hashing with provided salt."""
         from pbx.utils.encryption import FIPSEncryption
 
@@ -134,7 +128,7 @@ class TestHashPassword:
         from pbx.utils.encryption import FIPSEncryption
 
         enc = FIPSEncryption(fips_mode=False)
-        hashed, salt = enc.hash_password("password", "string_salt_value!!")
+        hashed, _salt = enc.hash_password("password", "string_salt_value!!")
         assert isinstance(hashed, str)
 
     @patch("pbx.utils.encryption.get_logger")
@@ -143,7 +137,7 @@ class TestHashPassword:
         from pbx.utils.encryption import FIPSEncryption
 
         enc = FIPSEncryption(fips_mode=False)
-        hashed, salt = enc.hash_password(b"bytes_password")
+        hashed, _salt = enc.hash_password(b"bytes_password")
         assert isinstance(hashed, str)
 
     @patch("pbx.utils.encryption.get_logger")
@@ -234,7 +228,7 @@ class TestEncryptData:
 
         enc = FIPSEncryption(fips_mode=True)
         key = b"0123456789abcdef0123456789abcdef"
-        encrypted, nonce, tag = enc.encrypt_data(b"bytes data", key)
+        encrypted, _nonce, _tag = enc.encrypt_data(b"bytes data", key)
         assert isinstance(encrypted, str)
 
     @patch("pbx.utils.encryption.get_logger")
@@ -244,7 +238,7 @@ class TestEncryptData:
 
         enc = FIPSEncryption(fips_mode=True)
         key = "0123456789abcdef0123456789abcdef"  # 32 chars
-        encrypted, nonce, tag = enc.encrypt_data("Hello", key)
+        encrypted, _nonce, _tag = enc.encrypt_data("Hello", key)
         assert isinstance(encrypted, str)
 
     @patch("pbx.utils.encryption.get_logger")
@@ -394,7 +388,7 @@ class TestDeriveKey:
         from pbx.utils.encryption import FIPSEncryption
 
         enc = FIPSEncryption(fips_mode=True)
-        key, salt = enc.derive_key("my_password_long_enough")
+        key, _salt = enc.derive_key("my_password_long_enough")
         assert isinstance(key, bytes)
         assert len(key) == 32
 
@@ -425,7 +419,7 @@ class TestDeriveKey:
         from pbx.utils.encryption import FIPSEncryption
 
         enc = FIPSEncryption(fips_mode=False)
-        key, salt = enc.derive_key(b"bytes_password")
+        key, _salt = enc.derive_key(b"bytes_password")
         assert isinstance(key, bytes)
         assert len(key) == 32
 
@@ -435,7 +429,7 @@ class TestDeriveKey:
         from pbx.utils.encryption import FIPSEncryption
 
         enc = FIPSEncryption(fips_mode=False)
-        key, salt = enc.derive_key("password", key_length=16)
+        key, _salt = enc.derive_key("password", key_length=16)
         assert len(key) == 16
 
     @patch("pbx.utils.encryption.get_logger")
@@ -507,9 +501,7 @@ class TestHashData:
         assert hash1 != hash2
 
     @patch("pbx.utils.encryption.get_logger")
-    def test_hash_data_fips_vs_non_fips_same_result(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_hash_data_fips_vs_non_fips_same_result(self, mock_get_logger: MagicMock) -> None:
         """Test FIPS and non-FIPS produce same SHA-256 hash."""
         from pbx.utils.encryption import FIPSEncryption
 
@@ -564,7 +556,7 @@ class TestEncryptDecryptIntegration:
         enc = FIPSEncryption(fips_mode=True)
 
         # Derive key from password
-        key, salt = enc.derive_key("my_secure_password_here!")
+        key, _salt = enc.derive_key("my_secure_password_here!")
 
         # Encrypt data
         original = "Sensitive PBX configuration data"

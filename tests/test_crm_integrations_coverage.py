@@ -7,7 +7,6 @@ import pytest
 
 from pbx.features.crm_integrations import HubSpotIntegration, ZendeskIntegration
 
-
 # ---------------------------------------------------------------------------
 # Helper to build a mock db_backend
 # ---------------------------------------------------------------------------
@@ -132,14 +131,16 @@ class TestHubSpotUpdateConfig:
         db = _make_db("sqlite")
         db.execute.return_value = []  # No existing config
         integration = HubSpotIntegration(db, {})
-        result = integration.update_config({
-            "enabled": True,
-            "api_key_encrypted": "enc_key",
-            "portal_id": "12345",
-            "sync_contacts": True,
-            "sync_deals": False,
-            "auto_create_contacts": True,
-        })
+        result = integration.update_config(
+            {
+                "enabled": True,
+                "api_key_encrypted": "enc_key",
+                "portal_id": "12345",
+                "sync_contacts": True,
+                "sync_deals": False,
+                "auto_create_contacts": True,
+            }
+        )
         assert result is True
         assert integration.enabled is True
         # Second call is the INSERT
@@ -240,13 +241,15 @@ class TestHubSpotSyncContact:
             patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity") as mock_log,
         ):
-            result = integration.sync_contact({
-                "email": "user@example.com",
-                "first_name": "John",
-                "last_name": "Doe",
-                "phone": "5551234",
-                "company": "ACME",
-            })
+            result = integration.sync_contact(
+                {
+                    "email": "user@example.com",
+                    "first_name": "John",
+                    "last_name": "Doe",
+                    "phone": "5551234",
+                    "company": "ACME",
+                }
+            )
 
         assert result is True
         mock_post.assert_called_once()
@@ -270,8 +273,7 @@ class TestHubSpotSyncContact:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
             result = integration.sync_contact({"email": "user@example.com"})
@@ -406,17 +408,18 @@ class TestHubSpotCreateDeal:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
-            result = integration.create_deal({
-                "dealname": "Big Deal",
-                "amount": 10000,
-                "dealstage": "closedwon",
-                "pipeline": "default",
-                "closedate": "2026-01-01",
-            })
+            result = integration.create_deal(
+                {
+                    "dealname": "Big Deal",
+                    "amount": 10000,
+                    "dealstage": "closedwon",
+                    "pipeline": "default",
+                    "closedate": "2026-01-01",
+                }
+            )
 
         assert result is True
         call_url = mock_post.call_args[0][0]
@@ -435,14 +438,15 @@ class TestHubSpotCreateDeal:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
-            result = integration.create_deal({
-                "dealname": "Deal with Contact",
-                "contact_id": "456",
-            })
+            result = integration.create_deal(
+                {
+                    "dealname": "Deal with Contact",
+                    "contact_id": "456",
+                }
+            )
 
         assert result is True
         payload = mock_post.call_args[1]["json"]
@@ -464,8 +468,7 @@ class TestHubSpotCreateDeal:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
             result = integration.create_deal({"dealname": "Webhook Deal"})
@@ -692,14 +695,16 @@ class TestZendeskUpdateConfig:
         db = _make_db("sqlite")
         db.execute.return_value = []  # No existing config
         integration = ZendeskIntegration(db, {})
-        result = integration.update_config({
-            "enabled": True,
-            "subdomain": "testco",
-            "api_token_encrypted": "enc_token",
-            "email": "admin@testco.com",
-            "auto_create_tickets": True,
-            "default_priority": "high",
-        })
+        result = integration.update_config(
+            {
+                "enabled": True,
+                "subdomain": "testco",
+                "api_token_encrypted": "enc_token",
+                "email": "admin@testco.com",
+                "auto_create_tickets": True,
+                "default_priority": "high",
+            }
+        )
         assert result is True
         assert integration.enabled is True
         assert db.execute.call_count == 2
@@ -787,17 +792,18 @@ class TestZendeskCreateTicket:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
-            result = integration.create_ticket({
-                "subject": "Call from 5551234",
-                "description": "Incoming call from customer",
-                "requester_email": "customer@example.com",
-                "priority": "high",
-                "tags": ["phone", "incoming"],
-            })
+            result = integration.create_ticket(
+                {
+                    "subject": "Call from 5551234",
+                    "description": "Incoming call from customer",
+                    "requester_email": "customer@example.com",
+                    "priority": "high",
+                    "tags": ["phone", "incoming"],
+                }
+            )
 
         assert result == "12345"
         call_url = mock_post.call_args[0][0]
@@ -821,14 +827,15 @@ class TestZendeskCreateTicket:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
-            result = integration.create_ticket({
-                "subject": "Call",
-                "requester_name": "John Doe",
-            })
+            result = integration.create_ticket(
+                {
+                    "subject": "Call",
+                    "requester_name": "John Doe",
+                }
+            )
 
         assert result == "99"
         payload = mock_post.call_args[1]["json"]
@@ -853,8 +860,7 @@ class TestZendeskCreateTicket:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
             result = integration.create_ticket({"subject": "Webhook Ticket"})
@@ -958,8 +964,7 @@ class TestZendeskCreateTicket:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.post", return_value=mock_response)
-            as mock_post,
+            patch("requests.post", return_value=mock_response) as mock_post,
             patch.object(integration, "_log_activity"),
         ):
             result = integration.create_ticket({})
@@ -1035,16 +1040,18 @@ class TestZendeskUpdateTicket:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.put", return_value=mock_response)
-            as mock_put,
+            patch("requests.put", return_value=mock_response) as mock_put,
             patch.object(integration, "_log_activity"),
         ):
-            result = integration.update_ticket("123", {
-                "status": "solved",
-                "priority": "urgent",
-                "comment": "Issue resolved",
-                "assignee_id": "456",
-            })
+            result = integration.update_ticket(
+                "123",
+                {
+                    "status": "solved",
+                    "priority": "urgent",
+                    "comment": "Issue resolved",
+                    "assignee_id": "456",
+                },
+            )
 
         assert result is True
         call_url = mock_put.call_args[0][0]
@@ -1069,8 +1076,7 @@ class TestZendeskUpdateTicket:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.put", return_value=mock_response)
-            as mock_put,
+            patch("requests.put", return_value=mock_response) as mock_put,
             patch.object(integration, "_log_activity"),
         ):
             result = integration.update_ticket("123", {"status": "solved"})
@@ -1173,8 +1179,7 @@ class TestZendeskUpdateTicket:
 
         with (
             patch.object(integration, "get_config", return_value=mock_config),
-            patch("requests.put", return_value=mock_response)
-            as mock_put,
+            patch("requests.put", return_value=mock_response) as mock_put,
             patch.object(integration, "_log_activity"),
         ):
             result = integration.update_ticket("123", {})

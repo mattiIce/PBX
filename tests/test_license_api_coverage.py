@@ -100,9 +100,7 @@ class TestListAvailableFeatures:
         assert body["licensing_enabled"] is False
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_licensing_enabled_with_license(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_licensing_enabled_with_license(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """When licensing is enabled, returns features for the current license type."""
         mock_mgr = MagicMock()
         mock_mgr.enabled = True
@@ -129,9 +127,7 @@ class TestListAvailableFeatures:
         assert body["licensing_enabled"] is True
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_licensing_enabled_no_license(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_licensing_enabled_no_license(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """When no license is present, defaults to 'trial' type."""
         mock_mgr = MagicMock()
         mock_mgr.enabled = True
@@ -146,9 +142,7 @@ class TestListAvailableFeatures:
         assert "basic_calls" in body["features"]
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_custom_license_type(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_custom_license_type(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """Custom license type returns custom_features from license data."""
         mock_mgr = MagicMock()
         mock_mgr.enabled = True
@@ -167,9 +161,7 @@ class TestListAvailableFeatures:
         assert "feature_b" in body["features"]
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_features_with_no_limits(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_features_with_no_limits(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """Features without limit entries result in empty limits dict."""
         mock_mgr = MagicMock()
         mock_mgr.enabled = True
@@ -183,9 +175,7 @@ class TestListAvailableFeatures:
         assert body["limits"] == {}
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_features_with_non_limit_colon(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_features_with_non_limit_colon(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """Features containing colons that are NOT limits stay in the feature list."""
         mock_mgr = MagicMock()
         mock_mgr.enabled = True
@@ -231,25 +221,19 @@ class TestCheckFeature:
         assert body["available"] is True
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_feature_not_available(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_feature_not_available(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """Returns available=False when feature is not available."""
         mock_mgr = MagicMock()
         mock_mgr.has_feature.return_value = False
         mock_glm.return_value = mock_mgr
 
-        body, status = _json_post(
-            client, "/api/license/check", {"feature": "advanced_routing"}
-        )
+        body, status = _json_post(client, "/api/license/check", {"feature": "advanced_routing"})
 
         assert status == 200
         assert body["available"] is False
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_missing_feature_name(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_missing_feature_name(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """Returns 400 when feature name is missing."""
         body, status = _json_post(client, "/api/license/check", {})
 
@@ -258,9 +242,7 @@ class TestCheckFeature:
         assert "Missing feature name" in body["error"]
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_empty_feature_name(
-        self, mock_glm: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_empty_feature_name(self, mock_glm: MagicMock, client: FlaskClient) -> None:
         """Returns 400 when feature name is an empty string."""
         body, status = _json_post(client, "/api/license/check", {"feature": ""})
 
@@ -272,9 +254,7 @@ class TestCheckFeature:
         """Returns 500 on exception."""
         mock_glm.side_effect = ValueError("check error")
 
-        body, status = _json_post(
-            client, "/api/license/check", {"feature": "something"}
-        )
+        body, status = _json_post(client, "/api/license/check", {"feature": "something"})
 
         assert status == 500
         assert body["success"] is False
@@ -295,9 +275,7 @@ class TestGenerateLicense:
             sess["is_license_admin"] = True
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_generate_success(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_generate_success(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Successfully generates a license when admin is authenticated."""
         self._login_as_admin(client, app)
 
@@ -326,7 +304,7 @@ class TestGenerateLicense:
         mock_mgr.generate_license_key.return_value = {"key": "K"}
         mock_glm.return_value = mock_mgr
 
-        body, status = _json_post(
+        _body, status = _json_post(
             client,
             "/api/license/generate",
             {
@@ -364,9 +342,7 @@ class TestGenerateLicense:
         """Returns 400 when type is missing."""
         self._login_as_admin(client, app)
 
-        body, status = _json_post(
-            client, "/api/license/generate", {"issued_to": "Test Org"}
-        )
+        body, status = _json_post(client, "/api/license/generate", {"issued_to": "Test Org"})
 
         assert status == 400
         assert "Missing required fields" in body["error"]
@@ -378,9 +354,7 @@ class TestGenerateLicense:
         """Returns 400 when issued_to is missing."""
         self._login_as_admin(client, app)
 
-        body, status = _json_post(
-            client, "/api/license/generate", {"type": "trial"}
-        )
+        body, status = _json_post(client, "/api/license/generate", {"type": "trial"})
 
         assert status == 400
         assert "Missing required fields" in body["error"]
@@ -402,9 +376,7 @@ class TestGenerateLicense:
         assert "Invalid license type" in body["error"]
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_generate_exception(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_generate_exception(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Returns 500 on internal exception."""
         self._login_as_admin(client, app)
 
@@ -436,9 +408,7 @@ class TestInstallLicense:
             sess["is_license_admin"] = True
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_install_success(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_install_success(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Successfully installs a license."""
         self._login_as_admin(client, app)
 
@@ -521,9 +491,7 @@ class TestInstallLicense:
         assert "Missing license key" in body["error"]
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_install_save_fails(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_install_save_fails(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Returns 500 when save_license returns False."""
         self._login_as_admin(client, app)
 
@@ -543,16 +511,12 @@ class TestInstallLicense:
 
     def test_install_unauthenticated(self, client: FlaskClient) -> None:
         """Returns 401 when not authenticated."""
-        body, status = _json_post(
-            client, "/api/license/install", {"key": "ABCD"}
-        )
+        _body, status = _json_post(client, "/api/license/install", {"key": "ABCD"})
 
         assert status == 401
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_install_exception(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_install_exception(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Returns 500 on internal exception."""
         self._login_as_admin(client, app)
 
@@ -584,9 +548,7 @@ class TestRevokeLicense:
             sess["is_license_admin"] = True
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_revoke_success(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_revoke_success(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Successfully revokes a license."""
         self._login_as_admin(client, app)
 
@@ -601,9 +563,7 @@ class TestRevokeLicense:
         assert "revoked" in body["message"]
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_revoke_fails(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_revoke_fails(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Returns 500 when revoke_license returns False."""
         self._login_as_admin(client, app)
 
@@ -618,14 +578,12 @@ class TestRevokeLicense:
 
     def test_revoke_unauthenticated(self, client: FlaskClient) -> None:
         """Returns 401 when not authenticated."""
-        body, status = _json_post(client, "/api/license/revoke")
+        _body, status = _json_post(client, "/api/license/revoke")
 
         assert status == 401
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_revoke_exception(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_revoke_exception(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Returns 500 on internal exception."""
         self._login_as_admin(client, app)
 
@@ -716,7 +674,7 @@ class TestToggleLicensing:
 
     def test_toggle_unauthenticated(self, client: FlaskClient) -> None:
         """Returns 401 when not authenticated."""
-        body, status = _json_post(client, "/api/license/toggle", {"enabled": True})
+        _body, status = _json_post(client, "/api/license/toggle", {"enabled": True})
 
         assert status == 401
 
@@ -751,21 +709,17 @@ class TestToggleLicensing:
         mock_path_instance = MagicMock()
         mock_path_instance.exists.return_value = True
         mock_path_instance.read_text.return_value = ""
-        mock_path_cls.return_value.resolve.return_value.parent.parent.__truediv__ = (
-            MagicMock(return_value=mock_path_instance)
+        mock_path_cls.return_value.resolve.return_value.parent.parent.__truediv__ = MagicMock(
+            return_value=mock_path_instance
         )
 
-        body, status = _json_post(
-            client, "/api/license/toggle", {"enabled": False}
-        )
+        body, status = _json_post(client, "/api/license/toggle", {"enabled": False})
 
         assert status == 403
         assert "lock file" in body["error"]
 
     @patch("pbx.api.license_api.get_license_manager")
-    def test_toggle_exception(
-        self, mock_glm: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_toggle_exception(self, mock_glm: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Returns 500 on internal exception."""
         self._login_as_admin(client, app)
 
@@ -825,7 +779,7 @@ class TestRemoveLicenseLock:
 
     def test_remove_lock_unauthenticated(self, client: FlaskClient) -> None:
         """Returns 401 when not authenticated."""
-        body, status = _json_post(client, "/api/license/remove_lock")
+        _body, status = _json_post(client, "/api/license/remove_lock")
 
         assert status == 401
 
@@ -874,9 +828,7 @@ class TestVerifyAdmin:
         assert body["is_license_admin"] is False
         assert body["message"] != "Authorized"
 
-    def test_verify_admin_wrong_extension(
-        self, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_verify_admin_wrong_extension(self, client: FlaskClient, app: Flask) -> None:
         """Returns is_license_admin=False for non-admin extension."""
         with client.session_transaction() as sess:
             sess["extension"] = "1001"
@@ -896,9 +848,7 @@ class TestAdminLogin:
     """Tests for POST /api/license/admin_login."""
 
     @patch("pbx.utils.license_admin.verify_license_admin_credentials", return_value=True)
-    def test_login_success(
-        self, mock_verify: MagicMock, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_login_success(self, mock_verify: MagicMock, client: FlaskClient, app: Flask) -> None:
         """Successful login sets session and returns 200."""
         body, status = _json_post(
             client,
@@ -913,9 +863,7 @@ class TestAdminLogin:
         mock_verify.assert_called_once_with("9322", "ICE", "26697647")
 
     @patch("pbx.utils.license_admin.verify_license_admin_credentials", return_value=False)
-    def test_login_invalid_credentials(
-        self, mock_verify: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_login_invalid_credentials(self, mock_verify: MagicMock, client: FlaskClient) -> None:
         """Returns 401 for invalid credentials."""
         body, status = _json_post(
             client,
@@ -987,9 +935,7 @@ class TestAdminLogin:
         "pbx.utils.license_admin.verify_license_admin_credentials",
         side_effect=TypeError("bad arg"),
     )
-    def test_login_exception(
-        self, mock_verify: MagicMock, client: FlaskClient
-    ) -> None:
+    def test_login_exception(self, mock_verify: MagicMock, client: FlaskClient) -> None:
         """Returns 500 on internal exception."""
         body, status = _json_post(
             client,
@@ -1041,15 +987,15 @@ class TestRegisterLicenseRoutes:
 class TestRequireLicenseAdminDecorator:
     """Test the @require_license_admin decorator behavior."""
 
-    def test_decorator_blocks_non_admin_session(
-        self, client: FlaskClient, app: Flask
-    ) -> None:
+    def test_decorator_blocks_non_admin_session(self, client: FlaskClient, app: Flask) -> None:
         """Protected endpoints return 401 for non-admin sessions."""
         with client.session_transaction() as sess:
             sess["extension"] = "1001"
             sess["username"] = "user"
 
-        body, status = _json_post(client, "/api/license/generate", {"type": "trial", "issued_to": "X"})
+        _body, status = _json_post(
+            client, "/api/license/generate", {"type": "trial", "issued_to": "X"}
+        )
 
         assert status == 401
 

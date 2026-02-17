@@ -118,12 +118,7 @@ class TestSIPMessageParseResponse:
     """Tests for SIPMessage.parse - response parsing."""
 
     def test_parse_200_ok(self) -> None:
-        raw = (
-            "SIP/2.0 200 OK\r\n"
-            "Via: SIP/2.0/UDP 192.168.1.100:5060\r\n"
-            "Content-Length: 0\r\n"
-            "\r\n"
-        )
+        raw = "SIP/2.0 200 OK\r\nVia: SIP/2.0/UDP 192.168.1.100:5060\r\nContent-Length: 0\r\n\r\n"
         msg = SIPMessage()
         msg.parse(raw)
         assert msg.status_code == 200
@@ -160,12 +155,7 @@ class TestSIPMessageParseResponse:
 
     def test_parse_response_with_body(self) -> None:
         body_text = "v=0\r\nc=IN IP4 10.0.0.1"
-        raw = (
-            "SIP/2.0 200 OK\r\n"
-            "Content-Type: application/sdp\r\n"
-            "\r\n"
-            f"{body_text}"
-        )
+        raw = f"SIP/2.0 200 OK\r\nContent-Type: application/sdp\r\n\r\n{body_text}"
         msg = SIPMessage()
         msg.parse(raw)
         assert msg.body == body_text
@@ -210,13 +200,10 @@ class TestSIPMessageParseEdgeCases:
         msg = SIPMessage()
         msg.parse(raw)
         # Colon in the value part should be preserved
-        assert "SIP/2.0/UDP 192.168.1.100:5060;branch=z9hG4bK" == msg.headers["Via"]
+        assert msg.headers["Via"] == "SIP/2.0/UDP 192.168.1.100:5060;branch=z9hG4bK"
 
     def test_parse_no_body_separator(self) -> None:
-        raw = (
-            "INVITE sip:1002@pbx.local SIP/2.0\r\n"
-            "Via: SIP/2.0/UDP 192.168.1.100:5060\r\n"
-        )
+        raw = "INVITE sip:1002@pbx.local SIP/2.0\r\nVia: SIP/2.0/UDP 192.168.1.100:5060\r\n"
         msg = SIPMessage()
         msg.parse(raw)
         assert msg.method == "INVITE"

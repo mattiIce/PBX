@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from datetime import UTC, datetime, time
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+if TYPE_CHECKING:
+    from pbx.features.least_cost_routing import RateEntry
 
 
 @pytest.mark.unit
@@ -48,7 +52,7 @@ class TestDialPattern:
 class TestRateEntry:
     """Tests for RateEntry class."""
 
-    def _make_rate(self, **kwargs) -> "RateEntry":
+    def _make_rate(self, **kwargs) -> RateEntry:
         from pbx.features.least_cost_routing import DialPattern, RateEntry
 
         defaults = {
@@ -275,9 +279,7 @@ class TestLeastCostRouting:
             assert lcr2.rate_entries[0].trunk_id == "trunk-1"
 
     def test_add_time_based_rate(self) -> None:
-        result = self.lcr.add_time_based_rate(
-            "Peak Hours", 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.5
-        )
+        result = self.lcr.add_time_based_rate("Peak Hours", 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.5)
         assert result is True
         assert len(self.lcr.time_based_rates) == 1
 
@@ -476,7 +478,7 @@ class TestLeastCostRoutingDatabaseErrors:
 
             from pbx.features.least_cost_routing import LeastCostRouting
 
-            lcr = LeastCostRouting(pbx)
+            _lcr = LeastCostRouting(pbx)
             # Should not crash - error is logged
 
     def test_save_rate_db_error(self, tmp_path) -> None:

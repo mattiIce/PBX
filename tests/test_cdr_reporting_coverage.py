@@ -50,7 +50,7 @@ class TestCDRRecord:
     @patch("pbx.features.cdr.get_logger")
     def test_mark_answered(self, mock_get_logger: MagicMock) -> None:
         """Test marking call as answered."""
-        from pbx.features.cdr import CDRRecord, CallDisposition
+        from pbx.features.cdr import CallDisposition, CDRRecord
 
         record = CDRRecord("call-1", "1001", "1002")
         record.mark_answered()
@@ -61,7 +61,7 @@ class TestCDRRecord:
     @patch("pbx.features.cdr.get_logger")
     def test_mark_ended_answered(self, mock_get_logger: MagicMock) -> None:
         """Test marking answered call as ended."""
-        from pbx.features.cdr import CDRRecord, CallDisposition
+        from pbx.features.cdr import CallDisposition, CDRRecord
 
         record = CDRRecord("call-1", "1001", "1002")
         record.mark_answered()
@@ -76,7 +76,7 @@ class TestCDRRecord:
     @patch("pbx.features.cdr.get_logger")
     def test_mark_ended_unanswered(self, mock_get_logger: MagicMock) -> None:
         """Test marking unanswered call as ended."""
-        from pbx.features.cdr import CDRRecord, CallDisposition
+        from pbx.features.cdr import CallDisposition, CDRRecord
 
         record = CDRRecord("call-1", "1001", "1002")
         record.mark_ended(hangup_cause="no_answer")
@@ -154,7 +154,7 @@ class TestCDRSystem:
     @patch("pbx.features.cdr.get_logger")
     def test_mark_answered(self, mock_get_logger: MagicMock, mock_mkdir: MagicMock) -> None:
         """Test marking a call as answered in CDR."""
-        from pbx.features.cdr import CDRSystem, CallDisposition
+        from pbx.features.cdr import CallDisposition, CDRSystem
 
         system = CDRSystem(storage_path="/tmp/test_cdr")
         system.start_record("call-1", "1001", "1002")
@@ -201,9 +201,7 @@ class TestCDRSystem:
 
     @patch("pbx.features.cdr.Path.mkdir")
     @patch("pbx.features.cdr.get_logger")
-    def test_end_record(
-        self, mock_get_logger: MagicMock, mock_mkdir: MagicMock
-    ) -> None:
+    def test_end_record(self, mock_get_logger: MagicMock, mock_mkdir: MagicMock) -> None:
         """Test ending a CDR record."""
         from pbx.features.cdr import CDRSystem
 
@@ -231,9 +229,7 @@ class TestCDRSystem:
 
     @patch("pbx.features.cdr.Path.mkdir")
     @patch("pbx.features.cdr.get_logger")
-    def test_save_record_error(
-        self, mock_get_logger: MagicMock, mock_mkdir: MagicMock
-    ) -> None:
+    def test_save_record_error(self, mock_get_logger: MagicMock, mock_mkdir: MagicMock) -> None:
         """Test saving record with OS error."""
         from pbx.features.cdr import CDRSystem
 
@@ -251,9 +247,7 @@ class TestCDRGetRecords:
 
     @patch("pbx.features.cdr.Path.mkdir")
     @patch("pbx.features.cdr.get_logger")
-    def test_get_records_no_file(
-        self, mock_get_logger: MagicMock, mock_mkdir: MagicMock
-    ) -> None:
+    def test_get_records_no_file(self, mock_get_logger: MagicMock, mock_mkdir: MagicMock) -> None:
         """Test getting records when file doesn't exist."""
         from pbx.features.cdr import CDRSystem
 
@@ -264,9 +258,7 @@ class TestCDRGetRecords:
 
     @patch("pbx.features.cdr.Path.mkdir")
     @patch("pbx.features.cdr.get_logger")
-    def test_get_records_with_file(
-        self, mock_get_logger: MagicMock, mock_mkdir: MagicMock
-    ) -> None:
+    def test_get_records_with_file(self, mock_get_logger: MagicMock, mock_mkdir: MagicMock) -> None:
         """Test getting records from file."""
         from pbx.features.cdr import CDRSystem
 
@@ -275,8 +267,10 @@ class TestCDRGetRecords:
 
         system = CDRSystem(storage_path="/tmp/test_cdr")
 
-        with patch("pathlib.Path.exists", return_value=True), \
-             patch("pathlib.Path.open", mock_open(read_data=file_content)):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.open", mock_open(read_data=file_content)),
+        ):
             records = system.get_records(date="2026-01-15")
 
         assert len(records) == 1
@@ -296,8 +290,10 @@ class TestCDRGetRecords:
 
         system = CDRSystem(storage_path="/tmp/test_cdr")
 
-        with patch("pathlib.Path.exists", return_value=True), \
-             patch("pathlib.Path.open", mock_open(read_data=records_data)):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.open", mock_open(read_data=records_data)),
+        ):
             records = system.get_records(date="2026-01-15", limit=3)
 
         assert len(records) == 3
@@ -312,8 +308,10 @@ class TestCDRGetRecords:
 
         system = CDRSystem(storage_path="/tmp/test_cdr")
 
-        with patch("pathlib.Path.exists", return_value=True), \
-             patch("pathlib.Path.open", mock_open(read_data="")):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.open", mock_open(read_data="")),
+        ):
             records = system.get_records()
 
         assert records == []
@@ -330,8 +328,10 @@ class TestCDRGetRecords:
 
         system = CDRSystem(storage_path="/tmp/test_cdr")
 
-        with patch("pathlib.Path.exists", return_value=True), \
-             patch("pathlib.Path.open", side_effect=OSError("read error")):
+        with (
+            patch("pathlib.Path.exists", return_value=True),
+            patch("pathlib.Path.open", side_effect=OSError("read error")),
+        ):
             records = system.get_records(date="2026-01-15")
 
         assert records == []

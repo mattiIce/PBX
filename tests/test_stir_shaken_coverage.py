@@ -253,9 +253,7 @@ class TestSTIRSHAKENManagerCreatePassport:
         manager.private_key = mock_key
         manager.certificate = MagicMock()
 
-        result = manager.create_passport(
-            "+12125551234", "+13105551234", orig_id="custom-uuid-123"
-        )
+        result = manager.create_passport("+12125551234", "+13105551234", orig_id="custom-uuid-123")
         assert result is not None
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
@@ -294,62 +292,76 @@ class TestSTIRSHAKENManagerVerifyPassport:
     def test_verify_passport_disabled(self) -> None:
         manager = STIRSHAKENManager()
         manager.enabled = False
-        valid, payload, reason = manager.verify_passport("fake.jwt.token")
+        valid, _payload, reason = manager.verify_passport("fake.jwt.token")
         assert valid is False
         assert reason == "Verification disabled"
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_passport_verification_disabled(self) -> None:
         manager = STIRSHAKENManager(config={"enable_verification": False})
-        valid, payload, reason = manager.verify_passport("fake.jwt.token")
+        valid, _payload, reason = manager.verify_passport("fake.jwt.token")
         assert valid is False
         assert reason == "Verification disabled"
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_passport_invalid_jwt_format(self) -> None:
         manager = STIRSHAKENManager()
-        valid, payload, reason = manager.verify_passport("invalid_token")
+        valid, _payload, reason = manager.verify_passport("invalid_token")
         assert valid is False
         assert reason == "Invalid JWT format"
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_passport_not_shaken(self) -> None:
         manager = STIRSHAKENManager()
-        header = base64.urlsafe_b64encode(json.dumps({"ppt": "other"}).encode()).rstrip(b"=").decode()
-        payload = base64.urlsafe_b64encode(json.dumps({"iat": int(time.time())}).encode()).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(json.dumps({"ppt": "other"}).encode()).rstrip(b"=").decode()
+        )
+        payload = (
+            base64.urlsafe_b64encode(json.dumps({"iat": int(time.time())}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
         sig = base64.urlsafe_b64encode(b"sig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
+        valid, _pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
         assert valid is False
         assert reason == "Not a SHAKEN PASSporT"
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_passport_expired(self) -> None:
         manager = STIRSHAKENManager()
-        header = base64.urlsafe_b64encode(
-            json.dumps({"ppt": "shaken", "alg": "RS256"}).encode()
-        ).rstrip(b"=").decode()
-        payload = base64.urlsafe_b64encode(
-            json.dumps({"iat": int(time.time()) - 120}).encode()
-        ).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(json.dumps({"ppt": "shaken", "alg": "RS256"}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
+        payload = (
+            base64.urlsafe_b64encode(json.dumps({"iat": int(time.time()) - 120}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
         sig = base64.urlsafe_b64encode(b"sig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
+        valid, _pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
         assert valid is False
         assert reason == "PASSporT expired"
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_passport_missing_cert_url(self) -> None:
         manager = STIRSHAKENManager()
-        header = base64.urlsafe_b64encode(
-            json.dumps({"ppt": "shaken", "alg": "RS256"}).encode()
-        ).rstrip(b"=").decode()
-        payload = base64.urlsafe_b64encode(
-            json.dumps({"iat": int(time.time())}).encode()
-        ).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(json.dumps({"ppt": "shaken", "alg": "RS256"}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
+        payload = (
+            base64.urlsafe_b64encode(json.dumps({"iat": int(time.time())}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
         sig = base64.urlsafe_b64encode(b"sig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
+        valid, _pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
         assert valid is False
         assert reason == "Missing certificate URL"
 
@@ -357,15 +369,23 @@ class TestSTIRSHAKENManagerVerifyPassport:
     def test_verify_passport_no_certificate(self) -> None:
         manager = STIRSHAKENManager()
         manager.certificate = None
-        header = base64.urlsafe_b64encode(
-            json.dumps({"ppt": "shaken", "alg": "RS256", "x5u": "https://cert.example.com/cert.pem"}).encode()
-        ).rstrip(b"=").decode()
-        payload = base64.urlsafe_b64encode(
-            json.dumps({"iat": int(time.time())}).encode()
-        ).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(
+                json.dumps(
+                    {"ppt": "shaken", "alg": "RS256", "x5u": "https://cert.example.com/cert.pem"}
+                ).encode()
+            )
+            .rstrip(b"=")
+            .decode()
+        )
+        payload = (
+            base64.urlsafe_b64encode(json.dumps({"iat": int(time.time())}).encode())
+            .rstrip(b"=")
+            .decode()
+        )
         sig = base64.urlsafe_b64encode(b"sig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
+        valid, _pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
         assert valid is False
         assert reason == "No certificate for verification"
 
@@ -378,16 +398,20 @@ class TestSTIRSHAKENManagerVerifyPassport:
         mock_cert.public_key.return_value = mock_pub_key
         manager.certificate = mock_cert
 
-        header = base64.urlsafe_b64encode(
-            json.dumps({"ppt": "shaken", "alg": "RS256", "x5u": "https://cert.example.com"}).encode()
-        ).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(
+                json.dumps(
+                    {"ppt": "shaken", "alg": "RS256", "x5u": "https://cert.example.com"}
+                ).encode()
+            )
+            .rstrip(b"=")
+            .decode()
+        )
         payload_data = {"iat": int(time.time()), "attest": "A", "orig": {"tn": "+12125551234"}}
-        payload = base64.urlsafe_b64encode(
-            json.dumps(payload_data).encode()
-        ).rstrip(b"=").decode()
+        payload = base64.urlsafe_b64encode(json.dumps(payload_data).encode()).rstrip(b"=").decode()
         sig = base64.urlsafe_b64encode(b"validsig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
+        valid, _pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
         assert valid is True
         assert reason == "Signature valid"
 
@@ -400,16 +424,20 @@ class TestSTIRSHAKENManagerVerifyPassport:
         mock_cert.public_key.return_value = mock_pub_key
         manager.certificate = mock_cert
 
-        header = base64.urlsafe_b64encode(
-            json.dumps({"ppt": "shaken", "alg": "ES256", "x5u": "https://cert.example.com"}).encode()
-        ).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(
+                json.dumps(
+                    {"ppt": "shaken", "alg": "ES256", "x5u": "https://cert.example.com"}
+                ).encode()
+            )
+            .rstrip(b"=")
+            .decode()
+        )
         payload_data = {"iat": int(time.time()), "attest": "B"}
-        payload = base64.urlsafe_b64encode(
-            json.dumps(payload_data).encode()
-        ).rstrip(b"=").decode()
+        payload = base64.urlsafe_b64encode(json.dumps(payload_data).encode()).rstrip(b"=").decode()
         sig = base64.urlsafe_b64encode(b"ecsig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
+        valid, _pay, _reason = manager.verify_passport(f"{header}.{payload}.{sig}")
         assert valid is True
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
@@ -421,16 +449,20 @@ class TestSTIRSHAKENManagerVerifyPassport:
         mock_cert.public_key.return_value = mock_pub_key
         manager.certificate = mock_cert
 
-        header = base64.urlsafe_b64encode(
-            json.dumps({"ppt": "shaken", "alg": "RS256", "x5u": "https://cert.example.com"}).encode()
-        ).rstrip(b"=").decode()
+        header = (
+            base64.urlsafe_b64encode(
+                json.dumps(
+                    {"ppt": "shaken", "alg": "RS256", "x5u": "https://cert.example.com"}
+                ).encode()
+            )
+            .rstrip(b"=")
+            .decode()
+        )
         payload_data = {"iat": int(time.time()), "attest": "A"}
-        payload = base64.urlsafe_b64encode(
-            json.dumps(payload_data).encode()
-        ).rstrip(b"=").decode()
+        payload = base64.urlsafe_b64encode(json.dumps(payload_data).encode()).rstrip(b"=").decode()
         sig = base64.urlsafe_b64encode(b"badsig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
+        valid, _pay, reason = manager.verify_passport(f"{header}.{payload}.{sig}")
         assert valid is False
         assert "Signature verification failed" in reason
 
@@ -442,7 +474,7 @@ class TestSTIRSHAKENManagerVerifyPassport:
         bad_payload = base64.urlsafe_b64encode(b"not json").rstrip(b"=").decode()
         sig = base64.urlsafe_b64encode(b"sig").rstrip(b"=").decode()
 
-        valid, pay, reason = manager.verify_passport(f"{bad_header}.{bad_payload}.{sig}")
+        valid, _pay, _reason = manager.verify_passport(f"{bad_header}.{bad_payload}.{sig}")
         assert valid is False
 
 
@@ -496,66 +528,74 @@ class TestSTIRSHAKENManagerIdentityHeader:
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_identity_header_empty(self) -> None:
         manager = STIRSHAKENManager()
-        status, payload = manager.verify_identity_header("")
+        status, _payload = manager.verify_identity_header("")
         assert status == VerificationStatus.NO_SIGNATURE
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_identity_header_parse_fails(self) -> None:
         manager = STIRSHAKENManager()
         with patch.object(manager, "parse_identity_header", return_value=None):
-            status, payload = manager.verify_identity_header("bad header")
+            status, _payload = manager.verify_identity_header("bad header")
             assert status == VerificationStatus.VERIFICATION_FAILED
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_identity_header_verification_fails(self) -> None:
         manager = STIRSHAKENManager()
         parsed = {"passport": "a.b.c", "info": "url", "alg": "RS256", "ppt": "shaken"}
-        with patch.object(manager, "parse_identity_header", return_value=parsed):
-            with patch.object(
-                manager, "verify_passport", return_value=(False, None, "Verification failed")
-            ):
-                status, payload = manager.verify_identity_header("some header")
-                assert status == VerificationStatus.VERIFICATION_FAILED
+        with (
+            patch.object(manager, "parse_identity_header", return_value=parsed),
+            patch.object(manager, "verify_passport", return_value=(False, None, "Verification failed")),
+        ):
+            status, _payload = manager.verify_identity_header("some header")
+            assert status == VerificationStatus.VERIFICATION_FAILED
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_identity_header_attestation_a(self) -> None:
         manager = STIRSHAKENManager()
         parsed = {"passport": "a.b.c", "info": "url", "alg": "RS256", "ppt": "shaken"}
         pay = {"attest": "A"}
-        with patch.object(manager, "parse_identity_header", return_value=parsed):
-            with patch.object(manager, "verify_passport", return_value=(True, pay, "Signature valid")):
-                status, payload = manager.verify_identity_header("header")
-                assert status == VerificationStatus.VERIFIED_FULL
+        with (
+            patch.object(manager, "parse_identity_header", return_value=parsed),
+            patch.object(manager, "verify_passport", return_value=(True, pay, "Signature valid")),
+        ):
+            status, _payload = manager.verify_identity_header("header")
+            assert status == VerificationStatus.VERIFIED_FULL
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_identity_header_attestation_b(self) -> None:
         manager = STIRSHAKENManager()
         parsed = {"passport": "a.b.c", "info": "url", "alg": "RS256", "ppt": "shaken"}
         pay = {"attest": "B"}
-        with patch.object(manager, "parse_identity_header", return_value=parsed):
-            with patch.object(manager, "verify_passport", return_value=(True, pay, "ok")):
-                status, payload = manager.verify_identity_header("header")
-                assert status == VerificationStatus.VERIFIED_PARTIAL
+        with (
+            patch.object(manager, "parse_identity_header", return_value=parsed),
+            patch.object(manager, "verify_passport", return_value=(True, pay, "ok")),
+        ):
+            status, _payload = manager.verify_identity_header("header")
+            assert status == VerificationStatus.VERIFIED_PARTIAL
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_identity_header_attestation_c(self) -> None:
         manager = STIRSHAKENManager()
         parsed = {"passport": "a.b.c", "info": "url", "alg": "RS256", "ppt": "shaken"}
         pay = {"attest": "C"}
-        with patch.object(manager, "parse_identity_header", return_value=parsed):
-            with patch.object(manager, "verify_passport", return_value=(True, pay, "ok")):
-                status, payload = manager.verify_identity_header("header")
-                assert status == VerificationStatus.VERIFIED_GATEWAY
+        with (
+            patch.object(manager, "parse_identity_header", return_value=parsed),
+            patch.object(manager, "verify_passport", return_value=(True, pay, "ok")),
+        ):
+            status, _payload = manager.verify_identity_header("header")
+            assert status == VerificationStatus.VERIFIED_GATEWAY
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_verify_identity_header_unknown_attestation(self) -> None:
         manager = STIRSHAKENManager()
         parsed = {"passport": "a.b.c", "info": "url", "alg": "RS256", "ppt": "shaken"}
         pay = {"attest": "X"}
-        with patch.object(manager, "parse_identity_header", return_value=parsed):
-            with patch.object(manager, "verify_passport", return_value=(True, pay, "ok")):
-                status, payload = manager.verify_identity_header("header")
-                assert status == VerificationStatus.VERIFICATION_FAILED
+        with (
+            patch.object(manager, "parse_identity_header", return_value=parsed),
+            patch.object(manager, "verify_passport", return_value=(True, pay, "ok")),
+        ):
+            status, _payload = manager.verify_identity_header("header")
+            assert status == VerificationStatus.VERIFICATION_FAILED
 
 
 @pytest.mark.unit
@@ -637,7 +677,9 @@ class TestSTIRSHAKENManagerHelpers:
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
     def test_get_certificate_url_from_config(self) -> None:
-        manager = STIRSHAKENManager(config={"certificate_url": "https://custom.example.com/cert.pem"})
+        manager = STIRSHAKENManager(
+            config={"certificate_url": "https://custom.example.com/cert.pem"}
+        )
         assert manager._get_certificate_url() == "https://custom.example.com/cert.pem"
 
     @patch("pbx.features.stir_shaken.CRYPTO_AVAILABLE", True)
@@ -682,8 +724,14 @@ class TestSTIRSHAKENManagerGenerateCert:
     @patch("pbx.features.stir_shaken.NameOID")
     @patch("pbx.features.stir_shaken.default_backend")
     def test_generate_test_certificate_success(
-        self, mock_backend, mock_nameoid, mock_serialization,
-        mock_hashes, mock_rsa, mock_x509, mock_path_cls
+        self,
+        mock_backend,
+        mock_nameoid,
+        mock_serialization,
+        mock_hashes,
+        mock_rsa,
+        mock_x509,
+        mock_path_cls,
     ) -> None:
         mock_key = MagicMock()
         mock_rsa.generate_private_key.return_value = mock_key
@@ -738,7 +786,7 @@ class TestUtilityFunctions:
         manager = MagicMock()
         manager.enabled = True
         manager.create_identity_header.return_value = "fake_identity"
-        result = add_stir_shaken_to_invite(sip_msg, manager, "+12125551234", "+13105551234")
+        _result = add_stir_shaken_to_invite(sip_msg, manager, "+12125551234", "+13105551234")
         sip_msg.set_header.assert_called_once_with("Identity", "fake_identity")
 
     def test_add_stir_shaken_to_invite_identity_none(self) -> None:
@@ -746,19 +794,19 @@ class TestUtilityFunctions:
         manager = MagicMock()
         manager.enabled = True
         manager.create_identity_header.return_value = None
-        result = add_stir_shaken_to_invite(sip_msg, manager, "+12125551234", "+13105551234")
+        _result = add_stir_shaken_to_invite(sip_msg, manager, "+12125551234", "+13105551234")
         sip_msg.set_header.assert_not_called()
 
     def test_verify_stir_shaken_invite_no_manager(self) -> None:
         sip_msg = MagicMock()
-        status, payload = verify_stir_shaken_invite(sip_msg, None)
+        status, _payload = verify_stir_shaken_invite(sip_msg, None)
         assert status == VerificationStatus.NOT_VERIFIED
 
     def test_verify_stir_shaken_invite_disabled_manager(self) -> None:
         sip_msg = MagicMock()
         manager = MagicMock()
         manager.enabled = False
-        status, payload = verify_stir_shaken_invite(sip_msg, manager)
+        status, _payload = verify_stir_shaken_invite(sip_msg, manager)
         assert status == VerificationStatus.NOT_VERIFIED
 
     def test_verify_stir_shaken_invite_no_identity_header(self) -> None:
@@ -766,7 +814,7 @@ class TestUtilityFunctions:
         sip_msg.get_header.return_value = None
         manager = MagicMock()
         manager.enabled = True
-        status, payload = verify_stir_shaken_invite(sip_msg, manager)
+        status, _payload = verify_stir_shaken_invite(sip_msg, manager)
         assert status == VerificationStatus.NO_SIGNATURE
 
     def test_verify_stir_shaken_invite_with_identity(self) -> None:
@@ -774,6 +822,9 @@ class TestUtilityFunctions:
         sip_msg.get_header.return_value = "identity_header_value"
         manager = MagicMock()
         manager.enabled = True
-        manager.verify_identity_header.return_value = (VerificationStatus.VERIFIED_FULL, {"attest": "A"})
-        status, payload = verify_stir_shaken_invite(sip_msg, manager)
+        manager.verify_identity_header.return_value = (
+            VerificationStatus.VERIFIED_FULL,
+            {"attest": "A"},
+        )
+        status, _payload = verify_stir_shaken_invite(sip_msg, manager)
         assert status == VerificationStatus.VERIFIED_FULL

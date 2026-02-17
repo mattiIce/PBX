@@ -361,6 +361,7 @@ class TestGetVoicemailDropSingleton:
 
     def test_creates_instance(self) -> None:
         import pbx.features.predictive_voicemail_drop as mod
+
         original = mod._voicemail_drop
         mod._voicemail_drop = None
         try:
@@ -372,6 +373,7 @@ class TestGetVoicemailDropSingleton:
 
     def test_returns_same_instance(self) -> None:
         import pbx.features.predictive_voicemail_drop as mod
+
         original = mod._voicemail_drop
         mod._voicemail_drop = None
         try:

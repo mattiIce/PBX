@@ -98,7 +98,10 @@ class TestAICallRoutingInitDisabled:
         router = AICallRouting()
 
         assert router.feature_names == [
-            "hour", "day_of_week", "call_duration_avg", "queue_wait_time"
+            "hour",
+            "day_of_week",
+            "call_duration_avg",
+            "queue_wait_time",
         ]
 
     @patch("pbx.features.ai_call_routing.get_logger")
@@ -204,7 +207,11 @@ class TestInitializeModel:
 
     @patch("pbx.features.ai_call_routing.get_logger")
     @patch("pbx.features.ai_call_routing.SKLEARN_AVAILABLE", True)
-    @patch("pbx.features.ai_call_routing.RandomForestClassifier", side_effect=Exception("init error"), create=True)
+    @patch(
+        "pbx.features.ai_call_routing.RandomForestClassifier",
+        side_effect=Exception("init error"),
+        create=True,
+    )
     def test_initialize_model_exception(
         self,
         mock_rf_classifier: MagicMock,
@@ -229,10 +236,12 @@ class TestRecordCallOutcome:
     def test_record_when_disabled(self, mock_get_logger: MagicMock) -> None:
         """Recording when disabled should return False"""
         router = AICallRouting()
-        result = router.record_call_outcome({
-            "routed_to": "ext_100",
-            "outcome": "answered",
-        })
+        result = router.record_call_outcome(
+            {
+                "routed_to": "ext_100",
+                "outcome": "answered",
+            }
+        )
 
         assert result is False
         assert len(router.training_data) == 0
@@ -251,11 +260,13 @@ class TestRecordCallOutcome:
         config = {"features": {"ai_routing": {"enabled": True}}}
         router = AICallRouting(config=config)
 
-        result = router.record_call_outcome({
-            "routed_to": "ext_100",
-            "outcome": "answered",
-            "timestamp": datetime(2025, 6, 15, 10, 30, tzinfo=UTC),
-        })
+        result = router.record_call_outcome(
+            {
+                "routed_to": "ext_100",
+                "outcome": "answered",
+                "timestamp": datetime(2025, 6, 15, 10, 30, tzinfo=UTC),
+            }
+        )
 
         assert result is True
         assert len(router.training_data) == 1
@@ -275,14 +286,16 @@ class TestRecordCallOutcome:
         router = AICallRouting(config=config)
 
         ts = datetime(2025, 3, 10, 14, 30, tzinfo=UTC)
-        router.record_call_outcome({
-            "routed_to": "ext_200",
-            "outcome": "voicemail",
-            "timestamp": ts,
-            "duration": 120,
-            "wait_time": 15,
-            "queue_id": "sales",
-        })
+        router.record_call_outcome(
+            {
+                "routed_to": "ext_200",
+                "outcome": "voicemail",
+                "timestamp": ts,
+                "duration": 120,
+                "wait_time": 15,
+                "queue_id": "sales",
+            }
+        )
 
         data = router.training_data[0]
         assert data["hour"] == 14
@@ -307,10 +320,12 @@ class TestRecordCallOutcome:
         config = {"features": {"ai_routing": {"enabled": True}}}
         router = AICallRouting(config=config)
 
-        router.record_call_outcome({
-            "routed_to": "ext_100",
-            "outcome": "answered",
-        })
+        router.record_call_outcome(
+            {
+                "routed_to": "ext_100",
+                "outcome": "answered",
+            }
+        )
 
         data = router.training_data[0]
         assert data["call_duration"] == 0
@@ -331,21 +346,27 @@ class TestRecordCallOutcome:
         config = {"features": {"ai_routing": {"enabled": True}}}
         router = AICallRouting(config=config)
 
-        router.record_call_outcome({
-            "routed_to": "ext_100",
-            "outcome": "answered",
-            "timestamp": datetime(2025, 6, 15, 10, 0, tzinfo=UTC),
-        })
-        router.record_call_outcome({
-            "routed_to": "ext_100",
-            "outcome": "abandoned",
-            "timestamp": datetime(2025, 6, 15, 11, 0, tzinfo=UTC),
-        })
-        router.record_call_outcome({
-            "routed_to": "ext_200",
-            "outcome": "answered",
-            "timestamp": datetime(2025, 6, 15, 12, 0, tzinfo=UTC),
-        })
+        router.record_call_outcome(
+            {
+                "routed_to": "ext_100",
+                "outcome": "answered",
+                "timestamp": datetime(2025, 6, 15, 10, 0, tzinfo=UTC),
+            }
+        )
+        router.record_call_outcome(
+            {
+                "routed_to": "ext_100",
+                "outcome": "abandoned",
+                "timestamp": datetime(2025, 6, 15, 11, 0, tzinfo=UTC),
+            }
+        )
+        router.record_call_outcome(
+            {
+                "routed_to": "ext_200",
+                "outcome": "answered",
+                "timestamp": datetime(2025, 6, 15, 12, 0, tzinfo=UTC),
+            }
+        )
 
         assert len(router.routing_decisions["ext_100"]) == 2
         assert len(router.routing_decisions["ext_200"]) == 1
@@ -369,19 +390,23 @@ class TestRecordCallOutcome:
 
         # Add 99 samples (should not trigger retrain)
         for i in range(99):
-            router.record_call_outcome({
-                "routed_to": "ext_100",
-                "outcome": "answered",
-                "timestamp": datetime(2025, 6, 15, i % 24, 0, tzinfo=UTC),
-            })
+            router.record_call_outcome(
+                {
+                    "routed_to": "ext_100",
+                    "outcome": "answered",
+                    "timestamp": datetime(2025, 6, 15, i % 24, 0, tzinfo=UTC),
+                }
+            )
         router._train_model.assert_not_called()
 
         # Add 1 more to reach 100 (should trigger since 100 >= 100 and 100 % 50 == 0)
-        router.record_call_outcome({
-            "routed_to": "ext_100",
-            "outcome": "answered",
-            "timestamp": datetime(2025, 6, 15, 10, 0, tzinfo=UTC),
-        })
+        router.record_call_outcome(
+            {
+                "routed_to": "ext_100",
+                "outcome": "answered",
+                "timestamp": datetime(2025, 6, 15, 10, 0, tzinfo=UTC),
+            }
+        )
         router._train_model.assert_called_once()
 
     @patch("pbx.features.ai_call_routing.get_logger")
@@ -400,11 +425,13 @@ class TestRecordCallOutcome:
         router._train_model = MagicMock()
 
         for i in range(101):
-            router.record_call_outcome({
-                "routed_to": "ext_100",
-                "outcome": "answered",
-                "timestamp": datetime(2025, 6, 15, i % 24, 0, tzinfo=UTC),
-            })
+            router.record_call_outcome(
+                {
+                    "routed_to": "ext_100",
+                    "outcome": "answered",
+                    "timestamp": datetime(2025, 6, 15, i % 24, 0, tzinfo=UTC),
+                }
+            )
 
         # Should have been called only once at 100
         assert router._train_model.call_count == 1
@@ -461,15 +488,16 @@ class TestTrainModel:
         router = AICallRouting(config=config)
 
         # Add sufficient training data
-        training_data = []
-        for i in range(150):
-            training_data.append({
+        training_data = [
+            {
                 "hour": i % 24,
                 "day_of_week": i % 7,
                 "call_duration": 60,
                 "wait_time": 5,
                 "routed_to": f"ext_{i % 3}",
-            })
+            }
+            for i in range(150)
+        ]
         router.training_data = training_data
 
         mock_np.array.return_value = MagicMock()
@@ -497,15 +525,16 @@ class TestTrainModel:
         config = {"features": {"ai_routing": {"enabled": True}}}
         router = AICallRouting(config=config)
 
-        training_data = []
-        for i in range(1500):
-            training_data.append({
+        training_data = [
+            {
                 "hour": i % 24,
                 "day_of_week": i % 7,
                 "call_duration": 60,
                 "wait_time": 5,
                 "routed_to": "ext_100",
-            })
+            }
+            for i in range(1500)
+        ]
         router.training_data = training_data
 
         mock_np.array.return_value = MagicMock()
@@ -537,8 +566,15 @@ class TestTrainModel:
         config = {"features": {"ai_routing": {"enabled": True}}}
         router = AICallRouting(config=config)
 
-        router.training_data = [{"hour": 10, "day_of_week": 1, "call_duration": 60,
-                                  "wait_time": 5, "routed_to": "ext_100"}] * 200
+        router.training_data = [
+            {
+                "hour": 10,
+                "day_of_week": 1,
+                "call_duration": 60,
+                "wait_time": 5,
+                "routed_to": "ext_100",
+            }
+        ] * 200
 
         mock_np.array.side_effect = ValueError("numpy error")
         router._train_model()
@@ -630,8 +666,7 @@ class TestGetRoutingRecommendation:
         router.label_encoder = mock_le_instance
 
         result = router.get_routing_recommendation(
-            {"caller_id": "5551234",
-             "timestamp": datetime(2025, 6, 15, 14, 30, tzinfo=UTC)},
+            {"caller_id": "5551234", "timestamp": datetime(2025, 6, 15, 14, 30, tzinfo=UTC)},
             ["ext_100", "ext_200"],
         )
 
@@ -791,16 +826,12 @@ class TestRuleBasedRouting:
         # ext_100: 80% success (8/10 answered)
         router.routing_decisions["ext_100"] = [
             {"outcome": "answered", "timestamp": datetime.now(UTC)} for _ in range(8)
-        ] + [
-            {"outcome": "abandoned", "timestamp": datetime.now(UTC)} for _ in range(2)
-        ]
+        ] + [{"outcome": "abandoned", "timestamp": datetime.now(UTC)} for _ in range(2)]
 
         # ext_200: 50% success (5/10 answered)
         router.routing_decisions["ext_200"] = [
             {"outcome": "answered", "timestamp": datetime.now(UTC)} for _ in range(5)
-        ] + [
-            {"outcome": "abandoned", "timestamp": datetime.now(UTC)} for _ in range(5)
-        ]
+        ] + [{"outcome": "abandoned", "timestamp": datetime.now(UTC)} for _ in range(5)]
 
         result = router._rule_based_routing({}, ["ext_100", "ext_200"])
 
@@ -835,9 +866,7 @@ class TestRuleBasedRouting:
         router = AICallRouting()
 
         # 200 outcomes: first 150 answered, last 50 abandoned
-        outcomes = [
-            {"outcome": "answered", "timestamp": datetime.now(UTC)} for _ in range(150)
-        ] + [
+        outcomes = [{"outcome": "answered", "timestamp": datetime.now(UTC)} for _ in range(150)] + [
             {"outcome": "abandoned", "timestamp": datetime.now(UTC)} for _ in range(50)
         ]
         router.routing_decisions["ext_100"] = outcomes
@@ -971,9 +1000,11 @@ class TestExportTrainingData:
         """Exporting empty training data should create empty JSON array"""
         router = AICallRouting()
 
-        with patch("builtins.open", mock_open()) as mocked_file:
-            with patch.object(Path, "open", mocked_file):
-                result = router.export_training_data("/tmp/test_export.json")
+        with (
+            patch("builtins.open", mock_open()) as mocked_file,
+            patch.object(Path, "open", mocked_file),
+        ):
+            result = router.export_training_data("/tmp/test_export.json")
 
         assert result is True
 
@@ -986,9 +1017,11 @@ class TestExportTrainingData:
             {"hour": 14, "day_of_week": 3, "routed_to": "ext_200", "outcome": "voicemail"},
         ]
 
-        with patch("builtins.open", mock_open()) as mocked_file:
-            with patch.object(Path, "open", mocked_file):
-                result = router.export_training_data("/tmp/test_export.json")
+        with (
+            patch("builtins.open", mock_open()) as mocked_file,
+            patch.object(Path, "open", mocked_file),
+        ):
+            result = router.export_training_data("/tmp/test_export.json")
 
         assert result is True
 
@@ -1006,10 +1039,12 @@ class TestExportTrainingData:
         def capture_json_dump(data, f, **kwargs):
             written_data.append(data)
 
-        with patch("builtins.open", mock_open()):
-            with patch.object(Path, "open", mock_open()):
-                with patch("json.dump", side_effect=capture_json_dump):
-                    result = router.export_training_data("/tmp/test_export.json")
+        with (
+            patch("builtins.open", mock_open()),
+            patch.object(Path, "open", mock_open()),
+            patch("json.dump", side_effect=capture_json_dump),
+        ):
+            result = router.export_training_data("/tmp/test_export.json")
 
         assert result is True
         assert len(written_data) == 1
@@ -1028,10 +1063,12 @@ class TestExportTrainingData:
         def capture_json_dump(data, f, **kwargs):
             written_data.append(data)
 
-        with patch("builtins.open", mock_open()):
-            with patch.object(Path, "open", mock_open()):
-                with patch("json.dump", side_effect=capture_json_dump):
-                    result = router.export_training_data("/tmp/test_export.json")
+        with (
+            patch("builtins.open", mock_open()),
+            patch.object(Path, "open", mock_open()),
+            patch("json.dump", side_effect=capture_json_dump),
+        ):
+            result = router.export_training_data("/tmp/test_export.json")
 
         assert result is True
         # String timestamp should remain unchanged
@@ -1064,9 +1101,8 @@ class TestExportTrainingData:
             {"hour": 11, "routed_to": "ext_200", "outcome": "voicemail"},
         ]
 
-        with patch("builtins.open", mock_open()):
-            with patch.object(Path, "open", mock_open()):
-                router.export_training_data("/tmp/test.json")
+        with patch("builtins.open", mock_open()), patch.object(Path, "open", mock_open()):
+            router.export_training_data("/tmp/test.json")
 
         info_calls = [call[0][0] for call in mock_logger.info.call_args_list]
         assert any("2" in msg and "training samples" in msg.lower() for msg in info_calls)
@@ -1080,9 +1116,8 @@ class TestExportTrainingData:
             {"hour": 10, "timestamp": ts, "routed_to": "ext_100", "outcome": "answered"},
         ]
 
-        with patch("builtins.open", mock_open()):
-            with patch.object(Path, "open", mock_open()):
-                router.export_training_data("/tmp/test.json")
+        with patch("builtins.open", mock_open()), patch.object(Path, "open", mock_open()):
+            router.export_training_data("/tmp/test.json")
 
         # Original should still have datetime, not string
         assert isinstance(router.training_data[0]["timestamp"], datetime)
@@ -1108,10 +1143,12 @@ class TestImportTrainingData:
         """Importing data should append to training_data"""
         router = AICallRouting()
 
-        import_json = json.dumps([
-            {"hour": 10, "day_of_week": 1, "routed_to": "ext_100", "outcome": "answered"},
-            {"hour": 14, "day_of_week": 3, "routed_to": "ext_200", "outcome": "voicemail"},
-        ])
+        import_json = json.dumps(
+            [
+                {"hour": 10, "day_of_week": 1, "routed_to": "ext_100", "outcome": "answered"},
+                {"hour": 14, "day_of_week": 3, "routed_to": "ext_200", "outcome": "voicemail"},
+            ]
+        )
 
         with patch.object(Path, "open", mock_open(read_data=import_json)):
             result = router.import_training_data("/tmp/test_import.json")
@@ -1125,9 +1162,11 @@ class TestImportTrainingData:
         router = AICallRouting()
 
         ts_str = "2025-06-15T10:30:00+00:00"
-        import_json = json.dumps([
-            {"hour": 10, "timestamp": ts_str, "routed_to": "ext_100", "outcome": "answered"},
-        ])
+        import_json = json.dumps(
+            [
+                {"hour": 10, "timestamp": ts_str, "routed_to": "ext_100", "outcome": "answered"},
+            ]
+        )
 
         with patch.object(Path, "open", mock_open(read_data=import_json)):
             result = router.import_training_data("/tmp/test_import.json")
@@ -1140,9 +1179,11 @@ class TestImportTrainingData:
         """Import should leave non-string timestamps as-is"""
         router = AICallRouting()
 
-        import_json = json.dumps([
-            {"hour": 10, "timestamp": 12345, "routed_to": "ext_100", "outcome": "answered"},
-        ])
+        import_json = json.dumps(
+            [
+                {"hour": 10, "timestamp": 12345, "routed_to": "ext_100", "outcome": "answered"},
+            ]
+        )
 
         with patch.object(Path, "open", mock_open(read_data=import_json)):
             result = router.import_training_data("/tmp/test_import.json")
@@ -1180,8 +1221,15 @@ class TestImportTrainingData:
         router._train_model = MagicMock()
 
         # Pre-fill with 90 samples
-        router.training_data = [{"hour": 10, "day_of_week": 1, "call_duration": 60,
-                                  "wait_time": 5, "routed_to": "ext_100"}] * 90
+        router.training_data = [
+            {
+                "hour": 10,
+                "day_of_week": 1,
+                "call_duration": 60,
+                "wait_time": 5,
+                "routed_to": "ext_100",
+            }
+        ] * 90
 
         # Import 20 more to exceed min_training_samples
         import_items = [{"hour": 10, "routed_to": "ext_100"}] * 20
@@ -1447,11 +1495,13 @@ class TestAICallRoutingEdgeCases:
         router._train_model = MagicMock()
 
         for i in range(150):
-            router.record_call_outcome({
-                "routed_to": "ext_100",
-                "outcome": "answered",
-                "timestamp": datetime(2025, 6, 15, i % 24, 0, tzinfo=UTC),
-            })
+            router.record_call_outcome(
+                {
+                    "routed_to": "ext_100",
+                    "outcome": "answered",
+                    "timestamp": datetime(2025, 6, 15, i % 24, 0, tzinfo=UTC),
+                }
+            )
 
         # Should have been called at 100 and 150
         assert router._train_model.call_count == 2
@@ -1469,10 +1519,12 @@ class TestAICallRoutingEdgeCases:
         def capture_json_dump(data, f, **kwargs):
             written_data.append(data)
 
-        with patch("builtins.open", mock_open()):
-            with patch.object(Path, "open", mock_open()):
-                with patch("json.dump", side_effect=capture_json_dump):
-                    result = router.export_training_data("/tmp/test.json")
+        with (
+            patch("builtins.open", mock_open()),
+            patch.object(Path, "open", mock_open()),
+            patch("json.dump", side_effect=capture_json_dump),
+        ):
+            result = router.export_training_data("/tmp/test.json")
 
         assert result is True
         assert "timestamp" not in written_data[0][0]
@@ -1482,9 +1534,11 @@ class TestAICallRoutingEdgeCases:
         """Import should handle data items without timestamp key"""
         router = AICallRouting()
 
-        import_json = json.dumps([
-            {"hour": 10, "routed_to": "ext_100", "outcome": "answered"},
-        ])
+        import_json = json.dumps(
+            [
+                {"hour": 10, "routed_to": "ext_100", "outcome": "answered"},
+            ]
+        )
 
         with patch.object(Path, "open", mock_open(read_data=import_json)):
             result = router.import_training_data("/tmp/test.json")
