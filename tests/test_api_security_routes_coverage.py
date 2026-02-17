@@ -1173,10 +1173,13 @@ class TestDNDOverride:
         dnd = MagicMock()
         mock_pbx_core.dnd_scheduler = dnd
 
-        with patch(AUTH_PATCH, return_value=AUTH_OK), patch(
-            "pbx.features.presence.PresenceStatus",
-            side_effect=ValueError("Invalid"),
-            create=True,
+        with (
+            patch(AUTH_PATCH, return_value=AUTH_OK),
+            patch(
+                "pbx.features.presence.PresenceStatus",
+                side_effect=ValueError("Invalid"),
+                create=True,
+            ),
         ):
             resp = api_client.post(
                 "/api/dnd/override",

@@ -20,7 +20,7 @@ pyttsx3>=2.99  # Offline TTS (uses espeak)
 # Database backend (FREE, open source)
 sqlalchemy>=2.0.46  # ORM
 psycopg2-binary>=2.9.11  # PostgreSQL adapter for Python
-alembic>=1.15.0  # Database migrations
+alembic>=1.18  # Database migrations
 
 # For enterprise integrations (Teams, Outlook, Zoom):
 # Note: requests version compatible with current docker-compose
@@ -84,5 +84,5 @@ websockets>=16.0  # Real-time updates (already installed by vosk)
 
 # Monitoring (FREE, open source)
 prometheus-client>=0.24.1  # Metrics collection
-redis>=7.1.1  # Caching/queues
+redis>=7.2.0  # Caching/queues
 psutil>=7.2.2  # System and process monitoring

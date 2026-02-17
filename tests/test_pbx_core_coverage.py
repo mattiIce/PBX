@@ -160,15 +160,18 @@ class TestPBXCoreInit:
         # QoS monitor mock (imported dynamically inside __init__)
         mock_qos_module = MagicMock()
 
-        with patch.dict(
-            "sys.modules",
-            {
-                "pbx.features.qos_monitoring": mock_qos_module,
-                "pbx.utils.database": MagicMock(
-                    ExtensionDB=MagicMock(return_value=mock_ext_db_inst)
-                ),
-            },
-        ), patch("pbx.utils.encryption.get_encryption") as mock_get_enc:
+        with (
+            patch.dict(
+                "sys.modules",
+                {
+                    "pbx.features.qos_monitoring": mock_qos_module,
+                    "pbx.utils.database": MagicMock(
+                        ExtensionDB=MagicMock(return_value=mock_ext_db_inst)
+                    ),
+                },
+            ),
+            patch("pbx.utils.encryption.get_encryption") as mock_get_enc,
+        ):
             enc_inst = MagicMock()
             enc_inst.hash_password.return_value = ("hashed", "salt")
             mock_get_enc.return_value = enc_inst
@@ -1031,30 +1034,30 @@ class TestHandleCalleeAnswer:
             patch("pbx.core.pbx.SDPBuilder", create=True) as mock_sdp_build,
             patch("pbx.core.pbx.SIPMessageBuilder", create=True) as mock_sip_build,
         ):
-                sdp_inst = MagicMock()
-                sdp_inst.get_audio_info.return_value = {"address": "10.0.0.2", "port": 20002}
-                mock_sdp_cls.return_value = sdp_inst
+            sdp_inst = MagicMock()
+            sdp_inst.get_audio_info.return_value = {"address": "10.0.0.2", "port": 20002}
+            mock_sdp_cls.return_value = sdp_inst
 
-                mock_sdp_build.build_audio_sdp.return_value = "v=0\r\n..."
+            mock_sdp_build.build_audio_sdp.return_value = "v=0\r\n..."
 
-                ok_msg = MagicMock()
-                mock_sip_build.build_response.return_value = ok_msg
+            ok_msg = MagicMock()
+            mock_sip_build.build_response.return_value = ok_msg
 
-                pbx.config.get.side_effect = lambda k, d=None: {
-                    "server.external_ip": "10.0.0.100",
-                    "features.dtmf.payload_type": 101,
-                    "codecs.ilbc.mode": 30,
-                    "server.sip_port": 5060,
-                }.get(k, d)
+            pbx.config.get.side_effect = lambda k, d=None: {
+                "server.external_ip": "10.0.0.100",
+                "features.dtmf.payload_type": 101,
+                "codecs.ilbc.mode": 30,
+                "server.sip_port": 5060,
+            }.get(k, d)
 
-                pbx._get_phone_user_agent = MagicMock(return_value=None)
-                pbx._detect_phone_model = MagicMock(return_value=None)
-                pbx._get_codecs_for_phone_model = MagicMock(return_value=["0", "8", "101"])
-                pbx._get_dtmf_payload_type = MagicMock(return_value=101)
-                pbx._get_ilbc_mode = MagicMock(return_value=30)
-                pbx._get_server_ip = MagicMock(return_value="10.0.0.100")
+            pbx._get_phone_user_agent = MagicMock(return_value=None)
+            pbx._detect_phone_model = MagicMock(return_value=None)
+            pbx._get_codecs_for_phone_model = MagicMock(return_value=["0", "8", "101"])
+            pbx._get_dtmf_payload_type = MagicMock(return_value=101)
+            pbx._get_ilbc_mode = MagicMock(return_value=30)
+            pbx._get_server_ip = MagicMock(return_value="10.0.0.100")
 
-                pbx.handle_callee_answer("call-42", response_msg, ("10.0.0.2", 5060))
+            pbx.handle_callee_answer("call-42", response_msg, ("10.0.0.2", 5060))
 
         # Call should be marked as connected
         mock_call.connect.assert_called_once()

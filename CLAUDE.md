@@ -212,12 +212,12 @@ System dependencies required in CI: `espeak`, `ffmpeg`, `libopus-dev`, `portaudi
 Configured in `.pre-commit-config.yaml`:
 
 1. **pre-commit-hooks** (v5.0.0) — trailing whitespace, EOF, YAML/JSON/TOML/XML checks, merge conflicts, debug statements, private key detection, LF line endings, test naming, no-commit-to-main
-2. **ruff** (v0.9.10) — lint with `--fix` + format
-3. **mypy** (v1.15.0) — type checking (excludes tests, skipped in CI)
-4. **bandit** (1.9.0) — security scanning (excludes tests)
-5. **yamllint** (v1.35.1) — YAML linting (excludes config files)
-6. **markdownlint-cli2** (v0.17.2) — Markdown linting
-7. **shellcheck** (v0.10.0.1) — shell script linting
+2. **ruff** (v0.15.1) — lint with `--fix` + format
+3. **mypy** (v1.19.1) — type checking (excludes tests, skipped in CI)
+4. **bandit** (1.9.3) — security scanning (excludes tests)
+5. **yamllint** (v1.38.0) — YAML linting (excludes config files)
+6. **markdownlint-cli2** (v0.21.0) — Markdown linting
+7. **shellcheck** (v0.11.0.1) — shell script linting
 
 ## Key Files
 
