@@ -97,12 +97,12 @@ class TestAutoAttendantHandlerInit:
 class TestHandleAutoAttendant:
     """Tests for handle_auto_attendant."""
 
-    @patch("pbx.core.auto_attendant_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_happy_path_returns_true(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """Successful auto attendant setup should return True."""
         pbx = _make_pbx_core()
@@ -119,12 +119,12 @@ class TestHandleAutoAttendant:
         pbx.call_manager.create_call.assert_called_once_with("call-1", "1001", "0")
         pbx.cdr_system.start_record.assert_called_once_with("call-1", "1001", "0")
 
-    @patch("pbx.core.auto_attendant_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_no_sdp_body(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """When INVITE has no SDP body, should still proceed."""
         pbx = _make_pbx_core()
@@ -152,12 +152,12 @@ class TestHandleAutoAttendant:
         assert result is False
         pbx.logger.error.assert_called()
 
-    @patch("pbx.core.auto_attendant_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_sends_180_ringing(
-        self, mock_sip_builder, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip_builder, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """Should send 180 Ringing before answering."""
         pbx = _make_pbx_core()
@@ -172,12 +172,12 @@ class TestHandleAutoAttendant:
         # build_response should be called at least twice (180 and 200)
         assert mock_sip_builder.build_response.call_count >= 2
 
-    @patch("pbx.core.auto_attendant_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_detected_phone_model_logged(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """When phone model is detected, codec info should be logged."""
         pbx = _make_pbx_core()
@@ -191,12 +191,12 @@ class TestHandleAutoAttendant:
         handler.handle_auto_attendant("1001", "0", "call-1", message, ("192.168.1.10", 5060))
         pbx._get_codecs_for_phone_model.assert_called()
 
-    @patch("pbx.core.auto_attendant_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_no_phone_model_uses_default_codecs(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """When no phone model is detected, should use default codecs."""
         pbx = _make_pbx_core()
@@ -211,12 +211,12 @@ class TestHandleAutoAttendant:
         # Should still succeed
         pbx.sip_server._send_message.assert_called()
 
-    @patch("pbx.core.auto_attendant_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_rtp_port_allocated_from_pool(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """The first port from the pool should be allocated for the call."""
         pbx = _make_pbx_core()
@@ -370,6 +370,7 @@ class TestAutoAttendantSession:
         self, mock_player_cls, mock_dtmf_cls, mock_get_prompt, mock_time
     ) -> None:
         """On DTMF resulting in transfer, should call transfer_call."""
+        mock_time.time.return_value = 100.0
         pbx = _make_pbx_core()
         pbx.auto_attendant._get_audio_file.return_value = None
         pbx.auto_attendant.timeout = 60
@@ -409,6 +410,7 @@ class TestAutoAttendantSession:
         self, mock_player_cls, mock_dtmf_cls, mock_get_prompt, mock_time
     ) -> None:
         """If transfer_call returns False, a warning should be logged."""
+        mock_time.time.return_value = 100.0
         pbx = _make_pbx_core()
         pbx.auto_attendant._get_audio_file.return_value = None
         pbx.auto_attendant.timeout = 60
@@ -446,6 +448,7 @@ class TestAutoAttendantSession:
         self, mock_player_cls, mock_dtmf_cls, mock_get_prompt, mock_time
     ) -> None:
         """On DTMF play action, timeout should be reset."""
+        mock_time.time.return_value = 100.0
         pbx = _make_pbx_core()
         pbx.auto_attendant._get_audio_file.return_value = None
         pbx.auto_attendant.timeout = 60
@@ -498,6 +501,7 @@ class TestAutoAttendantSession:
         self, mock_player_cls, mock_dtmf_cls, mock_get_prompt, mock_time
     ) -> None:
         """When session times out, should handle timeout and potentially transfer."""
+        mock_time.time.return_value = 100.0
         pbx = _make_pbx_core()
         pbx.auto_attendant._get_audio_file.return_value = None
         pbx.auto_attendant.timeout = 0  # Immediate timeout
@@ -536,6 +540,7 @@ class TestAutoAttendantSession:
         self, mock_player_cls, mock_dtmf_cls, mock_get_prompt, mock_time
     ) -> None:
         """When timeout transfer fails, a warning should be logged."""
+        mock_time.time.return_value = 100.0
         pbx = _make_pbx_core()
         pbx.auto_attendant._get_audio_file.return_value = None
         pbx.auto_attendant.timeout = 0
@@ -638,6 +643,7 @@ class TestAutoAttendantSession:
         self, mock_player_cls, mock_dtmf_cls, mock_get_prompt, mock_time
     ) -> None:
         """In-band DTMF detection should be used when SIP INFO queue is empty."""
+        mock_time.time.return_value = 100.0
         pbx = _make_pbx_core()
         pbx.auto_attendant._get_audio_file.return_value = None
         pbx.auto_attendant.timeout = 60
@@ -676,6 +682,7 @@ class TestAutoAttendantSession:
         self, mock_player_cls, mock_dtmf_cls, mock_get_prompt, mock_time
     ) -> None:
         """When transferring audio file exists, should play it directly."""
+        mock_time.time.return_value = 100.0
         pbx = _make_pbx_core()
         pbx.auto_attendant._get_audio_file.side_effect = lambda name: (
             "/audio/transferring.wav" if name == "transferring" else None

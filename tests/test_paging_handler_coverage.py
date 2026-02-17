@@ -102,12 +102,12 @@ class TestPagingHandlerInit:
 class TestHandlePaging:
     """Tests for handle_paging."""
 
-    @patch("pbx.core.paging_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_happy_path_with_dac_device(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """Successful paging with a DAC device should return True and start thread."""
         pbx = _make_pbx_core()
@@ -124,7 +124,7 @@ class TestHandlePaging:
         assert result is True
         pbx.call_manager.create_call.assert_called_once_with("call-1", "1001", "700")
         pbx.cdr_system.start_record.assert_called_once_with("call-1", "1001", "700")
-        mock_threading.Thread.assert_called_once()
+        mock_thread_cls.assert_called_once()
 
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
@@ -242,12 +242,12 @@ class TestHandlePaging:
         assert result is True
         pbx.logger.warning.assert_called()
 
-    @patch("pbx.core.paging_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_phone_model_detected_logged(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """When phone model is detected, codec info should be logged."""
         pbx = _make_pbx_core()
@@ -282,12 +282,12 @@ class TestHandlePaging:
         result = handler.handle_paging("1001", "700", "call-1", message, ("192.168.1.10", 5060))
         assert result is True
 
-    @patch("pbx.core.paging_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_dac_device_found_in_list(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """DAC device matching zone's dac_device should be used for the session."""
         pbx = _make_pbx_core()
@@ -304,7 +304,7 @@ class TestHandlePaging:
         result = handler.handle_paging("1001", "700", "call-1", message, ("192.168.1.10", 5060))
         assert result is True
         # Thread should be started with the matched DAC device
-        mock_threading.Thread.assert_called_once()
+        mock_thread_cls.assert_called_once()
 
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
@@ -327,12 +327,12 @@ class TestHandlePaging:
         # No matching DAC device, so treated like no hardware
         assert result is True
 
-    @patch("pbx.core.paging_handler.threading")
+    @patch("threading.Thread")
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
     def test_call_connects_after_200ok(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_threading
+        self, mock_sip, mock_sdp_builder, mock_sdp_session, mock_thread_cls
     ) -> None:
         """Call.connect() should be called after sending 200 OK."""
         pbx = _make_pbx_core()
