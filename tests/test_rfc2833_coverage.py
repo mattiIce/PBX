@@ -218,6 +218,8 @@ class TestRFC2833Receiver:
         from pbx.rtp.rfc2833 import RFC2833Receiver
 
         mock_sock = MagicMock()
+        # Make recvfrom block properly so thread doesn't crash
+        mock_sock.recvfrom.side_effect = TimeoutError()
         mock_socket_class.return_value = mock_sock
 
         receiver = RFC2833Receiver(local_port=5000)
@@ -227,13 +229,18 @@ class TestRFC2833Receiver:
         assert receiver.running is True
         mock_sock.bind.assert_called_once()
 
+        # Stop receiver to clean up thread
+        receiver.stop()
+
     @patch("pbx.rtp.rfc2833.socket.socket")
     @patch("pbx.rtp.rfc2833.get_logger")
     def test_start_failure(self, mock_get_logger: MagicMock, mock_socket_class: MagicMock) -> None:
         """Test receiver start failure."""
         from pbx.rtp.rfc2833 import RFC2833Receiver
 
-        mock_socket_class.side_effect = OSError("Port in use")
+        mock_sock = MagicMock()
+        mock_sock.bind.side_effect = OSError("Port in use")
+        mock_socket_class.return_value = mock_sock
 
         receiver = RFC2833Receiver(local_port=5000)
         result = receiver.start()

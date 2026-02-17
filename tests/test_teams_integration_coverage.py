@@ -27,30 +27,44 @@ class TestTeamsIntegrationInit:
     @patch("pbx.integrations.teams.get_logger")
     def test_init_enabled_with_all_dependencies(self, mock_get_logger: MagicMock) -> None:
         """Test initialization when enabled with all deps available."""
-        from pbx.integrations.teams import TeamsIntegration
+        import sys
 
-        config = MagicMock()
+        mock_msal = MagicMock()
+        sys.modules["msal"] = mock_msal
 
-        def config_get(key: str, default=None):
-            mapping = {
-                "integrations.microsoft_teams.enabled": True,
-                "integrations.microsoft_teams.tenant_id": "tenant-123",
-                "integrations.microsoft_teams.client_id": "client-123",
-                "integrations.microsoft_teams.client_secret": "secret-123",
-                "integrations.microsoft_teams.direct_routing_domain": "sip.contoso.com",
-            }
-            return mapping.get(key, default)
+        try:
+            import importlib
 
-        config.get.side_effect = config_get
+            import pbx.integrations.teams as teams_mod
 
-        with patch("pbx.integrations.teams.msal") as mock_msal:
+            teams_mod.msal = mock_msal
+
+            config = MagicMock()
+
+            def config_get(key: str, default=None):
+                mapping = {
+                    "integrations.microsoft_teams.enabled": True,
+                    "integrations.microsoft_teams.tenant_id": "tenant-123",
+                    "integrations.microsoft_teams.client_id": "client-123",
+                    "integrations.microsoft_teams.client_secret": "secret-123",
+                    "integrations.microsoft_teams.direct_routing_domain": "sip.contoso.com",
+                }
+                return mapping.get(key, default)
+
+            config.get.side_effect = config_get
+
             mock_msal.ConfidentialClientApplication.return_value = MagicMock()
-            integration = TeamsIntegration(config)
+            integration = teams_mod.TeamsIntegration(config)
 
             assert integration.enabled is True
             assert integration.tenant_id == "tenant-123"
             assert integration.client_id == "client-123"
             assert integration.msal_app is not None
+        finally:
+            if "msal" in sys.modules and isinstance(sys.modules["msal"], MagicMock):
+                del sys.modules["msal"]
+            if hasattr(teams_mod, "msal") and isinstance(teams_mod.msal, MagicMock):
+                delattr(teams_mod, "msal")
 
     @patch("pbx.integrations.teams.MSAL_AVAILABLE", False)
     @patch("pbx.integrations.teams.REQUESTS_AVAILABLE", True)
@@ -120,26 +134,38 @@ class TestTeamsIntegrationInit:
     @patch("pbx.integrations.teams.get_logger")
     def test_init_msal_exception(self, mock_get_logger: MagicMock) -> None:
         """Test MSAL initialization handles exceptions."""
-        from pbx.integrations.teams import TeamsIntegration
+        import sys
 
-        config = MagicMock()
+        mock_msal = MagicMock()
+        sys.modules["msal"] = mock_msal
 
-        def config_get(key: str, default=None):
-            mapping = {
-                "integrations.microsoft_teams.enabled": True,
-                "integrations.microsoft_teams.tenant_id": "tenant-123",
-                "integrations.microsoft_teams.client_id": "client-123",
-                "integrations.microsoft_teams.client_secret": "secret-123",
-            }
-            return mapping.get(key, default)
+        try:
+            import pbx.integrations.teams as teams_mod
 
-        config.get.side_effect = config_get
+            teams_mod.msal = mock_msal
 
-        with patch("pbx.integrations.teams.msal") as mock_msal:
+            config = MagicMock()
+
+            def config_get(key: str, default=None):
+                mapping = {
+                    "integrations.microsoft_teams.enabled": True,
+                    "integrations.microsoft_teams.tenant_id": "tenant-123",
+                    "integrations.microsoft_teams.client_id": "client-123",
+                    "integrations.microsoft_teams.client_secret": "secret-123",
+                }
+                return mapping.get(key, default)
+
+            config.get.side_effect = config_get
+
             mock_msal.ConfidentialClientApplication.side_effect = Exception("MSAL init error")
-            integration = TeamsIntegration(config)
+            integration = teams_mod.TeamsIntegration(config)
 
             assert integration.msal_app is None
+        finally:
+            if "msal" in sys.modules and isinstance(sys.modules["msal"], MagicMock):
+                del sys.modules["msal"]
+            if hasattr(teams_mod, "msal") and isinstance(teams_mod.msal, MagicMock):
+                delattr(teams_mod, "msal")
 
 
 @pytest.mark.unit

@@ -466,10 +466,9 @@ class TestExtractFeaturesAndTargets:
 
     @patch("pbx.features.call_quality_prediction.get_logger")
     def test_extract_basic_features(self, mock_logger: MagicMock) -> None:
-        try:
-            import numpy as np
-        except ImportError:
-            pytest.skip("numpy not available")
+        from pbx.features.call_quality_prediction import SKLEARN_AVAILABLE
+        if not SKLEARN_AVAILABLE:
+            pytest.skip("sklearn/numpy not available")
         cqp = CallQualityPrediction()
         data = [
             {"latency": 10, "jitter": 5, "packet_loss": 1, "bandwidth": 64, "mos_score": 4.0},
@@ -482,10 +481,9 @@ class TestExtractFeaturesAndTargets:
 
     @patch("pbx.features.call_quality_prediction.get_logger")
     def test_extract_with_codec(self, mock_logger: MagicMock) -> None:
-        try:
-            import numpy as np
-        except ImportError:
-            pytest.skip("numpy not available")
+        from pbx.features.call_quality_prediction import SKLEARN_AVAILABLE
+        if not SKLEARN_AVAILABLE:
+            pytest.skip("sklearn/numpy not available")
         cqp = CallQualityPrediction()
         data = [
             {"latency": 10, "jitter": 5, "packet_loss": 1, "bandwidth": 64,
