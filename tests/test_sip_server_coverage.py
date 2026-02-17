@@ -12,10 +12,10 @@ from pbx.sip.server import (
     SIPServer,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_request_message(
     method: str = "INVITE",
@@ -44,7 +44,7 @@ def _make_request_message(
     if extra_headers:
         headers.update(extra_headers)
 
-    msg.get_header.side_effect = lambda name: headers.get(name)
+    msg.get_header.side_effect = headers.get
     return msg
 
 
@@ -64,7 +64,7 @@ def _make_response_message(
     headers: dict[str, str] = {
         "Call-ID": call_id,
     }
-    msg.get_header.side_effect = lambda name: headers.get(name)
+    msg.get_header.side_effect = headers.get
     return msg
 
 
@@ -82,7 +82,7 @@ class TestModuleConstants:
 
     def test_valid_dtmf_digits_contains_all_expected(self) -> None:
         expected = list("0123456789*#ABCD")
-        assert VALID_DTMF_DIGITS == expected
+        assert expected == VALID_DTMF_DIGITS
 
     def test_rfc2833_event_map_contains_star(self) -> None:
         assert RFC2833_EVENT_TO_DTMF["10"] == "*"
@@ -156,9 +156,7 @@ class TestSIPServerStartStop:
 
         assert result is True
         assert server.running is True
-        mock_sock.setsockopt.assert_called_once_with(
-            socket.SOL_SOCKET, socket.SO_REUSEADDR, 1
-        )
+        mock_sock.setsockopt.assert_called_once_with(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         mock_sock.settimeout.assert_called_once_with(1.0)
         mock_sock.bind.assert_called_once_with(("0.0.0.0", 5060))
         mock_thread.start.assert_called_once()
@@ -230,7 +228,7 @@ class TestSIPServerListen:
             if call_count == 1:
                 return (b"REGISTER sip:pbx.local SIP/2.0\r\n\r\n", ADDR)
             server.running = False
-            raise TimeoutError()
+            raise TimeoutError
 
         mock_sock.recvfrom.side_effect = recvfrom_side_effect
         server.running = True
@@ -256,7 +254,7 @@ class TestSIPServerListen:
             call_count += 1
             if call_count >= 2:
                 server.running = False
-            raise TimeoutError()
+            raise TimeoutError
 
         mock_sock.recvfrom.side_effect = recvfrom_side_effect
         server.running = True
@@ -278,7 +276,7 @@ class TestSIPServerListen:
             if call_count == 1:
                 raise OSError("socket error")
             server.running = False
-            raise TimeoutError()
+            raise TimeoutError
 
         mock_sock.recvfrom.side_effect = recvfrom_side_effect
         server.running = True
@@ -496,9 +494,7 @@ class TestHandleRequest:
         server = self._make_server()
         msg = _make_request_message("FOOBAR")
         server._handle_request(msg, ADDR)
-        server._send_response.assert_called_once_with(
-            405, "Method Not Allowed", msg, ADDR
-        )
+        server._send_response.assert_called_once_with(405, "Method Not Allowed", msg, ADDR)
 
 
 # ===========================================================================
@@ -1156,10 +1152,12 @@ class TestHandleInfo:
         )
         # Override call_id to None
         original_side_effect = msg.get_header.side_effect
+
         def get_header_no_callid(name: str) -> str | None:
             if name == "Call-ID":
                 return None
             return original_side_effect(name)
+
         msg.get_header.side_effect = get_header_no_callid
 
         server._handle_info(msg, ADDR)
@@ -1532,9 +1530,7 @@ class TestSendMethods:
 
         server._send_message("SIP/2.0 200 OK\r\n\r\n", ADDR)
 
-        mock_sock.sendto.assert_called_once_with(
-            b"SIP/2.0 200 OK\r\n\r\n", ADDR
-        )
+        mock_sock.sendto.assert_called_once_with(b"SIP/2.0 200 OK\r\n\r\n", ADDR)
 
     @patch("pbx.sip.server.get_logger")
     def test_send_message_oserror(self, mock_get_logger: MagicMock) -> None:

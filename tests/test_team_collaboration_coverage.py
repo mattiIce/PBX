@@ -9,7 +9,6 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-
 # ---------------------------------------------------------------------------
 # TeamMessagingEngine tests
 # ---------------------------------------------------------------------------
@@ -872,7 +871,18 @@ class TestFileShareEngineGetSharedFiles:
         """Test getting shared files"""
         engine = self._make_engine()
         engine.db.execute.return_value = [
-            (1, "doc.pdf", "/path/doc.pdf", 1024, "application/pdf", "1001", "1002", "A doc", "2025-01-01", "2025-12-31"),
+            (
+                1,
+                "doc.pdf",
+                "/path/doc.pdf",
+                1024,
+                "application/pdf",
+                "1001",
+                "1002",
+                "A doc",
+                "2025-01-01",
+                "2025-12-31",
+            ),
         ]
 
         result = engine.get_shared_files("1001")
@@ -917,7 +927,18 @@ class TestFileShareEngineGetSharedFiles:
         """Test getting shared files with postgresql"""
         engine = self._make_engine("postgresql")
         engine.db.execute.return_value = [
-            (1, "doc.pdf", "/path/doc.pdf", 1024, "application/pdf", "1001", "1002", "A doc", "2025-01-01", None),
+            (
+                1,
+                "doc.pdf",
+                "/path/doc.pdf",
+                1024,
+                "application/pdf",
+                "1001",
+                "1002",
+                "A doc",
+                "2025-01-01",
+                None,
+            ),
         ]
 
         result = engine.get_shared_files("1001")

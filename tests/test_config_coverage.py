@@ -1,11 +1,17 @@
 """Comprehensive tests for pbx.utils.config module."""
 
+from __future__ import annotations
+
 import tempfile
 from pathlib import Path
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+
+if TYPE_CHECKING:
+    from pbx.utils.config import Config
 
 
 @pytest.mark.unit
@@ -24,9 +30,7 @@ class TestConfigInit:
         mock_env_loader.resolve_config.side_effect = lambda x: x
         mock_get_env_loader.return_value = mock_env_loader
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
             yaml.dump({"server": {"host": "0.0.0.0", "port": 5060}}, f)
             f.flush()
             config = Config(config_file=f.name)
@@ -53,9 +57,7 @@ class TestConfigInit:
         """Test Config initialization with load_env=False."""
         from pbx.utils.config import Config
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
             yaml.dump({"test": "value"}, f)
             f.flush()
             config = Config(config_file=f.name, load_env=False)
@@ -76,9 +78,7 @@ class TestConfigInit:
         mock_env_loader.resolve_config.side_effect = lambda x: x
         mock_get_env_loader.return_value = mock_env_loader
 
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".yml", delete=False
-        ) as f:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
             f.write("")
             f.flush()
             config = Config(config_file=f.name)
@@ -86,19 +86,21 @@ class TestConfigInit:
         assert config.config == {}
 
 
-def _make_config(data: dict) -> "Config":
+def _make_config(data: dict) -> Config:
     """Helper to create a Config object with given data."""
     from pbx.utils.config import Config
 
     with tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False) as f:
         yaml.dump(data, f)
         f.flush()
-        with patch("pbx.utils.config.load_env_file"):
-            with patch("pbx.utils.config.get_env_loader") as mock_gel:
-                mock_env = MagicMock()
-                mock_env.resolve_config.side_effect = lambda x: x
-                mock_gel.return_value = mock_env
-                config = Config(config_file=f.name)
+        with (
+            patch("pbx.utils.config.load_env_file"),
+            patch("pbx.utils.config.get_env_loader") as mock_gel,
+        ):
+            mock_env = MagicMock()
+            mock_env.resolve_config.side_effect = lambda x: x
+            mock_gel.return_value = mock_env
+            config = Config(config_file=f.name)
     return config
 
 
@@ -422,9 +424,7 @@ class TestUpdateEmailConfig:
         """Test updating email from_address."""
         config = _make_config({})
         with patch.object(config, "save", return_value=True):
-            result = config.update_email_config(
-                {"email": {"from_address": "pbx@example.com"}}
-            )
+            result = config.update_email_config({"email": {"from_address": "pbx@example.com"}})
         assert result is True
         assert config.config["voicemail"]["email"]["from_address"] == "pbx@example.com"
 

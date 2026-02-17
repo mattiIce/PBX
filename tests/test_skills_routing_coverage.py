@@ -148,7 +148,7 @@ class TestSkillsBasedRouterInit:
     def test_init_database_disabled(self, mock_get_logger) -> None:
         mock_db = MagicMock()
         mock_db.enabled = False
-        router = SkillsBasedRouter(database=mock_db)
+        _router = SkillsBasedRouter(database=mock_db)
         mock_db.execute.assert_not_called()
 
 
@@ -199,7 +199,7 @@ class TestSkillsBasedRouterInitializeSchema:
         mock_db = MagicMock()
         mock_db.enabled = True
         mock_db.db_type = "postgresql"
-        router = SkillsBasedRouter(database=mock_db)
+        _router = SkillsBasedRouter(database=mock_db)
         assert mock_db.execute.call_count == 3
 
     @patch("pbx.features.skills_routing.get_logger")
@@ -207,7 +207,7 @@ class TestSkillsBasedRouterInitializeSchema:
         mock_db = MagicMock()
         mock_db.enabled = True
         mock_db.db_type = "sqlite"
-        router = SkillsBasedRouter(database=mock_db)
+        _router = SkillsBasedRouter(database=mock_db)
         assert mock_db.execute.call_count == 3
 
     @patch("pbx.features.skills_routing.get_logger")
@@ -543,7 +543,9 @@ class TestSkillsBasedRouterFindBestAgents:
         router.fallback_to_any_agent = False
         router.add_skill("python", "Python")
         router.assign_skill_to_agent("1001", "python", 2)
-        router.set_queue_requirements("Q100", [{"skill_id": "python", "min_proficiency": 5, "required": True}])
+        router.set_queue_requirements(
+            "Q100", [{"skill_id": "python", "min_proficiency": 5, "required": True}]
+        )
 
         result = router.find_best_agents("Q100", ["1001"])
         assert len(result) == 0
@@ -556,10 +558,13 @@ class TestSkillsBasedRouterFindBestAgents:
         router.add_skill("java", "Java")
         router.assign_skill_to_agent("1001", "python", 8)
         # Agent 1001 has python but NOT java (required)
-        router.set_queue_requirements("Q100", [
-            {"skill_id": "python", "min_proficiency": 3, "required": True},
-            {"skill_id": "java", "min_proficiency": 3, "required": True},
-        ])
+        router.set_queue_requirements(
+            "Q100",
+            [
+                {"skill_id": "python", "min_proficiency": 3, "required": True},
+                {"skill_id": "java", "min_proficiency": 3, "required": True},
+            ],
+        )
 
         result = router.find_best_agents("Q100", ["1001"])
         assert len(result) == 0
@@ -572,10 +577,13 @@ class TestSkillsBasedRouterFindBestAgents:
         router.assign_skill_to_agent("1001", "python", 8)
         router.assign_skill_to_agent("1001", "java", 6)
         router.assign_skill_to_agent("1002", "python", 8)
-        router.set_queue_requirements("Q100", [
-            {"skill_id": "python", "min_proficiency": 3, "required": True},
-            {"skill_id": "java", "min_proficiency": 3, "required": False},
-        ])
+        router.set_queue_requirements(
+            "Q100",
+            [
+                {"skill_id": "python", "min_proficiency": 3, "required": True},
+                {"skill_id": "java", "min_proficiency": 3, "required": False},
+            ],
+        )
 
         result = router.find_best_agents("Q100", ["1001", "1002"])
         # Agent 1001 should score higher due to optional java skill

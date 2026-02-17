@@ -24,7 +24,7 @@ from pbx.models.voicemail import Voicemail
 
 
 @pytest.fixture
-def db_session() -> Generator[Session, None, None]:
+def db_session() -> Generator[Session]:
     """Provide an in-memory SQLite session for model testing."""
     engine = create_engine("sqlite:///:memory:")
     Base.metadata.create_all(engine)
@@ -183,9 +183,7 @@ class TestExtensionModel:
 
     def test_repr(self, db_session: Session) -> None:
         """Extension.__repr__ should include id, number, and name."""
-        ext = Extension(
-            id=1, number="1001", name="Alice", password_hash="hash123"
-        )
+        ext = Extension(id=1, number="1001", name="Alice", password_hash="hash123")
         db_session.add(ext)
         db_session.flush()
         result = repr(ext)
@@ -197,9 +195,7 @@ class TestExtensionModel:
 
     def test_repr_different_values(self, db_session: Session) -> None:
         """__repr__ should reflect the actual attribute values."""
-        ext = Extension(
-            id=42, number="9999", name="Bob", password_hash="hash456"
-        )
+        ext = Extension(id=42, number="9999", name="Bob", password_hash="hash456")
         db_session.add(ext)
         db_session.flush()
         result = repr(ext)
@@ -304,9 +300,7 @@ class TestCallRecordModel:
 
     def test_repr(self, db_session: Session) -> None:
         """CallRecord.__repr__ should include id, call_id, caller, callee."""
-        record = CallRecord(
-            id=10, call_id="abc-123", caller="1001", callee="1002"
-        )
+        record = CallRecord(id=10, call_id="abc-123", caller="1001", callee="1002")
         db_session.add(record)
         db_session.flush()
         result = repr(record)
@@ -319,9 +313,7 @@ class TestCallRecordModel:
 
     def test_repr_different_values(self, db_session: Session) -> None:
         """__repr__ should reflect the actual attribute values."""
-        record = CallRecord(
-            id=99, call_id="xyz-789", caller="2001", callee="3001"
-        )
+        record = CallRecord(id=99, call_id="xyz-789", caller="2001", callee="3001")
         db_session.add(record)
         db_session.flush()
         result = repr(record)
@@ -417,9 +409,7 @@ class TestVoicemailModel:
 
     def test_repr(self, db_session: Session) -> None:
         """Voicemail.__repr__ should include id, extension, caller_id, listened."""
-        vm = Voicemail(
-            id=5, extension="1001", caller_id="5551234567", listened=False
-        )
+        vm = Voicemail(id=5, extension="1001", caller_id="5551234567", listened=False)
         db_session.add(vm)
         db_session.flush()
         result = repr(vm)
@@ -432,9 +422,7 @@ class TestVoicemailModel:
 
     def test_repr_listened_true(self, db_session: Session) -> None:
         """__repr__ should show listened=True when message has been played."""
-        vm = Voicemail(
-            id=6, extension="2002", caller_id=None, listened=True
-        )
+        vm = Voicemail(id=6, extension="2002", caller_id=None, listened=True)
         db_session.add(vm)
         db_session.flush()
         result = repr(vm)
@@ -515,7 +503,9 @@ class TestRegisteredPhoneModel:
     def test_repr(self, db_session: Session) -> None:
         """RegisteredPhone.__repr__ should include id, extension, ip, mac."""
         phone = RegisteredPhone(
-            id=3, extension="1001", ip_address="192.168.1.50",
+            id=3,
+            extension="1001",
+            ip_address="192.168.1.50",
             mac_address="AA:BB:CC:DD:EE:FF",
         )
         db_session.add(phone)
@@ -531,7 +521,9 @@ class TestRegisteredPhoneModel:
     def test_repr_none_mac(self, db_session: Session) -> None:
         """__repr__ should handle None mac_address gracefully."""
         phone = RegisteredPhone(
-            id=4, extension="2002", ip_address="10.0.0.1",
+            id=4,
+            extension="2002",
+            ip_address="10.0.0.1",
             mac_address=None,
         )
         db_session.add(phone)

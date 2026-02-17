@@ -1,10 +1,16 @@
 """Comprehensive tests for pbx.integrations.outlook module."""
 
+from __future__ import annotations
+
 import sys
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+if TYPE_CHECKING:
+    from pbx.integrations.outlook import OutlookIntegration
 
 # Ensure msal is available as a mock in the module namespace before import
 _mock_msal = MagicMock()
@@ -74,9 +80,7 @@ class TestOutlookIntegrationInit:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.REQUESTS_AVAILABLE", True)
     @patch("pbx.integrations.outlook.get_logger")
-    def test_init_enabled_with_all_dependencies(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_init_enabled_with_all_dependencies(self, mock_get_logger: MagicMock) -> None:
         """Test initialization with all dependencies available."""
         from pbx.integrations.outlook import OutlookIntegration
 
@@ -121,9 +125,7 @@ class TestInitializeMsal:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.REQUESTS_AVAILABLE", True)
     @patch("pbx.integrations.outlook.get_logger")
-    def test_initialize_msal_missing_credentials(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_initialize_msal_missing_credentials(self, mock_get_logger: MagicMock) -> None:
         """Test MSAL initialization with missing credentials."""
         from pbx.integrations.outlook import OutlookIntegration
 
@@ -147,7 +149,6 @@ class TestInitializeMsal:
     def test_initialize_msal_exception(self, mock_get_logger: MagicMock) -> None:
         """Test MSAL initialization when exception occurs."""
         import pbx.integrations.outlook as outlook_mod
-
         from pbx.integrations.outlook import OutlookIntegration
 
         # Temporarily make msal.ConfidentialClientApplication raise
@@ -165,9 +166,7 @@ class TestInitializeMsal:
                 "integrations.outlook.client_secret": "secret",
                 "integrations.outlook.sync_interval": 300,
                 "integrations.outlook.auto_dnd_in_meetings": True,
-                "integrations.outlook.scopes": [
-                    "https://graph.microsoft.com/.default"
-                ],
+                "integrations.outlook.scopes": ["https://graph.microsoft.com/.default"],
             }.get(key, default)
 
             integration = OutlookIntegration(config)
@@ -181,7 +180,7 @@ class TestInitializeMsal:
 class TestAuthenticate:
     """Tests for authenticate method."""
 
-    def _make_integration(self) -> "OutlookIntegration":
+    def _make_integration(self) -> OutlookIntegration:
         """Create a minimally configured integration for auth testing."""
         from pbx.integrations.outlook import OutlookIntegration
 
@@ -202,9 +201,7 @@ class TestAuthenticate:
 
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.get_logger")
-    def test_authenticate_no_msal_app_init_fails(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_authenticate_no_msal_app_init_fails(self, mock_get_logger: MagicMock) -> None:
         """Test authentication when MSAL app is None and re-init fails."""
         integration = self._make_integration()
         integration.enabled = True
@@ -223,9 +220,7 @@ class TestAuthenticate:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
 
         result = integration.authenticate()
         assert result is True
@@ -275,7 +270,7 @@ class TestAuthenticate:
 class TestGetCalendarEvents:
     """Tests for get_calendar_events method."""
 
-    def _make_integration(self) -> "OutlookIntegration":
+    def _make_integration(self) -> OutlookIntegration:
         from pbx.integrations.outlook import OutlookIntegration
 
         config = MagicMock()
@@ -322,9 +317,7 @@ class TestGetCalendarEvents:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -363,9 +356,7 @@ class TestGetCalendarEvents:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -387,9 +378,7 @@ class TestGetCalendarEvents:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -411,9 +400,7 @@ class TestGetCalendarEvents:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.get.side_effect = TypeError("type error")
         mock_requests.RequestException = Exception
 
@@ -425,7 +412,7 @@ class TestGetCalendarEvents:
 class TestCheckUserAvailability:
     """Tests for check_user_availability method."""
 
-    def _make_integration(self) -> "OutlookIntegration":
+    def _make_integration(self) -> OutlookIntegration:
         from pbx.integrations.outlook import OutlookIntegration
 
         config = MagicMock()
@@ -460,12 +447,12 @@ class TestCheckUserAvailability:
             }
         ]
 
-        with patch.object(integration, "get_calendar_events", return_value=events):
-            with patch.object(
-                integration, "get_out_of_office_status", return_value=None
-            ):
-                result = integration.check_user_availability("user@example.com")
-                assert result == "busy"
+        with (
+            patch.object(integration, "get_calendar_events", return_value=events),
+            patch.object(integration, "get_out_of_office_status", return_value=None),
+        ):
+            result = integration.check_user_availability("user@example.com")
+            assert result == "busy"
 
     @patch("pbx.integrations.outlook.get_logger")
     def test_check_availability_available(self, mock_get_logger: MagicMock) -> None:
@@ -473,34 +460,32 @@ class TestCheckUserAvailability:
         integration = self._make_integration()
         integration.enabled = True
 
-        with patch.object(integration, "get_calendar_events", return_value=[]):
-            with patch.object(
-                integration, "get_out_of_office_status", return_value=None
-            ):
-                result = integration.check_user_availability("user@example.com")
-                assert result == "available"
+        with (
+            patch.object(integration, "get_calendar_events", return_value=[]),
+            patch.object(integration, "get_out_of_office_status", return_value=None),
+        ):
+            result = integration.check_user_availability("user@example.com")
+            assert result == "available"
 
     @patch("pbx.integrations.outlook.get_logger")
-    def test_check_availability_out_of_office(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_check_availability_out_of_office(self, mock_get_logger: MagicMock) -> None:
         """Test availability check returns out_of_office."""
         integration = self._make_integration()
         integration.enabled = True
 
-        with patch.object(integration, "get_calendar_events", return_value=[]):
-            with patch.object(
+        with (
+            patch.object(integration, "get_calendar_events", return_value=[]),
+            patch.object(
                 integration,
                 "get_out_of_office_status",
                 return_value={"status": "scheduled"},
-            ):
-                result = integration.check_user_availability("user@example.com")
-                assert result == "out_of_office"
+            ),
+        ):
+            result = integration.check_user_availability("user@example.com")
+            assert result == "out_of_office"
 
     @patch("pbx.integrations.outlook.get_logger")
-    def test_check_availability_cancelled_event(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_check_availability_cancelled_event(self, mock_get_logger: MagicMock) -> None:
         """Test availability check ignores cancelled events."""
         integration = self._make_integration()
         integration.enabled = True
@@ -515,19 +500,19 @@ class TestCheckUserAvailability:
             }
         ]
 
-        with patch.object(integration, "get_calendar_events", return_value=events):
-            with patch.object(
-                integration, "get_out_of_office_status", return_value=None
-            ):
-                result = integration.check_user_availability("user@example.com")
-                assert result == "available"
+        with (
+            patch.object(integration, "get_calendar_events", return_value=events),
+            patch.object(integration, "get_out_of_office_status", return_value=None),
+        ):
+            result = integration.check_user_availability("user@example.com")
+            assert result == "available"
 
 
 @pytest.mark.unit
 class TestSyncContacts:
     """Tests for sync_contacts method."""
 
-    def _make_integration(self) -> "OutlookIntegration":
+    def _make_integration(self) -> OutlookIntegration:
         from pbx.integrations.outlook import OutlookIntegration
 
         config = MagicMock()
@@ -557,9 +542,7 @@ class TestSyncContacts:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -596,9 +579,7 @@ class TestSyncContacts:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -633,9 +614,7 @@ class TestSyncContacts:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -657,9 +636,7 @@ class TestSyncContacts:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.get.side_effect = KeyError("fail")
         mock_requests.RequestException = Exception
 
@@ -671,7 +648,7 @@ class TestSyncContacts:
 class TestLogCallToCalendar:
     """Tests for log_call_to_calendar method."""
 
-    def _make_integration(self) -> "OutlookIntegration":
+    def _make_integration(self) -> OutlookIntegration:
         from pbx.integrations.outlook import OutlookIntegration
 
         config = MagicMock()
@@ -694,16 +671,12 @@ class TestLogCallToCalendar:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_log_call_success(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_log_call_success(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test successful call logging."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -725,16 +698,12 @@ class TestLogCallToCalendar:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_log_call_outbound(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_log_call_outbound(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test call logging for outbound call."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -755,16 +724,12 @@ class TestLogCallToCalendar:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_log_call_defaults(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_log_call_defaults(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test call logging with default values."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -788,9 +753,7 @@ class TestLogCallToCalendar:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -818,9 +781,7 @@ class TestLogCallToCalendar:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -835,16 +796,12 @@ class TestLogCallToCalendar:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_log_call_exception(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_log_call_exception(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test call logging with exception."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.post.side_effect = TypeError("error")
         mock_requests.RequestException = Exception
 
@@ -856,7 +813,7 @@ class TestLogCallToCalendar:
 class TestGetOutOfOfficeStatus:
     """Tests for get_out_of_office_status method."""
 
-    def _make_integration(self) -> "OutlookIntegration":
+    def _make_integration(self) -> OutlookIntegration:
         from pbx.integrations.outlook import OutlookIntegration
 
         config = MagicMock()
@@ -879,16 +836,12 @@ class TestGetOutOfOfficeStatus:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_get_ooo_success(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_get_ooo_success(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test successful OOO status retrieval."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -911,16 +864,12 @@ class TestGetOutOfOfficeStatus:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_get_ooo_api_error(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_get_ooo_api_error(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test OOO status with API error."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -934,16 +883,12 @@ class TestGetOutOfOfficeStatus:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_get_ooo_exception(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_get_ooo_exception(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test OOO status with exception."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.get.side_effect = ValueError("fail")
         mock_requests.RequestException = Exception
 
@@ -955,7 +900,7 @@ class TestGetOutOfOfficeStatus:
 class TestSendMeetingReminder:
     """Tests for send_meeting_reminder method."""
 
-    def _make_integration(self) -> "OutlookIntegration":
+    def _make_integration(self) -> OutlookIntegration:
         from pbx.integrations.outlook import OutlookIntegration
 
         config = MagicMock()
@@ -1002,9 +947,7 @@ class TestSendMeetingReminder:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -1025,9 +968,7 @@ class TestSendMeetingReminder:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -1045,16 +986,12 @@ class TestSendMeetingReminder:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_reminder_past_time(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_reminder_past_time(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test reminder when meeting time has passed."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         past_time = (datetime.now(UTC) - timedelta(hours=2)).isoformat()
@@ -1080,9 +1017,7 @@ class TestSendMeetingReminder:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         future_time = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
@@ -1094,9 +1029,7 @@ class TestSendMeetingReminder:
         }
         mock_requests.get.return_value = mock_response
 
-        result = integration.send_meeting_reminder(
-            "user@example.com", "meet1", pbx_core=None
-        )
+        result = integration.send_meeting_reminder("user@example.com", "meet1", pbx_core=None)
         assert result is False
 
     @patch("threading.Timer")
@@ -1114,9 +1047,7 @@ class TestSendMeetingReminder:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         future_time = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
@@ -1157,9 +1088,7 @@ class TestSendMeetingReminder:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         future_time = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
@@ -1198,9 +1127,7 @@ class TestSendMeetingReminder:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         future_time = (datetime.now(UTC) + timedelta(hours=1)).isoformat()
@@ -1233,9 +1160,7 @@ class TestSendMeetingReminder:
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.RequestException = Exception
 
         mock_response = MagicMock()
@@ -1253,16 +1178,12 @@ class TestSendMeetingReminder:
     @patch("pbx.integrations.outlook.MSAL_AVAILABLE", True)
     @patch("pbx.integrations.outlook.requests")
     @patch("pbx.integrations.outlook.get_logger")
-    def test_reminder_exception(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_reminder_exception(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test reminder with general exception."""
         integration = self._make_integration()
         integration.enabled = True
         integration.msal_app = MagicMock()
-        integration.msal_app.acquire_token_for_client.return_value = {
-            "access_token": "token123"
-        }
+        integration.msal_app.acquire_token_for_client.return_value = {"access_token": "token123"}
         mock_requests.get.side_effect = RuntimeError("unexpected")
 
         result = integration.send_meeting_reminder("user@example.com", "meet1")

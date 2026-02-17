@@ -9,7 +9,6 @@ import pytest
 
 from pbx.core.call_router import CallRouter
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -153,7 +152,7 @@ def _make_invite_message(
     if extra_headers:
         headers.update(extra_headers)
 
-    msg.get_header.side_effect = lambda name: headers.get(name)
+    msg.get_header.side_effect = headers.get
     msg.uri = f"sip:{to_ext}@pbx.local"
     return msg
 
@@ -628,9 +627,7 @@ class TestRouteCallRTPRelay:
 
         assert result is True
         pbx.rtp_relay.allocate_relay.assert_called_once_with("call-1")
-        mock_handler.set_endpoints.assert_called_once_with(
-            ("192.168.1.100", 30000), None
-        )
+        mock_handler.set_endpoints.assert_called_once_with(("192.168.1.100", 30000), None)
 
     def test_rtp_relay_allocation_returns_none(self) -> None:
         pbx = _make_pbx_core()
@@ -800,12 +797,14 @@ class TestRouteCallInviteForwarding:
 
         caller_ext = MagicMock()
         caller_ext.name = "John Doe"
+
         def get_ext(ext_num: str) -> MagicMock:
             if ext_num == "1001":
                 return caller_ext
             dest = MagicMock()
             dest.address = ("10.0.0.2", 5060)
             return dest
+
         pbx.extension_registry.get.side_effect = get_ext
 
         router = CallRouter(pbx)
@@ -824,10 +823,12 @@ class TestRouteCallInviteForwarding:
         pbx.sip_server._send_message.assert_called_once()
 
     def test_caller_id_headers_skipped_when_disabled(self) -> None:
-        pbx = _make_pbx_core(config_overrides={
-            "sip.caller_id.send_p_asserted_identity": False,
-            "sip.caller_id.send_remote_party_id": False,
-        })
+        pbx = _make_pbx_core(
+            config_overrides={
+                "sip.caller_id.send_p_asserted_identity": False,
+                "sip.caller_id.send_remote_party_id": False,
+            }
+        )
 
         router = CallRouter(pbx)
         msg = _make_invite_message(body="")
@@ -847,12 +848,14 @@ class TestRouteCallInviteForwarding:
 
         caller_ext = MagicMock()
         caller_ext.name = ""
+
         def get_ext(ext_num: str) -> MagicMock:
             if ext_num == "1001":
                 return caller_ext
             dest = MagicMock()
             dest.address = ("10.0.0.2", 5060)
             return dest
+
         pbx.extension_registry.get.side_effect = get_ext
 
         router = CallRouter(pbx)
@@ -878,6 +881,7 @@ class TestRouteCallInviteForwarding:
             dest = MagicMock()
             dest.address = ("10.0.0.2", 5060)
             return dest
+
         pbx.extension_registry.get.side_effect = get_ext
 
         router = CallRouter(pbx)
@@ -943,9 +947,11 @@ class TestRouteCallMACAddress:
         assert result is True
 
     def test_mac_disabled_in_config(self) -> None:
-        pbx = _make_pbx_core(config_overrides={
-            "sip.device.send_mac_address": False,
-        })
+        pbx = _make_pbx_core(
+            config_overrides={
+                "sip.device.send_mac_address": False,
+            }
+        )
 
         router = CallRouter(pbx)
         msg = _make_invite_message(body="")
@@ -1000,9 +1006,7 @@ class TestRouteCallMACAddress:
 
     def test_mac_db_returns_empty_mac(self) -> None:
         pbx = _make_pbx_core()
-        pbx.registered_phones_db.get_by_extension.return_value = [
-            {"mac_address": None}
-        ]
+        pbx.registered_phones_db.get_by_extension.return_value = [{"mac_address": None}]
 
         router = CallRouter(pbx)
         msg = _make_invite_message(body="")
@@ -1018,9 +1022,11 @@ class TestRouteCallMACAddress:
         assert result is True
 
     def test_mac_accept_from_invite_disabled(self) -> None:
-        pbx = _make_pbx_core(config_overrides={
-            "sip.device.accept_mac_in_invite": False,
-        })
+        pbx = _make_pbx_core(
+            config_overrides={
+                "sip.device.accept_mac_in_invite": False,
+            }
+        )
         pbx.registered_phones_db.get_by_extension.return_value = []
 
         router = CallRouter(pbx)
@@ -1109,6 +1115,7 @@ class TestRouteCallCDRWebhooks:
         pbx.webhook_system.trigger_event.assert_called_once()
         webhook_args = pbx.webhook_system.trigger_event.call_args
         from pbx.features.webhooks import WebhookEvent
+
         assert webhook_args[0][0] == WebhookEvent.CALL_STARTED
 
 
@@ -1128,12 +1135,13 @@ class TestSendCancelToCallee:
         mock_call.callee_addr = ("10.0.0.2", 5060)
         mock_call.callee_invite = MagicMock()
         mock_call.callee_invite.uri = "sip:1002@10.0.0.1"
-        mock_call.callee_invite.get_header.side_effect = lambda name: {
+        _callee_headers = {
             "From": "<sip:1001@pbx.local>",
             "To": "<sip:1002@pbx.local>",
             "CSeq": "1 INVITE",
             "Via": "SIP/2.0/UDP 10.0.0.1:5060",
-        }.get(name)
+        }
+        mock_call.callee_invite.get_header.side_effect = _callee_headers.get
         mock_call.to_extension = "1002"
 
         router = CallRouter(pbx)
@@ -1356,9 +1364,11 @@ class TestHandleNoAnswer:
         router._answer_call_for_voicemail = MagicMock(return_value=True)
         router._send_cancel_to_callee = MagicMock()
 
-        with patch("threading.Timer") as mock_timer_cls, \
-             patch("threading.Thread") as mock_thread_cls, \
-             patch("time.sleep"):
+        with (
+            patch("threading.Timer") as mock_timer_cls,
+            patch("threading.Thread") as mock_thread_cls,
+            patch("time.sleep"),
+        ):
             mock_timer = MagicMock()
             mock_timer_cls.return_value = mock_timer
             mock_thread = MagicMock()
@@ -1465,8 +1475,10 @@ class TestHandleNoAnswer:
         router._answer_call_for_voicemail = MagicMock(return_value=True)
         router._send_cancel_to_callee = MagicMock()
 
-        with patch("threading.Timer") as mock_timer_cls, \
-             patch("threading.Thread") as mock_thread_cls:
+        with (
+            patch("threading.Timer") as mock_timer_cls,
+            patch("threading.Thread") as mock_thread_cls,
+        ):
             mock_timer_cls.return_value = MagicMock()
             mock_thread_cls.return_value = MagicMock()
 
@@ -1559,10 +1571,12 @@ class TestHandleNoAnswer:
         router._answer_call_for_voicemail = MagicMock(return_value=True)
         router._send_cancel_to_callee = MagicMock()
 
-        with patch("threading.Timer") as mock_timer_cls, \
-             patch("threading.Thread") as mock_thread_cls, \
-             patch("time.sleep"), \
-             patch("pbx.core.call_router.Path") as mock_path:
+        with (
+            patch("threading.Timer") as mock_timer_cls,
+            patch("threading.Thread") as mock_thread_cls,
+            patch("time.sleep"),
+            patch("pbx.core.call_router.Path") as mock_path,
+        ):
             mock_timer_cls.return_value = MagicMock()
             mock_thread_cls.return_value = MagicMock()
             mock_path_instance = MagicMock()
@@ -1616,10 +1630,12 @@ class TestHandleNoAnswer:
         router._answer_call_for_voicemail = MagicMock(return_value=True)
         router._send_cancel_to_callee = MagicMock()
 
-        with patch("threading.Timer") as mock_timer_cls, \
-             patch("threading.Thread") as mock_thread_cls, \
-             patch("time.sleep"), \
-             patch("pbx.core.call_router.Path") as mock_path:
+        with (
+            patch("threading.Timer") as mock_timer_cls,
+            patch("threading.Thread") as mock_thread_cls,
+            patch("time.sleep"),
+            patch("pbx.core.call_router.Path") as mock_path,
+        ):
             mock_timer_cls.return_value = MagicMock()
             mock_thread_cls.return_value = MagicMock()
             mock_path_instance = MagicMock()
@@ -1667,8 +1683,10 @@ class TestHandleNoAnswer:
         router._answer_call_for_voicemail = MagicMock(return_value=True)
         router._send_cancel_to_callee = MagicMock()
 
-        with patch("threading.Timer") as mock_timer_cls, \
-             patch("threading.Thread") as mock_thread_cls:
+        with (
+            patch("threading.Timer") as mock_timer_cls,
+            patch("threading.Thread") as mock_thread_cls,
+        ):
             mock_timer_cls.return_value = MagicMock()
             mock_thread_cls.return_value = MagicMock()
 

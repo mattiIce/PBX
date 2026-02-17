@@ -1,6 +1,7 @@
 """Comprehensive tests for Features Blueprint routes."""
 
 import json
+from datetime import UTC
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -22,7 +23,10 @@ class TestAutoAttendantConfigRoutes:
         aa.audio_path = "/audio"
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/config")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -36,7 +40,10 @@ class TestAutoAttendantConfigRoutes:
         if hasattr(mock_pbx_core, "auto_attendant"):
             del mock_pbx_core.auto_attendant
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/config")
         assert resp.status_code == 500
         data = json.loads(resp.data)
@@ -49,13 +56,14 @@ class TestAutoAttendantConfigRoutes:
         type(aa).enabled = property(lambda self: (_ for _ in ()).throw(RuntimeError("boom")))
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/config")
         assert resp.status_code == 500
 
-    def test_get_auto_attendant_config_unauthenticated(
-        self, api_client: FlaskClient
-    ) -> None:
+    def test_get_auto_attendant_config_unauthenticated(self, api_client: FlaskClient) -> None:
         with patch("pbx.api.utils.verify_authentication", return_value=(False, None)):
             resp = api_client.get("/api/auto-attendant/config")
         assert resp.status_code == 401
@@ -66,13 +74,15 @@ class TestAutoAttendantConfigRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
-            with patch("pbx.api.routes.features._regenerate_voice_prompts"):
-                resp = api_client.put(
-                    "/api/auto-attendant/config",
-                    data=json.dumps({"enabled": True, "timeout": 15}),
-                    content_type="application/json",
-                )
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+            resp = api_client.put(
+                "/api/auto-attendant/config",
+                data=json.dumps({"enabled": True, "timeout": 15}),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["success"] is True
@@ -84,13 +94,15 @@ class TestAutoAttendantConfigRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
-            with patch("pbx.api.routes.features._regenerate_voice_prompts"):
-                resp = api_client.put(
-                    "/api/auto-attendant/config",
-                    data=json.dumps({"prompts": {"welcome": "Hello"}}),
-                    content_type="application/json",
-                )
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+            resp = api_client.put(
+                "/api/auto-attendant/config",
+                data=json.dumps({"prompts": {"welcome": "Hello"}}),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
 
     def test_update_auto_attendant_config_not_available(
@@ -99,7 +111,10 @@ class TestAutoAttendantConfigRoutes:
         if hasattr(mock_pbx_core, "auto_attendant"):
             del mock_pbx_core.auto_attendant
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/config",
                 data=json.dumps({"enabled": True}),
@@ -122,7 +137,10 @@ class TestAutoAttendantMenuOptionRoutes:
         }
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menu-options")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -134,7 +152,10 @@ class TestAutoAttendantMenuOptionRoutes:
         if hasattr(mock_pbx_core, "auto_attendant"):
             del mock_pbx_core.auto_attendant
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menu-options")
         assert resp.status_code == 500
 
@@ -144,17 +165,21 @@ class TestAutoAttendantMenuOptionRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
-            with patch("pbx.api.routes.features._regenerate_voice_prompts"):
-                resp = api_client.post(
-                    "/api/auto-attendant/menu-options",
-                    data=json.dumps({
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+            resp = api_client.post(
+                "/api/auto-attendant/menu-options",
+                data=json.dumps(
+                    {
                         "digit": "3",
                         "destination": "1003",
                         "description": "Billing",
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["success"] is True
@@ -166,7 +191,10 @@ class TestAutoAttendantMenuOptionRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menu-options",
                 data=json.dumps({"digit": ""}),
@@ -183,13 +211,15 @@ class TestAutoAttendantMenuOptionRoutes:
         }
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
-            with patch("pbx.api.routes.features._regenerate_voice_prompts"):
-                resp = api_client.put(
-                    "/api/auto-attendant/menu-options/1",
-                    data=json.dumps({"destination": "1010"}),
-                    content_type="application/json",
-                )
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+            resp = api_client.put(
+                "/api/auto-attendant/menu-options/1",
+                data=json.dumps({"destination": "1010"}),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
 
     def test_update_menu_option_not_found(
@@ -199,7 +229,10 @@ class TestAutoAttendantMenuOptionRoutes:
         aa.menu_options = {}
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/menu-options/9",
                 data=json.dumps({"destination": "1010"}),
@@ -214,9 +247,11 @@ class TestAutoAttendantMenuOptionRoutes:
         aa.menu_options = {"1": {"destination": "1001", "description": "Sales"}}
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
-            with patch("pbx.api.routes.features._regenerate_voice_prompts"):
-                resp = api_client.delete("/api/auto-attendant/menu-options/1")
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+            resp = api_client.delete("/api/auto-attendant/menu-options/1")
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["success"] is True
@@ -228,7 +263,10 @@ class TestAutoAttendantMenuOptionRoutes:
         aa.menu_options = {}
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/auto-attendant/menu-options/9")
         assert resp.status_code == 404
 
@@ -237,15 +275,19 @@ class TestAutoAttendantMenuOptionRoutes:
 class TestAutoAttendantPromptRoutes:
     """Tests for Auto-Attendant prompt endpoints."""
 
-    def test_get_prompts_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_prompts_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.config.get.side_effect = lambda key, default=None: (
-            {"welcome": "Hi"} if key == "auto_attendant" else
-            "TestCo" if key == "company_name" else default
+            {"welcome": "Hi"}
+            if key == "auto_attendant"
+            else "TestCo"
+            if key == "company_name"
+            else default
         )
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/prompts")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -257,16 +299,20 @@ class TestAutoAttendantPromptRoutes:
         mock_pbx_core.config.config = {"auto_attendant": {}}
         mock_pbx_core.config.save.return_value = True
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
-            with patch("pbx.api.routes.features._regenerate_voice_prompts"):
-                resp = api_client.put(
-                    "/api/auto-attendant/prompts",
-                    data=json.dumps({
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+            resp = api_client.put(
+                "/api/auto-attendant/prompts",
+                data=json.dumps(
+                    {
                         "prompts": {"welcome": "Welcome"},
                         "company_name": "ACME",
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["success"] is True
@@ -276,14 +322,15 @@ class TestAutoAttendantPromptRoutes:
 class TestAutoAttendantMenuRoutes:
     """Tests for Auto-Attendant multi-level menu endpoints."""
 
-    def test_get_menus_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_menus_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.list_menus.return_value = [{"menu_id": "main", "name": "Main Menu"}]
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menus")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -296,7 +343,10 @@ class TestAutoAttendantMenuRoutes:
         aa.get_menu.return_value = {"menu_id": "main", "name": "Main Menu"}
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menus/main")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -309,26 +359,32 @@ class TestAutoAttendantMenuRoutes:
         aa.get_menu.return_value = None
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menus/nonexistent")
         assert resp.status_code == 404
 
-    def test_create_menu_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_create_menu_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.create_menu.return_value = True
         aa.audio_path = "/audio"
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menus",
-                data=json.dumps({
-                    "menu_id": "support-menu",
-                    "menu_name": "Support Menu",
-                    "prompt_text": "Press 1 for help",
-                }),
+                data=json.dumps(
+                    {
+                        "menu_id": "support-menu",
+                        "menu_name": "Support Menu",
+                        "prompt_text": "Press 1 for help",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -341,7 +397,10 @@ class TestAutoAttendantMenuRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menus",
                 data=json.dumps({"menu_id": "test"}),
@@ -355,45 +414,54 @@ class TestAutoAttendantMenuRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menus",
-                data=json.dumps({
-                    "menu_id": "INVALID ID!!",
-                    "menu_name": "Bad",
-                }),
+                data=json.dumps(
+                    {
+                        "menu_id": "INVALID ID!!",
+                        "menu_name": "Bad",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
 
-    def test_create_menu_failure(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_create_menu_failure(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.create_menu.return_value = False
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menus",
-                data=json.dumps({
-                    "menu_id": "test-menu",
-                    "menu_name": "Test Menu",
-                }),
+                data=json.dumps(
+                    {
+                        "menu_id": "test-menu",
+                        "menu_name": "Test Menu",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
 
-    def test_update_menu_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_update_menu_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.get_menu.return_value = {"menu_id": "main", "name": "Main"}
         aa.update_menu.return_value = True
         aa.audio_path = "/audio"
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/menus/main",
                 data=json.dumps({"menu_name": "Updated Main"}),
@@ -401,14 +469,15 @@ class TestAutoAttendantMenuRoutes:
             )
         assert resp.status_code == 200
 
-    def test_update_menu_not_found(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_update_menu_not_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.get_menu.return_value = None
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/menus/nonexistent",
                 data=json.dumps({"menu_name": "X"}),
@@ -416,25 +485,27 @@ class TestAutoAttendantMenuRoutes:
             )
         assert resp.status_code == 404
 
-    def test_delete_menu_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_delete_menu_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.delete_menu.return_value = True
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/auto-attendant/menus/sub-menu")
         assert resp.status_code == 200
 
-    def test_delete_menu_failure(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_delete_menu_failure(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.delete_menu.return_value = False
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/auto-attendant/menus/main")
         assert resp.status_code == 400
 
@@ -444,11 +515,19 @@ class TestAutoAttendantMenuRoutes:
         aa = MagicMock()
         aa.get_menu.return_value = {"menu_id": "main"}
         aa.get_menu_items.return_value = [
-            {"digit": "1", "destination_type": "extension", "destination_value": "1001", "description": "Sales"},
+            {
+                "digit": "1",
+                "destination_type": "extension",
+                "destination_value": "1001",
+                "description": "Sales",
+            },
         ]
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menus/main/items")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -462,27 +541,33 @@ class TestAutoAttendantMenuRoutes:
         aa.get_menu.return_value = None
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menus/missing/items")
         assert resp.status_code == 404
 
-    def test_add_menu_item_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_add_menu_item_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.get_menu.return_value = {"menu_id": "main"}
         aa.add_menu_item.return_value = True
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menus/main/items",
-                data=json.dumps({
-                    "digit": "1",
-                    "destination_type": "extension",
-                    "destination_value": "1001",
-                    "description": "Sales",
-                }),
+                data=json.dumps(
+                    {
+                        "digit": "1",
+                        "destination_type": "extension",
+                        "destination_value": "1001",
+                        "description": "Sales",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -493,7 +578,10 @@ class TestAutoAttendantMenuRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menus/main/items",
                 data=json.dumps({"digit": "1"}),
@@ -508,14 +596,19 @@ class TestAutoAttendantMenuRoutes:
         aa.get_menu.return_value = None
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menus/missing/items",
-                data=json.dumps({
-                    "digit": "1",
-                    "destination_type": "extension",
-                    "destination_value": "1001",
-                }),
+                data=json.dumps(
+                    {
+                        "digit": "1",
+                        "destination_type": "extension",
+                        "destination_value": "1001",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 404
@@ -525,12 +618,20 @@ class TestAutoAttendantMenuRoutes:
     ) -> None:
         aa = MagicMock()
         aa.get_menu_items.return_value = [
-            {"digit": "1", "destination_type": "extension", "destination_value": "1001", "description": "Sales"},
+            {
+                "digit": "1",
+                "destination_type": "extension",
+                "destination_value": "1001",
+                "description": "Sales",
+            },
         ]
         aa.add_menu_item.return_value = True
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/menus/main/items/1",
                 data=json.dumps({"destination_value": "1010"}),
@@ -545,7 +646,10 @@ class TestAutoAttendantMenuRoutes:
         aa.get_menu_items.return_value = []
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/menus/main/items/9",
                 data=json.dumps({"destination_value": "1010"}),
@@ -559,7 +663,10 @@ class TestAutoAttendantMenuRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/menus/main/items/1",
                 data=json.dumps({}),
@@ -574,7 +681,10 @@ class TestAutoAttendantMenuRoutes:
         aa.remove_menu_item.return_value = True
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/auto-attendant/menus/main/items/1")
         assert resp.status_code == 200
 
@@ -585,31 +695,36 @@ class TestAutoAttendantMenuRoutes:
         aa.remove_menu_item.return_value = False
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/auto-attendant/menus/main/items/9")
         assert resp.status_code == 500
 
-    def test_get_menu_tree_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_menu_tree_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.get_menu_tree.return_value = {"menu_id": "main", "children": []}
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menu-tree")
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert "menu_tree" in data
 
-    def test_get_menu_tree_failure(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_menu_tree_failure(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         aa = MagicMock()
         aa.get_menu_tree.return_value = None
         mock_pbx_core.auto_attendant = aa
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/auto-attendant/menu-tree")
         assert resp.status_code == 500
 
@@ -625,7 +740,10 @@ class TestSIPTrunkRoutes:
         ts.get_trunk_status.return_value = [{"trunk_id": "t1", "status": "active"}]
         mock_pbx_core.trunk_system = ts
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/sip-trunks")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -637,7 +755,10 @@ class TestSIPTrunkRoutes:
         if hasattr(mock_pbx_core, "trunk_system"):
             del mock_pbx_core.trunk_system
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/sip-trunks")
         assert resp.status_code == 500
 
@@ -654,15 +775,16 @@ class TestSIPTrunkRoutes:
         ts.failover_enabled = True
         mock_pbx_core.trunk_system = ts
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/sip-trunks/health")
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["monitoring_active"] is True
 
-    def test_add_sip_trunk_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_add_sip_trunk_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         ts = MagicMock()
         mock_pbx_core.trunk_system = ts
 
@@ -674,19 +796,19 @@ class TestSIPTrunkRoutes:
             "password": "pass",
         }
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
-            with patch(
-                "pbx.features.sip_trunk.SIPTrunk", create=True
-            ) as mock_sip_trunk:
-                trunk_instance = MagicMock()
-                trunk_instance.name = "New Trunk"
-                trunk_instance.to_dict.return_value = trunk_data
-                mock_sip_trunk.return_value = trunk_instance
-                resp = api_client.post(
-                    "/api/sip-trunks",
-                    data=json.dumps(trunk_data),
-                    content_type="application/json",
-                )
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ), patch("pbx.features.sip_trunk.SIPTrunk", create=True) as mock_sip_trunk:
+            trunk_instance = MagicMock()
+            trunk_instance.name = "New Trunk"
+            trunk_instance.to_dict.return_value = trunk_data
+            mock_sip_trunk.return_value = trunk_instance
+            resp = api_client.post(
+                "/api/sip-trunks",
+                data=json.dumps(trunk_data),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
 
     def test_test_sip_trunk_success(
@@ -699,7 +821,10 @@ class TestSIPTrunkRoutes:
         ts.get_trunk.return_value = trunk
         mock_pbx_core.trunk_system = ts
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/sip-trunks/test",
                 data=json.dumps({"trunk_id": "t1"}),
@@ -714,7 +839,10 @@ class TestSIPTrunkRoutes:
         ts.get_trunk.return_value = None
         mock_pbx_core.trunk_system = ts
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/sip-trunks/test",
                 data=json.dumps({"trunk_id": "nonexistent"}),
@@ -729,7 +857,10 @@ class TestSIPTrunkRoutes:
         ts.get_trunk.return_value = MagicMock()
         mock_pbx_core.trunk_system = ts
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/sip-trunks/t1")
         assert resp.status_code == 200
 
@@ -740,7 +871,10 @@ class TestSIPTrunkRoutes:
         ts.get_trunk.return_value = None
         mock_pbx_core.trunk_system = ts
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/sip-trunks/nonexistent")
         assert resp.status_code == 404
 
@@ -749,9 +883,7 @@ class TestSIPTrunkRoutes:
 class TestLCRRoutes:
     """Tests for LCR (Least-Cost Routing) endpoints."""
 
-    def test_get_lcr_rates_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_lcr_rates_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         rate_entry = MagicMock()
         rate_entry.trunk_id = "t1"
         rate_entry.pattern.pattern = "^1"
@@ -766,7 +898,10 @@ class TestLCRRoutes:
         lcr.time_based_rates = []
         mock_pbx_core.lcr = lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/lcr/rates")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -778,7 +913,10 @@ class TestLCRRoutes:
         if hasattr(mock_pbx_core, "lcr"):
             del mock_pbx_core.lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/lcr/rates")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -791,7 +929,10 @@ class TestLCRRoutes:
         lcr.get_statistics.return_value = {"total_calls": 100}
         mock_pbx_core.lcr = lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/lcr/statistics")
         assert resp.status_code == 200
 
@@ -801,26 +942,32 @@ class TestLCRRoutes:
         if hasattr(mock_pbx_core, "lcr"):
             del mock_pbx_core.lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/lcr/statistics")
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["total_calls"] == 0
 
-    def test_add_lcr_rate_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_add_lcr_rate_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         lcr = MagicMock()
         mock_pbx_core.lcr = lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/lcr/rate",
-                data=json.dumps({
-                    "trunk_id": "t1",
-                    "pattern": "^1",
-                    "rate_per_minute": 0.01,
-                }),
+                data=json.dumps(
+                    {
+                        "trunk_id": "t1",
+                        "pattern": "^1",
+                        "rate_per_minute": 0.01,
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -831,14 +978,19 @@ class TestLCRRoutes:
         if hasattr(mock_pbx_core, "lcr"):
             del mock_pbx_core.lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/lcr/rate",
-                data=json.dumps({
-                    "trunk_id": "t1",
-                    "pattern": "^1",
-                    "rate_per_minute": 0.01,
-                }),
+                data=json.dumps(
+                    {
+                        "trunk_id": "t1",
+                        "pattern": "^1",
+                        "rate_per_minute": 0.01,
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500
@@ -849,18 +1001,23 @@ class TestLCRRoutes:
         lcr = MagicMock()
         mock_pbx_core.lcr = lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/lcr/time-rate",
-                data=json.dumps({
-                    "name": "Off-Peak",
-                    "start_hour": 18,
-                    "start_minute": 0,
-                    "end_hour": 8,
-                    "end_minute": 0,
-                    "days": [0, 1, 2, 3, 4],
-                    "multiplier": 0.5,
-                }),
+                data=json.dumps(
+                    {
+                        "name": "Off-Peak",
+                        "start_hour": 18,
+                        "start_minute": 0,
+                        "end_hour": 8,
+                        "end_minute": 0,
+                        "days": [0, 1, 2, 3, 4],
+                        "multiplier": 0.5,
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -871,7 +1028,10 @@ class TestLCRRoutes:
         lcr = MagicMock()
         mock_pbx_core.lcr = lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post("/api/lcr/clear-rates")
         assert resp.status_code == 200
         lcr.clear_rates.assert_called_once()
@@ -882,7 +1042,10 @@ class TestLCRRoutes:
         lcr = MagicMock()
         mock_pbx_core.lcr = lcr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post("/api/lcr/clear-time-rates")
         assert resp.status_code == 200
         lcr.clear_time_rates.assert_called_once()
@@ -900,7 +1063,10 @@ class TestFMFMRoutes:
         fmfm.get_config.return_value = {"extension": "1001", "enabled": True}
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fmfm/extensions")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -912,18 +1078,22 @@ class TestFMFMRoutes:
         if hasattr(mock_pbx_core, "find_me_follow_me"):
             del mock_pbx_core.find_me_follow_me
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fmfm/extensions")
         assert resp.status_code == 500
 
-    def test_get_fmfm_config_found(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_fmfm_config_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         fmfm = MagicMock()
         fmfm.get_config.return_value = {"extension": "1001", "enabled": True}
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fmfm/config/1001")
         assert resp.status_code == 200
 
@@ -934,7 +1104,10 @@ class TestFMFMRoutes:
         fmfm.get_config.return_value = None
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fmfm/config/9999")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -947,7 +1120,10 @@ class TestFMFMRoutes:
         fmfm.get_statistics.return_value = {"total_calls": 50}
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fmfm/statistics")
         assert resp.status_code == 200
 
@@ -959,7 +1135,10 @@ class TestFMFMRoutes:
         fmfm.get_config.return_value = {"extension": "1001", "enabled": True}
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fmfm/config",
                 data=json.dumps({"extension": "1001", "enabled": True}),
@@ -973,7 +1152,10 @@ class TestFMFMRoutes:
         fmfm = MagicMock()
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fmfm/config",
                 data=json.dumps({"enabled": True}),
@@ -988,7 +1170,10 @@ class TestFMFMRoutes:
         fmfm.set_config.return_value = False
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fmfm/config",
                 data=json.dumps({"extension": "1001", "enabled": True}),
@@ -1004,7 +1189,10 @@ class TestFMFMRoutes:
         fmfm.get_config.return_value = {"extension": "1001"}
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fmfm/destination",
                 data=json.dumps({"extension": "1001", "number": "5551234"}),
@@ -1018,7 +1206,10 @@ class TestFMFMRoutes:
         fmfm = MagicMock()
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fmfm/destination",
                 data=json.dumps({"extension": "1001"}),
@@ -1033,7 +1224,10 @@ class TestFMFMRoutes:
         fmfm.remove_destination.return_value = True
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/fmfm/destination/1001/5551234")
         assert resp.status_code == 200
 
@@ -1044,18 +1238,22 @@ class TestFMFMRoutes:
         fmfm.remove_destination.return_value = False
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/fmfm/destination/1001/9999999")
         assert resp.status_code == 404
 
-    def test_disable_fmfm_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_disable_fmfm_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         fmfm = MagicMock()
         fmfm.delete_config.return_value = True
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/fmfm/config/1001")
         assert resp.status_code == 200
 
@@ -1066,7 +1264,10 @@ class TestFMFMRoutes:
         fmfm.delete_config.return_value = False
         mock_pbx_core.find_me_follow_me = fmfm
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/fmfm/config/9999")
         assert resp.status_code == 404
 
@@ -1082,7 +1283,10 @@ class TestTimeRoutingRoutes:
         tbr.list_rules.return_value = [{"rule_id": "r1", "name": "Business Hours"}]
         mock_pbx_core.time_based_routing = tbr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/time-routing/rules")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1094,7 +1298,10 @@ class TestTimeRoutingRoutes:
         if hasattr(mock_pbx_core, "time_based_routing"):
             del mock_pbx_core.time_based_routing
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/time-routing/rules")
         assert resp.status_code == 500
 
@@ -1105,7 +1312,10 @@ class TestTimeRoutingRoutes:
         tbr.get_statistics.return_value = {"total": 10}
         mock_pbx_core.time_based_routing = tbr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/time-routing/statistics")
         assert resp.status_code == 200
 
@@ -1116,15 +1326,20 @@ class TestTimeRoutingRoutes:
         tbr.add_rule.return_value = "r1"
         mock_pbx_core.time_based_routing = tbr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/time-routing/rule",
-                data=json.dumps({
-                    "name": "Business Hours",
-                    "destination": "1001",
-                    "route_to": "1002",
-                    "time_conditions": [{"start": "09:00", "end": "17:00"}],
-                }),
+                data=json.dumps(
+                    {
+                        "name": "Business Hours",
+                        "destination": "1001",
+                        "route_to": "1002",
+                        "time_conditions": [{"start": "09:00", "end": "17:00"}],
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1135,7 +1350,10 @@ class TestTimeRoutingRoutes:
         tbr = MagicMock()
         mock_pbx_core.time_based_routing = tbr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/time-routing/rule",
                 data=json.dumps({"name": "Test"}),
@@ -1150,15 +1368,20 @@ class TestTimeRoutingRoutes:
         tbr.add_rule.return_value = None
         mock_pbx_core.time_based_routing = tbr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/time-routing/rule",
-                data=json.dumps({
-                    "name": "Test",
-                    "destination": "1001",
-                    "route_to": "1002",
-                    "time_conditions": [],
-                }),
+                data=json.dumps(
+                    {
+                        "name": "Test",
+                        "destination": "1001",
+                        "route_to": "1002",
+                        "time_conditions": [],
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500
@@ -1170,7 +1393,10 @@ class TestTimeRoutingRoutes:
         tbr.delete_rule.return_value = True
         mock_pbx_core.time_based_routing = tbr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/time-routing/rule/r1")
         assert resp.status_code == 200
 
@@ -1181,7 +1407,10 @@ class TestTimeRoutingRoutes:
         tbr.delete_rule.return_value = False
         mock_pbx_core.time_based_routing = tbr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/time-routing/rule/nonexistent")
         assert resp.status_code == 404
 
@@ -1199,7 +1428,10 @@ class TestRecordingRetentionRoutes:
         }
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/recording-retention/policies")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1211,7 +1443,10 @@ class TestRecordingRetentionRoutes:
         if hasattr(mock_pbx_core, "recording_retention"):
             del mock_pbx_core.recording_retention
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/recording-retention/policies")
         assert resp.status_code == 500
 
@@ -1227,7 +1462,10 @@ class TestRecordingRetentionRoutes:
         }
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/recording-retention/statistics")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1241,7 +1479,10 @@ class TestRecordingRetentionRoutes:
         rr.add_policy.return_value = "p1"
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/recording-retention/policy",
                 data=json.dumps({"name": "Default", "retention_days": 30}),
@@ -1255,7 +1496,10 @@ class TestRecordingRetentionRoutes:
         rr = MagicMock()
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/recording-retention/policy",
                 data=json.dumps({"name": "Default"}),
@@ -1269,7 +1513,10 @@ class TestRecordingRetentionRoutes:
         rr = MagicMock()
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/recording-retention/policy",
                 data=json.dumps({"name": "Bad", "retention_days": 9999}),
@@ -1283,7 +1530,10 @@ class TestRecordingRetentionRoutes:
         rr = MagicMock()
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/recording-retention/policy",
                 data=json.dumps({"name": "<script>alert(1)</script>", "retention_days": 30}),
@@ -1298,7 +1548,10 @@ class TestRecordingRetentionRoutes:
         rr.retention_policies = {"p1": {"name": "Default"}}
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/recording-retention/policy/p1")
         assert resp.status_code == 200
 
@@ -1309,7 +1562,10 @@ class TestRecordingRetentionRoutes:
         rr.retention_policies = {}
         mock_pbx_core.recording_retention = rr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/recording-retention/policy/nonexistent")
         assert resp.status_code == 404
 
@@ -1325,7 +1581,10 @@ class TestFraudDetectionRoutes:
         fd.get_alerts.return_value = [{"alert_id": "a1", "type": "suspicious"}]
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fraud-detection/alerts")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1338,7 +1597,10 @@ class TestFraudDetectionRoutes:
         fd.get_alerts.return_value = []
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fraud-detection/alerts?extension=1001&hours=48")
         assert resp.status_code == 200
 
@@ -1348,7 +1610,10 @@ class TestFraudDetectionRoutes:
         if hasattr(mock_pbx_core, "fraud_detection"):
             del mock_pbx_core.fraud_detection
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fraud-detection/alerts")
         assert resp.status_code == 500
 
@@ -1366,7 +1631,10 @@ class TestFraudDetectionRoutes:
         fd.blocked_patterns = ["^900"]
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fraud-detection/statistics")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1379,7 +1647,10 @@ class TestFraudDetectionRoutes:
         fd.get_extension_statistics.return_value = {"extension": "1001", "alerts": 0}
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fraud-detection/extension/1001")
         assert resp.status_code == 200
 
@@ -1389,7 +1660,10 @@ class TestFraudDetectionRoutes:
         fd = MagicMock()
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/fraud-detection/extension/abc")
         assert resp.status_code == 400
 
@@ -1400,7 +1674,10 @@ class TestFraudDetectionRoutes:
         fd.add_blocked_pattern.return_value = True
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fraud-detection/blocked-pattern",
                 data=json.dumps({"pattern": "^900", "reason": "Premium rate"}),
@@ -1414,7 +1691,10 @@ class TestFraudDetectionRoutes:
         fd = MagicMock()
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fraud-detection/blocked-pattern",
                 data=json.dumps({"pattern": "^900"}),
@@ -1428,7 +1708,10 @@ class TestFraudDetectionRoutes:
         fd = MagicMock()
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/fraud-detection/blocked-pattern",
                 data=json.dumps({"pattern": "[invalid", "reason": "Test"}),
@@ -1443,7 +1726,10 @@ class TestFraudDetectionRoutes:
         fd.blocked_patterns = ["^900", "^976"]
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/fraud-detection/blocked-pattern/0")
         assert resp.status_code == 200
 
@@ -1454,7 +1740,10 @@ class TestFraudDetectionRoutes:
         fd.blocked_patterns = []
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/fraud-detection/blocked-pattern/99")
         assert resp.status_code == 404
 
@@ -1465,7 +1754,10 @@ class TestFraudDetectionRoutes:
         fd.blocked_patterns = []
         mock_pbx_core.fraud_detection = fd
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/fraud-detection/blocked-pattern/abc")
         assert resp.status_code == 400
 
@@ -1481,7 +1773,10 @@ class TestCallbackQueueRoutes:
         cq.get_statistics.return_value = {"pending": 3, "completed": 10}
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/statistics")
         assert resp.status_code == 200
 
@@ -1491,7 +1786,10 @@ class TestCallbackQueueRoutes:
         if hasattr(mock_pbx_core, "callback_queue"):
             del mock_pbx_core.callback_queue
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/statistics")
         assert resp.status_code == 500
 
@@ -1506,7 +1804,10 @@ class TestCallbackQueueRoutes:
         ]
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/list")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1520,7 +1821,10 @@ class TestCallbackQueueRoutes:
         cq.get_queue_statistics.return_value = {"pending": 0}
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/queue/sales")
         assert resp.status_code == 200
 
@@ -1530,7 +1834,10 @@ class TestCallbackQueueRoutes:
         cq = MagicMock()
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/queue/invalid id!!!")
         assert resp.status_code == 400
 
@@ -1541,7 +1848,10 @@ class TestCallbackQueueRoutes:
         cq.get_callback_info.return_value = {"callback_id": "cb_abc123", "status": "pending"}
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/info/cb_abc123")
         assert resp.status_code == 200
 
@@ -1552,7 +1862,10 @@ class TestCallbackQueueRoutes:
         cq.get_callback_info.return_value = None
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/info/cb_nonexistent")
         assert resp.status_code == 404
 
@@ -1562,7 +1875,10 @@ class TestCallbackQueueRoutes:
         cq = MagicMock()
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/callback-queue/info/bad_id")
         assert resp.status_code == 400
 
@@ -1573,13 +1889,18 @@ class TestCallbackQueueRoutes:
         cq.request_callback.return_value = {"callback_id": "cb_new", "position": 1}
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/request",
-                data=json.dumps({
-                    "queue_id": "sales",
-                    "caller_number": "5551234",
-                }),
+                data=json.dumps(
+                    {
+                        "queue_id": "sales",
+                        "caller_number": "5551234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1590,7 +1911,10 @@ class TestCallbackQueueRoutes:
         cq = MagicMock()
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/request",
                 data=json.dumps({"queue_id": "sales"}),
@@ -1605,13 +1929,18 @@ class TestCallbackQueueRoutes:
         cq.request_callback.return_value = {"error": "Queue full"}
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/request",
-                data=json.dumps({
-                    "queue_id": "sales",
-                    "caller_number": "5551234",
-                }),
+                data=json.dumps(
+                    {
+                        "queue_id": "sales",
+                        "caller_number": "5551234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
@@ -1623,13 +1952,18 @@ class TestCallbackQueueRoutes:
         cq.start_callback.return_value = {"status": "in_progress"}
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/start",
-                data=json.dumps({
-                    "callback_id": "cb_1",
-                    "agent_id": "agent_1",
-                }),
+                data=json.dumps(
+                    {
+                        "callback_id": "cb_1",
+                        "agent_id": "agent_1",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1640,7 +1974,10 @@ class TestCallbackQueueRoutes:
         cq = MagicMock()
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/start",
                 data=json.dumps({"callback_id": "cb_1"}),
@@ -1655,13 +1992,18 @@ class TestCallbackQueueRoutes:
         cq.complete_callback.return_value = True
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/complete",
-                data=json.dumps({
-                    "callback_id": "cb_1",
-                    "success": True,
-                }),
+                data=json.dumps(
+                    {
+                        "callback_id": "cb_1",
+                        "success": True,
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1673,13 +2015,18 @@ class TestCallbackQueueRoutes:
         cq.complete_callback.return_value = False
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/complete",
-                data=json.dumps({
-                    "callback_id": "cb_nonexistent",
-                    "success": False,
-                }),
+                data=json.dumps(
+                    {
+                        "callback_id": "cb_nonexistent",
+                        "success": False,
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 404
@@ -1690,7 +2037,10 @@ class TestCallbackQueueRoutes:
         cq = MagicMock()
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/complete",
                 data=json.dumps({"callback_id": "cb_1"}),
@@ -1705,7 +2055,10 @@ class TestCallbackQueueRoutes:
         cq.cancel_callback.return_value = True
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/cancel",
                 data=json.dumps({"callback_id": "cb_1"}),
@@ -1720,7 +2073,10 @@ class TestCallbackQueueRoutes:
         cq.cancel_callback.return_value = False
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/cancel",
                 data=json.dumps({"callback_id": "cb_missing"}),
@@ -1734,7 +2090,10 @@ class TestCallbackQueueRoutes:
         cq = MagicMock()
         mock_pbx_core.callback_queue = cq
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/callback-queue/cancel",
                 data=json.dumps({}),
@@ -1753,7 +2112,7 @@ class TestMobilePushRoutes:
         from datetime import datetime, timezone
 
         mp = MagicMock()
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         mp.device_tokens = {
             "user1": [
                 {"platform": "ios", "registered_at": now, "last_seen": now},
@@ -1761,7 +2120,10 @@ class TestMobilePushRoutes:
         }
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/mobile-push/devices")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1773,7 +2135,10 @@ class TestMobilePushRoutes:
         if hasattr(mock_pbx_core, "mobile_push"):
             del mock_pbx_core.mobile_push
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/mobile-push/devices")
         assert resp.status_code == 500
 
@@ -1784,7 +2149,10 @@ class TestMobilePushRoutes:
         mp.get_user_devices.return_value = [{"platform": "ios"}]
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/mobile-push/devices/user1")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1796,7 +2164,10 @@ class TestMobilePushRoutes:
         mp = MagicMock()
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/mobile-push/devices/invalid user!!")
         assert resp.status_code == 400
 
@@ -1810,7 +2181,10 @@ class TestMobilePushRoutes:
         mp.notification_history = [{"sent_at": "2024-01-01"}]
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/mobile-push/statistics")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1824,14 +2198,19 @@ class TestMobilePushRoutes:
         mp.register_device.return_value = True
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/mobile-push/register",
-                data=json.dumps({
-                    "user_id": "user1",
-                    "device_token": "abc123",
-                    "platform": "ios",
-                }),
+                data=json.dumps(
+                    {
+                        "user_id": "user1",
+                        "device_token": "abc123",
+                        "platform": "ios",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1842,7 +2221,10 @@ class TestMobilePushRoutes:
         mp = MagicMock()
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/mobile-push/register",
                 data=json.dumps({"user_id": "user1"}),
@@ -1857,13 +2239,18 @@ class TestMobilePushRoutes:
         mp.unregister_device.return_value = True
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/mobile-push/unregister",
-                data=json.dumps({
-                    "user_id": "user1",
-                    "device_token": "abc123",
-                }),
+                data=json.dumps(
+                    {
+                        "user_id": "user1",
+                        "device_token": "abc123",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1875,13 +2262,18 @@ class TestMobilePushRoutes:
         mp.unregister_device.return_value = False
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/mobile-push/unregister",
-                data=json.dumps({
-                    "user_id": "user1",
-                    "device_token": "nonexistent",
-                }),
+                data=json.dumps(
+                    {
+                        "user_id": "user1",
+                        "device_token": "nonexistent",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 404
@@ -1893,7 +2285,10 @@ class TestMobilePushRoutes:
         mp.send_test_notification.return_value = {"sent": 1}
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/mobile-push/test",
                 data=json.dumps({"user_id": "user1"}),
@@ -1907,7 +2302,10 @@ class TestMobilePushRoutes:
         mp = MagicMock()
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/mobile-push/test",
                 data=json.dumps({}),
@@ -1922,7 +2320,10 @@ class TestMobilePushRoutes:
         mp.send_test_notification.return_value = {"error": "No devices"}
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/mobile-push/test",
                 data=json.dumps({"user_id": "user1"}),
@@ -1947,7 +2348,10 @@ class TestRecordingAnnouncementsRoutes:
         ra.require_consent = True
         mock_pbx_core.recording_announcements = ra
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/recording-announcements/statistics")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -1960,7 +2364,10 @@ class TestRecordingAnnouncementsRoutes:
         if hasattr(mock_pbx_core, "recording_announcements"):
             del mock_pbx_core.recording_announcements
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/recording-announcements/statistics")
         assert resp.status_code == 500
 
@@ -1971,7 +2378,10 @@ class TestRecordingAnnouncementsRoutes:
         ra.get_announcement_config.return_value = {"type": "beep", "consent": True}
         mock_pbx_core.recording_announcements = ra
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/recording-announcements/config")
         assert resp.status_code == 200
 
@@ -1981,7 +2391,10 @@ class TestRecordingAnnouncementsRoutes:
         if hasattr(mock_pbx_core, "recording_announcements"):
             del mock_pbx_core.recording_announcements
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/recording-announcements/config")
         assert resp.status_code == 500
 
@@ -1997,7 +2410,10 @@ class TestSkillsBasedRoutingRoutes:
         sr.get_all_skills.return_value = [{"skill_id": "english", "name": "English"}]
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/skills/all")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -2009,7 +2425,10 @@ class TestSkillsBasedRoutingRoutes:
         if hasattr(mock_pbx_core, "skills_router"):
             del mock_pbx_core.skills_router
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/skills/all")
         assert resp.status_code == 500
 
@@ -2020,7 +2439,10 @@ class TestSkillsBasedRoutingRoutes:
         sr.get_agent_skills.return_value = [{"skill_id": "english", "proficiency": 8}]
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/skills/agent/1001")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -2033,27 +2455,33 @@ class TestSkillsBasedRoutingRoutes:
         sr.get_queue_requirements.return_value = [{"skill_id": "english", "min_proficiency": 5}]
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/skills/queue/100")
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["queue_number"] == "100"
 
-    def test_add_skill_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_add_skill_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         sr = MagicMock()
         sr.add_skill.return_value = True
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/skills/skill",
-                data=json.dumps({
-                    "skill_id": "french",
-                    "name": "French",
-                    "description": "French language",
-                }),
+                data=json.dumps(
+                    {
+                        "skill_id": "french",
+                        "name": "French",
+                        "description": "French language",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -2064,7 +2492,10 @@ class TestSkillsBasedRoutingRoutes:
         sr = MagicMock()
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/skills/skill",
                 data=json.dumps({"skill_id": "french"}),
@@ -2079,7 +2510,10 @@ class TestSkillsBasedRoutingRoutes:
         sr.add_skill.return_value = False
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/skills/skill",
                 data=json.dumps({"skill_id": "english", "name": "English"}),
@@ -2087,21 +2521,24 @@ class TestSkillsBasedRoutingRoutes:
             )
         assert resp.status_code == 409
 
-    def test_assign_skill_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_assign_skill_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         sr = MagicMock()
         sr.assign_skill_to_agent.return_value = True
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/skills/assign",
-                data=json.dumps({
-                    "agent_extension": "1001",
-                    "skill_id": "english",
-                    "proficiency": 8,
-                }),
+                data=json.dumps(
+                    {
+                        "agent_extension": "1001",
+                        "skill_id": "english",
+                        "proficiency": 8,
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -2112,7 +2549,10 @@ class TestSkillsBasedRoutingRoutes:
         sr = MagicMock()
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/skills/assign",
                 data=json.dumps({"agent_extension": "1001"}),
@@ -2127,13 +2567,18 @@ class TestSkillsBasedRoutingRoutes:
         sr.set_queue_requirements.return_value = True
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/skills/queue-requirements",
-                data=json.dumps({
-                    "queue_number": "100",
-                    "requirements": [{"skill_id": "english"}],
-                }),
+                data=json.dumps(
+                    {
+                        "queue_number": "100",
+                        "requirements": [{"skill_id": "english"}],
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -2144,7 +2589,10 @@ class TestSkillsBasedRoutingRoutes:
         sr = MagicMock()
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.post(
                 "/api/skills/queue-requirements",
                 data=json.dumps({"requirements": []}),
@@ -2159,7 +2607,10 @@ class TestSkillsBasedRoutingRoutes:
         sr.remove_skill_from_agent.return_value = True
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/skills/assign/1001/english")
         assert resp.status_code == 200
 
@@ -2170,7 +2621,10 @@ class TestSkillsBasedRoutingRoutes:
         sr.remove_skill_from_agent.return_value = False
         mock_pbx_core.skills_router = sr
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.delete("/api/skills/assign/1001/nonexistent")
         assert resp.status_code == 404
 
@@ -2185,7 +2639,7 @@ class TestPushHistoryRoute:
         from datetime import datetime, timezone
 
         mp = MagicMock()
-        now = datetime.now(tz=timezone.utc)
+        now = datetime.now(tz=UTC)
         mp.notification_history = [
             {
                 "user_id": "user1",
@@ -2198,7 +2652,10 @@ class TestPushHistoryRoute:
         ]
         mock_pbx_core.mobile_push = mp
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/mobile-push/history")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -2210,6 +2667,9 @@ class TestPushHistoryRoute:
         if hasattr(mock_pbx_core, "mobile_push"):
             del mock_pbx_core.mobile_push
 
-        with patch("pbx.api.utils.verify_authentication", return_value=(True, {"extension": "1001", "is_admin": True})):
+        with patch(
+            "pbx.api.utils.verify_authentication",
+            return_value=(True, {"extension": "1001", "is_admin": True}),
+        ):
             resp = api_client.get("/api/mobile-push/history")
         assert resp.status_code == 500

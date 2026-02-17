@@ -736,9 +736,7 @@ class TestDNSSRVFailoverMarkServerFailed:
         self.failover.srv_cache["_sip._tcp.example.com"] = [record]
 
         with patch.object(self.failover, "_trigger_failover") as mock_trigger:
-            self.failover.mark_server_failed(
-                "sip", "tcp", "example.com", "sip.example.com", 5060
-            )
+            self.failover.mark_server_failed("sip", "tcp", "example.com", "sip.example.com", 5060)
             mock_trigger.assert_called_once_with("_sip._tcp.example.com")
 
     def test_mark_failed_no_matching_record(self) -> None:
@@ -746,9 +744,7 @@ class TestDNSSRVFailoverMarkServerFailed:
         record = SRVRecord(priority=10, weight=60, port=5060, target="sip.example.com")
         self.failover.srv_cache["_sip._tcp.example.com"] = [record]
 
-        self.failover.mark_server_failed(
-            "sip", "tcp", "example.com", "other.example.com", 5060
-        )
+        self.failover.mark_server_failed("sip", "tcp", "example.com", "other.example.com", 5060)
 
         assert record.failure_count == 0
         assert record.available is True
@@ -758,9 +754,7 @@ class TestDNSSRVFailoverMarkServerFailed:
         record = SRVRecord(priority=10, weight=60, port=5060, target="sip.example.com")
         self.failover.srv_cache["_sip._tcp.example.com"] = [record]
 
-        self.failover.mark_server_failed(
-            "sip", "tcp", "example.com", "sip.example.com", 5061
-        )
+        self.failover.mark_server_failed("sip", "tcp", "example.com", "sip.example.com", 5061)
 
         assert record.failure_count == 0
 
@@ -770,9 +764,7 @@ class TestDNSSRVFailoverMarkServerFailed:
         record_b = SRVRecord(priority=20, weight=40, port=5060, target="sip2.example.com")
         self.failover.srv_cache["_sip._tcp.example.com"] = [record_a, record_b]
 
-        self.failover.mark_server_failed(
-            "sip", "tcp", "example.com", "sip2.example.com", 5060
-        )
+        self.failover.mark_server_failed("sip", "tcp", "example.com", "sip2.example.com", 5060)
 
         assert record_a.failure_count == 0
         assert record_b.failure_count == 1
@@ -824,9 +816,7 @@ class TestDNSSRVFailoverMarkServerRecovered:
         record.available = False
         self.failover.srv_cache["_sip._tcp.example.com"] = [record]
 
-        self.failover.mark_server_recovered(
-            "sip", "tcp", "example.com", "sip.example.com", 5060
-        )
+        self.failover.mark_server_recovered("sip", "tcp", "example.com", "sip.example.com", 5060)
 
         assert record.failure_count == 0
         assert record.available is True
@@ -838,9 +828,7 @@ class TestDNSSRVFailoverMarkServerRecovered:
         record.available = False
         self.failover.srv_cache["_sip._tcp.example.com"] = [record]
 
-        self.failover.mark_server_recovered(
-            "sip", "tcp", "example.com", "other.example.com", 5060
-        )
+        self.failover.mark_server_recovered("sip", "tcp", "example.com", "other.example.com", 5060)
 
         # Original record should remain unchanged
         assert record.failure_count == 3
@@ -853,9 +841,7 @@ class TestDNSSRVFailoverMarkServerRecovered:
         assert record.failure_count == 0
         self.failover.srv_cache["_sip._tcp.example.com"] = [record]
 
-        self.failover.mark_server_recovered(
-            "sip", "tcp", "example.com", "sip.example.com", 5060
-        )
+        self.failover.mark_server_recovered("sip", "tcp", "example.com", "sip.example.com", 5060)
 
         assert record.failure_count == 0
         assert record.available is True
@@ -872,9 +858,7 @@ class TestDNSSRVFailoverMarkServerRecovered:
 
         self.failover.srv_cache["_sip._tcp.example.com"] = [record_a, record_b]
 
-        self.failover.mark_server_recovered(
-            "sip", "tcp", "example.com", "sip2.example.com", 5060
-        )
+        self.failover.mark_server_recovered("sip", "tcp", "example.com", "sip2.example.com", 5060)
 
         # Only record_b should be recovered
         assert record_a.failure_count == 5
@@ -984,9 +968,7 @@ class TestDNSSRVFailoverStatistics:
         record.failure_count = 2
         self.failover.srv_cache["_sip._tcp.example.com"] = [record]
 
-        self.failover.mark_server_failed(
-            "sip", "tcp", "example.com", "sip.example.com", 5060
-        )
+        self.failover.mark_server_failed("sip", "tcp", "example.com", "sip.example.com", 5060)
 
         stats = self.failover.get_statistics()
 
@@ -1130,12 +1112,8 @@ class TestDNSSRVFailoverIntegration:
         assert server["target"] == "primary.example.com"
 
         # Mark primary as failed twice (max_failures=2)
-        self.failover.mark_server_failed(
-            "sip", "tcp", "example.com", "primary.example.com", 5060
-        )
-        self.failover.mark_server_failed(
-            "sip", "tcp", "example.com", "primary.example.com", 5060
-        )
+        self.failover.mark_server_failed("sip", "tcp", "example.com", "primary.example.com", 5060)
+        self.failover.mark_server_failed("sip", "tcp", "example.com", "primary.example.com", 5060)
 
         # Primary should now be unavailable
         assert records[0].available is False

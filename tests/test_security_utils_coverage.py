@@ -203,9 +203,9 @@ class TestPasswordPolicy:
         policy = PasswordPolicy()
         pw = policy.generate_strong_password(16)
         assert len(pw) >= 16
-        valid, _ = policy.validate(pw)
+        _valid, _ = policy.validate(pw)
         # Generated passwords should (overwhelmingly) pass validation
-        # They may rarely trigger sequential/repeated checks – that's acceptable
+        # They may rarely trigger sequential/repeated checks - that's acceptable
 
     @patch("pbx.utils.security.get_logger")
     def test_generate_strong_password_minimum_length_enforced(
@@ -228,11 +228,11 @@ class TestPasswordPolicy:
             "security.password.require_digit": False,
             "security.password.require_special": False,
         }
-        policy = PasswordPolicy(config)
+        _policy = PasswordPolicy(config)
         # With nothing required, all_chars would be empty, but the while loop
         # would become infinite. Let's just confirm it doesn't crash when
         # at least one category is on. Test the branch where requirements are off.
-        # Actually since all are False, all_chars is empty – the code would
+        # Actually since all are False, all_chars is empty - the code would
         # loop forever. We test that the generate method works when some flags
         # are off but at least one is on.
         config2 = dict(config)
@@ -322,7 +322,7 @@ class TestRateLimiter:
         limiter.lockouts["user1"] = time.time() - 1
         limiter.attempts["user1"] = [time.time()]
 
-        limited, remaining = limiter.is_rate_limited("user1")
+        limited, _remaining = limiter.is_rate_limited("user1")
         assert limited is False
         assert "user1" not in limiter.lockouts
         assert "user1" not in limiter.attempts
@@ -348,7 +348,7 @@ class TestRateLimiter:
         limiter = RateLimiter(config)
         # Record very old attempts
         limiter.attempts["user1"] = [time.time() - 100, time.time() - 100]
-        limited, remaining = limiter.is_rate_limited("user1")
+        limited, _remaining = limiter.is_rate_limited("user1")
         assert limited is False
         assert limiter.attempts["user1"] == []
 
@@ -540,7 +540,7 @@ class TestSecurePasswordManager:
     ) -> None:
         from pbx.utils.security import SecurePasswordManager
 
-        mgr = SecurePasswordManager()
+        _mgr = SecurePasswordManager()
         # Default fips_mode=True, enforce_fips=True
         mock_get_encryption.assert_called_once_with(True, True)
 
@@ -552,7 +552,7 @@ class TestSecurePasswordManager:
         from pbx.utils.security import SecurePasswordManager
 
         config = {"security.fips_mode": False}
-        mgr = SecurePasswordManager(config)
+        _mgr = SecurePasswordManager(config)
         mock_get_encryption.assert_called_once_with(False, False)
 
     @patch("pbx.utils.security.get_encryption")
@@ -563,7 +563,7 @@ class TestSecurePasswordManager:
         from pbx.utils.security import SecurePasswordManager
 
         config = {"security.fips_mode": True, "security.enforce_fips": False}
-        mgr = SecurePasswordManager(config)
+        _mgr = SecurePasswordManager(config)
         mock_get_encryption.assert_called_once_with(True, False)
 
     @patch("pbx.utils.security.get_encryption")
@@ -605,7 +605,7 @@ class TestSecurePasswordManager:
         from pbx.utils.security import SecurePasswordManager
 
         mgr = SecurePasswordManager()
-        valid, msg = mgr.validate_new_password("")
+        valid, _msg = mgr.validate_new_password("")
         assert valid is False
 
     @patch("pbx.utils.security.get_encryption")
@@ -736,7 +736,7 @@ class TestThreatDetector:
         db.enabled = True
         db.db_type = "sqlite"
         db.fetch_all.return_value = []
-        detector = ThreatDetector(database=db, config={})
+        _detector = ThreatDetector(database=db, config={})
         # Should have initialized schema and loaded blocked IPs
         assert db.execute.call_count >= 2  # two CREATE TABLE calls
         db.fetch_all.assert_called_once()
@@ -751,8 +751,8 @@ class TestThreatDetector:
         db.enabled = True
         db.db_type = "sqlite"
         db.execute.side_effect = sqlite3.Error("schema error")
-        # Should not raise – error is caught
-        detector = ThreatDetector(database=db, config={})
+        # Should not raise - error is caught
+        _detector = ThreatDetector(database=db, config={})
         logger.error.assert_called()
 
     @patch("pbx.utils.security.get_logger")
@@ -763,7 +763,7 @@ class TestThreatDetector:
         db.enabled = True
         db.db_type = "postgresql"
         db.fetch_all.return_value = []
-        detector = ThreatDetector(database=db, config={})
+        _detector = ThreatDetector(database=db, config={})
         # Should call execute for CREATE TABLE (postgresql variant)
         assert db.execute.call_count >= 2
 
@@ -818,7 +818,7 @@ class TestThreatDetector:
         db.db_type = "sqlite"
         # First two calls are execute for schema creation; then fetch_all fails
         db.fetch_all.side_effect = sqlite3.Error("load error")
-        detector = ThreatDetector(database=db, config={})
+        _detector = ThreatDetector(database=db, config={})
         logger.error.assert_called()
         assert "Failed to load blocked IPs" in logger.error.call_args[0][0]
 
@@ -828,7 +828,7 @@ class TestThreatDetector:
 
         db = MagicMock()
         db.enabled = False
-        detector = ThreatDetector(database=db, config={})
+        _detector = ThreatDetector(database=db, config={})
         # _load_blocked_ips_from_database should return early
         db.fetch_all.assert_not_called()
 
@@ -863,9 +863,7 @@ class TestThreatDetector:
     def test_is_ip_blocked_disabled(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
-        detector = ThreatDetector(
-            config={"security.threat_detection.enabled": False}
-        )
+        detector = ThreatDetector(config={"security.threat_detection.enabled": False})
         blocked, reason = detector.is_ip_blocked("1.2.3.4")
         assert blocked is False
         assert reason is None
@@ -884,9 +882,7 @@ class TestThreatDetector:
         assert reason == "test block"
 
     @patch("pbx.utils.security.get_logger")
-    def test_is_ip_blocked_expired_triggers_auto_unblock(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_is_ip_blocked_expired_triggers_auto_unblock(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
         db = MagicMock()
@@ -900,7 +896,7 @@ class TestThreatDetector:
             "until": time.time() - 10,
             "reason": "old block",
         }
-        blocked, reason = detector.is_ip_blocked("1.2.3.4")
+        blocked, _reason = detector.is_ip_blocked("1.2.3.4")
         assert blocked is False
         assert "1.2.3.4" not in detector.blocked_ips
 
@@ -930,7 +926,7 @@ class TestThreatDetector:
         db.fetch_one.return_value = None
 
         detector = ThreatDetector(database=db, config={})
-        blocked, reason = detector.is_ip_blocked("5.6.7.8")
+        blocked, _reason = detector.is_ip_blocked("5.6.7.8")
         assert blocked is False
         # Verify the PostgreSQL query variant was used
         call_args = db.fetch_one.call_args[0][0]
@@ -957,9 +953,7 @@ class TestThreatDetector:
     def test_block_ip_disabled(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
-        detector = ThreatDetector(
-            config={"security.threat_detection.enabled": False}
-        )
+        detector = ThreatDetector(config={"security.threat_detection.enabled": False})
         detector.block_ip("1.2.3.4", "test")
         assert "1.2.3.4" not in detector.blocked_ips
 
@@ -1114,9 +1108,7 @@ class TestThreatDetector:
     def test_record_failed_attempt_disabled(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
-        detector = ThreatDetector(
-            config={"security.threat_detection.enabled": False}
-        )
+        detector = ThreatDetector(config={"security.threat_detection.enabled": False})
         detector.record_failed_attempt("1.2.3.4", "bad password")
         assert "1.2.3.4" not in detector.failed_attempts
 
@@ -1144,9 +1136,7 @@ class TestThreatDetector:
     def test_record_failed_attempt_triggers_block(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
-        detector = ThreatDetector(
-            config={"security.threat_detection.failed_login_threshold": 3}
-        )
+        detector = ThreatDetector(config={"security.threat_detection.failed_login_threshold": 3})
         for i in range(3):
             detector.record_failed_attempt("1.2.3.4", f"attempt {i}")
 
@@ -1161,9 +1151,7 @@ class TestThreatDetector:
     def test_detect_suspicious_pattern_disabled(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
-        detector = ThreatDetector(
-            config={"security.threat_detection.enabled": False}
-        )
+        detector = ThreatDetector(config={"security.threat_detection.enabled": False})
         result = detector.detect_suspicious_pattern("1.2.3.4", "sql_injection")
         assert result is False
 
@@ -1177,9 +1165,7 @@ class TestThreatDetector:
         assert detector.suspicious_patterns["1.2.3.4"]["sql_injection"] == 1
 
     @patch("pbx.utils.security.get_logger")
-    def test_detect_suspicious_pattern_threshold_reached(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_detect_suspicious_pattern_threshold_reached(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
         detector = ThreatDetector(
@@ -1194,9 +1180,7 @@ class TestThreatDetector:
         assert detector.suspicious_patterns["1.2.3.4"]["scanner"] == 0
 
     @patch("pbx.utils.security.get_logger")
-    def test_detect_suspicious_pattern_multiple_patterns(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_detect_suspicious_pattern_multiple_patterns(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
         detector = ThreatDetector()
@@ -1211,9 +1195,7 @@ class TestThreatDetector:
     def test_analyze_request_pattern_disabled(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
-        detector = ThreatDetector(
-            config={"security.threat_detection.enabled": False}
-        )
+        detector = ThreatDetector(config={"security.threat_detection.enabled": False})
         analysis = detector.analyze_request_pattern("1.2.3.4")
         assert analysis["is_blocked"] is False
         assert analysis["is_suspicious"] is False
@@ -1248,9 +1230,7 @@ class TestThreatDetector:
         from pbx.utils.security import ThreatDetector
 
         detector = ThreatDetector()
-        analysis = detector.analyze_request_pattern(
-            "1.2.3.4", user_agent="nmap nikto sqlmap"
-        )
+        analysis = detector.analyze_request_pattern("1.2.3.4", user_agent="nmap nikto sqlmap")
         assert analysis["score"] >= 90  # 30 per scanner keyword
 
     @patch("pbx.utils.security.get_logger")
@@ -1284,9 +1264,7 @@ class TestThreatDetector:
         from pbx.utils.security import ThreatDetector
 
         detector = ThreatDetector()
-        analysis = detector.analyze_request_pattern(
-            "1.2.3.4", user_agent="Mozilla/5.0 Chrome/120"
-        )
+        analysis = detector.analyze_request_pattern("1.2.3.4", user_agent="Mozilla/5.0 Chrome/120")
         assert analysis["is_suspicious"] is False
 
     @patch("pbx.utils.security.get_logger")
@@ -1504,9 +1482,7 @@ class TestSecurityIntegration:
     """Tests that verify interactions between security components"""
 
     @patch("pbx.utils.security.get_logger")
-    def test_rate_limiter_lockout_then_is_rate_limited(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_rate_limiter_lockout_then_is_rate_limited(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import RateLimiter
 
         config = {
@@ -1517,8 +1493,8 @@ class TestSecurityIntegration:
         limiter.record_attempt("user1")
         limiter.record_attempt("user1")
 
-        # Now check – should trigger lockout
-        limited, remaining = limiter.is_rate_limited("user1")
+        # Now check - should trigger lockout
+        limited, _remaining = limiter.is_rate_limited("user1")
         assert limited is True
 
         # Second check while locked out
@@ -1531,9 +1507,7 @@ class TestSecurityIntegration:
     def test_threat_detector_full_flow(self, mock_get_logger: MagicMock) -> None:
         from pbx.utils.security import ThreatDetector
 
-        detector = ThreatDetector(
-            config={"security.threat_detection.failed_login_threshold": 2}
-        )
+        detector = ThreatDetector(config={"security.threat_detection.failed_login_threshold": 2})
 
         # Not blocked initially
         blocked, _ = detector.is_ip_blocked("10.0.0.1")

@@ -181,8 +181,14 @@ class TestProcessInboundSip:
         """Test that rate-exceeded IPs are blocked."""
         config = _make_sbc_config(rate_limit=2)
         sbc = SessionBorderController(config)
-        msg = {"method": "OPTIONS", "via": "SIP/2.0/UDP 10.0.0.1:5060",
-               "from": "a", "to": "b", "call_id": "x", "cseq": "1"}
+        msg = {
+            "method": "OPTIONS",
+            "via": "SIP/2.0/UDP 10.0.0.1:5060",
+            "from": "a",
+            "to": "b",
+            "call_id": "x",
+            "cseq": "1",
+        }
 
         # First two should pass
         r1 = sbc.process_inbound_sip(msg, "10.0.0.1")
@@ -201,8 +207,7 @@ class TestProcessInboundSip:
         """Test forwarding of a valid SIP message."""
         config = _make_sbc_config(topology_hiding=False)
         sbc = SessionBorderController(config)
-        msg = {"method": "INVITE", "via": "v", "from": "f",
-               "to": "t", "call_id": "c", "cseq": "1"}
+        msg = {"method": "INVITE", "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1"}
 
         result = sbc.process_inbound_sip(msg, "10.0.0.1")
         assert result["action"] == "forward"
@@ -494,7 +499,11 @@ class TestNormalizeSipMessage:
         """Test user_agent, server, organization headers are stripped."""
         sbc = SessionBorderController()
         msg = {
-            "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1",
+            "via": "v",
+            "from": "f",
+            "to": "t",
+            "call_id": "c",
+            "cseq": "1",
             "user_agent": "Phone/1.0",
             "server": "PBX/2.0",
             "organization": "Acme",
@@ -529,7 +538,11 @@ class TestNormalizeSipMessage:
         sbc.logger = mock_logger
         msg = {
             "method": "FOOBAR",
-            "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1",
+            "via": "v",
+            "from": "f",
+            "to": "t",
+            "call_id": "c",
+            "cseq": "1",
         }
         sbc._normalize_sip_message(msg)
 
@@ -545,14 +558,26 @@ class TestNormalizeSipMessage:
         sbc = SessionBorderController()
         sbc.logger = mock_logger
         valid_methods = [
-            "INVITE", "ACK", "BYE", "CANCEL", "REGISTER",
-            "OPTIONS", "INFO", "UPDATE", "REFER", "NOTIFY",
+            "INVITE",
+            "ACK",
+            "BYE",
+            "CANCEL",
+            "REGISTER",
+            "OPTIONS",
+            "INFO",
+            "UPDATE",
+            "REFER",
+            "NOTIFY",
         ]
         for method in valid_methods:
             mock_logger.warning.reset_mock()
             msg = {
                 "method": method,
-                "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1",
+                "via": "v",
+                "from": "f",
+                "to": "t",
+                "call_id": "c",
+                "cseq": "1",
             }
             sbc._normalize_sip_message(msg)
             warning_calls = [str(c) for c in mock_logger.warning.call_args_list]
@@ -570,7 +595,11 @@ class TestNormalizeSipMessage:
         sbc.logger = mock_logger
         msg = {
             "method": "invite",
-            "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1",
+            "via": "v",
+            "from": "f",
+            "to": "t",
+            "call_id": "c",
+            "cseq": "1",
         }
         sbc._normalize_sip_message(msg)
 
@@ -582,7 +611,11 @@ class TestNormalizeSipMessage:
         """Test that normalization does not mutate the original dict."""
         sbc = SessionBorderController()
         original = {
-            "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1",
+            "via": "v",
+            "from": "f",
+            "to": "t",
+            "call_id": "c",
+            "cseq": "1",
             "user_agent": "SoftPhone/1.0",
         }
         original_copy = original.copy()
@@ -807,7 +840,7 @@ class TestAllocateRelay:
         """Test that allocated ports are removed from the pool."""
         config = _make_sbc_config(media_relay=True)
         sbc = SessionBorderController(config)
-        pool_before = len(sbc.relay_port_pool)
+        _pool_before = len(sbc.relay_port_pool)
 
         sbc.allocate_relay("call-001", "pcmu")
 
@@ -918,9 +951,7 @@ class TestCallAdmissionControl:
         config = _make_sbc_config(max_calls=100, max_bandwidth=100000)
         sbc = SessionBorderController(config)
 
-        result = sbc.perform_call_admission_control(
-            {"call_id": "call-001", "codec": "pcmu"}
-        )
+        result = sbc.perform_call_admission_control({"call_id": "call-001", "codec": "pcmu"})
         assert result["admit"] is True
         assert result["allocated_bandwidth"] == 80
         assert sbc.current_bandwidth == 80
@@ -932,9 +963,7 @@ class TestCallAdmissionControl:
         config = _make_sbc_config(max_calls=0)
         sbc = SessionBorderController(config)
 
-        result = sbc.perform_call_admission_control(
-            {"call_id": "call-001", "codec": "pcmu"}
-        )
+        result = sbc.perform_call_admission_control({"call_id": "call-001", "codec": "pcmu"})
         assert result["admit"] is False
         assert result["reason"] == "Maximum calls reached"
 
@@ -945,9 +974,7 @@ class TestCallAdmissionControl:
         sbc = SessionBorderController(config)
         sbc.current_bandwidth = 50  # Already at max
 
-        result = sbc.perform_call_admission_control(
-            {"call_id": "call-001", "codec": "pcmu"}
-        )
+        result = sbc.perform_call_admission_control({"call_id": "call-001", "codec": "pcmu"})
         assert result["admit"] is False
         assert result["reason"] == "Insufficient bandwidth"
 
@@ -1309,11 +1336,13 @@ class TestGetSBC:
     def setup_method(self) -> None:
         """Reset global _sbc before each test."""
         import pbx.features.session_border_controller as sbc_module
+
         sbc_module._sbc = None
 
     def teardown_method(self) -> None:
         """Reset global _sbc after each test."""
         import pbx.features.session_border_controller as sbc_module
+
         sbc_module._sbc = None
 
     @patch("pbx.features.session_border_controller.get_logger")
@@ -1364,8 +1393,12 @@ class TestIntegrationScenarios:
     def test_full_call_lifecycle(self, mock_get_logger: MagicMock) -> None:
         """Test a complete call lifecycle through the SBC."""
         config = _make_sbc_config(
-            enabled=True, media_relay=True, topology_hiding=True,
-            max_calls=10, max_bandwidth=100000, public_ip="203.0.113.1",
+            enabled=True,
+            media_relay=True,
+            topology_hiding=True,
+            max_calls=10,
+            max_bandwidth=100000,
+            public_ip="203.0.113.1",
         )
         sbc = SessionBorderController(config)
 
@@ -1414,8 +1447,7 @@ class TestIntegrationScenarios:
         sbc.add_to_blacklist("10.0.0.99")
 
         result = sbc.process_inbound_sip(
-            {"method": "INVITE", "via": "v", "from": "f", "to": "t",
-             "call_id": "c", "cseq": "1"},
+            {"method": "INVITE", "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1"},
             "10.0.0.99",
         )
         assert result["action"] == "block"

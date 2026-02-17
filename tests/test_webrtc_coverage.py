@@ -10,10 +10,10 @@ import pytest
 
 from pbx.features.webrtc import WebRTCGateway, WebRTCSession, WebRTCSignalingServer
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_config(overrides: dict | None = None) -> MagicMock:
     """Create a mock config with sensible defaults and optional overrides."""
@@ -630,9 +630,9 @@ class TestWebRTCSignalingServerCleanup:
 
     @patch("pbx.features.webrtc.WebRTCSignalingServer._start_cleanup_thread")
     def test_cleanup_stale_sessions(self, mock_cleanup: MagicMock) -> None:
-        server = WebRTCSignalingServer(config=_enabled_config(
-            **{"features.webrtc.session_timeout": 0}
-        ))
+        server = WebRTCSignalingServer(
+            config=_enabled_config(**{"features.webrtc.session_timeout": 0})
+        )
         session = server.create_session("1001")
         sid = session.session_id
         # Force the session to be stale
@@ -642,9 +642,9 @@ class TestWebRTCSignalingServerCleanup:
 
     @patch("pbx.features.webrtc.WebRTCSignalingServer._start_cleanup_thread")
     def test_cleanup_keeps_active_sessions(self, mock_cleanup: MagicMock) -> None:
-        server = WebRTCSignalingServer(config=_enabled_config(
-            **{"features.webrtc.session_timeout": 9999}
-        ))
+        server = WebRTCSignalingServer(
+            config=_enabled_config(**{"features.webrtc.session_timeout": 9999})
+        )
         session = server.create_session("1001")
         server._cleanup_stale_sessions()
         assert server.get_session(session.session_id) is not None
@@ -719,13 +719,15 @@ class TestWebRTCSignalingServerVirtualExtensions:
         pbx_core.extension_registry.extensions = {}
         server.pbx_core = pbx_core
 
-        with patch("pbx.features.webrtc.WebRTCSignalingServer._start_cleanup_thread"):
-            with patch("pbx.features.extensions.Extension") as MockExtCls:
-                mock_ext_instance = MagicMock()
-                MockExtCls.return_value = mock_ext_instance
-                result = server._create_virtual_webrtc_extension("webrtc-100")
-                MockExtCls.assert_called_once()
-                assert result is mock_ext_instance
+        with (
+            patch("pbx.features.webrtc.WebRTCSignalingServer._start_cleanup_thread"),
+            patch("pbx.features.extensions.Extension") as MockExtCls,
+        ):
+            mock_ext_instance = MagicMock()
+            MockExtCls.return_value = mock_ext_instance
+            result = server._create_virtual_webrtc_extension("webrtc-100")
+            MockExtCls.assert_called_once()
+            assert result is mock_ext_instance
 
     @patch("pbx.features.webrtc.WebRTCSignalingServer._start_cleanup_thread")
     def test_auto_create_skipped_for_non_webrtc_prefix(self, mock_cleanup: MagicMock) -> None:
@@ -786,23 +788,19 @@ class TestWebRTCSignalingServerCreateSessionWithPBXCore:
         )
 
     def test_create_session_registers_extension_verbose(self) -> None:
-        server, pbx_core = self._make_server_with_pbx(
-            **{"features.webrtc.verbose_logging": True}
-        )
-        session = server.create_session("1001")
+        server, pbx_core = self._make_server_with_pbx(**{"features.webrtc.verbose_logging": True})
+        _session = server.create_session("1001")
         pbx_core.extension_registry.register.assert_called_once()
 
     def test_create_session_registers_in_phones_db(self) -> None:
         server, pbx_core = self._make_server_with_pbx()
         pbx_core.registered_phones_db = MagicMock()
         pbx_core.registered_phones_db.register_phone.return_value = (True, "mac-123")
-        session = server.create_session("1001")
+        _session = server.create_session("1001")
         pbx_core.registered_phones_db.register_phone.assert_called_once()
 
     def test_create_session_registers_in_phones_db_verbose(self) -> None:
-        server, pbx_core = self._make_server_with_pbx(
-            **{"features.webrtc.verbose_logging": True}
-        )
+        server, pbx_core = self._make_server_with_pbx(**{"features.webrtc.verbose_logging": True})
         pbx_core.registered_phones_db = MagicMock()
         pbx_core.registered_phones_db.register_phone.return_value = (True, "mac-123")
         server.create_session("1001")
@@ -837,9 +835,7 @@ class TestWebRTCSignalingServerCreateSessionWithPBXCore:
         assert session is not None
 
     def test_log_session_creation_verbose(self) -> None:
-        server, _ = self._make_server_with_pbx(
-            **{"features.webrtc.verbose_logging": True}
-        )
+        server, _ = self._make_server_with_pbx(**{"features.webrtc.verbose_logging": True})
         session = server.create_session("1001")
         assert session is not None
 
@@ -1000,9 +996,7 @@ class TestWebRTCGatewaySDPConversion:
             "a=rtpmap:8 PCMA/8000\r\n"
             "a=sendrecv\r\n"
         )
-        result = gw.sip_to_webrtc_sdp(
-            multi_media_sdp, ice_ufrag="u", ice_pwd="p", fingerprint="fp"
-        )
+        result = gw.sip_to_webrtc_sdp(multi_media_sdp, ice_ufrag="u", ice_pwd="p", fingerprint="fp")
         assert "mid:0" in result
         assert "mid:1" in result
 
@@ -1058,18 +1052,18 @@ class TestWebRTCGatewayInitiateCall:
         assert gw.initiate_call("sid", "1002") is None
 
     def test_initiate_call_no_signaling(self) -> None:
-        gw, signaling, pbx_core = self._make_gateway_and_signaling()
+        gw, _signaling, _pbx_core = self._make_gateway_and_signaling()
         # No signaling provided -> session not found
         result = gw.initiate_call("nonexistent", "1002", webrtc_signaling=None)
         assert result is None
 
     def test_initiate_call_session_not_found(self) -> None:
-        gw, signaling, pbx_core = self._make_gateway_and_signaling()
+        gw, signaling, _pbx_core = self._make_gateway_and_signaling()
         result = gw.initiate_call("nonexistent", "1002", webrtc_signaling=signaling)
         assert result is None
 
     def test_initiate_call_session_not_found_verbose(self) -> None:
-        gw, signaling, pbx_core = self._make_gateway_and_signaling(verbose=True)
+        gw, signaling, _pbx_core = self._make_gateway_and_signaling(verbose=True)
         result = gw.initiate_call("nonexistent", "1002", webrtc_signaling=signaling)
         assert result is None
 
@@ -1149,7 +1143,7 @@ class TestWebRTCGatewayInitiateCall:
         assert result is None
 
     def test_initiate_call_associates_call_id(self) -> None:
-        gw, signaling, pbx_core = self._make_gateway_and_signaling()
+        gw, signaling, _pbx_core = self._make_gateway_and_signaling()
         session = signaling.create_session("1001")
         call_id = gw.initiate_call(session.session_id, "1002", webrtc_signaling=signaling)
         assert session.call_id == call_id
@@ -1204,7 +1198,7 @@ class TestWebRTCGatewayInitiateCallAutoAttendant:
     def test_auto_attendant_with_audio_file(
         self, MockRTPPlayer: MagicMock, mock_exists: MagicMock
     ) -> None:
-        gw, signaling, pbx_core = self._make_aa_setup()
+        gw, signaling, _pbx_core = self._make_aa_setup()
         session = signaling.create_session("1001")
         signaling.handle_offer(session.session_id, SIP_SDP)
 
@@ -1221,7 +1215,7 @@ class TestWebRTCGatewayInitiateCallAutoAttendant:
     def test_auto_attendant_audio_file_not_found(
         self, MockRTPPlayer: MagicMock, mock_exists: MagicMock
     ) -> None:
-        gw, signaling, pbx_core = self._make_aa_setup()
+        gw, signaling, _pbx_core = self._make_aa_setup()
         session = signaling.create_session("1001")
         signaling.handle_offer(session.session_id, SIP_SDP)
 
@@ -1238,7 +1232,7 @@ class TestWebRTCGatewayInitiateCallAutoAttendant:
     def test_auto_attendant_player_start_fails(
         self, MockRTPPlayer: MagicMock, mock_exists: MagicMock
     ) -> None:
-        gw, signaling, pbx_core = self._make_aa_setup()
+        gw, signaling, _pbx_core = self._make_aa_setup()
         session = signaling.create_session("1001")
         signaling.handle_offer(session.session_id, SIP_SDP)
 
@@ -1310,10 +1304,8 @@ class TestWebRTCGatewayInitiateCallVoicemail:
 
     @patch("pbx.features.voicemail.VoicemailIVR")
     @patch("threading.Thread")
-    def test_voicemail_access_pattern(
-        self, mock_thread_cls: MagicMock, MockIVR: MagicMock
-    ) -> None:
-        gw, signaling, pbx_core = self._make_vm_setup()
+    def test_voicemail_access_pattern(self, mock_thread_cls: MagicMock, MockIVR: MagicMock) -> None:
+        gw, signaling, _pbx_core = self._make_vm_setup()
         session = signaling.create_session("1001")
         signaling.handle_offer(session.session_id, SIP_SDP)
 
@@ -1327,10 +1319,8 @@ class TestWebRTCGatewayInitiateCallVoicemail:
 
     @patch("pbx.features.voicemail.VoicemailIVR")
     @patch("threading.Thread")
-    def test_voicemail_access_verbose(
-        self, mock_thread_cls: MagicMock, MockIVR: MagicMock
-    ) -> None:
-        gw, signaling, pbx_core = self._make_vm_setup(verbose=True)
+    def test_voicemail_access_verbose(self, mock_thread_cls: MagicMock, MockIVR: MagicMock) -> None:
+        gw, signaling, _pbx_core = self._make_vm_setup(verbose=True)
         session = signaling.create_session("1001")
         signaling.handle_offer(session.session_id, SIP_SDP)
 
@@ -1436,7 +1426,7 @@ class TestWebRTCGatewayInitiateCallVoicemail:
 
     def test_non_voicemail_pattern_not_matched(self) -> None:
         """Patterns like *12 (too short) should not match voicemail."""
-        gw, signaling, pbx_core = self._make_vm_setup()
+        gw, signaling, _pbx_core = self._make_vm_setup()
         session = signaling.create_session("1001")
 
         result = gw.initiate_call(session.session_id, "*12", webrtc_signaling=signaling)
@@ -1467,12 +1457,12 @@ class TestWebRTCGatewayReceiveCall:
         assert gw.receive_call("sid", "cid") is False
 
     def test_receive_call_no_signaling(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, _signaling, _pbx_core = self._make_setup()
         result = gw.receive_call("nonexistent", "call-1", webrtc_signaling=None)
         assert result is False
 
     def test_receive_call_session_not_found(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, signaling, _pbx_core = self._make_setup()
         result = gw.receive_call("nonexistent", "call-1", webrtc_signaling=signaling)
         assert result is False
 
@@ -1484,7 +1474,7 @@ class TestWebRTCGatewayReceiveCall:
         assert result is False
 
     def test_receive_call_success_with_sdp(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, signaling, _pbx_core = self._make_setup()
         session = signaling.create_session("1002")
         result = gw.receive_call(
             session.session_id, "call-1", caller_sdp=SIP_SDP, webrtc_signaling=signaling
@@ -1495,7 +1485,7 @@ class TestWebRTCGatewayReceiveCall:
         assert session.call_id == "call-1"
 
     def test_receive_call_success_no_sdp(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, signaling, _pbx_core = self._make_setup()
         session = signaling.create_session("1002")
         result = gw.receive_call(
             session.session_id, "call-1", caller_sdp=None, webrtc_signaling=signaling
@@ -1503,15 +1493,13 @@ class TestWebRTCGatewayReceiveCall:
         assert result is True
 
     def test_receive_call_sets_metadata(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, signaling, _pbx_core = self._make_setup()
         session = signaling.create_session("1002")
         gw.receive_call(
             session.session_id, "call-1", caller_sdp=SIP_SDP, webrtc_signaling=signaling
         )
         assert signaling.get_session_metadata(session.session_id, "incoming_call") is True
-        assert (
-            signaling.get_session_metadata(session.session_id, "caller_extension") == "1001"
-        )
+        assert signaling.get_session_metadata(session.session_id, "caller_extension") == "1001"
 
     def test_receive_call_calls_ring(self) -> None:
         gw, signaling, pbx_core = self._make_setup()
@@ -1554,17 +1542,17 @@ class TestWebRTCGatewayAnswerCall:
         assert gw.answer_call("sid") is False
 
     def test_answer_call_no_signaling(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, _signaling, _pbx_core = self._make_setup()
         result = gw.answer_call("sid", webrtc_signaling=None)
         assert result is False
 
     def test_answer_call_session_not_found(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, signaling, _pbx_core = self._make_setup()
         result = gw.answer_call("nonexistent", webrtc_signaling=signaling)
         assert result is False
 
     def test_answer_call_no_call_id(self) -> None:
-        gw, signaling, pbx_core = self._make_setup()
+        gw, signaling, _pbx_core = self._make_setup()
         session = signaling.create_session("1002")
         # call_id is None by default
         result = gw.answer_call(session.session_id, webrtc_signaling=signaling)

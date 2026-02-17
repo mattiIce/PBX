@@ -155,7 +155,7 @@ class TestCollectMetrics:
         config = {"features": {"quality_prediction": {"enabled": True}}}
         cqp = CallQualityPrediction(config=config)
         # Add enough metrics to allow prediction
-        for i in range(5):
+        for _ in range(5):
             m = NetworkMetrics()
             m.mos_score = 4.0
             m.latency = 20
@@ -171,7 +171,9 @@ class TestPredictQuality:
     """Tests for _predict_quality method."""
 
     @patch("pbx.features.call_quality_prediction.get_logger")
-    def _make_cqp_with_metrics(self, mock_logger: MagicMock, count: int = 5, mos: float = 4.0) -> CallQualityPrediction:
+    def _make_cqp_with_metrics(
+        self, mock_logger: MagicMock, count: int = 5, mos: float = 4.0
+    ) -> CallQualityPrediction:
         cqp = CallQualityPrediction()
         cqp.enabled = True
         for i in range(count):
@@ -216,13 +218,13 @@ class TestPredictQuality:
     def test_predict_quality_saves_to_db(self) -> None:
         cqp = self._make_cqp_with_metrics(count=5, mos=4.0)
         cqp.db = MagicMock()
-        result = cqp._predict_quality("call-1")
+        _result = cqp._predict_quality("call-1")
         cqp.db.save_prediction.assert_called_once()
 
     def test_predict_quality_alert_saves_to_db(self) -> None:
         cqp = self._make_cqp_with_metrics(count=5, mos=2.0)
         cqp.db = MagicMock()
-        result = cqp._predict_quality("call-1")
+        _result = cqp._predict_quality("call-1")
         assert cqp.db.save_alert.called
 
     def test_predict_quality_high_packet_loss_alert(self) -> None:
@@ -417,15 +419,16 @@ class TestTrainModel:
     @patch("pbx.features.call_quality_prediction.get_logger")
     def test_train_model_linear_regression_fallback(self, mock_logger: MagicMock) -> None:
         cqp = CallQualityPrediction()
-        data = []
-        for i in range(20):
-            data.append({
+        data = [
+            {
                 "latency": 10 + i * 2,
                 "jitter": 5 + i,
                 "packet_loss": 0.5 + i * 0.1,
                 "bandwidth": 64,
                 "mos_score": 4.5 - i * 0.05,
-            })
+            }
+            for i in range(20)
+        ]
         with patch("pbx.features.call_quality_prediction.SKLEARN_AVAILABLE", False):
             cqp.train_model(data)
             assert len(cqp.model_weights) > 0
@@ -433,9 +436,8 @@ class TestTrainModel:
     @patch("pbx.features.call_quality_prediction.get_logger")
     def test_train_model_with_codec_and_time(self, mock_logger: MagicMock) -> None:
         cqp = CallQualityPrediction()
-        data = []
-        for i in range(20):
-            data.append({
+        data = [
+            {
                 "latency": 10 + i,
                 "jitter": 5,
                 "packet_loss": 1.0,
@@ -443,7 +445,9 @@ class TestTrainModel:
                 "mos_score": 4.0,
                 "codec": "g711",
                 "time_of_day": 12,
-            })
+            }
+            for i in range(20)
+        ]
         with patch("pbx.features.call_quality_prediction.SKLEARN_AVAILABLE", False):
             cqp.train_model(data)
             assert len(cqp.model_weights) > 0
@@ -467,6 +471,7 @@ class TestExtractFeaturesAndTargets:
     @patch("pbx.features.call_quality_prediction.get_logger")
     def test_extract_basic_features(self, mock_logger: MagicMock) -> None:
         from pbx.features.call_quality_prediction import SKLEARN_AVAILABLE
+
         if not SKLEARN_AVAILABLE:
             pytest.skip("sklearn/numpy not available")
         cqp = CallQualityPrediction()
@@ -482,14 +487,22 @@ class TestExtractFeaturesAndTargets:
     @patch("pbx.features.call_quality_prediction.get_logger")
     def test_extract_with_codec(self, mock_logger: MagicMock) -> None:
         from pbx.features.call_quality_prediction import SKLEARN_AVAILABLE
+
         if not SKLEARN_AVAILABLE:
             pytest.skip("sklearn/numpy not available")
         cqp = CallQualityPrediction()
         data = [
-            {"latency": 10, "jitter": 5, "packet_loss": 1, "bandwidth": 64,
-             "mos_score": 4.0, "codec": "g722", "time_of_day": 14},
+            {
+                "latency": 10,
+                "jitter": 5,
+                "packet_loss": 1,
+                "bandwidth": 64,
+                "mos_score": 4.0,
+                "codec": "g722",
+                "time_of_day": 14,
+            },
         ]
-        features, targets = cqp._extract_features_and_targets(data)
+        features, _targets = cqp._extract_features_and_targets(data)
         assert features[0][6] == 1.0  # g722 feature
 
 
@@ -531,6 +544,7 @@ class TestGetQualityPredictionSingleton:
 
     def test_get_quality_prediction_creates_instance(self) -> None:
         import pbx.features.call_quality_prediction as mod
+
         original = mod._quality_prediction
         mod._quality_prediction = None
         try:
@@ -542,6 +556,7 @@ class TestGetQualityPredictionSingleton:
 
     def test_get_quality_prediction_returns_same_instance(self) -> None:
         import pbx.features.call_quality_prediction as mod
+
         original = mod._quality_prediction
         mod._quality_prediction = None
         try:

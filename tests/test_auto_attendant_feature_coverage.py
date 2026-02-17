@@ -151,7 +151,7 @@ class TestAutoAttendantInit:
         from pbx.features.auto_attendant import AutoAttendant
 
         # First init saves config to db
-        aa1 = AutoAttendant(config=aa_config)
+        _aa1 = AutoAttendant(config=aa_config)
 
         # Second init should load from db
         aa2 = AutoAttendant(config=aa_config)
@@ -169,7 +169,7 @@ class TestAutoAttendantInit:
         }.get(key, default)
 
         # Should not raise
-        aa = AutoAttendant(config=config)
+        _aa = AutoAttendant(config=config)
 
 
 # =============================================================================
@@ -437,7 +437,9 @@ class TestAutoAttendantMenuTree:
         auto_attendant.add_menu_item("support", "1", "extension", "2001", "Tech Support")
 
         tree = auto_attendant.get_menu_tree()
-        submenu_item = next((i for i in tree["items"] if i.get("destination_type") == "submenu"), None)
+        submenu_item = next(
+            (i for i in tree["items"] if i.get("destination_type") == "submenu"), None
+        )
         assert submenu_item is not None
         assert "submenu" in submenu_item
 
@@ -518,7 +520,7 @@ class TestAutoAttendantDTMF:
         from pbx.features.auto_attendant import AAState
 
         session = self._start_session(auto_attendant)
-        result = auto_attendant.handle_dtmf(session, "7")
+        _result = auto_attendant.handle_dtmf(session, "7")
         assert session["state"] == AAState.INVALID
 
     def test_handle_dtmf_star_go_back_at_main(self, auto_attendant) -> None:
@@ -526,7 +528,7 @@ class TestAutoAttendantDTMF:
         from pbx.features.auto_attendant import AAState
 
         session = self._start_session(auto_attendant)
-        result = auto_attendant.handle_dtmf(session, "*")
+        _result = auto_attendant.handle_dtmf(session, "*")
         # At main menu with empty stack, invalid input
         assert session["retry_count"] >= 1
 
@@ -569,7 +571,7 @@ class TestAutoAttendantDTMF:
         auto_attendant.add_menu_item("main", "3", "submenu", "support", "Support Menu")
 
         session = self._start_session(auto_attendant)
-        result = auto_attendant.handle_dtmf(session, "3")
+        _result = auto_attendant.handle_dtmf(session, "3")
         assert session["state"] == AAState.SUBMENU
         assert session["current_menu_id"] == "support"
         assert "main" in session["menu_stack"]
@@ -584,7 +586,7 @@ class TestAutoAttendantDTMF:
         auto_attendant.handle_dtmf(session, "3")  # go to support submenu
 
         # Now go back with *
-        result = auto_attendant.handle_dtmf(session, "*")
+        _result = auto_attendant.handle_dtmf(session, "*")
         assert session["current_menu_id"] == "main"
         assert session["state"] == AAState.MAIN_MENU
 
@@ -597,7 +599,7 @@ class TestAutoAttendantDTMF:
         session = self._start_session(auto_attendant)
         auto_attendant.handle_dtmf(session, "3")  # go to support submenu
 
-        result = auto_attendant.handle_dtmf(session, "9")
+        _result = auto_attendant.handle_dtmf(session, "9")
         assert session["current_menu_id"] == "main"
 
     def test_handle_dtmf_submenu_extension_transfer(self, auto_attendant) -> None:
@@ -655,7 +657,7 @@ class TestAutoAttendantDTMF:
         session = self._start_session(auto_attendant)
         session["state"] = AAState.INVALID
         session["current_menu_id"] = "support"
-        result = auto_attendant.handle_dtmf(session, "1")
+        _result = auto_attendant.handle_dtmf(session, "1")
         assert session["state"] == AAState.SUBMENU
 
 
@@ -749,7 +751,7 @@ class TestAutoAttendantNavigateSubmenu:
             "retry_count": 5,
         }
 
-        result = auto_attendant._navigate_to_submenu(session, "support")
+        _result = auto_attendant._navigate_to_submenu(session, "support")
         assert session["current_menu_id"] == "support"
         assert session["state"] == AAState.SUBMENU
         assert session["retry_count"] == 0
@@ -765,7 +767,7 @@ class TestAutoAttendantNavigateSubmenu:
             "retry_count": 0,
         }
 
-        result = auto_attendant._handle_go_back(session)
+        _result = auto_attendant._handle_go_back(session)
         # Empty stack means can't go back, treats as invalid
         assert session["retry_count"] >= 1
 
@@ -779,7 +781,7 @@ class TestAutoAttendantNavigateSubmenu:
             "retry_count": 0,
         }
 
-        result = auto_attendant._handle_go_back(session)
+        _result = auto_attendant._handle_go_back(session)
         assert session["current_menu_id"] == "main"
         assert session["state"] == AAState.MAIN_MENU
 

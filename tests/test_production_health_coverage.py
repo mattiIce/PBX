@@ -62,7 +62,7 @@ class TestCheckLiveness:
     def test_liveness_uptime_positive(self) -> None:
         checker = ProductionHealthChecker()
         time.sleep(0.01)
-        is_alive, details = checker.check_liveness()
+        _is_alive, details = checker.check_liveness()
         assert details["uptime_seconds"] > 0
 
     def test_liveness_exception(self) -> None:
@@ -143,7 +143,7 @@ class TestCheckReadiness:
         mock_resources.return_value = (False, {"status": "warning"})
 
         checker = ProductionHealthChecker()
-        is_ready, details = checker.check_readiness()
+        is_ready, _details = checker.check_readiness()
 
         assert is_ready is False
 
@@ -160,7 +160,9 @@ class TestGetDetailedStatus:
         mock_readiness.return_value = (True, {"status": "ready"})
         mock_metrics.return_value = {"uptime_seconds": 100}
 
-        checker = ProductionHealthChecker(config={"server": {"version": "2.0", "server_name": "TestPBX"}})
+        checker = ProductionHealthChecker(
+            config={"server": {"version": "2.0", "server_name": "TestPBX"}}
+        )
         status = checker.get_detailed_status()
 
         assert status["overall_status"] == "healthy"
@@ -172,7 +174,9 @@ class TestGetDetailedStatus:
     @patch.object(ProductionHealthChecker, "_get_metrics")
     @patch.object(ProductionHealthChecker, "check_readiness")
     @patch.object(ProductionHealthChecker, "check_liveness")
-    def test_unhealthy_status_liveness_fail(self, mock_liveness, mock_readiness, mock_metrics) -> None:
+    def test_unhealthy_status_liveness_fail(
+        self, mock_liveness, mock_readiness, mock_metrics
+    ) -> None:
         mock_liveness.return_value = (False, {"status": "dead"})
         mock_readiness.return_value = (True, {"status": "ready"})
         mock_metrics.return_value = {}
@@ -184,7 +188,9 @@ class TestGetDetailedStatus:
     @patch.object(ProductionHealthChecker, "_get_metrics")
     @patch.object(ProductionHealthChecker, "check_readiness")
     @patch.object(ProductionHealthChecker, "check_liveness")
-    def test_unhealthy_status_readiness_fail(self, mock_liveness, mock_readiness, mock_metrics) -> None:
+    def test_unhealthy_status_readiness_fail(
+        self, mock_liveness, mock_readiness, mock_metrics
+    ) -> None:
         mock_liveness.return_value = (True, {"status": "alive"})
         mock_readiness.return_value = (False, {"status": "not_ready"})
         mock_metrics.return_value = {}
@@ -196,7 +202,9 @@ class TestGetDetailedStatus:
     @patch.object(ProductionHealthChecker, "_get_metrics")
     @patch.object(ProductionHealthChecker, "check_readiness")
     @patch.object(ProductionHealthChecker, "check_liveness")
-    def test_default_version_and_server_name(self, mock_liveness, mock_readiness, mock_metrics) -> None:
+    def test_default_version_and_server_name(
+        self, mock_liveness, mock_readiness, mock_metrics
+    ) -> None:
         mock_liveness.return_value = (True, {"status": "alive"})
         mock_readiness.return_value = (True, {"status": "ready"})
         mock_metrics.return_value = {}
@@ -271,7 +279,9 @@ class TestCheckPbxCore:
     def test_pbx_core_exception(self) -> None:
         mock_core = MagicMock()
         # Make hasattr raise an exception (very unlikely but tests the outer except)
-        type(mock_core).sip_server = property(lambda self: (_ for _ in ()).throw(RuntimeError("bad")))
+        type(mock_core).sip_server = property(
+            lambda self: (_ for _ in ()).throw(RuntimeError("bad"))
+        )
 
         checker = ProductionHealthChecker(pbx_core=mock_core)
         is_ok, details = checker._check_pbx_core()
@@ -326,7 +336,9 @@ class TestCheckDatabase:
 
         saved = sys.modules.pop("pbx.utils.database", None)
         try:
-            original_import = __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
+            original_import = (
+                __builtins__.__import__ if hasattr(__builtins__, "__import__") else __import__
+            )
 
             def mock_import(name, *args, **kwargs):
                 if name == "pbx.utils.database":
@@ -720,7 +732,7 @@ class TestFormatHealthCheckResponse:
                 "status": "running",  # Non-numeric, should be skipped
             }
         }
-        status_code, body = format_health_check_response(True, details, "prometheus")
+        _status_code, body = format_health_check_response(True, details, "prometheus")
         assert "pbx_uptime_seconds 100" in body
         assert "pbx_status" not in body
 

@@ -197,7 +197,7 @@ class TestRTPHandlerHandleRTPPacket:
             h = RTPHandler(local_port=5000)
 
         rtp_header = struct.pack("!BBHII", 0x80, 0, 42, 1000, 0xDEADBEEF)
-        payload = b"\xFF" * 160
+        payload = b"\xff" * 160
         h._handle_rtp_packet(rtp_header + payload, ("10.0.0.1", 6000))
 
 
@@ -338,7 +338,7 @@ class TestRTPRelayAllocate:
 
             r = RTPRelay(port_range_start=30000, port_range_end=30004)
 
-        original_pool = r.port_pool.copy()
+        _original_pool = r.port_pool.copy()
         with patch("pbx.rtp.handler.RTPRelayHandler") as mock_handler_cls:
             mock_handler = MagicMock()
             mock_handler.start.return_value = False
@@ -1225,7 +1225,7 @@ class TestRTPRecorderRecordLoop:
 
         # PCMU packet (payload_type=0)
         rtp_header = struct.pack("!BBHII", 0x80, 0, 1, 160, 0xDEADBEEF)
-        payload = b"\x7F" * 160
+        payload = b"\x7f" * 160
         packet = rtp_header + payload
 
         mock_sock = MagicMock()
@@ -1668,7 +1668,7 @@ class TestRTPPlayerBuildRTPPacket:
 
         p.sequence_number = 100
         p.timestamp = 16000
-        payload = b"\xAA" * 20
+        payload = b"\xaa" * 20
         packet = p._build_rtp_packet(payload, payload_type=8)
 
         # Header is 12 bytes
@@ -1713,6 +1713,7 @@ class TestRTPPlayerPlayBeep:
         with patch.dict("sys.modules", {"pbx.utils.audio": None}):
             # Force ImportError by making the import fail
             import builtins
+
             original_import = builtins.__import__
 
             def failing_import(name, *args, **kwargs):
@@ -1755,9 +1756,19 @@ class TestRTPPlayerPlayFile:
         block_align = num_channels * bits_per_sample // 8
         fmt_data = struct.pack(
             "<HHIIHH",
-            audio_format, num_channels, sample_rate, byte_rate, block_align, bits_per_sample,
+            audio_format,
+            num_channels,
+            sample_rate,
+            byte_rate,
+            block_align,
+            bits_per_sample,
         )
-        fmt_chunk = b"fmt " + struct.pack("<I", len(fmt_data) + len(extra_fmt_bytes)) + fmt_data + extra_fmt_bytes
+        fmt_chunk = (
+            b"fmt "
+            + struct.pack("<I", len(fmt_data) + len(extra_fmt_bytes))
+            + fmt_data
+            + extra_fmt_bytes
+        )
 
         # data chunk
         data_chunk = b"data" + struct.pack("<I", len(audio_data)) + audio_data
@@ -1831,7 +1842,10 @@ class TestRTPPlayerPlayFile:
 
         audio_data = b"\x00\x01" * 160  # 320 bytes of 16-bit PCM
         wav_data = self._build_wav(
-            audio_format=1, sample_rate=8000, bits_per_sample=16, audio_data=audio_data,
+            audio_format=1,
+            sample_rate=8000,
+            bits_per_sample=16,
+            audio_data=audio_data,
         )
         with (
             patch.object(Path, "exists", return_value=True),
@@ -1855,13 +1869,16 @@ class TestRTPPlayerPlayFile:
         # 320 bytes (160 16-bit samples at 16kHz)
         audio_data = b"\x00\x01" * 160
         wav_data = self._build_wav(
-            audio_format=1, sample_rate=16000, bits_per_sample=16, audio_data=audio_data,
+            audio_format=1,
+            sample_rate=16000,
+            bits_per_sample=16,
+            audio_data=audio_data,
         )
         with (
             patch.object(Path, "exists", return_value=True),
             patch.object(Path, "open", mock_open(read_data=wav_data)),
-            patch("pbx.utils.audio.pcm16_to_ulaw", return_value=b"\x00" * 80) as mock_conv,
-            patch.object(p, "send_audio", return_value=True) as mock_send,
+            patch("pbx.utils.audio.pcm16_to_ulaw", return_value=b"\x00" * 80) as _mock_conv,
+            patch.object(p, "send_audio", return_value=True) as _mock_send,
         ):
             result = p.play_file("/test/file.wav")
 
@@ -1890,14 +1907,17 @@ class TestRTPPlayerPlayFile:
         # Stereo 16-bit PCM
         audio_data = b"\x00\x01\x02\x03" * 80  # 320 bytes interleaved stereo
         wav_data = self._build_wav(
-            audio_format=1, num_channels=2, sample_rate=8000, bits_per_sample=16,
+            audio_format=1,
+            num_channels=2,
+            sample_rate=8000,
+            bits_per_sample=16,
             audio_data=audio_data,
         )
         with (
             patch.object(Path, "exists", return_value=True),
             patch.object(Path, "open", mock_open(read_data=wav_data)),
-            patch("pbx.utils.audio.pcm16_to_ulaw", return_value=b"\x00" * 80) as mock_conv,
-            patch.object(p, "send_audio", return_value=True) as mock_send,
+            patch("pbx.utils.audio.pcm16_to_ulaw", return_value=b"\x00" * 80) as _mock_conv,
+            patch.object(p, "send_audio", return_value=True) as _mock_send,
         ):
             result = p.play_file("/test/file.wav")
         assert result is True
@@ -1908,15 +1928,18 @@ class TestRTPPlayerPlayFile:
 
             p = RTPPlayer(local_port=5000, remote_host="10.0.0.1", remote_port=6000)
 
-        audio_data = b"\xAA\xBB" * 80  # 160 bytes stereo 8-bit
+        audio_data = b"\xaa\xbb" * 80  # 160 bytes stereo 8-bit
         wav_data = self._build_wav(
-            audio_format=7, num_channels=2, sample_rate=8000, bits_per_sample=8,
+            audio_format=7,
+            num_channels=2,
+            sample_rate=8000,
+            bits_per_sample=8,
             audio_data=audio_data,
         )
         with (
             patch.object(Path, "exists", return_value=True),
             patch.object(Path, "open", mock_open(read_data=wav_data)),
-            patch.object(p, "send_audio", return_value=True) as mock_send,
+            patch.object(p, "send_audio", return_value=True) as _mock_send,
         ):
             result = p.play_file("/test/file.wav")
         assert result is True
@@ -2022,7 +2045,8 @@ class TestRTPPlayerPlayFile:
             p = RTPPlayer(local_port=5000, remote_host="10.0.0.1", remote_port=6000)
 
         wav_data = self._build_wav(
-            audio_format=7, extra_fmt_bytes=b"\x00\x00",
+            audio_format=7,
+            extra_fmt_bytes=b"\x00\x00",
         )
         with (
             patch.object(Path, "exists", return_value=True),
@@ -2053,7 +2077,10 @@ class TestRTPPlayerPlayFile:
 
         audio_data = b"\x00\x01" * 160
         wav_data = self._build_wav(
-            audio_format=1, sample_rate=8000, bits_per_sample=16, audio_data=audio_data,
+            audio_format=1,
+            sample_rate=8000,
+            bits_per_sample=16,
+            audio_data=audio_data,
         )
         with (
             patch.object(Path, "exists", return_value=True),
@@ -2077,7 +2104,14 @@ class TestRTPPlayerPlayFile:
         audio_data = b"\x00" * 160
         data_chunk = b"data" + struct.pack("<I", len(audio_data)) + audio_data
         riff_size = 4 + len(unknown_chunk) + len(fmt_chunk) + len(data_chunk)
-        wav_data = b"RIFF" + struct.pack("<I", riff_size) + b"WAVE" + unknown_chunk + fmt_chunk + data_chunk
+        wav_data = (
+            b"RIFF"
+            + struct.pack("<I", riff_size)
+            + b"WAVE"
+            + unknown_chunk
+            + fmt_chunk
+            + data_chunk
+        )
 
         with (
             patch.object(Path, "exists", return_value=True),
@@ -2138,7 +2172,7 @@ class TestRTPDTMFListenerInit:
     def test_init_defaults(self) -> None:
         with (
             patch("pbx.rtp.handler.get_logger"),
-            patch("pbx.utils.dtmf.DTMFDetector") as mock_detector_cls,
+            patch("pbx.utils.dtmf.DTMFDetector") as _mock_detector_cls,
         ):
             from pbx.rtp.handler import RTPDTMFListener
 
@@ -2515,7 +2549,7 @@ class TestRTPDTMFListenerDecodeG711:
 
             listener = RTPDTMFListener(local_port=5000)
 
-        samples = listener._decode_g711(b"\x80\x00\xFF", payload_type=0)
+        samples = listener._decode_g711(b"\x80\x00\xff", payload_type=0)
         assert len(samples) == 3
         for s in samples:
             assert -1.0 <= s <= 1.0
@@ -2529,7 +2563,7 @@ class TestRTPDTMFListenerDecodeG711:
 
             listener = RTPDTMFListener(local_port=5000)
 
-        samples = listener._decode_g711(b"\x80\x00\xFF", payload_type=8)
+        samples = listener._decode_g711(b"\x80\x00\xff", payload_type=8)
         assert len(samples) == 3
         for s in samples:
             assert -1.0 <= s <= 1.0
@@ -2668,9 +2702,11 @@ class TestRTPDTMFListenerGetDigit:
 
             listener = RTPDTMFListener(local_port=5000)
 
-        with patch("pbx.rtp.handler.time.sleep"):
-            with patch("pbx.rtp.handler.time.time", side_effect=[0.0, 0.0, 2.0]):
-                result = listener.get_digit(timeout=1.0)
+        with (
+            patch("pbx.rtp.handler.time.sleep"),
+            patch("pbx.rtp.handler.time.time", side_effect=[0.0, 0.0, 2.0]),
+        ):
+            result = listener.get_digit(timeout=1.0)
         assert result is None
 
 

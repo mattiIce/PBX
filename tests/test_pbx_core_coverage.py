@@ -164,15 +164,16 @@ class TestPBXCoreInit:
             "sys.modules",
             {
                 "pbx.features.qos_monitoring": mock_qos_module,
-                "pbx.utils.database": MagicMock(ExtensionDB=MagicMock(return_value=mock_ext_db_inst)),
+                "pbx.utils.database": MagicMock(
+                    ExtensionDB=MagicMock(return_value=mock_ext_db_inst)
+                ),
             },
-        ):
-            with patch("pbx.utils.encryption.get_encryption") as mock_get_enc:
-                enc_inst = MagicMock()
-                enc_inst.hash_password.return_value = ("hashed", "salt")
-                mock_get_enc.return_value = enc_inst
+        ), patch("pbx.utils.encryption.get_encryption") as mock_get_enc:
+            enc_inst = MagicMock()
+            enc_inst.hash_password.return_value = ("hashed", "salt")
+            mock_get_enc.return_value = enc_inst
 
-                pbx = PBXCore("test_config.yml")
+            pbx = PBXCore("test_config.yml")
 
         # Verify core subsystems were set up
         assert pbx.running is False
@@ -305,9 +306,7 @@ class TestAutoSeedCriticalExtensions:
         pbx.logger.info.assert_not_called()
 
     @patch("pbx.utils.encryption.get_encryption")
-    def test_seed_skips_existing_extensions(
-        self, mock_get_enc: MagicMock
-    ) -> None:
+    def test_seed_skips_existing_extensions(self, mock_get_enc: MagicMock) -> None:
         """Extensions that already exist are not re-seeded."""
         pbx = _make_pbx_core_shell()
         pbx.config.get.return_value = False
@@ -321,9 +320,7 @@ class TestAutoSeedCriticalExtensions:
         pbx.extension_db.add.assert_not_called()
 
     @patch("pbx.utils.encryption.get_encryption")
-    def test_seed_creates_missing_extensions(
-        self, mock_get_enc: MagicMock
-    ) -> None:
+    def test_seed_creates_missing_extensions(self, mock_get_enc: MagicMock) -> None:
         """Missing critical extensions are created in the database."""
         pbx = _make_pbx_core_shell()
         pbx.config.get.return_value = False
@@ -342,9 +339,7 @@ class TestAutoSeedCriticalExtensions:
         assert pbx.extension_db.add.call_count == 2
 
     @patch("pbx.utils.encryption.get_encryption")
-    def test_seed_handles_add_failure(
-        self, mock_get_enc: MagicMock
-    ) -> None:
+    def test_seed_handles_add_failure(self, mock_get_enc: MagicMock) -> None:
         """When encryption.hash_password raises, the error is logged."""
         pbx = _make_pbx_core_shell()
         pbx.config.get.return_value = False
@@ -689,23 +684,21 @@ class TestExtractMacAddress:
     def test_mac_from_contact_colon_format(self) -> None:
         """Extracts MAC from Contact header (colon-separated)."""
         pbx = _make_pbx_core_shell()
-        result = pbx._extract_mac_address(
-            "<sip:1001@10.0.0.1;mac=00:11:22:33:44:55>", None
-        )
+        result = pbx._extract_mac_address("<sip:1001@10.0.0.1;mac=00:11:22:33:44:55>", None)
         assert result == "001122334455"
 
     def test_mac_from_contact_dash_format(self) -> None:
         """Extracts MAC from Contact header (dash-separated)."""
         pbx = _make_pbx_core_shell()
-        result = pbx._extract_mac_address(
-            "<sip:1001@10.0.0.1;mac=00-11-22-33-44-55>", None
-        )
+        result = pbx._extract_mac_address("<sip:1001@10.0.0.1;mac=00-11-22-33-44-55>", None)
         assert result == "001122334455"
 
     def test_mac_from_instance_uuid(self) -> None:
         """Extracts MAC from sip.instance UUID in Contact header."""
         pbx = _make_pbx_core_shell()
-        contact = '<sip:1001@10.0.0.1>;+sip.instance="<urn:uuid:00112233-4455-6677-8899-aabbccddeeff>"'
+        contact = (
+            '<sip:1001@10.0.0.1>;+sip.instance="<urn:uuid:00112233-4455-6677-8899-aabbccddeeff>"'
+        )
         result = pbx._extract_mac_address(contact, None)
         # Last 12 hex chars: "aabbccddeeff"
         assert result == "aabbccddeeff"
@@ -924,9 +917,7 @@ class TestRouteCall:
         pbx._call_router.route_call.return_value = True
         msg = MagicMock()
 
-        result = pbx.route_call(
-            "from", "to", "call-1", msg, ("10.0.0.1", 5060)
-        )
+        result = pbx.route_call("from", "to", "call-1", msg, ("10.0.0.1", 5060))
 
         assert result is True
         pbx._call_router.route_call.assert_called_once_with(
@@ -1027,15 +1018,19 @@ class TestHandleCalleeAnswer:
         response_msg.body = "v=0\r\no=- 0 0 IN IP4 10.0.0.2\r\n"
 
         # SDP parsing
-        with patch.dict("sys.modules", {
-            "pbx.sip.message": MagicMock(),
-            "pbx.sip.sdp": MagicMock(),
-        }):
+        with (
+            patch.dict(
+                "sys.modules",
+                {
+                    "pbx.sip.message": MagicMock(),
+                    "pbx.sip.sdp": MagicMock(),
+                },
+            ),
             # Mock the SDP and SIP builder imports inside the method
-            with patch("pbx.core.pbx.SDPSession", create=True) as mock_sdp_cls, \
-                 patch("pbx.core.pbx.SDPBuilder", create=True) as mock_sdp_build, \
-                 patch("pbx.core.pbx.SIPMessageBuilder", create=True) as mock_sip_build:
-
+            patch("pbx.core.pbx.SDPSession", create=True) as mock_sdp_cls,
+            patch("pbx.core.pbx.SDPBuilder", create=True) as mock_sdp_build,
+            patch("pbx.core.pbx.SIPMessageBuilder", create=True) as mock_sip_build,
+        ):
                 sdp_inst = MagicMock()
                 sdp_inst.get_audio_info.return_value = {"address": "10.0.0.2", "port": 20002}
                 mock_sdp_cls.return_value = sdp_inst
@@ -1321,7 +1316,9 @@ class TestTransferCall:
         refer_msg = MagicMock()
         mock_sip_builder.build_request.return_value = refer_msg
 
-        with patch.dict("sys.modules", {"pbx.sip.message": MagicMock(SIPMessageBuilder=mock_sip_builder)}):
+        with patch.dict(
+            "sys.modules", {"pbx.sip.message": MagicMock(SIPMessageBuilder=mock_sip_builder)}
+        ):
             result = pbx.transfer_call("c1", "2001")
 
         assert result is True
@@ -1410,7 +1407,9 @@ class TestDelegateMethods:
         mock_call = MagicMock()
         mock_rec = MagicMock()
         pbx._monitor_voicemail_dtmf("c1", mock_call, mock_rec)
-        pbx._voicemail_handler.monitor_voicemail_dtmf.assert_called_once_with("c1", mock_call, mock_rec)
+        pbx._voicemail_handler.monitor_voicemail_dtmf.assert_called_once_with(
+            "c1", mock_call, mock_rec
+        )
 
     def test_complete_voicemail_recording(self) -> None:
         pbx = _make_pbx_core_shell()
@@ -1489,7 +1488,7 @@ class TestBuildWavFile:
     def test_wav_contains_audio_data(self) -> None:
         """WAV file ends with the original audio data."""
         pbx = _make_pbx_core_shell()
-        audio_data = b"\xAA\xBB\xCC\xDD"
+        audio_data = b"\xaa\xbb\xcc\xdd"
 
         wav = pbx._build_wav_file(audio_data)
 

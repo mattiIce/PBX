@@ -438,35 +438,27 @@ class TestVerifySignature:
     def test_valid_signature_default_key(self, mock_enabled) -> None:
         mgr = LicenseManager()
         # Generate a valid license and verify it
-        license_data = mgr.generate_license_key(
-            LicenseType.BASIC, "Test Corp", expiration_days=30
-        )
+        license_data = mgr.generate_license_key(LicenseType.BASIC, "Test Corp", expiration_days=30)
         # The generated license has a valid signature
         assert mgr._verify_signature(license_data) is True
 
     @patch.object(LicenseManager, "_is_licensing_enabled", return_value=False)
     def test_invalid_signature(self, mock_enabled) -> None:
         mgr = LicenseManager()
-        license_data = mgr.generate_license_key(
-            LicenseType.BASIC, "Test Corp", expiration_days=30
-        )
+        license_data = mgr.generate_license_key(LicenseType.BASIC, "Test Corp", expiration_days=30)
         license_data["signature"] = "tampered_signature"
         assert mgr._verify_signature(license_data) is False
 
     @patch.object(LicenseManager, "_is_licensing_enabled", return_value=False)
     def test_custom_secret_key(self, mock_enabled) -> None:
         mgr = LicenseManager({"license_secret_key": "my_custom_secret"})
-        license_data = mgr.generate_license_key(
-            LicenseType.BASIC, "Test Corp", expiration_days=30
-        )
+        license_data = mgr.generate_license_key(LicenseType.BASIC, "Test Corp", expiration_days=30)
         assert mgr._verify_signature(license_data) is True
 
     @patch.object(LicenseManager, "_is_licensing_enabled", return_value=False)
     def test_default_secret_key_warning(self, mock_enabled) -> None:
         mgr = LicenseManager({"license_secret_key": "default_secret_key"})
-        license_data = mgr.generate_license_key(
-            LicenseType.BASIC, "Test Corp", expiration_days=30
-        )
+        license_data = mgr.generate_license_key(LicenseType.BASIC, "Test Corp", expiration_days=30)
         # Should still work with default key, just logs a warning
         assert mgr._verify_signature(license_data) is True
 
@@ -612,9 +604,10 @@ class TestSaveLicense:
 
             license_data = mgr.generate_license_key(LicenseType.ENTERPRISE, "Corp")
 
-            with patch.object(mgr, "_load_license"), patch.object(
-                mgr, "_create_license_lock"
-            ) as mock_lock:
+            with (
+                patch.object(mgr, "_load_license"),
+                patch.object(mgr, "_create_license_lock") as mock_lock,
+            ):
                 result = mgr.save_license(license_data, enforce_licensing=True)
                 assert result is True
                 mock_lock.assert_called_once_with(license_data)
@@ -726,7 +719,7 @@ class TestGetLicenseStatus:
         with patch.object(
             mgr, "_check_trial_eligibility", return_value=(LicenseStatus.ACTIVE, "Trial")
         ) as mock_trial:
-            status, message = mgr.get_license_status()
+            status, _message = mgr.get_license_status()
             mock_trial.assert_called_once()
             assert status == LicenseStatus.ACTIVE
 
@@ -845,7 +838,7 @@ class TestCheckTrialEligibility:
                 return original_open(self_path, *args, **kwargs)
 
             with patch.object(Path, "open", mock_open):
-                status, message = mgr._check_trial_eligibility()
+                status, _message = mgr._check_trial_eligibility()
                 assert status == LicenseStatus.INVALID
 
     @patch.object(LicenseManager, "_is_licensing_enabled", return_value=False)

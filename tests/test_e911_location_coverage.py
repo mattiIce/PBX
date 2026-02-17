@@ -174,9 +174,7 @@ class TestE911RegisterLocation:
     def test_register_location_disabled(self) -> None:
         """Test registering location when service is disabled"""
         with patch("pbx.features.e911_location.get_logger"):
-            service = E911LocationService(
-                {"features": {"e911": {"enabled": False}}}
-            )
+            service = E911LocationService({"features": {"e911": {"enabled": False}}})
 
         result = service.register_location("ext-1001", "building_a")
 
@@ -358,9 +356,7 @@ class TestE911RouteEmergencyCall:
     def test_route_emergency_call_not_enabled(self) -> None:
         """Test routing emergency call when service is disabled"""
         with patch("pbx.features.e911_location.get_logger"):
-            service = E911LocationService(
-                {"features": {"e911": {"enabled": False}}}
-            )
+            service = E911LocationService({"features": {"e911": {"enabled": False}}})
 
         result = service.route_emergency_call("ext-1001", {"name": "John"})
 
@@ -438,9 +434,7 @@ class TestE911FormatDispatchableLocation:
     def setup_method(self) -> None:
         """Set up test fixtures"""
         with patch("pbx.features.e911_location.get_logger"):
-            self.service = E911LocationService(
-                {"features": {"e911": {"enabled": True}}}
-            )
+            self.service = E911LocationService({"features": {"e911": {"enabled": True}}})
 
     def test_format_full_location(self) -> None:
         """Test formatting with all location fields"""

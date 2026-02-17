@@ -6,10 +6,16 @@ initialization, encoding, decoding, codec negotiation, bandwidth calculation,
 encoder/decoder creation, statistics, and the global singleton accessor.
 """
 
+from __future__ import annotations
+
 from datetime import UTC, datetime
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
+
+if TYPE_CHECKING:
+    from pbx.features.video_codec import VideoCodecManager
 
 
 @pytest.mark.unit
@@ -485,15 +491,13 @@ class TestDetectCodecsViaFfmpeg:
 
     def _create_manager(
         self, mock_logger: MagicMock, ffmpeg_available: bool = True
-    ) -> "VideoCodecManager":
+    ) -> VideoCodecManager:
         """Helper to create a manager for testing internal methods"""
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=ffmpeg_available),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         # Reset ffmpeg_available to desired state for the test
@@ -718,14 +722,12 @@ class TestDetectCodecsViaFfmpeg:
 class TestDetectOpenH264:
     """Test the _detect_openh264 method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=False),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -782,14 +784,12 @@ class TestDetectOpenH264:
 class TestDetectX265:
     """Test the _detect_x265 method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=False),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -879,14 +879,12 @@ class TestDetectX265:
 class TestDetectAvailableCodecs:
     """Test the _detect_available_codecs method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=False),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -899,12 +897,8 @@ class TestDetectAvailableCodecs:
 
         with (
             patch.object(manager, "_detect_codecs_via_ffmpeg", return_value=["H.264"]),
-            patch.object(
-                manager, "_detect_openh264", return_value=["H.264"]
-            ) as mock_openh264,
-            patch.object(
-                manager, "_detect_x265", return_value=["H.264", "H.265"]
-            ) as mock_x265,
+            patch.object(manager, "_detect_openh264", return_value=["H.264"]) as mock_openh264,
+            patch.object(manager, "_detect_x265", return_value=["H.264", "H.265"]) as mock_x265,
         ):
             result = manager._detect_available_codecs()
 
@@ -951,17 +945,13 @@ class TestDetectAvailableCodecs:
 class TestEncodeFrame:
     """Test the encode_frame method"""
 
-    def _create_manager(
-        self, mock_logger: MagicMock, enabled: bool = True
-    ) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock, enabled: bool = True) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         config = {"features": {"video_codec": {"enabled": enabled}}}
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=True),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(config)
         return manager
@@ -1056,10 +1046,8 @@ class TestEncodeFrame:
         mock_logger.return_value = MagicMock()
         manager = self._create_manager(mock_logger, enabled=True)
 
-        frame = b"\xAB\xCD" * 100
-        result = manager.encode_frame(
-            frame, codec="VP8", resolution=(640, 480), bitrate=1000
-        )
+        frame = b"\xab\xcd" * 100
+        result = manager.encode_frame(frame, codec="VP8", resolution=(640, 480), bitrate=1000)
 
         assert result == frame
         assert manager.frames_encoded == 1
@@ -1071,7 +1059,7 @@ class TestEncodeFrame:
         mock_logger.return_value = MagicMock()
         manager = self._create_manager(mock_logger, enabled=True)
 
-        logger_instance = manager.logger
+        _logger_instance = manager.logger
         frame = b"\x00" * 10
         manager.encode_frame(frame, codec=None)
 
@@ -1094,17 +1082,13 @@ class TestEncodeFrame:
 class TestDecodeFrame:
     """Test the decode_frame method"""
 
-    def _create_manager(
-        self, mock_logger: MagicMock, enabled: bool = True
-    ) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock, enabled: bool = True) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         config = {"features": {"video_codec": {"enabled": enabled}}}
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=True),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(config)
         return manager
@@ -1125,7 +1109,7 @@ class TestDecodeFrame:
         mock_logger.return_value = MagicMock()
         manager = self._create_manager(mock_logger, enabled=True)
 
-        data = b"\xDE\xAD\xBE\xEF" * 50
+        data = b"\xde\xad\xbe\xef" * 50
         result = manager.decode_frame(data)
 
         assert result == data
@@ -1173,14 +1157,12 @@ class TestDecodeFrame:
 class TestCreateEncoder:
     """Test the create_encoder method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=True),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -1334,14 +1316,12 @@ class TestCreateEncoder:
 class TestCreateDecoder:
     """Test the create_decoder method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=True),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -1404,14 +1384,12 @@ class TestCreateDecoder:
 class TestNegotiateCodec:
     """Test the negotiate_codec method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=True),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -1539,14 +1517,12 @@ class TestNegotiateCodec:
 class TestGetSupportedResolutions:
     """Test the get_supported_resolutions method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=True),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -1588,14 +1564,12 @@ class TestGetSupportedResolutions:
 class TestCalculateBandwidth:
     """Test the calculate_bandwidth method"""
 
-    def _create_manager(self, mock_logger: MagicMock) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         with (
             patch.object(VideoCodecManager, "_check_ffmpeg", return_value=True),
-            patch.object(
-                VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]
-            ),
+            patch.object(VideoCodecManager, "_detect_available_codecs", return_value=["H.264"]),
         ):
             manager = VideoCodecManager(None)
         return manager
@@ -1720,9 +1694,7 @@ class TestCalculateBandwidth:
 class TestGetStatistics:
     """Test the get_statistics method"""
 
-    def _create_manager(
-        self, mock_logger: MagicMock, enabled: bool = False
-    ) -> "VideoCodecManager":
+    def _create_manager(self, mock_logger: MagicMock, enabled: bool = False) -> VideoCodecManager:
         from pbx.features.video_codec import VideoCodecManager
 
         config = {"features": {"video_codec": {"enabled": enabled}}}

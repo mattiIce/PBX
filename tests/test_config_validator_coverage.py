@@ -53,8 +53,14 @@ class TestValidateAll:
                 "rtp_port_range_end": 20000,
                 "external_ip": "192.168.1.1",
             },
-            "database": {"type": "postgresql", "host": "localhost", "port": 5432,
-                         "name": "pbx", "user": "admin", "password": "${DB_PASSWORD}"},
+            "database": {
+                "type": "postgresql",
+                "host": "localhost",
+                "port": 5432,
+                "name": "pbx",
+                "user": "admin",
+                "password": "${DB_PASSWORD}",
+            },
             "api": {
                 "port": 9000,
                 "ssl": {"enabled": True, "cert_file": "${SSL_CERT}", "key_file": "${SSL_KEY}"},
@@ -73,7 +79,7 @@ class TestValidateAll:
         with patch("pbx.utils.config_validator.environ") as mock_env:
             mock_env.get.return_value = "some_value"
             validator = ConfigValidator(config)
-            is_valid, errors, warnings = validator.validate_all()
+            is_valid, errors, _warnings = validator.validate_all()
             assert is_valid is True
             assert len(errors) == 0
 
@@ -358,8 +364,10 @@ class TestValidateApiConfig:
         }
         validator = ConfigValidator(config)
         validator._validate_api_config()
-        assert any("certificate file not found" in e.lower() or "cert" in e.lower()
-                    for e in validator.errors)
+        assert any(
+            "certificate file not found" in e.lower() or "cert" in e.lower()
+            for e in validator.errors
+        )
 
     def test_ssl_disabled_warning(self) -> None:
         config = {"api": {"ssl": {"enabled": False}}}
@@ -635,7 +643,9 @@ class TestValidateProductionReadiness:
         config = {"server": {"server_name": "production-pbx.acme.com"}}
         validator = ConfigValidator(config)
         validator._validate_production_readiness()
-        example_warnings = [w for w in validator.warnings if "Server name" in w and "example" in w.lower()]
+        example_warnings = [
+            w for w in validator.warnings if "Server name" in w and "example" in w.lower()
+        ]
         assert len(example_warnings) == 0
 
     def test_voicemail_email_no_smtp_host(self) -> None:
@@ -716,7 +726,9 @@ class TestValidateProductionReadiness:
         validator = ConfigValidator(config)
         validator._validate_production_readiness()
         # Empty string should not trigger "example" warning
-        example_warnings = [w for w in validator.warnings if "example" in w.lower() and "Server" in w]
+        example_warnings = [
+            w for w in validator.warnings if "example" in w.lower() and "Server" in w
+        ]
         assert len(example_warnings) == 0
 
 
@@ -726,12 +738,24 @@ class TestValidateConfigOnStartup:
 
     def test_valid_config_returns_true(self) -> None:
         config = {
-            "server": {"sip_port": 5060, "rtp_port_range_start": 10000,
-                        "rtp_port_range_end": 20000, "external_ip": "10.0.0.1"},
-            "database": {"type": "postgresql", "host": "db", "port": 5432,
-                         "name": "pbx", "user": "u", "password": "${P}"},
-            "api": {"port": 9000, "ssl": {"enabled": True, "cert_file": "${C}",
-                                           "key_file": "${K}"}},
+            "server": {
+                "sip_port": 5060,
+                "rtp_port_range_start": 10000,
+                "rtp_port_range_end": 20000,
+                "external_ip": "10.0.0.1",
+            },
+            "database": {
+                "type": "postgresql",
+                "host": "db",
+                "port": 5432,
+                "name": "pbx",
+                "user": "u",
+                "password": "${P}",
+            },
+            "api": {
+                "port": 9000,
+                "ssl": {"enabled": True, "cert_file": "${C}", "key_file": "${K}"},
+            },
             "security": {"fips_mode": True, "max_failed_attempts": 5},
             "extensions": [{"number": "1001", "password": "G00dPa$$word!"}],
             "codecs": {"g711_pcmu": {"enabled": True}},
@@ -750,8 +774,12 @@ class TestValidateConfigOnStartup:
     def test_warnings_only_returns_true(self) -> None:
         # Config that produces warnings but no errors
         config = {
-            "server": {"sip_port": 5060, "rtp_port_range_start": 10000,
-                        "rtp_port_range_end": 20000, "external_ip": "10.0.0.1"},
+            "server": {
+                "sip_port": 5060,
+                "rtp_port_range_start": 10000,
+                "rtp_port_range_end": 20000,
+                "external_ip": "10.0.0.1",
+            },
             "database": {"type": "sqlite", "path": "pbx.db"},
             "api": {"port": 9000},
             "security": {"fips_mode": False},
@@ -764,13 +792,25 @@ class TestValidateConfigOnStartup:
     def test_no_errors_no_warnings(self) -> None:
         """Config that passes all checks cleanly."""
         config = {
-            "server": {"sip_port": 5060, "rtp_port_range_start": 10000,
-                        "rtp_port_range_end": 20000, "external_ip": "10.0.0.1",
-                        "server_name": "production-pbx"},
-            "database": {"type": "postgresql", "host": "db", "port": 5432,
-                         "name": "pbx", "user": "u", "password": "${P}"},
-            "api": {"port": 9000, "ssl": {"enabled": True, "cert_file": "${C}",
-                                           "key_file": "${K}"}},
+            "server": {
+                "sip_port": 5060,
+                "rtp_port_range_start": 10000,
+                "rtp_port_range_end": 20000,
+                "external_ip": "10.0.0.1",
+                "server_name": "production-pbx",
+            },
+            "database": {
+                "type": "postgresql",
+                "host": "db",
+                "port": 5432,
+                "name": "pbx",
+                "user": "u",
+                "password": "${P}",
+            },
+            "api": {
+                "port": 9000,
+                "ssl": {"enabled": True, "cert_file": "${C}", "key_file": "${K}"},
+            },
             "security": {"fips_mode": True, "max_failed_attempts": 5},
             "extensions": [{"number": "1001", "password": "G00dPa$$word!"}],
             "codecs": {"g711_pcmu": {"enabled": True}},

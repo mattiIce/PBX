@@ -19,7 +19,6 @@ from pbx.features.predictive_dialing import (
     get_predictive_dialer,
 )
 
-
 # ---------------------------------------------------------------------------
 # Enum tests
 # ---------------------------------------------------------------------------
@@ -233,7 +232,11 @@ class TestPredictiveDialerInit:
 
         with patch.dict(
             "sys.modules",
-            {"pbx.features.predictive_dialing_db": MagicMock(PredictiveDialingDatabase=mock_db_class)},
+            {
+                "pbx.features.predictive_dialing_db": MagicMock(
+                    PredictiveDialingDatabase=mock_db_class
+                )
+            },
         ):
             dialer = PredictiveDialer(config={}, db_backend=mock_db_backend)
 
@@ -264,7 +267,11 @@ class TestPredictiveDialerInit:
 
         with patch.dict(
             "sys.modules",
-            {"pbx.features.predictive_dialing_db": MagicMock(PredictiveDialingDatabase=mock_db_class)},
+            {
+                "pbx.features.predictive_dialing_db": MagicMock(
+                    PredictiveDialingDatabase=mock_db_class
+                )
+            },
         ):
             dialer = PredictiveDialer(config={}, db_backend=mock_db_backend)
 
@@ -547,9 +554,7 @@ class TestPredictiveDialerPredictAgentAvailability:
 
     def test_zero_agents(self) -> None:
         """Zero agents should return 0 lines to dial."""
-        result = self.dialer.predict_agent_availability(
-            current_agents=0, avg_call_duration=120.0
-        )
+        result = self.dialer.predict_agent_availability(current_agents=0, avg_call_duration=120.0)
         assert result == 0
 
     def test_basic_prediction(self) -> None:
@@ -683,19 +688,25 @@ class TestPredictiveDialerCalculateAbandonRate:
     def test_no_answered_or_abandoned(self) -> None:
         """Contacts with neither answered nor abandoned result return 0.0."""
         self.dialer.create_campaign("c1", "Pending", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-            {"id": "c2", "phone_number": "5552222222"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+                {"id": "c2", "phone_number": "5552222222"},
+            ],
+        )
         assert self.dialer.calculate_abandon_rate("c1") == 0.0
 
     def test_all_answered(self) -> None:
         """All contacts answered gives 0.0 abandon rate."""
         self.dialer.create_campaign("c1", "Good", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-            {"id": "c2", "phone_number": "5552222222"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+                {"id": "c2", "phone_number": "5552222222"},
+            ],
+        )
         for contact in self.dialer.campaigns["c1"].contacts:
             contact.call_result = "answered"
         assert self.dialer.calculate_abandon_rate("c1") == 0.0
@@ -703,10 +714,13 @@ class TestPredictiveDialerCalculateAbandonRate:
     def test_all_abandoned(self) -> None:
         """All contacts abandoned gives 1.0 abandon rate."""
         self.dialer.create_campaign("c1", "Bad", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-            {"id": "c2", "phone_number": "5552222222"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+                {"id": "c2", "phone_number": "5552222222"},
+            ],
+        )
         for contact in self.dialer.campaigns["c1"].contacts:
             contact.call_result = "abandoned"
         assert self.dialer.calculate_abandon_rate("c1") == 1.0
@@ -714,9 +728,9 @@ class TestPredictiveDialerCalculateAbandonRate:
     def test_mixed_results(self) -> None:
         """Mix of answered, abandoned, and connected contacts."""
         self.dialer.create_campaign("c1", "Mixed", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": f"c{i}", "phone_number": f"555{i:07d}"} for i in range(10)
-        ])
+        self.dialer.add_contacts(
+            "c1", [{"id": f"c{i}", "phone_number": f"555{i:07d}"} for i in range(10)]
+        )
         contacts = self.dialer.campaigns["c1"].contacts
         # 3 abandoned, 4 answered, 2 connected, 1 pending
         for i in range(3):
@@ -734,9 +748,12 @@ class TestPredictiveDialerCalculateAbandonRate:
     def test_connected_counts_as_answered(self) -> None:
         """'connected' call_result counts as answered (not abandoned)."""
         self.dialer.create_campaign("c1", "Connected", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+            ],
+        )
         self.dialer.campaigns["c1"].contacts[0].call_result = "connected"
         assert self.dialer.calculate_abandon_rate("c1") == 0.0
 
@@ -763,10 +780,13 @@ class TestPredictiveDialerGetNextContact:
     def test_returns_first_pending(self) -> None:
         """Returns the first pending contact."""
         self.dialer.create_campaign("c1", "Test", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-            {"id": "c2", "phone_number": "5552222222"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+                {"id": "c2", "phone_number": "5552222222"},
+            ],
+        )
         contact = self.dialer.get_next_contact("c1")
         assert contact is not None
         assert contact.contact_id == "c1"
@@ -774,10 +794,13 @@ class TestPredictiveDialerGetNextContact:
     def test_skips_non_pending_contacts(self) -> None:
         """Skips contacts that are not pending or eligible for retry."""
         self.dialer.create_campaign("c1", "Test", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-            {"id": "c2", "phone_number": "5552222222"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+                {"id": "c2", "phone_number": "5552222222"},
+            ],
+        )
         # Mark first contact as completed
         self.dialer.campaigns["c1"].contacts[0].status = "completed"
         contact = self.dialer.get_next_contact("c1")
@@ -787,9 +810,12 @@ class TestPredictiveDialerGetNextContact:
     def test_retry_contact_ready(self) -> None:
         """Contact in retry status with elapsed retry interval is returned."""
         self.dialer.create_campaign("c1", "Test", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+            ],
+        )
         contact = self.dialer.campaigns["c1"].contacts[0]
         contact.status = "retry"
         # Set last_attempt to be well past the retry interval
@@ -801,9 +827,12 @@ class TestPredictiveDialerGetNextContact:
     def test_retry_contact_not_ready(self) -> None:
         """Contact in retry status with recent attempt is not returned."""
         self.dialer.create_campaign("c1", "Test", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+            ],
+        )
         contact = self.dialer.campaigns["c1"].contacts[0]
         contact.status = "retry"
         contact.last_attempt = datetime.now(UTC)  # Just now — not enough time passed
@@ -813,9 +842,12 @@ class TestPredictiveDialerGetNextContact:
     def test_retry_contact_no_last_attempt(self) -> None:
         """Contact with retry status but no last_attempt is not returned."""
         self.dialer.create_campaign("c1", "Test", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+            ],
+        )
         contact = self.dialer.campaigns["c1"].contacts[0]
         contact.status = "retry"
         contact.last_attempt = None
@@ -827,10 +859,13 @@ class TestPredictiveDialerGetNextContact:
     def test_all_contacts_completed(self) -> None:
         """All contacts completed returns None."""
         self.dialer.create_campaign("c1", "Test", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-            {"id": "c2", "phone_number": "5552222222"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+                {"id": "c2", "phone_number": "5552222222"},
+            ],
+        )
         for c in self.dialer.campaigns["c1"].contacts:
             c.status = "completed"
         assert self.dialer.get_next_contact("c1") is None
@@ -846,9 +881,12 @@ class TestPredictiveDialerDialContact:
             mgl.return_value = MagicMock()
             self.dialer = PredictiveDialer(config={})
             self.dialer.create_campaign("c1", "Test", "progressive")
-            self.dialer.add_contacts("c1", [
-                {"id": "ct1", "phone_number": "5551111111"},
-            ])
+            self.dialer.add_contacts(
+                "c1",
+                [
+                    {"id": "ct1", "phone_number": "5551111111"},
+                ],
+            )
 
     def test_dial_nonexistent_campaign(self) -> None:
         """Dialing with nonexistent campaign returns error."""
@@ -962,10 +1000,13 @@ class TestPredictiveDialerGetCampaignStatistics:
     def test_statistics_with_contacts(self) -> None:
         """Statistics reflect added contacts."""
         self.dialer.create_campaign("c1", "Contacts", "progressive")
-        self.dialer.add_contacts("c1", [
-            {"id": "c1", "phone_number": "5551111111"},
-            {"id": "c2", "phone_number": "5552222222"},
-        ])
+        self.dialer.add_contacts(
+            "c1",
+            [
+                {"id": "c1", "phone_number": "5551111111"},
+                {"id": "c2", "phone_number": "5552222222"},
+            ],
+        )
         campaign = self.dialer.campaigns["c1"]
         campaign.contacts_completed = 1
         campaign.successful_calls = 1
@@ -1127,9 +1168,7 @@ class TestPredictiveDialerWorkflow:
         assert campaign.status is CampaignStatus.PENDING
 
         # Add contacts
-        contacts_data = [
-            {"id": f"c{i}", "phone_number": f"555{i:07d}"} for i in range(5)
-        ]
+        contacts_data = [{"id": f"c{i}", "phone_number": f"555{i:07d}"} for i in range(5)]
         added = self.dialer.add_contacts("lifecycle", contacts_data)
         assert added == 5
 
@@ -1166,9 +1205,7 @@ class TestPredictiveDialerWorkflow:
     def test_abandon_rate_during_campaign(self) -> None:
         """Monitor abandon rate as contacts are dialed."""
         self.dialer.create_campaign("abandon", "Abandon Test", "predictive")
-        contacts_data = [
-            {"id": f"c{i}", "phone_number": f"555{i:07d}"} for i in range(10)
-        ]
+        contacts_data = [{"id": f"c{i}", "phone_number": f"555{i:07d}"} for i in range(10)]
         self.dialer.add_contacts("abandon", contacts_data)
         self.dialer.start_campaign("abandon")
 
@@ -1217,9 +1254,12 @@ class TestPredictiveDialerWorkflow:
     def test_contact_retry_flow(self) -> None:
         """Test retry flow: dial, mark retry, wait, re-dial."""
         self.dialer.create_campaign("retry", "Retry Test", "progressive")
-        self.dialer.add_contacts("retry", [
-            {"id": "r1", "phone_number": "5551111111"},
-        ])
+        self.dialer.add_contacts(
+            "retry",
+            [
+                {"id": "r1", "phone_number": "5551111111"},
+            ],
+        )
         self.dialer.start_campaign("retry")
 
         contact = self.dialer.get_next_contact("retry")

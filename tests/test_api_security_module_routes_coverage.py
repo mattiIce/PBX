@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask.testing import FlaskClient
 
-
 AUTH_ADMIN = (True, {"extension": "1001", "is_admin": True})
 AUTH_USER = (True, {"extension": "1001", "is_admin": False})
 AUTH_NONE = (False, None)
@@ -238,9 +237,7 @@ class TestHotDeskLogout:
             )
         assert resp.status_code == 404
 
-    def test_logout_by_extension(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_logout_by_extension(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.hot_desking = MagicMock()
         mock_pbx_core.hot_desking.logout_extension.return_value = 2
 
@@ -682,11 +679,13 @@ class TestMfaEnrollFido2:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER):
             resp = api_client.post(
                 "/api/mfa/enroll-fido2",
-                data=json.dumps({
-                    "extension": "1001",
-                    "credential_data": {"id": "abc"},
-                    "device_name": "Key1",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "credential_data": {"id": "abc"},
+                        "device_name": "Key1",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1054,11 +1053,13 @@ class TestAddDndRule:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER):
             resp = api_client.post(
                 "/api/dnd/rule",
-                data=json.dumps({
-                    "extension": "1001",
-                    "rule_type": "time_based",
-                    "config": {"start": "22:00", "end": "08:00"},
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "rule_type": "time_based",
+                        "config": {"start": "22:00", "end": "08:00"},
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1159,33 +1160,36 @@ class TestDndOverride:
     def test_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.dnd_scheduler = MagicMock()
 
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER):
-            with patch("pbx.features.presence.PresenceStatus", autospec=True) as mock_status:
-                mock_status.return_value = mock_status
-                resp = api_client.post(
-                    "/api/dnd/override",
-                    data=json.dumps({
+        with (
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER),
+            patch("pbx.features.presence.PresenceStatus", autospec=True) as mock_status,
+        ):
+            mock_status.return_value = mock_status
+            resp = api_client.post(
+                "/api/dnd/override",
+                data=json.dumps(
+                    {
                         "extension": "1001",
                         "status": "do_not_disturb",
                         "duration_minutes": 60,
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
 
     def test_invalid_status(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.dnd_scheduler = MagicMock()
 
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER):
-            with patch(
-                "pbx.features.presence.PresenceStatus",
-                side_effect=ValueError("invalid"),
-            ):
-                resp = api_client.post(
-                    "/api/dnd/override",
-                    data=json.dumps({"extension": "1001", "status": "invalid_status"}),
-                    content_type="application/json",
-                )
+        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER), patch(
+            "pbx.features.presence.PresenceStatus",
+            side_effect=ValueError("invalid"),
+        ):
+            resp = api_client.post(
+                "/api/dnd/override",
+                data=json.dumps({"extension": "1001", "status": "invalid_status"}),
+                content_type="application/json",
+            )
         assert resp.status_code == 400
 
     def test_missing_fields(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
@@ -1214,16 +1218,15 @@ class TestDndOverride:
     def test_exception(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.dnd_scheduler = MagicMock()
 
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER):
-            with patch(
-                "pbx.features.presence.PresenceStatus",
-                side_effect=RuntimeError("fail"),
-            ):
-                resp = api_client.post(
-                    "/api/dnd/override",
-                    data=json.dumps({"extension": "1001", "status": "do_not_disturb"}),
-                    content_type="application/json",
-                )
+        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER), patch(
+            "pbx.features.presence.PresenceStatus",
+            side_effect=RuntimeError("fail"),
+        ):
+            resp = api_client.post(
+                "/api/dnd/override",
+                data=json.dumps({"extension": "1001", "status": "do_not_disturb"}),
+                content_type="application/json",
+            )
         assert resp.status_code == 500
 
 

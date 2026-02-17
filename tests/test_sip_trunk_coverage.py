@@ -14,7 +14,6 @@ from pbx.features.sip_trunk import (
     get_trunk_manager,
 )
 
-
 # ---------------------------------------------------------------------------
 # TrunkStatus / TrunkHealthStatus enums
 # ---------------------------------------------------------------------------
@@ -551,7 +550,7 @@ class TestSIPTrunkSystemInit:
     @patch("pbx.features.sip_trunk.get_logger")
     def test_init_with_config(self, mock_logger: MagicMock, mock_e911: MagicMock) -> None:
         config = {"some_key": "some_value"}
-        system = SIPTrunkSystem(config=config)
+        _system = SIPTrunkSystem(config=config)
         mock_e911.assert_called_once_with(config)
 
 
@@ -707,9 +706,7 @@ class TestSIPTrunkSystemMakeOutboundCall:
 
     @patch("pbx.features.sip_trunk.E911Protection")
     @patch("pbx.features.sip_trunk.get_logger")
-    def test_make_outbound_call_success(
-        self, mock_logger: MagicMock, mock_e911: MagicMock
-    ) -> None:
+    def test_make_outbound_call_success(self, mock_logger: MagicMock, mock_e911: MagicMock) -> None:
         mock_e911.return_value.block_if_e911.return_value = False
         system = SIPTrunkSystem()
         trunk = _make_trunk("t1", "Primary")
@@ -1009,9 +1006,7 @@ class TestSIPTrunkSystemRouteWithFailover:
 
     @patch("pbx.features.sip_trunk.E911Protection")
     @patch("pbx.features.sip_trunk.get_logger")
-    def test_route_with_failover_to_alt(
-        self, mock_logger: MagicMock, mock_e911: MagicMock
-    ) -> None:
+    def test_route_with_failover_to_alt(self, mock_logger: MagicMock, mock_e911: MagicMock) -> None:
         mock_e911.return_value.block_if_e911.return_value = False
         system = SIPTrunkSystem()
         primary = _make_trunk("t1", "Primary", priority=100)
@@ -1172,9 +1167,7 @@ class TestSIPTrunkSystemHealthSummary:
 
     @patch("pbx.features.sip_trunk.E911Protection")
     @patch("pbx.features.sip_trunk.get_logger")
-    def test_health_summary_with_trunks(
-        self, mock_logger: MagicMock, mock_e911: MagicMock
-    ) -> None:
+    def test_health_summary_with_trunks(self, mock_logger: MagicMock, mock_e911: MagicMock) -> None:
         system = SIPTrunkSystem()
         t1 = _make_trunk("t1", "Healthy Trunk")
         t1.register()

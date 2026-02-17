@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask.testing import FlaskClient
 
-
 AUTH_PATCH = "pbx.api.utils.verify_authentication"
 AUTH_OK = (True, {"extension": "1001", "is_admin": True})
 AUTH_NON_ADMIN = (True, {"extension": "1001", "is_admin": False})
@@ -22,9 +21,7 @@ AUTH_FAIL = (False, None)
 class TestHotDeskingSessions:
     """Tests for Hot-Desking session endpoints."""
 
-    def test_get_sessions_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_sessions_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         hd = MagicMock()
         hd.get_active_sessions.return_value = [
             {"device_id": "d1", "extension": "1001"},
@@ -50,9 +47,7 @@ class TestHotDeskingSessions:
         data = json.loads(resp.data)
         assert "error" in data
 
-    def test_get_sessions_unauthenticated(
-        self, api_client: FlaskClient
-    ) -> None:
+    def test_get_sessions_unauthenticated(self, api_client: FlaskClient) -> None:
         with patch(AUTH_PATCH, return_value=AUTH_FAIL):
             resp = api_client.get("/api/hot-desk/sessions")
         assert resp.status_code == 401
@@ -73,9 +68,7 @@ class TestHotDeskingSessions:
 class TestHotDeskingSessionByDevice:
     """Tests for Hot-Desking single session endpoints."""
 
-    def test_get_session_found(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_session_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         session = MagicMock()
         session.to_dict.return_value = {"device_id": "d1", "extension": "1001"}
         hd = MagicMock()
@@ -88,9 +81,7 @@ class TestHotDeskingSessionByDevice:
         data = json.loads(resp.data)
         assert data["device_id"] == "d1"
 
-    def test_get_session_not_found(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_session_not_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         hd = MagicMock()
         hd.get_session.return_value = None
         mock_pbx_core.hot_desking = hd
@@ -99,9 +90,7 @@ class TestHotDeskingSessionByDevice:
             resp = api_client.get("/api/hot-desk/session/unknown")
         assert resp.status_code == 404
 
-    def test_get_session_exception(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_session_exception(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         hd = MagicMock()
         hd.get_session.side_effect = RuntimeError("fail")
         mock_pbx_core.hot_desking = hd
@@ -161,9 +150,7 @@ class TestHotDeskingExtension:
 class TestHotDeskingLogin:
     """Tests for Hot-Desking login endpoint."""
 
-    def test_login_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_login_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         hd = MagicMock()
         hd.login.return_value = True
         hd.get_extension_profile.return_value = {"extension": "1001"}
@@ -172,11 +159,13 @@ class TestHotDeskingLogin:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/hot-desk/login",
-                data=json.dumps({
-                    "extension": "1001",
-                    "device_id": "d1",
-                    "pin": "1234",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "device_id": "d1",
+                        "pin": "1234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -184,9 +173,7 @@ class TestHotDeskingLogin:
         assert data["success"] is True
         assert "profile" in data
 
-    def test_login_failure(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_login_failure(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         hd = MagicMock()
         hd.login.return_value = False
         mock_pbx_core.hot_desking = hd
@@ -194,18 +181,18 @@ class TestHotDeskingLogin:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/hot-desk/login",
-                data=json.dumps({
-                    "extension": "1001",
-                    "device_id": "d1",
-                    "pin": "wrong",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "device_id": "d1",
+                        "pin": "wrong",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 401
 
-    def test_login_missing_fields(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_login_missing_fields(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         hd = MagicMock()
         mock_pbx_core.hot_desking = hd
 
@@ -217,9 +204,7 @@ class TestHotDeskingLogin:
             )
         assert resp.status_code == 400
 
-    def test_login_not_available(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_login_not_available(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         if hasattr(mock_pbx_core, "hot_desking"):
             del mock_pbx_core.hot_desking
 
@@ -285,9 +270,7 @@ class TestHotDeskingLogout:
         data = json.loads(resp.data)
         assert "2 device(s)" in data["message"]
 
-    def test_logout_missing_fields(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_logout_missing_fields(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         hd = MagicMock()
         mock_pbx_core.hot_desking = hd
 
@@ -299,9 +282,7 @@ class TestHotDeskingLogout:
             )
         assert resp.status_code == 400
 
-    def test_logout_not_available(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_logout_not_available(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         if hasattr(mock_pbx_core, "hot_desking"):
             del mock_pbx_core.hot_desking
 
@@ -364,9 +345,7 @@ class TestMFAStatus:
 class TestMFAMethods:
     """Tests for MFA methods endpoint."""
 
-    def test_get_methods_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_methods_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.get_enrolled_methods.return_value = ["totp", "yubikey"]
         mock_pbx_core.mfa_manager = mfa
@@ -393,9 +372,7 @@ class TestMFAMethods:
 class TestMFAEnroll:
     """Tests for MFA enrollment endpoints."""
 
-    def test_enroll_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_enroll_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.enroll_user.return_value = (True, "otpauth://totp/...", ["code1", "code2"])
         mock_pbx_core.mfa_manager = mfa
@@ -412,9 +389,7 @@ class TestMFAEnroll:
         assert "provisioning_uri" in data
         assert "backup_codes" in data
 
-    def test_enroll_failure(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_enroll_failure(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.enroll_user.return_value = (False, None, None)
         mock_pbx_core.mfa_manager = mfa
@@ -490,9 +465,7 @@ class TestMFAVerify:
             )
         assert resp.status_code == 400
 
-    def test_verify_code_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_verify_code_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.verify_code.return_value = True
         mock_pbx_core.mfa_manager = mfa
@@ -505,9 +478,7 @@ class TestMFAVerify:
             )
         assert resp.status_code == 200
 
-    def test_verify_code_invalid(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_verify_code_invalid(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.verify_code.return_value = False
         mock_pbx_core.mfa_manager = mfa
@@ -539,9 +510,7 @@ class TestMFAVerify:
 class TestMFADisable:
     """Tests for MFA disable endpoint."""
 
-    def test_disable_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_disable_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.disable_for_user.return_value = True
         mock_pbx_core.mfa_manager = mfa
@@ -554,9 +523,7 @@ class TestMFADisable:
             )
         assert resp.status_code == 200
 
-    def test_disable_failure(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_disable_failure(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.disable_for_user.return_value = False
         mock_pbx_core.mfa_manager = mfa
@@ -598,11 +565,13 @@ class TestMFAYubiKey:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/mfa/enroll-yubikey",
-                data=json.dumps({
-                    "extension": "1001",
-                    "otp": "cccccccfiuv...",
-                    "device_name": "My YubiKey",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "otp": "cccccccfiuv...",
+                        "device_name": "My YubiKey",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -617,10 +586,12 @@ class TestMFAYubiKey:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/mfa/enroll-yubikey",
-                data=json.dumps({
-                    "extension": "1001",
-                    "otp": "bad",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "otp": "bad",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
@@ -644,9 +615,7 @@ class TestMFAYubiKey:
 class TestMFAFIDO2:
     """Tests for MFA FIDO2/WebAuthn enrollment endpoint."""
 
-    def test_enroll_fido2_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_enroll_fido2_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.enroll_fido2.return_value = (True, None)
         mock_pbx_core.mfa_manager = mfa
@@ -654,18 +623,18 @@ class TestMFAFIDO2:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/mfa/enroll-fido2",
-                data=json.dumps({
-                    "extension": "1001",
-                    "credential_data": {"id": "cred_abc"},
-                    "device_name": "USB Key",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "credential_data": {"id": "cred_abc"},
+                        "device_name": "USB Key",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
 
-    def test_enroll_fido2_failure(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_enroll_fido2_failure(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mfa = MagicMock()
         mfa.enroll_fido2.return_value = (False, "Invalid credential")
         mock_pbx_core.mfa_manager = mfa
@@ -673,10 +642,12 @@ class TestMFAFIDO2:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/mfa/enroll-fido2",
-                data=json.dumps({
-                    "extension": "1001",
-                    "credential_data": {"id": "bad"},
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "credential_data": {"id": "bad"},
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
@@ -740,9 +711,7 @@ class TestThreatDetection:
             resp = api_client.get("/api/security/threat-summary")
         assert resp.status_code == 500
 
-    def test_check_ip_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_check_ip_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         td = MagicMock()
         td.is_ip_blocked.return_value = (True, "Brute force")
         mock_pbx_core.threat_detector = td
@@ -754,9 +723,7 @@ class TestThreatDetection:
         assert data["is_blocked"] is True
         assert data["reason"] == "Brute force"
 
-    def test_check_ip_not_blocked(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_check_ip_not_blocked(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         td = MagicMock()
         td.is_ip_blocked.return_value = (False, None)
         mock_pbx_core.threat_detector = td
@@ -777,20 +744,20 @@ class TestThreatDetection:
             resp = api_client.get("/api/security/check-ip/1.2.3.4")
         assert resp.status_code == 500
 
-    def test_block_ip_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_block_ip_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         td = MagicMock()
         mock_pbx_core.threat_detector = td
 
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/security/block-ip",
-                data=json.dumps({
-                    "ip_address": "192.168.1.200",
-                    "reason": "Scanning",
-                    "duration": 3600,
-                }),
+                data=json.dumps(
+                    {
+                        "ip_address": "192.168.1.200",
+                        "reason": "Scanning",
+                        "duration": 3600,
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -835,9 +802,7 @@ class TestThreatDetection:
             )
         assert resp.status_code == 401
 
-    def test_unblock_ip_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_unblock_ip_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         td = MagicMock()
         mock_pbx_core.threat_detector = td
 
@@ -1000,9 +965,7 @@ class TestDNDStatus:
 class TestDNDRules:
     """Tests for DND rules endpoints."""
 
-    def test_get_rules_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_get_rules_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         dnd = MagicMock()
         dnd.get_rules.return_value = [{"rule_id": "r1", "type": "time_based"}]
         mock_pbx_core.dnd_scheduler = dnd
@@ -1024,9 +987,7 @@ class TestDNDRules:
             resp = api_client.get("/api/dnd/rules/1001")
         assert resp.status_code == 500
 
-    def test_add_rule_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_add_rule_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         dnd = MagicMock()
         dnd.add_rule.return_value = "rule_123"
         mock_pbx_core.dnd_scheduler = dnd
@@ -1034,11 +995,13 @@ class TestDNDRules:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/dnd/rule",
-                data=json.dumps({
-                    "extension": "1001",
-                    "rule_type": "time_based",
-                    "config": {"start": "18:00", "end": "08:00"},
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "rule_type": "time_based",
+                        "config": {"start": "18:00", "end": "08:00"},
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1068,17 +1031,17 @@ class TestDNDRules:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/dnd/rule",
-                data=json.dumps({
-                    "extension": "1001",
-                    "rule_type": "time_based",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "rule_type": "time_based",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500
 
-    def test_delete_rule_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_delete_rule_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         dnd = MagicMock()
         dnd.remove_rule.return_value = True
         mock_pbx_core.dnd_scheduler = dnd
@@ -1087,9 +1050,7 @@ class TestDNDRules:
             resp = api_client.delete("/api/dnd/rule/rule_123")
         assert resp.status_code == 200
 
-    def test_delete_rule_not_found(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_delete_rule_not_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         dnd = MagicMock()
         dnd.remove_rule.return_value = False
         mock_pbx_core.dnd_scheduler = dnd
@@ -1098,9 +1059,7 @@ class TestDNDRules:
             resp = api_client.delete("/api/dnd/rule/nonexistent")
         assert resp.status_code == 404
 
-    def test_delete_rule_exception(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_delete_rule_exception(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         dnd = MagicMock()
         dnd.remove_rule.side_effect = RuntimeError("fail")
         mock_pbx_core.dnd_scheduler = dnd
@@ -1123,10 +1082,12 @@ class TestDNDCalendar:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/dnd/register-calendar",
-                data=json.dumps({
-                    "extension": "1001",
-                    "email": "user@example.com",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "email": "user@example.com",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -1155,10 +1116,12 @@ class TestDNDCalendar:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/dnd/register-calendar",
-                data=json.dumps({
-                    "extension": "1001",
-                    "email": "user@example.com",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "email": "user@example.com",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500
@@ -1168,26 +1131,26 @@ class TestDNDCalendar:
 class TestDNDOverride:
     """Tests for DND manual override endpoints."""
 
-    def test_set_override_success(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_set_override_success(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         dnd = MagicMock()
         mock_pbx_core.dnd_scheduler = dnd
 
-        with patch(AUTH_PATCH, return_value=AUTH_OK):
-            with patch(
-                "pbx.features.presence.PresenceStatus", create=True
-            ) as mock_presence:
-                mock_presence.return_value = MagicMock()
-                resp = api_client.post(
-                    "/api/dnd/override",
-                    data=json.dumps({
+        with (
+            patch(AUTH_PATCH, return_value=AUTH_OK),
+            patch("pbx.features.presence.PresenceStatus", create=True) as mock_presence,
+        ):
+            mock_presence.return_value = MagicMock()
+            resp = api_client.post(
+                "/api/dnd/override",
+                data=json.dumps(
+                    {
                         "extension": "1001",
                         "status": "do_not_disturb",
                         "duration_minutes": 60,
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
 
     def test_set_override_missing_fields(
@@ -1210,20 +1173,21 @@ class TestDNDOverride:
         dnd = MagicMock()
         mock_pbx_core.dnd_scheduler = dnd
 
-        with patch(AUTH_PATCH, return_value=AUTH_OK):
-            with patch(
-                "pbx.features.presence.PresenceStatus",
-                side_effect=ValueError("Invalid"),
-                create=True,
-            ):
-                resp = api_client.post(
-                    "/api/dnd/override",
-                    data=json.dumps({
+        with patch(AUTH_PATCH, return_value=AUTH_OK), patch(
+            "pbx.features.presence.PresenceStatus",
+            side_effect=ValueError("Invalid"),
+            create=True,
+        ):
+            resp = api_client.post(
+                "/api/dnd/override",
+                data=json.dumps(
+                    {
                         "extension": "1001",
                         "status": "invalid_status",
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 400
 
     def test_set_override_not_available(
@@ -1235,10 +1199,12 @@ class TestDNDOverride:
         with patch(AUTH_PATCH, return_value=AUTH_OK):
             resp = api_client.post(
                 "/api/dnd/override",
-                data=json.dumps({
-                    "extension": "1001",
-                    "status": "available",
-                }),
+                data=json.dumps(
+                    {
+                        "extension": "1001",
+                        "status": "available",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500

@@ -170,7 +170,7 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
-"tests/*" = ["F401", "F811", "ARG", "PLR", "PT", "B011", "PLC0415"]
+"tests/*" = ["F401", "F811", "ARG", "PLR", "PT", "B011", "PLC0415", "N806", "N803"]
 "pbx/api/rest_api.py" = ["ALL"]  # deprecated file
 "pbx/features/*" = ["PLC0415"]  # lazy imports are intentional for dynamic feature loading
 "pbx/core/*" = ["PLC0415"]  # lazy imports for circular import avoidance

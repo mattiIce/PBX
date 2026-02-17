@@ -5,11 +5,16 @@ Tests cover all public classes, methods, enums, dataclasses, and the
 global singleton accessor in pbx/features/call_recording_analytics.py.
 """
 
+from __future__ import annotations
+
 from datetime import UTC, datetime, timedelta
+from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+if TYPE_CHECKING:
+    from pbx.features.call_recording_analytics import RecordingAnalytics
 
 # ---------------------------------------------------------------------------
 # AnalysisType enum
@@ -82,15 +87,11 @@ def _build_analytics(
     config: dict | None = None,
     vosk_available: bool = False,
     spacy_available: bool = False,
-) -> "RecordingAnalytics":
+) -> RecordingAnalytics:
     """Construct a RecordingAnalytics with mocked optional imports."""
     with (
-        patch(
-            "pbx.features.call_recording_analytics.VOSK_AVAILABLE", vosk_available
-        ),
-        patch(
-            "pbx.features.call_recording_analytics.SPACY_AVAILABLE", spacy_available
-        ),
+        patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", vosk_available),
+        patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", spacy_available),
         patch("pbx.features.call_recording_analytics.get_logger") as mock_logger_fn,
     ):
         mock_logger_fn.return_value = MagicMock()
@@ -151,12 +152,8 @@ class TestRecordingAnalyticsInit:
         cfg = _make_config(vosk_model_path="/fake/vosk")
         mock_model = MagicMock()
         with (
-            patch(
-                "pbx.features.call_recording_analytics.VOSK_AVAILABLE", True
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.SPACY_AVAILABLE", False
-            ),
+            patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", True),
+            patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", False),
             patch("pbx.features.call_recording_analytics.get_logger") as mock_log,
             patch("pbx.features.call_recording_analytics.Path") as mock_path_cls,
             patch("pbx.features.call_recording_analytics.Model", mock_model, create=True),
@@ -173,12 +170,8 @@ class TestRecordingAnalyticsInit:
     def test_init_vosk_model_not_found(self) -> None:
         cfg = _make_config(vosk_model_path="/nonexistent/path")
         with (
-            patch(
-                "pbx.features.call_recording_analytics.VOSK_AVAILABLE", True
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.SPACY_AVAILABLE", False
-            ),
+            patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", True),
+            patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", False),
             patch("pbx.features.call_recording_analytics.get_logger") as mock_log,
             patch("pbx.features.call_recording_analytics.Path") as mock_path_cls,
             patch("pbx.features.call_recording_analytics.Model", create=True),
@@ -194,12 +187,8 @@ class TestRecordingAnalyticsInit:
     def test_init_vosk_model_load_exception(self) -> None:
         cfg = _make_config(vosk_model_path="/bad/path")
         with (
-            patch(
-                "pbx.features.call_recording_analytics.VOSK_AVAILABLE", True
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.SPACY_AVAILABLE", False
-            ),
+            patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", True),
+            patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", False),
             patch("pbx.features.call_recording_analytics.get_logger") as mock_log,
             patch("pbx.features.call_recording_analytics.Path") as mock_path_cls,
             patch(
@@ -222,12 +211,8 @@ class TestRecordingAnalyticsInit:
         mock_spacy.load.return_value = mock_nlp
 
         with (
-            patch(
-                "pbx.features.call_recording_analytics.VOSK_AVAILABLE", False
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.SPACY_AVAILABLE", True
-            ),
+            patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", False),
+            patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", True),
             patch("pbx.features.call_recording_analytics.get_logger") as mock_log,
             patch("pbx.features.call_recording_analytics.spacy", mock_spacy, create=True),
         ):
@@ -244,12 +229,8 @@ class TestRecordingAnalyticsInit:
         mock_spacy.load.side_effect = RuntimeError("no model")
 
         with (
-            patch(
-                "pbx.features.call_recording_analytics.VOSK_AVAILABLE", False
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.SPACY_AVAILABLE", True
-            ),
+            patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", False),
+            patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", True),
             patch("pbx.features.call_recording_analytics.get_logger") as mock_log,
             patch("pbx.features.call_recording_analytics.spacy", mock_spacy, create=True),
         ):
@@ -591,7 +572,7 @@ class TestProcessVoskAudio:
         )
         mock_recognizer.FinalResult.return_value = json.dumps({})
 
-        transcript, words, total_conf, conf_count = analytics._process_vosk_audio(
+        transcript, words, _total_conf, conf_count = analytics._process_vosk_audio(
             mock_recognizer, mock_wf
         )
 
@@ -612,7 +593,7 @@ class TestProcessVoskAudio:
         mock_recognizer.Result.return_value = json.dumps({"text": "just text"})
         mock_recognizer.FinalResult.return_value = json.dumps({"text": "final"})
 
-        transcript, words, total_conf, conf_count = analytics._process_vosk_audio(
+        transcript, words, _total_conf, _conf_count = analytics._process_vosk_audio(
             mock_recognizer, mock_wf
         )
 
@@ -654,7 +635,17 @@ class TestAnalyzeSentiment:
         # Mock spaCy NLP pipeline
         mock_nlp = MagicMock()
         mock_tokens = []
-        for word in ["thank", "you", "very", "much", "that", "was", "excellent", "and", "wonderful"]:
+        for word in [
+            "thank",
+            "you",
+            "very",
+            "much",
+            "that",
+            "was",
+            "excellent",
+            "and",
+            "wonderful",
+        ]:
             token = MagicMock()
             token.lemma_.lower.return_value = word
             token.is_alpha = True
@@ -700,9 +691,7 @@ class TestAnalyzeSentiment:
         analytics = _build_analytics()
         analytics.vosk_model = MagicMock()
 
-        analytics._transcribe = MagicMock(
-            return_value={"text": "hello goodbye yes no"}
-        )
+        analytics._transcribe = MagicMock(return_value={"text": "hello goodbye yes no"})
 
         mock_nlp = MagicMock()
         mock_tokens = []
@@ -726,9 +715,7 @@ class TestAnalyzeSentiment:
         analytics = _build_analytics()
         analytics.vosk_model = MagicMock()
 
-        analytics._transcribe = MagicMock(
-            return_value={"text": "thank you"}
-        )
+        analytics._transcribe = MagicMock(return_value={"text": "thank you"})
 
         mock_nlp = MagicMock(side_effect=RuntimeError("spacy error"))
         analytics.spacy_nlp = mock_nlp
@@ -787,9 +774,7 @@ class TestAnalyzeSentiment:
         analytics.vosk_model = MagicMock()
         analytics.spacy_nlp = None
 
-        analytics._transcribe = MagicMock(
-            return_value={"text": "thank angry"}
-        )
+        analytics._transcribe = MagicMock(return_value={"text": "thank angry"})
 
         result = analytics._analyze_sentiment("/audio.wav")
 
@@ -929,7 +914,7 @@ class TestSummarize:
 class TestSearchRecordings:
     """Tests for search_recordings."""
 
-    def _populate_analyses(self, analytics: "RecordingAnalytics") -> None:
+    def _populate_analyses(self, analytics: RecordingAnalytics) -> None:
         """Populate analytics.analyses with test data."""
         analytics.analyses = {
             "rec-positive": {
@@ -1035,9 +1020,7 @@ class TestSearchRecordings:
     def test_search_combined_criteria_no_match(self) -> None:
         analytics = _build_analytics()
         self._populate_analyses(analytics)
-        result = analytics.search_recordings(
-            {"sentiment": "positive", "compliant": False}
-        )
+        result = analytics.search_recordings({"sentiment": "positive", "compliant": False})
         assert result == []
 
     def test_search_empty_analyses(self) -> None:
@@ -1185,9 +1168,7 @@ class TestAggregateSentimentData:
 
     def test_aggregate_sentiment_no_sentiment_key(self) -> None:
         analytics = _build_analytics()
-        analyses = [
-            {"analyzed_at": "2026-01-01T00:00:00+00:00", "analyses": {}}
-        ]
+        analyses = [{"analyzed_at": "2026-01-01T00:00:00+00:00", "analyses": {}}]
         result = analytics._aggregate_sentiment_data(analyses)
         assert result == []
 
@@ -1254,9 +1235,7 @@ class TestAggregateQualityData:
 
     def test_aggregate_quality_no_quality_key(self) -> None:
         analytics = _build_analytics()
-        analyses = [
-            {"analyzed_at": "2026-01-01T00:00:00+00:00", "analyses": {}}
-        ]
+        analyses = [{"analyzed_at": "2026-01-01T00:00:00+00:00", "analyses": {}}]
         result = analytics._aggregate_quality_data(analyses)
         assert result == []
 
@@ -1407,9 +1386,7 @@ class TestGetTrendAnalysis:
     def test_trend_analysis_no_data(self) -> None:
         analytics = _build_analytics()
         now = datetime.now(UTC)
-        result = analytics.get_trend_analysis(
-            now - timedelta(days=7), now + timedelta(days=1)
-        )
+        result = analytics.get_trend_analysis(now - timedelta(days=7), now + timedelta(days=1))
         assert result["sentiment_trend"] == []
         assert result["quality_trend"] == []
         assert result["keyword_trends"] == {}
@@ -1448,9 +1425,7 @@ class TestGetTrendAnalysis:
             },
         }
 
-        result = analytics.get_trend_analysis(
-            now - timedelta(hours=1), now + timedelta(hours=1)
-        )
+        result = analytics.get_trend_analysis(now - timedelta(hours=1), now + timedelta(hours=1))
 
         assert result["total_recordings"] == 2
         assert len(result["sentiment_trend"]) == 2
@@ -1469,9 +1444,7 @@ class TestGetTrendAnalysis:
                 "analyses": {"compliance": {"compliant": True}},
             },
         }
-        result = analytics.get_trend_analysis(
-            now - timedelta(hours=1), now + timedelta(hours=1)
-        )
+        result = analytics.get_trend_analysis(now - timedelta(hours=1), now + timedelta(hours=1))
         assert result["compliance_rate"] == 100.0
 
     def test_trend_analysis_no_compliance_data(self) -> None:
@@ -1483,9 +1456,7 @@ class TestGetTrendAnalysis:
                 "analyses": {"sentiment": {"overall_sentiment": "neutral"}},
             },
         }
-        result = analytics.get_trend_analysis(
-            now - timedelta(hours=1), now + timedelta(hours=1)
-        )
+        result = analytics.get_trend_analysis(now - timedelta(hours=1), now + timedelta(hours=1))
         assert result["compliance_rate"] == 0.0
 
     def test_trend_analysis_date_range_in_result(self) -> None:
@@ -1549,15 +1520,9 @@ class TestGetRecordingAnalytics:
 
     def test_get_recording_analytics_creates_instance(self) -> None:
         with (
-            patch(
-                "pbx.features.call_recording_analytics._recording_analytics", None
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.VOSK_AVAILABLE", False
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.SPACY_AVAILABLE", False
-            ),
+            patch("pbx.features.call_recording_analytics._recording_analytics", None),
+            patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", False),
+            patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", False),
             patch("pbx.features.call_recording_analytics.get_logger") as mock_log,
         ):
             mock_log.return_value = MagicMock()
@@ -1568,9 +1533,7 @@ class TestGetRecordingAnalytics:
 
     def test_get_recording_analytics_returns_same_instance(self) -> None:
         sentinel = MagicMock()
-        with patch(
-            "pbx.features.call_recording_analytics._recording_analytics", sentinel
-        ):
+        with patch("pbx.features.call_recording_analytics._recording_analytics", sentinel):
             from pbx.features.call_recording_analytics import get_recording_analytics
 
             instance = get_recording_analytics()
@@ -1578,15 +1541,9 @@ class TestGetRecordingAnalytics:
 
     def test_get_recording_analytics_none_config(self) -> None:
         with (
-            patch(
-                "pbx.features.call_recording_analytics._recording_analytics", None
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.VOSK_AVAILABLE", False
-            ),
-            patch(
-                "pbx.features.call_recording_analytics.SPACY_AVAILABLE", False
-            ),
+            patch("pbx.features.call_recording_analytics._recording_analytics", None),
+            patch("pbx.features.call_recording_analytics.VOSK_AVAILABLE", False),
+            patch("pbx.features.call_recording_analytics.SPACY_AVAILABLE", False),
             patch("pbx.features.call_recording_analytics.get_logger") as mock_log,
         ):
             mock_log.return_value = MagicMock()
@@ -1644,9 +1601,7 @@ class TestAnalyzeAndSearchFlow:
         analytics.analyze_recording("rec-1", "/a.wav", ["sentiment", "quality"])
 
         now = datetime.now(UTC)
-        trends = analytics.get_trend_analysis(
-            now - timedelta(hours=1), now + timedelta(hours=1)
-        )
+        trends = analytics.get_trend_analysis(now - timedelta(hours=1), now + timedelta(hours=1))
         assert trends["total_recordings"] == 1
 
     def test_multiple_analyses_then_statistics(self) -> None:
@@ -1746,22 +1701,23 @@ class TestEdgeCases:
                 "analyses": {"compliance": {"compliant": False}},
             },
         }
-        result = analytics.get_trend_analysis(
-            now - timedelta(hours=1), now + timedelta(hours=1)
-        )
+        result = analytics.get_trend_analysis(now - timedelta(hours=1), now + timedelta(hours=1))
         # 2/3 = 66.67%
         assert result["compliance_rate"] == 66.67
 
     def test_sentiment_spacy_with_non_alpha_tokens(self) -> None:
         analytics = _build_analytics()
         analytics.vosk_model = MagicMock()
-        analytics._transcribe = MagicMock(
-            return_value={"text": "thank 123 !!! excellent"}
-        )
+        analytics._transcribe = MagicMock(return_value={"text": "thank 123 !!! excellent"})
 
         mock_nlp = MagicMock()
         mock_tokens = []
-        for word, is_alpha in [("thank", True), ("123", False), ("!!!", False), ("excellent", True)]:
+        for word, is_alpha in [
+            ("thank", True),
+            ("123", False),
+            ("!!!", False),
+            ("excellent", True),
+        ]:
             token = MagicMock()
             token.lemma_.lower.return_value = word
             token.is_alpha = is_alpha
@@ -1782,6 +1738,11 @@ class TestEdgeCases:
         analytics = _build_analytics()
         # With empty transcript, base scores are 50.0 -- we trust the logic is correct
         result = analytics._score_quality("/audio.wav")
-        for key in ["overall_score", "agent_performance", "customer_satisfaction",
-                     "resolution_quality", "professionalism"]:
+        for key in [
+            "overall_score",
+            "agent_performance",
+            "customer_satisfaction",
+            "resolution_quality",
+            "professionalism",
+        ]:
             assert 0.0 <= result[key] <= 100.0

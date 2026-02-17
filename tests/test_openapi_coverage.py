@@ -171,10 +171,9 @@ class TestHealthEndpoints:
 
     def test_health_check_200_schema_ref(self) -> None:
         """200 response must reference HealthResponse schema."""
-        schema = (
-            get_openapi_spec()["paths"]["/health"]["get"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/health"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]
         assert schema["$ref"] == "#/components/schemas/HealthResponse"
 
     def test_detailed_health_operation_id(self) -> None:
@@ -184,19 +183,17 @@ class TestHealthEndpoints:
 
     def test_detailed_health_overall_status_enum(self) -> None:
         """Detailed health must define overall_status enum."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/health/detailed"]["get"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/health/detailed"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
         overall = schema["properties"]["overall_status"]
         assert overall["enum"] == ["healthy", "degraded", "unhealthy"]
 
     def test_detailed_health_components_property(self) -> None:
         """Detailed health must include a components property."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/health/detailed"]["get"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/health/detailed"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
         assert "components" in schema["properties"]
 
     def test_status_endpoint_operation_id(self) -> None:
@@ -212,10 +209,9 @@ class TestHealthEndpoints:
 
     def test_status_endpoint_500_error_ref(self) -> None:
         """500 response must reference Error schema."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/status"]["get"]["responses"]["500"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/status"]["get"]["responses"]["500"]["content"][
+            "application/json"
+        ]["schema"]
         assert schema["$ref"] == "#/components/schemas/Error"
 
 
@@ -240,10 +236,9 @@ class TestAuthEndpoints:
 
     def test_login_request_body_schema_ref(self) -> None:
         """Login request body must reference LoginRequest."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/auth/login"]["post"]["requestBody"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/auth/login"]["post"]["requestBody"]["content"][
+            "application/json"
+        ]["schema"]
         assert schema["$ref"] == "#/components/schemas/LoginRequest"
 
     def test_login_responses(self) -> None:
@@ -255,10 +250,9 @@ class TestAuthEndpoints:
 
     def test_login_200_schema_ref(self) -> None:
         """Login 200 response must reference LoginResponse."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/auth/login"]["post"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/auth/login"]["post"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
         assert schema["$ref"] == "#/components/schemas/LoginResponse"
 
     def test_logout_is_post(self) -> None:
@@ -278,10 +272,9 @@ class TestAuthEndpoints:
 
     def test_logout_200_schema_ref(self) -> None:
         """Logout 200 must reference SuccessResponse."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/auth/logout"]["post"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/auth/logout"]["post"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
         assert schema["$ref"] == "#/components/schemas/SuccessResponse"
 
 
@@ -306,10 +299,9 @@ class TestExtensionsEndpoints:
 
     def test_list_extensions_200_is_array(self) -> None:
         """200 response must be an array of Extensions."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/extensions"]["get"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/extensions"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
         assert schema["type"] == "array"
         assert schema["items"]["$ref"] == "#/components/schemas/Extension"
 
@@ -325,10 +317,9 @@ class TestExtensionsEndpoints:
 
     def test_create_extension_request_body_ref(self) -> None:
         """Create extension request body must reference CreateExtensionRequest."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/extensions"]["post"]["requestBody"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/extensions"]["post"]["requestBody"]["content"][
+            "application/json"
+        ]["schema"]
         assert schema["$ref"] == "#/components/schemas/CreateExtensionRequest"
 
     def test_create_extension_responses(self) -> None:
@@ -360,10 +351,9 @@ class TestExtensionsEndpoints:
 
     def test_update_extension_request_body_ref(self) -> None:
         """Update extension request body must reference UpdateExtensionRequest."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/extensions/{number}"]["put"]["requestBody"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/extensions/{number}"]["put"]["requestBody"][
+            "content"
+        ]["application/json"]["schema"]
         assert schema["$ref"] == "#/components/schemas/UpdateExtensionRequest"
 
     def test_update_extension_responses(self) -> None:
@@ -392,9 +382,7 @@ class TestExtensionsEndpoints:
 
     def test_delete_extension_responses(self) -> None:
         """Delete extension must define 200 and 404 responses."""
-        responses = (
-            get_openapi_spec()["paths"]["/api/extensions/{number}"]["delete"]["responses"]
-        )
+        responses = get_openapi_spec()["paths"]["/api/extensions/{number}"]["delete"]["responses"]
         assert "200" in responses
         assert "404" in responses
 
@@ -420,10 +408,9 @@ class TestCallsEndpoints:
 
     def test_active_calls_200_is_array_of_strings(self) -> None:
         """200 response must be an array of strings."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/calls"]["get"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/calls"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]
         assert schema["type"] == "array"
         assert schema["items"]["type"] == "string"
 
@@ -450,10 +437,9 @@ class TestCallsEndpoints:
 
     def test_statistics_200_schema_properties(self) -> None:
         """Statistics 200 response must include call_quality and real_time."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/statistics"]["get"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/statistics"]["get"]["responses"]["200"][
+            "content"
+        ]["application/json"]["schema"]
         assert "call_quality" in schema["properties"]
         assert "real_time" in schema["properties"]
 
@@ -479,10 +465,9 @@ class TestConfigEndpoints:
 
     def test_get_config_200_schema_ref(self) -> None:
         """200 response must reference ConfigResponse."""
-        schema = (
-            get_openapi_spec()["paths"]["/api/config"]["get"]["responses"]["200"]
-            ["content"]["application/json"]["schema"]
-        )
+        schema = get_openapi_spec()["paths"]["/api/config"]["get"]["responses"]["200"]["content"][
+            "application/json"
+        ]["schema"]
         assert schema["$ref"] == "#/components/schemas/ConfigResponse"
 
     def test_update_config_is_put(self) -> None:
@@ -627,8 +612,13 @@ class TestComponentsSchemas:
         schema = get_openapi_spec()["components"]["schemas"]["Extension"]
         assert schema["type"] == "object"
         expected_props = {
-            "number", "name", "email", "registered",
-            "allow_external", "ad_synced", "is_admin",
+            "number",
+            "name",
+            "email",
+            "registered",
+            "allow_external",
+            "ad_synced",
+            "is_admin",
         }
         assert expected_props == set(schema["properties"].keys())
         assert set(schema["required"]) == {"number", "name"}
@@ -676,8 +666,12 @@ class TestComponentsSchemas:
         assert schema["type"] == "object"
         assert "required" not in schema
         expected_props = {
-            "name", "email", "password", "voicemail_pin",
-            "allow_external", "is_admin",
+            "name",
+            "email",
+            "password",
+            "voicemail_pin",
+            "allow_external",
+            "is_admin",
         }
         assert expected_props == set(schema["properties"].keys())
 
@@ -715,28 +709,38 @@ class TestOpenAPIOperationIds:
     def test_all_operation_ids_unique(self) -> None:
         """All operationId values must be unique across the spec."""
         spec = get_openapi_spec()
-        operation_ids: list[str] = []
-        for _path, methods in spec["paths"].items():
-            for _method, operation in methods.items():
-                if isinstance(operation, dict) and "operationId" in operation:
-                    operation_ids.append(operation["operationId"])
+        operation_ids: list[str] = [
+            operation["operationId"]
+            for methods in spec["paths"].values()
+            for operation in methods.values()
+            if isinstance(operation, dict) and "operationId" in operation
+        ]
         assert len(operation_ids) == len(set(operation_ids))
 
     def test_expected_operation_ids(self) -> None:
         """All expected operationIds must be present."""
         spec = get_openapi_spec()
         operation_ids: set[str] = set()
-        for _path, methods in spec["paths"].items():
-            for _method, operation in methods.items():
+        for methods in spec["paths"].values():
+            for operation in methods.values():
                 if isinstance(operation, dict) and "operationId" in operation:
                     operation_ids.add(operation["operationId"])
 
         expected = {
-            "healthCheck", "detailedHealth", "getStatus",
-            "login", "logout",
-            "getExtensions", "createExtension", "updateExtension", "deleteExtension",
-            "getActiveCalls", "getStatistics",
-            "getConfig", "updateConfig", "getFullConfig",
+            "healthCheck",
+            "detailedHealth",
+            "getStatus",
+            "login",
+            "logout",
+            "getExtensions",
+            "createExtension",
+            "updateExtension",
+            "deleteExtension",
+            "getActiveCalls",
+            "getStatistics",
+            "getConfig",
+            "updateConfig",
+            "getFullConfig",
         }
         assert expected == operation_ids
 
@@ -767,7 +771,7 @@ class TestOpenAPISchemaRefs:
         for ref in refs:
             prefix = "#/components/schemas/"
             assert ref.startswith(prefix), f"Unexpected ref prefix: {ref}"
-            schema_name = ref[len(prefix):]
+            schema_name = ref[len(prefix) :]
             assert schema_name in schemas, f"Unresolved $ref: {ref}"
 
 

@@ -6,6 +6,7 @@ pbx/features/call_tagging.py with extensive mocking of optional
 ML/NLP dependencies.
 """
 
+from datetime import UTC
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -84,7 +85,7 @@ class TestCallTag:
 
         tag = CallTag("test", TagSource.MANUAL)
         assert tag.created_at.tzinfo is not None
-        assert tag.created_at.tzinfo == timezone.utc
+        assert tag.created_at.tzinfo == UTC
 
 
 @pytest.mark.unit
@@ -172,22 +173,35 @@ class TestMLClassifierInit:
         mock_vectorizer.fit_transform.return_value = MagicMock()
         mock_label_encoder = MagicMock()
         mock_label_encoder.fit_transform.return_value = MagicMock()
-        mock_label_encoder.classes_ = ["billing", "complaint", "emergency", "general_inquiry",
-                                       "sales", "support", "technical"]
+        mock_label_encoder.classes_ = [
+            "billing",
+            "complaint",
+            "emergency",
+            "general_inquiry",
+            "sales",
+            "support",
+            "technical",
+        ]
         mock_classifier = MagicMock()
 
         with (
             patch.object(ct_module, "SKLEARN_AVAILABLE", True),
             patch.object(
-                ct_module, "TfidfVectorizer", create=True,
+                ct_module,
+                "TfidfVectorizer",
+                create=True,
                 return_value=mock_vectorizer,
             ),
             patch.object(
-                ct_module, "LabelEncoder", create=True,
+                ct_module,
+                "LabelEncoder",
+                create=True,
                 return_value=mock_label_encoder,
             ),
             patch.object(
-                ct_module, "MultinomialNB", create=True,
+                ct_module,
+                "MultinomialNB",
+                create=True,
                 return_value=mock_classifier,
             ),
         ):
@@ -205,7 +219,9 @@ class TestMLClassifierInit:
         with (
             patch.object(ct_module, "SKLEARN_AVAILABLE", True),
             patch.object(
-                ct_module, "TfidfVectorizer", create=True,
+                ct_module,
+                "TfidfVectorizer",
+                create=True,
                 side_effect=RuntimeError("training failed"),
             ),
         ):
@@ -536,7 +552,9 @@ class TestClassifyWithAI:
         mock_nlp = MagicMock()
         ct.nlp_model = mock_nlp
 
-        with patch.object(ct, "_classify_with_spacy", return_value=[("complaint", 0.8)]) as mock_cls:
+        with patch.object(
+            ct, "_classify_with_spacy", return_value=[("complaint", 0.8)]
+        ) as mock_cls:
             # _classify_with_ai calls _classify_with_spacy when nlp_model is set
             # Note: the keyword fallback reassigns `results`, so spacy results may be
             # overwritten. We verify _classify_with_spacy was actually invoked.
@@ -649,15 +667,18 @@ class TestClassifyWithML:
         ct.tfidf_vectorizer = mock_vectorizer
 
         mock_classifier = MagicMock()
-        mock_classifier.predict_proba.return_value = [
-            [0.25, 0.2, 0.18, 0.15, 0.12, 0.05, 0.05]
-        ]
+        mock_classifier.predict_proba.return_value = [[0.25, 0.2, 0.18, 0.15, 0.12, 0.05, 0.05]]
         ct.ml_classifier = mock_classifier
 
         mock_encoder = MagicMock()
         mock_encoder.classes_ = [
-            "sales", "support", "billing", "technical",
-            "complaint", "emergency", "general",
+            "sales",
+            "support",
+            "billing",
+            "technical",
+            "complaint",
+            "emergency",
+            "general",
         ]
         ct.label_encoder = mock_encoder
 
@@ -741,9 +762,7 @@ class TestClassifyWithSpacy:
         ct.nlp_model = MagicMock()
 
         with (
-            patch.object(
-                ct, "extract_entities_with_spacy", return_value={"ORG": ["Acme Corp"]}
-            ),
+            patch.object(ct, "extract_entities_with_spacy", return_value={"ORG": ["Acme Corp"]}),
             patch.object(
                 ct,
                 "analyze_sentiment_with_spacy",
@@ -759,9 +778,7 @@ class TestClassifyWithSpacy:
         ct.nlp_model = MagicMock()
 
         with (
-            patch.object(
-                ct, "extract_entities_with_spacy", return_value={"MONEY": ["$500"]}
-            ),
+            patch.object(ct, "extract_entities_with_spacy", return_value={"MONEY": ["$500"]}),
             patch.object(
                 ct,
                 "analyze_sentiment_with_spacy",
@@ -776,9 +793,7 @@ class TestClassifyWithSpacy:
         ct = self._make_tagging()
         ct.nlp_model = MagicMock()
 
-        with patch.object(
-            ct, "extract_entities_with_spacy", side_effect=KeyError("bad key")
-        ):
+        with patch.object(ct, "extract_entities_with_spacy", side_effect=KeyError("bad key")):
             results = ct._classify_with_spacy("test text")
             assert results == []
 
@@ -888,9 +903,7 @@ class TestTagFromMetadata:
 
     def test_combined_metadata(self) -> None:
         ct = self._make_tagging()
-        tags = ct._tag_from_metadata(
-            {"queue": "support", "time_of_day": 10, "duration": 60}
-        )
+        tags = ct._tag_from_metadata({"queue": "support", "time_of_day": 10, "duration": 60})
         assert "queue_support" in tags
         assert "morning" in tags
         assert "medium_call" in tags
@@ -1563,9 +1576,7 @@ class TestAnalyzeSentimentWithSpacy:
     def test_negative_sentiment(self) -> None:
         ct = self._make_tagging()
         mock_nlp = MagicMock()
-        mock_nlp.return_value = self._make_mock_doc(
-            ["This", "is", "terrible", "and", "awful"]
-        )
+        mock_nlp.return_value = self._make_mock_doc(["This", "is", "terrible", "and", "awful"])
         ct.nlp_model = mock_nlp
 
         result = ct.analyze_sentiment_with_spacy("This is terrible and awful")
@@ -1858,19 +1869,20 @@ class TestEdgeCases:
         ct = self._make_tagging()
         ct.min_confidence = 0.99
 
-        with patch.object(
-            ct, "_classify_with_ai", return_value=[("sales", 0.5), ("support", 0.3)]
-        ):
+        with patch.object(ct, "_classify_with_ai", return_value=[("sales", 0.5), ("support", 0.3)]):
             result = ct.auto_tag_call("call-001", transcript="buy something")
             # AI tags should be filtered out (below 0.99 confidence)
             # But rule-based tags can still apply
-            ai_tags_in_result = [t for t in result if t in ("sales", "support")]
+            _ai_tags_in_result = [t for t in result if t in ("sales", "support")]
             # Rule-based tags might still add "sales" from rules, but AI tags with
             # low confidence won't add duplicates via the AI path
-            assert all(
-                t not in result or t in ct._apply_rules("call-001", "buy something")
-                for t in ["sales", "support"]
-            ) or True  # Flexible assertion since rules might also trigger
+            assert (
+                all(
+                    t not in result or t in ct._apply_rules("call-001", "buy something")
+                    for t in ["sales", "support"]
+                )
+                or True
+            )  # Flexible assertion since rules might also trigger
 
     def test_multiple_calls_independent(self) -> None:
         from pbx.features.call_tagging import TagSource

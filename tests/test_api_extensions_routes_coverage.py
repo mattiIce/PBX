@@ -6,7 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 from flask.testing import FlaskClient
 
-
 AUTH_ADMIN = (True, {"extension": "1001", "is_admin": True})
 AUTH_USER = (True, {"extension": "1001", "is_admin": False})
 AUTH_NONE = (False, None)
@@ -73,12 +72,12 @@ class TestGetExtensions:
             resp = api_client.get("/api/extensions")
         assert resp.status_code == 401
 
-    def test_pbx_not_initialized(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
-        with patch("pbx.api.routes.extensions.get_pbx_core", return_value=None):
-            with patch("pbx.api.routes.extensions.verify_authentication", return_value=AUTH_ADMIN):
-                resp = api_client.get("/api/extensions")
+    def test_pbx_not_initialized(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        with (
+            patch("pbx.api.routes.extensions.get_pbx_core", return_value=None),
+            patch("pbx.api.routes.extensions.verify_authentication", return_value=AUTH_ADMIN),
+        ):
+            resp = api_client.get("/api/extensions")
         assert resp.status_code == 500
 
     def test_exception(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
@@ -103,20 +102,24 @@ class TestAddExtension:
         mock_pbx_core.extension_db = MagicMock()
         mock_pbx_core.extension_db.add.return_value = True
 
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
-            with patch("pbx.utils.config.Config.validate_email", return_value=True):
-                resp = api_client.post(
-                    "/api/extensions",
-                    data=json.dumps({
+        with (
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN),
+            patch("pbx.utils.config.Config.validate_email", return_value=True),
+        ):
+            resp = api_client.post(
+                "/api/extensions",
+                data=json.dumps(
+                    {
                         "number": "1002",
                         "name": "New User",
                         "email": "new@example.com",
                         "password": "securepass123",
                         "voicemail_pin": "1234",
                         "is_admin": False,
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 200
         data = json.loads(resp.data)
         assert data["success"] is True
@@ -131,12 +134,14 @@ class TestAddExtension:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1002",
-                    "name": "New User",
-                    "password": "securepass123",
-                    "voicemail_pin": "1234",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "1002",
+                        "name": "New User",
+                        "password": "securepass123",
+                        "voicemail_pin": "1234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 200
@@ -152,35 +157,35 @@ class TestAddExtension:
             )
         assert resp.status_code == 400
 
-    def test_missing_voicemail_pin(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_missing_voicemail_pin(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1002",
-                    "name": "User",
-                    "password": "securepass123",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "1002",
+                        "name": "User",
+                        "password": "securepass123",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
         data = json.loads(resp.data)
         assert "voicemail" in data["error"].lower()
 
-    def test_invalid_voicemail_pin(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_invalid_voicemail_pin(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1002",
-                    "name": "User",
-                    "password": "securepass123",
-                    "voicemail_pin": "ab",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "1002",
+                        "name": "User",
+                        "password": "securepass123",
+                        "voicemail_pin": "ab",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
@@ -191,12 +196,14 @@ class TestAddExtension:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "12",
-                    "name": "User",
-                    "password": "securepass123",
-                    "voicemail_pin": "1234",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "12",
+                        "name": "User",
+                        "password": "securepass123",
+                        "voicemail_pin": "1234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
@@ -205,30 +212,36 @@ class TestAddExtension:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1002",
-                    "name": "User",
-                    "password": "short",
-                    "voicemail_pin": "1234",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "1002",
+                        "name": "User",
+                        "password": "short",
+                        "voicemail_pin": "1234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
 
     def test_invalid_email(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
-            with patch("pbx.utils.config.Config.validate_email", return_value=False):
-                resp = api_client.post(
-                    "/api/extensions",
-                    data=json.dumps({
+        with (
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN),
+            patch("pbx.utils.config.Config.validate_email", return_value=False),
+        ):
+            resp = api_client.post(
+                "/api/extensions",
+                data=json.dumps(
+                    {
                         "number": "1002",
                         "name": "User",
                         "password": "securepass123",
                         "voicemail_pin": "1234",
                         "email": "bad-email",
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 400
 
     def test_extension_already_exists(
@@ -239,12 +252,14 @@ class TestAddExtension:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1001",
-                    "name": "User",
-                    "password": "securepass123",
-                    "voicemail_pin": "1234",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "1001",
+                        "name": "User",
+                        "password": "securepass123",
+                        "voicemail_pin": "1234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 400
@@ -257,43 +272,49 @@ class TestAddExtension:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1002",
-                    "name": "User",
-                    "password": "securepass123",
-                    "voicemail_pin": "1234",
-                }),
-                content_type="application/json",
-            )
-        assert resp.status_code == 500
-
-    def test_pbx_not_initialized(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
-        with patch("pbx.api.routes.extensions.get_pbx_core", return_value=None):
-            with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
-                resp = api_client.post(
-                    "/api/extensions",
-                    data=json.dumps({
+                data=json.dumps(
+                    {
                         "number": "1002",
                         "name": "User",
                         "password": "securepass123",
                         "voicemail_pin": "1234",
-                    }),
-                    content_type="application/json",
-                )
+                    }
+                ),
+                content_type="application/json",
+            )
+        assert resp.status_code == 500
+
+    def test_pbx_not_initialized(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        with (
+            patch("pbx.api.routes.extensions.get_pbx_core", return_value=None),
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN),
+        ):
+            resp = api_client.post(
+                "/api/extensions",
+                data=json.dumps(
+                    {
+                        "number": "1002",
+                        "name": "User",
+                        "password": "securepass123",
+                        "voicemail_pin": "1234",
+                    }
+                ),
+                content_type="application/json",
+            )
         assert resp.status_code == 500
 
     def test_non_admin(self, api_client: FlaskClient) -> None:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1002",
-                    "name": "User",
-                    "password": "securepass123",
-                    "voicemail_pin": "1234",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "1002",
+                        "name": "User",
+                        "password": "securepass123",
+                        "voicemail_pin": "1234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 403
@@ -304,12 +325,14 @@ class TestAddExtension:
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
             resp = api_client.post(
                 "/api/extensions",
-                data=json.dumps({
-                    "number": "1002",
-                    "name": "User",
-                    "password": "securepass123",
-                    "voicemail_pin": "1234",
-                }),
+                data=json.dumps(
+                    {
+                        "number": "1002",
+                        "name": "User",
+                        "password": "securepass123",
+                        "voicemail_pin": "1234",
+                    }
+                ),
                 content_type="application/json",
             )
         assert resp.status_code == 500
@@ -352,9 +375,7 @@ class TestUpdateExtension:
             )
         assert resp.status_code == 200
 
-    def test_extension_not_found(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_extension_not_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.extension_registry.get.return_value = None
 
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
@@ -376,9 +397,7 @@ class TestUpdateExtension:
             )
         assert resp.status_code == 400
 
-    def test_invalid_voicemail_pin(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_invalid_voicemail_pin(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.extension_registry.get.return_value = _make_extension_mock()
 
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
@@ -392,13 +411,15 @@ class TestUpdateExtension:
     def test_invalid_email(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.extension_registry.get.return_value = _make_extension_mock()
 
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
-            with patch("pbx.utils.config.Config.validate_email", return_value=False):
-                resp = api_client.put(
-                    "/api/extensions/1001",
-                    data=json.dumps({"email": "bad-email"}),
-                    content_type="application/json",
-                )
+        with (
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN),
+            patch("pbx.utils.config.Config.validate_email", return_value=False),
+        ):
+            resp = api_client.put(
+                "/api/extensions/1001",
+                data=json.dumps({"email": "bad-email"}),
+                content_type="application/json",
+            )
         assert resp.status_code == 400
 
     def test_update_fails(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
@@ -414,16 +435,16 @@ class TestUpdateExtension:
             )
         assert resp.status_code == 500
 
-    def test_pbx_not_initialized(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
-        with patch("pbx.api.routes.extensions.get_pbx_core", return_value=None):
-            with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
-                resp = api_client.put(
-                    "/api/extensions/1001",
-                    data=json.dumps({"name": "Updated"}),
-                    content_type="application/json",
-                )
+    def test_pbx_not_initialized(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        with (
+            patch("pbx.api.routes.extensions.get_pbx_core", return_value=None),
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN),
+        ):
+            resp = api_client.put(
+                "/api/extensions/1001",
+                data=json.dumps({"name": "Updated"}),
+                content_type="application/json",
+            )
         assert resp.status_code == 500
 
     def test_exception(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
@@ -467,9 +488,7 @@ class TestDeleteExtension:
             resp = api_client.delete("/api/extensions/1001")
         assert resp.status_code == 200
 
-    def test_extension_not_found(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
+    def test_extension_not_found(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.extension_registry.get.return_value = None
 
         with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
@@ -485,12 +504,12 @@ class TestDeleteExtension:
             resp = api_client.delete("/api/extensions/1001")
         assert resp.status_code == 500
 
-    def test_pbx_not_initialized(
-        self, api_client: FlaskClient, mock_pbx_core: MagicMock
-    ) -> None:
-        with patch("pbx.api.routes.extensions.get_pbx_core", return_value=None):
-            with patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN):
-                resp = api_client.delete("/api/extensions/1001")
+    def test_pbx_not_initialized(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        with (
+            patch("pbx.api.routes.extensions.get_pbx_core", return_value=None),
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_ADMIN),
+        ):
+            resp = api_client.delete("/api/extensions/1001")
         assert resp.status_code == 500
 
     def test_non_admin(self, api_client: FlaskClient) -> None:

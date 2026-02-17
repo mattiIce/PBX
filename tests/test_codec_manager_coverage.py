@@ -187,9 +187,7 @@ class TestVideoCodecManagerDetection:
         # First call for _check_ffmpeg, then for _detect_codecs_via_ffmpeg
         encoder_result = MagicMock()
         encoder_result.returncode = 0
-        encoder_result.stdout = (
-            "libx264 libx265 libvpx libvpx-vp9 libaom vp8 vp9 hevc h264 av1"
-        )
+        encoder_result.stdout = "libx264 libx265 libvpx libvpx-vp9 libaom vp8 vp9 hevc h264 av1"
         mock_run.return_value = encoder_result
 
         manager = VideoCodecManager()
@@ -426,9 +424,7 @@ class TestVideoCodecManagerNegotiation:
 
         manager = VideoCodecManager()
 
-        result = manager.negotiate_codec(
-            ["H.264", "VP8"], ["H.264", "H.265"]
-        )
+        result = manager.negotiate_codec(["H.264", "VP8"], ["H.264", "H.265"])
 
         assert result == "H.264"
 
@@ -449,9 +445,7 @@ class TestVideoCodecManagerNegotiation:
 
         manager = VideoCodecManager()
 
-        result = manager.negotiate_codec(
-            ["H.264", "H.265", "VP8"], ["H.265", "H.264"]
-        )
+        result = manager.negotiate_codec(["H.264", "H.265", "VP8"], ["H.265", "H.264"])
 
         assert result == "H.265"
 

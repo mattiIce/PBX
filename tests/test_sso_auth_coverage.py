@@ -192,9 +192,7 @@ class TestSSOAuthServiceSAML:
     def test_initiate_saml_auth_success(self) -> None:
         """Test successful SAML auth initiation"""
         service = self._make_service()
-        result = service.initiate_saml_auth(
-            {"callback_url": "/my/callback"}
-        )
+        result = service.initiate_saml_auth({"callback_url": "/my/callback"})
 
         assert "auth_url" in result
         assert "request_id" in result
@@ -430,6 +428,7 @@ class TestSSOAuthServiceSessionManagement:
 
         # Small delay so timestamps differ
         import time
+
         time.sleep(0.01)
 
         service.validate_session(session_id)

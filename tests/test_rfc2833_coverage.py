@@ -513,7 +513,7 @@ class TestRFC2833Sender:
         )
         sender.socket = MagicMock()
 
-        payload = b"\x01\x0A\x00\xA0"  # event=1, volume=10, duration=160
+        payload = b"\x01\x0a\x00\xa0"  # event=1, volume=10, duration=160
         sender._send_rtp_packet(payload, payload_type=101, marker=True)
 
         sender.socket.sendto.assert_called_once()

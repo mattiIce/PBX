@@ -911,9 +911,7 @@ class TestGetCallBlendingSingleton:
         cb_module._call_blending = None
 
     @patch("pbx.features.call_blending.get_logger")
-    def test_get_call_blending_ignores_config_after_init(
-        self, mock_get_logger: MagicMock
-    ) -> None:
+    def test_get_call_blending_ignores_config_after_init(self, mock_get_logger: MagicMock) -> None:
         mock_get_logger.return_value = MagicMock()
         import pbx.features.call_blending as cb_module
 

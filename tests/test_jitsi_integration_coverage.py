@@ -232,9 +232,7 @@ class TestCreateMeeting:
         integration = JitsiIntegration(config)
 
         with patch.object(integration, "_generate_jwt_token", return_value="fake-jwt-token"):
-            result = integration.create_meeting(
-                room_name="secure-room", moderator_name="Admin"
-            )
+            result = integration.create_meeting(room_name="secure-room", moderator_name="Admin")
 
         assert result["success"] is True
         assert "?jwt=fake-jwt-token" in result["moderator_url"]
@@ -537,7 +535,7 @@ class TestGenerateJwtToken:
         integration = JitsiIntegration(config)
 
         now = int(time.time())
-        result = integration._generate_jwt_token("room1", "Alice", expiry_hours=48)
+        _result = integration._generate_jwt_token("room1", "Alice", expiry_hours=48)
 
         call_args = mock_jwt.encode.call_args
         payload = call_args.args[0]

@@ -73,7 +73,9 @@ class TestGenerateMp3:
         result = _generate_mp3("Hello world", "en", "com", False)
 
         assert result == "/tmp/test.mp3"
-        mock_gtts_class.assert_called_once_with(text="Hello world", tld="com", lang="en", slow=False)
+        mock_gtts_class.assert_called_once_with(
+            text="Hello world", tld="com", lang="en", slow=False
+        )
         mock_tts_instance.save.assert_called_once_with("/tmp/test.mp3")
 
     @patch("pbx.utils.tts.gTTS", create=True)
@@ -235,7 +237,9 @@ class TestExportAudio:
         mock_encode.return_value = True
         mock_audio = MagicMock()
 
-        result = _export_audio(mock_audio, "/output/file.g722", convert_to_g722=True, sample_rate=16000)
+        result = _export_audio(
+            mock_audio, "/output/file.g722", convert_to_g722=True, sample_rate=16000
+        )
 
         assert result == "/tmp/temp.wav"
         mock_audio.export.assert_called_once_with("/tmp/temp.wav", format="wav")
@@ -258,7 +262,9 @@ class TestExportAudio:
         mock_encode.return_value = False
         mock_audio = MagicMock()
 
-        result = _export_audio(mock_audio, "/output/file.wav", convert_to_g722=True, sample_rate=16000)
+        result = _export_audio(
+            mock_audio, "/output/file.wav", convert_to_g722=True, sample_rate=16000
+        )
 
         assert result == "/tmp/temp.wav"
         # Should have called export twice: once for temp WAV, once for fallback
@@ -272,7 +278,9 @@ class TestExportAudio:
 
         mock_audio = MagicMock()
 
-        result = _export_audio(mock_audio, "/output/file.wav", convert_to_g722=False, sample_rate=8000)
+        result = _export_audio(
+            mock_audio, "/output/file.wav", convert_to_g722=False, sample_rate=8000
+        )
 
         assert result is None
         mock_audio.export.assert_called_once_with("/output/file.wav", format="wav")
@@ -372,9 +380,7 @@ class TestTextToWavTelephony:
 
     @patch("pbx.utils.tts._generate_mp3")
     @patch("pbx.utils.tts.Path")
-    def test_cleanup_on_exception(
-        self, mock_path_cls: MagicMock, mock_gen_mp3: MagicMock
-    ) -> None:
+    def test_cleanup_on_exception(self, mock_path_cls: MagicMock, mock_gen_mp3: MagicMock) -> None:
         """Test that temporary files are cleaned up on exception."""
         import pbx.utils.tts as tts_module
 
@@ -387,9 +393,10 @@ class TestTextToWavTelephony:
             mock_path_instance.exists.return_value = True
             mock_path_cls.return_value = mock_path_instance
 
-            with patch("pbx.utils.tts._convert_to_telephony_audio", side_effect=RuntimeError("fail")):
-                with pytest.raises(RuntimeError, match="fail"):
-                    tts_module.text_to_wav_telephony("Hello", "/output/hello.wav")
+            with patch(
+                "pbx.utils.tts._convert_to_telephony_audio", side_effect=RuntimeError("fail")
+            ), pytest.raises(RuntimeError, match="fail"):
+                tts_module.text_to_wav_telephony("Hello", "/output/hello.wav")
 
             # Verify unlink was called for cleanup
             mock_path_instance.unlink.assert_called()
@@ -469,9 +476,7 @@ class TestGeneratePrompts:
 
     @patch("pbx.utils.tts.text_to_wav_telephony")
     @patch("pbx.utils.tts.Path")
-    def test_generate_prompts_success(
-        self, mock_path_cls: MagicMock, mock_tts: MagicMock
-    ) -> None:
+    def test_generate_prompts_success(self, mock_path_cls: MagicMock, mock_tts: MagicMock) -> None:
         """Test generating multiple prompts successfully."""
         import pbx.utils.tts as tts_module
 

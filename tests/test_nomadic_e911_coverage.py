@@ -72,8 +72,22 @@ class TestUpdateLocation:
         mock_db.db_type = "sqlite"
         # First call for get_location returns existing location
         existing_row = (
-            1, "1001", "192.168.1.50", "Old Office", "456 Old St", "Chicago",
-            "IL", "60601", "USA", "B", "1", "101", 41.8781, -87.6298, "2026-01-01", False,
+            1,
+            "1001",
+            "192.168.1.50",
+            "Old Office",
+            "456 Old St",
+            "Chicago",
+            "IL",
+            "60601",
+            "USA",
+            "B",
+            "1",
+            "101",
+            41.8781,
+            -87.6298,
+            "2026-01-01",
+            False,
         )
         # get_location returns the row, then update_location does inserts
         mock_db.execute.side_effect = [
@@ -159,9 +173,22 @@ class TestGetLocation:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
         row = (
-            1, "1001", "192.168.1.100", "Main Office", "123 Main St", "Springfield",
-            "IL", "62701", "USA", "A", "2", "201", "39.7817", "-89.6501",
-            "2026-01-15T10:30:00", True,
+            1,
+            "1001",
+            "192.168.1.100",
+            "Main Office",
+            "123 Main St",
+            "Springfield",
+            "IL",
+            "62701",
+            "USA",
+            "A",
+            "2",
+            "201",
+            "39.7817",
+            "-89.6501",
+            "2026-01-15T10:30:00",
+            True,
         )
         mock_db.execute.return_value = [row]
         engine = NomadicE911Engine(db_backend=mock_db, config={})
@@ -197,9 +224,22 @@ class TestGetLocation:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
         row = (
-            1, "1001", "192.168.1.100", "Office", "123 St", "City",
-            "ST", "12345", "USA", "A", "1", "101", None, None,
-            "2026-01-15", False,
+            1,
+            "1001",
+            "192.168.1.100",
+            "Office",
+            "123 St",
+            "City",
+            "ST",
+            "12345",
+            "USA",
+            "A",
+            "1",
+            "101",
+            None,
+            None,
+            "2026-01-15",
+            False,
         )
         mock_db.execute.return_value = [row]
         engine = NomadicE911Engine(db_backend=mock_db, config={})
@@ -212,9 +252,22 @@ class TestGetLocation:
         mock_db = MagicMock()
         mock_db.db_type = "postgresql"
         row = (
-            1, "1001", "10.0.0.1", "PG Office", "456 PG St", "PGCity",
-            "CA", "90001", "USA", "C", "3", "301", "34.0522", "-118.2437",
-            "2026-02-01", False,
+            1,
+            "1001",
+            "10.0.0.1",
+            "PG Office",
+            "456 PG St",
+            "PGCity",
+            "CA",
+            "90001",
+            "USA",
+            "C",
+            "3",
+            "301",
+            "34.0522",
+            "-118.2437",
+            "2026-02-01",
+            False,
         )
         mock_db.execute.return_value = [row]
         engine = NomadicE911Engine(db_backend=mock_db, config={})
@@ -244,9 +297,20 @@ class TestDetectLocationByIp:
         mock_db.db_type = "sqlite"
         # _find_site_by_ip returns a site
         site_row = (
-            1, "Main Office", "192.168.1.0", "192.168.1.255", "trunk-1",
-            "911", "5551234", "123 Main St", "Springfield", "IL", "62701",
-            "USA", "A", "2",
+            1,
+            "Main Office",
+            "192.168.1.0",
+            "192.168.1.255",
+            "trunk-1",
+            "911",
+            "5551234",
+            "123 Main St",
+            "Springfield",
+            "IL",
+            "62701",
+            "USA",
+            "A",
+            "2",
         )
         # Mock execute: first for _find_site_by_ip, then for update_location calls
         mock_db.execute.side_effect = [
@@ -285,9 +349,20 @@ class TestDetectLocationByIp:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
         site_row = (
-            1, "Office", "192.168.1.0", "192.168.1.255", "trunk-1",
-            "911", "5551234", "123 St", "City", "ST", "12345",
-            "USA", "A", "1",
+            1,
+            "Office",
+            "192.168.1.0",
+            "192.168.1.255",
+            "trunk-1",
+            "911",
+            "5551234",
+            "123 St",
+            "City",
+            "ST",
+            "12345",
+            "USA",
+            "A",
+            "1",
         )
         # _find_site_by_ip succeeds, but update_location fails
         # update_location calls: get_location (execute), then INSERT (execute raises)
@@ -312,9 +387,20 @@ class TestFindSiteByIp:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
         site_row = (
-            1, "Branch Office", "10.0.1.0", "10.0.1.255", "trunk-2",
-            "911", "5559876", "456 Branch St", "Chicago", "IL", "60601",
-            "USA", "B", "3",
+            1,
+            "Branch Office",
+            "10.0.1.0",
+            "10.0.1.255",
+            "trunk-2",
+            "911",
+            "5559876",
+            "456 Branch St",
+            "Chicago",
+            "IL",
+            "60601",
+            "USA",
+            "B",
+            "3",
         )
         mock_db.execute.return_value = [site_row]
         engine = NomadicE911Engine(db_backend=mock_db, config={})
@@ -329,9 +415,20 @@ class TestFindSiteByIp:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
         site_row = (
-            1, "Office", "192.168.1.0", "192.168.1.255", "trunk-1",
-            "911", "5551234", "123 St", "City", "ST", "12345",
-            "USA", "A", "1",
+            1,
+            "Office",
+            "192.168.1.0",
+            "192.168.1.255",
+            "trunk-1",
+            "911",
+            "5551234",
+            "123 St",
+            "City",
+            "ST",
+            "12345",
+            "USA",
+            "A",
+            "1",
         )
         mock_db.execute.return_value = [site_row]
         engine = NomadicE911Engine(db_backend=mock_db, config={})
@@ -517,12 +614,38 @@ class TestGetAllSites:
     def test_get_all_sites(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
         row1 = (
-            1, "Office A", "10.0.0.0", "10.0.0.255", "trunk-1", "911", "5551111",
-            "100 A St", "CityA", "CA", "90001", "USA", "A", "1", "2026-01-01",
+            1,
+            "Office A",
+            "10.0.0.0",
+            "10.0.0.255",
+            "trunk-1",
+            "911",
+            "5551111",
+            "100 A St",
+            "CityA",
+            "CA",
+            "90001",
+            "USA",
+            "A",
+            "1",
+            "2026-01-01",
         )
         row2 = (
-            2, "Office B", "10.0.1.0", "10.0.1.255", "trunk-2", "911", "5552222",
-            "200 B St", "CityB", "NY", "10001", "USA", "B", "2", "2026-01-02",
+            2,
+            "Office B",
+            "10.0.1.0",
+            "10.0.1.255",
+            "trunk-2",
+            "911",
+            "5552222",
+            "200 B St",
+            "CityB",
+            "NY",
+            "10001",
+            "USA",
+            "B",
+            "2",
+            "2026-01-02",
         )
         mock_db.execute.return_value = [row1, row2]
         engine = NomadicE911Engine(db_backend=mock_db, config={})
@@ -577,7 +700,14 @@ class TestGetLocationHistory:
     def test_get_history(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        row1 = (1, "1001", "Old Office, Chicago, IL", "New Office, Springfield, IL", "manual", "2026-01-15")
+        row1 = (
+            1,
+            "1001",
+            "Old Office, Chicago, IL",
+            "New Office, Springfield, IL",
+            "manual",
+            "2026-01-15",
+        )
         row2 = (2, "1001", "Home, Remote", "New Office, Springfield, IL", "auto", "2026-01-10")
         mock_db.execute.return_value = [row1, row2]
         engine = NomadicE911Engine(db_backend=mock_db, config={})

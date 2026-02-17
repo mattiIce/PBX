@@ -128,9 +128,7 @@ class TestTLSManagerCreateSSLContext:
         mock_ssl_context_cls.return_value = mock_ctx
         TLSManager(cert_file="/cert.pem", key_file="/key.pem")
         # After init, options should include all the disabled protocol flags
-        expected_options = (
-            ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
-        )
+        expected_options = ssl.OP_NO_SSLv2 | ssl.OP_NO_SSLv3 | ssl.OP_NO_TLSv1 | ssl.OP_NO_TLSv1_1
         assert (mock_ctx.options & expected_options) == expected_options
 
     @patch("pbx.utils.tls_support.get_logger")
@@ -323,8 +321,8 @@ class TestSRTPManagerCreateSession:
     @patch("pbx.utils.tls_support.get_logger")
     def test_create_session_stores_key_and_salt(self, mock_get_logger: MagicMock) -> None:
         mgr = SRTPManager()
-        key = b"\xAA" * 32
-        salt = b"\xBB" * 14
+        key = b"\xaa" * 32
+        salt = b"\xbb" * 14
         mgr.create_session("call-1", key, salt)
         session = mgr.sessions["call-1"]
         assert session["master_key"] == key
@@ -414,7 +412,7 @@ class TestSRTPManagerDecryptRtpPacket:
         key = b"\x00" * 32
         salt = b"\x01" * 14
         mgr.create_session("call-1", key, salt)
-        original = b"\x80\x00\x00\x01" + b"\xAA" * 160
+        original = b"\x80\x00\x00\x01" + b"\xaa" * 160
         encrypted = mgr.encrypt_rtp_packet("call-1", original, 42)
         assert encrypted is not None
         decrypted = mgr.decrypt_rtp_packet("call-1", encrypted, 42)
@@ -428,7 +426,7 @@ class TestSRTPManagerDecryptRtpPacket:
         key = b"\x00" * 32
         salt = b"\x01" * 14
         mgr.create_session("call-1", key, salt)
-        original = b"\x80\x00\x00\x01" + b"\xAA" * 160
+        original = b"\x80\x00\x00\x01" + b"\xaa" * 160
         encrypted = mgr.encrypt_rtp_packet("call-1", original, 42)
         assert encrypted is not None
         # Wrong sequence number -> wrong nonce -> AES-GCM raises InvalidTag

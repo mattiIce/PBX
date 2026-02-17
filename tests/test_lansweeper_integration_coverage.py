@@ -662,9 +662,7 @@ class TestUpdateAssetCustomField:
         config = _make_enabled_config()
         integration = LansweeperIntegration(config)
 
-        result = integration.update_asset_custom_field(
-            "00:11:22:33:44:55", "PBX_Extension", "1001"
-        )
+        result = integration.update_asset_custom_field("00:11:22:33:44:55", "PBX_Extension", "1001")
 
         assert result is True
         call_kwargs = mock_requests.post.call_args

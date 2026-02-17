@@ -6,9 +6,6 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from pbx.features.g722_codec import (
-    G722Codec,
-    G722CodecManager,
-    G722State,
     IHB_TABLE,
     ILB_TABLE,
     Q2_DECISION_LEVELS,
@@ -17,6 +14,9 @@ from pbx.features.g722_codec import (
     Q6_OUTPUT_LEVELS,
     WH_TABLE,
     WL_TABLE,
+    G722Codec,
+    G722CodecManager,
+    G722State,
 )
 
 
@@ -200,7 +200,7 @@ class TestG722Decode:
     @patch("pbx.features.g722_codec.get_logger")
     def test_decode_multiple_bytes(self, mock_logger: MagicMock) -> None:
         codec = G722Codec()
-        result = codec.decode(b"\x00\x3F\x80\xFF")
+        result = codec.decode(b"\x00\x3f\x80\xff")
         assert result is not None
         assert len(result) == 16  # 4 bytes input = 8 samples = 16 bytes output
 
@@ -214,7 +214,7 @@ class TestG722Decode:
     @patch("pbx.features.g722_codec.get_logger")
     def test_decode_all_ff(self, mock_logger: MagicMock) -> None:
         codec = G722Codec()
-        result = codec.decode(b"\xFF" * 5)
+        result = codec.decode(b"\xff" * 5)
         assert result is not None
         assert len(result) == 20
 

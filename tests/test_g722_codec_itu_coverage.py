@@ -382,7 +382,7 @@ class TestG722CodecITUDecode:
     def test_decode_output_is_valid_pcm(self, mock_get_logger: MagicMock) -> None:
         """Decoded output should be valid 16-bit PCM samples"""
         codec = G722CodecITU()
-        result = codec.decode(b"\x2A")
+        result = codec.decode(b"\x2a")
 
         assert result is not None
         assert len(result) == 4
@@ -419,7 +419,7 @@ class TestG722CodecITUDecode:
         """Decode should split byte into 6-bit lower and 2-bit upper"""
         codec = G722CodecITU()
         # 0xFF = ih=3 (bits 7-6), il=63 (bits 5-0)
-        result = codec.decode(b"\xFF")
+        result = codec.decode(b"\xff")
         assert result is not None
         assert len(result) == 4
 
@@ -428,21 +428,23 @@ class TestG722CodecITUDecode:
         """Decode should return None when internal error occurs"""
         codec = G722CodecITU()
         # Monkey-patch _decode_lower to raise a ValueError
-        original = codec._decode_lower
+        _original = codec._decode_lower
+
         def broken_decode_lower(il, state):
             raise ValueError("simulated decode error")
+
         codec._decode_lower = broken_decode_lower
-        result = codec.decode(b"\x2A")
+        result = codec.decode(b"\x2a")
         assert result is None
 
     @patch("pbx.features.g722_codec_itu.get_logger")
     def test_decode_preserves_state(self, mock_get_logger: MagicMock) -> None:
         """Multiple decode calls should properly update decoder state"""
         codec = G722CodecITU()
-        codec.decode(b"\x2A")
-        state_after_first = codec.decoder_state.s
+        codec.decode(b"\x2a")
+        _state_after_first = codec.decoder_state.s
 
-        codec.decode(b"\x2A")
+        codec.decode(b"\x2a")
         # State should evolve between calls
         assert isinstance(codec.decoder_state.s, int)
 
@@ -576,7 +578,7 @@ class TestQMFSynthesis:
         state = G722State()
         xout1, xout2 = codec._qmf_synthesis(1000, 500, state)
         assert xout1 == 1500  # rl + rh
-        assert xout2 == 500   # rl - rh
+        assert xout2 == 500  # rl - rh
 
     @patch("pbx.features.g722_codec_itu.get_logger")
     def test_qmf_synthesis_saturation(self, mock_get_logger: MagicMock) -> None:
@@ -594,7 +596,7 @@ class TestQMFSynthesis:
         state = G722State()
         xout1, xout2 = codec._qmf_synthesis(-1000, -500, state)
         assert xout1 == -1500  # -1000 + -500
-        assert xout2 == -500   # -1000 - (-500)
+        assert xout2 == -500  # -1000 - (-500)
 
 
 @pytest.mark.unit
@@ -631,7 +633,7 @@ class TestEncodeLower:
         """Encoding should update predictor state"""
         codec = G722CodecITU()
         state = G722State()
-        initial_det = state.det
+        _initial_det = state.det
 
         codec._encode_lower(5000, state)
 
@@ -643,7 +645,7 @@ class TestEncodeLower:
         """Det (scale factor) should adapt after encoding"""
         codec = G722CodecITU()
         state = G722State()
-        initial_det = state.det
+        _initial_det = state.det
 
         codec._encode_lower(5000, state)
 
@@ -1099,8 +1101,14 @@ class TestGetInfo:
         codec = G722CodecITU()
         info = codec.get_info()
 
-        expected_keys = {"name", "description", "sample_rate", "bitrate", "payload_type",
-                         "implementation"}
+        expected_keys = {
+            "name",
+            "description",
+            "sample_rate",
+            "bitrate",
+            "payload_type",
+            "implementation",
+        }
         assert set(info.keys()) == expected_keys
 
     @patch("pbx.features.g722_codec_itu.get_logger")
@@ -1162,7 +1170,7 @@ class TestG722CodecITUEdgeCases:
         """Encoding alternating max/min samples should not crash"""
         codec = G722CodecITU()
         samples = []
-        for i in range(40):
+        for _ in range(40):
             samples.extend([32767, -32768])
         pcm_data = struct.pack(f"<{len(samples)}h", *samples)
         result = codec.encode(pcm_data)
@@ -1187,8 +1195,8 @@ class TestG722CodecITUEdgeCases:
         """Multiple consecutive decode calls should maintain state properly"""
         codec = G722CodecITU()
 
-        result1 = codec.decode(b"\x2A")
-        result2 = codec.decode(b"\x2A")
+        result1 = codec.decode(b"\x2a")
+        result2 = codec.decode(b"\x2a")
 
         assert result1 is not None
         assert result2 is not None
@@ -1273,11 +1281,13 @@ class TestG722CodecITUEdgeCases:
         mock_get_logger.return_value = mock_logger
 
         codec = G722CodecITU()
+
         # Monkey-patch _decode_lower to raise a ValueError
         def broken_decode_lower(il, state):
             raise ValueError("simulated decode error")
+
         codec._decode_lower = broken_decode_lower
-        codec.decode(b"\x2A")
+        codec.decode(b"\x2a")
 
         mock_logger.error.assert_called_once()
         assert "decoding error" in mock_logger.error.call_args[0][0].lower()

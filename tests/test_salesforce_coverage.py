@@ -241,9 +241,7 @@ class TestEspoCRMFindContact:
     @patch("pbx.integrations.espocrm.requests")
     @patch("pbx.integrations.espocrm.REQUESTS_AVAILABLE", True)
     @patch("pbx.integrations.espocrm.get_logger")
-    def test_find_contact_found(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_find_contact_found(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test find contact success."""
         from pbx.integrations.espocrm import EspoCRMIntegration
 
@@ -256,9 +254,7 @@ class TestEspoCRMFindContact:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "list": [{"id": "contact-1", "name": "John Doe"}]
-        }
+        mock_response.json.return_value = {"list": [{"id": "contact-1", "name": "John Doe"}]}
         mock_requests.request.return_value = mock_response
 
         result = integration.find_contact_by_phone("+1 (555) 123-4567")
@@ -331,8 +327,7 @@ class TestEspoCRMCreateContact:
         mock_requests.request.return_value = mock_response
 
         result = integration.create_contact(
-            "John Doe", "5551234567", email="john@example.com",
-            company="Acme", title="Manager"
+            "John Doe", "5551234567", email="john@example.com", company="Acme", title="Manager"
         )
 
         assert result is not None
@@ -397,9 +392,7 @@ class TestEspoCRMLogCall:
     @patch("pbx.integrations.espocrm.requests")
     @patch("pbx.integrations.espocrm.REQUESTS_AVAILABLE", True)
     @patch("pbx.integrations.espocrm.get_logger")
-    def test_log_call_success(
-        self, mock_get_logger: MagicMock, mock_requests: MagicMock
-    ) -> None:
+    def test_log_call_success(self, mock_get_logger: MagicMock, mock_requests: MagicMock) -> None:
         """Test successful call logging."""
         from pbx.integrations.espocrm import EspoCRMIntegration
 
@@ -416,9 +409,7 @@ class TestEspoCRMLogCall:
         mock_response.json.return_value = {"id": "call-record-1"}
         mock_requests.request.return_value = mock_response
 
-        result = integration.log_call(
-            "contact-1", "Inbound", 120, "Held", description="Test call"
-        )
+        result = integration.log_call("contact-1", "Inbound", 120, "Held", description="Test call")
 
         assert result is not None
 
@@ -520,9 +511,7 @@ class TestEspoCRMContactOperations:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "list": [{"id": "c1", "name": "John Doe"}]
-        }
+        mock_response.json.return_value = {"list": [{"id": "c1", "name": "John Doe"}]}
         mock_requests.request.return_value = mock_response
 
         result = integration.search_contacts("John")
@@ -581,8 +570,12 @@ class TestEspoCRMOpportunity:
         mock_requests.request.return_value = mock_response
 
         result = integration.create_opportunity(
-            "Big Deal", 50000.0, contact_id="c1", account_id="a1",
-            stage="Qualification", close_date="2026-06-30"
+            "Big Deal",
+            50000.0,
+            contact_id="c1",
+            account_id="a1",
+            stage="Qualification",
+            close_date="2026-06-30",
         )
 
         assert result is not None
@@ -623,9 +616,7 @@ class TestEspoCRMActivities:
 
         mock_response = MagicMock()
         mock_response.status_code = 200
-        mock_response.json.return_value = {
-            "list": [{"id": "activity-1", "name": "Inbound Call"}]
-        }
+        mock_response.json.return_value = {"list": [{"id": "activity-1", "name": "Inbound Call"}]}
         mock_requests.request.return_value = mock_response
 
         result = integration.get_recent_activities("c1", limit=5)
@@ -672,16 +663,12 @@ class TestEspoCRMCallHandling:
         # find_contact_by_phone returns contact
         find_response = MagicMock()
         find_response.status_code = 200
-        find_response.json.return_value = {
-            "list": [{"id": "c1", "name": "John Doe"}]
-        }
+        find_response.json.return_value = {"list": [{"id": "c1", "name": "John Doe"}]}
 
         # get_recent_activities returns activities
         activities_response = MagicMock()
         activities_response.status_code = 200
-        activities_response.json.return_value = {
-            "list": [{"id": "a1", "name": "Previous Call"}]
-        }
+        activities_response.json.return_value = {"list": [{"id": "a1", "name": "Previous Call"}]}
 
         mock_requests.request.side_effect = [find_response, activities_response]
 

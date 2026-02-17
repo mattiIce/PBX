@@ -60,9 +60,7 @@ def _make_call(state_value: str = "connected") -> MagicMock:
     return call_obj
 
 
-def _make_page_info(
-    with_dac: bool = True, zone_count: int = 1
-) -> dict[str, Any]:
+def _make_page_info(with_dac: bool = True, zone_count: int = 1) -> dict[str, Any]:
     """Create page info dictionary."""
     zones = []
     for i in range(zone_count):
@@ -188,9 +186,7 @@ class TestHandlePaging:
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
-    def test_rtp_allocation_failure(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session
-    ) -> None:
+    def test_rtp_allocation_failure(self, mock_sip, mock_sdp_builder, mock_sdp_session) -> None:
         """If RTP relay allocation fails, should end page and return False."""
         pbx = _make_pbx_core()
         pbx.rtp_relay.allocate_relay.return_value = None
@@ -207,9 +203,7 @@ class TestHandlePaging:
     @patch("pbx.sip.sdp.SDPSession")
     @patch("pbx.sip.sdp.SDPBuilder")
     @patch("pbx.sip.message.SIPMessageBuilder")
-    def test_no_zones_returns_false(
-        self, mock_sip, mock_sdp_builder, mock_sdp_session
-    ) -> None:
+    def test_no_zones_returns_false(self, mock_sip, mock_sdp_builder, mock_sdp_session) -> None:
         """If no zones configured, should end page and return False."""
         pbx = _make_pbx_core()
         handler = PagingHandler(pbx)

@@ -532,9 +532,7 @@ class TestTriggerEmergencyNotification:
             "floor": "2",
             "room": "203",
         }
-        self.kl._trigger_emergency_notification(
-            "1001", {"name": "John"}, location, "call-1"
-        )
+        self.kl._trigger_emergency_notification("1001", {"name": "John"}, location, "call-1")
         mock_notif.on_911_call.assert_called_once()
 
     def test_notification_without_location(self) -> None:

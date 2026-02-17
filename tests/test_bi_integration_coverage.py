@@ -24,7 +24,6 @@ from pbx.features.bi_integration import (
     get_bi_integration,
 )
 
-
 # ---------------------------------------------------------------------------
 # Enum tests
 # ---------------------------------------------------------------------------
@@ -269,7 +268,9 @@ class TestExecuteQuery:
         mock_psycopg2_extras.RealDictCursor = "FakeCursorClass"
         with (
             patch("pbx.utils.database.get_database", return_value=mock_db),
-            patch.dict("sys.modules", {"psycopg2": MagicMock(), "psycopg2.extras": mock_psycopg2_extras}),
+            patch.dict(
+                "sys.modules", {"psycopg2": MagicMock(), "psycopg2.extras": mock_psycopg2_extras}
+            ),
         ):
             result = bi._execute_query("SELECT 1", datetime.now(UTC), datetime.now(UTC))
 
@@ -296,7 +297,9 @@ class TestExecuteQuery:
         mock_db.connection.cursor.side_effect = sqlite3.OperationalError("no such table")
 
         with patch("pbx.utils.database.get_database", return_value=mock_db):
-            result = bi._execute_query("SELECT * FROM missing", datetime.now(UTC), datetime.now(UTC))
+            result = bi._execute_query(
+                "SELECT * FROM missing", datetime.now(UTC), datetime.now(UTC)
+            )
         assert result == []
 
     def test_query_parameter_substitution(self) -> None:
@@ -575,9 +578,7 @@ class TestExportDataset:
 
     @patch.object(BIIntegration, "_format_data", return_value="/tmp/out.csv")
     @patch.object(BIIntegration, "_execute_query", return_value=[{"id": 1}])
-    def test_successful_export(
-        self, mock_query: MagicMock, mock_format: MagicMock
-    ) -> None:
+    def test_successful_export(self, mock_query: MagicMock, mock_format: MagicMock) -> None:
         bi = self._make_bi()
         result = bi.export_dataset("cdr", ExportFormat.CSV)
         assert result["success"] is True
@@ -589,9 +590,7 @@ class TestExportDataset:
 
     @patch.object(BIIntegration, "_format_data", return_value="/tmp/out.json")
     @patch.object(BIIntegration, "_execute_query", return_value=[])
-    def test_export_with_json_format(
-        self, mock_query: MagicMock, mock_format: MagicMock
-    ) -> None:
+    def test_export_with_json_format(self, mock_query: MagicMock, mock_format: MagicMock) -> None:
         bi = self._make_bi()
         result = bi.export_dataset("cdr", ExportFormat.JSON)
         assert result["success"] is True
@@ -599,9 +598,7 @@ class TestExportDataset:
 
     @patch.object(BIIntegration, "_format_data", return_value="")
     @patch.object(BIIntegration, "_execute_query", return_value=[])
-    def test_default_date_range(
-        self, mock_query: MagicMock, mock_format: MagicMock
-    ) -> None:
+    def test_default_date_range(self, mock_query: MagicMock, mock_format: MagicMock) -> None:
         bi = self._make_bi()
         bi.export_dataset("cdr")
         call_args = mock_query.call_args
@@ -615,9 +612,7 @@ class TestExportDataset:
 
     @patch.object(BIIntegration, "_format_data", return_value="")
     @patch.object(BIIntegration, "_execute_query", return_value=[])
-    def test_custom_date_range(
-        self, mock_query: MagicMock, mock_format: MagicMock
-    ) -> None:
+    def test_custom_date_range(self, mock_query: MagicMock, mock_format: MagicMock) -> None:
         bi = self._make_bi()
         custom_start = datetime(2024, 1, 1, tzinfo=UTC)
         custom_end = datetime(2024, 1, 31, tzinfo=UTC)
@@ -784,9 +779,7 @@ class TestTestConnection:
         mock_requests.RequestException = Exception
 
         with patch.dict("sys.modules", {"requests": mock_requests}):
-            result = bi.test_connection(
-                BIProvider.POWER_BI, {"access_token": "test_token"}
-            )
+            result = bi.test_connection(BIProvider.POWER_BI, {"access_token": "test_token"})
         assert result["success"] is True
         assert result["provider"] == "powerbi"
 
@@ -800,9 +793,7 @@ class TestTestConnection:
         mock_requests.RequestException = Exception
 
         with patch.dict("sys.modules", {"requests": mock_requests}):
-            result = bi.test_connection(
-                BIProvider.POWER_BI, {"access_token": "bad_token"}
-            )
+            result = bi.test_connection(BIProvider.POWER_BI, {"access_token": "bad_token"})
         assert result["success"] is False
         assert "401" in result["error"]
 
@@ -810,9 +801,7 @@ class TestTestConnection:
         bi = self._make_bi()
 
         with patch.dict("sys.modules", {"requests": None}):
-            result = bi.test_connection(
-                BIProvider.POWER_BI, {"access_token": "tok"}
-            )
+            result = bi.test_connection(BIProvider.POWER_BI, {"access_token": "tok"})
         assert result["success"] is False
         assert "not installed" in result["error"]
 
@@ -831,9 +820,7 @@ class TestTestConnection:
         mock_requests.get.side_effect = Exception("Connection refused")
 
         with patch.dict("sys.modules", {"requests": mock_requests}):
-            result = bi.test_connection(
-                BIProvider.POWER_BI, {"access_token": "tok"}
-            )
+            result = bi.test_connection(BIProvider.POWER_BI, {"access_token": "tok"})
         assert result["success"] is False
         assert "Connection refused" in result["error"]
 
@@ -990,7 +977,7 @@ class TestCalculateNextRun:
         bi = self._make_bi()
         with patch("pbx.features.bi_integration.datetime") as mock_dt:
             mock_dt.now.return_value = datetime(2024, 12, 15, 10, 0, 0, tzinfo=UTC)
-            mock_dt.side_effect = lambda *args, **kw: datetime(*args, **kw)
+            mock_dt.side_effect = datetime
             # Can't easily mock datetime.now inside the method since it uses
             # datetime.now(UTC) directly; test that logic path exists
             # by calling with a known schedule
@@ -1022,7 +1009,7 @@ class TestCreateTableauExtract:
         return BIIntegration()
 
     def test_dataset_not_found_without_hyper_api(self) -> None:
-        bi = self._make_bi()
+        _bi = self._make_bi()
         # tableauhyperapi is not installed, so ImportError path is taken;
         # but dataset_name must be in self.datasets for the fallback
         # "nonexistent" is not in datasets => KeyError inside except ImportError fallback
@@ -1034,7 +1021,6 @@ class TestCreateTableauExtract:
         # except ImportError -> fallback that accesses self.datasets[dataset_name]
         # If dataset_name not in datasets, that line raises KeyError which is NOT caught.
         # So we should test with a valid dataset name for the import error path.
-        pass
 
     @patch.object(BIIntegration, "_execute_query", return_value=[])
     @patch.object(BIIntegration, "_export_csv", return_value="/tmp/fallback.csv")
@@ -1196,9 +1182,7 @@ class TestCreatePowerBIDataset:
         "_create_powerbi_schema",
         return_value={"name": "cdr", "tables": []},
     )
-    def test_successful_creation(
-        self, mock_schema: MagicMock, mock_query: MagicMock
-    ) -> None:
+    def test_successful_creation(self, mock_schema: MagicMock, mock_query: MagicMock) -> None:
         bi = self._make_bi()
         creds = {"access_token": "tok", "workspace_id": "ws1"}
 
@@ -1223,9 +1207,7 @@ class TestCreatePowerBIDataset:
         "_create_powerbi_schema",
         return_value={"name": "cdr", "tables": []},
     )
-    def test_api_error_response(
-        self, mock_schema: MagicMock, mock_query: MagicMock
-    ) -> None:
+    def test_api_error_response(self, mock_schema: MagicMock, mock_query: MagicMock) -> None:
         bi = self._make_bi()
         creds = {"access_token": "tok", "workspace_id": "ws1"}
 
@@ -1258,9 +1240,7 @@ class TestCreatePowerBIDataset:
         "_create_powerbi_schema",
         return_value={"name": "cdr", "tables": []},
     )
-    def test_request_exception(
-        self, mock_schema: MagicMock, mock_query: MagicMock
-    ) -> None:
+    def test_request_exception(self, mock_schema: MagicMock, mock_query: MagicMock) -> None:
         bi = self._make_bi()
         creds = {"access_token": "tok", "workspace_id": "ws1"}
 
@@ -1328,9 +1308,7 @@ class TestCreatePowerBISchema:
 
     def test_multiple_columns(self) -> None:
         bi = self._make_bi()
-        schema = bi._create_powerbi_schema(
-            "ds", [{"id": 1, "value": 2.5, "label": "x"}]
-        )
+        schema = bi._create_powerbi_schema("ds", [{"id": 1, "value": 2.5, "label": "x"}])
         cols = schema["tables"][0]["columns"]
         assert len(cols) == 3
         types = [c["dataType"] for c in cols]

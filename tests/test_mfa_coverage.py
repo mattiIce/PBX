@@ -227,13 +227,13 @@ class TestYubiKeyOTPVerifier:
     @pytest.mark.unit
     def test_verify_otp_empty(self) -> None:
         v = self._make_verifier()
-        ok, err = v.verify_otp("")
+        ok, _err = v.verify_otp("")
         assert ok is False
 
     @pytest.mark.unit
     def test_verify_otp_none(self) -> None:
         v = self._make_verifier()
-        ok, err = v.verify_otp(None)
+        ok, _err = v.verify_otp(None)
         assert ok is False
 
     @pytest.mark.unit
@@ -351,9 +351,12 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_ok(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server", return_value={"status": "OK", "otp": otp, "nonce": "x"}
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v, "_query_yubico_server", return_value={"status": "OK", "otp": otp, "nonce": "x"}
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is True
         assert err is None
@@ -362,10 +365,14 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_replayed(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "REPLAYED_OTP", "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "REPLAYED_OTP", "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "replay" in err.lower()
@@ -374,10 +381,14 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_bad_otp(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "BAD_OTP", "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "BAD_OTP", "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "Invalid OTP" in err
@@ -386,10 +397,14 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_no_such_client(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "NO_SUCH_CLIENT", "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "NO_SUCH_CLIENT", "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "client" in err.lower()
@@ -398,10 +413,14 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_bad_signature(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "BAD_SIGNATURE", "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "BAD_SIGNATURE", "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "signature" in err.lower()
@@ -410,10 +429,14 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_missing_parameter(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "MISSING_PARAMETER", "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "MISSING_PARAMETER", "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "parameter" in err.lower()
@@ -422,10 +445,14 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_operation_not_allowed(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "OPERATION_NOT_ALLOWED", "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "OPERATION_NOT_ALLOWED", "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "not allowed" in err.lower()
@@ -434,10 +461,14 @@ class TestYubiKeyOTPVerifier:
     def test_verify_via_yubico_otp_mismatch(self) -> None:
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "OK", "otp": "d" * 44, "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "OK", "otp": "d" * 44, "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "mismatch" in err.lower()
@@ -457,10 +488,15 @@ class TestYubiKeyOTPVerifier:
         otp = "c" * 44
         responses = [
             {"status": "BACKEND_ERROR", "nonce": "x"},
-            None, None, None, None,
+            None,
+            None,
+            None,
+            None,
         ]
-        with patch.object(v, "_query_yubico_server", side_effect=responses), \
-             patch.object(v, "_verify_yubico_response_signature", return_value=True):
+        with (
+            patch.object(v, "_query_yubico_server", side_effect=responses),
+            patch.object(v, "_verify_yubico_response_signature", return_value=True),
+        ):
             ok, err = v._verify_via_yubico(otp)
         assert ok is False
         assert "Backend error" in err
@@ -479,11 +515,15 @@ class TestYubiKeyOTPVerifier:
         """When signature verification fails, move to next server."""
         v = self._make_verifier()
         otp = "c" * 44
-        with patch.object(
-            v, "_query_yubico_server",
-            return_value={"status": "OK", "otp": otp, "nonce": "x"},
-        ), patch.object(v, "_verify_yubico_response_signature", return_value=False):
-            ok, err = v._verify_via_yubico(otp)
+        with (
+            patch.object(
+                v,
+                "_query_yubico_server",
+                return_value={"status": "OK", "otp": otp, "nonce": "x"},
+            ),
+            patch.object(v, "_verify_yubico_response_signature", return_value=False),
+        ):
+            ok, _err = v._verify_via_yubico(otp)
         assert ok is False
 
 
@@ -498,11 +538,14 @@ class TestFIDO2Verifier:
             from pbx.features.mfa import FIDO2Verifier
 
             if fido2_available:
-                with patch.dict("sys.modules", {
-                    "fido2": MagicMock(),
-                    "fido2.server": MagicMock(),
-                    "fido2.webauthn": MagicMock(),
-                }):
+                with patch.dict(
+                    "sys.modules",
+                    {
+                        "fido2": MagicMock(),
+                        "fido2.server": MagicMock(),
+                        "fido2.webauthn": MagicMock(),
+                    },
+                ):
                     v = FIDO2Verifier(rp_id="test.local", rp_name="Test")
                     v.fido2_available = True
                     return v
@@ -546,10 +589,13 @@ class TestFIDO2Verifier:
     @pytest.mark.unit
     def test_register_credential_basic_mode(self) -> None:
         v = self._make_verifier(fido2_available=False)
-        ok, cid = v.register_credential("1001", {
-            "credential_id": "my_cred",
-            "public_key": "my_pk",
-        })
+        ok, cid = v.register_credential(
+            "1001",
+            {
+                "credential_id": "my_cred",
+                "public_key": "my_pk",
+            },
+        )
         assert ok is True
         assert cid == "my_cred"
 
@@ -557,10 +603,13 @@ class TestFIDO2Verifier:
     def test_register_credential_fido2_mode_valid(self) -> None:
         v = self._make_verifier(fido2_available=True)
         cred_id_b64 = base64.b64encode(b"x" * 32).decode("utf-8")
-        ok, cid = v.register_credential("1001", {
-            "credential_id": cred_id_b64,
-            "public_key": "pk",
-        })
+        ok, cid = v.register_credential(
+            "1001",
+            {
+                "credential_id": cred_id_b64,
+                "public_key": "pk",
+            },
+        )
         assert ok is True
         assert cid == cred_id_b64
 
@@ -568,10 +617,13 @@ class TestFIDO2Verifier:
     def test_register_credential_fido2_too_short(self) -> None:
         v = self._make_verifier(fido2_available=True)
         cred_id_b64 = base64.b64encode(b"x" * 5).decode("utf-8")
-        ok, err = v.register_credential("1001", {
-            "credential_id": cred_id_b64,
-            "public_key": "pk",
-        })
+        ok, err = v.register_credential(
+            "1001",
+            {
+                "credential_id": cred_id_b64,
+                "public_key": "pk",
+            },
+        )
         assert ok is False
         assert "length" in err.lower()
 
@@ -579,20 +631,26 @@ class TestFIDO2Verifier:
     def test_register_credential_fido2_too_long(self) -> None:
         v = self._make_verifier(fido2_available=True)
         cred_id_b64 = base64.b64encode(b"x" * 2000).decode("utf-8")
-        ok, err = v.register_credential("1001", {
-            "credential_id": cred_id_b64,
-            "public_key": "pk",
-        })
+        ok, err = v.register_credential(
+            "1001",
+            {
+                "credential_id": cred_id_b64,
+                "public_key": "pk",
+            },
+        )
         assert ok is False
         assert "length" in err.lower()
 
     @pytest.mark.unit
     def test_register_credential_fido2_bytes_credential_id(self) -> None:
         v = self._make_verifier(fido2_available=True)
-        ok, cid = v.register_credential("1001", {
-            "credential_id": b"x" * 32,
-            "public_key": "pk",
-        })
+        ok, _cid = v.register_credential(
+            "1001",
+            {
+                "credential_id": b"x" * 32,
+                "public_key": "pk",
+            },
+        )
         assert ok is True
 
     @pytest.mark.unit
@@ -605,10 +663,14 @@ class TestFIDO2Verifier:
     @pytest.mark.unit
     def test_verify_assertion_missing_signature(self) -> None:
         v = self._make_verifier()
-        ok, err = v.verify_assertion("cred", {
-            "authenticator_data": "ad",
-            "client_data_json": "cdj",
-        }, b"pk")
+        ok, err = v.verify_assertion(
+            "cred",
+            {
+                "authenticator_data": "ad",
+                "client_data_json": "cdj",
+            },
+            b"pk",
+        )
         assert ok is False
         assert "Missing" in err
 
@@ -618,11 +680,15 @@ class TestFIDO2Verifier:
         auth_data = base64.b64encode(b"x" * 50).decode("utf-8")
         sig = base64.b64encode(b"y" * 70).decode("utf-8")
         cdj = base64.b64encode(b'{"type":"webauthn.get"}').decode("utf-8")
-        ok, err = v.verify_assertion("cred", {
-            "authenticator_data": auth_data,
-            "signature": sig,
-            "client_data_json": cdj,
-        }, b"pk")
+        ok, err = v.verify_assertion(
+            "cred",
+            {
+                "authenticator_data": auth_data,
+                "signature": sig,
+                "client_data_json": cdj,
+            },
+            b"pk",
+        )
         assert ok is True
         assert err is None
 
@@ -632,11 +698,15 @@ class TestFIDO2Verifier:
         auth_data = base64.b64encode(b"x" * 10).decode("utf-8")
         sig = base64.b64encode(b"y" * 70).decode("utf-8")
         cdj = base64.b64encode(b'{"type":"webauthn.get"}').decode("utf-8")
-        ok, err = v.verify_assertion("cred", {
-            "authenticator_data": auth_data,
-            "signature": sig,
-            "client_data_json": cdj,
-        }, b"pk")
+        ok, err = v.verify_assertion(
+            "cred",
+            {
+                "authenticator_data": auth_data,
+                "signature": sig,
+                "client_data_json": cdj,
+            },
+            b"pk",
+        )
         assert ok is False
         assert "authenticator_data" in err.lower()
 
@@ -646,22 +716,30 @@ class TestFIDO2Verifier:
         auth_data = base64.b64encode(b"x" * 50).decode("utf-8")
         sig = base64.b64encode(b"y" * 10).decode("utf-8")
         cdj = base64.b64encode(b'{"type":"webauthn.get"}').decode("utf-8")
-        ok, err = v.verify_assertion("cred", {
-            "authenticator_data": auth_data,
-            "signature": sig,
-            "client_data_json": cdj,
-        }, b"pk")
+        ok, err = v.verify_assertion(
+            "cred",
+            {
+                "authenticator_data": auth_data,
+                "signature": sig,
+                "client_data_json": cdj,
+            },
+            b"pk",
+        )
         assert ok is False
         assert "signature" in err.lower()
 
     @pytest.mark.unit
     def test_verify_assertion_decode_error(self) -> None:
         v = self._make_verifier(fido2_available=False)
-        ok, err = v.verify_assertion("cred", {
-            "authenticator_data": "!!!invalid_base64!!!",
-            "signature": "!!!invalid_base64!!!",
-            "client_data_json": "!!!invalid_base64!!!",
-        }, b"pk")
+        ok, err = v.verify_assertion(
+            "cred",
+            {
+                "authenticator_data": "!!!invalid_base64!!!",
+                "signature": "!!!invalid_base64!!!",
+                "client_data_json": "!!!invalid_base64!!!",
+            },
+            b"pk",
+        )
         assert ok is False
         assert "decode" in err.lower() or "Failed" in err
 
@@ -672,11 +750,15 @@ class TestFIDO2Verifier:
         sig = base64.b64encode(b"y" * 70).decode("utf-8")
         cdj = base64.b64encode(b'{"type":"webauthn.get"}').decode("utf-8")
         pk = base64.b64encode(b"publickey").decode("utf-8")
-        ok, err = v.verify_assertion("cred", {
-            "authenticator_data": auth_data,
-            "signature": sig,
-            "client_data_json": cdj,
-        }, pk)
+        ok, _err = v.verify_assertion(
+            "cred",
+            {
+                "authenticator_data": auth_data,
+                "signature": sig,
+                "client_data_json": cdj,
+            },
+            pk,
+        )
         assert ok is True
 
     @pytest.mark.unit
@@ -687,11 +769,15 @@ class TestFIDO2Verifier:
         sig = base64.b64encode(b"y" * 70).decode("utf-8")
         # A string that is valid base64 but we just pass a json string directly as bytes
         cdj_bytes = b'{"type":"webauthn.get"}'
-        ok, err = v.verify_assertion("cred", {
-            "authenticator_data": auth_data,
-            "signature": sig,
-            "client_data_json": cdj_bytes,
-        }, b"pk")
+        ok, _err = v.verify_assertion(
+            "cred",
+            {
+                "authenticator_data": auth_data,
+                "signature": sig,
+                "client_data_json": cdj_bytes,
+            },
+            b"pk",
+        )
         assert ok is True
 
 
@@ -702,10 +788,13 @@ class TestMFAManagerInit:
     """Tests for MFAManager initialization."""
 
     def _make_manager(self, config=None, database=None):
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             return MFAManager(database=database, config=config or {})
 
     @pytest.mark.unit
@@ -729,10 +818,13 @@ class TestMFAManagerInit:
             "security.mfa.yubikey.client_id": "42",
             "security.mfa.yubikey.api_key": "key",
         }
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             m = MFAManager(config=config)
         assert m.yubikey_enabled is True
         assert m.yubikey_verifier is not None
@@ -740,10 +832,13 @@ class TestMFAManagerInit:
     @pytest.mark.unit
     def test_init_fido2_enabled(self) -> None:
         config = {"security.mfa.fido2.enabled": True}
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             m = MFAManager(config=config)
         assert m.fido2_enabled is True
         assert m.fido2_verifier is not None
@@ -753,7 +848,7 @@ class TestMFAManagerInit:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        m = self._make_manager(database=db)
+        _m = self._make_manager(database=db)
         assert db.execute.call_count == 4  # 4 CREATE TABLE calls
 
     @pytest.mark.unit
@@ -762,7 +857,7 @@ class TestMFAManagerInit:
         db.enabled = True
         db.db_type = "sqlite"
         db.execute.side_effect = sqlite3.Error("fail")
-        m = self._make_manager(database=db)
+        _m = self._make_manager(database=db)
         # Should not raise
 
     @pytest.mark.unit
@@ -770,7 +865,7 @@ class TestMFAManagerInit:
         db = MagicMock()
         db.enabled = True
         db.db_type = "postgresql"
-        m = self._make_manager(database=db)
+        _m = self._make_manager(database=db)
         assert db.execute.call_count == 4
 
 
@@ -779,14 +874,17 @@ class TestMFAManagerEnrollUser:
 
     def _make_manager(self, db=None, enabled=True):
         config = {"security.mfa.enabled": enabled}
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             enc = MagicMock()
             enc.derive_key.return_value = (b"k" * 32, b"salt" * 8)
             enc.encrypt_data.return_value = ("enc_data", "nonce_val", "tag_val")
             enc.hash_password.return_value = ("hashed", "salt_b64")
             mock_enc.return_value = enc
             from pbx.features.mfa import MFAManager
+
             m = MFAManager(database=db, config=config)
         return m
 
@@ -827,7 +925,7 @@ class TestMFAManagerEnrollUser:
         db.db_type = "sqlite"
         db.fetch_all.return_value = [{"id": 1, "enabled": True}]
         m = self._make_manager(db=db)
-        ok, uri, codes = m.enroll_user("1001")
+        ok, _uri, _codes = m.enroll_user("1001")
         assert ok is True
 
     @pytest.mark.unit
@@ -837,7 +935,7 @@ class TestMFAManagerEnrollUser:
         db.db_type = "postgresql"
         db.fetch_all.return_value = []
         m = self._make_manager(db=db)
-        ok, uri, codes = m.enroll_user("1001")
+        ok, _uri, _codes = m.enroll_user("1001")
         assert ok is True
 
     @pytest.mark.unit
@@ -847,7 +945,7 @@ class TestMFAManagerEnrollUser:
         db.db_type = "sqlite"
         db.fetch_all.side_effect = sqlite3.Error("fail")
         m = self._make_manager(db=db)
-        ok, uri, codes = m.enroll_user("1001")
+        ok, _uri, _codes = m.enroll_user("1001")
         assert ok is False
 
 
@@ -856,11 +954,14 @@ class TestMFAManagerVerifyEnrollment:
 
     def _make_manager(self, db=None, enabled=True, secret_bytes=None):
         config = {"security.mfa.enabled": enabled}
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             enc = MagicMock()
             mock_enc.return_value = enc
             from pbx.features.mfa import MFAManager
+
             m = MFAManager(database=db, config=config)
         if secret_bytes is not None:
             m._get_secret_for_enrollment = MagicMock(return_value=secret_bytes)
@@ -891,6 +992,7 @@ class TestMFAManagerVerifyEnrollment:
         m = self._make_manager(db=db, enabled=True, secret_bytes=secret)
         with patch("pbx.features.mfa.get_logger"):
             from pbx.features.mfa import TOTPGenerator
+
             totp = TOTPGenerator(secret=secret)
             code = totp.generate()
         assert m.verify_enrollment("1001", code) is True
@@ -905,6 +1007,7 @@ class TestMFAManagerVerifyEnrollment:
         m = self._make_manager(db=db, enabled=True, secret_bytes=secret)
         with patch("pbx.features.mfa.get_logger"):
             from pbx.features.mfa import TOTPGenerator
+
             totp = TOTPGenerator(secret=secret)
             code = totp.generate()
         assert m.verify_enrollment("1001", code) is True
@@ -919,6 +1022,7 @@ class TestMFAManagerVerifyEnrollment:
         m = self._make_manager(db=db, enabled=True, secret_bytes=secret)
         with patch("pbx.features.mfa.get_logger"):
             from pbx.features.mfa import TOTPGenerator
+
             totp = TOTPGenerator(secret=secret)
             code = totp.generate()
         assert m.verify_enrollment("1001", code) is False
@@ -933,11 +1037,14 @@ class TestMFAManagerVerifyCode:
             "security.mfa.required": required,
             "security.mfa.yubikey.enabled": yubikey,
         }
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             enc = MagicMock()
             mock_enc.return_value = enc
             from pbx.features.mfa import MFAManager
+
             m = MFAManager(database=db, config=config)
         return m
 
@@ -967,6 +1074,7 @@ class TestMFAManagerVerifyCode:
         m._update_last_used = MagicMock()
         with patch("pbx.features.mfa.get_logger"):
             from pbx.features.mfa import TOTPGenerator
+
             code = TOTPGenerator(secret=secret).generate()
         assert m.verify_code("1001", code) is True
         m._update_last_used.assert_called_once_with("1001")
@@ -1020,10 +1128,13 @@ class TestMFAManagerIsEnabledForUser:
 
     def _make_manager(self, enabled=True, db=None):
         config = {"security.mfa.enabled": enabled}
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             return MFAManager(database=db, config=config)
 
     @pytest.mark.unit
@@ -1086,10 +1197,13 @@ class TestMFAManagerDisableForUser:
     """Tests for MFAManager.disable_for_user."""
 
     def _make_manager(self, db=None):
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             return MFAManager(database=db, config={})
 
     @pytest.mark.unit
@@ -1128,10 +1242,13 @@ class TestMFAManagerEnrollYubikey:
 
     def _make_manager(self, db=None, yubikey=True):
         config = {"security.mfa.yubikey.enabled": yubikey}
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             return MFAManager(database=db, config=config)
 
     @pytest.mark.unit
@@ -1156,7 +1273,7 @@ class TestMFAManagerEnrollYubikey:
         m = self._make_manager(db=db, yubikey=True)
         m.yubikey_verifier = MagicMock()
         m.yubikey_verifier.verify_otp.return_value = (False, "bad otp")
-        ok, err = m.enroll_yubikey("1001", "c" * 44)
+        ok, _err = m.enroll_yubikey("1001", "c" * 44)
         assert ok is False
 
     @pytest.mark.unit
@@ -1210,7 +1327,7 @@ class TestMFAManagerEnrollYubikey:
         m.yubikey_verifier = MagicMock()
         m.yubikey_verifier.verify_otp.return_value = (True, None)
         m.yubikey_verifier.extract_public_id.return_value = "cccccccccccc"
-        ok, err = m.enroll_yubikey("1001", "c" * 44)
+        ok, _err = m.enroll_yubikey("1001", "c" * 44)
         assert ok is True
 
     @pytest.mark.unit
@@ -1223,7 +1340,7 @@ class TestMFAManagerEnrollYubikey:
         m.yubikey_verifier = MagicMock()
         m.yubikey_verifier.verify_otp.return_value = (True, None)
         m.yubikey_verifier.extract_public_id.return_value = "cccccccccccc"
-        ok, err = m.enroll_yubikey("1001", "c" * 44)
+        ok, _err = m.enroll_yubikey("1001", "c" * 44)
         assert ok is False
 
 
@@ -1232,10 +1349,13 @@ class TestMFAManagerEnrollFido2:
 
     def _make_manager(self, db=None, fido2=True):
         config = {"security.mfa.fido2.enabled": fido2}
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             return MFAManager(database=db, config=config)
 
     @pytest.mark.unit
@@ -1272,10 +1392,13 @@ class TestMFAManagerEnrollFido2:
         m = self._make_manager(db=db, fido2=True)
         m.fido2_verifier = MagicMock()
         m.fido2_verifier.register_credential.return_value = (True, "cred_id_123")
-        ok, err = m.enroll_fido2("1001", {
-            "credential_id": "cred_id_123",
-            "public_key": "string_pk",
-        })
+        ok, _err = m.enroll_fido2(
+            "1001",
+            {
+                "credential_id": "cred_id_123",
+                "public_key": "string_pk",
+            },
+        )
         assert ok is True
 
     @pytest.mark.unit
@@ -1286,10 +1409,13 @@ class TestMFAManagerEnrollFido2:
         m = self._make_manager(db=db, fido2=True)
         m.fido2_verifier = MagicMock()
         m.fido2_verifier.register_credential.return_value = (True, "cred_id_123")
-        ok, err = m.enroll_fido2("1001", {
-            "credential_id": "cred_id_123",
-            "public_key": {"kty": "EC"},
-        })
+        ok, _err = m.enroll_fido2(
+            "1001",
+            {
+                "credential_id": "cred_id_123",
+                "public_key": {"kty": "EC"},
+            },
+        )
         assert ok is True
 
     @pytest.mark.unit
@@ -1300,10 +1426,13 @@ class TestMFAManagerEnrollFido2:
         m = self._make_manager(db=db, fido2=True)
         m.fido2_verifier = MagicMock()
         m.fido2_verifier.register_credential.return_value = (True, "cred_id_123")
-        ok, err = m.enroll_fido2("1001", {
-            "credential_id": "cred_id_123",
-            "public_key": b"bytes_pk",
-        })
+        ok, _err = m.enroll_fido2(
+            "1001",
+            {
+                "credential_id": "cred_id_123",
+                "public_key": b"bytes_pk",
+            },
+        )
         assert ok is True
 
     @pytest.mark.unit
@@ -1314,10 +1443,13 @@ class TestMFAManagerEnrollFido2:
         m = self._make_manager(db=db, fido2=True)
         m.fido2_verifier = MagicMock()
         m.fido2_verifier.register_credential.return_value = (True, "cred_id_123")
-        ok, err = m.enroll_fido2("1001", {
-            "credential_id": "cred_id_123",
-            "public_key": "pk",
-        })
+        ok, _err = m.enroll_fido2(
+            "1001",
+            {
+                "credential_id": "cred_id_123",
+                "public_key": "pk",
+            },
+        )
         assert ok is True
 
     @pytest.mark.unit
@@ -1329,10 +1461,13 @@ class TestMFAManagerEnrollFido2:
         m = self._make_manager(db=db, fido2=True)
         m.fido2_verifier = MagicMock()
         m.fido2_verifier.register_credential.return_value = (True, "cred_id_123")
-        ok, err = m.enroll_fido2("1001", {
-            "credential_id": "cred_id_123",
-            "public_key": "pk",
-        })
+        ok, _err = m.enroll_fido2(
+            "1001",
+            {
+                "credential_id": "cred_id_123",
+                "public_key": "pk",
+            },
+        )
         assert ok is False
 
 
@@ -1344,10 +1479,13 @@ class TestMFAManagerGetEnrolledMethods:
             "security.mfa.yubikey.enabled": yubikey,
             "security.mfa.fido2.enabled": fido2,
         }
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager
+
             return MFAManager(database=db, config=config)
 
     @pytest.mark.unit
@@ -1450,11 +1588,14 @@ class TestMFAManagerPrivateMethods:
             "security.mfa.enabled": enabled,
             "security.mfa.yubikey.enabled": yubikey,
         }
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             enc = MagicMock()
             mock_enc.return_value = enc
             from pbx.features.mfa import MFAManager
+
             m = MFAManager(database=db, config=config)
         return m
 
@@ -1803,10 +1944,13 @@ class TestGetMfaManager:
 
     @pytest.mark.unit
     def test_returns_mfa_manager(self) -> None:
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import MFAManager, get_mfa_manager
+
             m = get_mfa_manager()
             assert isinstance(m, MFAManager)
 
@@ -1815,10 +1959,13 @@ class TestGetMfaManager:
         db = MagicMock()
         db.enabled = False
         config = {"security.mfa.enabled": False}
-        with patch("pbx.features.mfa.get_logger"), \
-             patch("pbx.features.mfa.get_encryption") as mock_enc:
+        with (
+            patch("pbx.features.mfa.get_logger"),
+            patch("pbx.features.mfa.get_encryption") as mock_enc,
+        ):
             mock_enc.return_value = MagicMock()
             from pbx.features.mfa import get_mfa_manager
+
             m = get_mfa_manager(database=db, config=config)
             assert m.database is db
             assert m.enabled is False

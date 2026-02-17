@@ -304,8 +304,26 @@ class TestGetCallHistory:
     def test_get_call_history(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        row1 = (1, "1001", "5559999", "c2d-1001-100", "web", "2026-02-17T10:00:00", None, "initiated")
-        row2 = (2, "1001", "5558888", "c2d-1001-101", "crm", "2026-02-17T11:00:00", "2026-02-17T11:00:05", "connected")
+        row1 = (
+            1,
+            "1001",
+            "5559999",
+            "c2d-1001-100",
+            "web",
+            "2026-02-17T10:00:00",
+            None,
+            "initiated",
+        )
+        row2 = (
+            2,
+            "1001",
+            "5558888",
+            "c2d-1001-101",
+            "crm",
+            "2026-02-17T11:00:00",
+            "2026-02-17T11:00:05",
+            "connected",
+        )
         mock_db.execute.return_value = [row1, row2]
         engine = ClickToDialEngine(db_backend=mock_db, config={})
         history = engine.get_call_history("1001")

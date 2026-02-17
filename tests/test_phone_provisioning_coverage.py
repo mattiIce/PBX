@@ -10,14 +10,14 @@ Covers all public classes and methods:
 
 from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import MagicMock, patch, mock_open
+from unittest.mock import MagicMock, mock_open, patch
 
 import pytest
-
 
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_config(overrides: dict | None = None) -> MagicMock:
     """Build a mock Config whose .get() navigates a nested dict."""
@@ -75,12 +75,14 @@ def _make_provisioning(config_overrides: dict | None = None, database=None):
 def _lazy_import():
     """Import the module under test (deferred so patches can be applied)."""
     import pbx.features.phone_provisioning as mod
+
     return mod
 
 
 # ---------------------------------------------------------------------------
 # Tests for normalize_mac_address
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestNormalizeMacAddress:
@@ -115,6 +117,7 @@ class TestNormalizeMacAddress:
 # Tests for PhoneTemplate
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestPhoneTemplate:
     """Tests for the PhoneTemplate class."""
@@ -128,7 +131,9 @@ class TestPhoneTemplate:
 
     def test_generate_config_replaces_extension_fields(self) -> None:
         mod = _lazy_import()
-        tpl = mod.PhoneTemplate("v", "m", "N={{EXTENSION_NUMBER}} P={{EXTENSION_PASSWORD}} NM={{EXTENSION_NAME}}")
+        tpl = mod.PhoneTemplate(
+            "v", "m", "N={{EXTENSION_NUMBER}} P={{EXTENSION_PASSWORD}} NM={{EXTENSION_NAME}}"
+        )
         result = tpl.generate_config(
             {"number": "2001", "name": "Alice", "password": "s3cr3t"},
             {"sip_host": "1.2.3.4"},
@@ -161,7 +166,9 @@ class TestPhoneTemplate:
 
     def test_generate_config_ldap_defaults(self) -> None:
         mod = _lazy_import()
-        tpl = mod.PhoneTemplate("v", "m", "V={{LDAP_VERSION}} T={{LDAP_TLS_MODE}} DN={{LDAP_DISPLAY_NAME}}")
+        tpl = mod.PhoneTemplate(
+            "v", "m", "V={{LDAP_VERSION}} T={{LDAP_TLS_MODE}} DN={{LDAP_DISPLAY_NAME}}"
+        )
         result = tpl.generate_config({"number": "1"}, {})
         assert "V=3" in result
         assert "T=1" in result
@@ -169,7 +176,9 @@ class TestPhoneTemplate:
 
     def test_generate_config_remote_phonebook(self) -> None:
         mod = _lazy_import()
-        tpl = mod.PhoneTemplate("v", "m", "U={{REMOTE_PHONEBOOK_URL}} R={{REMOTE_PHONEBOOK_REFRESH}}")
+        tpl = mod.PhoneTemplate(
+            "v", "m", "U={{REMOTE_PHONEBOOK_URL}} R={{REMOTE_PHONEBOOK_REFRESH}}"
+        )
         result = tpl.generate_config(
             {"number": "1"},
             {"remote_phonebook": {"url": "http://pb.local/dir.xml", "refresh_interval": "30"}},
@@ -199,6 +208,7 @@ class TestPhoneTemplate:
 # ---------------------------------------------------------------------------
 # Tests for ProvisioningDevice
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestProvisioningDevice:
@@ -286,6 +296,7 @@ class TestProvisioningDevice:
 # Tests for PhoneProvisioning.__init__
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestPhoneProvisioningInit:
     """Tests for PhoneProvisioning initialization."""
@@ -332,6 +343,7 @@ class TestPhoneProvisioningInit:
 # ---------------------------------------------------------------------------
 # Tests for PhoneProvisioning._load_devices_from_database
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestLoadDevicesFromDatabase:
@@ -396,6 +408,7 @@ class TestLoadDevicesFromDatabase:
 # Tests for _load_builtin_templates
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestLoadBuiltinTemplates:
     """Tests for built-in template loading."""
@@ -429,6 +442,7 @@ class TestLoadBuiltinTemplates:
 # ---------------------------------------------------------------------------
 # Tests for _load_custom_templates
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestLoadCustomTemplates:
@@ -490,7 +504,7 @@ class TestLoadCustomTemplates:
             patch("pathlib.Path.iterdir", side_effect=OSError("permission denied")),
         ):
             mod = _lazy_import()
-            prov = mod.PhoneProvisioning(cfg)
+            _prov = mod.PhoneProvisioning(cfg)
 
         mock_logger.error.assert_called()
 
@@ -498,6 +512,7 @@ class TestLoadCustomTemplates:
 # ---------------------------------------------------------------------------
 # Tests for add_template / get_template
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestAddGetTemplate:
@@ -525,6 +540,7 @@ class TestAddGetTemplate:
 # Tests for register_device / unregister_device / get_device
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestDeviceRegistration:
     """Tests for device registration lifecycle."""
@@ -549,7 +565,7 @@ class TestDeviceRegistration:
         prov.devices_db = MagicMock()
         prov.devices_db.add_device.side_effect = RuntimeError("db error")
         # Should not raise; device still saved in memory
-        dev = prov.register_device("11:22:33:44:55:66", "2001", "cisco", "spa504g")
+        _dev = prov.register_device("11:22:33:44:55:66", "2001", "cisco", "spa504g")
         assert "112233445566" in prov.devices
 
     def test_unregister_device_found(self) -> None:
@@ -592,6 +608,7 @@ class TestDeviceRegistration:
 # ---------------------------------------------------------------------------
 # Tests for get_all_devices / get_atas / get_phones
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestDeviceLists:
@@ -638,6 +655,7 @@ class TestDeviceLists:
 # Tests for _build_ldap_phonebook_config
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestBuildLdapPhonebookConfig:
     """Tests for _build_ldap_phonebook_config."""
@@ -651,32 +669,36 @@ class TestBuildLdapPhonebookConfig:
         assert cfg["display_name"] == "Directory"
 
     def test_explicit_config_returned(self) -> None:
-        prov = _make_provisioning({
-            "provisioning": {
-                "ldap_phonebook": {
-                    "enable": 1,
-                    "server": "ldap.company.com",
-                    "port": 389,
+        prov = _make_provisioning(
+            {
+                "provisioning": {
+                    "ldap_phonebook": {
+                        "enable": 1,
+                        "server": "ldap.company.com",
+                        "port": 389,
+                    }
                 }
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         assert cfg["enable"] == 1
         assert cfg["server"] == "ldap.company.com"
         assert cfg["port"] == 389
 
     def test_ad_enabled_ldaps_url(self) -> None:
-        prov = _make_provisioning({
-            "integrations": {
-                "active_directory": {
-                    "enabled": True,
-                    "server": "ldaps://ad.company.com",
-                    "bind_dn": "CN=admin,DC=company,DC=com",
-                    "bind_password": "adpass",
-                    "base_dn": "DC=company,DC=com",
+        prov = _make_provisioning(
+            {
+                "integrations": {
+                    "active_directory": {
+                        "enabled": True,
+                        "server": "ldaps://ad.company.com",
+                        "bind_dn": "CN=admin,DC=company,DC=com",
+                        "bind_password": "adpass",
+                        "base_dn": "DC=company,DC=com",
+                    }
                 }
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         assert cfg["enable"] == 1
         assert cfg["server"] == "ad.company.com"
@@ -687,103 +709,115 @@ class TestBuildLdapPhonebookConfig:
         assert cfg["base"] == "DC=company,DC=com"
 
     def test_ad_enabled_ldap_url(self) -> None:
-        prov = _make_provisioning({
-            "integrations": {
-                "active_directory": {
-                    "enabled": True,
-                    "server": "ldap://ad.company.com",
-                    "bind_dn": "CN=admin,DC=company,DC=com",
-                    "bind_password": "adpass",
-                    "base_dn": "DC=company,DC=com",
+        prov = _make_provisioning(
+            {
+                "integrations": {
+                    "active_directory": {
+                        "enabled": True,
+                        "server": "ldap://ad.company.com",
+                        "bind_dn": "CN=admin,DC=company,DC=com",
+                        "bind_password": "adpass",
+                        "base_dn": "DC=company,DC=com",
+                    }
                 }
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         assert cfg["port"] == 389
         assert cfg["tls_mode"] == 0
 
     def test_ad_enabled_ldaps_with_custom_port(self) -> None:
-        prov = _make_provisioning({
-            "integrations": {
-                "active_directory": {
-                    "enabled": True,
-                    "server": "ldaps://ad.company.com:3269",
-                    "bind_dn": "CN=admin,DC=company,DC=com",
-                    "bind_password": "adpass",
-                    "base_dn": "DC=company,DC=com",
+        prov = _make_provisioning(
+            {
+                "integrations": {
+                    "active_directory": {
+                        "enabled": True,
+                        "server": "ldaps://ad.company.com:3269",
+                        "bind_dn": "CN=admin,DC=company,DC=com",
+                        "bind_password": "adpass",
+                        "base_dn": "DC=company,DC=com",
+                    }
                 }
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         assert cfg["port"] == 3269
         assert cfg["tls_mode"] == 1
 
     def test_ad_enabled_no_scheme_defaults_ldaps(self) -> None:
-        prov = _make_provisioning({
-            "integrations": {
-                "active_directory": {
-                    "enabled": True,
-                    "server": "ad.company.com",
-                    "bind_dn": "CN=admin,DC=company,DC=com",
-                    "bind_password": "adpass",
-                    "base_dn": "DC=company,DC=com",
+        prov = _make_provisioning(
+            {
+                "integrations": {
+                    "active_directory": {
+                        "enabled": True,
+                        "server": "ad.company.com",
+                        "bind_dn": "CN=admin,DC=company,DC=com",
+                        "bind_password": "adpass",
+                        "base_dn": "DC=company,DC=com",
+                    }
                 }
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         assert cfg["tls_mode"] == 1
         assert cfg["port"] == 636
 
     def test_ad_enabled_invalid_bind_dn_logs_warning(self) -> None:
-        prov = _make_provisioning({
-            "integrations": {
-                "active_directory": {
-                    "enabled": True,
-                    "server": "ldaps://ad.company.com",
-                    "bind_dn": "admin@company.com",
-                    "bind_password": "adpass",
-                    "base_dn": "DC=company,DC=com",
+        prov = _make_provisioning(
+            {
+                "integrations": {
+                    "active_directory": {
+                        "enabled": True,
+                        "server": "ldaps://ad.company.com",
+                        "bind_dn": "admin@company.com",
+                        "bind_password": "adpass",
+                        "base_dn": "DC=company,DC=com",
+                    }
                 }
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         # Should still produce config, just with a warning logged
         assert cfg["user"] == "admin@company.com"
 
     def test_ad_enabled_missing_credentials_falls_through(self) -> None:
-        prov = _make_provisioning({
-            "integrations": {
-                "active_directory": {
-                    "enabled": True,
-                    "server": "",
-                    "bind_dn": "",
-                    "bind_password": "",
-                    "base_dn": "",
+        prov = _make_provisioning(
+            {
+                "integrations": {
+                    "active_directory": {
+                        "enabled": True,
+                        "server": "",
+                        "bind_dn": "",
+                        "bind_password": "",
+                        "base_dn": "",
+                    }
                 }
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         # Falls through to empty defaults since credentials are missing
         assert cfg["enable"] == 0
 
     def test_ad_explicit_config_overrides_defaults(self) -> None:
-        prov = _make_provisioning({
-            "integrations": {
-                "active_directory": {
-                    "enabled": True,
-                    "server": "ldaps://ad.company.com",
-                    "bind_dn": "CN=admin,DC=company,DC=com",
-                    "bind_password": "adpass",
-                    "base_dn": "DC=company,DC=com",
-                }
-            },
-            "provisioning": {
-                "ldap_phonebook": {
-                    "port": 3269,
-                    "display_name": "Corp Directory",
-                }
+        prov = _make_provisioning(
+            {
+                "integrations": {
+                    "active_directory": {
+                        "enabled": True,
+                        "server": "ldaps://ad.company.com",
+                        "bind_dn": "CN=admin,DC=company,DC=com",
+                        "bind_password": "adpass",
+                        "base_dn": "DC=company,DC=com",
+                    }
+                },
+                "provisioning": {
+                    "ldap_phonebook": {
+                        "port": 3269,
+                        "display_name": "Corp Directory",
+                    }
+                },
             }
-        })
+        )
         cfg = prov._build_ldap_phonebook_config()
         assert cfg["port"] == 3269
         assert cfg["display_name"] == "Corp Directory"
@@ -792,6 +826,7 @@ class TestBuildLdapPhonebookConfig:
 # ---------------------------------------------------------------------------
 # Tests for generate_config
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestGenerateConfig:
@@ -917,6 +952,7 @@ class TestGenerateConfig:
 # Tests for _add_request_log / get_request_history
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestRequestHistory:
     """Tests for provision request history tracking."""
@@ -960,6 +996,7 @@ class TestRequestHistory:
 # Tests for _generate_config_url
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGenerateConfigUrl:
     """Tests for _generate_config_url."""
@@ -973,11 +1010,13 @@ class TestGenerateConfigUrl:
         assert "9000" in url
 
     def test_custom_url_format(self) -> None:
-        prov = _make_provisioning({
-            "provisioning": {
-                "url_format": "tftp://{{SERVER_IP}}/configs/{mac}.cfg",
+        prov = _make_provisioning(
+            {
+                "provisioning": {
+                    "url_format": "tftp://{{SERVER_IP}}/configs/{mac}.cfg",
+                }
             }
-        })
+        )
         url = prov._generate_config_url("aabbccddeeff")
         assert url == "tftp://10.0.0.1/configs/aabbccddeeff.cfg"
 
@@ -990,6 +1029,7 @@ class TestGenerateConfigUrl:
 # ---------------------------------------------------------------------------
 # Tests for get_supported_vendors / get_supported_models
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestSupportedVendorsModels:
@@ -1024,7 +1064,7 @@ class TestSupportedVendorsModels:
         all_models = prov.get_supported_models()
         assert isinstance(all_models, dict)
         assert "cisco" in all_models
-        for vendor, models in all_models.items():
+        for models in all_models.values():
             assert models == sorted(models)
 
     def test_get_supported_models_case_insensitive(self) -> None:
@@ -1036,6 +1076,7 @@ class TestSupportedVendorsModels:
 # ---------------------------------------------------------------------------
 # Tests for reboot_phone
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestRebootPhone:
@@ -1100,6 +1141,7 @@ class TestRebootPhone:
 # Tests for reboot_all_phones
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestRebootAllPhones:
     """Tests for reboot_all_phones."""
@@ -1149,6 +1191,7 @@ class TestRebootAllPhones:
 # Tests for list_all_templates
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestListAllTemplates:
     """Tests for list_all_templates."""
@@ -1185,6 +1228,7 @@ class TestListAllTemplates:
 # Tests for get_template_content
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestGetTemplateContent:
     """Tests for get_template_content."""
@@ -1205,6 +1249,7 @@ class TestGetTemplateContent:
 # Tests for export_template_to_file
 # ---------------------------------------------------------------------------
 
+
 @pytest.mark.unit
 class TestExportTemplateToFile:
     """Tests for export_template_to_file."""
@@ -1218,13 +1263,13 @@ class TestExportTemplateToFile:
 
     def test_invalid_model_name(self) -> None:
         prov = _make_provisioning()
-        success, msg, path = prov.export_template_to_file("vendor", "bad..model")
+        success, msg, _path = prov.export_template_to_file("vendor", "bad..model")
         assert success is False
         assert "Invalid" in msg
 
     def test_template_not_found(self) -> None:
         prov = _make_provisioning()
-        success, msg, path = prov.export_template_to_file("unknown", "model")
+        success, msg, _path = prov.export_template_to_file("unknown", "model")
         assert success is False
         assert "not found" in msg
 
@@ -1235,7 +1280,7 @@ class TestExportTemplateToFile:
             patch("pathlib.Path.exists", return_value=True),
             patch("pathlib.Path.open", m),
         ):
-            success, msg, path = prov.export_template_to_file("yealink", "t46s")
+            success, msg, _path = prov.export_template_to_file("yealink", "t46s")
         assert success is True
         assert "exported" in msg.lower()
         m.assert_called_once_with("w")
@@ -1248,7 +1293,7 @@ class TestExportTemplateToFile:
             patch("pathlib.Path.mkdir") as mock_mkdir,
             patch("pathlib.Path.open", m),
         ):
-            success, msg, path = prov.export_template_to_file("yealink", "t46s")
+            success, _msg, _path = prov.export_template_to_file("yealink", "t46s")
         assert success is True
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
@@ -1258,7 +1303,7 @@ class TestExportTemplateToFile:
             patch("pathlib.Path.exists", return_value=False),
             patch("pathlib.Path.mkdir", side_effect=OSError("no permission")),
         ):
-            success, msg, path = prov.export_template_to_file("yealink", "t46s")
+            success, msg, _path = prov.export_template_to_file("yealink", "t46s")
         assert success is False
         assert "Failed" in msg
 
@@ -1268,7 +1313,7 @@ class TestExportTemplateToFile:
             patch("pathlib.Path.exists", return_value=True),
             patch("pathlib.Path.open", side_effect=OSError("disk full")),
         ):
-            success, msg, path = prov.export_template_to_file("yealink", "t46s")
+            success, msg, _path = prov.export_template_to_file("yealink", "t46s")
         assert success is False
         assert "Failed" in msg
 
@@ -1276,6 +1321,7 @@ class TestExportTemplateToFile:
 # ---------------------------------------------------------------------------
 # Tests for update_template
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestUpdateTemplate:
@@ -1314,7 +1360,7 @@ class TestUpdateTemplate:
             patch("pathlib.Path.mkdir") as mock_mkdir,
             patch("pathlib.Path.open", m),
         ):
-            success, msg = prov.update_template("acme", "phone1", "data")
+            success, _msg = prov.update_template("acme", "phone1", "data")
         assert success is True
         mock_mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
@@ -1324,7 +1370,7 @@ class TestUpdateTemplate:
             patch("pathlib.Path.exists", return_value=False),
             patch("pathlib.Path.mkdir", side_effect=OSError("no permission")),
         ):
-            success, msg = prov.update_template("acme", "phone1", "data")
+            success, _msg = prov.update_template("acme", "phone1", "data")
         assert success is False
 
     def test_write_failure(self) -> None:
@@ -1333,13 +1379,14 @@ class TestUpdateTemplate:
             patch("pathlib.Path.exists", return_value=True),
             patch("pathlib.Path.open", side_effect=OSError("disk full")),
         ):
-            success, msg = prov.update_template("acme", "phone1", "data")
+            success, _msg = prov.update_template("acme", "phone1", "data")
         assert success is False
 
 
 # ---------------------------------------------------------------------------
 # Tests for set_static_ip / get_static_ip
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestStaticIp:
@@ -1363,7 +1410,7 @@ class TestStaticIp:
         prov.devices_db = MagicMock()
         prov.devices_db.set_static_ip.return_value = True
         prov.register_device("AA:BB:CC:DD:EE:FF", "1001", "yealink", "t46s")
-        success, msg = prov.set_static_ip("AA:BB:CC:DD:EE:FF", "10.0.0.50")
+        success, _msg = prov.set_static_ip("AA:BB:CC:DD:EE:FF", "10.0.0.50")
         assert success is True
         prov.devices_db.set_static_ip.assert_called_once_with("aabbccddeeff", "10.0.0.50")
 
@@ -1372,7 +1419,7 @@ class TestStaticIp:
         prov.devices_db = MagicMock()
         prov.devices_db.set_static_ip.return_value = False
         prov.register_device("AA:BB:CC:DD:EE:FF", "1001", "yealink", "t46s")
-        success, msg = prov.set_static_ip("AA:BB:CC:DD:EE:FF", "10.0.0.50")
+        success, _msg = prov.set_static_ip("AA:BB:CC:DD:EE:FF", "10.0.0.50")
         assert success is False
 
     def test_set_static_ip_db_exception(self) -> None:
@@ -1418,6 +1465,7 @@ class TestStaticIp:
 # ---------------------------------------------------------------------------
 # Tests for reload_templates
 # ---------------------------------------------------------------------------
+
 
 @pytest.mark.unit
 class TestReloadTemplates:

@@ -610,10 +610,10 @@ class TestCallQualityPredictionDatabaseGetStatistics:
         """Test getting statistics with SQLite backend."""
         self.mock_db.db_type = "sqlite"
         self.mock_cursor.fetchone.side_effect = [
-            (100,),   # total_predictions
-            (15,),    # alerts_generated
-            (5,),     # active_alerts
-            (4.1,),   # avg_mos_24h
+            (100,),  # total_predictions
+            (15,),  # alerts_generated
+            (5,),  # active_alerts
+            (4.1,),  # avg_mos_24h
         ]
         result = self.db.get_statistics()
         assert result["total_predictions"] == 100
