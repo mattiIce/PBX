@@ -28,7 +28,7 @@ class NetworkConfig(BaseModel):
     rtp_port_start: int = Field(default=10000, ge=1024, le=65535)
     rtp_port_end: int = Field(default=20000, ge=1024, le=65535)
     api_port: int = Field(default=9000, ge=1024, le=65535)
-    bind_address: str = "0.0.0.0"
+    bind_address: str = "0.0.0.0"  # nosec B104 - PBX server binds to all interfaces
 
     @field_validator("rtp_port_end")
     @classmethod

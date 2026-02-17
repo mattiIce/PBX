@@ -137,7 +137,7 @@ function initializeForms() {
     for (const form of forms) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            console.log('Ajax form submitted:', (form as HTMLFormElement).id);
+            console.log('Ajax form submitted:', form.id);
         });
     }
 }

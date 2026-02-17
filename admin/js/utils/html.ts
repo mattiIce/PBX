@@ -168,12 +168,12 @@ export function downloadLicense(licenseData: LicenseData): void {
 }
 
 // Backward compatibility: register utilities on the window object
-(window as Record<string, unknown>).formatDate = formatDate;
-(window as Record<string, unknown>).truncate = truncate;
-(window as Record<string, unknown>).getDuration = getDuration;
-(window as Record<string, unknown>).getStatusBadge = getStatusBadge;
-(window as Record<string, unknown>).getHealthBadge = getHealthBadge;
-(window as Record<string, unknown>).getPriorityBadge = getPriorityBadge;
-(window as Record<string, unknown>).getQualityClass = getQualityClass;
-(window as Record<string, unknown>).getScheduleDescription = getScheduleDescription;
-(window as Record<string, unknown>).downloadLicense = downloadLicense;
+(window as unknown as Record<string, unknown>).formatDate = formatDate;
+(window as unknown as Record<string, unknown>).truncate = truncate;
+(window as unknown as Record<string, unknown>).getDuration = getDuration;
+(window as unknown as Record<string, unknown>).getStatusBadge = getStatusBadge;
+(window as unknown as Record<string, unknown>).getHealthBadge = getHealthBadge;
+(window as unknown as Record<string, unknown>).getPriorityBadge = getPriorityBadge;
+(window as unknown as Record<string, unknown>).getQualityClass = getQualityClass;
+(window as unknown as Record<string, unknown>).getScheduleDescription = getScheduleDescription;
+(window as unknown as Record<string, unknown>).downloadLicense = downloadLicense;

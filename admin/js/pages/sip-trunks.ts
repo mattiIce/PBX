@@ -386,7 +386,7 @@ export async function loadLCRRates(): Promise<void> {
         });
 
         if (!response.ok) {
-            if ((window as Record<string, unknown>).suppressErrorNotifications) {
+            if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
                 console.info('LCR rates endpoint returned error:', response.status, '(feature may not be enabled)');
             } else {
                 console.error('Error loading LCR rates:', response.status);
@@ -452,7 +452,7 @@ export async function loadLCRRates(): Promise<void> {
         // Load statistics
         loadLCRStatistics();
     } catch (error: unknown) {
-        if ((window as Record<string, unknown>).suppressErrorNotifications) {
+        if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
             const msg = error instanceof Error ? error.message : String(error);
             console.info('Error loading LCR rates (expected if LCR not enabled):', msg);
         } else {
@@ -470,7 +470,7 @@ export async function loadLCRStatistics(): Promise<void> {
         });
 
         if (!response.ok) {
-            if ((window as Record<string, unknown>).suppressErrorNotifications) {
+            if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
                 console.info('LCR statistics endpoint returned error:', response.status, '(feature may not be enabled)');
             } else {
                 console.error('Error loading LCR statistics:', response.status);
@@ -512,7 +512,7 @@ export async function loadLCRStatistics(): Promise<void> {
             }
         }
     } catch (error: unknown) {
-        if ((window as Record<string, unknown>).suppressErrorNotifications) {
+        if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
             const msg = error instanceof Error ? error.message : String(error);
             console.info('Error loading LCR statistics (expected if LCR not enabled):', msg);
         } else {
@@ -754,19 +754,19 @@ export async function clearLCRRates(): Promise<void> {
 // Backward compatibility - register with window
 // ---------------------------------------------------------------------------
 
-window.loadSIPTrunks = loadSIPTrunks;
-window.loadTrunkHealth = loadTrunkHealth;
-window.showAddTrunkModal = showAddTrunkModal;
-window.closeAddTrunkModal = closeAddTrunkModal;
-window.addSIPTrunk = addSIPTrunk;
-window.deleteTrunk = deleteTrunk;
-window.testTrunk = testTrunk;
-window.loadLCRRates = loadLCRRates;
-window.loadLCRStatistics = loadLCRStatistics;
-window.showAddLCRRateModal = showAddLCRRateModal;
-window.closeLCRRateModal = closeLCRRateModal;
-window.addLCRRate = addLCRRate;
-window.showAddTimeRateModal = showAddTimeRateModal;
-window.closeTimeRateModal = closeTimeRateModal;
-window.addTimeRate = addTimeRate;
-window.clearLCRRates = clearLCRRates;
+(window as any).loadSIPTrunks = loadSIPTrunks;
+(window as any).loadTrunkHealth = loadTrunkHealth;
+(window as any).showAddTrunkModal = showAddTrunkModal;
+(window as any).closeAddTrunkModal = closeAddTrunkModal;
+(window as any).addSIPTrunk = addSIPTrunk;
+(window as any).deleteTrunk = deleteTrunk;
+(window as any).testTrunk = testTrunk;
+(window as any).loadLCRRates = loadLCRRates;
+(window as any).loadLCRStatistics = loadLCRStatistics;
+(window as any).showAddLCRRateModal = showAddLCRRateModal;
+(window as any).closeLCRRateModal = closeLCRRateModal;
+(window as any).addLCRRate = addLCRRate;
+(window as any).showAddTimeRateModal = showAddTimeRateModal;
+(window as any).closeTimeRateModal = closeTimeRateModal;
+(window as any).addTimeRate = addTimeRate;
+(window as any).clearLCRRates = clearLCRRates;
