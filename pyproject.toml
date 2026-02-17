@@ -277,6 +277,9 @@ filterwarnings = [
     "error",
     "ignore::DeprecationWarning:twisted.*",
     "ignore::DeprecationWarning:sqlalchemy.*",
+    "ignore:pbx.api.rest_api is deprecated:DeprecationWarning",
+    "ignore::pytest.PytestReturnNotNoneWarning",
+    "ignore::pytest.PytestUnraisableExceptionWarning",
 ]
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
