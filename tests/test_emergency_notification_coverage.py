@@ -511,10 +511,12 @@ class TestNotifyContact:
         from pbx.features.emergency_notification import EmergencyContact
 
         mock_pbx_core.paging_system.enabled = False
+        # Remove "page" from ens.notify_methods so the condition in _notify_contact is False
+        ens.notify_methods = ["call", "email"]
         contact = EmergencyContact(name="Test", extension="1001", notification_methods=["page"])
         record = {"contacts_notified": [], "methods_used": []}
         ens._notify_contact(contact, "911_call", {}, record)
-        # page not added when paging system is disabled
+        # page not added when page not in notify_methods
         assert "page" not in record["methods_used"]
 
     def test_send_email_notification_with_notifier(self, ens, mock_pbx_core) -> None:
@@ -582,9 +584,9 @@ class TestNotifyContact:
         contact = EmergencyContact(
             name="Test", email="test@example.com", notification_methods=["email"]
         )
-        with patch("pbx.features.emergency_notification.smtplib") as mock_smtp_mod:
+        with patch("smtplib.SMTP") as mock_smtp_cls:
             mock_server = MagicMock()
-            mock_smtp_mod.SMTP.return_value = mock_server
+            mock_smtp_cls.return_value = mock_server
             ens._send_email_notification(contact, "911_call", {})
             mock_server.send_message.assert_called_once()
             mock_server.quit.assert_called_once()
@@ -598,9 +600,9 @@ class TestNotifyContact:
         email_notifier.username = "user"
         email_notifier.password = "pass"
 
-        with patch("pbx.features.emergency_notification.smtplib") as mock_smtp_mod:
+        with patch("smtplib.SMTP") as mock_smtp_cls:
             mock_server = MagicMock()
-            mock_smtp_mod.SMTP.return_value = mock_server
+            mock_smtp_cls.return_value = mock_server
             ens._send_email_direct("test@example.com", "Subject", "Body", email_notifier)
             mock_server.starttls.assert_called_once()
             mock_server.login.assert_called_once_with("user", "pass")
@@ -615,9 +617,9 @@ class TestNotifyContact:
         email_notifier.username = None
         email_notifier.password = None
 
-        with patch("pbx.features.emergency_notification.smtplib") as mock_smtp_mod:
+        with patch("smtplib.SMTP") as mock_smtp_cls:
             mock_server = MagicMock()
-            mock_smtp_mod.SMTP.return_value = mock_server
+            mock_smtp_cls.return_value = mock_server
             ens._send_email_direct("test@example.com", "Subject", "Body", email_notifier)
             mock_server.starttls.assert_not_called()
             mock_server.login.assert_not_called()

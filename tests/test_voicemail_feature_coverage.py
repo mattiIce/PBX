@@ -465,7 +465,7 @@ class TestVoicemailBoxSaveMessage:
         voicemail_box.email_notifier = mock_email_notifier
         voicemail_box.database = mock_database
 
-        with patch("pbx.features.voicemail.ExtensionDB") as mock_ext_db_cls:
+        with patch("pbx.utils.database.ExtensionDB") as mock_ext_db_cls:
             mock_ext_db = MagicMock()
             mock_ext_db.get.return_value = {"email": "db@example.com"}
             mock_ext_db_cls.return_value = mock_ext_db
@@ -486,7 +486,7 @@ class TestVoicemailBoxSaveMessage:
         voicemail_box.email_notifier = mock_email_notifier
         voicemail_box.database = mock_database
 
-        with patch("pbx.features.voicemail.ExtensionDB") as mock_ext_db_cls:
+        with patch("pbx.utils.database.ExtensionDB") as mock_ext_db_cls:
             mock_ext_db_cls.side_effect = KeyError("db error")
 
             calls = []

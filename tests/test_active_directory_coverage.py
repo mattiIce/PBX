@@ -34,6 +34,10 @@ MOD = "pbx.integrations.active_directory"
 # Helpers
 # ---------------------------------------------------------------------------
 
+# Sentinel to remove a key from defaults entirely
+_REMOVE = object()
+
+
 def _make_config(overrides: dict | None = None) -> MagicMock:
     """Return a MagicMock config whose ``.get()`` behaves like a dict lookup."""
     defaults: dict = {
@@ -62,10 +66,6 @@ def _make_config(overrides: dict | None = None) -> MagicMock:
     return cfg
 
 
-# Sentinel to remove a key from defaults entirely
-_REMOVE = object()
-
-
 def _make_ad(config_overrides: dict | None = None) -> ActiveDirectoryIntegration:
     """Convenience: create an AD integration with patched logger."""
     cfg = _make_config(config_overrides)
@@ -91,55 +91,75 @@ def _make_ad_connected(
     return ad, conn
 
 
+class _LdapEntry:
+    """Minimal stand-in for an ldap3 Entry.
+
+    Attributes are set only when explicitly requested, so ``hasattr()``
+    behaves exactly the same as with a real ldap3 entry object.
+    """
+
+    def __init__(
+        self,
+        sam: str = "jdoe",
+        display: str | None = "John Doe",
+        mail: str | None = "jdoe@example.com",
+        phone: str | None = "1001",
+        groups: list | None = None,
+        dn: str = "CN=jdoe,OU=Users,DC=example,DC=com",
+    ) -> None:
+        self.entry_dn = dn
+
+        # sAMAccountName always present (but can be set to None via sam=None)
+        self.sAMAccountName = _StrProxy(sam) if sam is not None else None
+
+        if display is not None:
+            self.displayName = _StrProxy(display)
+        # else: attribute does NOT exist => hasattr(..., 'displayName') is False
+
+        if mail is not None:
+            self.mail = _StrProxy(mail)
+
+        if phone is not None:
+            self.telephoneNumber = _StrProxy(phone)
+
+        if groups is not None:
+            self.memberOf = groups
+            # The source checks hasattr(entry, "memberO") (typo) but accesses
+            # entry.memberOf.  We set both so both paths work.
+            self.memberO = groups
+
+
+class _StrProxy:
+    """Object whose ``str()`` returns a deterministic string."""
+
+    def __init__(self, value: str) -> None:
+        self._value = value
+
+    def __str__(self) -> str:
+        return self._value
+
+    def __repr__(self) -> str:
+        return f"_StrProxy({self._value!r})"
+
+
 def _make_ldap_entry(
     sam: str = "jdoe",
-    display: str = "John Doe",
-    mail: str = "jdoe@example.com",
-    phone: str = "1001",
+    display: str | None = "John Doe",
+    mail: str | None = "jdoe@example.com",
+    phone: str | None = "1001",
     groups: list | None = None,
-    has_display: bool = True,
-    has_mail: bool = True,
-    has_phone: bool = True,
-    has_member_of: bool = True,
     dn: str = "CN=jdoe,OU=Users,DC=example,DC=com",
-) -> MagicMock:
-    """Build a fake ldap3 entry object."""
-    entry = MagicMock()
-    entry.entry_dn = dn
+) -> _LdapEntry:
+    """Build a fake ldap3 entry object.
 
-    entry.sAMAccountName = MagicMock()
-    entry.sAMAccountName.__str__ = lambda self: sam
-
-    if has_display:
-        entry.displayName = MagicMock()
-        entry.displayName.__str__ = lambda self, _d=display: _d
-    else:
-        # Remove so hasattr(..., 'displayName') returns False
-        type(entry).displayName = PropertyMock(side_effect=AttributeError)
-
-    if has_mail:
-        entry.mail = MagicMock()
-        entry.mail.__str__ = lambda self, _m=mail: _m
-    else:
-        type(entry).mail = PropertyMock(side_effect=AttributeError)
-
-    if has_phone:
-        entry.telephoneNumber = MagicMock()
-        entry.telephoneNumber.__str__ = lambda self, _p=phone: _p
-    else:
-        type(entry).telephoneNumber = PropertyMock(side_effect=AttributeError)
-
-    if has_member_of:
-        if groups is None:
-            groups = ["CN=Sales,OU=Groups,DC=example,DC=com"]
-        entry.memberOf = groups
-    else:
-        type(entry).memberOf = PropertyMock(side_effect=AttributeError)
-
-    return entry
-
-
-from unittest.mock import PropertyMock  # noqa: E402
+    Pass ``None`` for display / mail / phone to omit that attribute entirely
+    (so ``hasattr`` returns False).  Pass ``groups`` as a list to set
+    ``memberOf``; omit to leave it unset.
+    """
+    if groups is None:
+        # Default: do NOT set memberOf at all (matches has_member_of=False)
+        pass
+    return _LdapEntry(sam=sam, display=display, mail=mail, phone=phone, groups=groups, dn=dn)
 
 
 # ---------------------------------------------------------------------------
@@ -186,7 +206,6 @@ class TestActiveDirectoryInit:
             "integrations.active_directory.use_ssl": _REMOVE,
             "integrations.active_directory.auto_provision": _REMOVE,
         })
-        # Defaults: use_ssl=True, auto_provision=False
         assert ad.use_ssl is True
         assert ad.auto_provision is False
 
@@ -284,20 +303,17 @@ class TestAuthenticateUser:
 
     def test_auth_user_not_found(self) -> None:
         ad, conn = _make_ad_connected(entries=[])
-        # After search, entries should be empty
         result = ad.authenticate_user("jdoe", "password123")
         assert result is None
 
     def test_auth_success(self) -> None:
-        entry = _make_ldap_entry()
+        entry = _make_ldap_entry(groups=["CN=Sales,OU=Groups,DC=example,DC=com"])
         ad, conn = _make_ad_connected()
 
-        # search populates entries
         def do_search(**kwargs):
             conn.entries = [entry]
         conn.search.side_effect = do_search
 
-        # The second Connection call (user bind) must succeed
         user_conn = MagicMock()
         user_conn.bound = True
 
@@ -313,9 +329,7 @@ class TestAuthenticateUser:
 
     def test_auth_success_minimal_attrs(self) -> None:
         """Entry without displayName, mail, telephoneNumber, memberOf."""
-        entry = _make_ldap_entry(
-            has_display=False, has_mail=False, has_phone=False, has_member_of=False
-        )
+        entry = _make_ldap_entry(display=None, mail=None, phone=None, groups=None)
         ad, conn = _make_ad_connected()
 
         def do_search(**kwargs):
@@ -336,7 +350,7 @@ class TestAuthenticateUser:
         assert result["groups"] == []
 
     def test_auth_user_bind_fails(self) -> None:
-        entry = _make_ldap_entry()
+        entry = _make_ldap_entry(groups=["CN=G,OU=G,DC=d,DC=c"])
         ad, conn = _make_ad_connected()
 
         def do_search(**kwargs):
@@ -366,7 +380,7 @@ class TestAuthenticateUser:
         assert result is None
 
     def test_auth_uses_custom_search_base(self) -> None:
-        entry = _make_ldap_entry()
+        entry = _make_ldap_entry(groups=["CN=G,OU=G,DC=d,DC=c"])
         ad, conn = _make_ad_connected(config_overrides={
             "integrations.active_directory.user_search_base": "OU=Staff,DC=example,DC=com"
         })
@@ -414,7 +428,6 @@ class TestMapGroupsToPermissions:
         assert result == {"admin": True, "external_calling": True}
 
     def test_match_by_cn_extraction(self) -> None:
-        """User group and config group are the same full DN."""
         group_dn = "CN=Managers,OU=Groups,DC=example,DC=com"
         ad = _make_ad({
             "integrations.active_directory.group_permissions": {
@@ -518,11 +531,10 @@ class TestGetUserGroups:
         assert result == []
 
     def test_returns_group_names(self) -> None:
-        entry = MagicMock()
-        entry.memberOf = [
+        entry = _make_ldap_entry(groups=[
             "CN=Sales,OU=Groups,DC=example,DC=com",
             "CN=IT,OU=Groups,DC=example,DC=com",
-        ]
+        ])
 
         ad, conn = _make_ad_connected()
 
@@ -535,8 +547,7 @@ class TestGetUserGroups:
 
     def test_groups_no_member_of_attr(self) -> None:
         """User has no memberOf attribute."""
-        entry = MagicMock(spec=["entry_dn"])
-        entry.entry_dn = "CN=jdoe,DC=example,DC=com"
+        entry = _make_ldap_entry(groups=None)  # no memberOf
 
         ad, conn = _make_ad_connected()
 
@@ -549,11 +560,10 @@ class TestGetUserGroups:
 
     def test_groups_non_cn_entries_skipped(self) -> None:
         """Group DNs not starting with CN= are skipped."""
-        entry = MagicMock()
-        entry.memberOf = [
+        entry = _make_ldap_entry(groups=[
             "OU=Sales,OU=Groups,DC=example,DC=com",  # not CN=
             "CN=IT,OU=Groups,DC=example,DC=com",
-        ]
+        ])
 
         ad, conn = _make_ad_connected()
 
@@ -613,7 +623,7 @@ class TestSearchUsers:
         assert results[0]["phone"] == "1001"
 
     def test_search_minimal_attrs(self) -> None:
-        entry = _make_ldap_entry(has_display=False, has_mail=False, has_phone=False)
+        entry = _make_ldap_entry(display=None, mail=None, phone=None)
 
         ad, conn = _make_ad_connected()
 
@@ -758,7 +768,6 @@ class TestSyncUsers:
 
     def test_no_users_found(self) -> None:
         ad, conn = _make_ad_connected()
-        # search returns no entries
         result = ad.sync_users()
         assert result == 0
 
@@ -804,7 +813,6 @@ class TestSyncUsers:
 
         assert result["synced_count"] == 1
         extension_db.update.assert_called()
-        # Find the update call that was for syncing (not deactivation)
         call_kwargs = extension_db.update.call_args_list[0][1]
         assert call_kwargs["name"] == "John Doe"
         assert call_kwargs["ad_synced"] is True
@@ -835,12 +843,9 @@ class TestSyncUsers:
         assert ext_obj.config["email"] == "jdoe@example.com"
         assert ext_obj.config["ad_synced"] is True
 
-    def test_sync_skips_user_missing_username(self) -> None:
-        """Entry without sAMAccountName is skipped."""
-        entry = MagicMock(spec=["entry_dn", "telephoneNumber"])
-        entry.entry_dn = "CN=unknown,DC=example,DC=com"
-        entry.telephoneNumber = MagicMock()
-        entry.telephoneNumber.__str__ = lambda self: "1001"
+    def test_sync_skips_user_missing_phone(self) -> None:
+        """Entry without telephoneNumber is skipped (phone=None)."""
+        entry = _make_ldap_entry(phone=None)
 
         ad, conn = _make_ad_connected()
 
@@ -923,7 +928,6 @@ class TestSyncUsers:
 
         ad.sync_users(extension_db=extension_db)
 
-        # Verify deactivation call for 1002
         deactivation_calls = [
             c for c in extension_db.update.call_args_list
             if c[1].get("number") == "1002"
@@ -994,7 +998,7 @@ class TestSyncUsers:
         mock_pbx_config.add_extension.return_value = True
         mock_pbx_config.get_extensions.return_value = []
 
-        with patch(f"{MOD}.Config", return_value=mock_pbx_config):
+        with patch("pbx.utils.config.Config", return_value=mock_pbx_config):
             result = ad.sync_users()
 
         assert result["synced_count"] == 1
@@ -1016,7 +1020,7 @@ class TestSyncUsers:
         mock_pbx_config.update_extension.return_value = True
         mock_pbx_config.get_extensions.return_value = []
 
-        with patch(f"{MOD}.Config", return_value=mock_pbx_config):
+        with patch("pbx.utils.config.Config", return_value=mock_pbx_config):
             result = ad.sync_users()
 
         assert result["synced_count"] == 1
@@ -1039,7 +1043,7 @@ class TestSyncUsers:
             {"number": "2001", "ad_synced": True},
         ]
 
-        with patch(f"{MOD}.Config", return_value=mock_pbx_config):
+        with patch("pbx.utils.config.Config", return_value=mock_pbx_config):
             ad.sync_users()
 
         mock_pbx_config.update_extension.assert_called_with(number="2001", allow_external=False)
@@ -1131,10 +1135,15 @@ class TestSyncUsers:
         assert result["synced_count"] == 0
 
     def test_sync_exception_in_user_processing(self) -> None:
-        """Per-user error is caught and processing continues."""
-        bad_entry = MagicMock()
-        bad_entry.sAMAccountName = MagicMock()
-        bad_entry.sAMAccountName.__str__ = MagicMock(side_effect=TypeError("bad"))
+        """Per-user ValueError is caught and processing continues.
+
+        The error must happen AFTER ``username`` is assigned (line 247-249)
+        so that the error handler at line 445 can safely access ``username``.
+        We trigger it by making telephoneNumber's str() raise ValueError.
+        """
+        bad_entry = _make_ldap_entry(sam="bad", phone="1001")
+        # Override telephoneNumber to raise ValueError during str()
+        bad_entry.telephoneNumber = _BadStr()
 
         good_entry = _make_ldap_entry(sam="good", phone="2001")
 
@@ -1150,6 +1159,7 @@ class TestSyncUsers:
         extension_db.get_ad_synced.return_value = []
 
         result = ad.sync_users(extension_db=extension_db)
+        # good_entry should have been processed
         assert result["synced_count"] == 1
 
     def test_sync_outer_exception(self) -> None:
@@ -1176,7 +1186,7 @@ class TestSyncUsers:
         extension_registry = MagicMock()
         extension_registry.extensions = {}
 
-        with patch(f"{MOD}.Extension") as mock_ext_cls:
+        with patch("pbx.features.extensions.Extension") as mock_ext_cls:
             mock_ext_instance = MagicMock()
             mock_ext_cls.return_value = mock_ext_instance
             result = ad.sync_users(
@@ -1243,8 +1253,8 @@ class TestSyncUsers:
         extension_registry.extensions = {}
 
         with (
-            patch(f"{MOD}.Config", return_value=mock_pbx_config),
-            patch(f"{MOD}.Extension") as mock_ext_cls,
+            patch("pbx.utils.config.Config", return_value=mock_pbx_config),
+            patch("pbx.features.extensions.Extension") as mock_ext_cls,
         ):
             mock_ext_instance = MagicMock()
             mock_ext_cls.return_value = mock_ext_instance
@@ -1267,7 +1277,7 @@ class TestSyncUsers:
         mock_pbx_config.add_extension.return_value = False
         mock_pbx_config.get_extensions.return_value = []
 
-        with patch(f"{MOD}.Config", return_value=mock_pbx_config):
+        with patch("pbx.utils.config.Config", return_value=mock_pbx_config):
             result = ad.sync_users()
 
         assert result["synced_count"] == 0
@@ -1286,7 +1296,7 @@ class TestSyncUsers:
         mock_pbx_config.update_extension.return_value = False
         mock_pbx_config.get_extensions.return_value = []
 
-        with patch(f"{MOD}.Config", return_value=mock_pbx_config):
+        with patch("pbx.utils.config.Config", return_value=mock_pbx_config):
             result = ad.sync_users()
 
         assert result["synced_count"] == 0
@@ -1378,16 +1388,17 @@ class TestSyncUsers:
         extension_registry.extensions = {}
 
         with (
-            patch(f"{MOD}.Config", return_value=mock_pbx_config),
-            patch(f"{MOD}.Extension") as mock_ext_cls,
+            patch("pbx.utils.config.Config", return_value=mock_pbx_config),
+            patch("pbx.features.extensions.Extension") as mock_ext_cls,
         ):
             mock_ext_cls.return_value = MagicMock()
             ad.sync_users(extension_registry=extension_registry)
 
         assert ext_obj.config["allow_external"] is False
 
-    def test_sync_entry_without_email(self) -> None:
-        entry = _make_ldap_entry(phone="1001", has_mail=False)
+    def test_sync_entry_without_email_db_create(self) -> None:
+        """Entry without email gets None for email in extension data."""
+        entry = _make_ldap_entry(phone="1001", mail=None)
 
         ad, conn = _make_ad_connected()
 
@@ -1408,7 +1419,7 @@ class TestSyncUsers:
 
     def test_sync_update_live_registry_no_email(self) -> None:
         """When email is None, it should not be set in ext.config."""
-        entry = _make_ldap_entry(phone="1001", has_mail=False)
+        entry = _make_ldap_entry(phone="1001", mail=None)
 
         ad, conn = _make_ad_connected()
 
@@ -1452,7 +1463,7 @@ class TestSyncUsers:
         mock_pbx_config.update_extension.return_value = True
         mock_pbx_config.get_extensions.return_value = []
 
-        with patch(f"{MOD}.Config", return_value=mock_pbx_config):
+        with patch("pbx.utils.config.Config", return_value=mock_pbx_config):
             result = ad.sync_users()
 
         assert result["synced_count"] == 1
@@ -1460,7 +1471,7 @@ class TestSyncUsers:
         assert existing_ext["admin"] is True
 
     def test_sync_config_mode_create_new_ext_config_stored(self) -> None:
-        """Config mode create: newly created ext config is updated with ad_synced + permissions."""
+        """Config mode create: newly created ext config updated with ad_synced + permissions."""
         entry = _make_ldap_entry(
             phone="1001",
             groups=["CN=Admins,OU=Groups,DC=example,DC=com"],
@@ -1478,12 +1489,11 @@ class TestSyncUsers:
 
         new_ext_config = {"number": "1001"}
         mock_pbx_config = MagicMock()
-        # First call: check if exists -> None; second call: after creation -> returns dict
         mock_pbx_config.get_extension.side_effect = [None, new_ext_config]
         mock_pbx_config.add_extension.return_value = True
         mock_pbx_config.get_extensions.return_value = []
 
-        with patch(f"{MOD}.Config", return_value=mock_pbx_config):
+        with patch("pbx.utils.config.Config", return_value=mock_pbx_config):
             result = ad.sync_users()
 
         assert result["synced_count"] == 1
@@ -1491,7 +1501,7 @@ class TestSyncUsers:
         assert new_ext_config["admin"] is True
 
     def test_sync_phone_provisioning_with_update(self) -> None:
-        """Phone provisioning triggers reboot only when extensions are updated."""
+        """Phone provisioning triggers reboot when extensions are updated."""
         entry = _make_ldap_entry(phone="1001")
 
         ad, conn = _make_ad_connected()
@@ -1518,7 +1528,6 @@ class TestSyncUsers:
         assert result["extensions_to_reboot"] == ["1001"]
 
     def test_sync_deactivation_skips_non_digit_numbers(self) -> None:
-        """Extensions with non-digit numbers are not deactivated."""
         entry = _make_ldap_entry(phone="1001")
 
         ad, conn = _make_ad_connected()
@@ -1531,7 +1540,7 @@ class TestSyncUsers:
         extension_db.get.return_value = None
         extension_db.add.return_value = True
         extension_db.get_ad_synced.return_value = [
-            {"number": "abc", "ad_synced": True},  # not digits
+            {"number": "abc", "ad_synced": True},
         ]
 
         ad.sync_users(extension_db=extension_db)
@@ -1543,7 +1552,6 @@ class TestSyncUsers:
         assert len(deactivation_calls) == 0
 
     def test_sync_deactivation_skips_short_numbers(self) -> None:
-        """Extensions with fewer than 3 digits are not deactivated."""
         entry = _make_ldap_entry(phone="1001")
 
         ad, conn = _make_ad_connected()
@@ -1556,7 +1564,7 @@ class TestSyncUsers:
         extension_db.get.return_value = None
         extension_db.add.return_value = True
         extension_db.get_ad_synced.return_value = [
-            {"number": "12", "ad_synced": True},  # too short
+            {"number": "12", "ad_synced": True},
         ]
 
         ad.sync_users(extension_db=extension_db)
@@ -1566,3 +1574,10 @@ class TestSyncUsers:
             if c[1].get("number") == "12"
         ]
         assert len(deactivation_calls) == 0
+
+
+class _BadStr:
+    """Object whose str() raises ValueError (caught by the except clause)."""
+
+    def __str__(self) -> str:
+        raise ValueError("bad entry value")

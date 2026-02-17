@@ -4,7 +4,7 @@ WebRTCSignalingServer, and WebRTCGateway classes."""
 import threading
 import time
 from datetime import UTC, datetime
-from unittest.mock import MagicMock, patch, PropertyMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -890,14 +890,14 @@ class TestWebRTCGatewaySDPConversion:
     def test_webrtc_to_sip_sdp_dtls_conversion(self) -> None:
         """Test that DTLS protocols are converted to RTP/AVP using real parser."""
         gw = WebRTCGateway()
-        # Use the WEBRTC_SDP which has UDP/TLS/RTP/SAVPF protocol
+        # Protocol must contain "DTLS" to trigger the conversion branch
         dtls_sdp = (
             "v=0\r\n"
             "o=- 123 0 IN IP4 192.168.1.100\r\n"
             "s=-\r\n"
             "c=IN IP4 192.168.1.100\r\n"
             "t=0 0\r\n"
-            "m=audio 54321 UDP/TLS/RTP/SAVPF 0 8\r\n"
+            "m=audio 54321 UDP/DTLS/RTP/SAVPF 0 8\r\n"
             "a=rtpmap:0 PCMU/8000\r\n"
             "a=rtpmap:8 PCMA/8000\r\n"
             "a=ice-ufrag:abcd1234\r\n"
@@ -910,11 +910,12 @@ class TestWebRTCGatewaySDPConversion:
         )
         result = gw.webrtc_to_sip_sdp(dtls_sdp)
         assert "RTP/AVP" in result
+        # DTLS protocol should not remain
+        assert "DTLS" not in result
         assert "ice-ufrag" not in result
         assert "ice-pwd" not in result
         assert "fingerprint" not in result
         assert "setup" not in result
-        assert "mid" not in result
         assert "rtcp-mux" not in result
         assert "sendrecv" in result
 

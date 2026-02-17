@@ -519,8 +519,11 @@ class TestRouteCallDialplanCheck:
 class TestRouteCallSDP:
     """Tests for SDP parsing in route_call."""
 
+    @patch("pbx.sip.sdp.SDPBuilder.build_audio_sdp", return_value="v=0\r\n")
     @patch("pbx.sip.sdp.SDPSession")
-    def test_caller_sdp_parsed_with_body(self, mock_sdp_cls: MagicMock) -> None:
+    def test_caller_sdp_parsed_with_body(
+        self, mock_sdp_cls: MagicMock, mock_build_sdp: MagicMock
+    ) -> None:
         pbx = _make_pbx_core()
 
         sdp_obj = MagicMock()
@@ -559,8 +562,11 @@ class TestRouteCallSDP:
 
         assert result is True
 
+    @patch("pbx.sip.sdp.SDPBuilder.build_audio_sdp", return_value="v=0\r\n")
     @patch("pbx.sip.sdp.SDPSession")
-    def test_sdp_with_no_audio_info(self, mock_sdp_cls: MagicMock) -> None:
+    def test_sdp_with_no_audio_info(
+        self, mock_sdp_cls: MagicMock, mock_build_sdp: MagicMock
+    ) -> None:
         pbx = _make_pbx_core()
 
         sdp_obj = MagicMock()
@@ -590,8 +596,11 @@ class TestRouteCallSDP:
 class TestRouteCallRTPRelay:
     """Tests for RTP relay allocation and endpoint setup."""
 
+    @patch("pbx.sip.sdp.SDPBuilder.build_audio_sdp", return_value="v=0\r\n")
     @patch("pbx.sip.sdp.SDPSession")
-    def test_rtp_relay_allocated_and_endpoint_set(self, mock_sdp_cls: MagicMock) -> None:
+    def test_rtp_relay_allocated_and_endpoint_set(
+        self, mock_sdp_cls: MagicMock, mock_build_sdp: MagicMock
+    ) -> None:
         pbx = _make_pbx_core()
 
         sdp_obj = MagicMock()
@@ -1243,10 +1252,10 @@ class TestAnswerCallForVoicemail:
 class TestHandleNoAnswer:
     """Tests for _handle_no_answer() method."""
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_call_not_found(
         self,
         mock_call_state: MagicMock,
@@ -1262,10 +1271,10 @@ class TestHandleNoAnswer:
 
         pbx.logger.warning.assert_called()
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_call_already_connected(
         self,
         mock_call_state: MagicMock,
@@ -1284,10 +1293,10 @@ class TestHandleNoAnswer:
 
         pbx.logger.debug.assert_called()
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_already_routed_to_voicemail(
         self,
         mock_call_state: MagicMock,
@@ -1306,10 +1315,10 @@ class TestHandleNoAnswer:
 
         pbx.logger.debug.assert_called()
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_routes_to_voicemail(
         self,
         mock_call_state: MagicMock,
@@ -1361,10 +1370,10 @@ class TestHandleNoAnswer:
         router._send_cancel_to_callee.assert_called_once()
         router._answer_call_for_voicemail.assert_called_once()
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_answer_fails_returns_early(
         self,
         mock_call_state: MagicMock,
@@ -1388,10 +1397,10 @@ class TestHandleNoAnswer:
         router._answer_call_for_voicemail.assert_called_once()
         mock_rtp_player_cls.assert_not_called()
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_no_caller_rtp_ends_call(
         self,
         mock_call_state: MagicMock,
@@ -1417,10 +1426,10 @@ class TestHandleNoAnswer:
 
         pbx.end_call.assert_called_once_with("call-1")
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_player_start_fails(
         self,
         mock_call_state: MagicMock,
@@ -1465,10 +1474,10 @@ class TestHandleNoAnswer:
 
         pbx.logger.warning.assert_called()
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_recorder_start_fails(
         self,
         mock_call_state: MagicMock,
@@ -1511,10 +1520,10 @@ class TestHandleNoAnswer:
 
         pbx.end_call.assert_called_once_with("call-1")
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_with_custom_greeting(
         self,
         mock_call_state: MagicMock,
@@ -1566,10 +1575,10 @@ class TestHandleNoAnswer:
         mock_player.play_file.assert_called_once_with("/tmp/custom_greeting.wav")
         mock_player.play_beep.assert_called_once_with(frequency=1000, duration_ms=500)
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_custom_greeting_file_not_found_falls_back(
         self,
         mock_call_state: MagicMock,
@@ -1621,10 +1630,10 @@ class TestHandleNoAnswer:
 
         mock_get_prompt.assert_called_once_with("leave_message")
 
-    @patch("pbx.core.call_router.get_prompt_audio")
-    @patch("pbx.core.call_router.RTPRecorder")
-    @patch("pbx.core.call_router.RTPPlayer")
-    @patch("pbx.core.call_router.CallState")
+    @patch("pbx.utils.audio.get_prompt_audio")
+    @patch("pbx.rtp.handler.RTPRecorder")
+    @patch("pbx.rtp.handler.RTPPlayer")
+    @patch("pbx.core.call.CallState")
     def test_no_answer_greeting_oserror(
         self,
         mock_call_state: MagicMock,

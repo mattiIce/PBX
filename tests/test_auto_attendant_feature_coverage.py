@@ -539,8 +539,15 @@ class TestAutoAttendantDTMF:
         from pbx.features.auto_attendant import AAState
 
         session = self._start_session(auto_attendant)
-        for _ in range(3):
-            result = auto_attendant.handle_dtmf(session, "7")
+        # First invalid attempt -> retry_count 1, state INVALID
+        auto_attendant.handle_dtmf(session, "7")
+        # Any key in INVALID state returns to menu
+        auto_attendant.handle_dtmf(session, "1")
+        # Second invalid attempt -> retry_count 2, state INVALID
+        auto_attendant.handle_dtmf(session, "7")
+        auto_attendant.handle_dtmf(session, "1")
+        # Third invalid attempt -> retry_count 3 >= max_retries -> transfer
+        result = auto_attendant.handle_dtmf(session, "7")
 
         assert result["action"] == "transfer"
         assert result["destination"] == "1001"
@@ -889,7 +896,7 @@ class TestGeneratePrompts:
 
         output_dir = str(tmp_path / "prompts")
 
-        with patch("pbx.features.auto_attendant.generate_voice_prompt") as mock_gen:
+        with patch("pbx.utils.audio.generate_voice_prompt") as mock_gen:
             mock_gen.return_value = b"fake wav data"
             generate_auto_attendant_prompts(output_dir)
 
@@ -901,7 +908,7 @@ class TestGeneratePrompts:
 
         output_dir = str(tmp_path / "prompts")
 
-        with patch("pbx.features.auto_attendant.generate_voice_prompt") as mock_gen:
+        with patch("pbx.utils.audio.generate_voice_prompt") as mock_gen:
             mock_gen.side_effect = OSError("generation failed")
             # Should not raise
             generate_auto_attendant_prompts(output_dir)
