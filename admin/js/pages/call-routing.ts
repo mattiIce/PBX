@@ -273,7 +273,7 @@ export async function saveFMFMConfig(event: Event): Promise<void> {
 
     const destinations: FMFMDestination[] = destNumbers.map((input, idx) => ({
         number: input.value,
-        ring_time: parseInt(destRingTimes[idx].value) || 20
+        ring_time: parseInt(destRingTimes[idx]?.value ?? "20") || 20
     })).filter(d => d.number);
 
     if (destinations.length === 0) {
@@ -1246,36 +1246,36 @@ export async function cancelCallback(callbackId: string): Promise<void> {
 // Backward compatibility - register with window
 // ---------------------------------------------------------------------------
 
-window.loadFMFMExtensions = loadFMFMExtensions;
-window.showAddFMFMModal = showAddFMFMModal;
-window.closeAddFMFMModal = closeAddFMFMModal;
-window.addFMFMDestinationRow = addFMFMDestinationRow;
-window.saveFMFMConfig = saveFMFMConfig;
-window.editFMFMConfig = editFMFMConfig;
-window.deleteFMFMConfig = deleteFMFMConfig;
-window.getScheduleDescription = getScheduleDescription;
-window.showAddTimeRuleModal = showAddTimeRuleModal;
-window.closeAddTimeRuleModal = closeAddTimeRuleModal;
-window.loadTimeRoutingRules = loadTimeRoutingRules;
-window.saveTimeRoutingRule = saveTimeRoutingRule;
-window.deleteTimeRoutingRule = deleteTimeRoutingRule;
-window.showAddWebhookModal = showAddWebhookModal;
-window.closeAddWebhookModal = closeAddWebhookModal;
-window.loadWebhooks = loadWebhooks;
-window.addWebhook = addWebhook;
-window.deleteWebhook = deleteWebhook;
-window.loadHotDeskSessions = loadHotDeskSessions;
-window.logoutHotDesk = logoutHotDesk;
-window.getDuration = getDuration;
-window.loadRetentionPolicies = loadRetentionPolicies;
-window.showAddRetentionPolicyModal = showAddRetentionPolicyModal;
-window.closeAddRetentionPolicyModal = closeAddRetentionPolicyModal;
-window.addRetentionPolicy = addRetentionPolicy;
-window.deleteRetentionPolicy = deleteRetentionPolicy;
-window.loadCallbackQueue = loadCallbackQueue;
-window.showRequestCallbackModal = showRequestCallbackModal;
-window.closeRequestCallbackModal = closeRequestCallbackModal;
-window.requestCallback = requestCallback;
-window.startCallback = startCallback;
-window.completeCallback = completeCallback;
-window.cancelCallback = cancelCallback;
+(window as any).loadFMFMExtensions = loadFMFMExtensions;
+(window as any).showAddFMFMModal = showAddFMFMModal;
+(window as any).closeAddFMFMModal = closeAddFMFMModal;
+(window as any).addFMFMDestinationRow = addFMFMDestinationRow;
+(window as any).saveFMFMConfig = saveFMFMConfig;
+(window as any).editFMFMConfig = editFMFMConfig;
+(window as any).deleteFMFMConfig = deleteFMFMConfig;
+(window as any).getScheduleDescription = getScheduleDescription;
+(window as any).showAddTimeRuleModal = showAddTimeRuleModal;
+(window as any).closeAddTimeRuleModal = closeAddTimeRuleModal;
+(window as any).loadTimeRoutingRules = loadTimeRoutingRules;
+(window as any).saveTimeRoutingRule = saveTimeRoutingRule;
+(window as any).deleteTimeRoutingRule = deleteTimeRoutingRule;
+(window as any).showAddWebhookModal = showAddWebhookModal;
+(window as any).closeAddWebhookModal = closeAddWebhookModal;
+(window as any).loadWebhooks = loadWebhooks;
+(window as any).addWebhook = addWebhook;
+(window as any).deleteWebhook = deleteWebhook;
+(window as any).loadHotDeskSessions = loadHotDeskSessions;
+(window as any).logoutHotDesk = logoutHotDesk;
+(window as any).getDuration = getDuration;
+(window as any).loadRetentionPolicies = loadRetentionPolicies;
+(window as any).showAddRetentionPolicyModal = showAddRetentionPolicyModal;
+(window as any).closeAddRetentionPolicyModal = closeAddRetentionPolicyModal;
+(window as any).addRetentionPolicy = addRetentionPolicy;
+(window as any).deleteRetentionPolicy = deleteRetentionPolicy;
+(window as any).loadCallbackQueue = loadCallbackQueue;
+(window as any).showRequestCallbackModal = showRequestCallbackModal;
+(window as any).closeRequestCallbackModal = closeRequestCallbackModal;
+(window as any).requestCallback = requestCallback;
+(window as any).startCallback = startCallback;
+(window as any).completeCallback = completeCallback;
+(window as any).cancelCallback = cancelCallback;

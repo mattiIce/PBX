@@ -435,8 +435,8 @@ class VoicemailBox:
                 WHERE extension_number = {placeholder}
                 ORDER BY created_at DESC
                 """  # nosec B608 - placeholder is safely parameterized
-                self.logger.debug(  # nosec B608 - log statement only
-                    f"  Query: SELECT from voicemail_messages WHERE extension_number = {self.extension_number}"
+                self.logger.debug(
+                    f"  Query: SELECT from voicemail_messages WHERE extension_number = {self.extension_number}"  # nosec B608 - log statement only
                 )
                 rows = self.database.fetch_all(query, (self.extension_number,))
 

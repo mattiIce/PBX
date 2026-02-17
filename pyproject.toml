@@ -339,9 +339,6 @@ skips = [
     "B607",  # start_process_with_partial_path
     "B602",  # subprocess_popen_with_shell_equals_true
     "B605",  # start_process_with_a_shell
-    "B105",  # hardcoded_password_string
-    "B113",  # request_without_timeout
-    "B104",  # hardcoded_bind_all_interfaces
     "B310",  # urllib_urlopen
     "B311",  # random (pseudo-random generators)
 ]
