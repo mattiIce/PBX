@@ -62,7 +62,7 @@ jobs:
 
       - name: Run security scan
         run: |
-          pip install pip-audit
+          uv pip install pip-audit
           bandit -r pbx/ -ll -c pyproject.toml
           pip-audit || true
 

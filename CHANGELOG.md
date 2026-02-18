@@ -35,7 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Geographic redundancy and DNS SRV failover
 - Mobile app support with push notifications (FCM and APNs)
 - Session Border Controller and data residency controls
-- Comprehensive test suite (126 test files) with pytest and Jest
+- Comprehensive test suite (236 test files) with pytest and Jest
 - CI/CD pipelines: tests, code quality, security scanning, production deployment, dependency updates, syntax checks
 - Docker Compose orchestration (PostgreSQL 17 + Redis 7 + PBX)
 - Kubernetes manifests and Terraform IaC

@@ -46,7 +46,7 @@ opuslib>=3.0.1  # Python bindings for Opus codec (requires libopus system librar
 # framework is implemented and will work for SDP negotiation, but actual encoding/
 # decoding requires the speex library and system dependencies. The codec gracefully
 # handles the missing library.
-# To install: First run 'sudo apt-get install libspeex-dev', then 'pip install speex>=0.9.1'
+# To install: First run 'sudo apt-get install libspeex-dev', then 'uv pip install speex>=0.9.1'
 # speex>=0.9.1  # Speex codec support (requires libspeex-dev system library)
 
 # === FREE & OPEN-SOURCE AI/ML INTEGRATION ===
