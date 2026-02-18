@@ -195,20 +195,19 @@ jobs:
         run: python scripts/health_monitor.py --api-url https://pbx.example.com
 
       - name: Notify deployment success
-        uses: 8398a7/action-slack@v3
+        uses: slackapi/slack-github-action@v2
         if: success()
         with:
-          status: custom
-          custom_payload: |
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
             {
-              text: "Production deployment successful",
-              attachments: [{
-                color: 'good',
-                text: `Version: ${{ github.ref_name }}\nEnvironment: Production\nDeployed by: ${{ github.actor }}`
+              "text": "Production deployment successful",
+              "attachments": [{
+                "color": "good",
+                "text": "Version: ${{ github.ref_name }}\nEnvironment: Production\nDeployed by: ${{ github.actor }}"
               }]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   rollback:
     name: Rollback Production
@@ -228,19 +227,18 @@ jobs:
         run: python scripts/smoke_tests.py --api-url https://pbx.example.com
 
       - name: Notify rollback
-        uses: 8398a7/action-slack@v3
+        uses: slackapi/slack-github-action@v2
         with:
-          status: custom
-          custom_payload: |
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
             {
-              text: "Production deployment failed - rolled back",
-              attachments: [{
-                color: 'danger',
-                text: `Version: ${{ github.ref_name }}\nEnvironment: Production\nAttempted by: ${{ github.actor }}`
+              "text": "Production deployment failed - rolled back",
+              "attachments": [{
+                "color": "danger",
+                "text": "Version: ${{ github.ref_name }}\nEnvironment: Production\nAttempted by: ${{ github.actor }}"
               }]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   performance-test:
     name: Performance Testing
@@ -267,7 +265,7 @@ jobs:
         run: python scripts/benchmark_performance.py --save benchmark-results.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: benchmark-results
           path: benchmark-results.json
@@ -295,7 +293,7 @@ jobs:
           output: "trivy-results.sarif"
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: "trivy-results.sarif"
 
@@ -332,7 +330,7 @@ jobs:
           # Add report generation here
 
       - name: Upload compliance report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: compliance-report
           path: compliance-report.json

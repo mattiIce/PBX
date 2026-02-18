@@ -19,7 +19,7 @@ RUN --mount=type=cache,target=/var/cache/apt,sharing=locked \
     libsndfile1-dev
 
 # Install uv for fast dependency resolution
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=ghcr.io/astral-sh/uv:0.10.4 /uv /usr/local/bin/uv
 
 # Create virtual environment
 RUN python -m venv /opt/venv

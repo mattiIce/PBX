@@ -155,7 +155,7 @@ class SetupWizard:
         """Check Python version"""
         self.print_info("Checking Python version...")
         version = sys.version_info
-        if version.major == 3 and version.minor >= 12:
+        if version.major == 3 and version.minor >= 13:
             self.print_success(f"Python {version.major}.{version.minor} detected")
             return True
         self.print_error(f"Python 3.13+ required. Current version: {version.major}.{version.minor}")
