@@ -264,6 +264,12 @@ Per-file overrides:
 - `pbx/features/*`, `pbx/core/*`, `pbx/api/routes/*`, `pbx/api/app.py`, `pbx/api/server.py`, `pbx/api/utils.py`, `pbx/api/license_api.py`, `pbx/api/opensource_integration_api.py`, `pbx/rtp/handler.py`, `pbx/main.py`, `pbx/utils/*`, `pbx/integrations/*`: `PLC0415` ignored (lazy imports intentional)
 - `scripts/*`: `PLC0415`, `PLW1510`, `PT028` ignored
 
+## Known Technical Debt
+
+| Item | File(s) | Description |
+|------|---------|-------------|
+| CSS variable migration | `admin/css/admin.css` | ~150 hardcoded hex color values should be replaced with CSS custom properties from `variables.css`. This would eliminate the large dark-mode override block (~280 lines) at the bottom of the file and enable single-source theming. The modular CSS chain (`main.css` → `variables.css` + `base.css` + `layout.css` + `components.css`) already uses variables. |
+
 ## Deployment
 
 - **Ubuntu setup**: `scripts/setup_ubuntu.py` (automated wizard)

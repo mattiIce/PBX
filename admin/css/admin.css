@@ -1,3 +1,18 @@
+/* ==========================================================================
+   admin.css — Standalone Admin Panel Stylesheet
+
+   TODO(refactor): Migrate hardcoded color values to CSS custom properties
+   from variables.css. This file uses ~60 unique hardcoded hex colors (e.g.
+   #2c3e50, #6c757d, #3b9dd6, #f5f7fa) that duplicate tokens already defined
+   in variables.css. Converting them would:
+     1. Eliminate the large dark-mode override block at the bottom of this file
+     2. Enable theming through a single variables.css change
+     3. Reduce maintenance surface for color consistency
+   The modular CSS chain (main.css → variables.css + base.css + layout.css +
+   components.css) already uses variables — this file is the legacy holdout.
+   Estimated scope: ~150 color value replacements across ~1800 lines.
+   ========================================================================== */
+
 /* Skip Navigation Link (Accessibility) */
 .skip-nav {
     position: absolute;
