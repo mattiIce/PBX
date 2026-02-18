@@ -76,6 +76,9 @@ soundfile>=0.13.1  # Audio file I/O
 imageio-ffmpeg>=0.6.0  # FFmpeg wrapper for Python
 av>=16.1.0  # PyAV - Pythonic binding for FFmpeg
 
+# Data validation (FREE, open source)
+pydantic>=2.12  # Data validation and settings management
+
 # Web interface (FREE, open source)
 flask>=3.1.2  # Web framework
 werkzeug>=3.1.5  # Web framework utilities (Flask dependency) - security updates
