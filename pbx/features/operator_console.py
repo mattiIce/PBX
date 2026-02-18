@@ -226,19 +226,31 @@ class OperatorConsole:
             f"Announcement logged: '{announcement}' for transfer to {target_extension}"
         )
 
-        # Attempt the transfer (the actual SIP transfer would happen in the
-        # call manager)
+        # Attempt the transfer via the PBX core's blind_transfer mechanism
         try:
-            # Resume the call and transfer it
+            # Resume the call from hold before transferring
             call.resume()
-            # The actual transfer would be handled by the SIP server
-            # This is a placeholder for the transfer mechanism
-            call.transfer_target = target_extension
-            self.logger.info(f"Transfer initiated for call {call_id} to {target_extension}")
-            return True
+
+            # Use PBX core's blind_transfer to perform the actual SIP-level transfer.
+            # blind_transfer sends a new INVITE to the target extension, re-points the
+            # RTP relay, and sends BYE to the transferring party (operator).
+            success = self.pbx_core.blind_transfer(call_id, target_extension)
+            if success:
+                self.logger.info(
+                    f"Announced transfer completed for call {call_id} to {target_extension}"
+                )
+            else:
+                self.logger.error(
+                    f"PBX core blind_transfer failed for call {call_id} to {target_extension}"
+                )
+            return success
         except Exception as e:
             self.logger.error(f"Failed to transfer call {call_id}: {e}")
-            call.resume()  # Resume call with operator if transfer fails
+            # Resume call with operator if transfer fails so the caller is not left on hold
+            import contextlib
+
+            with contextlib.suppress(Exception):
+                call.resume()
             return False
 
     def park_and_page(
@@ -286,30 +298,89 @@ class OperatorConsole:
             self.logger.info(f"PAGE: {full_message}")
 
         elif method == "multicast":
-            # Multicast paging to speakers
-            # In production, this would send RTP stream to multicast address
+            # Multicast paging to speakers via UDP RTP multicast
             multicast_addr = self.config.get(
                 "features.operator_console.paging.multicast_address", "224.0.1.1"
             )
             multicast_port = self.config.get(
                 "features.operator_console.paging.multicast_port", 5004
             )
-            self.logger.info(
-                f"Would send multicast page to {multicast_addr}:{multicast_port}: {full_message}"
-            )
+
+            # Use the PBX core's paging system if available for full SIP-based paging
+            if hasattr(self.pbx_core, "paging_system") and self.pbx_core.paging_system.enabled:
+                # Delegate to the paging system which handles SIP INVITE to DAC devices
+                # and RTP audio routing through the paging handler
+                all_call_ext = self.pbx_core.paging_system.all_call_extension
+                page_id = self.pbx_core.paging_system.initiate_page("operator", all_call_ext)
+                if page_id:
+                    self.logger.info(f"Multicast page initiated via paging system: {page_id}")
+                else:
+                    self.logger.warning("Paging system failed to initiate multicast page")
+            else:
+                # Direct multicast: send a UDP packet to the multicast group
+                # so that multicast-capable speakers/paging devices receive the notification
+                import socket
+
+                try:
+                    sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
+                    sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 32)
+                    # Encode the page message as a simple payload for multicast receivers
+                    payload = full_message.encode("utf-8")
+                    sock.sendto(payload, (multicast_addr, multicast_port))
+                    sock.close()
+                    self.logger.info(
+                        f"Sent multicast page to {multicast_addr}:{multicast_port}: {full_message}"
+                    )
+                except OSError as mcast_err:
+                    self.logger.error(f"Failed to send multicast page: {mcast_err}")
 
         elif method == "sip":
-            # SIP-based paging
+            # SIP-based paging via the PBX core's paging handler
             paging_uri = self.config.get(
                 "features.operator_console.paging.sip_uri", "sip:page-all@pbx.local"
             )
-            self.logger.info(f"Would send SIP page to {paging_uri}: {full_message}")
+
+            if hasattr(self.pbx_core, "paging_system") and self.pbx_core.paging_system.enabled:
+                # Use the paging system's all-call extension to initiate a SIP page
+                all_call_ext = self.pbx_core.paging_system.all_call_extension
+                page_id = self.pbx_core.paging_system.initiate_page("operator", all_call_ext)
+                if page_id:
+                    self.logger.info(
+                        f"SIP page initiated via paging system to {paging_uri}: {full_message} "
+                        f"(page_id={page_id})"
+                    )
+                else:
+                    self.logger.warning(
+                        f"Paging system failed to initiate SIP page to {paging_uri}"
+                    )
+            else:
+                self.logger.warning(
+                    f"SIP paging requested but paging system is not available: {paging_uri}"
+                )
 
         elif method == "email":
-            # Email notification (if voicemail system with email is configured)
+            # Email notification via the voicemail system's email capabilities
             if hasattr(self.pbx_core, "voicemail_system"):
-                # Would send email notification
-                self.logger.info(f"Would send email page: {full_message}")
+                vm_system = self.pbx_core.voicemail_system
+                # Send page notification to all operator extensions that have email configured
+                sent_count = 0
+                for op_ext in self.operator_extensions:
+                    ext_obj = self.pbx_core.extension_registry.get(op_ext)
+                    if ext_obj and hasattr(ext_obj, "config") and ext_obj.config:
+                        email = ext_obj.config.get("email")
+                        if email and hasattr(vm_system, "send_email_notification"):
+                            try:
+                                vm_system.send_email_notification(
+                                    email, "Page Notification", full_message
+                                )
+                                sent_count += 1
+                            except Exception as email_err:
+                                self.logger.error(
+                                    f"Failed to send email page to {email}: {email_err}"
+                                )
+                self.logger.info(f"Sent email page to {sent_count} operator(s): {full_message}")
+            else:
+                self.logger.warning("Email paging requested but voicemail system is not available")
 
         else:
             self.logger.warning(f"Unknown paging method: {method}")

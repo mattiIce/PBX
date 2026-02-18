@@ -88,8 +88,9 @@ def pcm16_to_g722(pcm_data: bytes, sample_rate: int = 8000) -> bytes:
         bytes: G.722 encoded audio data
 
     Note:
-        This uses the G722Codec class which currently has a stub implementation.
-        For production use with actual G.722 encoding, integrate a native G.722 library.
+        This uses the G722Codec class which provides a complete ITU-T G.722
+        sub-band ADPCM (SB-ADPCM) implementation with proper quantization
+        tables, adaptive prediction, and QMF filtering (see g722_codec_itu.py).
     """
     # Import G.722 codec
     from pbx.features.g722_codec import G722Codec

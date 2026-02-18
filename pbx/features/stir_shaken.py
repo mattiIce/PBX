@@ -275,12 +275,28 @@ class STIRSHAKENManager:
             if not cert_url:
                 return False, payload, "Missing certificate URL"
 
-            # In production, would fetch and validate certificate from URL
-            # For now, use configured certificate
-            if not self.certificate:
-                return False, payload, "No certificate for verification"
+            # Resolve the signing certificate:
+            # 1. Try fetching from the x5u URL (HTTPS or file://)
+            # 2. Fall back to the locally configured certificate
+            verification_cert = self._fetch_certificate_from_url(cert_url)
+            if verification_cert is None:
+                # Fall back to local certificate
+                if not self.certificate:
+                    return False, payload, "No certificate for verification"
+                verification_cert = self.certificate
 
-            public_key = self.certificate.public_key()
+            # Validate certificate expiry
+            now = datetime.now(UTC)
+            if now < verification_cert.not_valid_before_utc:
+                return False, payload, "Certificate not yet valid"
+            if now > verification_cert.not_valid_after_utc:
+                return False, payload, "Certificate has expired"
+
+            # Validate certificate chain against CA bundle if available
+            if self.ca_bundle and not self._validate_certificate_chain(verification_cert):
+                return False, payload, "Certificate chain validation failed"
+
+            public_key = verification_cert.public_key()
 
             try:
                 if header.get("alg") == "RS256":
@@ -481,11 +497,124 @@ class STIRSHAKENManager:
 
         return tn
 
+    def _fetch_certificate_from_url(self, cert_url: str) -> "x509.Certificate | None":
+        """Fetch and parse an X.509 certificate from a URL.
+
+        Supports ``https://`` and ``file://`` URLs.  For HTTPS the request
+        honours a 5-second timeout so that verification does not block
+        indefinitely if the remote server is unreachable.
+
+        Args:
+            cert_url: URL pointing to a PEM-encoded certificate.
+
+        Returns:
+            Parsed certificate or ``None`` on failure.
+        """
+        try:
+            if cert_url.startswith("file://"):
+                # Local file URI — strip scheme and read directly
+                file_path = Path(cert_url.removeprefix("file://"))
+                cert_data = file_path.read_bytes()
+            elif cert_url.startswith("https://"):
+                import ssl
+                import urllib.request
+
+                ssl_ctx = ssl.create_default_context()
+                if self.ca_bundle:
+                    # If we have a custom CA bundle, write it to a temp file for urllib
+                    import tempfile
+
+                    with tempfile.NamedTemporaryFile(suffix=".pem", delete=False) as tmp:
+                        for ca_cert in self.ca_bundle:
+                            tmp.write(ca_cert.public_bytes(serialization.Encoding.PEM))
+                        tmp_path = tmp.name
+                    ssl_ctx.load_verify_locations(tmp_path)
+                    Path(tmp_path).unlink(missing_ok=True)
+
+                req = urllib.request.Request(cert_url)  # nosec B310 - URL is from SIP Identity header x5u
+                with urllib.request.urlopen(req, timeout=5, context=ssl_ctx) as resp:  # nosec B310
+                    cert_data = resp.read()
+            else:
+                self.logger.warning(f"Unsupported certificate URL scheme: {cert_url}")
+                return None
+
+            return x509.load_pem_x509_certificate(cert_data, default_backend())
+
+        except Exception as e:
+            self.logger.warning(f"Failed to fetch certificate from {cert_url}: {e}")
+            return None
+
+    def _validate_certificate_chain(self, cert: "x509.Certificate") -> bool:
+        """Validate a certificate against the loaded CA bundle.
+
+        Checks whether any certificate in the CA bundle is the issuer of
+        *cert* by comparing issuer/subject names and verifying the signature.
+
+        Args:
+            cert: The certificate to validate.
+
+        Returns:
+            ``True`` if the certificate chains to a trusted CA.
+        """
+        if not self.ca_bundle:
+            return True  # No CA bundle — skip chain validation
+
+        for ca_cert in self.ca_bundle:
+            if cert.issuer == ca_cert.subject:
+                try:
+                    ca_public_key = ca_cert.public_key()
+                    if isinstance(ca_public_key, rsa.RSAPublicKey):
+                        ca_public_key.verify(
+                            cert.signature,
+                            cert.tbs_certificate_bytes,
+                            padding.PKCS1v15(),
+                            cert.signature_hash_algorithm,
+                        )
+                    else:
+                        from cryptography.hazmat.primitives.asymmetric import ec
+
+                        ca_public_key.verify(
+                            cert.signature,
+                            cert.tbs_certificate_bytes,
+                            ec.ECDSA(cert.signature_hash_algorithm),
+                        )
+                    return True
+                except (ValueError, TypeError) as e:
+                    self.logger.warning(f"Certificate chain signature check failed: {e}")
+                    return False
+
+        self.logger.warning("Certificate issuer not found in CA bundle")
+        return False
+
     def _get_certificate_url(self) -> str:
-        """Get certificate URL for Identity header"""
-        # In production, this would be a public URL to the certificate
-        # For now, return a placeholder
-        return self.config.get("certificate_url", "https://cert.example.com/cert.pem")
+        """Get certificate URL for Identity header
+
+        Returns the public URL where this service provider's STIR/SHAKEN
+        certificate can be fetched by verifying parties. The URL is read from
+        config key ``certificate_url``.  If that is not set but a local
+        ``certificate_path`` is configured, a ``file://`` URI pointing to
+        that path is returned so that local/test deployments still produce
+        a valid x5u header value.
+
+        Returns:
+            str: HTTPS (or file://) URL to the signing certificate
+        """
+        # Prefer an explicitly configured public URL
+        configured_url = self.config.get("certificate_url")
+        if configured_url:
+            return configured_url
+
+        # Fall back to a file:// URI derived from the local certificate path
+        cert_path = self.config.get("certificate_path")
+        if cert_path:
+            resolved = Path(cert_path).resolve()
+            return resolved.as_uri()
+
+        self.logger.warning(
+            "No certificate_url or certificate_path configured for STIR/SHAKEN; "
+            "Identity header x5u will be empty"
+        )
+        return ""
 
     def _base64url_encode(self, data: bytes) -> str:
         """Base64 URL-safe encode"""

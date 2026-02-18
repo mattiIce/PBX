@@ -10,6 +10,8 @@ from datetime import UTC, datetime
 from pbx.utils.logger import get_logger
 
 try:
+    import requests
+
     REQUESTS_AVAILABLE = True
 except ImportError:
     REQUESTS_AVAILABLE = False
@@ -42,6 +44,9 @@ class JitsiIntegration:
         # Optional: JWT token for secure rooms (if using Jitsi with auth)
         self.app_id = config.get("integrations.jitsi.app_id")
         self.app_secret = config.get("integrations.jitsi.app_secret")
+
+        # Optional API endpoint for self-hosted Jitsi (Oonfigco or Jicofo REST API)
+        self.api_endpoint = config.get("integrations.jitsi.api_endpoint")
 
         # Feature flags
         self.auto_create_rooms = config.get("integrations.jitsi.auto_create_rooms", True)
@@ -302,8 +307,10 @@ class JitsiIntegration:
         """
         Get information about a meeting room
 
-        Note: Public Jitsi doesn't provide room info API.
-        For self-hosted Jitsi, you can query Prosody or Jicofo.
+        When a Jitsi API endpoint is configured (self-hosted Jitsi with Oonfigco or
+        Jicofo REST API), queries the server for live room data including participant
+        count and conference details. Falls back to basic local info when no API
+        endpoint is available (e.g., public Jitsi servers).
 
         Args:
             room_name: Room identifier
@@ -311,12 +318,63 @@ class JitsiIntegration:
         Returns:
             Meeting info dict or None
         """
-        # This is a placeholder - would need Jitsi server API
+        meeting_url = f"{self.server_url}/{room_name}"
+
+        # If an API endpoint is configured, query the Jitsi server for live data
+        if self.api_endpoint and REQUESTS_AVAILABLE:
+            try:
+                # Query the Oonfigco/Jicofo REST API for conference info
+                # Common endpoint: /colibri/conferences or /room/{room_name}
+                api_url = f"{self.api_endpoint.rstrip('/')}/room/{room_name}"
+
+                headers = {"Accept": "application/json"}
+                # Include JWT auth if configured
+                if self.app_id and self.app_secret:
+                    token = self._generate_jwt_token(room_name, "api", is_moderator=True)
+                    if token:
+                        headers["Authorization"] = f"Bearer {token}"
+
+                response = requests.get(api_url, headers=headers, timeout=10)
+
+                if response.status_code == 200:
+                    data = response.json()
+                    self.logger.info(f"Retrieved meeting info for room {room_name} from API")
+                    return {
+                        "room_id": room_name,
+                        "url": meeting_url,
+                        "server": self.server_url,
+                        "participants": data.get("participants", []),
+                        "participant_count": data.get(
+                            "participant_count", len(data.get("participants", []))
+                        ),
+                        "created_at": data.get("created_at"),
+                        "is_active": data.get("is_active", True),
+                        "raw_data": data,
+                    }
+                if response.status_code == 404:
+                    self.logger.info(f"Room {room_name} not found on Jitsi server (not active)")
+                    return {
+                        "room_id": room_name,
+                        "url": meeting_url,
+                        "server": self.server_url,
+                        "is_active": False,
+                        "participant_count": 0,
+                    }
+                self.logger.warning(
+                    f"Failed to query Jitsi API for room {room_name}: "
+                    f"{response.status_code} - {response.text}"
+                )
+            except requests.ConnectionError:
+                self.logger.warning(f"Cannot connect to Jitsi API at {self.api_endpoint}")
+            except (requests.RequestException, KeyError, TypeError, ValueError) as e:
+                self.logger.error(f"Error querying Jitsi API for room {room_name}: {e}")
+
+        # Fallback: return basic info when no API endpoint is configured
+        # or when the API request failed
         return {
             "room_id": room_name,
-            "url": f"{self.server_url}/{room_name}",
+            "url": meeting_url,
             "server": self.server_url,
-            "note": "Room info requires self-hosted Jitsi with API access",
         }
 
     def end_meeting(self, room_name: str) -> bool:

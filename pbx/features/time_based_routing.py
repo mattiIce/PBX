@@ -160,11 +160,107 @@ class TimeBasedRouting:
         return check_time >= start_time or check_time <= end_time
 
     def _is_holiday(self, check_date: datetime) -> bool:
-        """Check if date is a holiday"""
-        # Stub - in production would check against holiday calendar
+        """Check if a date falls on a configured holiday.
+
+        The holiday calendar is read from
+        ``config.features.time_based_routing.holidays``.  The value can be
+        a simple list of date strings **or** a list of dicts with richer
+        matching capabilities.
+
+        Supported formats:
+        - ``"YYYY-MM-DD"`` — matches a specific date (e.g. ``"2026-01-01"``)
+        - ``"MM-DD"`` — matches the same month/day every year
+          (e.g. ``"12-25"`` for Christmas)
+        - dict with ``date`` key — same string formats above, plus an
+          optional ``name`` for logging/display
+        - dict with ``weekday`` (0-6, Monday=0) and optional ``month``
+          (1-12) — matches a recurring weekday, optionally limited to a
+          specific month
+        - dict with ``nth_weekday`` — matches the Nth occurrence of a
+          weekday in a month (e.g. 4th Thursday in November for US
+          Thanksgiving).  Keys: ``month`` (1-12), ``weekday`` (0-6),
+          ``n`` (1-based occurrence)
+
+        Args:
+            check_date: The datetime to check.
+
+        Returns:
+            ``True`` if the date is a configured holiday.
+        """
         holidays = self.config.get("features", {}).get("time_based_routing", {}).get("holidays", [])
-        date_str = check_date.strftime("%Y-%m-%d")
-        return date_str in holidays
+
+        if not holidays:
+            return False
+
+        check_date_str = check_date.strftime("%Y-%m-%d")
+        check_mmdd = check_date.strftime("%m-%d")
+
+        for entry in holidays:
+            # Simple string entry (exact date or recurring MM-DD)
+            if isinstance(entry, str):
+                if entry == check_date_str:
+                    return True
+                # Recurring annual holiday (MM-DD format)
+                if len(entry) == 5 and entry == check_mmdd:
+                    return True
+                continue
+
+            # Dict entry — richer matching
+            if not isinstance(entry, dict):
+                continue
+
+            # Nth weekday in a month (e.g. 4th Thursday in November)
+            if "nth_weekday" in entry or ("n" in entry and "weekday" in entry and "month" in entry):
+                month = entry.get("month")
+                weekday = entry.get("weekday")
+                n = entry.get("n") or entry.get("nth_weekday")
+                if (
+                    month is not None
+                    and weekday is not None
+                    and n is not None
+                    and self._matches_nth_weekday(check_date, int(month), int(weekday), int(n))
+                ):
+                    return True
+                continue
+
+            # Recurring weekday (optionally in a specific month)
+            if (
+                "weekday" in entry
+                and "date" not in entry
+                and check_date.weekday() == entry["weekday"]
+                and ("month" not in entry or check_date.month == entry["month"])
+            ):
+                return True
+            if "weekday" in entry and "date" not in entry:
+                continue
+
+            # Date string inside a dict (with optional name)
+            date_val = entry.get("date", "")
+            if date_val == check_date_str:
+                return True
+            if len(date_val) == 5 and date_val == check_mmdd:
+                return True
+
+        return False
+
+    @staticmethod
+    def _matches_nth_weekday(check_date: datetime, month: int, weekday: int, n: int) -> bool:
+        """Check if *check_date* is the *n*-th occurrence of *weekday* in *month*.
+
+        Args:
+            check_date: Date to test.
+            month: Required month (1-12).
+            weekday: Required weekday (0=Monday .. 6=Sunday).
+            n: 1-based occurrence (e.g. 4 for "fourth").
+
+        Returns:
+            ``True`` if the date matches.
+        """
+        if check_date.month != month or check_date.weekday() != weekday:
+            return False
+        # The Nth weekday falls on days (n-1)*7+1 .. n*7
+        day = check_date.day
+        return (n - 1) * 7 < day <= n * 7
 
     def create_business_hours_rule(
         self,

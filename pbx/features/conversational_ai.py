@@ -399,13 +399,12 @@ class ConversationalAI:
 
     def detect_intent(self, text: str) -> str:
         """
-        Detect user intent from text using NLTK and pattern matching
+        Detect user intent from text using NLTK and pattern matching,
+        with optional external AI provider integration.
 
         Uses free/open-source NLTK for NLP processing, with fallback to pattern matching.
-        In production, can also integrate with:
-        - Rasa for open-source intent classification
-        - OpenAI GPT for semantic understanding
-        - Dialogflow for intent classification
+        When an external provider (OpenAI, Dialogflow, Lex, Azure) is configured,
+        attempts to use that provider first, falling back to local detection on failure.
 
         Args:
             text: User's input text
@@ -413,6 +412,15 @@ class ConversationalAI:
         Returns:
             str: Detected intent
         """
+        # Attempt external provider intent detection if configured
+        if self.provider != "nltk" and hasattr(self, "_provider_config"):
+            try:
+                external_intent = self._detect_intent_via_provider(text)
+                if external_intent:
+                    return external_intent
+            except Exception as e:
+                self.logger.debug(f"External provider intent detection failed: {e}")
+
         text_lower = text.lower()
 
         # Use NLTK for enhanced intent detection if available
@@ -492,12 +500,11 @@ class ConversationalAI:
 
     def extract_entities(self, text: str) -> dict:
         """
-        Extract entities from text using pattern matching
+        Extract entities from text using pattern matching and optional AI provider.
 
-        In production, this should integrate with:
-        - spaCy for Named Entity Recognition
-        - OpenAI GPT for semantic entity extraction
-        - Custom ML models for domain-specific entities
+        Uses regex-based extraction for phone numbers, emails, extensions,
+        departments, times, and numbers. When an external AI provider is
+        configured, enriches results with provider-based entity extraction.
 
         Args:
             text: User's input text
@@ -593,6 +600,289 @@ class ConversationalAI:
             self.logger.error(f"NLTK tokenization error: {e}")
             return text.lower().split()
 
+    def _detect_intent_via_provider(self, text: str) -> str | None:
+        """
+        Detect intent using the configured external AI provider via HTTP API.
+
+        Args:
+            text: User's input text
+
+        Returns:
+            str | None: Detected intent or None if provider call fails
+        """
+        if not hasattr(self, "_provider_config"):
+            return None
+
+        provider_type = self._provider_config["type"]
+
+        try:
+            if provider_type == "openai":
+                return self._detect_intent_openai(text)
+            if provider_type == "dialogflow":
+                return self._detect_intent_dialogflow(text)
+            if provider_type == "lex":
+                return self._detect_intent_lex(text)
+            if provider_type == "azure":
+                return self._detect_intent_azure(text)
+        except Exception as e:
+            self.logger.warning(f"Provider intent detection failed ({provider_type}): {e}")
+
+        return None
+
+    def _detect_intent_openai(self, text: str) -> str | None:
+        """
+        Detect intent using the OpenAI Chat Completions API via urllib.
+
+        Args:
+            text: User's input text
+
+        Returns:
+            str | None: Detected intent or None on failure
+        """
+        import json
+        import urllib.request
+
+        config = self._provider_config
+        url = f"{config['endpoint']}/chat/completions"
+        system_prompt = (
+            "You are an intent classifier for a phone system. "
+            "Classify the user's message into exactly one of these intents: "
+            "emergency_request, transfer_request, sales_department, support_department, "
+            "billing_department, business_hours_inquiry, location_inquiry, pricing_inquiry, "
+            "voicemail_request, callback_request, complaint, cancel_request, gratitude, "
+            "affirmation, negation, general_inquiry. "
+            "Respond with only the intent name, nothing else."
+        )
+        payload = json.dumps(
+            {
+                "model": config["model"],
+                "messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": text},
+                ],
+                "max_tokens": 30,
+                "temperature": 0.0,
+            }
+        ).encode()
+
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {config['api_key']}",
+            },
+            method="POST",
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+
+        intent = result["choices"][0]["message"]["content"].strip().lower()
+        # Validate the intent is one we recognize
+        valid_intents = {
+            "emergency_request",
+            "transfer_request",
+            "sales_department",
+            "support_department",
+            "billing_department",
+            "business_hours_inquiry",
+            "location_inquiry",
+            "pricing_inquiry",
+            "voicemail_request",
+            "callback_request",
+            "complaint",
+            "cancel_request",
+            "gratitude",
+            "affirmation",
+            "negation",
+            "general_inquiry",
+        }
+        if intent in valid_intents:
+            self.logger.debug(f"OpenAI detected intent: {intent}")
+            return intent
+
+        return None
+
+    def _detect_intent_dialogflow(self, text: str) -> str | None:
+        """
+        Detect intent using Google Dialogflow REST API via urllib.
+
+        Args:
+            text: User's input text
+
+        Returns:
+            str | None: Detected intent or None on failure
+        """
+        import json
+        import urllib.request
+        import uuid
+
+        config = self._provider_config
+        session_id = str(uuid.uuid4())
+        url = f"{config['endpoint']}/{session_id}:detectIntent"
+        payload = json.dumps(
+            {
+                "queryInput": {
+                    "text": {
+                        "text": text,
+                        "languageCode": config.get("language_code", "en"),
+                    },
+                },
+            }
+        ).encode()
+
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {config['api_key']}",
+            },
+            method="POST",
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+
+        query_result = result.get("queryResult", {})
+        intent_info = query_result.get("intent", {})
+        intent_name = intent_info.get("displayName", "").strip().lower().replace(" ", "_")
+        if intent_name:
+            self.logger.debug(f"Dialogflow detected intent: {intent_name}")
+            return intent_name
+
+        return None
+
+    def _detect_intent_lex(self, text: str) -> str | None:
+        """
+        Detect intent using Amazon Lex runtime API via urllib.
+
+        Uses the PostText API to send text input and receive intent classification.
+
+        Args:
+            text: User's input text
+
+        Returns:
+            str | None: Detected intent or None on failure
+        """
+        import json
+        import urllib.request
+
+        config = self._provider_config
+        bot_name = config["bot_name"]
+        bot_alias = config["bot_alias"]
+        user_id = "pbx-conversational-ai"
+        url = f"{config['endpoint']}/bot/{bot_name}/alias/{bot_alias}/user/{user_id}/text"
+        payload = json.dumps({"inputText": text}).encode()
+
+        headers = {
+            "Content-Type": "application/json",
+        }
+        # Use API key as bearer token for authentication
+        if config.get("api_key"):
+            headers["Authorization"] = f"Bearer {config['api_key']}"
+
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers=headers,
+            method="POST",
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+
+        intent_name = result.get("intentName", "").strip().lower().replace(" ", "_")
+        if intent_name:
+            self.logger.debug(f"Lex detected intent: {intent_name}")
+            return intent_name
+
+        return None
+
+    def _detect_intent_azure(self, text: str) -> str | None:
+        """
+        Detect intent using Azure Bot Service / LUIS via urllib.
+
+        Args:
+            text: User's input text
+
+        Returns:
+            str | None: Detected intent or None on failure
+        """
+        import json
+        import urllib.request
+
+        config = self._provider_config
+        # Azure LUIS prediction endpoint
+        url = f"{config['endpoint']}"
+        # Append query parameter for the utterance
+        encoded_text = urllib.request.quote(text)
+        prediction_url = f"{url}?query={encoded_text}&verbose=false&show-all-intents=false"
+
+        req = urllib.request.Request(
+            prediction_url,
+            headers={
+                "Ocp-Apim-Subscription-Key": config["api_key"],
+                "Content-Type": "application/json",
+            },
+            method="GET",
+        )
+
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+
+        # Azure LUIS returns prediction.topIntent
+        prediction = result.get("prediction", {})
+        top_intent = prediction.get("topIntent", "").strip().lower().replace(" ", "_")
+        if top_intent and top_intent != "none":
+            self.logger.debug(f"Azure detected intent: {top_intent}")
+            return top_intent
+
+        return None
+
+    def _call_openai_completion(self, messages: list[dict]) -> str | None:
+        """
+        Call OpenAI Chat Completions API to generate a response.
+
+        Args:
+            messages: List of message dicts with 'role' and 'content'
+
+        Returns:
+            str | None: Generated response text or None on failure
+        """
+        import json
+        import urllib.request
+
+        config = self._provider_config
+        url = f"{config['endpoint']}/chat/completions"
+        payload = json.dumps(
+            {
+                "model": config["model"],
+                "messages": messages,
+                "max_tokens": config.get("max_tokens", self.max_tokens),
+                "temperature": config.get("temperature", self.temperature),
+            }
+        ).encode()
+
+        req = urllib.request.Request(
+            url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Authorization": f"Bearer {config['api_key']}",
+            },
+            method="POST",
+        )
+
+        try:
+            with urllib.request.urlopen(req, timeout=15) as resp:
+                result = json.loads(resp.read().decode())
+            return result["choices"][0]["message"]["content"].strip()
+        except Exception as e:
+            self.logger.warning(f"OpenAI completion call failed: {e}")
+            return None
+
     def end_conversation(self, call_id: str) -> dict:
         """
         End a conversation
@@ -684,12 +974,16 @@ class ConversationalAI:
             try:
                 from pbx.utils.encryption import encrypt_data
 
-                # In production, store encrypted API key in database or secure vault
                 encrypted_key = encrypt_data(api_key.encode())
+                self._api_key_encrypted = encrypted_key
                 self.logger.info(f"Configured AI provider: {provider} (API key encrypted)")
 
-                # Store for this session (in production, save to database)
-                self._api_key_encrypted = encrypted_key
+                # Persist encrypted key to database if available
+                if self.db:
+                    try:
+                        self.db.save_provider_config(provider, encrypted_key)
+                    except Exception as db_err:
+                        self.logger.debug(f"Could not persist API key to DB: {db_err}")
             except ImportError:
                 # Fallback if encryption not available
                 self.logger.warning(
@@ -705,30 +999,78 @@ class ConversationalAI:
         if "max_tokens" in kwargs:
             self.max_tokens = kwargs["max_tokens"]
 
-        # Provider-specific initialization
+        # Provider-specific initialization with HTTP-based API clients
         if self.provider == "openai":
             self.logger.info(f"  OpenAI model: {self.model}")
-            # In production: Initialize OpenAI client
-            # import openai
-            # openai.api_key = api_key
+            self._provider_config = {
+                "type": "openai",
+                "api_key": api_key,
+                "model": self.model,
+                "endpoint": kwargs.get("endpoint", "https://api.openai.com/v1"),
+                "max_tokens": self.max_tokens,
+                "temperature": self.temperature,
+            }
+            self.logger.info("  OpenAI HTTP client configured")
 
         elif self.provider == "dialogflow":
-            project_id = kwargs.get("project_id")
+            project_id = kwargs.get("project_id", "")
+            if not project_id:
+                self.logger.warning(
+                    "Dialogflow project_id not set; "
+                    "configure with project_id kwarg before making API calls"
+                )
             self.logger.info(f"  Dialogflow project: {project_id}")
-            # In production: Initialize Dialogflow client
-            # from google.cloud import dialogflow
+            self._provider_config = {
+                "type": "dialogflow",
+                "api_key": api_key,
+                "project_id": project_id,
+                "language_code": kwargs.get("language_code", "en"),
+                "endpoint": kwargs.get(
+                    "endpoint",
+                    f"https://dialogflow.googleapis.com/v2/projects/{project_id}/agent/sessions",
+                ),
+            }
+            self.logger.info("  Dialogflow HTTP client configured")
 
         elif self.provider == "lex":
             region = kwargs.get("region", "us-east-1")
+            bot_name = kwargs.get("bot_name", "")
+            bot_alias = kwargs.get("bot_alias", "$LATEST")
+            if not bot_name:
+                self.logger.warning(
+                    "Amazon Lex bot_name not set; "
+                    "configure with bot_name kwarg before making API calls"
+                )
             self.logger.info(f"  Amazon Lex region: {region}")
-            # In production: Initialize Lex client
-            # import boto3
-            # lex_client = boto3.client('lex-runtime', region_name=region)
+            self._provider_config = {
+                "type": "lex",
+                "api_key": api_key,
+                "secret_key": kwargs.get("secret_key", ""),
+                "region": region,
+                "bot_name": bot_name,
+                "bot_alias": bot_alias,
+                "endpoint": kwargs.get(
+                    "endpoint",
+                    f"https://runtime.lex.{region}.amazonaws.com",
+                ),
+            }
+            self.logger.info("  Amazon Lex HTTP client configured")
 
         elif self.provider == "azure":
-            endpoint = kwargs.get("endpoint")
+            endpoint = kwargs.get("endpoint", "")
+            if not endpoint:
+                self.logger.warning(
+                    "Azure endpoint not set; configure with endpoint kwarg before making API calls"
+                )
             self.logger.info(f"  Azure endpoint: {endpoint}")
-            # In production: Initialize Azure Bot Service client
+            self._provider_config = {
+                "type": "azure",
+                "api_key": api_key,
+                "endpoint": endpoint,
+                "bot_id": kwargs.get("bot_id", ""),
+                "api_version": kwargs.get("api_version", "2022-03-01-preview"),
+            }
+            self.logger.info("  Azure Bot Service HTTP client configured")
 
         self.logger.info(f"AI provider configured: {provider}")
         return True

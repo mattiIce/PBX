@@ -480,9 +480,27 @@ class MobilePushNotifications:
     ) -> dict:
         """Send push notification to all user's devices"""
         if not FIREBASE_AVAILABLE or not self.firebase_app:
-            # Stub mode - log notification
-            self.logger.debug(f"Would send notification to {user_id}: {title}")
-            return {"success": False, "stub_mode": True}
+            # Firebase not configured - store notification for later delivery
+            self.logger.info(
+                f"Push notification queued (Firebase not available): {user_id}: {title}"
+            )
+            self.notification_history.append(
+                {
+                    "user_id": user_id,
+                    "title": title,
+                    "body": body,
+                    "data": data,
+                    "sent_at": datetime.now(UTC),
+                    "delivered": False,
+                    "reason": "firebase_not_configured",
+                }
+            )
+            # Save to database even without Firebase
+            notification_type = data.get("type", "unknown") if data else "unknown"
+            self._save_notification_to_database(
+                user_id, notification_type, title, body, data, False
+            )
+            return {"success": False, "queued": True, "reason": "firebase_not_configured"}
 
         tokens = [t["token"] for t in self.device_tokens.get(user_id, [])]
         if not tokens:

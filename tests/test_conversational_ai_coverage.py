@@ -2229,3 +2229,624 @@ class TestEdgeCases:
 
         ai = ConversationalAI()
         assert ai.detect_intent("how much is it") == "pricing_inquiry"
+
+
+# ---------------------------------------------------------------------------
+# Helper: build a mock urllib response (context-manager compatible)
+# ---------------------------------------------------------------------------
+def _make_urlopen_response(data: dict) -> MagicMock:
+    """Return a MagicMock that behaves like urllib.request.urlopen(...) context manager."""
+    import json
+
+    response_bytes = json.dumps(data).encode()
+    mock_resp = MagicMock()
+    mock_resp.read.return_value = response_bytes
+    mock_resp.__enter__ = MagicMock(return_value=mock_resp)
+    mock_resp.__exit__ = MagicMock(return_value=False)
+    return mock_resp
+
+
+# ---------------------------------------------------------------------------
+# Provider config fixtures used across multiple test classes
+# ---------------------------------------------------------------------------
+_OPENAI_CONFIG = {
+    "type": "openai",
+    "api_key": "sk-test-key",
+    "model": "gpt-4",
+    "endpoint": "https://api.openai.com/v1",
+    "max_tokens": 150,
+    "temperature": 0.7,
+}
+
+_DIALOGFLOW_CONFIG = {
+    "type": "dialogflow",
+    "api_key": "df-test-key",
+    "project_id": "proj-123",
+    "language_code": "en",
+    "endpoint": "https://dialogflow.googleapis.com/v2/projects/proj-123/agent/sessions",
+}
+
+_LEX_CONFIG = {
+    "type": "lex",
+    "api_key": "lex-test-key",
+    "bot_name": "TestBot",
+    "bot_alias": "$LATEST",
+    "endpoint": "https://runtime.lex.us-east-1.amazonaws.com",
+}
+
+_AZURE_CONFIG = {
+    "type": "azure",
+    "api_key": "azure-test-key",
+    "endpoint": (
+        "https://example.cognitiveservices.azure.com"
+        "/luis/prediction/v3.0/apps/app-id/slots/production/predict"
+    ),
+}
+
+
+@pytest.mark.unit
+class TestDetectIntentViaProvider:
+    """Tests for the _detect_intent_via_provider dispatcher method."""
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_returns_none_when_no_provider_config(self, mock_get_logger) -> None:
+        """Returns None when _provider_config attribute is absent."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        # Ensure _provider_config is NOT set
+        assert not hasattr(ai, "_provider_config")
+        assert ai._detect_intent_via_provider("hello") is None
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_routes_to_openai(self, mock_get_logger) -> None:
+        """Dispatches to _detect_intent_openai when type is openai."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        ai._detect_intent_openai = MagicMock(return_value="greeting")
+        result = ai._detect_intent_via_provider("hi there")
+        ai._detect_intent_openai.assert_called_once_with("hi there")
+        assert result == "greeting"
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_routes_to_dialogflow(self, mock_get_logger) -> None:
+        """Dispatches to _detect_intent_dialogflow when type is dialogflow."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai._provider_config = {**_DIALOGFLOW_CONFIG}
+        ai._detect_intent_dialogflow = MagicMock(return_value="support_department")
+        result = ai._detect_intent_via_provider("I need help")
+        ai._detect_intent_dialogflow.assert_called_once_with("I need help")
+        assert result == "support_department"
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_routes_to_lex(self, mock_get_logger) -> None:
+        """Dispatches to _detect_intent_lex when type is lex."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai._provider_config = {**_LEX_CONFIG}
+        ai._detect_intent_lex = MagicMock(return_value="billing_department")
+        result = ai._detect_intent_via_provider("billing question")
+        ai._detect_intent_lex.assert_called_once_with("billing question")
+        assert result == "billing_department"
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_routes_to_azure(self, mock_get_logger) -> None:
+        """Dispatches to _detect_intent_azure when type is azure."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai._provider_config = {**_AZURE_CONFIG}
+        ai._detect_intent_azure = MagicMock(return_value="complaint")
+        result = ai._detect_intent_via_provider("I want to complain")
+        ai._detect_intent_azure.assert_called_once_with("I want to complain")
+        assert result == "complaint"
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_unknown_provider_type_returns_none(self, mock_get_logger) -> None:
+        """Returns None for an unrecognized provider type."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai._provider_config = {"type": "unknown_provider"}
+        assert ai._detect_intent_via_provider("hello") is None
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_exception_in_provider_returns_none(self, mock_get_logger) -> None:
+        """Returns None when the routed provider method raises an exception."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        ai._detect_intent_openai = MagicMock(side_effect=RuntimeError("API down"))
+        result = ai._detect_intent_via_provider("hello")
+        assert result is None
+
+
+@pytest.mark.unit
+class TestDetectIntentOpenAI:
+    """Tests for _detect_intent_openai (OpenAI Chat Completions)."""
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_happy_path_valid_intent(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns a valid intent string when OpenAI returns a recognized intent."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "billing_department"}}]}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai._detect_intent_openai("I have a billing question")
+        assert result == "billing_department"
+        mock_urlopen.assert_called_once()
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_valid_intent_with_whitespace(self, mock_get_logger, mock_urlopen) -> None:
+        """Strips whitespace and lowercases the returned intent."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "  Emergency_Request  "}}]}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai._detect_intent_openai("help")
+        assert result == "emergency_request"
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_invalid_intent_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when OpenAI returns an intent not in the valid set."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "play_music"}}]}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai._detect_intent_openai("play some tunes")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_urlopen_raises_exception(self, mock_get_logger, mock_urlopen) -> None:
+        """Propagates the exception when urlopen fails."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.side_effect = Exception("Connection refused")
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        with pytest.raises(Exception, match="Connection refused"):
+            ai._detect_intent_openai("hello")
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_empty_content_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when OpenAI returns empty content."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "   "}}]}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai._detect_intent_openai("hi")
+        # Empty string after strip is not in valid_intents
+        assert result is None
+
+
+@pytest.mark.unit
+class TestDetectIntentDialogflow:
+    """Tests for _detect_intent_dialogflow (Dialogflow REST API)."""
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_happy_path(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns the intent displayName from Dialogflow queryResult."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {
+                "queryResult": {
+                    "intent": {"displayName": "Transfer Request"},
+                    "fulfillmentText": "Transferring you now.",
+                }
+            }
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_DIALOGFLOW_CONFIG}
+        result = ai._detect_intent_dialogflow("transfer me to sales")
+        assert result == "transfer_request"
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_missing_query_result_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when queryResult is missing from the response."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response({})
+        ai = ConversationalAI()
+        ai._provider_config = {**_DIALOGFLOW_CONFIG}
+        result = ai._detect_intent_dialogflow("what")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_empty_display_name_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when displayName is empty."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"queryResult": {"intent": {"displayName": ""}}}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_DIALOGFLOW_CONFIG}
+        result = ai._detect_intent_dialogflow("hmm")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_urlopen_raises_exception(self, mock_get_logger, mock_urlopen) -> None:
+        """Propagates the exception when urlopen fails."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.side_effect = OSError("Network error")
+        ai = ConversationalAI()
+        ai._provider_config = {**_DIALOGFLOW_CONFIG}
+        with pytest.raises(OSError, match="Network error"):
+            ai._detect_intent_dialogflow("hello")
+
+
+@pytest.mark.unit
+class TestDetectIntentLex:
+    """Tests for _detect_intent_lex (Amazon Lex PostText API)."""
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_happy_path(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns the intentName from Lex PostText response."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"intentName": "Sales Department", "dialogState": "Fulfilled"}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_LEX_CONFIG}
+        result = ai._detect_intent_lex("I want to buy something")
+        assert result == "sales_department"
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_missing_intent_name_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when intentName is missing."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response({"dialogState": "ElicitIntent"})
+        ai = ConversationalAI()
+        ai._provider_config = {**_LEX_CONFIG}
+        result = ai._detect_intent_lex("uh")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_empty_intent_name_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when intentName is empty string."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response({"intentName": ""})
+        ai = ConversationalAI()
+        ai._provider_config = {**_LEX_CONFIG}
+        result = ai._detect_intent_lex("hmm")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_no_api_key_omits_auth_header(self, mock_get_logger, mock_urlopen) -> None:
+        """When api_key is empty, Authorization header is not sent."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response({"intentName": "callback_request"})
+        ai = ConversationalAI()
+        ai._provider_config = {**_LEX_CONFIG, "api_key": ""}
+        result = ai._detect_intent_lex("call me back")
+        assert result == "callback_request"
+        # Verify the Request object passed to urlopen
+        call_args = mock_urlopen.call_args
+        req = call_args[0][0]
+        assert "Authorization" not in req.headers
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_urlopen_raises_exception(self, mock_get_logger, mock_urlopen) -> None:
+        """Propagates the exception when urlopen fails."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.side_effect = TimeoutError("Request timed out")
+        ai = ConversationalAI()
+        ai._provider_config = {**_LEX_CONFIG}
+        with pytest.raises(TimeoutError, match="Request timed out"):
+            ai._detect_intent_lex("hello")
+
+
+@pytest.mark.unit
+class TestDetectIntentAzure:
+    """Tests for _detect_intent_azure (Azure LUIS prediction endpoint)."""
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_happy_path(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns the topIntent from Azure LUIS prediction response."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"prediction": {"topIntent": "Complaint", "intents": {"Complaint": {"score": 0.95}}}}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_AZURE_CONFIG}
+        result = ai._detect_intent_azure("I am very unhappy")
+        assert result == "complaint"
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_top_intent_none_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when topIntent is 'None' (Azure default fallback)."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response({"prediction": {"topIntent": "None"}})
+        ai = ConversationalAI()
+        ai._provider_config = {**_AZURE_CONFIG}
+        result = ai._detect_intent_azure("asdfghjkl")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_missing_prediction_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when prediction key is missing from response."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response({"error": "bad request"})
+        ai = ConversationalAI()
+        ai._provider_config = {**_AZURE_CONFIG}
+        result = ai._detect_intent_azure("test")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_empty_top_intent_returns_none(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when topIntent is an empty string."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response({"prediction": {"topIntent": ""}})
+        ai = ConversationalAI()
+        ai._provider_config = {**_AZURE_CONFIG}
+        result = ai._detect_intent_azure("nothing")
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_urlopen_raises_exception(self, mock_get_logger, mock_urlopen) -> None:
+        """Propagates the exception when urlopen fails."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.side_effect = ConnectionError("DNS resolution failed")
+        ai = ConversationalAI()
+        ai._provider_config = {**_AZURE_CONFIG}
+        with pytest.raises(ConnectionError, match="DNS resolution failed"):
+            ai._detect_intent_azure("hello")
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_spaces_in_intent_converted_to_underscores(self, mock_get_logger, mock_urlopen) -> None:
+        """Spaces in topIntent are replaced with underscores."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"prediction": {"topIntent": "Business Hours Inquiry"}}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_AZURE_CONFIG}
+        result = ai._detect_intent_azure("what are your hours")
+        assert result == "business_hours_inquiry"
+
+
+@pytest.mark.unit
+class TestCallOpenAICompletion:
+    """Tests for _call_openai_completion (OpenAI Chat Completions)."""
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_happy_path_returns_content(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns the response text from OpenAI completions."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "Hello! How can I help you today?"}}]}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        messages = [
+            {"role": "system", "content": "You are a helpful assistant."},
+            {"role": "user", "content": "Hi"},
+        ]
+        result = ai._call_openai_completion(messages)
+        assert result == "Hello! How can I help you today?"
+        mock_urlopen.assert_called_once()
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_strips_whitespace_from_response(self, mock_get_logger, mock_urlopen) -> None:
+        """Strips leading/trailing whitespace from the response."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "  Sure thing!  \n"}}]}
+        )
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai._call_openai_completion([{"role": "user", "content": "ok"}])
+        assert result == "Sure thing!"
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_returns_none_on_exception(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None (does not raise) when urlopen fails."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.side_effect = Exception("Server error")
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai._call_openai_completion([{"role": "user", "content": "hi"}])
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_returns_none_on_malformed_json(self, mock_get_logger, mock_urlopen) -> None:
+        """Returns None when the response JSON is malformed / missing keys."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        # Response missing 'choices' key entirely
+        mock_urlopen.return_value = _make_urlopen_response({"error": "rate limited"})
+        ai = ConversationalAI()
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai._call_openai_completion([{"role": "user", "content": "hi"}])
+        assert result is None
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_uses_config_max_tokens_and_temperature(self, mock_get_logger, mock_urlopen) -> None:
+        """Passes max_tokens and temperature from provider config to the request."""
+        import json
+
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "response"}}]}
+        )
+        custom_config = {**_OPENAI_CONFIG, "max_tokens": 200, "temperature": 0.3}
+        ai = ConversationalAI()
+        ai._provider_config = custom_config
+        ai._call_openai_completion([{"role": "user", "content": "test"}])
+
+        call_args = mock_urlopen.call_args
+        req = call_args[0][0]
+        body = json.loads(req.data.decode())
+        assert body["max_tokens"] == 200
+        assert body["temperature"] == 0.3
+
+
+@pytest.mark.unit
+class TestDetectIntentExternalProviderFallback:
+    """Tests for the external-provider fallback path in detect_intent()."""
+
+    @patch("urllib.request.urlopen")
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_external_provider_result_used_when_configured(
+        self, mock_get_logger, mock_urlopen
+    ) -> None:
+        """detect_intent() returns external provider intent when configured and successful."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        mock_urlopen.return_value = _make_urlopen_response(
+            {"choices": [{"message": {"content": "gratitude"}}]}
+        )
+        ai = ConversationalAI()
+        ai.provider = "openai"
+        ai._provider_config = {**_OPENAI_CONFIG}
+        result = ai.detect_intent("thank you very much")
+        assert result == "gratitude"
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_falls_back_to_local_when_provider_returns_none(self, mock_get_logger) -> None:
+        """Falls back to local pattern matching when external provider returns None."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai.provider = "openai"
+        ai._provider_config = {**_OPENAI_CONFIG}
+        ai._detect_intent_via_provider = MagicMock(return_value=None)
+        result = ai.detect_intent("I need to cancel")
+        # Should fall through to local pattern matching
+        assert result == "cancel_request"
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_falls_back_to_local_when_provider_raises(self, mock_get_logger) -> None:
+        """Falls back to local pattern matching when external provider raises."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai.provider = "openai"
+        ai._provider_config = {**_OPENAI_CONFIG}
+        ai._detect_intent_via_provider = MagicMock(side_effect=RuntimeError("API error"))
+        result = ai.detect_intent("transfer me please")
+        # Should still detect via local patterns
+        assert result == "transfer_request"
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_skips_provider_when_provider_is_nltk(self, mock_get_logger) -> None:
+        """Does not call external provider when self.provider is 'nltk'."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        assert ai.provider == "nltk"
+        ai._detect_intent_via_provider = MagicMock(return_value="emergency_request")
+        result = ai.detect_intent("help")
+        # Should NOT have called _detect_intent_via_provider
+        ai._detect_intent_via_provider.assert_not_called()
+        # Local detection should handle it
+        assert isinstance(result, str)
+
+    @patch(f"{MODULE}.get_logger")
+    @patch(f"{MODULE}.NLTK_AVAILABLE", False)
+    def test_skips_provider_when_no_provider_config(self, mock_get_logger) -> None:
+        """Does not call external provider when _provider_config is absent."""
+        from pbx.features.conversational_ai import ConversationalAI
+
+        ai = ConversationalAI()
+        ai.provider = "openai"  # Non-nltk but no _provider_config
+        assert not hasattr(ai, "_provider_config")
+        # Should not error; should fall through to local detection
+        result = ai.detect_intent("complain")
+        assert isinstance(result, str)

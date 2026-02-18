@@ -29,6 +29,95 @@ def get_calls() -> tuple[Response, int]:
     return send_json({"error": "PBX not initialized"}, 500), 500
 
 
+@calls_bp.route("/api/calls/<call_id>/transfer", methods=["POST"])
+@require_auth
+def transfer_call(call_id: str) -> tuple[Response, int]:
+    """Transfer a call to a new destination.
+
+    Supports three transfer types:
+    - blind: Immediate transfer without consultation
+    - attended: Complete an attended transfer using a consultation call
+    - consultative: Start a consultation call before completing transfer
+
+    Request body:
+        destination: Extension number to transfer to
+        type: Transfer type (blind, attended, consultative). Default: blind
+        consultation_call_id: Required for attended transfer type
+    """
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500), 500
+
+    data = request.get_json()
+    if not data:
+        return send_json({"error": "Request body required"}, 400), 400
+
+    transfer_type = data.get("type", "blind")
+    destination = data.get("destination")
+    consultation_call_id = data.get("consultation_call_id")
+
+    if transfer_type == "attended":
+        if not consultation_call_id:
+            return send_json(
+                {"error": "consultation_call_id required for attended transfer"}, 400
+            ), 400
+        success = pbx_core.attended_transfer(call_id, consultation_call_id)
+    elif transfer_type == "consultative":
+        if not destination:
+            return send_json({"error": "destination required for consultative transfer"}, 400), 400
+        new_call_id = pbx_core.consultation_transfer_start(call_id, destination)
+        if new_call_id:
+            return send_json(
+                {
+                    "success": True,
+                    "consultation_call_id": new_call_id,
+                    "message": f"Consultation call started to {destination}",
+                }
+            ), 200
+        return send_json({"error": "Failed to start consultation transfer"}, 500), 500
+    else:
+        # Default: blind transfer
+        if not destination:
+            return send_json({"error": "destination required"}, 400), 400
+        success = pbx_core.blind_transfer(call_id, destination)
+
+    if success:
+        return send_json(
+            {
+                "success": True,
+                "message": f"Call {call_id} transferred to {destination or 'consultation target'}",
+                "transfer_type": transfer_type,
+            }
+        ), 200
+    return send_json({"error": f"Transfer failed for call {call_id}"}, 500), 500
+
+
+@calls_bp.route("/api/calls/<call_id>/hold", methods=["POST"])
+@require_auth
+def hold_call(call_id: str) -> tuple[Response, int]:
+    """Place a call on hold."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500), 500
+
+    if pbx_core.hold_call(call_id):
+        return send_json({"success": True, "message": f"Call {call_id} placed on hold"}), 200
+    return send_json({"error": f"Failed to hold call {call_id}"}, 404), 404
+
+
+@calls_bp.route("/api/calls/<call_id>/resume", methods=["POST"])
+@require_auth
+def resume_call(call_id: str) -> tuple[Response, int]:
+    """Resume a call from hold."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500), 500
+
+    if pbx_core.resume_call(call_id):
+        return send_json({"success": True, "message": f"Call {call_id} resumed"}), 200
+    return send_json({"error": f"Failed to resume call {call_id}"}, 404), 404
+
+
 @calls_bp.route("/api/statistics", methods=["GET"])
 @require_auth
 def get_statistics() -> tuple[Response, int]:
@@ -131,17 +220,17 @@ def export_analytics() -> Response | tuple[Response, int]:
                 start_date, end_date, None
             )
 
-            # Export to CSV
+            # Export to CSV - create temp file and write data
             with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv") as temp_file:
-                pass
+                csv_path = temp_file.name
 
-            if pbx_core.statistics_engine.export_to_csv(analytics["records"], temp_file.name):
+            if pbx_core.statistics_engine.export_to_csv(analytics["records"], csv_path):
                 # Read the file and send as response
-                with Path(temp_file.name).open("rb") as f:
+                with Path(csv_path).open("rb") as f:
                     csv_data = f.read()
 
                 # Clean up temp file
-                Path(temp_file.name).unlink()
+                Path(csv_path).unlink()
 
                 response = current_app.response_class(
                     response=csv_data,

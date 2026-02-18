@@ -223,26 +223,82 @@ class PagingHandler:
                 )
                 return
 
-            # Note: Full DAC integration requires hardware
-            # When implemented, this will:
-            # 1. Establish SIP connection to the DAC gateway device
-            # 2. set up RTP relay to forward audio from caller to DAC
-            # 3. Handle zone selection (if multi-zone gateway)
-            # 4. Monitor the call and end when caller hangs up
-            # See GitHub issue #XX for hardware integration tracking
+            # Establish SIP connection to the DAC gateway device
+            import uuid
 
-            # For now, log the routing information
-            pbx.logger.info(f"Would route RTP audio to {dac_ip}:{dac_port}")
+            from pbx.sip.message import SIPMessageBuilder
+            from pbx.sip.sdp import SDPBuilder
 
+            server_ip: str = pbx._get_server_ip()
+            sip_port: int = pbx.config.get("server.sip_port", 5060)
+            dac_call_id = str(uuid.uuid4())
+
+            # Build SDP for DAC connection (sendonly - paging is one-way audio)
+            dac_rtp_port: int = call.rtp_ports[1] if call.rtp_ports else 10001
+            dac_sdp = SDPBuilder.build_audio_sdp(server_ip, dac_rtp_port, session_id=dac_call_id)
+
+            # Build INVITE to DAC device
+            invite_msg = SIPMessageBuilder.build_request(
+                method="INVITE",
+                uri=dac_sip_uri,
+                from_addr=f"<sip:paging@{server_ip}>",
+                to_addr=f"<sip:paging@{dac_ip}:{dac_port}>",
+                call_id=dac_call_id,
+                cseq=1,
+                body=dac_sdp,
+            )
+            invite_msg.set_header("Content-type", "application/sdp")
+            invite_msg.set_header("Contact", f"<sip:paging@{server_ip}:{sip_port}>")
+
+            # Add zone selection header if multi-zone DAC
+            zones: list[dict[str, Any]] = page_info.get("zones", [])
+            if zones:
+                zone_id: str | None = zones[0].get("zone_id")
+                if zone_id:
+                    invite_msg.set_header("X-Paging-Zone", zone_id)
+
+            # Send INVITE to DAC device
+            dac_addr: tuple[str, int] = (dac_ip, dac_port)
+            try:
+                pbx.sip_server._send_message(invite_msg.build(), dac_addr)
+                pbx.logger.info(f"Sent INVITE to DAC device at {dac_ip}:{dac_port}")
+            except Exception as invite_err:
+                pbx.logger.error(f"Failed to send INVITE to DAC: {invite_err}")
+                return
+
+            # Set up RTP relay to forward audio from caller to DAC
             if call.caller_rtp:
-                pbx.logger.info(
-                    f"Caller RTP: {call.caller_rtp['address']}:{call.caller_rtp['port']}"
+                caller_endpoint: tuple[str, int] = (
+                    call.caller_rtp["address"],
+                    call.caller_rtp["port"],
                 )
-                pbx.logger.info(f"Audio relay: Caller -> PBX:{call.rtp_ports[0]} -> DAC:{dac_ip}")
+                dac_endpoint: tuple[str, int] = (dac_ip, dac_port + 1)
+
+                # Configure RTP relay for forwarding
+                pbx.rtp_relay.set_endpoints(call.call_id, caller_endpoint, dac_endpoint)
+                pbx.logger.info(f"RTP relay configured: {caller_endpoint} -> {dac_endpoint}")
+                pbx.logger.info(
+                    f"Audio relay active: Caller -> PBX:{call.rtp_ports[0]} -> DAC:{dac_ip}"
+                )
 
             # Monitor the call until it ends
             while call.state.value != "ended":
                 time.sleep(1)
+
+            # Send BYE to DAC device to end the paging session
+            try:
+                bye_msg = SIPMessageBuilder.build_request(
+                    method="BYE",
+                    uri=dac_sip_uri,
+                    from_addr=f"<sip:paging@{server_ip}>",
+                    to_addr=f"<sip:paging@{dac_ip}:{dac_port}>",
+                    call_id=dac_call_id,
+                    cseq=2,
+                )
+                pbx.sip_server._send_message(bye_msg.build(), dac_addr)
+                pbx.logger.info("Sent BYE to DAC device")
+            except Exception as bye_err:
+                pbx.logger.error(f"Failed to send BYE to DAC: {bye_err}")
 
             pbx.logger.info(f"Paging session ended for {call_id}")
 

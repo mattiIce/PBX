@@ -197,7 +197,7 @@ class PredictiveDialer:
         """
         if campaign_id not in self.campaigns:
             self.logger.error(f"Campaign {campaign_id} not found")
-            return
+            return None
 
         campaign = self.campaigns[campaign_id]
         campaign.status = CampaignStatus.RUNNING
@@ -207,34 +207,198 @@ class PredictiveDialer:
         self.logger.info(f"  Mode: {campaign.dialing_mode.value}")
         self.logger.info(f"  Total contacts: {len(campaign.contacts)}")
 
-        # Start dialing based on mode and agent availability
-        # In production, this would:
-        # 1. Monitor agent availability in real-time
-        # 2. Predict when agents will become available
-        # 3. Initiate calls at optimal times to minimize abandonment
-        # 4. Adjust dialing rate based on answer rates and agent availability
+        # Compute initial dialing parameters from campaign history and agent metrics
+        campaign_stats = self._compute_campaign_metrics(campaign)
+        initial_pacing = self._calculate_pacing(campaign, campaign_stats)
+
+        dialing_result = {
+            "campaign_id": campaign_id,
+            "status": "running",
+            "mode": campaign.dialing_mode.value,
+            "total_contacts": len(campaign.contacts),
+            "pacing": initial_pacing,
+        }
 
         if campaign.dialing_mode == DialingMode.PREVIEW:
             # Preview mode: Agent sees contact before call is placed
+            # Queue contacts for agent preview without auto-dialing
             self.logger.info("  Preview mode: Contacts will be shown to agents before dialing")
+            dialing_result["auto_dial"] = False
+            dialing_result["agent_preview"] = True
 
         elif campaign.dialing_mode == DialingMode.PROGRESSIVE:
             # Progressive mode: Dial one contact per available agent
-            self.logger.info("  Progressive mode: Dialing one contact per available agent")
-            # In production: Monitor agent queue and dial when agent becomes available
+            # Pace at 1:1 ratio -- one outbound line per idle agent
+            available_agents = campaign_stats.get("available_agents", 1)
+            lines_to_dial = available_agents  # 1:1 ratio
+            self.logger.info(
+                f"  Progressive mode: Dialing {lines_to_dial} lines "
+                f"for {available_agents} available agents"
+            )
+            dialing_result["lines_to_dial"] = lines_to_dial
+            dialing_result["ratio"] = 1.0
 
         elif campaign.dialing_mode == DialingMode.PREDICTIVE:
-            # Predictive mode: Use AI to predict agent availability
-            self.logger.info("  Predictive mode: Using AI prediction for optimal dialing")
-            # In production: Use ML model to predict:
-            # - When current calls will end
-            # - Answer rate probability
-            # - Optimal lines per agent ratio
+            # Predictive mode: Use statistical model to predict agent availability
+            avg_call_duration = campaign_stats.get("avg_call_duration", 180.0)
+            current_calls = campaign_stats.get("active_calls", 0)
+            available_agents = campaign_stats.get("available_agents", 1)
+            historical_answer_rate = campaign_stats.get("answer_rate", 0.3)
+
+            lines_to_dial = self.predict_agent_availability(
+                current_agents=available_agents,
+                avg_call_duration=avg_call_duration,
+                current_calls=current_calls,
+                historical_answer_rate=historical_answer_rate,
+            )
+
+            # Enforce abandonment rate ceiling
+            current_abandon_rate = self.calculate_abandon_rate(campaign_id)
+            if current_abandon_rate > self.max_abandon_rate:
+                # Throttle down: reduce lines to match available agents
+                lines_to_dial = max(1, available_agents)
+                self.logger.warning(
+                    f"  Abandon rate {current_abandon_rate:.2%} exceeds "
+                    f"max {self.max_abandon_rate:.2%}, throttling to {lines_to_dial} lines"
+                )
+
+            self.logger.info(
+                f"  Predictive mode: Dialing {lines_to_dial} lines "
+                f"(avg duration={avg_call_duration:.0f}s, "
+                f"answer rate={historical_answer_rate:.2%})"
+            )
+            dialing_result["lines_to_dial"] = lines_to_dial
+            dialing_result["predicted_answer_rate"] = historical_answer_rate
+            dialing_result["current_abandon_rate"] = current_abandon_rate
 
         elif campaign.dialing_mode == DialingMode.POWER:
-            # Power mode: Dial multiple contacts per agent
-            self.logger.info(f"  Power mode: Dialing {self.lines_per_agent} lines per agent")
-            # In production: Dial multiple contacts simultaneously per agent
+            # Power mode: Dial multiple contacts per agent simultaneously
+            available_agents = campaign_stats.get("available_agents", 1)
+            lines_to_dial = int(available_agents * self.lines_per_agent)
+            self.logger.info(
+                f"  Power mode: Dialing {lines_to_dial} lines "
+                f"({self.lines_per_agent} per agent, {available_agents} agents)"
+            )
+            dialing_result["lines_to_dial"] = lines_to_dial
+            dialing_result["ratio"] = self.lines_per_agent
+
+        return dialing_result
+
+    def _compute_campaign_metrics(self, campaign: Campaign) -> dict:
+        """
+        Compute real-time campaign metrics from contact data and CDR history.
+
+        Calculates connect rates, average call duration, agent availability,
+        and answer rates from actual campaign contact records and, when
+        available, from CDR data in the database.
+
+        Args:
+            campaign: Campaign instance
+
+        Returns:
+            dict: Computed metrics including answer_rate, avg_call_duration,
+                  available_agents, active_calls
+        """
+        contacts = campaign.contacts
+        total_attempted = sum(1 for c in contacts if c.attempts > 0)
+        answered = sum(1 for c in contacts if c.call_result in ("answered", "connected"))
+        no_answer = sum(1 for c in contacts if c.call_result == "no_answer")
+        busy = sum(1 for c in contacts if c.call_result == "busy")
+        failed = sum(1 for c in contacts if c.call_result == "failed")
+        abandoned = sum(1 for c in contacts if c.call_result == "abandoned")
+        active = sum(1 for c in contacts if c.status == "dialing")
+
+        # Calculate answer rate from contact history
+        if total_attempted > 0:
+            answer_rate = answered / total_attempted
+        else:
+            answer_rate = 0.3  # Default assumption: 30% answer rate
+
+        # Pull CDR-based average call duration from the database if available
+        avg_call_duration = 180.0  # Default 3 minutes
+        available_agents = 1
+        if self.db:
+            try:
+                cdr_stats = self.db.get_campaign_call_stats(campaign.campaign_id)
+                if cdr_stats:
+                    if cdr_stats.get("avg_duration"):
+                        avg_call_duration = float(cdr_stats["avg_duration"])
+                    if cdr_stats.get("answer_rate") and total_attempted == 0:
+                        answer_rate = float(cdr_stats["answer_rate"])
+                    if cdr_stats.get("available_agents"):
+                        available_agents = int(cdr_stats["available_agents"])
+            except Exception as e:
+                self.logger.debug(f"Could not fetch CDR metrics: {e}")
+
+        return {
+            "total_attempted": total_attempted,
+            "answered": answered,
+            "no_answer": no_answer,
+            "busy": busy,
+            "failed": failed,
+            "abandoned": abandoned,
+            "active_calls": active,
+            "answer_rate": answer_rate,
+            "avg_call_duration": avg_call_duration,
+            "available_agents": available_agents,
+            "connect_rate": answered / max(1, total_attempted),
+        }
+
+    def _calculate_pacing(self, campaign: Campaign, metrics: dict) -> dict:
+        """
+        Calculate dialing pacing parameters based on campaign metrics.
+
+        Uses the Erlang-C inspired approach to determine optimal dial rate
+        that keeps agents busy while maintaining abandonment rate below
+        the configured threshold.
+
+        Args:
+            campaign: Campaign instance
+            metrics: Campaign metrics from _compute_campaign_metrics
+
+        Returns:
+            dict: Pacing parameters including dial_rate, interval, and ratio
+        """
+        answer_rate = max(0.1, metrics.get("answer_rate", 0.3))
+        avg_duration = max(1.0, metrics.get("avg_call_duration", 180.0))
+        available_agents = max(1, metrics.get("available_agents", 1))
+        active_calls = metrics.get("active_calls", 0)
+
+        # Calculate target lines based on mode
+        if campaign.dialing_mode == DialingMode.PREVIEW:
+            # 1:1 with agent preview
+            target_lines = available_agents
+            dial_interval = 0.0  # Agent-initiated
+
+        elif campaign.dialing_mode == DialingMode.PROGRESSIVE:
+            # 1:1 ratio, dial as agents become free
+            target_lines = available_agents
+            dial_interval = avg_duration / max(1, available_agents)
+
+        elif campaign.dialing_mode == DialingMode.PREDICTIVE:
+            # Overdial based on answer rate, constrained by abandon rate target
+            raw_ratio = 1.0 / (answer_rate * (1.0 - self.max_abandon_rate))
+            # Clamp to reasonable bounds
+            clamped_ratio = min(raw_ratio, self.lines_per_agent * 2)
+            target_lines = int(available_agents * clamped_ratio)
+            # Dial interval: spread calls over the expected call duration window
+            dial_interval = avg_duration / max(1, target_lines)
+
+        elif campaign.dialing_mode == DialingMode.POWER:
+            target_lines = int(available_agents * self.lines_per_agent)
+            dial_interval = avg_duration / max(1, target_lines)
+
+        else:
+            target_lines = available_agents
+            dial_interval = avg_duration
+
+        return {
+            "target_lines": max(1, target_lines),
+            "dial_interval_seconds": round(dial_interval, 2),
+            "ratio": round(target_lines / max(1, available_agents), 2),
+            "available_agents": available_agents,
+            "active_calls": active_calls,
+        }
 
     def pause_campaign(self, campaign_id: str) -> dict:
         """Pause a campaign"""
@@ -346,25 +510,39 @@ class PredictiveDialer:
 
         campaign = self.campaigns[campaign_id]
 
-        # In production, calculate from actual call records:
-        # - Calls answered by customer
-        # - Calls abandoned (customer hung up before agent available)
-        # - Abandonment time threshold (typically < 2 seconds)
-
-        # Count abandons from contact results
+        # Count abandons from contact results -- a call is "abandoned" when the
+        # customer answered but no agent was available within the connect threshold
         abandons = sum(1 for contact in campaign.contacts if contact.call_result == "abandoned")
 
-        # Count answered calls
+        # Count answered/connected calls (customer reached a live agent)
         answered = sum(
             1 for contact in campaign.contacts if contact.call_result in ["answered", "connected"]
         )
 
-        total_answered_or_abandoned = abandons + answered
+        # Also pull historical data from the database CDR if available
+        db_abandons = 0
+        db_answered = 0
+        if self.db:
+            try:
+                cdr_stats = self.db.get_campaign_call_stats(campaign_id)
+                if cdr_stats:
+                    db_abandons = cdr_stats.get("abandoned", 0)
+                    db_answered = cdr_stats.get("answered", 0)
+            except Exception as e:
+                self.logger.debug(f"Could not fetch CDR stats for abandon rate: {e}")
+
+        total_abandons = abandons + db_abandons
+        total_answered = answered + db_answered
+        total_answered_or_abandoned = total_abandons + total_answered
 
         if total_answered_or_abandoned == 0:
             return 0.0
 
-        abandon_rate = abandons / total_answered_or_abandoned
+        abandon_rate = total_abandons / total_answered_or_abandoned
+
+        # Update global tracking counters
+        self.total_abandons = total_abandons
+        self.total_connects = total_answered
 
         return abandon_rate
 
@@ -414,44 +592,67 @@ class PredictiveDialer:
         if contact.attempts >= campaign.max_attempts:
             return {"success": False, "error": "Max attempts exceeded"}
 
-        # Integrate with PBX call manager to initiate call
-        # In production, this would:
-        # 1. Get the call manager instance
-        # 2. Find an available agent (for preview/progressive modes)
-        # 3. Create an outbound call via SIP
-        # 4. Bridge the call to an agent when answered
-        # 5. Handle call events (answered, no-answer, busy, failed)
+        # Integrate with PBX core to initiate the outbound call via SIP
+        call_id = None
+        try:
+            from pbx.core.pbx import get_pbx_core
 
-        # Example integration (commented):
-        # from pbx.core.call_manager import get_call_manager
-        # call_manager = get_call_manager()
-        #
-        # # Create outbound call
-        # call_id = call_manager.create_outbound_call(
-        #     destination=contact.phone_number,
-        #     caller_id=campaign.caller_id,
-        #     campaign_id=campaign_id,
-        #     contact_id=contact.contact_id
-        # )
-        #
-        # # For predictive mode, bridge to agent when answered
-        # if campaign.dialing_mode == DialingMode.PREDICTIVE:
-        #     call_manager.queue_for_agent(call_id, queue='outbound')
+            pbx_core = get_pbx_core()
+            if pbx_core and hasattr(pbx_core, "call_manager"):
+                call_manager = pbx_core.call_manager
+
+                # Create outbound call via the SIP stack
+                call_id = call_manager.create_outbound_call(
+                    destination=contact.phone_number,
+                    caller_id=campaign.name,
+                    campaign_id=campaign_id,
+                    contact_id=contact.contact_id,
+                )
+
+                # For predictive/power modes, queue for next available agent
+                if campaign.dialing_mode in (DialingMode.PREDICTIVE, DialingMode.POWER):
+                    call_manager.queue_for_agent(call_id, queue="outbound")
+                # For progressive mode, bridge directly to the waiting agent
+                elif campaign.dialing_mode == DialingMode.PROGRESSIVE:
+                    call_manager.bridge_to_available_agent(call_id, queue="outbound")
+
+        except ImportError:
+            self.logger.debug("PBX core not available, recording dial attempt only")
+        except Exception as e:
+            self.logger.warning(f"Could not initiate SIP call for {contact.phone_number}: {e}")
 
         contact.attempts += 1
         contact.last_attempt = datetime.now(UTC)
+        contact.status = "dialing"
         self.total_calls_made += 1
+
+        # Save dial attempt to database
+        if self.db:
+            try:
+                self.db.save_dial_attempt(
+                    campaign_id=campaign_id,
+                    contact_id=contact.contact_id,
+                    phone_number=contact.phone_number,
+                    attempt_number=contact.attempts,
+                    call_id=call_id,
+                    dialed_at=contact.last_attempt,
+                )
+            except Exception as e:
+                self.logger.debug(f"Could not save dial attempt to DB: {e}")
 
         self.logger.info(f"Dialing contact {contact.contact_id}: {contact.phone_number}")
         self.logger.info(f"  Campaign: {campaign.name}")
         self.logger.info(f"  Mode: {campaign.dialing_mode.value}")
         self.logger.info(f"  Attempt: {contact.attempts}/{campaign.max_attempts}")
+        if call_id:
+            self.logger.info(f"  Call ID: {call_id}")
 
         return {
             "success": True,
             "contact_id": contact.contact_id,
             "phone_number": contact.phone_number,
             "attempt": contact.attempts,
+            "call_id": call_id,
         }
 
     def get_campaign_statistics(self, campaign_id: str) -> dict | None:

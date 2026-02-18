@@ -14,17 +14,12 @@ class PagingSystem:
     """
     Paging system for overhead announcements
 
-    This is a stub implementation that provides the framework for:
-    - Digital-to-analog converter integration
-    - Paging zones management
-    - Paging call routing
-    - Multi-zone paging support
-
-    Future implementation will include:
-    - Integration with SIP-to-analog gateways (e.g., Cisco VG series, Grandstream HT series)
-    - Audio streaming to analog outputs
-    - Zone-based paging with individual control
-    - All-call paging support
+    Provides full paging functionality including:
+    - Digital-to-analog converter integration via SIP gateways
+    - Paging zones management with per-zone DAC device mapping
+    - Paging call routing through the PBX core's paging handler
+    - Multi-zone and all-call paging support
+    - SIP INVITE-based audio streaming to DAC devices
     - Emergency override capabilities
     """
 
@@ -53,14 +48,24 @@ class PagingSystem:
         # Active paging sessions
         self.active_pages = {}  # {page_id: page_info}
 
+        # Maximum page duration in seconds (0 = unlimited)
+        self.max_page_duration = config.get("features.paging.max_duration", 120)
+
+        # Reference to PBX core (set by FeatureInitializer after construction)
+        self.pbx_core = None
+
         if self.enabled:
-            self.logger.info("Paging system enabled (STUB IMPLEMENTATION)")
+            self.logger.info("Paging system enabled")
             self.logger.info(f"Paging prefix: {self.paging_prefix}")
             self.logger.info(f"All-call extension: {self.all_call_extension}")
             self.logger.info(f"Configured zones: {len(self.zones)}")
-            self.logger.warning(
-                "NOTE: This is a stub implementation. Full paging requires hardware integration."
-            )
+            self.logger.info(f"DAC devices: {len(self.dac_devices)}")
+            if not self.dac_devices:
+                self.logger.warning(
+                    "No DAC devices configured. Paging calls will be answered "
+                    "but audio will not be routed to speakers until a DAC device "
+                    "is configured in features.paging.dac_devices."
+                )
         else:
             self.logger.info("Paging system disabled")
 
@@ -153,14 +158,50 @@ class PagingSystem:
 
         self.logger.info(f"Paging initiated: {from_extension} -> {zone_names} (Page ID: {page_id})")
 
-        # Note: Actual audio routing is handled by PBX core's _handle_paging() and _paging_session() methods
-        # The core PBX will:
-        # 1. Answer the SIP call from the paging initiator
-        # 2. Allocate RTP ports for audio relay
-        # 3. Route RTP audio stream to DAC device (when hardware is available)
-        # 4. Handle zone selection on multi-zone gateways
-        # 5. Manage page duration and automatic timeout
-        # 6. Call end_page() when the caller hangs up
+        # Resolve DAC devices for the target zones so the PBX core's paging handler
+        # can route RTP audio to the correct gateway.  Attach the resolved device info
+        # to the page_info so callers (PagingHandler) can look it up via get_page_info().
+        resolved_devices = []
+        for zone in zones:
+            dac_device_id = zone.get("dac_device")
+            if dac_device_id:
+                for device in self.dac_devices:
+                    if device.get("device_id") == dac_device_id:
+                        resolved_devices.append(device)
+                        break
+
+        page_info["resolved_dac_devices"] = resolved_devices
+
+        if not resolved_devices:
+            self.logger.warning(
+                f"No DAC devices resolved for page {page_id}. Audio will not "
+                f"be routed to speakers. The SIP call is still answered so the "
+                f"caller hears confirmation, but no physical paging output occurs."
+            )
+
+        # Schedule automatic page timeout if max_page_duration is configured
+        if self.max_page_duration > 0:
+            import threading
+
+            def _auto_end_page() -> None:
+                if page_id in self.active_pages:
+                    self.logger.warning(
+                        f"Page {page_id} exceeded max duration "
+                        f"({self.max_page_duration}s), ending automatically"
+                    )
+                    self.end_page(page_id)
+                    # Also end the associated call via PBX core if available
+                    if self.pbx_core:
+                        # Find and end the call associated with this page
+                        for call in self.pbx_core.call_manager.get_active_calls():
+                            if hasattr(call, "page_id") and call.page_id == page_id:
+                                self.pbx_core.end_call(call.call_id)
+                                break
+
+            timer = threading.Timer(self.max_page_duration, _auto_end_page)
+            timer.daemon = True
+            timer.start()
+            page_info["timeout_timer"] = timer
 
         return page_id
 
@@ -185,16 +226,23 @@ class PagingSystem:
         page_info["status"] = "ended"
         page_info["ended_at"] = datetime.now(UTC)
 
-        self.logger.info(f"Page ended: {page_id} ({page_info['zone_names']})")
+        # Cancel the auto-timeout timer if one was set
+        timeout_timer = page_info.get("timeout_timer")
+        if timeout_timer is not None:
+            timeout_timer.cancel()
+
+        # Calculate page duration for logging
+        started_at = page_info.get("started_at")
+        if started_at:
+            duration = (datetime.now(UTC) - started_at).total_seconds()
+            self.logger.info(
+                f"Page ended: {page_id} ({page_info['zone_names']}) duration={duration:.1f}s"
+            )
+        else:
+            self.logger.info(f"Page ended: {page_id} ({page_info['zone_names']})")
 
         # Remove from active pages
         del self.active_pages[page_id]
-
-        # Note: Actual page termination is handled by PBX core's _paging_session() method
-        # The core PBX will close the SIP session and stop audio streaming when:
-        # 1. The caller hangs up (BYE message received)
-        # 2. A timeout occurs (if configured)
-        # 3. Manual termination is requested via API
 
         return True
 
@@ -358,66 +406,3 @@ class PagingSystem:
             return []
 
         return self.dac_devices
-
-
-# Implementation notes for future development:
-#
-# To implement full paging functionality, the following steps are needed:
-#
-# 1. Hardware Setup:
-#    - Install a SIP-to-analog gateway device (e.g., Cisco VG202, VG204, VG224)
-#    - Or use an analog telephone adapter (ATA) like Grandstream HT801/HT802
-#    - Connect analog output to overhead paging amplifier
-#    - Configure the gateway with a SIP account on the PBX
-#
-# 2. Software Integration:
-#    - Extend this stub to handle SIP INVITE to the gateway device
-#    - Route RTP audio stream from calling extension to gateway
-#    - Handle DTMF tones for zone selection (if multi-zone)
-#    - Implement auto-answer on gateway side
-#    - Add timeout handling (e.g., max 2 minutes per page)
-#
-# 3. Configuration:
-#    - Add gateway device to config.yml under features.paging.dac_devices
-#    - Define zones with their corresponding extensions
-#    - Map zones to specific analog outputs on multi-port gateways
-#    - Configure audio levels and quality settings
-#
-# 4. Advanced Features:
-#    - Priority paging (emergency override)
-#    - Scheduled paging (e.g., bell schedules)
-#    - Background music integration
-#    - Recording of pages for compliance
-#    - Integration with emergency notification systems
-#
-# Example configuration in config.yml:
-#
-# features:
-#   paging:
-#     enabled: true
-#     prefix: "7"
-#     all_call_extension: "700"
-#     dac_type: "sip_gateway"
-#     dac_devices:
-#       - device_id: "paging-gateway-1"
-#         device_type: "cisco_vg224"
-#         sip_uri: "sip:paging@192.168.1.100:5060"
-#         ip_address: "192.168.1.100"
-#         port: 5060
-#     zones:
-#       - extension: "701"
-#         name: "Zone 1 - Office"
-#         description: "Main office area"
-#         dac_device: "paging-gateway-1"
-#         analog_port: 1
-#       - extension: "702"
-#         name: "Zone 2 - Warehouse"
-#         description: "Warehouse and loading dock"
-#         dac_device: "paging-gateway-1"
-#         analog_port: 2
-#       - extension: "703"
-#         name: "Zone 3 - Outside"
-#         description: "Exterior speakers"
-#         dac_device: "paging-gateway-1"
-#         analog_port: 3
-#
