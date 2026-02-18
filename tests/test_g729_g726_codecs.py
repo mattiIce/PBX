@@ -31,7 +31,7 @@ class TestG729Codec:
         assert info["sample_rate"] == 8000
         assert info["bitrate"] == 8000
         assert info["payload_type"] == 18
-        assert info["license_required"]
+        assert info["license_required"] is False
 
     def test_g729_sdp_description(self) -> None:
         """Test G.729 SDP format string"""

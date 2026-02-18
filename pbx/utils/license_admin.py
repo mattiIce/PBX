@@ -238,10 +238,31 @@ def verify_license_admin_session(request) -> tuple[bool, str | None]:
         # Check for Authorization header (for API access)
         auth_header = request.headers.get("Authorization")
         if auth_header and auth_header.startswith("Bearer "):
-            # Extract and verify token
-            # This could be implemented with JWT or custom token validation
-            # For now, we rely on session-based authentication
-            pass
+            # Extract and verify token using the session token manager
+            token = auth_header[7:]  # Strip "Bearer " prefix
+            from pbx.utils.session_token import get_session_token_manager
+
+            token_manager = get_session_token_manager()
+            is_valid, payload = token_manager.verify_token(token)
+
+            if is_valid and payload:
+                token_ext = payload.get("extension")
+                token_name = payload.get("name", "")
+
+                if (
+                    token_ext == LICENSE_ADMIN_EXTENSION
+                    and token_name.upper() == LICENSE_ADMIN_USERNAME.upper()
+                ):
+                    return True, None
+
+                logger.warning(
+                    f"Bearer token valid but not license admin "
+                    f"(ext={token_ext}) from {request.remote_addr}"
+                )
+            else:
+                logger.warning(
+                    f"Invalid or expired Bearer token from {request.remote_addr}"
+                )
 
         logger.warning(f"Unauthorized license admin access attempt from {request.remote_addr}")
         return False, "Unauthorized. License management requires administrator authentication."

@@ -430,7 +430,21 @@ class SecurityMonitor:
             for violation in critical_violations:
                 self.logger.error(f"  - {violation['check']}: {violation['message']}")
 
-            # For now, log but continue (can be made stricter based on requirements)
+            # Check if critical violations should block system operation
+            block_on_critical = self._get_config(
+                "security.block_on_critical_violations", False
+            )
+            if block_on_critical:
+                self.logger.error(
+                    "System cannot continue: block_on_critical_violations is enabled "
+                    f"and {len(critical_violations)} critical violation(s) were found"
+                )
+                return False
+
+            self.logger.warning(
+                "Allowing system to continue despite critical violations "
+                "(set security.block_on_critical_violations=true to enforce)"
+            )
             return True
 
         return True

@@ -310,13 +310,21 @@ class ActiveDirectoryIntegration:
 
                             # Store permissions in extension config if update succeeded
                             # Database may not have columns for all permissions, so we store them
-                            # in the extension's config field if available
-                            if success and hasattr(extension_db, "get"):
-                                ext_data = extension_db.get(extension_number)
-                                if ext_data and "config" in ext_data:
-                                    # Permissions can be stored in config JSON
-                                    # field
-                                    pass  # Database implementation handles this
+                            # in the system_config table keyed by extension number
+                            if success and permissions and hasattr(extension_db, "set_config"):
+                                config_key = f"ext.{extension_number}.ad_permissions"
+                                try:
+                                    extension_db.set_config(
+                                        config_key,
+                                        permissions,
+                                        config_type="json",
+                                        updated_by="ad_sync",
+                                    )
+                                except (OSError, TypeError, ValueError) as perm_err:
+                                    self.logger.warning(
+                                        f"Could not persist AD permissions for "
+                                        f"extension {extension_number}: {perm_err}"
+                                    )
                         else:
                             # Update in config.yml
                             success = pbx_config.update_extension(

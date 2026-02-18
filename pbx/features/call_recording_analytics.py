@@ -321,7 +321,7 @@ class RecordingAnalytics:
         transcript = ""
         if self.vosk_model:
             transcript_result = self._transcribe(audio_path)
-            transcript = transcript_result.get("text", "")
+            transcript = transcript_result.get("transcript", "")
 
         # Sentiment keywords for fallback
         positive_words = {
@@ -440,8 +440,9 @@ class RecordingAnalytics:
         Returns:
             dict: Detected keywords and topics
         """
-        # First, we need a transcript - placeholder for now
-        transcript = ""  # Would come from _transcribe(audio_path)
+        # Transcribe audio to get text for keyword analysis
+        transcript_result = self._transcribe(audio_path)
+        transcript = transcript_result.get("transcript", "")
 
         # Keyword categories
         competitor_keywords = ["competitor", "alternative", "other company", "switch"]
@@ -508,8 +509,9 @@ class RecordingAnalytics:
         Returns:
             dict: Compliance check results
         """
-        # First, we need a transcript - placeholder for now
-        transcript = ""  # Would come from _transcribe(audio_path)
+        # Transcribe audio to get text for compliance checking
+        transcript_result = self._transcribe(audio_path)
+        transcript = transcript_result.get("transcript", "")
 
         # Compliance requirements
         required_phrases = [
@@ -575,8 +577,9 @@ class RecordingAnalytics:
         Returns:
             dict: Quality scores
         """
-        # First, we need a transcript - placeholder for now
-        transcript = ""  # Would come from _transcribe(audio_path)
+        # Transcribe audio to get text for quality scoring
+        transcript_result = self._transcribe(audio_path)
+        transcript = transcript_result.get("transcript", "")
 
         # Quality indicators
         positive_indicators = [
@@ -683,8 +686,9 @@ class RecordingAnalytics:
         Returns:
             dict: Call summary with key points and action items
         """
-        # First, we need a transcript - placeholder for now
-        transcript = ""  # Would come from _transcribe(audio_path)
+        # Transcribe audio to get text for summarization
+        transcript_result = self._transcribe(audio_path)
+        transcript = transcript_result.get("transcript", "")
 
         summary = ""
         key_points = []

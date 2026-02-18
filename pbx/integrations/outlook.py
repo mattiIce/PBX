@@ -516,28 +516,129 @@ class OutlookIntegration:
                             f"Sending meeting reminder to extension {extension_number}"
                         )
 
-                        # In production, this would:
-                        # 1. Originate a call to the extension
-                        # 2. Play a TTS or pre-recorded message:
-                        #    "You have a meeting in {minutes_before} minutes: {subject}"
-                        # 3. Optionally provide options:
-                        #    "Press 1 to join now, press 2 to snooze, press 3 to dismiss"
-                        # 4. Handle DTMF responses
+                        # Originate a call to the extension and play the reminder
+                        if hasattr(pbx_core, "sip_server") and hasattr(
+                            pbx_core, "call_manager"
+                        ):
+                            import uuid
 
-                        # For now, log the reminder action
-                        self.logger.info(
-                            f"REMINDER: Extension {extension_number} has meeting '{subject}' "
-                            f"starting at {start_time.strftime('%H:%M')}"
-                        )
+                            from pbx.sip.message import SIPMessageBuilder
+                            from pbx.sip.sdp import SDPBuilder
 
-                        # If trunk system available, could originate call here
-                        if hasattr(pbx_core, "call_manager"):
-                            self.logger.info(
-                                f"Call reminder system ready for extension {extension_number}"
+                            server_ip = pbx_core._get_server_ip()
+                            sip_port = pbx_core.config.get("server.sip_port", 5060)
+                            reminder_call_id = str(uuid.uuid4())
+
+                            # Look up the extension's registered address
+                            ext_obj = pbx_core.extension_registry.get(extension_number)
+                            if not ext_obj or not ext_obj.address:
+                                self.logger.error(
+                                    f"Extension {extension_number} not registered, "
+                                    "cannot deliver meeting reminder"
+                                )
+                                return
+
+                            # Allocate RTP relay for the reminder call
+                            rtp_ports = pbx_core.rtp_relay.allocate_relay(reminder_call_id)
+                            if not rtp_ports:
+                                self.logger.error(
+                                    "Failed to allocate RTP ports for reminder call"
+                                )
+                                return
+
+                            # Build SDP for the reminder call
+                            sdp_body = SDPBuilder.build_audio_sdp(
+                                server_ip,
+                                rtp_ports[0],
+                                session_id=reminder_call_id,
                             )
-                            # In production:
-                            # pbx_core.originate_call(extension_number,
-                            # 'reminder', message)
+
+                            # Build SIP INVITE to the extension
+                            invite_msg = SIPMessageBuilder.build_request(
+                                method="INVITE",
+                                uri=f"sip:{extension_number}@{server_ip}",
+                                from_addr=f'"Meeting Reminder" <sip:reminder@{server_ip}>',
+                                to_addr=f"<sip:{extension_number}@{server_ip}>",
+                                call_id=reminder_call_id,
+                                cseq=1,
+                                body=sdp_body,
+                            )
+                            invite_msg.set_header("Content-type", "application/sdp")
+                            invite_msg.set_header(
+                                "Contact",
+                                f"<sip:reminder@{server_ip}:{sip_port}>",
+                            )
+
+                            # Send INVITE to the extension
+                            pbx_core.sip_server._send_message(
+                                invite_msg.build(), ext_obj.address
+                            )
+
+                            # Create call record for tracking
+                            reminder_call = pbx_core.call_manager.create_call(
+                                reminder_call_id, "reminder", extension_number
+                            )
+                            reminder_call.start()
+                            reminder_call.rtp_ports = rtp_ports
+
+                            self.logger.info(
+                                f"Meeting reminder call initiated to extension "
+                                f"{extension_number} (call_id={reminder_call_id}): "
+                                f"'{subject}' at {start_time.strftime('%H:%M')}"
+                            )
+
+                            # Schedule TTS playback after a brief delay for call setup
+                            import time
+
+                            time.sleep(2)
+
+                            # Play TTS reminder message via RTP
+                            try:
+                                from pbx.rtp.handler import RTPPlayer
+                                from pbx.utils.audio import generate_tts_audio
+
+                                reminder_text = (
+                                    f"Meeting reminder. You have a meeting in "
+                                    f"{minutes_before} minutes. {subject}."
+                                )
+                                audio_data = generate_tts_audio(reminder_text)
+                                if audio_data and ext_obj.address:
+                                    player = RTPPlayer(
+                                        local_port=rtp_ports[0],
+                                        remote_host=ext_obj.address[0],
+                                        remote_port=ext_obj.address[1],
+                                        call_id=reminder_call_id,
+                                    )
+                                    if player.start():
+                                        import contextlib
+                                        import tempfile
+                                        from pathlib import Path
+
+                                        with tempfile.NamedTemporaryFile(
+                                            suffix=".wav", delete=False
+                                        ) as tmp:
+                                            tmp.write(audio_data)
+                                            tmp_path = tmp.name
+                                        try:
+                                            player.play_file(tmp_path)
+                                        finally:
+                                            player.stop()
+                                            with contextlib.suppress(OSError):
+                                                Path(tmp_path).unlink()
+                                        self.logger.info(
+                                            f"Played TTS reminder to extension "
+                                            f"{extension_number}"
+                                        )
+                            except ImportError:
+                                self.logger.warning(
+                                    "TTS audio generation not available, "
+                                    "reminder call placed without audio message"
+                                )
+                        else:
+                            self.logger.warning(
+                                f"PBX SIP server or call manager not available, "
+                                f"cannot originate reminder call to {extension_number}"
+                            )
 
                     except Exception as e:
                         self.logger.error(f"Error sending meeting reminder: {e}")

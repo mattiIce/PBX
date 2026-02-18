@@ -270,14 +270,94 @@ class StatisticsEngine:
                     "calls_with_issues": qos_stats["calls_with_issues"],
                 }
 
-        # Fallback to placeholder data if QoS not available
+        # Derive quality estimates from CDR data when QoS monitor is not available
+        # Analyze recent call records to infer quality indicators
+        all_records = []
+        for i in range(7):
+            date = (datetime.now(UTC) - timedelta(days=i)).strftime("%Y-%m-%d")
+            records = self.cdr_system.get_records(date, limit=10000)
+            all_records.extend(records)
+
+        if not all_records:
+            return {
+                "average_mos": 0.0,
+                "average_jitter": 0.0,
+                "average_packet_loss": 0.0,
+                "average_latency": 0.0,
+                "quality_distribution": {
+                    "excellent": 0,
+                    "good": 0,
+                    "fair": 0,
+                    "poor": 0,
+                    "bad": 0,
+                },
+                "total_calls_monitored": 0,
+                "active_monitored_calls": 0,
+                "calls_with_issues": 0,
+                "note": "No call data available for quality estimation",
+            }
+
+        total_calls = len(all_records)
+        answered = [r for r in all_records if r.get("disposition") == "answered"]
+        failed = [r for r in all_records if r.get("disposition") == "failed"]
+
+        # Estimate quality distribution from call outcomes
+        # Answered calls with reasonable duration are considered good quality
+        # Short answered calls (<5s) may indicate quality issues
+        # Failed calls indicate poor quality
+        excellent_count = 0
+        good_count = 0
+        fair_count = 0
+        poor_count = 0
+        bad_count = 0
+
+        for record in all_records:
+            disposition = record.get("disposition", "unknown")
+            duration = record.get("duration", 0)
+
+            if disposition == "answered" and duration >= 30:
+                excellent_count += 1
+            elif disposition == "answered" and duration >= 10:
+                good_count += 1
+            elif disposition == "answered" and duration >= 5:
+                fair_count += 1
+            elif disposition in ("no_answer", "busy"):
+                poor_count += 1
+            else:
+                bad_count += 1
+
+        # Estimate MOS score from answer rate and call success patterns
+        # MOS scale: 1.0 (bad) to 5.0 (excellent)
+        answer_rate = len(answered) / total_calls if total_calls > 0 else 0
+        fail_rate = len(failed) / total_calls if total_calls > 0 else 0
+        estimated_mos = 1.0 + (answer_rate * 3.5) - (fail_rate * 1.5)
+        estimated_mos = max(1.0, min(5.0, estimated_mos))
+
+        # Estimate packet loss from failure rate (failed calls often indicate network issues)
+        estimated_packet_loss = fail_rate * 5.0  # rough estimate: 5% loss per failure rate
+
+        # Estimate number of calls with issues (short calls + failed calls)
+        short_answered = sum(1 for r in answered if r.get("duration", 0) < 5)
+        calls_with_issues = len(failed) + short_answered
+
         return {
-            "average_mos": 0.0,
+            "average_mos": round(estimated_mos, 2),
             "average_jitter": 0.0,
-            "average_packet_loss": 0.0,
+            "average_packet_loss": round(estimated_packet_loss, 2),
             "average_latency": 0.0,
-            "quality_distribution": {"excellent": 0, "good": 0, "fair": 0, "poor": 0, "bad": 0},
-            "note": "QoS monitoring not available - no quality data",
+            "quality_distribution": {
+                "excellent": round((excellent_count / total_calls) * 100, 1)
+                if total_calls > 0
+                else 0,
+                "good": round((good_count / total_calls) * 100, 1) if total_calls > 0 else 0,
+                "fair": round((fair_count / total_calls) * 100, 1) if total_calls > 0 else 0,
+                "poor": round((poor_count / total_calls) * 100, 1) if total_calls > 0 else 0,
+                "bad": round((bad_count / total_calls) * 100, 1) if total_calls > 0 else 0,
+            },
+            "total_calls_monitored": total_calls,
+            "active_monitored_calls": 0,
+            "calls_with_issues": calls_with_issues,
+            "note": "Quality estimated from CDR data - QoS monitor not available",
         }
 
     def get_real_time_metrics(self, pbx_core: Any | None) -> dict:

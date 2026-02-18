@@ -374,9 +374,64 @@ class VoiceBiometrics:
                 fraud_indicators.append("abnormal_zero_crossing")
                 risk_score += 0.15
 
-        # 4. Known fraudster voiceprint matching
-        # In production, this would compare against a database of known fraudster voiceprints
-        # For now, we use a placeholder check
+        # 4. Known fraudster voiceprint matching and identity verification
+        # Compare voice features against enrolled profiles to detect impersonation
+        claimed_user = caller_info.get("user_id") or caller_info.get("extension")
+        if voice_features and self.profiles:
+            # Check if caller claims an identity - verify it matches their voice
+            if claimed_user and claimed_user in self.profiles:
+                claimed_profile = self.profiles[claimed_user]
+                if claimed_profile.status == BiometricStatus.ENROLLED:
+                    match_score = self._calculate_match_score(claimed_profile, voice_features)
+                    if match_score < self.verification_threshold * 0.7:
+                        # Voice does not match claimed identity at all
+                        fraud_indicators.append("voice_identity_mismatch")
+                        risk_score += 0.4
+
+            # Compare against all enrolled profiles to detect known fraudsters
+            # or spoofing attempts (voice matching a suspended profile)
+            if SKLEARN_AVAILABLE and np is not None:
+                try:
+                    for user_id, profile in self.profiles.items():
+                        if profile.status == BiometricStatus.SUSPENDED:
+                            # Check if voice matches a suspended (flagged) profile
+                            match_score = self._calculate_match_score(profile, voice_features)
+                            if match_score >= self.verification_threshold:
+                                fraud_indicators.append(f"matches_suspended_profile:{user_id}")
+                                risk_score += 0.5
+                                break
+                except (KeyError, TypeError, ValueError) as e:
+                    self.logger.debug(f"Error during fraudster voiceprint matching: {e}")
+
+            # Check database for known fraud voiceprints if available
+            if self.db:
+                try:
+                    known_fraud = self.db.get_fraud_voiceprints()
+                    if known_fraud and voice_features:
+                        for fraud_record in known_fraud:
+                            fraud_features = fraud_record.get("voice_features", {})
+                            if fraud_features and SKLEARN_AVAILABLE and np is not None:
+                                common_keys = sorted(
+                                    set(voice_features.keys()) & set(fraud_features.keys())
+                                )
+                                if common_keys:
+                                    vec_a = np.array(
+                                        [voice_features.get(k, 0.0) for k in common_keys]
+                                    )
+                                    vec_b = np.array(
+                                        [fraud_features.get(k, 0.0) for k in common_keys]
+                                    )
+                                    # Cosine similarity
+                                    norm_a = np.linalg.norm(vec_a)
+                                    norm_b = np.linalg.norm(vec_b)
+                                    if norm_a > 0 and norm_b > 0:
+                                        similarity = float(np.dot(vec_a, vec_b) / (norm_a * norm_b))
+                                        if similarity > 0.9:
+                                            fraud_indicators.append("matches_known_fraudster")
+                                            risk_score += 0.5
+                                            break
+                except (AttributeError, KeyError, TypeError, ValueError) as e:
+                    self.logger.debug(f"Error checking fraud voiceprint database: {e}")
 
         # Cap risk score at 1.0
         risk_score = min(risk_score, 1.0)

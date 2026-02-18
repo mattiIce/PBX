@@ -446,15 +446,45 @@ class EmergencyNotificationSystem:
                 # Create emergency notification call
                 call_id = f"emergency-{trigger_type}-{int(time.time())}"
 
-                # In a full implementation, this would:
-                # 1. Place a call to the contact's extension
-                # 2. Play a pre-recorded emergency message
-                # 3. Transfer to emergency responder if needed
-
-                # For now, log the action
-                self.logger.warning(
-                    f"📞 Emergency call queued: {contact.name} ({contact.extension})"
+                # Place the actual call to the contact's extension
+                call_result = self.pbx_core.initiate_call(
+                    from_extension="emergency",
+                    to_extension=contact.extension,
+                    call_type="emergency_notification",
+                    metadata={
+                        "call_id": call_id,
+                        "trigger_type": trigger_type,
+                        "priority": "emergency",
+                        "details": details,
+                    },
                 )
+
+                if call_result:
+                    self.logger.warning(
+                        f"Emergency call placed: {contact.name} ({contact.extension}) "
+                        f"- call_id: {call_id}"
+                    )
+                else:
+                    self.logger.error(
+                        f"Emergency call failed to {contact.name} ({contact.extension})"
+                    )
+
+                # If an emergency audio announcement system is available, play message
+                if hasattr(self.pbx_core, "play_announcement"):
+                    announcement_text = (
+                        f"Emergency notification: {trigger_type}. "
+                        f"Caller: {details.get('caller_name', 'unknown')}. "
+                        f"Location: {details.get('location', 'unknown')}. "
+                        "Please respond immediately."
+                    )
+                    try:
+                        self.pbx_core.play_announcement(
+                            extension=contact.extension,
+                            message=announcement_text,
+                            call_id=call_id,
+                        )
+                    except (TypeError, ValueError) as announce_err:
+                        self.logger.warning(f"Could not play announcement: {announce_err}")
 
                 # Store notification for tracking
                 if hasattr(self, "_pending_emergency_calls"):
@@ -465,6 +495,7 @@ class EmergencyNotificationSystem:
                             "details": details,
                             "timestamp": datetime.now(UTC),
                             "call_id": call_id,
+                            "result": "placed" if call_result else "failed",
                         }
                     )
             else:

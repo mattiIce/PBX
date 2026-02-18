@@ -908,8 +908,8 @@ class TestDetectAvailableCodecs:
         assert "H.265" in result
 
     @patch("pbx.features.video_codec.get_logger")
-    def test_fallback_to_h264_placeholder(self, mock_logger: MagicMock) -> None:
-        """Test that H.264 is added as placeholder when no codecs found"""
+    def test_fallback_empty_when_no_codecs(self, mock_logger: MagicMock) -> None:
+        """Test that an empty list is returned when no codecs are found"""
         mock_logger.return_value = MagicMock()
         manager = self._create_manager(mock_logger)
 
@@ -917,10 +917,11 @@ class TestDetectAvailableCodecs:
             patch.object(manager, "_detect_codecs_via_ffmpeg", return_value=[]),
             patch.object(manager, "_detect_openh264", return_value=[]),
             patch.object(manager, "_detect_x265", return_value=[]),
+            patch("pbx.features.video_codec.PYAV_AVAILABLE", False),
         ):
             result = manager._detect_available_codecs()
 
-        assert result == ["H.264"]
+        assert result == []
 
     @patch("pbx.features.video_codec.get_logger")
     def test_no_fallback_when_codecs_found(self, mock_logger: MagicMock) -> None:

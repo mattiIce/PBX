@@ -292,6 +292,202 @@ def _ima_adpcm_decode(
 
 
 # ---------------------------------------------------------------------------
+# Generic N-bit ADPCM encoder / decoder
+# ---------------------------------------------------------------------------
+# The G.726 family uses the same IMA ADPCM prediction loop at all bitrates;
+# only the number of quantisation bits changes.  The functions below
+# generalise the 4-bit encoder/decoder above to 2, 3, and 5 bits per sample.
+#
+# At *N* bits per sample the magnitude is encoded in *(N-1)* bits and the
+# sign occupies the MSB.  The step-size index adjustment table is scaled
+# correspondingly.
+# ---------------------------------------------------------------------------
+
+# Index adjustment tables keyed by bits-per-sample.
+# These mirror the standard IMA ADPCM tables, truncated / extended for
+# different quantisation depths.
+_INDEX_TABLES: dict[int, list[int]] = {
+    2: [-1, 2],  # 1 magnitude bit  (codes 0..1)
+    3: [-1, -1, 2, 4],  # 2 magnitude bits (codes 0..3)
+    4: _INDEX_TABLE,  # 3 magnitude bits (codes 0..7), already defined
+    5: [-1, -1, -1, -1, 2, 4, 6, 8, -1, -1, -1, -1, 2, 4, 6, 8],  # 4 magnitude bits
+}
+
+
+def _adpcm_encode_nbits(
+    pcm_data: bytes,
+    bits_per_sample: int,
+    state: tuple[int, int] | None = None,
+) -> tuple[bytes, tuple[int, int]]:
+    """Encode 16-bit signed LE PCM to N-bit ADPCM.
+
+    The output is packed MSB-first within each byte, which is the standard
+    G.726 packing order.
+
+    Args:
+        pcm_data: Raw 16-bit signed little-endian PCM bytes.
+        bits_per_sample: 2, 3, 4, or 5.
+        state: Optional ``(predicted, index)`` carried from previous call.
+
+    Returns:
+        ``(adpcm_bytes, new_state)`` tuple.
+    """
+    if bits_per_sample == 4:
+        # Delegate to the optimised 4-bit path
+        return _ima_adpcm_encode(pcm_data, state)
+
+    idx_table = _INDEX_TABLES[bits_per_sample]
+    mag_bits = bits_per_sample - 1  # number of magnitude bits
+    sign_bit = 1 << mag_bits  # sign bit position
+
+    if state is None:
+        predicted: int = 0
+        index: int = 0
+    else:
+        predicted, index = state
+
+    num_samples = len(pcm_data) // 2
+
+    # Bit-packing state
+    bit_buffer = 0
+    bits_in_buffer = 0
+    output = bytearray()
+
+    for i in range(num_samples):
+        sample = struct.unpack_from("<h", pcm_data, i * 2)[0]
+        step = _STEP_SIZE_TABLE[index]
+
+        diff = sample - predicted
+        if diff < 0:
+            code = sign_bit
+            diff = -diff
+        else:
+            code = 0
+
+        # Quantise magnitude into mag_bits bits
+        temp_step = step
+        for bit_pos in range(mag_bits - 1, -1, -1):
+            if diff >= temp_step:
+                code |= 1 << bit_pos
+                diff -= temp_step
+            temp_step >>= 1
+
+        # Reconstruct to update prediction (keeps encoder/decoder in sync)
+        magnitude = code & (sign_bit - 1)
+        delta = step >> mag_bits
+        for bit_pos in range(mag_bits - 1, -1, -1):
+            if magnitude & (1 << bit_pos):
+                delta += step >> (mag_bits - 1 - bit_pos)
+
+        if code & sign_bit:
+            predicted -= delta
+        else:
+            predicted += delta
+        predicted = _clamp(predicted, -32768, 32767)
+
+        # Update step index using magnitude portion only
+        adj_idx = magnitude if magnitude < len(idx_table) else len(idx_table) - 1
+        index = _clamp(index + idx_table[adj_idx], 0, 88)
+
+        # Pack code into output (MSB-first packing)
+        bit_buffer = (bit_buffer << bits_per_sample) | (code & ((1 << bits_per_sample) - 1))
+        bits_in_buffer += bits_per_sample
+
+        while bits_in_buffer >= 8:
+            bits_in_buffer -= 8
+            output.append((bit_buffer >> bits_in_buffer) & 0xFF)
+
+    # Flush any remaining bits (pad with zeros on the right)
+    if bits_in_buffer > 0:
+        output.append((bit_buffer << (8 - bits_in_buffer)) & 0xFF)
+
+    return bytes(output), (predicted, index)
+
+
+def _adpcm_decode_nbits(
+    adpcm_data: bytes,
+    bits_per_sample: int,
+    num_samples: int | None = None,
+    state: tuple[int, int] | None = None,
+) -> tuple[bytes, tuple[int, int]]:
+    """Decode N-bit ADPCM to 16-bit signed LE PCM.
+
+    Args:
+        adpcm_data: ADPCM encoded bytes (MSB-first packing).
+        bits_per_sample: 2, 3, 4, or 5.
+        num_samples: Number of samples to decode.  If ``None``, decodes as
+            many complete samples as possible from the data.
+        state: Optional ``(predicted, index)`` carried from previous call.
+
+    Returns:
+        ``(pcm_bytes, new_state)`` tuple.
+    """
+    if bits_per_sample == 4:
+        return _ima_adpcm_decode(adpcm_data, 2, state)
+
+    idx_table = _INDEX_TABLES[bits_per_sample]
+    mag_bits = bits_per_sample - 1
+    sign_bit = 1 << mag_bits
+    code_mask = (1 << bits_per_sample) - 1
+
+    if state is None:
+        predicted: int = 0
+        index: int = 0
+    else:
+        predicted, index = state
+
+    # Determine how many samples we can decode
+    total_bits = len(adpcm_data) * 8
+    max_samples = total_bits // bits_per_sample
+    if num_samples is None:
+        num_samples = max_samples
+    else:
+        num_samples = min(num_samples, max_samples)
+
+    output = bytearray()
+
+    # Bit-unpacking state
+    bit_pos = 0  # current bit position in the data stream
+
+    for _ in range(num_samples):
+        # Extract bits_per_sample bits from the MSB-first packed stream
+        byte_idx = bit_pos // 8
+        bit_offset = bit_pos % 8
+
+        # Read up to 2 bytes to cover the code
+        if byte_idx + 1 < len(adpcm_data):
+            word = (adpcm_data[byte_idx] << 8) | adpcm_data[byte_idx + 1]
+        else:
+            word = adpcm_data[byte_idx] << 8
+
+        shift = 16 - bit_offset - bits_per_sample
+        code = (word >> shift) & code_mask
+        bit_pos += bits_per_sample
+
+        step = _STEP_SIZE_TABLE[index]
+        magnitude = code & (sign_bit - 1)
+
+        # Reconstruct difference
+        delta = step >> mag_bits
+        for bp in range(mag_bits - 1, -1, -1):
+            if magnitude & (1 << bp):
+                delta += step >> (mag_bits - 1 - bp)
+
+        if code & sign_bit:
+            predicted -= delta
+        else:
+            predicted += delta
+        predicted = _clamp(predicted, -32768, 32767)
+
+        adj_idx = magnitude if magnitude < len(idx_table) else len(idx_table) - 1
+        index = _clamp(index + idx_table[adj_idx], 0, 88)
+
+        output.extend(struct.pack("<h", predicted))
+
+    return bytes(output), (predicted, index)
+
+
+# ---------------------------------------------------------------------------
 # G.726 codec class
 # ---------------------------------------------------------------------------
 
@@ -366,24 +562,24 @@ class G726Codec:
         """
         Encode PCM audio to G.726 ADPCM.
 
+        Supports all G.726 bitrates (16, 24, 32, 40 kbit/s) via the pure-
+        Python ADPCM implementation.  State is carried across successive calls
+        so that a continuous audio stream can be encoded incrementally.
+
         Args:
             pcm_data: Raw PCM audio data (16-bit signed, 8 kHz, little-endian).
+                      Length must be a multiple of 2 (one sample = 2 bytes).
 
         Returns:
             Encoded G.726 data, or ``None`` if encoding fails.
         """
         try:
-            if self.bitrate_kbps == 32:
-                adpcm_data, self._encode_state = _ima_adpcm_encode(
-                    pcm_data,
-                    self._encode_state,
-                )
-                return adpcm_data
-            # For 16, 24, 40 kbit/s variants a specialised library is needed
-            self.logger.warning(
-                f"G.726-{self.bitrate_kbps} encoding not implemented. Only G.726-32 is supported."
+            adpcm_data, self._encode_state = _adpcm_encode_nbits(
+                pcm_data,
+                self.bits_per_sample,
+                self._encode_state,
             )
-            return None
+            return adpcm_data
         except Exception as e:
             self.logger.error(f"G.726 encoding error: {e}")
             return None
@@ -391,6 +587,10 @@ class G726Codec:
     def decode(self, g726_data: bytes) -> bytes | None:
         """
         Decode G.726 ADPCM to PCM audio.
+
+        Supports all G.726 bitrates (16, 24, 32, 40 kbit/s) via the pure-
+        Python ADPCM implementation.  State is carried across successive calls
+        so that a continuous audio stream can be decoded incrementally.
 
         Args:
             g726_data: Encoded G.726 data.
@@ -403,18 +603,12 @@ class G726Codec:
             if len(g726_data) == 0:
                 return b""
 
-            if self.bitrate_kbps == 32:
-                pcm_data, self._decode_state = _ima_adpcm_decode(
-                    g726_data,
-                    2,
-                    self._decode_state,
-                )
-                return pcm_data
-            # For 16, 24, 40 kbit/s variants a specialised library is needed
-            self.logger.warning(
-                f"G.726-{self.bitrate_kbps} decoding not implemented. Only G.726-32 is supported."
+            pcm_data, self._decode_state = _adpcm_decode_nbits(
+                g726_data,
+                self.bits_per_sample,
+                state=self._decode_state,
             )
-            return None
+            return pcm_data
         except Exception as e:
             self.logger.error(f"G.726 decoding error: {e}")
             return None
@@ -426,8 +620,6 @@ class G726Codec:
         Returns:
             Dictionary with codec details.
         """
-        impl_status = "Full (pure Python ADPCM)" if self.bitrate_kbps == 32 else "Framework Only"
-
         return {
             "name": f"G.726-{self.bitrate_kbps}",
             "description": f"ADPCM speech codec ({self.bitrate_kbps} kbit/s)",
@@ -438,7 +630,7 @@ class G726Codec:
             "enabled": self.enabled,
             "quality": self._get_quality_description(),
             "bandwidth": "Low to Medium",
-            "implementation": impl_status,
+            "implementation": f"Full (pure Python {self.bits_per_sample}-bit ADPCM)",
         }
 
     def _get_quality_description(self) -> str:
@@ -484,6 +676,9 @@ class G726Codec:
         """
         Check if G.726 codec is supported for given bitrate.
 
+        All four G.726 bitrate variants (16, 24, 32, 40 kbit/s) are fully
+        supported via the pure-Python ADPCM implementation.
+
         Args:
             bitrate: Bitrate to check (16000, 24000, 32000, or 40000).
 
@@ -491,10 +686,7 @@ class G726Codec:
             ``True`` if codec is available for this bitrate.
         """
         bitrate_kbps = bitrate // 1000
-
-        # G.726-32 is fully supported via the pure-Python ADPCM implementation
-        # Other bitrates would need a specialised library
-        return bitrate_kbps == 32
+        return bitrate_kbps in (16, 24, 32, 40)
 
     @staticmethod
     def get_capabilities() -> dict:
@@ -512,7 +704,7 @@ class G726Codec:
             "complexity": "Low",
             "latency": "Very Low",
             "applications": ["VoIP", "Telephony", "Low-bandwidth scenarios"],
-            "note": "G.726-32 fully supported via pure-Python ADPCM, others framework only",
+            "note": "All G.726 bitrates fully supported via pure-Python ADPCM",
         }
 
 

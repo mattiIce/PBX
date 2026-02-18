@@ -355,24 +355,33 @@ class CallTagging:
 
         tags_added = []
 
-        # Rule-based tagging
+        # Rule-based tagging from keyword rules
         if transcript:
             tags_added.extend(self._apply_rules(call_id, transcript))
 
-        # AI-based tagging (placeholder for ML integration)
+        # Classify transcript using ML (if available) or keyword scoring
         if transcript:
-            ai_tags = self._classify_with_ai(transcript)
-            for tag, confidence in ai_tags:
+            classification_tags = self._classify_with_ai(transcript)
+            for tag, confidence in classification_tags:
                 if confidence >= self.min_confidence and self.tag_call(
                     call_id, tag, TagSource.AUTO, confidence
                 ):
                     tags_added.append(tag)
 
-        # Metadata-based tagging
+        # Metadata-based tagging (queue, time, duration)
         if metadata:
             meta_tags = self._tag_from_metadata(metadata)
             tags_added.extend(
                 tag for tag in meta_tags if self.tag_call(call_id, tag, TagSource.RULE, 1.0)
+            )
+
+        # Rule-based auto-tagging from call metadata analysis
+        if metadata:
+            analysis_tags = self._analyze_call_metadata(call_id, metadata)
+            tags_added.extend(
+                tag
+                for tag, conf in analysis_tags
+                if conf >= self.min_confidence and self.tag_call(call_id, tag, TagSource.AUTO, conf)
             )
 
         if tags_added:
@@ -644,6 +653,112 @@ class CallTagging:
                 tags.append("medium_call")
             else:
                 tags.append("long_call")
+
+        return tags
+
+    def _analyze_call_metadata(self, call_id: str, metadata: dict) -> list[tuple[str, float]]:
+        """Analyze call metadata to produce rule-based auto-tags.
+
+        Examines structured call metadata (direction, disposition, caller
+        history, extension type, etc.) to derive meaningful tags without
+        requiring a transcript or ML model.
+
+        Args:
+            call_id: Call identifier (used for repeat-caller detection).
+            metadata: Call metadata dictionary.  Recognised keys include:
+                ``direction`` (inbound/outbound/internal),
+                ``disposition`` (answered/missed/abandoned/voicemail),
+                ``caller_id``, ``callee_id``,
+                ``extension_type`` (e.g. sales, support, executive),
+                ``transfer_count``, ``hold_duration``, ``ring_duration``,
+                ``is_after_hours`` (bool), ``ivr_path`` (list of menu choices).
+
+        Returns:
+            List of ``(tag, confidence)`` tuples.
+        """
+        tags: list[tuple[str, float]] = []
+
+        # --- Direction-based tagging ---
+        direction = metadata.get("direction", "").lower()
+        if direction == "inbound":
+            tags.append(("inbound", 1.0))
+        elif direction == "outbound":
+            tags.append(("outbound", 1.0))
+        elif direction == "internal":
+            tags.append(("internal", 1.0))
+
+        # --- Disposition-based tagging ---
+        disposition = metadata.get("disposition", "").lower()
+        if disposition == "missed":
+            tags.append(("missed_call", 1.0))
+        elif disposition == "abandoned":
+            tags.append(("abandoned", 0.95))
+        elif disposition == "voicemail":
+            tags.append(("voicemail", 1.0))
+
+        # --- Extension type mapping ---
+        ext_type = metadata.get("extension_type", "").lower()
+        ext_type_tag_map = {
+            "sales": ("sales", 0.85),
+            "support": ("support", 0.85),
+            "billing": ("billing", 0.85),
+            "executive": ("executive", 0.9),
+            "reception": ("reception", 0.8),
+        }
+        if ext_type in ext_type_tag_map:
+            tags.append(ext_type_tag_map[ext_type])
+
+        # --- Transfer / escalation detection ---
+        transfer_count = metadata.get("transfer_count", 0)
+        if transfer_count >= 2:
+            tags.append(("escalated", 0.9))
+        elif transfer_count == 1:
+            tags.append(("transferred", 0.85))
+
+        # --- Long hold detection ---
+        hold_duration = metadata.get("hold_duration", 0)
+        if hold_duration > 120:
+            tags.append(("long_hold", 0.9))
+
+        # --- Slow answer / long ring detection ---
+        ring_duration = metadata.get("ring_duration", 0)
+        if ring_duration > 30:
+            tags.append(("slow_answer", 0.8))
+
+        # --- After-hours tagging ---
+        if metadata.get("is_after_hours"):
+            tags.append(("after_hours", 1.0))
+
+        # --- IVR path analysis ---
+        ivr_path = metadata.get("ivr_path")
+        if ivr_path and isinstance(ivr_path, list):
+            ivr_tag_map = {
+                "sales": "sales",
+                "support": "support",
+                "billing": "billing",
+                "technical": "technical",
+            }
+            for choice in ivr_path:
+                choice_lower = str(choice).lower()
+                for keyword, tag in ivr_tag_map.items():
+                    if keyword in choice_lower:
+                        tags.append((tag, 0.9))
+                        break
+
+        # --- Repeat caller detection ---
+        caller_id = metadata.get("caller_id", "")
+        if caller_id:
+            repeat_count = sum(
+                1
+                for cid, tag_list in self.call_tags.items()
+                if cid != call_id and any(t.tag == f"caller_{caller_id}" for t in tag_list)
+            )
+            if repeat_count >= 3:
+                tags.append(("frequent_caller", 0.95))
+            elif repeat_count >= 1:
+                tags.append(("repeat_caller", 0.8))
+            # Always store a per-caller tag for future repeat detection
+            tags.append((f"caller_{caller_id}", 1.0))
 
         return tags
 

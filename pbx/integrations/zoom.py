@@ -242,15 +242,58 @@ class ZoomIntegration:
                     if trunk.allocate_channel():
                         self.logger.info(f"Initiating SIP call to {sip_uri} via trunk {trunk.name}")
 
-                        # In production, this would:
-                        # 1. Build SIP INVITE with Zoom Phone-specific headers
-                        # 2. Include authentication credentials from trunk config
-                        # 3. Handle codec negotiation (G.711, G.729, Opus)
-                        # 4. Bridge the call with the internal extension
-                        # 5. Handle call progress and status updates
+                        # Build SIP INVITE for Zoom Phone SIP endpoint
+                        import uuid
 
-                        # For now, log the action and return success indicator
-                        self.logger.info(f"Call routed to Zoom Phone: {from_number} -> {to_number}")
+                        from pbx.sip.message import SIPMessageBuilder
+                        from pbx.sip.sdp import SDPBuilder
+
+                        server_ip = pbx_core._get_server_ip()
+                        sip_port = pbx_core.config.get("server.sip_port", 5060)
+                        call_id = str(uuid.uuid4())
+
+                        # Allocate RTP relay for the call
+                        rtp_ports = pbx_core.rtp_relay.allocate_relay(call_id)
+                        if not rtp_ports:
+                            self.logger.error("Failed to allocate RTP ports for Zoom Phone call")
+                            trunk.release_channel()
+                            return False
+
+                        # Build SDP with codecs supported by Zoom Phone (G.711, G.729, Opus)
+                        sdp_body = SDPBuilder.build_audio_sdp(
+                            server_ip, rtp_ports[0], session_id=call_id
+                        )
+
+                        # Build SIP INVITE targeting the Zoom Phone SIP endpoint
+                        invite_msg = SIPMessageBuilder.build_request(
+                            method="INVITE",
+                            uri=f"sip:{sip_uri}",
+                            from_addr=f"<sip:{from_number}@{server_ip}>",
+                            to_addr=f"<sip:{sip_uri}>",
+                            call_id=call_id,
+                            cseq=1,
+                            body=sdp_body,
+                        )
+                        invite_msg.set_header("Content-type", "application/sdp")
+                        invite_msg.set_header(
+                            "Contact", f"<sip:{from_number}@{server_ip}:{sip_port}>"
+                        )
+
+                        # Send INVITE to the Zoom Phone SIP endpoint
+                        dest_addr = (trunk.host, trunk.port)
+                        pbx_core.sip_server._send_message(invite_msg.build(), dest_addr)
+
+                        # Create call record for tracking
+                        new_call = pbx_core.call_manager.create_call(
+                            call_id, from_number, to_number
+                        )
+                        new_call.start()
+                        new_call.rtp_ports = rtp_ports
+
+                        self.logger.info(
+                            f"SIP INVITE sent to Zoom Phone at {dest_addr} "
+                            f"for call {call_id}: {from_number} -> {to_number}"
+                        )
                         return True
                     self.logger.error("Failed to allocate channel on Zoom Phone trunk")
                     return False

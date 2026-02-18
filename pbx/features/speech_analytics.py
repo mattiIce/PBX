@@ -175,9 +175,21 @@ class SpeechAnalyticsEngine:
                 result["sentiment"] = sentiment_result["sentiment"]
                 result["sentiment_score"] = sentiment_result["score"]
 
-                # Detect keywords if configured
-                # In production, would get keywords from config
-                keywords = ["urgent", "complaint", "cancel", "refund", "problem"]
+                # Build keyword list from stored call-extension mapping or defaults
+                default_keywords = ["urgent", "complaint", "cancel", "refund", "problem"]
+                keywords = list(default_keywords)
+                try:
+                    # Try to get custom keywords from the extension config
+                    # call_id format may contain extension info (e.g., "ext-100-...")
+                    extension = getattr(self, "_call_extensions", {}).get(call_id)
+                    if extension:
+                        ext_config = self.get_config(extension)
+                        if ext_config and ext_config.get("keywords"):
+                            custom_kw = ext_config["keywords"]
+                            if isinstance(custom_kw, str) and custom_kw.strip():
+                                keywords = [k.strip() for k in custom_kw.split(",") if k.strip()]
+                except (KeyError, TypeError, ValueError):
+                    pass  # Use default keywords
                 result["keywords_detected"] = self.detect_keywords(transcription, keywords)
 
         except (KeyError, TypeError, ValueError) as e:
@@ -542,21 +554,74 @@ class SpeechAnalyticsEngine:
             Complete analysis dict
         """
         try:
-            # In production, would:
-            # 1. Load audio file
-            # 2. Convert to proper format (16kHz, mono PCM)
-            # 3. Process in chunks
-            # 4. Generate full transcript
-            # 5. Analyze sentiment
-            # 6. Generate summary
-            # 7. Detect keywords
+            import wave
 
-            # For now, return framework structure
+            chunk_results = []
+            duration = 0.0
+
+            # 1. Load audio file and read PCM data
+            try:
+                with wave.open(audio_file_path, "rb") as wf:
+                    sample_rate = wf.getframerate()
+                    n_frames = wf.getnframes()
+                    duration = n_frames / sample_rate if sample_rate > 0 else 0.0
+
+                    # 2. Read and process in chunks (4000 frames per chunk)
+                    chunk_frame_size = 4000
+                    while True:
+                        audio_chunk = wf.readframes(chunk_frame_size)
+                        if len(audio_chunk) == 0:
+                            break
+
+                        # 3. Transcribe each chunk
+                        chunk_text = self._transcribe_audio_vosk(audio_chunk)
+                        if chunk_text:
+                            chunk_results.append(chunk_text)
+
+            except (FileNotFoundError, wave.Error) as e:
+                self.logger.error(f"Could not open audio file {audio_file_path}: {e}")
+                return {"call_id": call_id, "status": "error", "error": str(e)}
+
+            # 4. Generate full transcript from all chunks
+            full_transcript = " ".join(chunk_results).strip()
+
+            # 5. Analyze sentiment of the full transcript
+            sentiment_result = self.analyze_sentiment(full_transcript)
+
+            # 6. Generate summary
+            summary = self.generate_summary(call_id, full_transcript)
+
+            # 7. Detect keywords
+            default_keywords = [
+                "urgent",
+                "complaint",
+                "cancel",
+                "refund",
+                "problem",
+                "help",
+                "issue",
+                "billing",
+                "account",
+                "service",
+            ]
+            keywords_detected = self.detect_keywords(full_transcript, default_keywords)
+
             return {
                 "call_id": call_id,
-                "status": "Analysis framework ready",
-                "note": "Full audio file analysis requires audio processing implementation",
+                "status": "completed",
+                "duration": duration,
+                "transcript": full_transcript,
+                "sentiment": sentiment_result["sentiment"],
+                "sentiment_score": sentiment_result["score"],
+                "sentiment_confidence": sentiment_result["confidence"],
+                "summary": summary,
+                "keywords_detected": keywords_detected,
+                "chunks_processed": len(chunk_results),
+                "timestamp": datetime.now(UTC).isoformat(),
             }
+        except ImportError:
+            self.logger.warning("wave module not available for audio file processing")
+            return {"call_id": call_id, "status": "error", "error": "wave module not available"}
         except Exception as e:
             self.logger.error(f"Error analyzing call recording: {e}")
             return {"call_id": call_id, "status": "error", "error": str(e)}

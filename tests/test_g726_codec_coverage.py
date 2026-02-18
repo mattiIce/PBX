@@ -245,14 +245,15 @@ class TestG726Codec:
         assert isinstance(result, bytes)
 
     @patch("pbx.features.g726_codec.get_logger")
-    def test_encode_non_32kbps_returns_none(self, mock_get_logger: MagicMock) -> None:
-        """Test encoding at non-32 kbit/s returns None."""
+    def test_encode_non_32kbps_succeeds(self, mock_get_logger: MagicMock) -> None:
+        """Test encoding at non-32 kbit/s succeeds with pure-Python ADPCM."""
         from pbx.features.g726_codec import G726Codec
 
         codec = G726Codec(bitrate=16000)
         pcm_data = struct.pack("<hh", 1000, -1000)
         result = codec.encode(pcm_data)
-        assert result is None
+        assert result is not None
+        assert isinstance(result, bytes)
 
     @patch("pbx.features.g726_codec.get_logger")
     def test_encode_exception(self, mock_get_logger: MagicMock) -> None:
@@ -288,13 +289,14 @@ class TestG726Codec:
         assert result == b""
 
     @patch("pbx.features.g726_codec.get_logger")
-    def test_decode_non_32kbps_returns_none(self, mock_get_logger: MagicMock) -> None:
-        """Test decoding at non-32 kbit/s returns None."""
+    def test_decode_non_32kbps_succeeds(self, mock_get_logger: MagicMock) -> None:
+        """Test decoding at non-32 kbit/s succeeds with pure-Python ADPCM."""
         from pbx.features.g726_codec import G726Codec
 
         codec = G726Codec(bitrate=24000)
         result = codec.decode(b"\x37")
-        assert result is None
+        assert result is not None
+        assert isinstance(result, bytes)
 
     @patch("pbx.features.g726_codec.get_logger")
     def test_decode_exception(self, mock_get_logger: MagicMock) -> None:
@@ -338,7 +340,7 @@ class TestG726Codec:
         assert info["bits_per_sample"] == 4
         assert info["payload_type"] == 2
         assert info["enabled"] is True
-        assert info["implementation"] == "Full (pure Python ADPCM)"
+        assert info["implementation"] == "Full (pure Python 4-bit ADPCM)"
 
     @patch("pbx.features.g726_codec.get_logger")
     def test_get_info_non_32kbps(self, mock_get_logger: MagicMock) -> None:
@@ -348,7 +350,7 @@ class TestG726Codec:
         codec = G726Codec(bitrate=16000)
         info = codec.get_info()
         assert info["name"] == "G.726-16"
-        assert info["implementation"] == "Framework Only"
+        assert info["implementation"] == "Full (pure Python 2-bit ADPCM)"
 
     @patch("pbx.features.g726_codec.get_logger")
     def test_get_quality_description_all_bitrates(self, mock_get_logger: MagicMock) -> None:
@@ -401,12 +403,12 @@ class TestG726Codec:
         assert G726Codec.is_supported(32000) is True
 
     def test_is_supported_other_bitrates(self) -> None:
-        """Test is_supported returns False for non-32000 bitrates."""
+        """Test is_supported returns True for all valid bitrates."""
         from pbx.features.g726_codec import G726Codec
 
-        assert G726Codec.is_supported(16000) is False
-        assert G726Codec.is_supported(24000) is False
-        assert G726Codec.is_supported(40000) is False
+        assert G726Codec.is_supported(16000) is True
+        assert G726Codec.is_supported(24000) is True
+        assert G726Codec.is_supported(40000) is True
 
     def test_get_capabilities(self) -> None:
         """Test get_capabilities returns correct structure."""

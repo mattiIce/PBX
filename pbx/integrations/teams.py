@@ -236,15 +236,63 @@ class TeamsIntegration:
                     if trunk.allocate_channel():
                         self.logger.info(f"Initiating SIP call to {sip_uri} via trunk {trunk.name}")
 
-                        # In production, this would:
-                        # 1. Build SIP INVITE with proper headers for Teams
-                        # 2. Include X-MS-SBC-CustomData header for routing
-                        # 3. Use TLS/SRTP for encryption
-                        # 4. Handle authentication with SBC
-                        # 5. Bridge the call with the internal extension
+                        # Build SIP INVITE for Teams Direct Routing via SBC
+                        import uuid
 
-                        # For now, log the action and return success indicator
-                        self.logger.info(f"Call routed to Teams: {from_number} -> {sip_uri}")
+                        from pbx.sip.message import SIPMessageBuilder
+                        from pbx.sip.sdp import SDPBuilder
+
+                        server_ip = pbx_core._get_server_ip()
+                        sip_port = pbx_core.config.get("server.sip_port", 5060)
+                        call_id = str(uuid.uuid4())
+
+                        # Allocate RTP relay for the call
+                        rtp_ports = pbx_core.rtp_relay.allocate_relay(call_id)
+                        if not rtp_ports:
+                            self.logger.error("Failed to allocate RTP ports for Teams call")
+                            trunk.release_channel()
+                            return False
+
+                        # Build SDP with audio codecs
+                        sdp_body = SDPBuilder.build_audio_sdp(
+                            server_ip, rtp_ports[0], session_id=call_id
+                        )
+
+                        # Build SIP INVITE targeting the Teams SBC endpoint
+                        invite_msg = SIPMessageBuilder.build_request(
+                            method="INVITE",
+                            uri=f"sip:{sip_uri}",
+                            from_addr=f"<sip:{from_number}@{server_ip}>",
+                            to_addr=f"<sip:{sip_uri}>",
+                            call_id=call_id,
+                            cseq=1,
+                            body=sdp_body,
+                        )
+                        invite_msg.set_header("Content-type", "application/sdp")
+                        invite_msg.set_header(
+                            "Contact",
+                            f"<sip:{from_number}@{server_ip}:{sip_port};transport=tls>",
+                        )
+                        invite_msg.set_header(
+                            "X-MS-SBC-CustomData",
+                            f"tenant={self.tenant_id};domain={self.direct_routing_domain}",
+                        )
+
+                        # Send INVITE to the Teams SBC endpoint
+                        dest_addr = (trunk.host, trunk.port)
+                        pbx_core.sip_server._send_message(invite_msg.build(), dest_addr)
+
+                        # Create call record for tracking
+                        new_call = pbx_core.call_manager.create_call(
+                            call_id, from_number, sip_uri
+                        )
+                        new_call.start()
+                        new_call.rtp_ports = rtp_ports
+
+                        self.logger.info(
+                            f"SIP INVITE sent to Teams SBC at {dest_addr} "
+                            f"for call {call_id}: {from_number} -> {sip_uri}"
+                        )
                         return True
                     self.logger.error("Failed to allocate channel on Teams trunk")
                     return False

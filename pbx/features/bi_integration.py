@@ -5,6 +5,7 @@ Export to BI tools (Tableau, Power BI, etc.)
 
 import csv
 import json
+import threading
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from pathlib import Path
@@ -79,6 +80,11 @@ class BIIntegration:
         # Datasets
         self.datasets: dict[str, DataSet] = {}
         self._initialize_default_datasets()
+
+        # Scheduled export timers
+        self.scheduled_exports: dict[str, dict] = {}
+        self._scheduled_timers: dict[str, threading.Timer] = {}
+        self._timer_lock = threading.Lock()
 
         # Statistics
         self.total_exports = 0
@@ -577,24 +583,41 @@ class BIIntegration:
             self.logger.error(f"Dataset {dataset_name} not found for scheduling")
             return
 
-        # Setup scheduled export job
-        # In production, this would integrate with cron or a task scheduler
         self.logger.info(f"Scheduled export for {dataset_name}")
         self.logger.info(f"  Schedule: {schedule}")
         self.logger.info(f"  Format: {export_format.value}")
 
-        # Store schedule configuration
-        if not hasattr(self, "scheduled_exports"):
-            self.scheduled_exports = {}
+        next_run = self._calculate_next_run(schedule)
 
+        # Store schedule configuration
         self.scheduled_exports[dataset_name] = {
             "schedule": schedule,
             "format": export_format,
             "last_run": None,
-            "next_run": self._calculate_next_run(schedule),
+            "next_run": next_run,
         }
 
-        self.logger.info(f"  Next run: {self.scheduled_exports[dataset_name]['next_run']}")
+        # Cancel any existing timer for this dataset
+        self._cancel_scheduled_timer(dataset_name)
+
+        # Calculate delay in seconds until next_run
+        now = datetime.now(UTC)
+        delay_seconds = max(0, (next_run - now).total_seconds())
+
+        # Create and start a threading.Timer for the next export run
+        timer = threading.Timer(
+            delay_seconds,
+            self._run_scheduled_export,
+            args=(dataset_name, schedule, export_format),
+        )
+        timer.daemon = True
+        timer.name = f"bi_export_{dataset_name}"
+
+        with self._timer_lock:
+            self._scheduled_timers[dataset_name] = timer
+            timer.start()
+
+        self.logger.info(f"  Next run: {next_run} (in {delay_seconds:.0f}s)")
 
     def _calculate_next_run(self, schedule: str) -> datetime:
         """Calculate next scheduled run time"""
@@ -620,6 +643,86 @@ class BIIntegration:
             )
         # Default to daily
         return now.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+
+    def _run_scheduled_export(
+        self, dataset_name: str, schedule: str, export_format: ExportFormat
+    ) -> None:
+        """
+        Execute a scheduled export and reschedule the next run.
+
+        Args:
+            dataset_name: Dataset to export
+            schedule: Schedule interval (daily, weekly, monthly)
+            export_format: Export format
+        """
+        self.logger.info(f"Running scheduled export for {dataset_name}")
+
+        try:
+            result = self.export_dataset(dataset_name, export_format=export_format)
+
+            if result.get("success"):
+                self.logger.info(
+                    f"Scheduled export completed: {dataset_name} "
+                    f"({result.get('record_count', 0)} records)"
+                )
+            else:
+                self.failed_exports += 1
+                self.logger.error(
+                    f"Scheduled export failed: {dataset_name} - {result.get('error')}"
+                )
+        except Exception as e:
+            self.failed_exports += 1
+            self.logger.error(f"Scheduled export error for {dataset_name}: {e}")
+
+        # Update schedule metadata
+        if dataset_name in self.scheduled_exports:
+            self.scheduled_exports[dataset_name]["last_run"] = datetime.now(UTC)
+            next_run = self._calculate_next_run(schedule)
+            self.scheduled_exports[dataset_name]["next_run"] = next_run
+
+            # Reschedule for the next interval
+            now = datetime.now(UTC)
+            delay_seconds = max(0, (next_run - now).total_seconds())
+
+            timer = threading.Timer(
+                delay_seconds,
+                self._run_scheduled_export,
+                args=(dataset_name, schedule, export_format),
+            )
+            timer.daemon = True
+            timer.name = f"bi_export_{dataset_name}"
+
+            with self._timer_lock:
+                self._scheduled_timers[dataset_name] = timer
+                timer.start()
+
+            self.logger.info(f"Next scheduled export for {dataset_name}: {next_run}")
+
+    def _cancel_scheduled_timer(self, dataset_name: str) -> None:
+        """
+        Cancel an existing scheduled timer for a dataset.
+
+        Args:
+            dataset_name: Dataset whose timer to cancel
+        """
+        with self._timer_lock:
+            existing_timer = self._scheduled_timers.pop(dataset_name, None)
+
+        if existing_timer is not None:
+            existing_timer.cancel()
+            self.logger.info(f"Cancelled existing scheduled timer for {dataset_name}")
+
+    def cancel_all_scheduled_exports(self) -> None:
+        """Cancel all scheduled export timers."""
+        with self._timer_lock:
+            timer_names = list(self._scheduled_timers.keys())
+            for name in timer_names:
+                timer = self._scheduled_timers.pop(name, None)
+                if timer is not None:
+                    timer.cancel()
+
+        self.scheduled_exports.clear()
+        self.logger.info("All scheduled exports cancelled")
 
     def get_available_datasets(self) -> list[dict]:
         """Get list of available datasets"""

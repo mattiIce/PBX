@@ -263,56 +263,233 @@ class SessionBorderController:
 
         return normalized
 
+    # STUN message constants (RFC 5389)
+    STUN_BINDING_REQUEST = 0x0001
+    STUN_BINDING_RESPONSE = 0x0101
+    STUN_MAGIC_COOKIE = 0x2112A442
+    STUN_ATTR_MAPPED_ADDRESS = 0x0001
+    STUN_ATTR_XOR_MAPPED_ADDRESS = 0x0020
+    STUN_ATTR_CHANGE_REQUEST = 0x0003
+    STUN_HEADER_SIZE = 20
+    STUN_DEFAULT_PORT = 3478
+    STUN_TIMEOUT = 2.0
+
     def detect_nat(self, local_ip: str, public_ip: str) -> NATType:
         """
-        Detect NAT type using STUN-like algorithm
+        Detect NAT type using STUN binding requests (RFC 5389).
+
+        Sends actual STUN Binding Request packets to the configured STUN
+        server (or falls back to the supplied *public_ip* on port 3478).
+
+        The algorithm follows RFC 3489 section 10.1:
+          1. **Test I** -- basic binding request to primary address/port.
+          2. **Test II** -- binding request with CHANGE-REQUEST flag
+             (change IP + port).
+          3. **Test III** -- binding request with CHANGE-REQUEST flag
+             (change port only).
 
         Args:
-            local_ip: Local IP address
-            public_ip: Public IP address
+            local_ip: Local IP address of this host.
+            public_ip: Known or assumed public IP address.
 
         Returns:
-            NATType: Detected NAT type
+            NATType: Detected NAT type.
         """
-        # Check if behind NAT
+        # No NAT if local equals public
         if local_ip == public_ip:
             return NATType.NONE
 
-        # Check if local IP is private
+        # Not behind NAT if local address is already public
         if not self._is_private_ip(local_ip):
-            # Both are public but different - unusual
             return NATType.NONE
 
-        # Simplified NAT detection based on RFC 3489/5389
-        # In production, this would perform STUN binding tests:
-        # 1. Test I: Basic binding test
-        # 2. Test II: Binding test with changed port
-        # 3. Test III: Binding test with changed IP and port
+        stun_server = self.config.get("features", {}).get("sbc", {}).get("stun_server", public_ip)
+        stun_port = (
+            self.config.get("features", {}).get("sbc", {}).get("stun_port", self.STUN_DEFAULT_PORT)
+        )
 
-        # For now, use heuristic based on common NAT behaviors
-        # Check if we can determine NAT type from IP patterns
+        # --- Test I: Basic STUN Binding Request ---
+        mapped_addr_1 = self._stun_binding_request(stun_server, stun_port)
+        if mapped_addr_1 is None:
+            self.logger.warning("STUN Test I failed — cannot reach STUN server")
+            # Cannot determine; assume port-restricted (most common)
+            return NATType.PORT_RESTRICTED
+
+        mapped_ip_1, mapped_port_1 = mapped_addr_1
+        self.logger.debug(f"STUN Test I: mapped address {mapped_ip_1}:{mapped_port_1}")
+
+        # --- Test II: Request server to respond from a different IP and port ---
+        # CHANGE-REQUEST flags: change IP (0x04) + change port (0x02) = 0x06
+        mapped_addr_2 = self._stun_binding_request(
+            stun_server, stun_port, change_request_flags=0x06
+        )
+
+        if mapped_addr_2 is not None:
+            # We received a response from a different server IP/port.
+            # This means the NAT allows traffic from any source — Full Cone.
+            self.logger.debug("STUN Test II succeeded — Full Cone NAT")
+            return NATType.FULL_CONE
+
+        # --- Test III: Same server IP, different port ---
+        # CHANGE-REQUEST flags: change port only (0x02)
+        mapped_addr_3 = self._stun_binding_request(
+            stun_server, stun_port, change_request_flags=0x02
+        )
+
+        if mapped_addr_3 is not None:
+            # Accepts from same IP but different port — Restricted Cone
+            self.logger.debug("STUN Test III succeeded — Restricted Cone NAT")
+            return NATType.RESTRICTED_CONE
+
+        # --- Test IV: Second binding to a different port to check for symmetric ---
+        alt_port = stun_port + 1
+        mapped_addr_4 = self._stun_binding_request(stun_server, alt_port)
+
+        if mapped_addr_4 is not None:
+            _mapped_ip_4, mapped_port_4 = mapped_addr_4
+            if mapped_port_4 != mapped_port_1:
+                # Different mapped port for different destination — Symmetric NAT
+                self.logger.debug(
+                    f"STUN Test IV: mapped port changed "
+                    f"({mapped_port_1} vs {mapped_port_4}) — Symmetric NAT"
+                )
+                return NATType.SYMMETRIC
+
+        # Default: Port Restricted Cone
+        self.logger.debug("STUN classification: Port Restricted Cone NAT")
+        return NATType.PORT_RESTRICTED
+
+    def _stun_binding_request(
+        self,
+        server: str,
+        port: int,
+        change_request_flags: int | None = None,
+    ) -> tuple[str, int] | None:
+        """Send a single STUN Binding Request and parse the response.
+
+        Constructs a minimal RFC 5389 Binding Request, optionally including
+        a CHANGE-REQUEST attribute (RFC 3489), sends it via UDP, and
+        extracts the XOR-MAPPED-ADDRESS (or MAPPED-ADDRESS) from the
+        response.
+
+        Args:
+            server: STUN server hostname or IP.
+            port: STUN server port.
+            change_request_flags: Optional CHANGE-REQUEST flags byte
+                (``0x02`` = change port, ``0x04`` = change IP, ``0x06`` =
+                both).
+
+        Returns:
+            ``(mapped_ip, mapped_port)`` tuple, or ``None`` on failure.
+        """
+        import os
+        import struct
 
         try:
-            # Try to connect to external service to determine NAT type
-            # This is a simplified version - production would use STUN protocol
+            # Build STUN Binding Request (RFC 5389 section 6)
+            transaction_id = os.urandom(12)  # 96-bit transaction ID
+            attrs = b""
+
+            if change_request_flags is not None:
+                # CHANGE-REQUEST attribute (type 0x0003, length 4)
+                attr_value = struct.pack("!I", change_request_flags)
+                attrs += struct.pack("!HH", self.STUN_ATTR_CHANGE_REQUEST, len(attr_value))
+                attrs += attr_value
+
+            header = struct.pack(
+                "!HHI",
+                self.STUN_BINDING_REQUEST,
+                len(attrs),
+                self.STUN_MAGIC_COOKIE,
+            )
+            packet = header + transaction_id + attrs
+
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-            sock.settimeout(1.0)
+            sock.settimeout(self.STUN_TIMEOUT)
 
-            # Attempt connection (doesn't actually send data, just tests binding)
             try:
-                sock.connect((public_ip, 3478))  # STUN port
-                # If we can bind, it's likely port-restricted or better
+                sock.sendto(packet, (server, port))
+                data, _addr = sock.recvfrom(1024)
+            finally:
                 sock.close()
 
-                # Default to port-restricted for most home/office NATs
-                return NATType.PORT_RESTRICTED
-            except OSError:
-                sock.close()
-                # Symmetric NAT is most restrictive
-                return NATType.SYMMETRIC
-        except OSError:
-            # If we can't determine, assume port-restricted (most common)
-            return NATType.PORT_RESTRICTED
+            # Parse response
+            if len(data) < self.STUN_HEADER_SIZE:
+                return None
+
+            msg_type, _msg_len, _magic = struct.unpack_from("!HHI", data, 0)
+            resp_txn = data[8:20]
+
+            if msg_type != self.STUN_BINDING_RESPONSE:
+                return None
+            if resp_txn != transaction_id:
+                return None
+
+            # Walk attributes looking for XOR-MAPPED-ADDRESS or MAPPED-ADDRESS
+            offset = self.STUN_HEADER_SIZE
+            while offset + 4 <= len(data):
+                attr_type, attr_len = struct.unpack_from("!HH", data, offset)
+                offset += 4
+                if offset + attr_len > len(data):
+                    break
+
+                if attr_type == self.STUN_ATTR_XOR_MAPPED_ADDRESS:
+                    result = self._parse_xor_mapped_address(data, offset, transaction_id)
+                    if result:
+                        return result
+
+                elif attr_type == self.STUN_ATTR_MAPPED_ADDRESS:
+                    result = self._parse_mapped_address(data, offset)
+                    if result:
+                        return result
+
+                # Advance to next attribute (padded to 4-byte boundary)
+                offset += attr_len + ((4 - attr_len % 4) % 4)
+
+            return None
+
+        except OSError as e:
+            self.logger.debug(f"STUN request to {server}:{port} failed: {e}")
+            return None
+
+    @staticmethod
+    def _parse_xor_mapped_address(
+        data: bytes, offset: int, _transaction_id: bytes
+    ) -> tuple[str, int] | None:
+        """Parse an XOR-MAPPED-ADDRESS attribute (RFC 5389 section 15.2)."""
+        import struct
+
+        if offset + 8 > len(data):
+            return None
+
+        _reserved, family, xport = struct.unpack_from("!BBH", data, offset)
+        if family != 0x01:  # Only IPv4 supported here
+            return None
+
+        xaddr = struct.unpack_from("!I", data, offset + 4)[0]
+
+        # XOR with magic cookie
+        mapped_port = xport ^ (SessionBorderController.STUN_MAGIC_COOKIE >> 16)
+        mapped_addr_int = xaddr ^ SessionBorderController.STUN_MAGIC_COOKIE
+
+        mapped_ip = socket.inet_ntoa(struct.pack("!I", mapped_addr_int))
+        return mapped_ip, mapped_port
+
+    @staticmethod
+    def _parse_mapped_address(data: bytes, offset: int) -> tuple[str, int] | None:
+        """Parse a MAPPED-ADDRESS attribute (RFC 5389 section 15.1)."""
+        import struct
+
+        if offset + 8 > len(data):
+            return None
+
+        _reserved, family, mapped_port = struct.unpack_from("!BBH", data, offset)
+        if family != 0x01:  # IPv4
+            return None
+
+        mapped_addr_int = struct.unpack_from("!I", data, offset + 4)[0]
+        mapped_ip = socket.inet_ntoa(struct.pack("!I", mapped_addr_int))
+        return mapped_ip, mapped_port
 
     def _is_private_ip(self, ip: str) -> bool:
         """Check if IP is in private range"""
