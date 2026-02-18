@@ -66,11 +66,11 @@ class AudioProcessor:
             # Convert bytes to numpy array
             audio_array = np.frombuffer(audio_data, dtype=np.int16)
 
-            # Apply noise suppression (stub - would use WebRTC APM)
+            # Apply spectral subtraction noise suppression
             if self.noise_suppression_enabled:
                 audio_array = self._suppress_noise(audio_array)
 
-            # Apply echo cancellation (stub - would use WebRTC APM)
+            # Apply NLMS adaptive echo cancellation
             if self.echo_cancellation_enabled and not is_far_end:
                 audio_array = self._cancel_echo(audio_array)
 
@@ -88,36 +88,163 @@ class AudioProcessor:
             return audio_data
 
     def _suppress_noise(self, audio: np.ndarray) -> np.ndarray:
-        """Apply noise suppression to audio signal"""
-        # Stub implementation - in production would use WebRTC's NS module
-        # For now, apply simple threshold-based noise gate
-        threshold = np.mean(np.abs(audio)) * 0.1
-        mask = np.abs(audio) > threshold
-        return audio * mask
+        """
+        Apply spectral subtraction noise suppression.
+
+        Uses a frequency-domain approach: estimates the noise spectrum from
+        low-energy frames and subtracts it from the signal spectrum.
+        """
+        frame_len = len(audio)
+        if frame_len == 0:
+            return audio
+
+        # Compute FFT
+        spectrum = np.fft.rfft(audio.astype(np.float64))
+        magnitude = np.abs(spectrum)
+        phase = np.angle(spectrum)
+
+        # Estimate noise floor from running average
+        current_rms = np.sqrt(np.mean(audio.astype(np.float64) ** 2))
+
+        if not hasattr(self, "_noise_spectrum"):
+            self._noise_spectrum = magnitude.copy()
+            self._noise_frame_count = 0
+
+        # Update noise estimate during silence (low energy frames)
+        silence_threshold = 500  # Threshold for silence detection
+        if current_rms < silence_threshold:
+            alpha = 0.95  # Smoothing factor for noise estimate
+            self._noise_spectrum = (
+                alpha * self._noise_spectrum + (1 - alpha) * magnitude
+            )
+            self._noise_frame_count += 1
+
+        # Spectral subtraction with over-subtraction factor
+        over_subtraction = 2.0
+        spectral_floor = 0.01  # Prevent musical noise
+
+        cleaned_magnitude = magnitude - over_subtraction * self._noise_spectrum
+        cleaned_magnitude = np.maximum(
+            cleaned_magnitude, spectral_floor * magnitude
+        )
+
+        # Reconstruct signal
+        cleaned_spectrum = cleaned_magnitude * np.exp(1j * phase)
+        result = np.fft.irfft(cleaned_spectrum, n=frame_len)
+        return np.clip(result, -32768, 32767).astype(np.int16)
 
     def _cancel_echo(self, audio: np.ndarray) -> np.ndarray:
-        """Apply echo cancellation to audio signal"""
-        # Stub implementation - in production would use WebRTC's AEC module
-        # This requires both near-end and far-end audio streams
+        """
+        Apply echo cancellation using NLMS (Normalized Least Mean Squares)
+        adaptive filter.
+
+        Maintains an adaptive filter that models the echo path and subtracts
+        the estimated echo from the near-end signal.
+        """
+        frame_len = len(audio)
+        if frame_len == 0:
+            return audio
+
+        # Initialize adaptive filter state
+        filter_length = 128  # Adaptive filter taps
+        if not hasattr(self, "_echo_filter"):
+            self._echo_filter = np.zeros(filter_length)
+            self._far_end_buffer = np.zeros(filter_length)
+            self._echo_mu = 0.01  # Step size for NLMS
+
+        # If we have far-end reference audio, use it
+        if hasattr(self, "_last_far_end") and self._last_far_end is not None:
+            far_end = self._last_far_end.astype(np.float64)
+
+            # Ensure matching lengths
+            process_len = min(frame_len, len(far_end))
+            near_end = audio[:process_len].astype(np.float64)
+
+            output = np.zeros(process_len)
+            for i in range(process_len):
+                # Shift far-end buffer
+                self._far_end_buffer = np.roll(self._far_end_buffer, 1)
+                self._far_end_buffer[0] = far_end[i] if i < len(far_end) else 0
+
+                # Estimate echo
+                echo_estimate = np.dot(self._echo_filter, self._far_end_buffer)
+
+                # Subtract estimated echo
+                error = near_end[i] - echo_estimate
+                output[i] = error
+
+                # Update filter (NLMS)
+                power = np.dot(self._far_end_buffer, self._far_end_buffer) + 1e-6
+                self._echo_filter += (
+                    self._echo_mu * error * self._far_end_buffer / power
+                )
+
+            result = np.zeros(frame_len)
+            result[:process_len] = output
+            if process_len < frame_len:
+                result[process_len:] = audio[process_len:]
+            return np.clip(result, -32768, 32767).astype(np.int16)
+
         return audio
 
+    def set_far_end_reference(self, far_end_audio: bytes) -> None:
+        """
+        Provide far-end audio reference for echo cancellation.
+
+        Args:
+            far_end_audio: Raw PCM 16-bit audio from the far end
+        """
+        self._last_far_end = np.frombuffer(far_end_audio, dtype=np.int16)
+
     def _apply_agc(self, audio: np.ndarray) -> np.ndarray:
-        """Apply automatic gain control"""
-        # Stub implementation - in production would use WebRTC's AGC module
-        # Simple normalization for now
+        """
+        Apply automatic gain control with attack/release dynamics.
+
+        Uses a digital compressor/expander with configurable target level,
+        attack time, and release time to smoothly normalize audio levels.
+        """
         if len(audio) == 0:
             return audio
 
-        target_level = 0.7  # Target RMS level (0-1)
-        current_rms = np.sqrt(np.mean(audio.astype(float) ** 2)) / 32768.0
+        # AGC parameters
+        target_level_db = -20.0  # Target output level in dBFS
+        attack_time = 0.005  # Attack time in seconds (fast)
+        release_time = 0.05  # Release time in seconds (slower)
+        max_gain_db = 30.0  # Maximum gain in dB
 
-        if current_rms > 0:
-            gain = target_level / current_rms
-            gain = min(gain, 10.0)  # Limit maximum gain
-            # Prevent overflow by clamping to int16 range
-            audio = np.clip(audio * gain, -32768, 32767).astype(np.int16)
+        # Initialize state
+        if not hasattr(self, "_agc_gain_db"):
+            self._agc_gain_db = 0.0
 
-        return audio
+        # Compute frame level in dB
+        audio_float = audio.astype(np.float64)
+        rms = np.sqrt(np.mean(audio_float**2))
+        if rms < 1.0:
+            return audio  # Signal too quiet, pass through
+
+        level_db = 20.0 * np.log10(rms / 32768.0 + 1e-10)
+
+        # Compute desired gain
+        desired_gain_db = target_level_db - level_db
+        desired_gain_db = np.clip(desired_gain_db, -20.0, max_gain_db)
+
+        # Smooth gain changes (attack/release)
+        samples_per_sec = self.sample_rate
+        frame_duration = len(audio) / samples_per_sec
+
+        if desired_gain_db > self._agc_gain_db:
+            # Increasing gain (release)
+            coeff = 1.0 - np.exp(-frame_duration / release_time)
+        else:
+            # Decreasing gain (attack)
+            coeff = 1.0 - np.exp(-frame_duration / attack_time)
+
+        self._agc_gain_db += coeff * (desired_gain_db - self._agc_gain_db)
+
+        # Apply gain
+        gain_linear = 10.0 ** (self._agc_gain_db / 20.0)
+        audio_gained = audio_float * gain_linear
+        return np.clip(audio_gained, -32768, 32767).astype(np.int16)
 
     def estimate_noise_level(self, audio_data: bytes) -> float:
         """

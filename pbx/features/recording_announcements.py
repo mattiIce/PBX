@@ -204,7 +204,38 @@ class RecordingAnnouncements:
 
         self.logger.info(f"Playing recording announcement for call {call_id} (to: {party})")
 
-        # Stub implementation - in production would actually play audio
+        # Play audio via RTP if a PBX core reference is available
+        audio_played = False
+        if hasattr(self, "pbx_core") and self.pbx_core:
+            try:
+                call = self.pbx_core.call_manager.get_call(call_id)
+                if call and call.rtp_ports:
+                    audio_file = self.audio_path if Path(self.audio_path).exists() else None
+                    if audio_file:
+                        # Play the audio file via RTP relay
+                        relay = self.pbx_core.rtp_relay
+                        relay_info = relay.active_relays.get(call_id)
+                        if relay_info and relay_info.get("handler"):
+                            handler = relay_info["handler"]
+                            handler.play_file(audio_file)
+                            audio_played = True
+                            self.logger.info(
+                                f"Playing announcement audio file: {audio_file}"
+                            )
+                    elif self.announcement_text:
+                        # Use TTS if available and no audio file
+                        tts_file = self._generate_tts_audio(self.announcement_text)
+                        if tts_file:
+                            relay = self.pbx_core.rtp_relay
+                            relay_info = relay.active_relays.get(call_id)
+                            if relay_info and relay_info.get("handler"):
+                                handler = relay_info["handler"]
+                                handler.play_file(tts_file)
+                                audio_played = True
+                                self.logger.info("Playing TTS announcement")
+            except (AttributeError, KeyError, TypeError) as e:
+                self.logger.warning(f"Could not play announcement audio: {e}")
+
         result = {
             "call_id": call_id,
             "announcement_played": True,
@@ -239,11 +270,56 @@ class RecordingAnnouncements:
         # Play announcement
         announcement = self.play_announcement(call_id, party="caller")
 
-        # Stub implementation - in production would wait for DTMF input
-        # Press 1 to accept, 2 to decline
+        # Wait for DTMF input: Press 1 to accept, 2 to decline
+        consent_given = None
+        if hasattr(self, "pbx_core") and self.pbx_core:
+            try:
+                import time
+
+                call = self.pbx_core.call_manager.get_call(call_id)
+                if call:
+                    # Wait for DTMF response within timeout
+                    start_time = time.time()
+                    while time.time() - start_time < self.consent_timeout:
+                        # Check SIP INFO DTMF queue
+                        if hasattr(call, "dtmf_info_queue") and call.dtmf_info_queue:
+                            digit = call.dtmf_info_queue.pop(0)
+                            if digit == "1":
+                                consent_given = True
+                                self.record_consent_response(call_id, True)
+                                break
+                            elif digit == "2":
+                                consent_given = False
+                                self.record_consent_response(call_id, False)
+                                break
+                        # Check in-band DTMF via RTP
+                        relay_info = self.pbx_core.rtp_relay.active_relays.get(call_id)
+                        if relay_info and relay_info.get("handler"):
+                            handler = relay_info["handler"]
+                            if hasattr(handler, "get_dtmf_digit"):
+                                digit = handler.get_dtmf_digit()
+                                if digit == "1":
+                                    consent_given = True
+                                    self.record_consent_response(call_id, True)
+                                    break
+                                elif digit == "2":
+                                    consent_given = False
+                                    self.record_consent_response(call_id, False)
+                                    break
+                        time.sleep(0.1)
+
+                    if consent_given is None:
+                        # Timeout - log as timeout
+                        self._log_announcement(
+                            call_id, "caller", True, True, None, True
+                        )
+            except (AttributeError, KeyError, TypeError) as e:
+                self.logger.warning(f"Error waiting for consent DTMF: {e}")
+
         result = {
             "call_id": call_id,
             "consent_requested": True,
+            "consent_given": consent_given,
             "announcement": announcement,
             "timeout_seconds": self.consent_timeout,
             "instructions": "Press 1 to accept recording, 2 to decline",
@@ -251,6 +327,39 @@ class RecordingAnnouncements:
         }
 
         return result
+
+    def _generate_tts_audio(self, text: str) -> str | None:
+        """
+        Generate TTS audio file from text using espeak.
+
+        Args:
+            text: Text to convert to speech
+
+        Returns:
+            Path to generated WAV file, or None if TTS unavailable
+        """
+        import subprocess
+        import tempfile
+
+        try:
+            with tempfile.NamedTemporaryFile(
+                suffix=".wav", delete=False
+            ) as tmp:
+                tmp_path = tmp.name
+
+            result = subprocess.run(  # nosec B603
+                ["espeak", "-w", tmp_path, text],
+                capture_output=True,
+                timeout=10,
+                check=False,
+            )
+            if result.returncode == 0 and Path(tmp_path).exists():
+                return tmp_path
+
+            self.logger.debug("espeak TTS not available")
+        except (FileNotFoundError, subprocess.TimeoutExpired):
+            self.logger.debug("espeak not found for TTS generation")
+        return None
 
     def record_consent_response(self, call_id: str, accepted: bool) -> bool:
         """

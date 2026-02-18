@@ -83,6 +83,20 @@ class SIPServer:
         self.socket: socket.socket | None = None
         self.running: bool = False
 
+        # Subscription tracking for SUBSCRIBE/NOTIFY (RFC 6665)
+        # Key: (from_uri, event_type), Value: subscription info dict
+        self.subscriptions: dict[tuple[str, str], dict] = {}
+
+        # Published event state for PUBLISH (RFC 3903)
+        # Key: (event_type, entity_tag), Value: publication info dict
+        self.publications: dict[tuple[str, str], dict] = {}
+        self._etag_counter: int = 0
+
+        # Reliable provisional response tracking for PRACK (RFC 3262)
+        # Key: (call_id, rseq), Value: provisional response info
+        self.pending_provisional_responses: dict[tuple[str, int], dict] = {}
+        self._rseq_counter: int = 1
+
     def start(self) -> bool:
         """
         Start SIP server.
@@ -206,7 +220,11 @@ class SIPServer:
 
     def _handle_register(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle REGISTER request.
+        Handle REGISTER request with digest authentication (RFC 2617).
+
+        Implements a two-step authentication flow:
+        1. First REGISTER without credentials: respond with 401 + WWW-Authenticate challenge
+        2. Second REGISTER with Authorization header: verify credentials and register
 
         Args:
             message: SIPMessage object.
@@ -214,23 +232,174 @@ class SIPServer:
         """
         self.logger.info(f"REGISTER request from {addr}")
 
-        # Extract extension from URI or From header
         from_header = message.get_header("From")
-
-        # Extract additional registration info
         user_agent = message.get_header("User-Agent")
         contact = message.get_header("Contact")
+        authorization = message.get_header("Authorization")
 
-        if self.pbx_core:
-            # Simple registration - in production, verify credentials
-            success = self.pbx_core.register_extension(from_header, addr, user_agent, contact)
-
-            if success:
-                self._send_response(200, "OK", message, addr)
-            else:
-                self._send_response(401, "Unauthorized", message, addr)
-        else:
+        if not self.pbx_core:
             self._send_response(200, "OK", message, addr)
+            return
+
+        # Check if this request contains authorization credentials
+        if authorization:
+            # Verify digest authentication credentials
+            if self._verify_digest_auth(authorization, from_header, "REGISTER"):
+                success = self.pbx_core.register_extension(
+                    from_header, addr, user_agent, contact
+                )
+                if success:
+                    response = SIPMessageBuilder.build_response(200, "OK", message)
+                    # Set Expires header from request or default
+                    expires = message.get_header("Expires") or "3600"
+                    response.set_header("Expires", expires)
+                    if contact:
+                        response.set_header("Contact", contact)
+                    self._send_message(response.build(), addr)
+                else:
+                    self._send_response(403, "Forbidden", message, addr)
+            else:
+                # Credentials invalid - send new challenge
+                self._send_auth_challenge(message, addr)
+        else:
+            # No credentials provided - check if auth is required
+            auth_required = True
+            if self.pbx_core:
+                auth_required = self.pbx_core.config.get(
+                    "security.sip_auth_required", True
+                )
+
+            if auth_required:
+                self._send_auth_challenge(message, addr)
+            else:
+                # Auth not required - register directly
+                success = self.pbx_core.register_extension(
+                    from_header, addr, user_agent, contact
+                )
+                if success:
+                    self._send_response(200, "OK", message, addr)
+                else:
+                    self._send_response(401, "Unauthorized", message, addr)
+
+    def _send_auth_challenge(self, message: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Send 401 Unauthorized with WWW-Authenticate challenge.
+
+        Args:
+            message: Original REGISTER request.
+            addr: Source address tuple.
+        """
+        import hashlib
+        import time
+
+        # Generate nonce from timestamp and server secret
+        timestamp = str(time.time())
+        server_secret = "pbx-sip-auth"
+        if self.pbx_core:
+            server_secret = self.pbx_core.config.get(
+                "security.sip_auth_secret", server_secret
+            )
+        nonce_input = f"{timestamp}:{server_secret}"
+        nonce = hashlib.md5(nonce_input.encode()).hexdigest()  # nosec B324 - MD5 required by SIP digest auth RFC 2617
+
+        realm = "warden-pbx"
+        if self.pbx_core:
+            realm = self.pbx_core.config.get("server.sip_realm", realm)
+
+        response = SIPMessageBuilder.build_response(401, "Unauthorized", message)
+        response.set_header(
+            "WWW-Authenticate",
+            f'Digest realm="{realm}", nonce="{nonce}", algorithm=MD5, qop="auth"',
+        )
+        self._send_message(response.build(), addr)
+
+    def _verify_digest_auth(
+        self, authorization: str, from_header: str, method: str
+    ) -> bool:
+        """
+        Verify SIP digest authentication credentials.
+
+        Args:
+            authorization: Authorization header value.
+            from_header: From header to extract extension.
+            method: SIP method (REGISTER, INVITE, etc.).
+
+        Returns:
+            True if credentials are valid.
+        """
+        import hashlib
+        import re
+
+        if not self.pbx_core:
+            return False
+
+        # Parse digest parameters from Authorization header
+        params: dict[str, str] = {}
+        for match in re.finditer(r'(\w+)="([^"]*)"', authorization):
+            params[match.group(1)] = match.group(2)
+        # Also handle unquoted values (like algorithm=MD5)
+        for match in re.finditer(r"(\w+)=([^,\s\"]+)", authorization):
+            key = match.group(1)
+            if key not in params:
+                params[key] = match.group(2)
+
+        username = params.get("username", "")
+        realm = params.get("realm", "")
+        nonce = params.get("nonce", "")
+        uri = params.get("uri", "")
+        response_hash = params.get("response", "")
+        qop = params.get("qop")
+        nc = params.get("nc", "")
+        cnonce = params.get("cnonce", "")
+
+        if not all([username, realm, nonce, uri, response_hash]):
+            self.logger.warning("Incomplete digest auth parameters")
+            return False
+
+        # Look up the password for this extension
+        password = None
+
+        # Check database first
+        if self.pbx_core.extension_db:
+            ext_data = self.pbx_core.extension_db.get(username)
+            if ext_data:
+                # For digest auth we need the plaintext password or pre-computed HA1
+                # If we have a stored HA1, use it directly
+                password = ext_data.get("sip_password") or ext_data.get("password")
+
+        # Fall back to config
+        if not password:
+            ext_config = self.pbx_core.config.get_extension(username)
+            if ext_config:
+                password = ext_config.get("sip_password") or ext_config.get("password")
+
+        if not password:
+            self.logger.warning(f"No credentials found for extension {username}")
+            return False
+
+        # Compute expected digest response (RFC 2617)
+        ha1 = hashlib.md5(  # nosec B324 - MD5 required by SIP digest auth RFC 2617
+            f"{username}:{realm}:{password}".encode()
+        ).hexdigest()
+        ha2 = hashlib.md5(  # nosec B324
+            f"{method}:{uri}".encode()
+        ).hexdigest()
+
+        if qop == "auth":
+            expected = hashlib.md5(  # nosec B324
+                f"{ha1}:{nonce}:{nc}:{cnonce}:{qop}:{ha2}".encode()
+            ).hexdigest()
+        else:
+            expected = hashlib.md5(  # nosec B324
+                f"{ha1}:{nonce}:{ha2}".encode()
+            ).hexdigest()
+
+        if response_hash == expected:
+            self.logger.debug(f"Digest auth verified for {username}")
+            return True
+
+        self.logger.warning(f"Digest auth failed for {username}")
+        return False
 
     def _handle_invite(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
@@ -370,30 +539,231 @@ class SIPServer:
 
     def _handle_subscribe(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle SUBSCRIBE request for presence/event notifications.
+        Handle SUBSCRIBE request for presence/event notifications (RFC 6665).
+
+        Tracks subscriptions and sends initial NOTIFY with current state.
+        Supported event packages: presence, dialog, message-summary, refer.
 
         Args:
             message: SIPMessage object.
             addr: Source address tuple.
         """
+        import re
+        import time
+
         self.logger.debug(f"SUBSCRIBE request from {addr}")
 
-        # Get the event type being subscribed to
         event = message.get_header("Event")
-        expires = message.get_header("Expires") or "3600"
+        expires_str = message.get_header("Expires") or "3600"
+        from_header = message.get_header("From") or ""
+        to_header = message.get_header("To") or ""
+        call_id = message.get_header("Call-ID") or ""
 
-        if event:
-            self.logger.info(f"SUBSCRIBE for event: {event}, expires: {expires}")
+        try:
+            expires = int(expires_str)
+        except ValueError:
+            expires = 3600
 
-        # Accept the subscription (basic implementation)
-        # In full implementation, would track subscriptions and send NOTIFY
-        # updates
+        if not event:
+            self._send_response(489, "Bad Event", message, addr)
+            return
+
+        self.logger.info(f"SUBSCRIBE for event: {event}, expires: {expires}")
+
+        # Extract subscriber URI for tracking
+        subscriber_uri = from_header
+        sub_match = re.search(r"sip:([^@>]+)", from_header)
+        if sub_match:
+            subscriber_uri = sub_match.group(1)
+
+        # Track the subscription
+        sub_key = (subscriber_uri, event)
+
+        if expires == 0:
+            # Unsubscribe - remove subscription
+            if sub_key in self.subscriptions:
+                del self.subscriptions[sub_key]
+                self.logger.info(f"Removed subscription: {subscriber_uri} for {event}")
+            response = SIPMessageBuilder.build_response(200, "OK", message)
+            response.set_header("Expires", "0")
+            self._send_message(response.build(), addr)
+
+            # Send final NOTIFY with terminated state
+            self._send_event_notify(
+                from_header, to_header, call_id, addr, event,
+                "terminated;reason=timeout", ""
+            )
+            return
+
+        # Store subscription
+        self.subscriptions[sub_key] = {
+            "from": from_header,
+            "to": to_header,
+            "call_id": call_id,
+            "addr": addr,
+            "event": event,
+            "expires": expires,
+            "created": time.time(),
+        }
+
+        # Accept the subscription
         response = SIPMessageBuilder.build_response(200, "OK", message)
-        response.set_header("Expires", expires)
+        response.set_header("Expires", str(expires))
         self._send_message(response.build(), addr)
 
-        # Optionally send initial NOTIFY (would need full NOTIFY
-        # implementation)
+        # Send initial NOTIFY with current state
+        notify_body = self._get_event_state(event, to_header)
+        content_type = self._get_event_content_type(event)
+
+        self._send_event_notify(
+            from_header, to_header, call_id, addr, event,
+            f"active;expires={expires}", notify_body, content_type
+        )
+
+    def _send_event_notify(
+        self,
+        from_header: str,
+        to_header: str,
+        call_id: str,
+        addr: AddrTuple,
+        event: str,
+        subscription_state: str,
+        body: str,
+        content_type: str = "application/pidf+xml",
+    ) -> None:
+        """
+        Send a NOTIFY message for an event subscription.
+
+        Args:
+            from_header: From header value.
+            to_header: To header value.
+            call_id: Call-ID for the subscription dialog.
+            addr: Address to send NOTIFY to.
+            event: Event type.
+            subscription_state: Subscription-State header value.
+            body: NOTIFY body content.
+            content_type: Content-Type for the body.
+        """
+        notify_msg = SIPMessageBuilder.build_request(
+            method="NOTIFY",
+            uri=f"sip:{addr[0]}:{addr[1]}",
+            from_addr=to_header,
+            to_addr=from_header,
+            call_id=call_id,
+            cseq=1,
+        )
+        notify_msg.set_header("Event", event)
+        notify_msg.set_header("Subscription-State", subscription_state)
+
+        if body:
+            notify_msg.body = body
+            notify_msg.set_header("Content-type", content_type)
+            notify_msg.set_header("Content-Length", str(len(body)))
+
+        self._send_message(notify_msg.build(), addr)
+        self.logger.debug(f"Sent NOTIFY for event {event} to {addr}")
+
+    def _get_event_state(self, event: str, to_header: str) -> str:
+        """
+        Get current state for an event package.
+
+        Args:
+            event: Event type (presence, dialog, message-summary).
+            to_header: To header to identify the monitored resource.
+
+        Returns:
+            XML/text body representing current state.
+        """
+        import re
+
+        extension = ""
+        ext_match = re.search(r"sip:(\d+)@", to_header or "")
+        if ext_match:
+            extension = ext_match.group(1)
+
+        if event == "presence":
+            # Return PIDF presence document
+            status = "open"
+            if self.pbx_core and extension:
+                if hasattr(self.pbx_core, "presence_system"):
+                    presence_info = self.pbx_core.presence_system.get_presence(extension)
+                    if presence_info:
+                        status = presence_info.get("status", "open")
+
+            server_ip = "127.0.0.1"
+            if self.pbx_core:
+                server_ip = self.pbx_core._get_server_ip()
+
+            return (
+                '<?xml version="1.0" encoding="UTF-8"?>\r\n'
+                '<presence xmlns="urn:ietf:params:xml:ns:pidf" '
+                f'entity="sip:{extension}@{server_ip}">\r\n'
+                "  <tuple>\r\n"
+                f"    <status><basic>{status}</basic></status>\r\n"
+                "  </tuple>\r\n"
+                "</presence>"
+            )
+
+        if event == "message-summary":
+            # Return message waiting indication (MWI)
+            new_msgs = 0
+            old_msgs = 0
+            if self.pbx_core and extension:
+                if hasattr(self.pbx_core, "voicemail_system"):
+                    vm_status = self.pbx_core.voicemail_system.get_mailbox_status(
+                        extension
+                    )
+                    if vm_status:
+                        new_msgs = vm_status.get("new_messages", 0)
+                        old_msgs = vm_status.get("old_messages", 0)
+
+            waiting = "yes" if new_msgs > 0 else "no"
+            return (
+                f"Messages-Waiting: {waiting}\r\n"
+                f"Voice-Message: {new_msgs}/{old_msgs}"
+            )
+
+        if event == "dialog":
+            # Return dialog info for BLF (busy lamp field)
+            dialog_state = "terminated"
+            if self.pbx_core and extension:
+                calls = self.pbx_core.call_manager.get_extension_calls(extension)
+                if calls:
+                    dialog_state = "confirmed"
+
+            server_ip = "127.0.0.1"
+            if self.pbx_core:
+                server_ip = self.pbx_core._get_server_ip()
+
+            return (
+                '<?xml version="1.0" encoding="UTF-8"?>\r\n'
+                '<dialog-info xmlns="urn:ietf:params:xml:ns:dialog-info" '
+                f'version="1" state="full" entity="sip:{extension}@{server_ip}">\r\n'
+                f'  <dialog id="1" direction="initiator">\r\n'
+                f"    <state>{dialog_state}</state>\r\n"
+                "  </dialog>\r\n"
+                "</dialog-info>"
+            )
+
+        return ""
+
+    def _get_event_content_type(self, event: str) -> str:
+        """
+        Get the Content-Type for an event package.
+
+        Args:
+            event: Event type.
+
+        Returns:
+            Content-Type string.
+        """
+        content_types = {
+            "presence": "application/pidf+xml",
+            "dialog": "application/dialog-info+xml",
+            "message-summary": "application/simple-message-summary",
+            "refer": "message/sipfrag;version=2.0",
+        }
+        return content_types.get(event, "text/plain")
 
     def _handle_notify(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
@@ -409,27 +779,204 @@ class SIPServer:
 
     def _handle_refer(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle REFER request for call transfer.
+        Handle REFER request for call transfer (RFC 3515).
+
+        Implements the full REFER flow:
+        1. Validates Refer-To header
+        2. Sends 202 Accepted
+        3. Sends NOTIFY with 100 Trying (transfer in progress)
+        4. Initiates new INVITE to the transfer destination
+        5. Sends NOTIFY with final status (200 OK or failure)
 
         Args:
             message: SIPMessage object.
             addr: Source address tuple.
         """
+        import re
+
         self.logger.info(f"REFER request from {addr}")
 
-        # Get the Refer-To header
         refer_to = message.get_header("Refer-To")
         if not refer_to:
             self._send_response(400, "Bad Request - Missing Refer-To", message, addr)
             return
 
-        self.logger.info(f"REFER to: {refer_to}")
+        call_id = message.get_header("Call-ID")
+        referred_by = message.get_header("Referred-By")
 
-        # Accept the REFER request
+        self.logger.info(f"REFER to: {refer_to}, Call-ID: {call_id}")
+
+        # Accept the REFER request (creates an implicit subscription)
         self._send_response(202, "Accepted", message, addr)
 
-        # In a full implementation, would initiate new call to refer-to destination
-        # and send NOTIFY messages about transfer progress
+        # Send initial NOTIFY - transfer is in progress (100 Trying)
+        self._send_transfer_notify(
+            message, addr, "SIP/2.0 100 Trying", call_id
+        )
+
+        if not self.pbx_core:
+            self._send_transfer_notify(
+                message, addr, "SIP/2.0 503 Service Unavailable", call_id
+            )
+            return
+
+        # Extract destination extension from Refer-To URI
+        dest_match = re.search(r"sip:([^@>]+)", refer_to)
+        if not dest_match:
+            self.logger.error(f"Could not parse Refer-To URI: {refer_to}")
+            self._send_transfer_notify(
+                message, addr, "SIP/2.0 400 Bad Request", call_id
+            )
+            return
+
+        destination = dest_match.group(1)
+        self.logger.info(f"Transfer destination: {destination}")
+
+        # Find the active call for this dialog
+        call = self.pbx_core.call_manager.get_call(call_id) if call_id else None
+
+        if call:
+            # Set call state to transferring
+            from pbx.core.call import CallState
+
+            call.state = CallState.TRANSFERRING
+            call.transfer_destination = destination
+            call.transferred = True
+
+            # Check if destination is registered
+            if self.pbx_core.extension_registry.is_registered(destination):
+                dest_addr = self.pbx_core.extension_registry.get_address(destination)
+
+                if dest_addr:
+                    # Build new INVITE to the transfer destination
+                    server_ip = self.pbx_core._get_server_ip()
+                    sip_port = self.pbx_core.config.get("server.sip_port", 5060)
+
+                    import uuid
+
+                    new_call_id = str(uuid.uuid4())
+
+                    invite_msg = SIPMessageBuilder.build_request(
+                        method="INVITE",
+                        uri=f"sip:{destination}@{dest_addr[0]}:{dest_addr[1]}",
+                        from_addr=f"<sip:{call.from_extension}@{server_ip}>",
+                        to_addr=f"<sip:{destination}@{server_ip}>",
+                        call_id=new_call_id,
+                        cseq=1,
+                    )
+
+                    # Add Referred-By header to indicate this is a transfer
+                    if referred_by:
+                        invite_msg.set_header("Referred-By", referred_by)
+
+                    invite_msg.set_header(
+                        "Contact",
+                        f"<sip:{call.from_extension}@{server_ip}:{sip_port}>",
+                    )
+
+                    # Include SDP from original call if available
+                    if call.caller_rtp and call.rtp_ports:
+                        from pbx.sip.sdp import SDPBuilder
+
+                        transfer_sdp = SDPBuilder.build_audio_sdp(
+                            server_ip,
+                            call.rtp_ports[0],
+                            session_id=new_call_id,
+                        )
+                        invite_msg.body = transfer_sdp
+                        invite_msg.set_header("Content-type", "application/sdp")
+                        invite_msg.set_header(
+                            "Content-Length", str(len(transfer_sdp))
+                        )
+
+                    # Send INVITE to transfer destination
+                    self._send_message(invite_msg.build(), dest_addr)
+                    self.logger.info(
+                        f"Sent INVITE to {destination} at {dest_addr} for transfer"
+                    )
+
+                    # Create new call record for the transferred leg
+                    new_call = self.pbx_core.call_manager.create_call(
+                        new_call_id, call.from_extension, destination
+                    )
+                    new_call.start()
+                    new_call.caller_rtp = call.caller_rtp
+                    new_call.caller_addr = call.caller_addr
+                    new_call.rtp_ports = call.rtp_ports
+
+                    # Send success NOTIFY
+                    self._send_transfer_notify(
+                        message, addr, "SIP/2.0 200 OK", call_id
+                    )
+
+                    # End the original call leg (the transferring party)
+                    self.pbx_core.end_call(call_id)
+                    self.logger.info(
+                        f"Transfer complete: {call.from_extension} -> {destination}"
+                    )
+                else:
+                    self.logger.error(f"No address for destination {destination}")
+                    self._send_transfer_notify(
+                        message, addr, "SIP/2.0 480 Temporarily Unavailable", call_id
+                    )
+            else:
+                self.logger.error(f"Destination {destination} not registered")
+                self._send_transfer_notify(
+                    message, addr, "SIP/2.0 404 Not Found", call_id
+                )
+        else:
+            self.logger.warning(f"No active call found for REFER Call-ID: {call_id}")
+            self._send_transfer_notify(
+                message, addr, "SIP/2.0 481 Call/Transaction Does Not Exist", call_id
+            )
+
+    def _send_transfer_notify(
+        self,
+        refer_msg: SIPMessage,
+        addr: AddrTuple,
+        sipfrag_status: str,
+        call_id: str | None,
+    ) -> None:
+        """
+        Send NOTIFY message for REFER subscription (RFC 3515 Section 2.4).
+
+        The NOTIFY body contains a message/sipfrag with the transfer status.
+
+        Args:
+            refer_msg: Original REFER message (for dialog headers).
+            addr: Address to send NOTIFY to.
+            sipfrag_status: SIP status line for the sipfrag body.
+            call_id: Call-ID for the dialog.
+        """
+        # Build NOTIFY request within the same dialog
+        from_header = refer_msg.get_header("To") or ""
+        to_header = refer_msg.get_header("From") or ""
+
+        notify_msg = SIPMessageBuilder.build_request(
+            method="NOTIFY",
+            uri=f"sip:{addr[0]}:{addr[1]}",
+            from_addr=from_header,
+            to_addr=to_header,
+            call_id=call_id or "",
+            cseq=1,
+        )
+
+        # Set subscription state
+        is_final = not sipfrag_status.endswith("Trying")
+        if is_final:
+            notify_msg.set_header("Subscription-State", "terminated;reason=noresource")
+        else:
+            notify_msg.set_header("Subscription-State", "active;expires=60")
+
+        notify_msg.set_header("Event", "refer")
+        notify_msg.set_header("Content-type", "message/sipfrag;version=2.0")
+
+        # Body is the SIP status line fragment
+        notify_msg.body = sipfrag_status
+        notify_msg.set_header("Content-Length", str(len(sipfrag_status)))
+
+        self._send_message(notify_msg.build(), addr)
+        self.logger.debug(f"Sent transfer NOTIFY: {sipfrag_status}")
 
     def _handle_info(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
@@ -498,41 +1045,96 @@ class SIPServer:
         """
         Handle MESSAGE request for instant messaging (RFC 3428).
 
-        MESSAGE is used to send instant messages between SIP endpoints.
-        The message body typically contains text/plain content.
+        Routes SIP MESSAGE to the destination endpoint. If the recipient is
+        registered, the message is forwarded. If not, a 404 is returned.
 
         Args:
             message: SIPMessage object.
             addr: Source address tuple.
         """
+        import re
+
         self.logger.info(f"MESSAGE request from {addr}")
 
-        # Get message details
         from_header = message.get_header("From")
         to_header = message.get_header("To")
         content_type = message.get_header("Content-type")
 
-        if message.body:
-            self.logger.info(f"MESSAGE from {from_header} to {to_header}: {message.body[:100]}")
-
-            # Forward message to PBX core if available for delivery
-            if self.pbx_core:
-                # In full implementation, would route message to recipient
-                # For now, log and accept
-                self.logger.debug(f"MESSAGE content-type: {content_type}")
-                self.logger.debug(f"MESSAGE body: {message.body}")
-        else:
+        if not message.body:
             self.logger.warning("MESSAGE request received with empty body")
+            self._send_response(200, "OK", message, addr)
+            return
 
-        # Accept the message
-        self._send_response(200, "OK", message, addr)
+        self.logger.info(f"MESSAGE from {from_header} to {to_header}: {message.body[:100]}")
+
+        if not self.pbx_core:
+            self._send_response(200, "OK", message, addr)
+            return
+
+        # Extract destination extension from To header
+        dest_match = re.search(r"sip:(\d+)@", to_header or "")
+        if not dest_match:
+            self.logger.warning(f"Could not parse destination from To header: {to_header}")
+            self._send_response(200, "OK", message, addr)
+            return
+
+        dest_extension = dest_match.group(1)
+
+        # Check if destination is registered and route the message
+        if self.pbx_core.extension_registry.is_registered(dest_extension):
+            dest_addr = self.pbx_core.extension_registry.get_address(dest_extension)
+
+            if dest_addr:
+                # Forward the MESSAGE to the recipient
+                fwd_msg = SIPMessageBuilder.build_request(
+                    method="MESSAGE",
+                    uri=f"sip:{dest_extension}@{dest_addr[0]}:{dest_addr[1]}",
+                    from_addr=from_header or "",
+                    to_addr=to_header or "",
+                    call_id=message.get_header("Call-ID") or "",
+                    cseq=message.get_header("CSeq") or "1 MESSAGE",
+                    body=message.body,
+                )
+                if content_type:
+                    fwd_msg.set_header("Content-type", content_type)
+
+                self._send_message(fwd_msg.build(), dest_addr)
+                self.logger.info(
+                    f"Forwarded MESSAGE to {dest_extension} at {dest_addr}"
+                )
+
+                # Trigger webhook if available
+                if hasattr(self.pbx_core, "webhook_system"):
+                    from pbx.features.webhooks import WebhookEvent
+
+                    self.pbx_core.webhook_system.trigger_event(
+                        WebhookEvent.MESSAGE_RECEIVED,
+                        {
+                            "from": from_header,
+                            "to": to_header,
+                            "content_type": content_type,
+                            "body_preview": message.body[:200],
+                        },
+                    )
+
+                self._send_response(200, "OK", message, addr)
+            else:
+                self.logger.warning(
+                    f"Destination {dest_extension} registered but no address available"
+                )
+                self._send_response(480, "Temporarily Unavailable", message, addr)
+        else:
+            self.logger.info(f"MESSAGE destination {dest_extension} not registered")
+            self._send_response(404, "Not Found", message, addr)
 
     def _handle_prack(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
         Handle PRACK request for Provisional Response Acknowledgment (RFC 3262).
 
-        PRACK is used to acknowledge provisional responses (1xx) reliably.
-        This enables reliable transmission of provisional responses like 180 Ringing.
+        PRACK acknowledges reliable provisional responses (1xx). This implementation:
+        1. Validates the RAck header matches a pending provisional response
+        2. Stops retransmission of that provisional response
+        3. Responds with 200 OK
 
         Args:
             message: SIPMessage object.
@@ -540,20 +1142,44 @@ class SIPServer:
         """
         self.logger.debug(f"PRACK request from {addr}")
 
-        # Get RAck header which identifies the provisional response being
-        # acknowledged
         rack_header = message.get_header("RAck")
         call_id = message.get_header("Call-ID")
 
-        if rack_header:
-            self.logger.info(f"PRACK acknowledging response: {rack_header} for call {call_id}")
+        if not rack_header:
+            self._send_response(400, "Bad Request - Missing RAck", message, addr)
+            return
 
-        # In full implementation, would:
-        # 1. Verify RAck matches a sent reliable provisional response
-        # 2. Stop retransmitting that provisional response
-        # 3. Continue with call establishment
+        self.logger.info(f"PRACK acknowledging response: {rack_header} for call {call_id}")
 
-        # Accept the PRACK
+        # Parse RAck header: "response-num cseq-num method"
+        rack_parts = rack_header.split()
+        if len(rack_parts) >= 2:
+            try:
+                rseq = int(rack_parts[0])
+                # Look up the pending provisional response
+                pending_key = (call_id or "", rseq)
+                if pending_key in self.pending_provisional_responses:
+                    # Stop retransmission of this provisional response
+                    pending = self.pending_provisional_responses.pop(pending_key)
+                    if pending.get("retransmit_timer"):
+                        pending["retransmit_timer"].cancel()
+                    self.logger.info(
+                        f"Acknowledged provisional response RSeq={rseq} for call {call_id}"
+                    )
+                else:
+                    self.logger.debug(
+                        f"No pending provisional response for RSeq={rseq}, call {call_id}"
+                    )
+            except ValueError:
+                self.logger.warning(f"Invalid RAck header format: {rack_header}")
+
+        # Forward PRACK to callee if this is a proxied call
+        if self.pbx_core and call_id:
+            call = self.pbx_core.call_manager.get_call(call_id)
+            if call and call.callee_addr and call.callee_addr != addr:
+                self._send_message(message.build(), call.callee_addr)
+                self.logger.debug(f"Forwarded PRACK to callee for call {call_id}")
+
         self._send_response(200, "OK", message, addr)
 
     def _handle_update(self, message: SIPMessage, addr: AddrTuple) -> None:
@@ -561,8 +1187,11 @@ class SIPServer:
         Handle UPDATE request for session modification (RFC 3311).
 
         UPDATE allows modification of session parameters (like SDP) without
-        changing the dialog state. Unlike re-INVITE, it cannot be used to
-        change the remote target or route set.
+        changing the dialog state. This implementation:
+        1. Parses the new SDP offer
+        2. Validates codec compatibility
+        3. Updates the RTP relay endpoints if media address/port changed
+        4. Responds with 200 OK and answer SDP
 
         Args:
             message: SIPMessage object.
@@ -573,64 +1202,208 @@ class SIPServer:
         call_id = message.get_header("Call-ID")
         content_type = message.get_header("Content-type")
 
-        # Check if this is a session update with SDP
-        if message.body and content_type and "sdp" in content_type.lower():
-            self.logger.info(f"UPDATE with SDP for call {call_id}")
-
-            # In full implementation, would:
-            # 1. Parse SDP to understand requested changes
-            # 2. Validate changes are acceptable
-            # 3. Update media session parameters
-            # 4. Respond with 200 OK and answer SDP
-
-            # For now, accept the update
-            self._send_response(200, "OK", message, addr)
-        else:
-            # UPDATE without SDP body
+        if not message.body or not content_type or "sdp" not in content_type.lower():
             self.logger.debug(f"UPDATE without SDP for call {call_id}")
             self._send_response(200, "OK", message, addr)
+            return
+
+        self.logger.info(f"UPDATE with SDP for call {call_id}")
+
+        if not self.pbx_core or not call_id:
+            self._send_response(200, "OK", message, addr)
+            return
+
+        call = self.pbx_core.call_manager.get_call(call_id)
+        if not call:
+            self._send_response(481, "Call/Transaction Does Not Exist", message, addr)
+            return
+
+        # Parse the new SDP offer
+        from pbx.sip.sdp import SDPBuilder, SDPSession
+
+        new_sdp_obj = SDPSession()
+        new_sdp_obj.parse(message.body)
+        new_audio = new_sdp_obj.get_audio_info()
+
+        if new_audio:
+            new_address = new_audio.get("address")
+            new_port = new_audio.get("port")
+
+            # Determine which party sent the UPDATE and update their endpoint
+            is_caller = addr == call.caller_addr
+            if is_caller and new_address and new_port:
+                old_rtp = call.caller_rtp
+                call.caller_rtp = new_audio
+                self.logger.info(
+                    f"Updated caller media: {new_address}:{new_port}"
+                )
+                # Update RTP relay endpoint
+                if call.rtp_ports:
+                    caller_endpoint = (new_address, new_port)
+                    callee_endpoint = None
+                    if call.callee_rtp:
+                        callee_endpoint = (
+                            call.callee_rtp["address"],
+                            call.callee_rtp["port"],
+                        )
+                    self.pbx_core.rtp_relay.set_endpoints(
+                        call_id, caller_endpoint, callee_endpoint
+                    )
+            elif new_address and new_port:
+                call.callee_rtp = new_audio
+                self.logger.info(
+                    f"Updated callee media: {new_address}:{new_port}"
+                )
+                if call.rtp_ports:
+                    caller_endpoint = None
+                    if call.caller_rtp:
+                        caller_endpoint = (
+                            call.caller_rtp["address"],
+                            call.caller_rtp["port"],
+                        )
+                    callee_endpoint = (new_address, new_port)
+                    self.pbx_core.rtp_relay.set_endpoints(
+                        call_id, caller_endpoint, callee_endpoint
+                    )
+
+        # Build answer SDP
+        server_ip = self.pbx_core._get_server_ip()
+        rtp_port = call.rtp_ports[0] if call.rtp_ports else 10000
+        answer_sdp = SDPBuilder.build_audio_sdp(
+            server_ip, rtp_port, session_id=call_id
+        )
+
+        response = SIPMessageBuilder.build_response(
+            200, "OK", message, body=answer_sdp
+        )
+        response.set_header("Content-type", "application/sdp")
+        self._send_message(response.build(), addr)
 
     def _handle_publish(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
         Handle PUBLISH request for event state publication (RFC 3903).
 
-        PUBLISH is used to publish event state to an event state compositor (ESC).
-        Common uses include publishing presence information, dialog state, etc.
+        Implements the event state compositor (ESC) which:
+        1. Stores published event state with unique ETags
+        2. Handles initial, refresh, modify, and remove publications
+        3. Notifies active subscribers of state changes
 
         Args:
             message: SIPMessage object.
             addr: Source address tuple.
         """
+        import time
+
         self.logger.info(f"PUBLISH request from {addr}")
 
-        # Get event and expires headers
         event = message.get_header("Event")
-        expires = message.get_header("Expires") or "3600"
+        expires_str = message.get_header("Expires") or "3600"
         sip_if_match = message.get_header("SIP-If-Match")
         content_type = message.get_header("Content-type")
 
-        if event:
-            self.logger.info(f"PUBLISH for event: {event}, expires: {expires}")
+        if not event:
+            self._send_response(489, "Bad Event", message, addr)
+            return
 
-        # In full implementation, would:
-        # 1. Store published event state
-        # 2. Generate entity tag (ETag) for this publication
-        # 3. Notify subscribers of state changes
-        # 4. Handle conditional requests using SIP-If-Match
+        try:
+            expires = int(expires_str)
+        except ValueError:
+            expires = 3600
+
+        self.logger.info(f"PUBLISH for event: {event}, expires: {expires}")
 
         if sip_if_match:
-            # This is a refresh or modification of existing publication
-            self.logger.debug(f"PUBLISH refresh/modify with SIP-If-Match: {sip_if_match}")
+            # Refresh/modify/remove existing publication
+            pub_key = (event, sip_if_match)
+            if pub_key not in self.publications:
+                # ETag not found - Conditional Request Failed
+                self._send_response(412, "Conditional Request Failed", message, addr)
+                return
 
-        if message.body and content_type:
-            self.logger.debug(f"PUBLISH body content-type: {content_type}")
+            if expires == 0:
+                # Remove publication
+                del self.publications[pub_key]
+                self.logger.info(f"Removed publication: {event}/{sip_if_match}")
+                response = SIPMessageBuilder.build_response(200, "OK", message)
+                response.set_header("Expires", "0")
+                response.set_header("SIP-ETag", sip_if_match)
+                self._send_message(response.build(), addr)
+                # Notify subscribers of removal
+                self._notify_subscribers(event)
+                return
 
-        # Accept the publication
+            if message.body:
+                # Modify publication
+                self.publications[pub_key]["body"] = message.body
+                self.publications[pub_key]["content_type"] = content_type
+                self.publications[pub_key]["expires"] = expires
+                self.publications[pub_key]["updated"] = time.time()
+                etag = sip_if_match
+            else:
+                # Refresh publication (extend expiry)
+                self.publications[pub_key]["expires"] = expires
+                self.publications[pub_key]["updated"] = time.time()
+                etag = sip_if_match
+        else:
+            # Initial publication - generate new ETag
+            self._etag_counter += 1
+            etag = f"pub-{self._etag_counter}-{int(time.time())}"
+            pub_key = (event, etag)
+
+            self.publications[pub_key] = {
+                "event": event,
+                "etag": etag,
+                "body": message.body or "",
+                "content_type": content_type,
+                "expires": expires,
+                "addr": addr,
+                "created": time.time(),
+                "updated": time.time(),
+            }
+            self.logger.info(f"New publication: {event}/{etag}")
+
+        # Respond with success and the ETag
         response = SIPMessageBuilder.build_response(200, "OK", message)
-        response.set_header("Expires", expires)
-        # In full implementation, would set SIP-ETag header
-        response.set_header("SIP-ETag", "entity-tag-placeholder")
+        response.set_header("Expires", str(expires))
+        response.set_header("SIP-ETag", etag)
         self._send_message(response.build(), addr)
+
+        # Notify active subscribers of the state change
+        self._notify_subscribers(event)
+
+    def _notify_subscribers(self, event: str) -> None:
+        """
+        Notify all active subscribers of a state change for an event type.
+
+        Args:
+            event: The event type that changed.
+        """
+        import time
+
+        for sub_key, sub_info in list(self.subscriptions.items()):
+            if sub_info["event"] != event:
+                continue
+
+            # Check if subscription has expired
+            elapsed = time.time() - sub_info["created"]
+            if elapsed > sub_info["expires"]:
+                del self.subscriptions[sub_key]
+                continue
+
+            remaining = int(sub_info["expires"] - elapsed)
+            body = self._get_event_state(event, sub_info["to"])
+            content_type = self._get_event_content_type(event)
+
+            self._send_event_notify(
+                sub_info["from"],
+                sub_info["to"],
+                sub_info["call_id"],
+                sub_info["addr"],
+                event,
+                f"active;expires={remaining}",
+                body,
+                content_type,
+            )
 
     def _handle_response(self, message: SIPMessage, addr: AddrTuple) -> None:
         """

@@ -840,15 +840,9 @@ class PBXCore:
             dtmf_digit: DTMF digit ('0'-'9', '*', '#', 'A'-'D')
 
         Note:
-            INFRASTRUCTURE ONLY - IVR Integration Pending:
-            The IVR session loops (_voicemail_ivr_session, _auto_attendant_session)
-            need to be updated to check call.dtmf_info_queue in addition to in-band
-            DTMF detection. This method provides the queueing infrastructure.
-
-            To complete SIP INFO DTMF support, update IVR loops to:
-            1. Check if hasattr(call, 'dtmf_info_queue') and call.dtmf_info_queue
-            2. Pop digit from queue: digit = call.dtmf_info_queue.pop(0)
-            3. Fall back to in-band detection if queue is empty
+            IVR loops (voicemail_handler, auto_attendant_handler) check
+            call.dtmf_info_queue for queued SIP INFO digits and fall back
+            to in-band DTMF detection when the queue is empty.
         """
         call = self.call_manager.get_call(call_id)
         if not call:
@@ -945,6 +939,312 @@ class PBXCore:
         call.transfer_destination = new_destination
 
         return True
+
+    def blind_transfer(self, call_id: str, destination: str) -> bool:
+        """
+        Perform blind (unattended) transfer.
+
+        The transferring party's call leg is immediately terminated and the
+        remaining party is connected to the new destination via a new INVITE.
+
+        Args:
+            call_id: Call identifier
+            destination: Destination extension to transfer to
+
+        Returns:
+            True if transfer initiated successfully
+        """
+        from pbx.sip.message import SIPMessageBuilder
+        from pbx.sip.sdp import SDPBuilder
+
+        call = self.call_manager.get_call(call_id)
+        if not call:
+            self.logger.error(f"Call {call_id} not found for blind transfer")
+            return False
+
+        if not self.extension_registry.is_registered(destination):
+            self.logger.error(f"Blind transfer destination {destination} not registered")
+            return False
+
+        dest_addr = self.extension_registry.get_address(destination)
+        if not dest_addr:
+            self.logger.error(f"No address for blind transfer destination {destination}")
+            return False
+
+        self.logger.info(
+            f"Blind transfer: call {call_id} to {destination}"
+        )
+
+        # Set call state to transferring
+        from pbx.core.call import CallState
+
+        call.state = CallState.TRANSFERRING
+        call.transferred = True
+        call.transfer_destination = destination
+
+        # Build new INVITE to the transfer destination
+        server_ip = self._get_server_ip()
+        sip_port = self.config.get("server.sip_port", 5060)
+        new_call_id = str(uuid.uuid4())
+
+        invite_msg = SIPMessageBuilder.build_request(
+            method="INVITE",
+            uri=f"sip:{destination}@{dest_addr[0]}:{dest_addr[1]}",
+            from_addr=f"<sip:{call.from_extension}@{server_ip}>",
+            to_addr=f"<sip:{destination}@{server_ip}>",
+            call_id=new_call_id,
+            cseq=1,
+        )
+        invite_msg.set_header(
+            "Contact", f"<sip:{call.from_extension}@{server_ip}:{sip_port}>"
+        )
+
+        # Include SDP with the existing RTP relay ports
+        if call.rtp_ports:
+            transfer_sdp = SDPBuilder.build_audio_sdp(
+                server_ip, call.rtp_ports[0], session_id=new_call_id
+            )
+            invite_msg.body = transfer_sdp
+            invite_msg.set_header("Content-type", "application/sdp")
+            invite_msg.set_header("Content-Length", str(len(transfer_sdp)))
+
+        # Send INVITE to new destination
+        self.sip_server._send_message(invite_msg.build(), dest_addr)
+
+        # Create new call record for the transferred leg
+        new_call = self.call_manager.create_call(
+            new_call_id, call.from_extension, destination
+        )
+        new_call.start()
+        new_call.caller_rtp = call.caller_rtp
+        new_call.caller_addr = call.caller_addr
+        new_call.rtp_ports = call.rtp_ports
+
+        # Send BYE to the transferring party (the party that initiated transfer)
+        if call.callee_addr:
+            bye_msg = SIPMessageBuilder.build_request(
+                method="BYE",
+                uri=f"sip:{call.to_extension}@{call.callee_addr[0]}:{call.callee_addr[1]}",
+                from_addr=f"<sip:{call.from_extension}@{server_ip}>",
+                to_addr=f"<sip:{call.to_extension}@{server_ip}>",
+                call_id=call_id,
+                cseq=2,
+            )
+            self.sip_server._send_message(bye_msg.build(), call.callee_addr)
+
+        # End the original call
+        self.call_manager.end_call(call_id)
+        self.cdr_system.end_record(call_id, hangup_cause="blind_transfer")
+
+        self.logger.info(f"Blind transfer complete: {call_id} -> {destination}")
+
+        # Trigger webhook
+        self.webhook_system.trigger_event(
+            WebhookEvent.CALL_TRANSFERRED,
+            {
+                "call_id": call_id,
+                "new_call_id": new_call_id,
+                "from_extension": call.from_extension,
+                "to_extension": call.to_extension,
+                "transfer_destination": destination,
+                "transfer_type": "blind",
+                "timestamp": datetime.now(UTC).isoformat(),
+            },
+        )
+
+        return True
+
+    def attended_transfer(
+        self, call_id: str, consultation_call_id: str
+    ) -> bool:
+        """
+        Perform attended (consultative) transfer.
+
+        The transferring party has already established a consultation call with
+        the transfer destination. This method bridges the original caller with
+        the consultation call's far end.
+
+        Args:
+            call_id: Original call identifier (caller on hold)
+            consultation_call_id: Consultation call identifier
+
+        Returns:
+            True if transfer completed successfully
+        """
+        from pbx.sip.message import SIPMessageBuilder
+
+        original_call = self.call_manager.get_call(call_id)
+        consult_call = self.call_manager.get_call(consultation_call_id)
+
+        if not original_call:
+            self.logger.error(f"Original call {call_id} not found for attended transfer")
+            return False
+
+        if not consult_call:
+            self.logger.error(
+                f"Consultation call {consultation_call_id} not found for attended transfer"
+            )
+            return False
+
+        self.logger.info(
+            f"Attended transfer: bridging {original_call.from_extension} "
+            f"with {consult_call.to_extension}"
+        )
+
+        from pbx.core.call import CallState
+
+        original_call.state = CallState.TRANSFERRING
+        original_call.transferred = True
+        original_call.transfer_destination = consult_call.to_extension
+
+        # Re-point the RTP relay: connect original caller with consultation
+        # call's far end
+        server_ip = self._get_server_ip()
+
+        if original_call.caller_rtp and consult_call.callee_rtp:
+            caller_endpoint = (
+                original_call.caller_rtp["address"],
+                original_call.caller_rtp["port"],
+            )
+            new_dest_endpoint = (
+                consult_call.callee_rtp["address"],
+                consult_call.callee_rtp["port"],
+            )
+
+            # Update the RTP relay for the original call to point to new
+            # destination
+            if original_call.rtp_ports:
+                self.rtp_relay.set_endpoints(
+                    call_id, caller_endpoint, new_dest_endpoint
+                )
+                self.logger.info(
+                    f"RTP relay re-bridged: {caller_endpoint} <-> {new_dest_endpoint}"
+                )
+
+        # Resume the original call from hold
+        original_call.state = CallState.CONNECTED
+        original_call.on_hold = False
+        original_call.to_extension = consult_call.to_extension
+        original_call.callee_addr = consult_call.callee_addr
+        original_call.callee_rtp = consult_call.callee_rtp
+
+        # Send BYE to the transferring party (consultation call's A-leg)
+        if consult_call.caller_addr:
+            bye_msg = SIPMessageBuilder.build_request(
+                method="BYE",
+                uri=f"sip:{consult_call.from_extension}@{consult_call.caller_addr[0]}:{consult_call.caller_addr[1]}",
+                from_addr=f"<sip:{consult_call.to_extension}@{server_ip}>",
+                to_addr=f"<sip:{consult_call.from_extension}@{server_ip}>",
+                call_id=consultation_call_id,
+                cseq=2,
+            )
+            self.sip_server._send_message(bye_msg.build(), consult_call.caller_addr)
+
+        # Release consultation call's RTP relay and end it
+        self.rtp_relay.release_relay(consultation_call_id)
+        self.call_manager.end_call(consultation_call_id)
+        self.cdr_system.end_record(consultation_call_id, hangup_cause="attended_transfer")
+
+        self.logger.info(
+            f"Attended transfer complete: {original_call.from_extension} "
+            f"now connected to {consult_call.to_extension}"
+        )
+
+        # Trigger webhook
+        self.webhook_system.trigger_event(
+            WebhookEvent.CALL_TRANSFERRED,
+            {
+                "call_id": call_id,
+                "consultation_call_id": consultation_call_id,
+                "from_extension": original_call.from_extension,
+                "transfer_destination": consult_call.to_extension,
+                "transfer_type": "attended",
+                "timestamp": datetime.now(UTC).isoformat(),
+            },
+        )
+
+        return True
+
+    def consultation_transfer_start(
+        self, call_id: str, destination: str
+    ) -> str | None:
+        """
+        Start a consultative transfer by placing the original call on hold
+        and initiating a new call to the destination.
+
+        Args:
+            call_id: Original call identifier
+            destination: Destination extension to consult with
+
+        Returns:
+            New consultation call ID, or None if failed
+        """
+        from pbx.sip.message import SIPMessageBuilder
+        from pbx.sip.sdp import SDPBuilder
+
+        call = self.call_manager.get_call(call_id)
+        if not call:
+            self.logger.error(f"Call {call_id} not found for consultation transfer")
+            return None
+
+        if not self.extension_registry.is_registered(destination):
+            self.logger.error(f"Consultation destination {destination} not registered")
+            return None
+
+        dest_addr = self.extension_registry.get_address(destination)
+        if not dest_addr:
+            self.logger.error(f"No address for consultation destination {destination}")
+            return None
+
+        # Place original call on hold
+        self.hold_call(call_id)
+
+        # Allocate new RTP ports for the consultation call
+        consult_call_id = str(uuid.uuid4())
+        rtp_ports = self.rtp_relay.allocate_relay(consult_call_id)
+        if not rtp_ports:
+            self.logger.error("Failed to allocate RTP ports for consultation call")
+            self.resume_call(call_id)
+            return None
+
+        # Create consultation call
+        consult_call = self.call_manager.create_call(
+            consult_call_id, call.to_extension, destination
+        )
+        consult_call.start()
+        consult_call.rtp_ports = rtp_ports
+
+        # Build and send INVITE for consultation
+        server_ip = self._get_server_ip()
+        sip_port = self.config.get("server.sip_port", 5060)
+
+        consult_sdp = SDPBuilder.build_audio_sdp(
+            server_ip, rtp_ports[0], session_id=consult_call_id
+        )
+
+        invite_msg = SIPMessageBuilder.build_request(
+            method="INVITE",
+            uri=f"sip:{destination}@{dest_addr[0]}:{dest_addr[1]}",
+            from_addr=f"<sip:{call.to_extension}@{server_ip}>",
+            to_addr=f"<sip:{destination}@{server_ip}>",
+            call_id=consult_call_id,
+            cseq=1,
+            body=consult_sdp,
+        )
+        invite_msg.set_header("Content-type", "application/sdp")
+        invite_msg.set_header(
+            "Contact", f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+        )
+
+        self.sip_server._send_message(invite_msg.build(), dest_addr)
+        self.logger.info(
+            f"Consultation call initiated: {consult_call_id} to {destination}"
+        )
+
+        # Start CDR for consultation call
+        self.cdr_system.start_record(consult_call_id, call.to_extension, destination)
+
+        return consult_call_id
 
     def hold_call(self, call_id: str) -> bool:
         """
