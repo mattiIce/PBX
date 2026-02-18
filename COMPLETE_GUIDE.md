@@ -2306,7 +2306,7 @@ blueprints = [..., your_bp]
 **Prerequisites:**
 - Python 3.13+
 - [uv](https://docs.astral.sh/uv/) (fast Python package manager)
-- Node.js 20+ and npm
+- Node.js 22+ and npm
 
 **Quick Start:**
 ```bash

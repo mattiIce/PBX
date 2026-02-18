@@ -78,6 +78,7 @@ pbx/
 │   ├── auto_attendant_handler.py # IVR logic
 │   ├── voicemail_handler.py      # Voicemail processing
 │   ├── emergency_handler.py      # E911 handling
+│   ├── paging_handler.py         # Overhead paging logic
 │   └── feature_initializer.py    # Dynamic feature loading
 ├── sip/              # SIP protocol implementation
 │   ├── server.py     # SIP server (Twisted-based)
@@ -86,6 +87,7 @@ pbx/
 ├── rtp/              # RTP media handling
 │   ├── handler.py    # RTP relay
 │   ├── jitter_buffer.py
+│   ├── rfc2833.py    # DTMF event handling (RFC 2833)
 │   └── rtcp_monitor.py
 ├── features/         # 76 feature modules (pluggable)
 │   └── ...           # Each feature is a self-contained .py module
@@ -108,7 +110,7 @@ admin/                # Frontend admin interface
 ├── vite.config.js
 └── tsconfig.json
 
-tests/                # Python test suite (236 files)
+tests/                # Python test suite (238 files)
 ├── conftest.py       # Shared fixtures
 ├── integration/      # Integration tests (API, call flow, provisioning)
 └── test_*.py
@@ -175,7 +177,7 @@ make test-cov          # With coverage (80% minimum)
 - Use the shared fixtures from `conftest.py` rather than creating ad-hoc mocks
 - API tests should use the `api_client` fixture (provides a Flask test client)
 - SIP protocol tests should use `sip_message_factory` to construct messages
-- Tests are relaxed on linting rules: `F401`, `F811`, `ARG`, `PLR`, `PT`, `B011` are ignored
+- Tests are relaxed on linting rules: `F401`, `F811`, `ARG`, `PLR`, `PT`, `B011`, `PLC0415`, `N806`, `N803` are ignored
 
 ## CI/CD
 
@@ -205,7 +207,7 @@ System dependencies required in CI: `espeak`, `ffmpeg`, `libopus-dev`, `portaudi
 - **Migrations**: Alembic (config in `alembic/`)
 - **Production**: PostgreSQL 17
 - **Development fallback**: SQLite
-- **Models**: `Extension`, `Voicemail`, `CallRecord`, `RegisteredPhone`
+- **Models**: `Base` (declarative base), `Extension`, `Voicemail`, `CallRecord`, `RegisteredPhone`
 
 ## Pre-commit Hooks
 
@@ -243,13 +245,24 @@ Notable ignored rules:
 - `E501` — line length (formatter handles it)
 - `E402` — module-level import order (needed for env loading)
 - `PLR0913/0912/0915` — complexity thresholds (relaxed)
+- `PLR2004` — magic value in comparison
+- `PLR0911` — too many return statements
+- `PLW0603` — global statement (existing pattern)
 - `ARG001/002` — unused arguments (common in callbacks/handlers)
 - `B008` — function calls in default args (Flask patterns)
+- `RET504` — unnecessary assignment before return
+- `SIM108` — ternary operator (readability preference)
+- `PTH123` — `open()` vs `Path.open()` (acceptable pattern)
+- `ISC001` — single-line implicit string concat (conflicts with formatter)
+- `ERA001` — commented-out code (documentation/examples that should stay)
+- `RUF001` — ambiguous Unicode characters (intentional in logs)
 
 Per-file overrides:
 - `__init__.py`: `F401` ignored (re-exports)
-- `tests/*`: Relaxed rules (`F401`, `F811`, `ARG`, `PLR`, `PT`, `B011`)
+- `tests/*`: Relaxed rules (`F401`, `F811`, `ARG`, `PLR`, `PT`, `B011`, `PLC0415`, `N806`, `N803`)
 - `pbx/api/rest_api.py`: All rules ignored (deprecated file)
+- `pbx/features/*`, `pbx/core/*`, `pbx/api/routes/*`, `pbx/api/app.py`, `pbx/api/server.py`, `pbx/api/utils.py`, `pbx/api/license_api.py`, `pbx/api/opensource_integration_api.py`, `pbx/rtp/handler.py`, `pbx/main.py`, `pbx/utils/*`, `pbx/integrations/*`: `PLC0415` ignored (lazy imports intentional)
+- `scripts/*`: `PLC0415`, `PLW1510`, `PT028` ignored
 
 ## Deployment
 

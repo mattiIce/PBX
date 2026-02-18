@@ -8,7 +8,7 @@ This directory contains JavaScript tests for the PBX admin panel functionality u
 
 ### Prerequisites
 
-- Node.js 20+ and npm installed
+- Node.js 22+ and npm installed
 
 ### Installation
 
@@ -46,15 +46,15 @@ Tests are organized in the `admin/tests/` directory with the following structure
 
 ```
 admin/tests/
-├── voicemail.test.js       # Tests for voicemail management functionality
-└── ...                     # Additional test files
+├── refresh-all.test.js     # Tests for refresh-all functionality
+└── voicemail.test.js       # Tests for voicemail management functionality
 ```
 
 ## Writing Tests
 
 ### Test File Naming
 
-- Test files should be named `*.test.js`
+- Test files should be named `*.test.js` or `*.test.ts`
 - Place test files in `admin/tests/` directory
 
 ### Example Test
