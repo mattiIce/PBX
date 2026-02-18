@@ -260,9 +260,7 @@ def verify_license_admin_session(request) -> tuple[bool, str | None]:
                     f"(ext={token_ext}) from {request.remote_addr}"
                 )
             else:
-                logger.warning(
-                    f"Invalid or expired Bearer token from {request.remote_addr}"
-                )
+                logger.warning(f"Invalid or expired Bearer token from {request.remote_addr}")
 
         logger.warning(f"Unauthorized license admin access attempt from {request.remote_addr}")
         return False, "Unauthorized. License management requires administrator authentication."

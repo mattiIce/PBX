@@ -94,8 +94,6 @@ class SSOAuthService:
             User information and session
         """
         import base64
-        import hashlib
-        import re
         from xml.etree import ElementTree
 
         if not self.enabled or self.provider != "saml":
@@ -126,9 +124,8 @@ class SSOAuthService:
                 if "Success" not in status_value:
                     return {"error": f"SAML authentication failed: {status_value}"}
 
-            # Validate response ID and InResponseTo
+            # Validate response ID
             response_id = root.get("ID")
-            in_response_to = root.get("InResponseTo")
 
             # Extract assertions
             assertion = root.find(".//saml:Assertion", ns)
@@ -143,14 +140,12 @@ class SSOAuthService:
                 now = datetime.now(UTC)
 
                 if not_before:
-                    nb_time = datetime.fromisoformat(not_before.replace("Z", "+00:00"))
+                    nb_time = datetime.fromisoformat(not_before)
                     if now < nb_time:
                         return {"error": "SAML assertion not yet valid"}
 
                 if not_on_or_after:
-                    noa_time = datetime.fromisoformat(
-                        not_on_or_after.replace("Z", "+00:00")
-                    )
+                    noa_time = datetime.fromisoformat(not_on_or_after)
                     if now >= noa_time:
                         return {"error": "SAML assertion has expired"}
 
@@ -174,11 +169,7 @@ class SSOAuthService:
             if attr_stmt is not None:
                 for attr in attr_stmt.findall("saml:Attribute", ns):
                     attr_name = attr.get("Name", "")
-                    values = [
-                        v.text
-                        for v in attr.findall("saml:AttributeValue", ns)
-                        if v.text
-                    ]
+                    values = [v.text for v in attr.findall("saml:AttributeValue", ns) if v.text]
 
                     # Map common attribute names
                     name_lower = attr_name.lower()
@@ -206,14 +197,10 @@ class SSOAuthService:
             if idp_cert:
                 sig_elem = root.find(".//ds:Signature", ns)
                 if sig_elem is None:
-                    self.logger.warning(
-                        "SAML response has no signature but IdP cert is configured"
-                    )
+                    self.logger.warning("SAML response has no signature but IdP cert is configured")
                 else:
                     # Compute digest of the signed content for verification
-                    digest_value = sig_elem.find(
-                        ".//ds:DigestValue", ns
-                    )
+                    digest_value = sig_elem.find(".//ds:DigestValue", ns)
                     if digest_value is not None:
                         self.logger.info(
                             f"SAML signature present, digest: {digest_value.text[:20]}..."
@@ -221,9 +208,7 @@ class SSOAuthService:
 
             # Create session
             session_id = self._create_session(user_info)
-            self.logger.info(
-                f"SAML authentication successful for {user_id}"
-            )
+            self.logger.info(f"SAML authentication successful for {user_id}")
 
             return {"session_id": session_id, "user_info": user_info}
 
@@ -275,8 +260,8 @@ class SSOAuthService:
             User information and session
         """
         import json
-        import urllib.request
         import urllib.parse
+        import urllib.request
 
         if not self.enabled or self.provider not in ("oauth", "oidc"):
             return {"error": "OAuth not enabled"}
@@ -290,15 +275,17 @@ class SSOAuthService:
         try:
             # Step 1: Exchange authorization code for access token
             token_url = f"{self.oauth_provider_url}/token"
-            token_data = urllib.parse.urlencode({
-                "grant_type": "authorization_code",
-                "code": code,
-                "client_id": self.oauth_client_id,
-                "client_secret": self.oauth_client_secret,
-                "redirect_uri": self.config.get("features", {}).get(
-                    "sso", {}
-                ).get("oauth_redirect_uri", ""),
-            }).encode("utf-8")
+            token_data = urllib.parse.urlencode(
+                {
+                    "grant_type": "authorization_code",
+                    "code": code,
+                    "client_id": self.oauth_client_id,
+                    "client_secret": self.oauth_client_secret,
+                    "redirect_uri": self.config.get("features", {})
+                    .get("sso", {})
+                    .get("oauth_redirect_uri", ""),
+                }
+            ).encode("utf-8")
 
             token_request = urllib.request.Request(
                 token_url,
@@ -312,8 +299,6 @@ class SSOAuthService:
             access_token = token_response.get("access_token")
             if not access_token:
                 return {"error": "No access token in response"}
-
-            id_token = token_response.get("id_token")
 
             # Step 2: Fetch user info from provider's userinfo endpoint
             userinfo_url = f"{self.oauth_provider_url}/userinfo"
@@ -344,9 +329,7 @@ class SSOAuthService:
 
             # Create session
             session_id = self._create_session(user_info)
-            self.logger.info(
-                f"OAuth authentication successful for {user_info['user_id']}"
-            )
+            self.logger.info(f"OAuth authentication successful for {user_info['user_id']}")
 
             return {"session_id": session_id, "user_info": user_info}
 

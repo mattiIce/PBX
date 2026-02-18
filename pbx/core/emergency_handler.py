@@ -158,15 +158,11 @@ class EmergencyHandler:
 
                 # Send to trunk
                 try:
-                    pbx.sip_server._send_message(
-                        trunk_invite.build(), (trunk_host, trunk_port)
-                    )
+                    pbx.sip_server._send_message(trunk_invite.build(), (trunk_host, trunk_port))
                     call.callee_addr = (trunk_host, trunk_port)
                     pbx.logger.critical("Emergency INVITE sent to trunk")
                 except Exception as trunk_err:
-                    pbx.logger.critical(
-                        f"Failed to route emergency call via trunk: {trunk_err}"
-                    )
+                    pbx.logger.critical(f"Failed to route emergency call via trunk: {trunk_err}")
 
         # Log all details for regulatory compliance
         compliance_log: dict[str, Any] = {

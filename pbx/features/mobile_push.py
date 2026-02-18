@@ -484,15 +484,17 @@ class MobilePushNotifications:
             self.logger.info(
                 f"Push notification queued (Firebase not available): {user_id}: {title}"
             )
-            self.notification_history.append({
-                "user_id": user_id,
-                "title": title,
-                "body": body,
-                "data": data,
-                "sent_at": datetime.now(UTC),
-                "delivered": False,
-                "reason": "firebase_not_configured",
-            })
+            self.notification_history.append(
+                {
+                    "user_id": user_id,
+                    "title": title,
+                    "body": body,
+                    "data": data,
+                    "sent_at": datetime.now(UTC),
+                    "delivered": False,
+                    "reason": "firebase_not_configured",
+                }
+            )
             # Save to database even without Firebase
             notification_type = data.get("type", "unknown") if data else "unknown"
             self._save_notification_to_database(

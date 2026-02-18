@@ -205,7 +205,6 @@ class RecordingAnnouncements:
         self.logger.info(f"Playing recording announcement for call {call_id} (to: {party})")
 
         # Play audio via RTP if a PBX core reference is available
-        audio_played = False
         if hasattr(self, "pbx_core") and self.pbx_core:
             try:
                 call = self.pbx_core.call_manager.get_call(call_id)
@@ -218,10 +217,7 @@ class RecordingAnnouncements:
                         if relay_info and relay_info.get("handler"):
                             handler = relay_info["handler"]
                             handler.play_file(audio_file)
-                            audio_played = True
-                            self.logger.info(
-                                f"Playing announcement audio file: {audio_file}"
-                            )
+                            self.logger.info(f"Playing announcement audio file: {audio_file}")
                     elif self.announcement_text:
                         # Use TTS if available and no audio file
                         tts_file = self._generate_tts_audio(self.announcement_text)
@@ -231,7 +227,6 @@ class RecordingAnnouncements:
                             if relay_info and relay_info.get("handler"):
                                 handler = relay_info["handler"]
                                 handler.play_file(tts_file)
-                                audio_played = True
                                 self.logger.info("Playing TTS announcement")
             except (AttributeError, KeyError, TypeError) as e:
                 self.logger.warning(f"Could not play announcement audio: {e}")
@@ -288,7 +283,7 @@ class RecordingAnnouncements:
                                 consent_given = True
                                 self.record_consent_response(call_id, True)
                                 break
-                            elif digit == "2":
+                            if digit == "2":
                                 consent_given = False
                                 self.record_consent_response(call_id, False)
                                 break
@@ -302,7 +297,7 @@ class RecordingAnnouncements:
                                     consent_given = True
                                     self.record_consent_response(call_id, True)
                                     break
-                                elif digit == "2":
+                                if digit == "2":
                                     consent_given = False
                                     self.record_consent_response(call_id, False)
                                     break
@@ -310,9 +305,7 @@ class RecordingAnnouncements:
 
                     if consent_given is None:
                         # Timeout - log as timeout
-                        self._log_announcement(
-                            call_id, "caller", True, True, None, True
-                        )
+                        self._log_announcement(call_id, "caller", True, True, None, True)
             except (AttributeError, KeyError, TypeError) as e:
                 self.logger.warning(f"Error waiting for consent DTMF: {e}")
 
@@ -342,9 +335,7 @@ class RecordingAnnouncements:
         import tempfile
 
         try:
-            with tempfile.NamedTemporaryFile(
-                suffix=".wav", delete=False
-            ) as tmp:
+            with tempfile.NamedTemporaryFile(suffix=".wav", delete=False) as tmp:
                 tmp_path = tmp.name
 
             result = subprocess.run(  # nosec B603

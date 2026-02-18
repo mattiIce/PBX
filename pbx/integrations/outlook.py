@@ -517,9 +517,7 @@ class OutlookIntegration:
                         )
 
                         # Originate a call to the extension and play the reminder
-                        if hasattr(pbx_core, "sip_server") and hasattr(
-                            pbx_core, "call_manager"
-                        ):
+                        if hasattr(pbx_core, "sip_server") and hasattr(pbx_core, "call_manager"):
                             import uuid
 
                             from pbx.sip.message import SIPMessageBuilder
@@ -541,9 +539,7 @@ class OutlookIntegration:
                             # Allocate RTP relay for the reminder call
                             rtp_ports = pbx_core.rtp_relay.allocate_relay(reminder_call_id)
                             if not rtp_ports:
-                                self.logger.error(
-                                    "Failed to allocate RTP ports for reminder call"
-                                )
+                                self.logger.error("Failed to allocate RTP ports for reminder call")
                                 return
 
                             # Build SDP for the reminder call
@@ -570,9 +566,7 @@ class OutlookIntegration:
                             )
 
                             # Send INVITE to the extension
-                            pbx_core.sip_server._send_message(
-                                invite_msg.build(), ext_obj.address
-                            )
+                            pbx_core.sip_server._send_message(invite_msg.build(), ext_obj.address)
 
                             # Create call record for tracking
                             reminder_call = pbx_core.call_manager.create_call(
@@ -626,8 +620,7 @@ class OutlookIntegration:
                                             with contextlib.suppress(OSError):
                                                 Path(tmp_path).unlink()
                                         self.logger.info(
-                                            f"Played TTS reminder to extension "
-                                            f"{extension_number}"
+                                            f"Played TTS reminder to extension {extension_number}"
                                         )
                             except ImportError:
                                 self.logger.warning(

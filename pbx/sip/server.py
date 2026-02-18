@@ -245,9 +245,7 @@ class SIPServer:
         if authorization:
             # Verify digest authentication credentials
             if self._verify_digest_auth(authorization, from_header, "REGISTER"):
-                success = self.pbx_core.register_extension(
-                    from_header, addr, user_agent, contact
-                )
+                success = self.pbx_core.register_extension(from_header, addr, user_agent, contact)
                 if success:
                     response = SIPMessageBuilder.build_response(200, "OK", message)
                     # Set Expires header from request or default
@@ -265,17 +263,13 @@ class SIPServer:
             # No credentials provided - check if auth is required
             auth_required = True
             if self.pbx_core:
-                auth_required = self.pbx_core.config.get(
-                    "security.sip_auth_required", True
-                )
+                auth_required = self.pbx_core.config.get("security.sip_auth_required", True)
 
             if auth_required:
                 self._send_auth_challenge(message, addr)
             else:
                 # Auth not required - register directly
-                success = self.pbx_core.register_extension(
-                    from_header, addr, user_agent, contact
-                )
+                success = self.pbx_core.register_extension(from_header, addr, user_agent, contact)
                 if success:
                     self._send_response(200, "OK", message, addr)
                 else:
@@ -296,9 +290,7 @@ class SIPServer:
         timestamp = str(time.time())
         server_secret = "pbx-sip-auth"
         if self.pbx_core:
-            server_secret = self.pbx_core.config.get(
-                "security.sip_auth_secret", server_secret
-            )
+            server_secret = self.pbx_core.config.get("security.sip_auth_secret", server_secret)
         nonce_input = f"{timestamp}:{server_secret}"
         nonce = hashlib.md5(nonce_input.encode()).hexdigest()  # nosec B324 - MD5 required by SIP digest auth RFC 2617
 
@@ -313,9 +305,7 @@ class SIPServer:
         )
         self._send_message(response.build(), addr)
 
-    def _verify_digest_auth(
-        self, authorization: str, from_header: str, method: str
-    ) -> bool:
+    def _verify_digest_auth(self, authorization: str, from_header: str, method: str) -> bool:
         """
         Verify SIP digest authentication credentials.
 
@@ -590,8 +580,7 @@ class SIPServer:
 
             # Send final NOTIFY with terminated state
             self._send_event_notify(
-                from_header, to_header, call_id, addr, event,
-                "terminated;reason=timeout", ""
+                from_header, to_header, call_id, addr, event, "terminated;reason=timeout", ""
             )
             return
 
@@ -616,8 +605,14 @@ class SIPServer:
         content_type = self._get_event_content_type(event)
 
         self._send_event_notify(
-            from_header, to_header, call_id, addr, event,
-            f"active;expires={expires}", notify_body, content_type
+            from_header,
+            to_header,
+            call_id,
+            addr,
+            event,
+            f"active;expires={expires}",
+            notify_body,
+            content_type,
         )
 
     def _send_event_notify(
@@ -684,11 +679,10 @@ class SIPServer:
         if event == "presence":
             # Return PIDF presence document
             status = "open"
-            if self.pbx_core and extension:
-                if hasattr(self.pbx_core, "presence_system"):
-                    presence_info = self.pbx_core.presence_system.get_presence(extension)
-                    if presence_info:
-                        status = presence_info.get("status", "open")
+            if self.pbx_core and extension and hasattr(self.pbx_core, "presence_system"):
+                presence_info = self.pbx_core.presence_system.get_presence(extension)
+                if presence_info:
+                    status = presence_info.get("status", "open")
 
             server_ip = "127.0.0.1"
             if self.pbx_core:
@@ -708,20 +702,14 @@ class SIPServer:
             # Return message waiting indication (MWI)
             new_msgs = 0
             old_msgs = 0
-            if self.pbx_core and extension:
-                if hasattr(self.pbx_core, "voicemail_system"):
-                    vm_status = self.pbx_core.voicemail_system.get_mailbox_status(
-                        extension
-                    )
-                    if vm_status:
-                        new_msgs = vm_status.get("new_messages", 0)
-                        old_msgs = vm_status.get("old_messages", 0)
+            if self.pbx_core and extension and hasattr(self.pbx_core, "voicemail_system"):
+                vm_status = self.pbx_core.voicemail_system.get_mailbox_status(extension)
+                if vm_status:
+                    new_msgs = vm_status.get("new_messages", 0)
+                    old_msgs = vm_status.get("old_messages", 0)
 
             waiting = "yes" if new_msgs > 0 else "no"
-            return (
-                f"Messages-Waiting: {waiting}\r\n"
-                f"Voice-Message: {new_msgs}/{old_msgs}"
-            )
+            return f"Messages-Waiting: {waiting}\r\nVoice-Message: {new_msgs}/{old_msgs}"
 
         if event == "dialog":
             # Return dialog info for BLF (busy lamp field)
@@ -810,23 +798,17 @@ class SIPServer:
         self._send_response(202, "Accepted", message, addr)
 
         # Send initial NOTIFY - transfer is in progress (100 Trying)
-        self._send_transfer_notify(
-            message, addr, "SIP/2.0 100 Trying", call_id
-        )
+        self._send_transfer_notify(message, addr, "SIP/2.0 100 Trying", call_id)
 
         if not self.pbx_core:
-            self._send_transfer_notify(
-                message, addr, "SIP/2.0 503 Service Unavailable", call_id
-            )
+            self._send_transfer_notify(message, addr, "SIP/2.0 503 Service Unavailable", call_id)
             return
 
         # Extract destination extension from Refer-To URI
         dest_match = re.search(r"sip:([^@>]+)", refer_to)
         if not dest_match:
             self.logger.error(f"Could not parse Refer-To URI: {refer_to}")
-            self._send_transfer_notify(
-                message, addr, "SIP/2.0 400 Bad Request", call_id
-            )
+            self._send_transfer_notify(message, addr, "SIP/2.0 400 Bad Request", call_id)
             return
 
         destination = dest_match.group(1)
@@ -885,15 +867,11 @@ class SIPServer:
                         )
                         invite_msg.body = transfer_sdp
                         invite_msg.set_header("Content-type", "application/sdp")
-                        invite_msg.set_header(
-                            "Content-Length", str(len(transfer_sdp))
-                        )
+                        invite_msg.set_header("Content-Length", str(len(transfer_sdp)))
 
                     # Send INVITE to transfer destination
                     self._send_message(invite_msg.build(), dest_addr)
-                    self.logger.info(
-                        f"Sent INVITE to {destination} at {dest_addr} for transfer"
-                    )
+                    self.logger.info(f"Sent INVITE to {destination} at {dest_addr} for transfer")
 
                     # Create new call record for the transferred leg
                     new_call = self.pbx_core.call_manager.create_call(
@@ -905,15 +883,11 @@ class SIPServer:
                     new_call.rtp_ports = call.rtp_ports
 
                     # Send success NOTIFY
-                    self._send_transfer_notify(
-                        message, addr, "SIP/2.0 200 OK", call_id
-                    )
+                    self._send_transfer_notify(message, addr, "SIP/2.0 200 OK", call_id)
 
                     # End the original call leg (the transferring party)
                     self.pbx_core.end_call(call_id)
-                    self.logger.info(
-                        f"Transfer complete: {call.from_extension} -> {destination}"
-                    )
+                    self.logger.info(f"Transfer complete: {call.from_extension} -> {destination}")
                 else:
                     self.logger.error(f"No address for destination {destination}")
                     self._send_transfer_notify(
@@ -921,9 +895,7 @@ class SIPServer:
                     )
             else:
                 self.logger.error(f"Destination {destination} not registered")
-                self._send_transfer_notify(
-                    message, addr, "SIP/2.0 404 Not Found", call_id
-                )
+                self._send_transfer_notify(message, addr, "SIP/2.0 404 Not Found", call_id)
         else:
             self.logger.warning(f"No active call found for REFER Call-ID: {call_id}")
             self._send_transfer_notify(
@@ -1099,9 +1071,7 @@ class SIPServer:
                     fwd_msg.set_header("Content-type", content_type)
 
                 self._send_message(fwd_msg.build(), dest_addr)
-                self.logger.info(
-                    f"Forwarded MESSAGE to {dest_extension} at {dest_addr}"
-                )
+                self.logger.info(f"Forwarded MESSAGE to {dest_extension} at {dest_addr}")
 
                 # Trigger webhook if available
                 if hasattr(self.pbx_core, "webhook_system"):
@@ -1232,11 +1202,8 @@ class SIPServer:
             # Determine which party sent the UPDATE and update their endpoint
             is_caller = addr == call.caller_addr
             if is_caller and new_address and new_port:
-                old_rtp = call.caller_rtp
                 call.caller_rtp = new_audio
-                self.logger.info(
-                    f"Updated caller media: {new_address}:{new_port}"
-                )
+                self.logger.info(f"Updated caller media: {new_address}:{new_port}")
                 # Update RTP relay endpoint
                 if call.rtp_ports:
                     caller_endpoint = (new_address, new_port)
@@ -1246,14 +1213,10 @@ class SIPServer:
                             call.callee_rtp["address"],
                             call.callee_rtp["port"],
                         )
-                    self.pbx_core.rtp_relay.set_endpoints(
-                        call_id, caller_endpoint, callee_endpoint
-                    )
+                    self.pbx_core.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
             elif new_address and new_port:
                 call.callee_rtp = new_audio
-                self.logger.info(
-                    f"Updated callee media: {new_address}:{new_port}"
-                )
+                self.logger.info(f"Updated callee media: {new_address}:{new_port}")
                 if call.rtp_ports:
                     caller_endpoint = None
                     if call.caller_rtp:
@@ -1262,20 +1225,14 @@ class SIPServer:
                             call.caller_rtp["port"],
                         )
                     callee_endpoint = (new_address, new_port)
-                    self.pbx_core.rtp_relay.set_endpoints(
-                        call_id, caller_endpoint, callee_endpoint
-                    )
+                    self.pbx_core.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
 
         # Build answer SDP
         server_ip = self.pbx_core._get_server_ip()
         rtp_port = call.rtp_ports[0] if call.rtp_ports else 10000
-        answer_sdp = SDPBuilder.build_audio_sdp(
-            server_ip, rtp_port, session_id=call_id
-        )
+        answer_sdp = SDPBuilder.build_audio_sdp(server_ip, rtp_port, session_id=call_id)
 
-        response = SIPMessageBuilder.build_response(
-            200, "OK", message, body=answer_sdp
-        )
+        response = SIPMessageBuilder.build_response(200, "OK", message, body=answer_sdp)
         response.set_header("Content-type", "application/sdp")
         self._send_message(response.build(), addr)
 

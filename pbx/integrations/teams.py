@@ -283,9 +283,7 @@ class TeamsIntegration:
                         pbx_core.sip_server._send_message(invite_msg.build(), dest_addr)
 
                         # Create call record for tracking
-                        new_call = pbx_core.call_manager.create_call(
-                            call_id, from_number, sip_uri
-                        )
+                        new_call = pbx_core.call_manager.create_call(call_id, from_number, sip_uri)
                         new_call.start()
                         new_call.rtp_ports = rtp_ports
 

@@ -345,9 +345,7 @@ def handle_license_toggle() -> tuple[Response, int]:
                 if Path(tmp_path).exists():
                     Path(tmp_path).unlink()
             except OSError as cleanup_err:
-                logger.warning(
-                    "Failed to clean up temporary file %s: %s", tmp_path, cleanup_err
-                )
+                logger.warning("Failed to clean up temporary file %s: %s", tmp_path, cleanup_err)
             logger.error("Failed to update .env file for licensing: %s", write_err, exc_info=True)
             return send_json(
                 {"success": False, "error": "Failed to persist licensing configuration"}, 500

@@ -391,8 +391,7 @@ class ActiveDirectoryIntegration:
                         }
 
                         # Add permissions to extension data
-                        for perm_key, perm_value in permissions.items():
-                            ext_data[perm_key] = perm_value
+                        ext_data.update(permissions)
 
                         if use_database:
                             # Add to database

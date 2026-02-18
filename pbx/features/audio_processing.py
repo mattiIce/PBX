@@ -114,9 +114,7 @@ class AudioProcessor:
         silence_threshold = 500  # Threshold for silence detection
         if current_rms < silence_threshold:
             alpha = 0.95  # Smoothing factor for noise estimate
-            self._noise_spectrum = (
-                alpha * self._noise_spectrum + (1 - alpha) * magnitude
-            )
+            self._noise_spectrum = alpha * self._noise_spectrum + (1 - alpha) * magnitude
             self._noise_frame_count += 1
 
         # Spectral subtraction with over-subtraction factor
@@ -124,9 +122,7 @@ class AudioProcessor:
         spectral_floor = 0.01  # Prevent musical noise
 
         cleaned_magnitude = magnitude - over_subtraction * self._noise_spectrum
-        cleaned_magnitude = np.maximum(
-            cleaned_magnitude, spectral_floor * magnitude
-        )
+        cleaned_magnitude = np.maximum(cleaned_magnitude, spectral_floor * magnitude)
 
         # Reconstruct signal
         cleaned_spectrum = cleaned_magnitude * np.exp(1j * phase)
@@ -175,9 +171,7 @@ class AudioProcessor:
 
                 # Update filter (NLMS)
                 power = np.dot(self._far_end_buffer, self._far_end_buffer) + 1e-6
-                self._echo_filter += (
-                    self._echo_mu * error * self._far_end_buffer / power
-                )
+                self._echo_filter += self._echo_mu * error * self._far_end_buffer / power
 
             result = np.zeros(frame_len)
             result[:process_len] = output

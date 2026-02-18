@@ -443,9 +443,7 @@ def generate_ssl_certificate() -> tuple[Response, int]:
             san_list.append(x509.IPAddress(ip))
         except ValueError:
             # hostname is not a valid IP address; this is expected for DNS hostnames
-            logger.debug(
-                "Hostname %r is not an IP address, skipping IPAddress SAN entry", hostname
-            )
+            logger.debug("Hostname %r is not an IP address, skipping IPAddress SAN entry", hostname)
 
         cert = (
             x509.CertificateBuilder()

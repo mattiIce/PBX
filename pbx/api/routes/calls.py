@@ -64,16 +64,16 @@ def transfer_call(call_id: str) -> tuple[Response, int]:
         success = pbx_core.attended_transfer(call_id, consultation_call_id)
     elif transfer_type == "consultative":
         if not destination:
-            return send_json(
-                {"error": "destination required for consultative transfer"}, 400
-            ), 400
+            return send_json({"error": "destination required for consultative transfer"}, 400), 400
         new_call_id = pbx_core.consultation_transfer_start(call_id, destination)
         if new_call_id:
-            return send_json({
-                "success": True,
-                "consultation_call_id": new_call_id,
-                "message": f"Consultation call started to {destination}",
-            }), 200
+            return send_json(
+                {
+                    "success": True,
+                    "consultation_call_id": new_call_id,
+                    "message": f"Consultation call started to {destination}",
+                }
+            ), 200
         return send_json({"error": "Failed to start consultation transfer"}, 500), 500
     else:
         # Default: blind transfer
@@ -82,11 +82,13 @@ def transfer_call(call_id: str) -> tuple[Response, int]:
         success = pbx_core.blind_transfer(call_id, destination)
 
     if success:
-        return send_json({
-            "success": True,
-            "message": f"Call {call_id} transferred to {destination or 'consultation target'}",
-            "transfer_type": transfer_type,
-        }), 200
+        return send_json(
+            {
+                "success": True,
+                "message": f"Call {call_id} transferred to {destination or 'consultation target'}",
+                "transfer_type": transfer_type,
+            }
+        ), 200
     return send_json({"error": f"Transfer failed for call {call_id}"}, 500), 500
 
 
@@ -219,9 +221,7 @@ def export_analytics() -> Response | tuple[Response, int]:
             )
 
             # Export to CSV - create temp file and write data
-            with tempfile.NamedTemporaryFile(
-                mode="w", delete=False, suffix=".csv"
-            ) as temp_file:
+            with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv") as temp_file:
                 csv_path = temp_file.name
 
             if pbx_core.statistics_engine.export_to_csv(analytics["records"], csv_path):

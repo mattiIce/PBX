@@ -344,7 +344,9 @@ class JitsiIntegration:
                         "url": meeting_url,
                         "server": self.server_url,
                         "participants": data.get("participants", []),
-                        "participant_count": data.get("participant_count", len(data.get("participants", []))),
+                        "participant_count": data.get(
+                            "participant_count", len(data.get("participants", []))
+                        ),
                         "created_at": data.get("created_at"),
                         "is_active": data.get("is_active", True),
                         "raw_data": data,
@@ -363,9 +365,7 @@ class JitsiIntegration:
                     f"{response.status_code} - {response.text}"
                 )
             except requests.ConnectionError:
-                self.logger.warning(
-                    f"Cannot connect to Jitsi API at {self.api_endpoint}"
-                )
+                self.logger.warning(f"Cannot connect to Jitsi API at {self.api_endpoint}")
             except (requests.RequestException, KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Error querying Jitsi API for room {room_name}: {e}")
 

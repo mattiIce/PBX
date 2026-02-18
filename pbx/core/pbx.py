@@ -971,9 +971,7 @@ class PBXCore:
             self.logger.error(f"No address for blind transfer destination {destination}")
             return False
 
-        self.logger.info(
-            f"Blind transfer: call {call_id} to {destination}"
-        )
+        self.logger.info(f"Blind transfer: call {call_id} to {destination}")
 
         # Set call state to transferring
         from pbx.core.call import CallState
@@ -995,9 +993,7 @@ class PBXCore:
             call_id=new_call_id,
             cseq=1,
         )
-        invite_msg.set_header(
-            "Contact", f"<sip:{call.from_extension}@{server_ip}:{sip_port}>"
-        )
+        invite_msg.set_header("Contact", f"<sip:{call.from_extension}@{server_ip}:{sip_port}>")
 
         # Include SDP with the existing RTP relay ports
         if call.rtp_ports:
@@ -1012,9 +1008,7 @@ class PBXCore:
         self.sip_server._send_message(invite_msg.build(), dest_addr)
 
         # Create new call record for the transferred leg
-        new_call = self.call_manager.create_call(
-            new_call_id, call.from_extension, destination
-        )
+        new_call = self.call_manager.create_call(new_call_id, call.from_extension, destination)
         new_call.start()
         new_call.caller_rtp = call.caller_rtp
         new_call.caller_addr = call.caller_addr
@@ -1054,9 +1048,7 @@ class PBXCore:
 
         return True
 
-    def attended_transfer(
-        self, call_id: str, consultation_call_id: str
-    ) -> bool:
+    def attended_transfer(self, call_id: str, consultation_call_id: str) -> bool:
         """
         Perform attended (consultative) transfer.
 
@@ -1114,12 +1106,8 @@ class PBXCore:
             # Update the RTP relay for the original call to point to new
             # destination
             if original_call.rtp_ports:
-                self.rtp_relay.set_endpoints(
-                    call_id, caller_endpoint, new_dest_endpoint
-                )
-                self.logger.info(
-                    f"RTP relay re-bridged: {caller_endpoint} <-> {new_dest_endpoint}"
-                )
+                self.rtp_relay.set_endpoints(call_id, caller_endpoint, new_dest_endpoint)
+                self.logger.info(f"RTP relay re-bridged: {caller_endpoint} <-> {new_dest_endpoint}")
 
         # Resume the original call from hold
         original_call.state = CallState.CONNECTED
@@ -1165,9 +1153,7 @@ class PBXCore:
 
         return True
 
-    def consultation_transfer_start(
-        self, call_id: str, destination: str
-    ) -> str | None:
+    def consultation_transfer_start(self, call_id: str, destination: str) -> str | None:
         """
         Start a consultative transfer by placing the original call on hold
         and initiating a new call to the destination.
@@ -1232,14 +1218,10 @@ class PBXCore:
             body=consult_sdp,
         )
         invite_msg.set_header("Content-type", "application/sdp")
-        invite_msg.set_header(
-            "Contact", f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
-        )
+        invite_msg.set_header("Contact", f"<sip:{call.to_extension}@{server_ip}:{sip_port}>")
 
         self.sip_server._send_message(invite_msg.build(), dest_addr)
-        self.logger.info(
-            f"Consultation call initiated: {consult_call_id} to {destination}"
-        )
+        self.logger.info(f"Consultation call initiated: {consult_call_id} to {destination}")
 
         # Start CDR for consultation call
         self.cdr_system.start_record(consult_call_id, call.to_extension, destination)

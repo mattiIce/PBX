@@ -257,7 +257,9 @@ class DataResidencyControls:
                     dest_dir.mkdir(parents=True, exist_ok=True)
 
                     # Copy files matching the data_id from source to destination
-                    source_files = list(source_dir.glob(f"{data_id}*")) if source_dir.exists() else []
+                    source_files = (
+                        list(source_dir.glob(f"{data_id}*")) if source_dir.exists() else []
+                    )
 
                     if source_files:
                         for source_file in source_files:
