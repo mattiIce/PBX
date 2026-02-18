@@ -1181,9 +1181,12 @@ class TestDndOverride:
     def test_invalid_status(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.dnd_scheduler = MagicMock()
 
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER), patch(
-            "pbx.features.presence.PresenceStatus",
-            side_effect=ValueError("invalid"),
+        with (
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER),
+            patch(
+                "pbx.features.presence.PresenceStatus",
+                side_effect=ValueError("invalid"),
+            ),
         ):
             resp = api_client.post(
                 "/api/dnd/override",
@@ -1218,9 +1221,12 @@ class TestDndOverride:
     def test_exception(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
         mock_pbx_core.dnd_scheduler = MagicMock()
 
-        with patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER), patch(
-            "pbx.features.presence.PresenceStatus",
-            side_effect=RuntimeError("fail"),
+        with (
+            patch("pbx.api.utils.verify_authentication", return_value=AUTH_USER),
+            patch(
+                "pbx.features.presence.PresenceStatus",
+                side_effect=RuntimeError("fail"),
+            ),
         ):
             resp = api_client.post(
                 "/api/dnd/override",

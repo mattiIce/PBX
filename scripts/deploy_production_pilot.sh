@@ -138,15 +138,25 @@ install_dependencies() {
     log_info "Installing system dependencies..."
 
     if [ "$DRY_RUN" = true ]; then
-        log_info "[DRY RUN] Would install: postgresql, python3-pip, nginx, etc."
+        log_info "[DRY RUN] Would install: postgresql-17, python3-pip, nginx, etc."
         return 0
     fi
 
     apt-get update
+
+    # Add PostgreSQL 17 official repository (Ubuntu 24.04 default repos only provide PostgreSQL 16)
+    apt-get install -y curl ca-certificates
+    install -d /usr/share/postgresql-common/pgdg
+    curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail \
+        https://www.postgresql.org/media/keys/ACCC4CF8.asc
+    echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+        > /etc/apt/sources.list.d/pgdg.list
+    apt-get update
+
     # Suppress Python SyntaxWarnings during package installation (e.g., from fail2ban)
     # These warnings are from the packages themselves, not our code
     PYTHONWARNINGS="ignore::SyntaxWarning" apt-get install -y \
-        postgresql \
+        postgresql-17 \
         postgresql-contrib \
         python3-pip \
         python3-venv \
@@ -208,11 +218,9 @@ setup_python_environment() {
     python3 -m venv venv
     source venv/bin/activate
 
-    # Upgrade pip
-    pip install --upgrade pip
-
-    # Install requirements
-    pip install -r requirements.txt
+    # Install uv and project dependencies
+    pip install --upgrade pip uv
+    uv pip install -e .
 
     log_success "Python environment configured"
 }

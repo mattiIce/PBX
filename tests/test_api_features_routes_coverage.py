@@ -74,10 +74,13 @@ class TestAutoAttendantConfigRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch(
-            "pbx.api.utils.verify_authentication",
-            return_value=(True, {"extension": "1001", "is_admin": True}),
-        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+        with (
+            patch(
+                "pbx.api.utils.verify_authentication",
+                return_value=(True, {"extension": "1001", "is_admin": True}),
+            ),
+            patch("pbx.api.routes.features._regenerate_voice_prompts"),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/config",
                 data=json.dumps({"enabled": True, "timeout": 15}),
@@ -94,10 +97,13 @@ class TestAutoAttendantConfigRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch(
-            "pbx.api.utils.verify_authentication",
-            return_value=(True, {"extension": "1001", "is_admin": True}),
-        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+        with (
+            patch(
+                "pbx.api.utils.verify_authentication",
+                return_value=(True, {"extension": "1001", "is_admin": True}),
+            ),
+            patch("pbx.api.routes.features._regenerate_voice_prompts"),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/config",
                 data=json.dumps({"prompts": {"welcome": "Hello"}}),
@@ -165,10 +171,13 @@ class TestAutoAttendantMenuOptionRoutes:
         aa = MagicMock()
         mock_pbx_core.auto_attendant = aa
 
-        with patch(
-            "pbx.api.utils.verify_authentication",
-            return_value=(True, {"extension": "1001", "is_admin": True}),
-        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+        with (
+            patch(
+                "pbx.api.utils.verify_authentication",
+                return_value=(True, {"extension": "1001", "is_admin": True}),
+            ),
+            patch("pbx.api.routes.features._regenerate_voice_prompts"),
+        ):
             resp = api_client.post(
                 "/api/auto-attendant/menu-options",
                 data=json.dumps(
@@ -211,10 +220,13 @@ class TestAutoAttendantMenuOptionRoutes:
         }
         mock_pbx_core.auto_attendant = aa
 
-        with patch(
-            "pbx.api.utils.verify_authentication",
-            return_value=(True, {"extension": "1001", "is_admin": True}),
-        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+        with (
+            patch(
+                "pbx.api.utils.verify_authentication",
+                return_value=(True, {"extension": "1001", "is_admin": True}),
+            ),
+            patch("pbx.api.routes.features._regenerate_voice_prompts"),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/menu-options/1",
                 data=json.dumps({"destination": "1010"}),
@@ -247,10 +259,13 @@ class TestAutoAttendantMenuOptionRoutes:
         aa.menu_options = {"1": {"destination": "1001", "description": "Sales"}}
         mock_pbx_core.auto_attendant = aa
 
-        with patch(
-            "pbx.api.utils.verify_authentication",
-            return_value=(True, {"extension": "1001", "is_admin": True}),
-        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+        with (
+            patch(
+                "pbx.api.utils.verify_authentication",
+                return_value=(True, {"extension": "1001", "is_admin": True}),
+            ),
+            patch("pbx.api.routes.features._regenerate_voice_prompts"),
+        ):
             resp = api_client.delete("/api/auto-attendant/menu-options/1")
         assert resp.status_code == 200
         data = json.loads(resp.data)
@@ -299,10 +314,13 @@ class TestAutoAttendantPromptRoutes:
         mock_pbx_core.config.config = {"auto_attendant": {}}
         mock_pbx_core.config.save.return_value = True
 
-        with patch(
-            "pbx.api.utils.verify_authentication",
-            return_value=(True, {"extension": "1001", "is_admin": True}),
-        ), patch("pbx.api.routes.features._regenerate_voice_prompts"):
+        with (
+            patch(
+                "pbx.api.utils.verify_authentication",
+                return_value=(True, {"extension": "1001", "is_admin": True}),
+            ),
+            patch("pbx.api.routes.features._regenerate_voice_prompts"),
+        ):
             resp = api_client.put(
                 "/api/auto-attendant/prompts",
                 data=json.dumps(
@@ -796,10 +814,13 @@ class TestSIPTrunkRoutes:
             "password": "pass",
         }
 
-        with patch(
-            "pbx.api.utils.verify_authentication",
-            return_value=(True, {"extension": "1001", "is_admin": True}),
-        ), patch("pbx.features.sip_trunk.SIPTrunk", create=True) as mock_sip_trunk:
+        with (
+            patch(
+                "pbx.api.utils.verify_authentication",
+                return_value=(True, {"extension": "1001", "is_admin": True}),
+            ),
+            patch("pbx.features.sip_trunk.SIPTrunk", create=True) as mock_sip_trunk,
+        ):
             trunk_instance = MagicMock()
             trunk_instance.name = "New Trunk"
             trunk_instance.to_dict.return_value = trunk_data

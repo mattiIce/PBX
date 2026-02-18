@@ -393,9 +393,12 @@ class TestTextToWavTelephony:
             mock_path_instance.exists.return_value = True
             mock_path_cls.return_value = mock_path_instance
 
-            with patch(
-                "pbx.utils.tts._convert_to_telephony_audio", side_effect=RuntimeError("fail")
-            ), pytest.raises(RuntimeError, match="fail"):
+            with (
+                patch(
+                    "pbx.utils.tts._convert_to_telephony_audio", side_effect=RuntimeError("fail")
+                ),
+                pytest.raises(RuntimeError, match="fail"),
+            ):
                 tts_module.text_to_wav_telephony("Hello", "/output/hello.wav")
 
             # Verify unlink was called for cleanup

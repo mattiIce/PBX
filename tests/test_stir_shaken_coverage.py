@@ -544,7 +544,9 @@ class TestSTIRSHAKENManagerIdentityHeader:
         parsed = {"passport": "a.b.c", "info": "url", "alg": "RS256", "ppt": "shaken"}
         with (
             patch.object(manager, "parse_identity_header", return_value=parsed),
-            patch.object(manager, "verify_passport", return_value=(False, None, "Verification failed")),
+            patch.object(
+                manager, "verify_passport", return_value=(False, None, "Verification failed")
+            ),
         ):
             status, _payload = manager.verify_identity_header("some header")
             assert status == VerificationStatus.VERIFICATION_FAILED

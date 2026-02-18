@@ -30,15 +30,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -62,7 +62,7 @@ jobs:
 
       - name: Run security scan
         run: |
-          pip install pip-audit
+          uv pip install pip-audit
           bandit -r pbx/ -ll -c pyproject.toml
           pip-audit || true
 
@@ -83,7 +83,7 @@ jobs:
       image-tag: ${{ steps.meta.outputs.tags }}
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -134,7 +134,7 @@ jobs:
       url: https://staging-pbx.example.com
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Deploy to Staging
         run: |
@@ -160,7 +160,7 @@ jobs:
       url: https://pbx.example.com
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Create deployment backup
         run: |
@@ -195,20 +195,19 @@ jobs:
         run: python scripts/health_monitor.py --api-url https://pbx.example.com
 
       - name: Notify deployment success
-        uses: 8398a7/action-slack@v3
+        uses: slackapi/slack-github-action@v2
         if: success()
         with:
-          status: custom
-          custom_payload: |
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
             {
-              text: "Production deployment successful",
-              attachments: [{
-                color: 'good',
-                text: `Version: ${{ github.ref_name }}\nEnvironment: Production\nDeployed by: ${{ github.actor }}`
+              "text": "Production deployment successful",
+              "attachments": [{
+                "color": "good",
+                "text": "Version: ${{ github.ref_name }}\nEnvironment: Production\nDeployed by: ${{ github.actor }}"
               }]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   rollback:
     name: Rollback Production
@@ -217,7 +216,7 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Rollback deployment
         run: |
@@ -228,19 +227,18 @@ jobs:
         run: python scripts/smoke_tests.py --api-url https://pbx.example.com
 
       - name: Notify rollback
-        uses: 8398a7/action-slack@v3
+        uses: slackapi/slack-github-action@v2
         with:
-          status: custom
-          custom_payload: |
+          webhook: ${{ secrets.SLACK_WEBHOOK }}
+          webhook-type: incoming-webhook
+          payload: |
             {
-              text: "Production deployment failed - rolled back",
-              attachments: [{
-                color: 'danger',
-                text: `Version: ${{ github.ref_name }}\nEnvironment: Production\nAttempted by: ${{ github.actor }}`
+              "text": "Production deployment failed - rolled back",
+              "attachments": [{
+                "color": "danger",
+                "text": "Version: ${{ github.ref_name }}\nEnvironment: Production\nAttempted by: ${{ github.actor }}"
               }]
             }
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK }}
 
   performance-test:
     name: Performance Testing
@@ -248,15 +246,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -267,7 +265,7 @@ jobs:
         run: python scripts/benchmark_performance.py --save benchmark-results.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: benchmark-results
           path: benchmark-results.json
@@ -284,10 +282,10 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Run Trivy vulnerability scanner
-        uses: aquasecurity/trivy-action@0.28.0
+        uses: aquasecurity/trivy-action@0.34.0
         with:
           scan-type: "fs"
           scan-ref: "."
@@ -295,7 +293,7 @@ jobs:
           output: "trivy-results.sarif"
 
       - name: Upload Trivy results to GitHub Security
-        uses: github/codeql-action/upload-sarif@v3
+        uses: github/codeql-action/upload-sarif@v4
         with:
           sarif_file: "trivy-results.sarif"
 
@@ -305,15 +303,15 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ env.PYTHON_VERSION }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
 
@@ -332,7 +330,7 @@ jobs:
           # Add report generation here
 
       - name: Upload compliance report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: compliance-report
           path: compliance-report.json

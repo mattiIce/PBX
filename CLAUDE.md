@@ -21,7 +21,7 @@ Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13
 
 ```bash
 # Install dependencies (development)
-make install            # pip install -e ".[dev]"
+make install            # uv pip install -e ".[dev]"
 
 # Run all checks (format + lint + test)
 make check
@@ -108,7 +108,7 @@ admin/                # Frontend admin interface
 ├── vite.config.js
 └── tsconfig.json
 
-tests/                # Python test suite (126 files)
+tests/                # Python test suite (236 files)
 ├── conftest.py       # Shared fixtures
 ├── integration/      # Integration tests (API, call flow, provisioning)
 └── test_*.py
@@ -184,7 +184,7 @@ GitHub Actions workflows in `.github/workflows/`:
 | Workflow | Purpose |
 |----------|---------|
 | `tests.yml` | pytest + coverage + PostgreSQL integration tests |
-| `code-quality.yml` | ruff format check, ruff lint, mypy, bandit, safety |
+| `code-quality.yml` | ruff format check, ruff lint, mypy, bandit, pip-audit |
 | `security-scanning.yml` | Trivy, gitleaks, SAST, dependency audit |
 | `production-deployment.yml` | Docker build/push, Kubernetes deploy |
 | `dependency-updates.yml` | Automated dependency checks |
@@ -211,13 +211,13 @@ System dependencies required in CI: `espeak`, `ffmpeg`, `libopus-dev`, `portaudi
 
 Configured in `.pre-commit-config.yaml`:
 
-1. **pre-commit-hooks** (v5.0.0) — trailing whitespace, EOF, YAML/JSON/TOML/XML checks, merge conflicts, debug statements, private key detection, LF line endings, test naming, no-commit-to-main
-2. **ruff** (v0.9.10) — lint with `--fix` + format
-3. **mypy** (v1.15.0) — type checking (excludes tests, skipped in CI)
-4. **bandit** (1.9.0) — security scanning (excludes tests)
-5. **yamllint** (v1.35.1) — YAML linting (excludes config files)
-6. **markdownlint-cli2** (v0.17.2) — Markdown linting
-7. **shellcheck** (v0.10.0.1) — shell script linting
+1. **pre-commit-hooks** (v6.0.0) — trailing whitespace, EOF, YAML/JSON/TOML/XML checks, merge conflicts, debug statements, private key detection, LF line endings, test naming, no-commit-to-main
+2. **ruff** (v0.15.1) — lint with `--fix` + format
+3. **mypy** (v1.19.1) — type checking (excludes tests, skipped in CI)
+4. **bandit** (1.9.3) — security scanning (excludes tests)
+5. **yamllint** (v1.38.0) — YAML linting (excludes config files)
+6. **markdownlint-cli2** (v0.21.0) — Markdown linting
+7. **shellcheck** (v0.11.0.1) — shell script linting
 
 ## Key Files
 

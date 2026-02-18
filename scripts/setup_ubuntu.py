@@ -155,7 +155,7 @@ class SetupWizard:
         """Check Python version"""
         self.print_info("Checking Python version...")
         version = sys.version_info
-        if version.major == 3 and version.minor >= 12:
+        if version.major == 3 and version.minor >= 13:
             self.print_success(f"Python {version.major}.{version.minor} detected")
             return True
         self.print_error(f"Python 3.13+ required. Current version: {version.major}.{version.minor}")
@@ -171,6 +171,27 @@ class SetupWizard:
             self.print_error("Failed to update package lists")
             return False
 
+        # Add PostgreSQL 17 official repository (Ubuntu 24.04 default repos only provide PG 16)
+        self.print_info("Adding PostgreSQL 17 repository...")
+        self.run_command(
+            "apt-get install -y curl ca-certificates", "Installing prerequisites", check=False
+        )
+        self.run_command("install -d /usr/share/postgresql-common/pgdg", check=False)
+        self.run_command(
+            "curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail "
+            "https://www.postgresql.org/media/keys/ACCC4CF8.asc",
+            "Downloading PostgreSQL signing key",
+            check=False,
+        )
+        self.run_command(
+            "sh -c 'echo \"deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc]"
+            " https://apt.postgresql.org/pub/repos/apt"
+            " $(lsb_release -cs)-pgdg main\" > /etc/apt/sources.list.d/pgdg.list'",
+            "Adding PostgreSQL repository",
+            check=False,
+        )
+        self.run_command("apt-get update", "Updating package lists", check=False)
+
         # List of required packages
         packages = [
             "espeak",  # Text-to-speech engine
@@ -178,7 +199,7 @@ class SetupWizard:
             "libopus-dev",  # Opus codec library
             "portaudio19-dev",  # Audio I/O library
             "libspeex-dev",  # Speex codec library
-            "postgresql",  # Database server
+            "postgresql-17",  # Database server (PostgreSQL 17 from PGDG repo)
             "postgresql-contrib",  # PostgreSQL extensions
             "python3-venv",  # Python virtual environment
             "python3-pip",  # Python package installer
@@ -227,31 +248,44 @@ class SetupWizard:
 
         self.print_success("Virtual environment created")
 
-        # Upgrade pip
+        # Install uv and upgrade pip
         pip_path = self.venv_path / "bin" / "pip"
         ret, _, _ = self.run_command(
-            f"{pip_path} install --upgrade pip", "Upgrading pip", check=False
+            f"{pip_path} install --upgrade pip uv", "Installing uv package manager", check=False
         )
         if ret != 0:
-            self.print_warning("Failed to upgrade pip (continuing anyway)")
+            self.print_warning("Failed to install uv (falling back to pip)")
 
-        # Install requirements (longer timeout for slow networks)
-        requirements_file = self.project_root / "requirements.txt"
-        if requirements_file.exists():
-            self.print_info("Installing Python dependencies (this may take several minutes)...")
+        # Install project dependencies (longer timeout for slow networks)
+        uv_path = self.venv_path / "bin" / "uv"
+        if uv_path.exists():
+            self.print_info(
+                "Installing Python dependencies with uv (this may take several minutes)..."
+            )
             ret, _, stderr = self.run_command(
-                f"{pip_path} install -r {requirements_file}",
+                f"{uv_path} pip install -e {self.project_root}",
                 "Installing Python packages",
                 check=False,
                 timeout=900,  # 15 minute timeout for Python package installation
             )
-            if ret != 0:
-                self.print_error(f"Failed to install Python dependencies: {stderr}")
-                return False
-            self.print_success("Python dependencies installed")
         else:
-            self.print_error(f"Requirements file not found: {requirements_file}")
+            requirements_file = self.project_root / "requirements.txt"
+            if not requirements_file.exists():
+                self.print_error(f"Requirements file not found: {requirements_file}")
+                return False
+            self.print_info(
+                "Installing Python dependencies with pip (this may take several minutes)..."
+            )
+            ret, _, stderr = self.run_command(
+                f"{pip_path} install -r {requirements_file}",
+                "Installing Python packages (pip fallback)",
+                check=False,
+                timeout=900,  # 15 minute timeout for Python package installation
+            )
+        if ret != 0:
+            self.print_error(f"Failed to install Python dependencies: {stderr}")
             return False
+        self.print_success("Python dependencies installed")
 
         return True
 

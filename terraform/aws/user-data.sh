@@ -66,8 +66,8 @@ sudo -u pbx python3 -m venv /opt/pbx/venv
 source /opt/pbx/venv/bin/activate
 
 # Install Python dependencies
-pip install --upgrade pip
-pip install -r requirements.txt
+pip install --upgrade pip uv
+uv pip install -e .
 
 # Get database credentials from Secrets Manager
 DB_CREDENTIALS=$(aws secretsmanager get-secret-value \

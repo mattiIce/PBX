@@ -142,7 +142,7 @@ case $choice in
             cd "$tmp_dir"
 
             # Download OpenSSL source with verification
-            openssl_src_version="3.0.13"
+            openssl_src_version="3.0.16"
             openssl_tar="openssl-${openssl_src_version}.tar.gz"
             openssl_url="https://www.openssl.org/source/${openssl_tar}"
 
