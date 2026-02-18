@@ -426,6 +426,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Validate PBX system production readiness")
     parser.add_argument("--json", action="store_true", help="Output results in JSON format")
     parser.add_argument("--verbose", action="store_true", help="Show detailed output")
+    parser.add_argument("--ci", action="store_true", help="Run in CI mode (non-interactive)")
     args = parser.parse_args()
 
     validator = ProductionValidator(verbose=args.verbose)

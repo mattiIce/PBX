@@ -1,5 +1,5 @@
 # Pre-commit hooks for PBX System
-# Install: pip install pre-commit && pre-commit install
+# Install: uv pip install pre-commit && pre-commit install
 
 default_language_version:
   python: python3.13

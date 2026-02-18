@@ -1,13 +1,13 @@
 # Constraints File for PBX System
 #
 # This file pins exact versions of all dependencies to ensure reproducible builds.
-# It is used with pip install -c constraints.txt to lock dependency versions across
-# different installation methods (pip install -e ., pip install -r requirements.txt, etc.)
+# It is used with uv pip install -c constraints.txt to lock dependency versions across
+# different installation methods (uv pip install -e ., uv pip install -r requirements.txt, etc.)
 #
 # Usage:
-#   pip install -c constraints.txt -e .
-#   pip install -c constraints.txt -r requirements.txt
-#   pip install -c constraints.txt -e ".[dev]"
+#   uv pip install -c constraints.txt -e .
+#   uv pip install -c constraints.txt -r requirements.txt
+#   uv pip install -c constraints.txt -e ".[dev]"
 #
 # To update versions: Review and update version numbers based on the latest stable
 # releases compatible with Python 3.13+. Test thoroughly after updating.

@@ -184,9 +184,9 @@ class SetupWizard:
             check=False,
         )
         self.run_command(
-            'sh -c \'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc]'
+            "sh -c 'echo \"deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc]"
             " https://apt.postgresql.org/pub/repos/apt"
-            ' $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list\'',
+            " $(lsb_release -cs)-pgdg main\" > /etc/apt/sources.list.d/pgdg.list'",
             "Adding PostgreSQL repository",
             check=False,
         )
@@ -248,31 +248,44 @@ class SetupWizard:
 
         self.print_success("Virtual environment created")
 
-        # Upgrade pip
+        # Install uv and upgrade pip
         pip_path = self.venv_path / "bin" / "pip"
         ret, _, _ = self.run_command(
-            f"{pip_path} install --upgrade pip", "Upgrading pip", check=False
+            f"{pip_path} install --upgrade pip uv", "Installing uv package manager", check=False
         )
         if ret != 0:
-            self.print_warning("Failed to upgrade pip (continuing anyway)")
+            self.print_warning("Failed to install uv (falling back to pip)")
 
-        # Install requirements (longer timeout for slow networks)
-        requirements_file = self.project_root / "requirements.txt"
-        if requirements_file.exists():
-            self.print_info("Installing Python dependencies (this may take several minutes)...")
+        # Install project dependencies (longer timeout for slow networks)
+        uv_path = self.venv_path / "bin" / "uv"
+        if uv_path.exists():
+            self.print_info(
+                "Installing Python dependencies with uv (this may take several minutes)..."
+            )
             ret, _, stderr = self.run_command(
-                f"{pip_path} install -r {requirements_file}",
+                f"{uv_path} pip install -e {self.project_root}",
                 "Installing Python packages",
                 check=False,
                 timeout=900,  # 15 minute timeout for Python package installation
             )
-            if ret != 0:
-                self.print_error(f"Failed to install Python dependencies: {stderr}")
-                return False
-            self.print_success("Python dependencies installed")
         else:
-            self.print_error(f"Requirements file not found: {requirements_file}")
+            requirements_file = self.project_root / "requirements.txt"
+            if not requirements_file.exists():
+                self.print_error(f"Requirements file not found: {requirements_file}")
+                return False
+            self.print_info(
+                "Installing Python dependencies with pip (this may take several minutes)..."
+            )
+            ret, _, stderr = self.run_command(
+                f"{pip_path} install -r {requirements_file}",
+                "Installing Python packages (pip fallback)",
+                check=False,
+                timeout=900,  # 15 minute timeout for Python package installation
+            )
+        if ret != 0:
+            self.print_error(f"Failed to install Python dependencies: {stderr}")
             return False
+        self.print_success("Python dependencies installed")
 
         return True
 
