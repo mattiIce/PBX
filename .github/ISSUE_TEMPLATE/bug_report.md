@@ -26,7 +26,7 @@ assignees: ''
 ## Environment
 <!-- Please complete the following information -->
 
-- **OS**: [e.g., Ubuntu 22.04]
+- **OS**: [e.g., Ubuntu 24.04]
 - **Python Version**: [e.g., 3.13]
 - **PBX Version**: [e.g., 1.0.0]
 - **Installation Method**: [e.g., Docker, bare metal]
