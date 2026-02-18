@@ -47,9 +47,9 @@ class ClickToDialEngine:
         try:
             result = self.db.execute(
                 (
-                    "SELECT * FROM click_to_dial_configs WHERE extension = ?"
+                    "SELECT id, extension, enabled, default_caller_id, auto_answer, browser_notification, created_at FROM click_to_dial_configs WHERE extension = ?"
                     if self.db.db_type == "sqlite"
-                    else "SELECT * FROM click_to_dial_configs WHERE extension = %s"
+                    else "SELECT id, extension, enabled, default_caller_id, auto_answer, browser_notification, created_at FROM click_to_dial_configs WHERE extension = %s"
                 ),
                 (extension,),
             )
@@ -263,11 +263,11 @@ class ClickToDialEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM click_to_dial_history
+                    """SELECT id, extension, destination, call_id, source, initiated_at, connected_at, status FROM click_to_dial_history
                    WHERE extension = ?
                    ORDER BY initiated_at DESC LIMIT ?"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM click_to_dial_history
+                    else """SELECT id, extension, destination, call_id, source, initiated_at, connected_at, status FROM click_to_dial_history
                    WHERE extension = %s
                    ORDER BY initiated_at DESC LIMIT %s"""
                 ),
@@ -300,7 +300,7 @@ class ClickToDialEngine:
             list of configuration dictionaries
         """
         try:
-            result = self.db.execute("SELECT * FROM click_to_dial_configs ORDER BY extension")
+            result = self.db.execute("SELECT id, extension, enabled, default_caller_id, auto_answer, browser_notification, created_at FROM click_to_dial_configs ORDER BY extension")
 
             configs = [
                 {

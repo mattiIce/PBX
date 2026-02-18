@@ -6,14 +6,14 @@ Test Content-Security-Policy headers are correctly formatted
 class TestCSPHeaders:
     """Test Content-Security-Policy headers"""
 
-    # This is the expected CSP string from rest_api.py _set_headers method
+    # Expected CSP from pbx/api/app.py add_security_headers (default config, no extra sources)
     # Keep this in sync with the actual implementation
     EXPECTED_CSP = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://unpkg.com; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data:; "
-        "connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
+        "connect-src 'self' https://cdn.jsdelivr.net;"
     )
 
     def test_csp_string_contains_self_not_sel(self) -> None:
@@ -64,5 +64,5 @@ class TestCSPHeaders:
         assert len(connect_src) == 1, "Should have exactly one connect-src directive"
         # Should allow 'self'
         assert "'self'" in connect_src[0]
-        # Should allow API port 9000
-        assert "http://*:9000" in connect_src[0] or "https://*:9000" in connect_src[0]
+        # Should allow CDN for fallback loading
+        assert "cdn.jsdelivr.net" in connect_src[0]

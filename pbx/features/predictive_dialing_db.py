@@ -368,9 +368,9 @@ class PredictiveDialingDatabase:
             cursor = self.db.connection.cursor()
 
             if self.db.db_type == "postgresql":
-                sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = %s"
+                sql = "SELECT id, campaign_id, name, dialing_mode, status, max_attempts, retry_interval, created_at, started_at, ended_at, total_contacts, contacts_completed, successful_calls, failed_calls FROM dialing_campaigns WHERE campaign_id = %s"
             else:
-                sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = ?"
+                sql = "SELECT id, campaign_id, name, dialing_mode, status, max_attempts, retry_interval, created_at, started_at, ended_at, total_contacts, contacts_completed, successful_calls, failed_calls FROM dialing_campaigns WHERE campaign_id = ?"
 
             cursor.execute(sql, (campaign_id,))
             row = cursor.fetchone()
@@ -388,7 +388,7 @@ class PredictiveDialingDatabase:
         """Get all campaigns"""
         try:
             cursor = self.db.connection.cursor()
-            cursor.execute("SELECT * FROM dialing_campaigns ORDER BY created_at DESC")
+            cursor.execute("SELECT id, campaign_id, name, dialing_mode, status, max_attempts, retry_interval, created_at, started_at, ended_at, total_contacts, contacts_completed, successful_calls, failed_calls FROM dialing_campaigns ORDER BY created_at DESC")
 
             columns = [desc[0] for desc in cursor.description]
             rows = cursor.fetchall()
@@ -404,9 +404,9 @@ class PredictiveDialingDatabase:
             cursor = self.db.connection.cursor()
 
             if self.db.db_type == "postgresql":
-                sql = "SELECT * FROM dialing_contacts WHERE campaign_id = %s ORDER BY created_at"
+                sql = "SELECT id, campaign_id, contact_id, phone_number, data, status, attempts, last_attempt, call_result, created_at FROM dialing_contacts WHERE campaign_id = %s ORDER BY created_at"
             else:
-                sql = "SELECT * FROM dialing_contacts WHERE campaign_id = ? ORDER BY created_at"
+                sql = "SELECT id, campaign_id, contact_id, phone_number, data, status, attempts, last_attempt, call_result, created_at FROM dialing_contacts WHERE campaign_id = ? ORDER BY created_at"
 
             cursor.execute(sql, (campaign_id,))
 
@@ -426,9 +426,9 @@ class PredictiveDialingDatabase:
             if campaign_id:
                 # Campaign-specific stats
                 if self.db.db_type == "postgresql":
-                    sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = %s"
+                    sql = "SELECT id, campaign_id, name, dialing_mode, status, max_attempts, retry_interval, created_at, started_at, ended_at, total_contacts, contacts_completed, successful_calls, failed_calls FROM dialing_campaigns WHERE campaign_id = %s"
                 else:
-                    sql = "SELECT * FROM dialing_campaigns WHERE campaign_id = ?"
+                    sql = "SELECT id, campaign_id, name, dialing_mode, status, max_attempts, retry_interval, created_at, started_at, ended_at, total_contacts, contacts_completed, successful_calls, failed_calls FROM dialing_campaigns WHERE campaign_id = ?"
 
                 cursor.execute(sql, (campaign_id,))
                 row = cursor.fetchone()

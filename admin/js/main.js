@@ -69,13 +69,13 @@ const LOGIN_PAGE_PATH = '/admin/login.html';
 
 // Application initialization
 async function initializeUserContext() {
-    console.log('Initializing user context...');
+    debugLog('Initializing user context...');
 
     // Check for authentication token first
     const token = localStorage.getItem('pbx_token');
 
     if (!token) {
-        console.log('No authentication token found, redirecting to login...');
+        debugLog('No authentication token found, redirecting to login...');
         window.location.replace(LOGIN_PAGE_PATH);
         return;
     }
@@ -87,7 +87,7 @@ async function initializeUserContext() {
         }, 5000);
 
         if (response.status === 401 || response.status === 403) {
-            console.log('Authentication token is invalid, redirecting to login...');
+            debugLog('Authentication token is invalid, redirecting to login...');
             localStorage.removeItem('pbx_token');
             localStorage.removeItem('pbx_extension');
             localStorage.removeItem('pbx_is_admin');
@@ -110,7 +110,7 @@ async function initializeUserContext() {
     const name = localStorage.getItem('pbx_name') || 'User';
 
     if (!extensionNumber) {
-        console.log('No extension number found, redirecting to login...');
+        debugLog('No extension number found, redirecting to login...');
         window.location.replace(LOGIN_PAGE_PATH);
         return;
     }
@@ -118,18 +118,18 @@ async function initializeUserContext() {
     // Store current user in the global store
     store.set('currentUser', { number: extensionNumber, is_admin: isAdmin, name: name });
 
-    console.log('User context initialized:', { number: extensionNumber, is_admin: isAdmin, name });
+    debugLog('User context initialized:', { number: extensionNumber, is_admin: isAdmin, name });
 
     // Load initial content based on role
     if (isAdmin) {
-        console.log('Admin user - showing dashboard tab');
+        debugLog('Admin user - showing dashboard tab');
         showTab('dashboard');
     } else {
-        console.log('Regular user - showing webrtc-phone tab');
+        debugLog('Regular user - showing webrtc-phone tab');
         showTab('webrtc-phone');
     }
 
-    console.log('User context initialization complete');
+    debugLog('User context initialization complete');
 }
 
 function initializeForms() {
@@ -140,7 +140,7 @@ function initializeForms() {
     for (const form of forms) {
         form.addEventListener('submit', (e) => {
             e.preventDefault();
-            console.log('Ajax form submitted:', form.id);
+            debugLog('Ajax form submitted:', form.id);
         });
     }
 }
@@ -203,14 +203,14 @@ async function checkConnection() {
 
 // DOMContentLoaded — main application entry point
 document.addEventListener('DOMContentLoaded', async () => {
-    console.log('DOMContentLoaded event fired - starting initialization');
+    debugLog('DOMContentLoaded event fired - starting initialization');
 
     // Initialize user context first (async) — this will call showTab() when ready
     await initializeUserContext();
-    console.log('User context initialization awaited');
+    debugLog('User context initialization awaited');
 
     // Then initialize other components
-    console.log('Initializing tabs, forms, and logout');
+    debugLog('Initializing tabs, forms, and logout');
     initializeTabs();
     initializeForms();
     initializeLogout();
@@ -220,7 +220,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Auto-refresh connection status every 10 seconds
     setInterval(checkConnection, 10000);
 
-    console.log('Page initialization complete');
+    debugLog('Page initialization complete');
 });
 
 // Named exports for use by other ES modules

@@ -62,7 +62,7 @@ export async function refreshAllData(): Promise<void> {
         // Suppress error notifications during bulk refresh to avoid notification spam
         (window as unknown as Record<string, unknown>).suppressErrorNotifications = true;
 
-        console.log('Refreshing all data for ALL tabs...');
+        debugLog('Refreshing all data for ALL tabs...');
 
         // Collect ALL tab refresh functions for batched execution
         const refreshFunctions: Array<() => Promise<void>> = [];
@@ -76,7 +76,7 @@ export async function refreshAllData(): Promise<void> {
 
         const failures = results.filter(r => r.status === 'rejected');
         if (failures.length > 0) {
-            console.info(
+            debugLog(
                 `${failures.length} refresh operation(s) failed (expected for unavailable features):`,
                 failures.map(f => (f as PromiseRejectedResult).reason?.message ?? (f as PromiseRejectedResult).reason),
             );

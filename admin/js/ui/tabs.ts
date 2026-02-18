@@ -75,7 +75,7 @@ function setupAutoRefresh(tabName: string): void {
             } catch (error: unknown) {
                 console.error(`Error during auto-refresh of ${tabName}:`, error);
                 if (error instanceof Error && error.message?.includes('401')) {
-                    console.warn('Authentication error during auto-refresh - user may need to re-login');
+                    debugWarn('Authentication error during auto-refresh - user may need to re-login');
                 }
             }
         }, AUTO_REFRESH_INTERVAL_MS);
@@ -111,7 +111,7 @@ export function showTab(tabName: string): void {
         if (tabButton) {
             tabButton.classList.add('active');
         } else {
-            console.warn(`Tab button for '${tabName}' not found`);
+            debugWarn(`Tab button for '${tabName}' not found`);
         }
     }
 

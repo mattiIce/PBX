@@ -44,9 +44,9 @@ class SpeechAnalyticsEngine:
         try:
             result = self.db.execute(
                 (
-                    "SELECT * FROM speech_analytics_configs WHERE extension = ?"
+                    "SELECT id, extension, enabled, transcription_enabled, sentiment_enabled, summarization_enabled, keywords, alert_threshold, created_at, updated_at FROM speech_analytics_configs WHERE extension = ?"
                     if self.db.db_type == "sqlite"
-                    else "SELECT * FROM speech_analytics_configs WHERE extension = %s"
+                    else "SELECT id, extension, enabled, transcription_enabled, sentiment_enabled, summarization_enabled, keywords, alert_threshold, created_at, updated_at FROM speech_analytics_configs WHERE extension = %s"
                 ),
                 (extension,),
             )
@@ -486,7 +486,7 @@ class SpeechAnalyticsEngine:
             list of configuration dictionaries
         """
         try:
-            result = self.db.execute("SELECT * FROM speech_analytics_configs ORDER BY extension")
+            result = self.db.execute("SELECT id, extension, enabled, transcription_enabled, sentiment_enabled, summarization_enabled, keywords, alert_threshold, created_at, updated_at FROM speech_analytics_configs ORDER BY extension")
 
             configs = [
                 {

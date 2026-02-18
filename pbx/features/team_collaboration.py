@@ -184,11 +184,11 @@ class TeamMessagingEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM team_messages
+                    """SELECT id, channel_id, sender_extension, message_text, message_type, sent_at FROM team_messages
                    WHERE channel_id = ?
                    ORDER BY sent_at DESC LIMIT ?"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM team_messages
+                    else """SELECT id, channel_id, sender_extension, message_text, message_type, sent_at FROM team_messages
                    WHERE channel_id = %s
                    ORDER BY sent_at DESC LIMIT %s"""
                 ),
@@ -225,12 +225,12 @@ class TeamMessagingEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT c.* FROM team_messaging_channels c
+                    """SELECT c.id, c.channel_name, c.description, c.is_private, c.created_by, c.created_at FROM team_messaging_channels c
                    INNER JOIN team_messaging_members m ON c.id = m.channel_id
                    WHERE m.extension = ?
                    ORDER BY c.channel_name"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT c.* FROM team_messaging_channels c
+                    else """SELECT c.id, c.channel_name, c.description, c.is_private, c.created_by, c.created_at FROM team_messaging_channels c
                    INNER JOIN team_messaging_members m ON c.id = m.channel_id
                    WHERE m.extension = %s
                    ORDER BY c.channel_name"""
@@ -266,10 +266,10 @@ class TeamMessagingEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM team_messaging_channels
+                    """SELECT id, channel_name, description, is_private, created_by, created_at FROM team_messaging_channels
                    WHERE is_private = ? ORDER BY channel_name"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM team_messaging_channels
+                    else """SELECT id, channel_name, description, is_private, created_by, created_at FROM team_messaging_channels
                    WHERE is_private = %s ORDER BY channel_name"""
                 ),
                 (False,),
@@ -386,11 +386,11 @@ class FileShareEngine:
             # Files uploaded by user or shared with them
             result = self.db.execute(
                 (
-                    """SELECT * FROM shared_files
+                    """SELECT id, file_name, file_path, file_size, mime_type, uploaded_by, shared_with, description, uploaded_at, expires_at FROM shared_files
                    WHERE uploaded_by = ? OR shared_with LIKE ?
                    ORDER BY uploaded_at DESC"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM shared_files
+                    else """SELECT id, file_name, file_path, file_size, mime_type, uploaded_by, shared_with, description, uploaded_at, expires_at FROM shared_files
                    WHERE uploaded_by = %s OR shared_with LIKE %s
                    ORDER BY uploaded_at DESC"""
                 ),

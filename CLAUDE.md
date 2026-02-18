@@ -270,34 +270,19 @@ Per-file overrides:
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| CORS wildcard origin | `pbx/api/app.py` | `Access-Control-Allow-Origin: *` allows any website to call the API. Should be restricted to the admin panel origin. CSP also uses `unsafe-inline` for scripts/styles and a wildcard `connect-src` (`http://*:9000`). Needs origin allowlist, CSP nonce-based inline handling, and tighter connect-src. |
-| K8s placeholder secrets | `kubernetes/deployment.yaml` | Contains `database-password: changeme` and stub TLS cert/key placeholders in committed YAML. Should use Kubernetes external secrets, sealed secrets, or Helm templating to prevent accidental deployment of defaults. |
-
-### Frontend
-
-| Item | File(s) | Description |
-|------|---------|-------------|
-| CSS variable migration | `admin/css/admin.css` | ~150 hardcoded hex color values should be replaced with CSS custom properties from `variables.css`. This would eliminate the large dark-mode override block (~280 lines) at the bottom of the file and enable single-source theming. The modular CSS chain (`main.css` → `variables.css` + `base.css` + `layout.css` + `components.css`) already uses variables. |
-| Console logging in JS | `admin/js/*.js` | ~49 `console.log`/`console.warn` statements remain across `webrtc_phone.js` (23), `main.js` (13), `auto_attendant.js` (8), and others. Should be replaced with the `debugLog`/`debugWarn` pattern already used in `index.html` and `login.html`, or removed entirely. |
+| CSP unsafe-inline | `pbx/api/app.py` | CSP still uses `unsafe-inline` for `script-src` and `style-src`. Removing this requires nonce-based CSP, which is a larger refactoring effort. CORS origin restriction and `connect-src` tightening are complete. |
 
 ### Backend
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| Deprecated rest_api.py | `pbx/api/rest_api.py` | Legacy 11K-line monolithic handler replaced by Flask blueprints. Currently a 30-line stub that re-exports `MAC_ADDRESS_PLACEHOLDERS` and deprecated class stubs. Should be removed once any remaining test references are migrated. Also remove the `"ALL"` ruff ignore in `pyproject.toml`. |
-| SELECT * usage | 15 files in `pbx/features/`, `pbx/utils/database.py` | `SELECT *` queries in `click_to_dial.py`, `voice_biometrics_db.py`, `bi_integration.py`, `compliance_framework.py`, and 11 others. Should use explicit column lists to avoid breakage on schema changes and improve query performance. |
+| SELECT * in BI queries | `pbx/features/bi_integration.py`, `data_residency_controls.py`, `speech_analytics.py` | A few `SELECT *` queries remain for BI/data warehouse tables (`call_detail_records`, `call_queue_stats`, `qos_metrics`, `call_summaries`, `data_residency_records`) whose schemas are not defined in the codebase. These are acceptable for generic data export use cases. |
 
 ### Database
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| Single Alembic migration | `alembic/versions/` | Only `001_initial_schema.py` exists. Any schema changes after v1.0 have no migration path. Needs migration discipline: one migration per schema change, tested upgrade/downgrade paths, CI validation. |
-
-### CI/CD & Deployment
-
-| Item | File(s) | Description |
-|------|---------|-------------|
-| Hardcoded example.com URLs | `.github/workflows/production-deployment.yml` | Smoke test, health check, and environment URLs use `staging-pbx.example.com`, `blue-pbx.example.com`, `pbx.example.com`. Should be parameterized via GitHub environment secrets (e.g. `${{ vars.STAGING_URL }}`). |
+| Single Alembic migration | `alembic/versions/` | Only `001_initial_schema.py` exists. Migration discipline documentation has been added to the file. Feature modules use runtime `CREATE TABLE IF NOT EXISTS` via `pbx/utils/migrations.py`. Future core table changes must use Alembic. |
 
 ## Deployment
 

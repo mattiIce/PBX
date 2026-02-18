@@ -369,7 +369,7 @@ async function loadJitsiConfig() {
         const response = await fetch('/api/config');
         if (!response.ok) {
             if (window.suppressErrorNotifications) {
-                console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
+                debugLog('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
             } else {
                 console.error('Failed to load Jitsi config:', response.status);
             }
@@ -388,7 +388,7 @@ async function loadJitsiConfig() {
         toggleJitsiSettings();
     } catch (error) {
         if (window.suppressErrorNotifications) {
-            console.info('Failed to load Jitsi config (expected if not authenticated):', error.message);
+            debugLog('Failed to load Jitsi config (expected if not authenticated):', error.message);
         } else {
             console.error('Failed to load Jitsi config:', error);
         }
@@ -469,7 +469,7 @@ async function loadMatrixConfig() {
         const response = await fetch('/api/config');
         if (!response.ok) {
             if (window.suppressErrorNotifications) {
-                console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
+                debugLog('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
             } else {
                 console.error('Failed to load Matrix config:', response.status);
             }
@@ -490,7 +490,7 @@ async function loadMatrixConfig() {
         toggleMatrixSettings();
     } catch (error) {
         if (window.suppressErrorNotifications) {
-            console.info('Failed to load Matrix config (expected if not authenticated):', error.message);
+            debugLog('Failed to load Matrix config (expected if not authenticated):', error.message);
         } else {
             console.error('Failed to load Matrix config:', error);
         }
@@ -585,7 +585,7 @@ async function loadEspoCRMConfig() {
         const response = await fetch('/api/config');
         if (!response.ok) {
             if (window.suppressErrorNotifications) {
-                console.info('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
+                debugLog('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
             } else {
                 console.error('Failed to load EspoCRM config:', response.status);
             }
@@ -605,7 +605,7 @@ async function loadEspoCRMConfig() {
         toggleEspoCRMSettings();
     } catch (error) {
         if (window.suppressErrorNotifications) {
-            console.info('Failed to load EspoCRM config (expected if not authenticated):', error.message);
+            debugLog('Failed to load EspoCRM config (expected if not authenticated):', error.message);
         } else {
             console.error('Failed to load EspoCRM config:', error);
         }

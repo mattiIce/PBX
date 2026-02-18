@@ -35,6 +35,11 @@
     --color-bg-card: #ffffff;
     --color-border: #e1e8ed;
     --color-border-light: #f0f0f0;
+    --color-focus-ring: #3b9dd6;
+    --color-bg-hover: #f8f9fa;
+    --color-bg-input: #f8fafb;
+    --color-border-medium: #cbd5e0;
+    --color-border-dark: #dee2e6;
 
     /* ---- Typography ---- */
     --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
@@ -125,6 +130,11 @@
         --color-bg-card: #1e2a3a;
         --color-border: #2a3a4a;
         --color-border-light: #243040;
+        --color-focus-ring: #5dade2;
+        --color-bg-hover: #243040;
+        --color-bg-input: #1e2a3a;
+        --color-border-medium: #2a3a4a;
+        --color-border-dark: #2a3a4a;
 
         /* ---- Shadows ---- */
         --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);

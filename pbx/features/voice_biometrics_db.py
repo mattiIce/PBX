@@ -192,9 +192,9 @@ class VoiceBiometricsDatabase:
             cursor = self.db.connection.cursor()
 
             if self.db.db_type == "postgresql":
-                sql = "SELECT * FROM voice_profiles WHERE user_id = %s"
+                sql = "SELECT id, user_id, extension, status, enrollment_samples, required_samples, voiceprint_data, successful_verifications, failed_verifications, created_at, last_updated FROM voice_profiles WHERE user_id = %s"
             else:
-                sql = "SELECT * FROM voice_profiles WHERE user_id = ?"
+                sql = "SELECT id, user_id, extension, status, enrollment_samples, required_samples, voiceprint_data, successful_verifications, failed_verifications, created_at, last_updated FROM voice_profiles WHERE user_id = ?"
 
             cursor.execute(sql, (user_id,))
             row = cursor.fetchone()

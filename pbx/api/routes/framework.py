@@ -646,7 +646,7 @@ def get_integration_activity() -> tuple[Response, int]:
         try:
             # Query integration activity log directly from database
             result = pbx_core.database.execute(
-                """SELECT * FROM integration_activity_log
+                """SELECT id, integration_type, action, status, details, created_at FROM integration_activity_log
                    ORDER BY created_at DESC LIMIT 100"""
             )
 

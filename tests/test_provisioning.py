@@ -232,7 +232,7 @@ def test_similar_mac_detection() -> None:
 def test_mac_placeholder_detection() -> None:
     """Test that MAC address placeholders are detected properly"""
 
-    from pbx.api.rest_api import MAC_ADDRESS_PLACEHOLDERS
+    from pbx.api.routes.provisioning import MAC_ADDRESS_PLACEHOLDERS
     from pbx.features.phone_provisioning import normalize_mac_address
 
     # Verify the constant has key placeholder patterns

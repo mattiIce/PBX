@@ -873,9 +873,9 @@ class VIPCallerDB:
     def get_vip(self, caller_id: str) -> dict | None:
         """Get VIP caller information"""
         query = (
-            "SELECT * FROM vip_callers WHERE caller_id = %s"
+            "SELECT id, caller_id, name, priority_level, notes, special_routing, created_at, updated_at FROM vip_callers WHERE caller_id = %s"
             if self.db.db_type == "postgresql"
-            else "SELECT * FROM vip_callers WHERE caller_id = ?"
+            else "SELECT id, caller_id, name, priority_level, notes, special_routing, created_at, updated_at FROM vip_callers WHERE caller_id = ?"
         )
         return self.db.fetch_one(query, (caller_id,))
 
@@ -883,12 +883,12 @@ class VIPCallerDB:
         """list all VIP callers"""
         if priority_level:
             query = (
-                "SELECT * FROM vip_callers WHERE priority_level = %s ORDER BY name"
+                "SELECT id, caller_id, name, priority_level, notes, special_routing, created_at, updated_at FROM vip_callers WHERE priority_level = %s ORDER BY name"
                 if self.db.db_type == "postgresql"
-                else "SELECT * FROM vip_callers WHERE priority_level = ? ORDER BY name"
+                else "SELECT id, caller_id, name, priority_level, notes, special_routing, created_at, updated_at FROM vip_callers WHERE priority_level = ? ORDER BY name"
             )
             return self.db.fetch_all(query, (priority_level,))
-        query = "SELECT * FROM vip_callers ORDER BY priority_level, name"
+        query = "SELECT id, caller_id, name, priority_level, notes, special_routing, created_at, updated_at FROM vip_callers ORDER BY priority_level, name"
         return self.db.fetch_all(query)
 
     def is_vip(self, caller_id: str) -> bool:
@@ -1054,23 +1054,23 @@ class RegisteredPhonesDB:
         if extension_number:
             query = (
                 """
-            SELECT * FROM registered_phones
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
             WHERE mac_address = %s AND extension_number = %s
             """
                 if self.db.db_type == "postgresql"
                 else """
-            SELECT * FROM registered_phones
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
             WHERE mac_address = ? AND extension_number = ?
             """
             )
             return self.db.fetch_one(query, (mac_address, extension_number))
         query = (
             """
-            SELECT * FROM registered_phones WHERE mac_address = %s
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones WHERE mac_address = %s
             """
             if self.db.db_type == "postgresql"
             else """
-            SELECT * FROM registered_phones WHERE mac_address = ?
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones WHERE mac_address = ?
             """
         )
         return self.db.fetch_one(query, (mac_address,))
@@ -1089,23 +1089,23 @@ class RegisteredPhonesDB:
         if extension_number:
             query = (
                 """
-            SELECT * FROM registered_phones
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
             WHERE ip_address = %s AND extension_number = %s
             """
                 if self.db.db_type == "postgresql"
                 else """
-            SELECT * FROM registered_phones
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
             WHERE ip_address = ? AND extension_number = ?
             """
             )
             return self.db.fetch_one(query, (ip_address, extension_number))
         query = (
             """
-            SELECT * FROM registered_phones WHERE ip_address = %s
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones WHERE ip_address = %s
             """
             if self.db.db_type == "postgresql"
             else """
-            SELECT * FROM registered_phones WHERE ip_address = ?
+            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones WHERE ip_address = ?
             """
         )
         return self.db.fetch_one(query, (ip_address,))
@@ -1122,13 +1122,13 @@ class RegisteredPhonesDB:
         """
         query = (
             """
-        SELECT * FROM registered_phones
+        SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
         WHERE extension_number = %s
         ORDER BY last_registered DESC
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM registered_phones
+        SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
         WHERE extension_number = ?
         ORDER BY last_registered DESC
         """
@@ -1143,7 +1143,7 @@ class RegisteredPhonesDB:
             list: list of all phone registrations
         """
         query = """
-        SELECT * FROM registered_phones
+        SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
         ORDER BY last_registered DESC
         """
         return self.db.fetch_all(query)
@@ -1385,11 +1385,11 @@ class ExtensionDB:
         """
         query = (
             """
-        SELECT * FROM extensions WHERE number = %s
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions WHERE number = %s
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM extensions WHERE number = ?
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions WHERE number = ?
         """
         )
         return self.db.fetch_one(query, (number,))
@@ -1402,7 +1402,7 @@ class ExtensionDB:
             list: list of all extensions
         """
         query = """
-        SELECT * FROM extensions ORDER BY number
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions ORDER BY number
         """
         return self.db.fetch_all(query)
 
@@ -1415,11 +1415,11 @@ class ExtensionDB:
         """
         query = (
             """
-        SELECT * FROM extensions WHERE ad_synced = %s ORDER BY number
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions WHERE ad_synced = %s ORDER BY number
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM extensions WHERE ad_synced = 1 ORDER BY number
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions WHERE ad_synced = 1 ORDER BY number
         """
         )
         return (
@@ -1568,13 +1568,13 @@ class ExtensionDB:
         search_pattern = f"%{query_str}%"
         query = (
             """
-        SELECT * FROM extensions
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions
         WHERE number LIKE %s OR name LIKE %s OR email LIKE %s
         ORDER BY number
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM extensions
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions
         WHERE number LIKE ? OR name LIKE ? OR email LIKE ?
         ORDER BY number
         """
@@ -1805,11 +1805,11 @@ class ProvisionedDevicesDB:
         """
         query = (
             """
-        SELECT * FROM provisioned_devices WHERE mac_address = %s
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE mac_address = %s
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM provisioned_devices WHERE mac_address = ?
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE mac_address = ?
         """
         )
         return self.db.fetch_one(query, (mac_address,))
@@ -1826,11 +1826,11 @@ class ProvisionedDevicesDB:
         """
         query = (
             """
-        SELECT * FROM provisioned_devices WHERE extension_number = %s
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE extension_number = %s
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM provisioned_devices WHERE extension_number = ?
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE extension_number = ?
         """
         )
         return self.db.fetch_one(query, (extension_number,))
@@ -1847,11 +1847,11 @@ class ProvisionedDevicesDB:
         """
         query = (
             """
-        SELECT * FROM provisioned_devices WHERE static_ip = %s
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE static_ip = %s
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM provisioned_devices WHERE static_ip = ?
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE static_ip = ?
         """
         )
         return self.db.fetch_one(query, (static_ip,))
@@ -1864,7 +1864,7 @@ class ProvisionedDevicesDB:
             list: list of all provisioned devices
         """
         query = """
-        SELECT * FROM provisioned_devices
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices
         ORDER BY extension_number
         """
         return self.db.fetch_all(query)
@@ -1881,13 +1881,13 @@ class ProvisionedDevicesDB:
         """
         query = (
             """
-        SELECT * FROM provisioned_devices
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices
         WHERE device_type = %s
         ORDER BY extension_number
         """
             if self.db.db_type == "postgresql"
             else """
-        SELECT * FROM provisioned_devices
+        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices
         WHERE device_type = ?
         ORDER BY extension_number
         """

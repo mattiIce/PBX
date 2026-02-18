@@ -149,6 +149,9 @@ spec:
 
 ---
 # ConfigMap for PBX configuration
+#
+# Replace the content below with your actual config.yml.
+# See config.yml in the repository root for all available options.
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -156,43 +159,70 @@ metadata:
   namespace: pbx-system
 data:
   config.yml: |-
-    # PBX Configuration
-    # TODO: Replace with your actual configuration
+    # PLACEHOLDER: Replace with your actual configuration.
+    # See config.yml in the repository root for a full reference.
     server:
       listen: 0.0.0.0
       port: 9000
-      # Add your full config.yml content here
+    api:
+      host: 0.0.0.0
+      port: 9000
+      enable_cors: true
+      cors_allowed_origins:
+        - "https://your-admin-panel.example.com"
 
 ---
 # Secret for SSL certificates
+#
+# WARNING: Do NOT commit real certificates to version control.
+# Create this secret separately using one of these methods:
+#
+#   Option A - kubectl (manual):
+#     kubectl create secret tls pbx-ssl-cert \
+#       --cert=path/to/tls.crt \
+#       --key=path/to/tls.key \
+#       -n pbx-system
+#
+#   Option B - cert-manager (automatic):
+#     Add cert-manager annotations to the Ingress resource and
+#     remove this Secret block entirely.
 apiVersion: v1
 kind: Secret
 metadata:
   name: pbx-ssl-cert
   namespace: pbx-system
+  annotations:
+    description: "PLACEHOLDER - Must be replaced before deployment"
 type: kubernetes.io/tls
 stringData:
-  tls.crt: |-
-    # PEM-encoded TLS certificate
-    # Replace with your actual certificate
-    # -----BEGIN CERTIFICATE-----
-    # ...
-    # -----END CERTIFICATE-----
-  tls.key: |-
-    # PEM-encoded TLS private key
-    # Replace with your actual private key
-    # -----BEGIN PRIVATE KEY-----
-    # ...
-    # -----END PRIVATE KEY-----
+  tls.crt: "REPLACE_ME"
+  tls.key: "REPLACE_ME"
 
 ---
 # Secret for database credentials
+#
+# WARNING: Do NOT deploy with the placeholder values below.
+# Create this secret separately using one of these methods:
+#
+#   Option A - kubectl (manual):
+#     kubectl create secret generic pbx-secrets \
+#       --from-literal=database-user=YOUR_DB_USER \
+#       --from-literal=database-password=YOUR_DB_PASSWORD \
+#       -n pbx-system
+#
+#   Option B - Sealed Secrets:
+#     kubeseal --format yaml < pbx-secrets.yaml > pbx-secrets-sealed.yaml
+#
+#   Option C - External Secrets Operator:
+#     Use an ExternalSecret resource pointing to your secrets backend.
 apiVersion: v1
 kind: Secret
 metadata:
   name: pbx-secrets
   namespace: pbx-system
+  annotations:
+    description: "PLACEHOLDER - Must be replaced before deployment"
 type: Opaque
 stringData:
-  database-user: pbx_user  # Replace with your database username
-  database-password: changeme  # Replace with your actual database password
+  database-user: "REPLACE_ME"
+  database-password: "REPLACE_ME"

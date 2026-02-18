@@ -44,7 +44,7 @@ export function setSuppressErrorNotifications(value: boolean): void {
 export function showNotification(message: string, type: NotificationType = 'info'): void {
     // Log to console for debugging (use info level for suppressed errors)
     if (suppressErrorNotifications && type === 'error') {
-        console.info(`[${type.toUpperCase()}] ${message}`);
+        debugLog(`[${type.toUpperCase()}] ${message}`);
         return; // Don't show error notifications during bulk operations
     }
 

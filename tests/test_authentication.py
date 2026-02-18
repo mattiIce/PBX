@@ -107,8 +107,7 @@ class TestSessionToken:
 class TestAuthenticationEndpoint:
     """Test authentication API endpoint"""
 
-    @patch("pbx.api.rest_api.PBXAPIHandler")
-    def test_login_success(self, mock_handler: MagicMock) -> None:
+    def test_login_success(self) -> None:
         """Test successful login"""
         # This is a placeholder - actual integration test would require
         # full PBX initialization and database
