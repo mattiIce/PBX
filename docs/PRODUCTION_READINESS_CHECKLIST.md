@@ -6,11 +6,7 @@
 
 This checklist ensures that all critical systems, security measures, monitoring, and documentation are in place before deploying the PBX system to production. Each section must be completed and verified.
 
-**Status Legend:**
-- **[DONE]** - Verified and tested
-- **[PARTIAL]** - Implemented but needs verification
-- **[TODO]** - Not yet implemented
-- **[IN PROGRESS]** - Currently being worked on
+**How to use this checklist:** Check off each item `[x]` as it is completed and verified.
 
 ---
 
@@ -522,11 +518,8 @@ This checklist ensures that all critical systems, security measures, monitoring,
 
 ## Notes
 
-Use this section to document any exceptions, deviations, or additional notes:
-
-```
-[Add notes here]
-```
+Use this section to document any exceptions, deviations, or additional notes
+relevant to your specific deployment.
 
 ---
 

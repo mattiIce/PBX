@@ -16,6 +16,7 @@ import {
     getScheduleDescription,
     downloadLicense,
 } from './utils/html.ts';
+import { executeBatched, refreshAllData, initializeRefreshButton } from './utils/refresh.ts';
 
 // Re-export to window for backward compatibility with non-modular code
 window.fetchWithTimeout = fetchWithTimeout;
@@ -40,6 +41,8 @@ window.getPriorityBadge = getPriorityBadge;
 window.getQualityClass = getQualityClass;
 window.getScheduleDescription = getScheduleDescription;
 window.downloadLicense = downloadLicense;
+window.executeBatched = executeBatched;
+window.refreshAllData = refreshAllData;
 
 // Page module imports — each module self-registers window.* exports
 import './pages/dashboard.ts';
@@ -211,6 +214,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     initializeTabs();
     initializeForms();
     initializeLogout();
+    initializeRefreshButton();
     checkConnection();
 
     // Auto-refresh connection status every 10 seconds
@@ -242,4 +246,6 @@ export {
     getQualityClass,
     getScheduleDescription,
     downloadLicense,
+    executeBatched,
+    refreshAllData,
 };

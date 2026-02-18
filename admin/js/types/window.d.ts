@@ -26,6 +26,15 @@ declare global {
         switchTab: (tabName: string) => void;
         initializeTabs: () => void;
 
+        // utils/refresh.ts
+        executeBatched: (
+            promiseFunctions: Array<(() => Promise<unknown>) | Promise<unknown>>,
+            batchSize?: number,
+            delayMs?: number,
+        ) => Promise<PromiseSettledResult<unknown>[]>;
+        refreshAllData: () => Promise<void>;
+        suppressErrorNotifications?: boolean;
+
         // utils/html.ts
         escapeHtml: (text: string) => string;
         copyToClipboard: (text: string) => Promise<void>;

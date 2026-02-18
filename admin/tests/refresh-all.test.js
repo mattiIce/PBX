@@ -41,58 +41,12 @@ global.loadADStatus = jest.fn(() => Promise.resolve());
 global.loadAnalytics = jest.fn(() => Promise.resolve());
 global.loadExtensions = jest.fn(() => Promise.resolve());
 
-/**
- * NOTE: The functions below (executeBatched, refreshAllData) are duplicated
- * here for testing purposes. While admin.js has been modularized into ES
- * modules (see admin/js/pages/*.js, admin/js/api/client.js, etc.), these
- * orchestration functions have not yet been extracted into their own module.
- *
- * TODO: Extract executeBatched and refreshAllData into a dedicated module
- * (e.g., admin/js/utils/refresh.js) and import them here instead of
- * duplicating the implementations.
- */
+// Import the shared executeBatched utility from the production module
+import { executeBatched } from '../js/utils/refresh.ts';
 
 // Mock the suppressErrorNotifications flag
 global.suppressErrorNotifications = false;
 global.window = global;
-
-/**
- * Execute promise-returning functions in batches to avoid overwhelming the rate limiter.
- * IMPORTANT: Pass functions that return promises, not promises themselves.
- * This ensures requests don't start until the batch is ready to execute them.
- * 
- * @param {Function[]} promiseFunctions - Array of functions that return promises
- * @param {number} batchSize - Number of promises to execute concurrently (default: 5)
- * @param {number} delayMs - Delay in milliseconds between batches (default: 1000)
- * @returns {Promise<Array>} Results from Promise.allSettled for all promises
- */
-async function executeBatched(promiseFunctions, batchSize = 5, delayMs = 1000) {
-    // Validate input
-    if (!Array.isArray(promiseFunctions)) {
-        throw new TypeError('promiseFunctions must be an array');
-    }
-    
-    const results = [];
-    
-    // Process promise functions in batches
-    for (let i = 0; i < promiseFunctions.length; i += batchSize) {
-        const batchFunctions = promiseFunctions.slice(i, i + batchSize);
-        
-        // Create promises only when ready to execute (lazy evaluation)
-        const batchPromises = batchFunctions.map(fn => typeof fn === 'function' ? fn() : fn);
-        
-        // Execute current batch
-        const batchResults = await Promise.allSettled(batchPromises);
-        results.push(...batchResults);
-        
-        // Add delay between batches (except after the last batch)
-        if (i + batchSize < promiseFunctions.length) {
-            await new Promise(resolve => setTimeout(resolve, delayMs));
-        }
-    }
-    
-    return results;
-}
 
 async function refreshAllData() {
     const refreshBtn = document.getElementById('refresh-all-button');

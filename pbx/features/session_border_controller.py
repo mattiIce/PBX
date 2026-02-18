@@ -173,8 +173,12 @@ class SessionBorderController:
         elif direction == "inbound":
             # For inbound, ensure internal IPs are hidden in responses
             if "via" in modified_message:
-                # Keep Via from external, but may need to add our own
-                pass
+                # Prepend SBC's own Via header so responses route back through us,
+                # while preserving the original external Via for proper SIP routing
+                sbc_via = (
+                    f"SIP/2.0/UDP {sbc_public_ip}:5060;branch=z9hG4bK-sbc-{id(modified_message)}"
+                )
+                modified_message["via"] = sbc_via + ", " + modified_message["via"]
 
             # Rewrite any internal IPs in SDP
             if "sdp" in modified_message:

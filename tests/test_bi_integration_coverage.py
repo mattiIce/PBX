@@ -369,17 +369,21 @@ class TestFormatData:
         mock_excel.assert_called_once()
         assert result == "/tmp/test.xlsx"
 
+    @patch.object(BIIntegration, "_export_parquet", return_value="/tmp/test.parquet")
     @patch("pathlib.Path.mkdir")
-    def test_unsupported_format_returns_empty_string(self, mock_mkdir: MagicMock) -> None:
+    def test_parquet_dispatch(self, mock_mkdir: MagicMock, mock_parquet: MagicMock) -> None:
         bi = self._make_bi()
         result = bi._format_data([{"a": 1}], ExportFormat.PARQUET, "ds")
-        assert result == ""
+        mock_parquet.assert_called_once()
+        assert result == "/tmp/test.parquet"
 
+    @patch.object(BIIntegration, "_export_sql", return_value="/tmp/test.sql")
     @patch("pathlib.Path.mkdir")
-    def test_unsupported_format_sql_returns_empty_string(self, mock_mkdir: MagicMock) -> None:
+    def test_sql_dispatch(self, mock_mkdir: MagicMock, mock_sql: MagicMock) -> None:
         bi = self._make_bi()
         result = bi._format_data([{"a": 1}], ExportFormat.SQL, "ds")
-        assert result == ""
+        mock_sql.assert_called_once()
+        assert result == "/tmp/test.sql"
 
     @patch("pathlib.Path.mkdir")
     def test_mkdir_called(self, mock_mkdir: MagicMock) -> None:
