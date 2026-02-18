@@ -171,6 +171,27 @@ class SetupWizard:
             self.print_error("Failed to update package lists")
             return False
 
+        # Add PostgreSQL 17 official repository (Ubuntu 24.04 default repos only provide PG 16)
+        self.print_info("Adding PostgreSQL 17 repository...")
+        self.run_command(
+            "apt-get install -y curl ca-certificates", "Installing prerequisites", check=False
+        )
+        self.run_command("install -d /usr/share/postgresql-common/pgdg", check=False)
+        self.run_command(
+            "curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail "
+            "https://www.postgresql.org/media/keys/ACCC4CF8.asc",
+            "Downloading PostgreSQL signing key",
+            check=False,
+        )
+        self.run_command(
+            'sh -c \'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc]'
+            " https://apt.postgresql.org/pub/repos/apt"
+            ' $(lsb_release -cs)-pgdg main" > /etc/apt/sources.list.d/pgdg.list\'',
+            "Adding PostgreSQL repository",
+            check=False,
+        )
+        self.run_command("apt-get update", "Updating package lists", check=False)
+
         # List of required packages
         packages = [
             "espeak",  # Text-to-speech engine
@@ -178,7 +199,7 @@ class SetupWizard:
             "libopus-dev",  # Opus codec library
             "portaudio19-dev",  # Audio I/O library
             "libspeex-dev",  # Speex codec library
-            "postgresql",  # Database server
+            "postgresql-17",  # Database server (PostgreSQL 17 from PGDG repo)
             "postgresql-contrib",  # PostgreSQL extensions
             "python3-venv",  # Python virtual environment
             "python3-pip",  # Python package installer

@@ -21,7 +21,7 @@ Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13
 
 ```bash
 # Install dependencies (development)
-make install            # pip install -e ".[dev]"
+make install            # uv pip install -e ".[dev]"
 
 # Run all checks (format + lint + test)
 make check
@@ -108,7 +108,7 @@ admin/                # Frontend admin interface
 ├── vite.config.js
 └── tsconfig.json
 
-tests/                # Python test suite (126 files)
+tests/                # Python test suite (236 files)
 ├── conftest.py       # Shared fixtures
 ├── integration/      # Integration tests (API, call flow, provisioning)
 └── test_*.py
@@ -184,7 +184,7 @@ GitHub Actions workflows in `.github/workflows/`:
 | Workflow | Purpose |
 |----------|---------|
 | `tests.yml` | pytest + coverage + PostgreSQL integration tests |
-| `code-quality.yml` | ruff format check, ruff lint, mypy, bandit, safety |
+| `code-quality.yml` | ruff format check, ruff lint, mypy, bandit, pip-audit |
 | `security-scanning.yml` | Trivy, gitleaks, SAST, dependency audit |
 | `production-deployment.yml` | Docker build/push, Kubernetes deploy |
 | `dependency-updates.yml` | Automated dependency checks |

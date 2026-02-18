@@ -86,7 +86,7 @@ class ProductionValidator:
 
         # Check Python version
         python_version = sys.version_info
-        if python_version >= (3, 12):
+        if python_version >= (3, 13):
             self.log(f"Python version: {python_version.major}.{python_version.minor}", "pass")
         else:
             self.log(
