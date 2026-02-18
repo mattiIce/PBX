@@ -9,10 +9,21 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     target: 'es2024',
+    sourcemap: false,
+    minify: 'esbuild',
+    cssMinify: true,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
         login: resolve(__dirname, 'html/login.html'),
+      },
+      output: {
+        manualChunks: {
+          vendor: [],
+        },
+        assetFileNames: 'assets/[name]-[hash][extname]',
+        chunkFileNames: 'assets/[name]-[hash].js',
+        entryFileNames: 'assets/[name]-[hash].js',
       },
     },
   },

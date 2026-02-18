@@ -179,7 +179,7 @@ export function showTab(tabName: string): void {
 }
 
 /**
- * Bind click handlers to all .tab-button elements.
+ * Bind click and keyboard handlers to all .tab-button elements.
  */
 export function initializeTabs(): void {
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -190,4 +190,46 @@ export function initializeTabs(): void {
             if (tabName) showTab(tabName);
         });
     }
+
+    // Keyboard navigation: arrow keys move between tabs within a sidebar section
+    const sidebar = document.querySelector('.sidebar');
+    if (sidebar) {
+        sidebar.addEventListener('keydown', (e: Event) => {
+            const event = e as KeyboardEvent;
+            const target = event.target as HTMLElement;
+            if (!target.classList.contains('tab-button')) return;
+
+            const section = target.closest('.sidebar-section');
+            if (!section) return;
+
+            const buttons = Array.from(section.querySelectorAll('.tab-button')) as HTMLElement[];
+            const currentIndex = buttons.indexOf(target);
+            let nextIndex = -1;
+
+            if (event.key === 'ArrowDown') {
+                nextIndex = currentIndex < buttons.length - 1 ? currentIndex + 1 : 0;
+            } else if (event.key === 'ArrowUp') {
+                nextIndex = currentIndex > 0 ? currentIndex - 1 : buttons.length - 1;
+            } else if (event.key === 'Home') {
+                nextIndex = 0;
+            } else if (event.key === 'End') {
+                nextIndex = buttons.length - 1;
+            }
+
+            if (nextIndex >= 0) {
+                event.preventDefault();
+                buttons[nextIndex].focus();
+            }
+        });
+    }
+
+    // Close modals on Escape key
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+            const activeModal = document.querySelector('.modal.active') as HTMLElement | null;
+            if (activeModal) {
+                activeModal.classList.remove('active');
+            }
+        }
+    });
 }

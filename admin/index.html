@@ -5,6 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- API Base URL - change this if your API server is on a different host/port -->
     <meta name="api-base-url" content="">
+    <meta name="description" content="Warden VoIP PBX administration panel - manage extensions, calls, trunks, and system configuration.">
+    <meta name="theme-color" content="#1a365d">
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
@@ -13,26 +15,29 @@
     <link rel="icon" type="image/png" sizes="192x192" href="assets/images/favicon-192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="assets/images/favicon-512.png">
     <link rel="stylesheet" href="css/admin.css?v=20231223">
-    <!-- Error tracking for debugging -->
+    <!-- Debug logging utility -->
     <script>
-        // Track JavaScript errors for debugging
+        // Debug logger - only outputs in development (non-standard ports or localhost)
+        window.__DEV__ = ['localhost', '127.0.0.1'].includes(location.hostname) || !['', '80', '443'].includes(location.port);
+        window.debugLog = window.__DEV__ ? console.log.bind(console) : function() {};
+        window.debugWarn = window.__DEV__ ? console.warn.bind(console) : function() {};
+
+        // Always track errors regardless of environment
         window.addEventListener('error', function(e) {
             console.error('JavaScript Error:', e.error || e.message, '\nFile:', e.filename, '\nLine:', e.lineno);
         });
-        
-        // Track unhandled promise rejections
+
         window.addEventListener('unhandledrejection', function(e) {
             console.error('Unhandled Promise Rejection:', e.reason);
         });
-        
-        // Log page load status
-        console.log('Admin panel loading...', new Date().toISOString());
+
+        debugLog('Admin panel loading...', new Date().toISOString());
     </script>
     <!-- Define fallback function before loading Chart.js -->
     <script>
         // Fallback function to load Chart.js from alternative CDNs
         function loadChartJsFallback() {
-            console.warn('Primary Chart.js CDN failed, trying fallback...');
+            debugWarn('Primary Chart.js CDN failed, trying fallback...');
             const fallbacks = [
                 'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js',
                 'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js'
@@ -50,12 +55,12 @@
                 const script = document.createElement('script');
                 script.src = fallbacks[currentIndex];
                 script.onerror = function() {
-                    console.warn(`Fallback ${currentIndex + 1} failed, trying next...`);
+                    debugWarn(`Fallback ${currentIndex + 1} failed, trying next...`);
                     currentIndex++;
                     tryNextFallback();
                 };
                 script.onload = function() {
-                    console.log(`Chart.js loaded successfully from fallback ${currentIndex + 1}`);
+                    debugLog(`Chart.js loaded successfully from fallback ${currentIndex + 1}`);
                     window.chartJsLoadFailed = false;
                 };
                 document.head.appendChild(script);
@@ -69,20 +74,21 @@
             onerror="loadChartJsFallback()"></script>
 </head>
 <body>
+    <a href="#main-content" class="skip-nav">Skip to main content</a>
     <div class="container">
-        <header>
+        <header role="banner">
             <div class="header-content">
                 <div class="header-branding">
-                    <img src="assets/images/warden-voip-logo.png" alt="Warden VoIP" class="header-logo">
+                    <img src="assets/images/warden-voip-logo.png" alt="Warden VoIP logo" class="header-logo">
                     <h1>Warden VoIP Admin Dashboard</h1>
                 </div>
-                <div class="status-bar">
-                    <span id="connection-status" class="status-badge">Connecting...</span>
-                    <span id="system-status" class="status-badge"></span>
-                    <button id="refresh-all-button" class="refresh-all-button" style="margin-left: 15px; padding: 6px 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;" title="Refresh all data on current page">
+                <div class="status-bar" role="status" aria-live="polite">
+                    <span id="connection-status" class="status-badge" aria-label="Connection status">Connecting...</span>
+                    <span id="system-status" class="status-badge" aria-label="System status"></span>
+                    <button id="refresh-all-button" class="refresh-all-button" style="margin-left: 15px; padding: 6px 12px; background: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;" title="Refresh all data on current page" aria-label="Refresh all data">
                         🔄 Refresh All
                     </button>
-                    <button id="logout-button" class="logout-button" style="margin-left: 15px; padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;">
+                    <button id="logout-button" class="logout-button" style="margin-left: 15px; padding: 6px 12px; background: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px;" aria-label="Log out">
                         🚪 Logout
                     </button>
                 </div>
@@ -91,7 +97,7 @@
 
         <div class="layout-wrapper">
             <!-- Left Sidebar Navigation -->
-            <nav class="sidebar">
+            <nav class="sidebar" role="navigation" aria-label="Main navigation">
                 <div class="sidebar-section">
                     <div class="sidebar-section-title">Overview</div>
                     <button class="tab-button active" data-tab="dashboard">
@@ -278,7 +284,7 @@
             </nav>
 
             <!-- Main Content Area -->
-            <div class="main-content">
+            <div class="main-content" id="main-content" role="main">
                 <!-- Feature Requirements Info Banner -->
         <!-- Dashboard Tab -->
         <div id="dashboard" class="tab-content active">

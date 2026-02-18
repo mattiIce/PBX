@@ -112,3 +112,87 @@ export async function fetchWithTimeout(
         clearTimeout(timeoutId);
     }
 }
+
+/**
+ * Fetch with automatic retry on network errors using exponential backoff.
+ * Only retries on network failures and 5xx server errors, not on 4xx client errors.
+ */
+export async function fetchWithRetry(
+    url: string,
+    options: FetchOptions = {},
+    {
+        maxRetries = 3,
+        baseDelay = 1000,
+        timeout = DEFAULT_FETCH_TIMEOUT,
+    }: { maxRetries?: number; baseDelay?: number; timeout?: number } = {}
+): Promise<Response> {
+    let lastError: Error | undefined;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+        try {
+            const response = await fetchWithTimeout(url, options, timeout);
+
+            // Don't retry on client errors (4xx) - only on server errors (5xx)
+            if (response.status < 500) {
+                return response;
+            }
+
+            // Server error - retry if attempts remain
+            if (attempt < maxRetries) {
+                const delay = baseDelay * Math.pow(2, attempt);
+                await new Promise(resolve => setTimeout(resolve, delay));
+                continue;
+            }
+
+            return response;
+        } catch (error: unknown) {
+            lastError = error instanceof Error ? error : new Error(String(error));
+
+            // Don't retry on timeout or if no retries left
+            if (lastError.message === 'Request timed out' || attempt >= maxRetries) {
+                throw lastError;
+            }
+
+            // Exponential backoff before retry
+            const delay = baseDelay * Math.pow(2, attempt);
+            await new Promise(resolve => setTimeout(resolve, delay));
+        }
+    }
+
+    throw lastError ?? new Error('Request failed after retries');
+}
+
+/**
+ * Handle 401 responses by clearing auth state and redirecting to login.
+ * Returns true if the response was a 401 (caller should stop processing).
+ */
+export function handleUnauthorized(response: Response): boolean {
+    if (response.status === 401) {
+        localStorage.removeItem('pbx_token');
+        localStorage.removeItem('pbx_extension');
+        localStorage.removeItem('pbx_is_admin');
+        localStorage.removeItem('pbx_name');
+        window.location.href = '/admin/login.html';
+        return true;
+    }
+    return false;
+}
+
+/**
+ * Convenience wrapper: fetch with auth headers, retry, and automatic 401 handling.
+ */
+export async function apiFetch<T = unknown>(
+    path: string,
+    options: FetchOptions = {}
+): Promise<ApiResponse<T>> {
+    const url = `${getApiBaseUrl()}${path}`;
+    const headers = { ...getAuthHeaders(), ...options.headers as Record<string, string> };
+
+    const response = await fetchWithRetry(url, { ...options, headers });
+
+    if (handleUnauthorized(response)) {
+        return { success: false, error: 'Session expired' };
+    }
+
+    return response.json() as Promise<ApiResponse<T>>;
+}
