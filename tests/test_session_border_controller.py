@@ -366,14 +366,16 @@ class TestHideTopology:
         assert "10.0.0.5" not in result["sdp"]
 
     @patch("pbx.features.session_border_controller.get_logger")
-    def test_inbound_via_passthrough(self, mock_get_logger: MagicMock) -> None:
-        """Test inbound direction does not rewrite Via header."""
+    def test_inbound_via_prepends_sbc(self, mock_get_logger: MagicMock) -> None:
+        """Test inbound direction prepends SBC Via header."""
         sbc = SessionBorderController(_make_sbc_config(public_ip="203.0.113.1"))
-        msg = {"via": "SIP/2.0/UDP 10.0.0.5:5060"}
+        original_via = "SIP/2.0/UDP 10.0.0.5:5060"
+        msg = {"via": original_via}
 
         result = sbc._hide_topology(msg, "inbound")
-        # Inbound via is kept as-is (the pass statement in code)
-        assert result["via"] == msg["via"]
+        # SBC prepends its own Via so responses route back through it
+        assert result["via"].startswith("SIP/2.0/UDP 203.0.113.1:5060;branch=z9hG4bK-sbc-")
+        assert result["via"].endswith(", " + original_via)
 
     @patch("pbx.features.session_border_controller.get_logger")
     def test_outbound_no_headers_present(self, mock_get_logger: MagicMock) -> None:
@@ -643,66 +645,55 @@ class TestDetectNAT:
         assert result is NATType.NONE
 
     @patch("pbx.features.session_border_controller.get_logger")
-    @patch("socket.socket")
-    def test_port_restricted_nat(
-        self, mock_socket_cls: MagicMock, mock_get_logger: MagicMock
-    ) -> None:
-        """Test port-restricted NAT detection when socket connects successfully."""
-        mock_sock = MagicMock()
-        mock_socket_cls.return_value = mock_sock
-
+    def test_port_restricted_nat(self, mock_get_logger: MagicMock) -> None:
+        """Test port-restricted NAT when all STUN tests fail."""
         sbc = SessionBorderController()
-        result = sbc.detect_nat("192.168.1.10", "203.0.113.1")
+        # All STUN binding requests return None -> PORT_RESTRICTED
+        with patch.object(sbc, "_stun_binding_request", return_value=None):
+            result = sbc.detect_nat("192.168.1.10", "203.0.113.1")
         assert result is NATType.PORT_RESTRICTED
-        mock_sock.connect.assert_called_once_with(("203.0.113.1", 3478))
-        mock_sock.close.assert_called()
 
     @patch("pbx.features.session_border_controller.get_logger")
-    @patch("socket.socket")
-    def test_symmetric_nat_on_connect_error(
-        self, mock_socket_cls: MagicMock, mock_get_logger: MagicMock
-    ) -> None:
-        """Test symmetric NAT when connect raises OSError."""
-        mock_sock = MagicMock()
-        mock_sock.connect.side_effect = OSError("Connection refused")
-        mock_socket_cls.return_value = mock_sock
-
+    def test_symmetric_nat(self, mock_get_logger: MagicMock) -> None:
+        """Test symmetric NAT when mapped port changes for different destinations."""
         sbc = SessionBorderController()
-        result = sbc.detect_nat("192.168.1.10", "203.0.113.1")
+
+        # Test I succeeds, Tests II & III fail, Test IV returns different port
+        def stun_side_effect(server, port, change_request_flags=None):
+            if change_request_flags is not None:
+                return None  # Tests II and III fail
+            if port == 3478:
+                return ("203.0.113.50", 12345)  # Test I
+            return ("203.0.113.50", 54321)  # Test IV — different mapped port
+
+        with patch.object(sbc, "_stun_binding_request", side_effect=stun_side_effect):
+            result = sbc.detect_nat("192.168.1.10", "203.0.113.1")
         assert result is NATType.SYMMETRIC
-        mock_sock.close.assert_called()
 
     @patch("pbx.features.session_border_controller.get_logger")
-    @patch("socket.socket")
-    def test_port_restricted_on_socket_creation_error(
-        self, mock_socket_cls: MagicMock, mock_get_logger: MagicMock
-    ) -> None:
-        """Test port-restricted NAT when socket creation raises OSError."""
-        mock_socket_cls.side_effect = OSError("Cannot create socket")
-
+    def test_port_restricted_on_stun_failure(self, mock_get_logger: MagicMock) -> None:
+        """Test port-restricted NAT when STUN server is unreachable (returns None)."""
         sbc = SessionBorderController()
-        result = sbc.detect_nat("192.168.1.10", "203.0.113.1")
+        # _stun_binding_request catches OSError internally and returns None
+        with patch.object(sbc, "_stun_binding_request", return_value=None):
+            result = sbc.detect_nat("192.168.1.10", "203.0.113.1")
         assert result is NATType.PORT_RESTRICTED
 
     @patch("pbx.features.session_border_controller.get_logger")
     def test_detect_nat_172_private(self, mock_get_logger: MagicMock) -> None:
         """Test NAT detection for 172.16.x.x private range."""
         sbc = SessionBorderController()
-        with patch("socket.socket") as mock_sock_cls:
-            mock_sock = MagicMock()
-            mock_sock_cls.return_value = mock_sock
+        with patch.object(sbc, "_stun_binding_request", return_value=None):
             result = sbc.detect_nat("172.16.0.10", "203.0.113.1")
-            assert result is NATType.PORT_RESTRICTED
+        assert result is NATType.PORT_RESTRICTED
 
     @patch("pbx.features.session_border_controller.get_logger")
     def test_detect_nat_10_private(self, mock_get_logger: MagicMock) -> None:
         """Test NAT detection for 10.x.x.x private range."""
         sbc = SessionBorderController()
-        with patch("socket.socket") as mock_sock_cls:
-            mock_sock = MagicMock()
-            mock_sock_cls.return_value = mock_sock
+        with patch.object(sbc, "_stun_binding_request", return_value=None):
             result = sbc.detect_nat("10.0.0.5", "203.0.113.1")
-            assert result is NATType.PORT_RESTRICTED
+        assert result is NATType.PORT_RESTRICTED
 
 
 @pytest.mark.unit

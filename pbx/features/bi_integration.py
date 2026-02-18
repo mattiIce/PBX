@@ -194,7 +194,11 @@ class BIIntegration:
             return self._export_json(data, dataset_name, timestamp)
         if export_format == ExportFormat.EXCEL:
             return self._export_excel(data, dataset_name, timestamp)
-        self.logger.warning(f"Format {export_format.value} not yet implemented")
+        if export_format == ExportFormat.PARQUET:
+            return self._export_parquet(data, dataset_name, timestamp)
+        if export_format == ExportFormat.SQL:
+            return self._export_sql(data, dataset_name, timestamp)
+        self.logger.warning(f"Unsupported export format: {export_format.value}")
         return ""
 
     def _export_csv(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
@@ -258,6 +262,69 @@ class BIIntegration:
         except ImportError:
             self.logger.warning("openpyxl not installed, falling back to CSV")
             return self._export_csv(data, dataset_name, timestamp)
+
+    def _export_parquet(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
+        """Export data to Parquet format (requires pyarrow)"""
+        filename = f"{self.export_path}/{dataset_name}_{timestamp}.parquet"
+
+        try:
+            import pyarrow as pa
+            import pyarrow.parquet as pq
+
+            if not data:
+                # Create empty Parquet file with no columns
+                table = pa.table({})
+                pq.write_table(table, filename)
+                return filename
+
+            # Build column arrays from data
+            columns: dict[str, list] = {key: [] for key in data[0]}
+            for row in data:
+                for key, col_list in columns.items():
+                    col_list.append(row.get(key))
+
+            table = pa.table(columns)
+            pq.write_table(table, filename)
+
+            self.logger.info(f"Exported {len(data)} rows to {filename}")
+            return filename
+        except ImportError:
+            self.logger.warning("pyarrow not installed, falling back to CSV")
+            return self._export_csv(data, dataset_name, timestamp)
+
+    def _export_sql(self, data: list[dict], dataset_name: str, timestamp: str) -> str:
+        """Export data as SQL INSERT statements"""
+        filename = f"{self.export_path}/{dataset_name}_{timestamp}.sql"
+
+        with Path(filename).open("w") as f:
+            if not data:
+                f.write(f"-- No data for {dataset_name}\n")
+                return filename
+
+            # Write CREATE TABLE statement
+            columns = list(data[0].keys())
+            col_defs = ", ".join(f'"{col}" TEXT' for col in columns)
+            f.write(f'CREATE TABLE IF NOT EXISTS "{dataset_name}" ({col_defs});\n\n')
+
+            # Write INSERT statements
+            for row in data:
+                values = []
+                for col in columns:
+                    val = row.get(col)
+                    if val is None:
+                        values.append("NULL")
+                    elif isinstance(val, (int, float)):
+                        values.append(str(val))
+                    else:
+                        # Escape single quotes for SQL
+                        escaped = str(val).replace("'", "''")
+                        values.append(f"'{escaped}'")
+                values_str = ", ".join(values)
+                col_names = ", ".join(f'"{col}"' for col in columns)
+                f.write(f'INSERT INTO "{dataset_name}" ({col_names}) VALUES ({values_str});\n')
+
+        self.logger.info(f"Exported {len(data)} rows to {filename}")
+        return filename
 
     def export_dataset(
         self,
