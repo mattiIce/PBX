@@ -1283,3 +1283,595 @@ class TestPredictiveDialerWorkflow:
         next_contact = self.dialer.get_next_contact("retry")
         assert next_contact is not None
         assert next_contact.contact_id == "r1"
+
+
+# ---------------------------------------------------------------------------
+# _compute_campaign_metrics tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestComputeCampaignMetrics:
+    """Tests for PredictiveDialer._compute_campaign_metrics."""
+
+    def setup_method(self) -> None:
+        with patch("pbx.features.predictive_dialing.get_logger") as mgl:
+            mgl.return_value = MagicMock()
+            self.dialer = PredictiveDialer(config={})
+
+    def _make_campaign_with_contacts(self, contacts_data: list[dict]) -> Campaign:
+        """Helper: create a campaign and set contact attributes."""
+        campaign = Campaign("metrics1", "Metrics Test", DialingMode.PROGRESSIVE)
+        for cd in contacts_data:
+            c = Contact(cd["id"], cd["phone"])
+            c.attempts = cd.get("attempts", 0)
+            c.call_result = cd.get("call_result")
+            c.status = cd.get("status", "pending")
+            campaign.contacts.append(c)
+        return campaign
+
+    def test_no_contacts_defaults(self) -> None:
+        """With no contacts, returns default answer_rate 0.3 and avg 180."""
+        campaign = Campaign("empty", "Empty", DialingMode.PROGRESSIVE)
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["answer_rate"] == 0.3
+        assert metrics["avg_call_duration"] == 180.0
+        assert metrics["total_attempted"] == 0
+        assert metrics["active_calls"] == 0
+        assert metrics["connect_rate"] == 0.0
+
+    def test_no_db_in_memory_only(self) -> None:
+        """Without a database, metrics are computed from in-memory contacts."""
+        campaign = self._make_campaign_with_contacts(
+            [
+                {"id": "c1", "phone": "5550001", "attempts": 1, "call_result": "answered"},
+                {"id": "c2", "phone": "5550002", "attempts": 1, "call_result": "no_answer"},
+                {"id": "c3", "phone": "5550003", "attempts": 1, "call_result": "busy"},
+                {"id": "c4", "phone": "5550004", "attempts": 1, "call_result": "connected"},
+            ]
+        )
+        assert self.dialer.db is None
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["total_attempted"] == 4
+        assert metrics["answered"] == 2  # answered + connected
+        assert metrics["no_answer"] == 1
+        assert metrics["busy"] == 1
+        assert metrics["answer_rate"] == 0.5  # 2/4
+
+    def test_with_db_returning_stats(self) -> None:
+        """When db returns CDR stats, avg_call_duration and available_agents come from db."""
+        campaign = Campaign("db1", "DB Test", DialingMode.PREDICTIVE)
+        mock_db = MagicMock()
+        mock_db.get_campaign_call_stats.return_value = {
+            "avg_duration": 240.0,
+            "answer_rate": 0.6,
+            "available_agents": 5,
+        }
+        self.dialer.db = mock_db
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["avg_call_duration"] == 240.0
+        assert metrics["available_agents"] == 5
+        # No in-memory attempts, so db answer_rate is used
+        assert metrics["answer_rate"] == 0.6
+
+    def test_with_db_returning_none(self) -> None:
+        """When db returns None, defaults are used."""
+        campaign = Campaign("db2", "DB None", DialingMode.PROGRESSIVE)
+        mock_db = MagicMock()
+        mock_db.get_campaign_call_stats.return_value = None
+        self.dialer.db = mock_db
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["avg_call_duration"] == 180.0
+        assert metrics["available_agents"] == 1
+
+    def test_db_answer_rate_not_used_when_in_memory_attempts_exist(self) -> None:
+        """If contacts have been attempted, in-memory answer_rate takes precedence over db."""
+        campaign = self._make_campaign_with_contacts(
+            [
+                {"id": "c1", "phone": "5550001", "attempts": 1, "call_result": "answered"},
+                {"id": "c2", "phone": "5550002", "attempts": 1, "call_result": "no_answer"},
+            ]
+        )
+        mock_db = MagicMock()
+        mock_db.get_campaign_call_stats.return_value = {
+            "avg_duration": 200.0,
+            "answer_rate": 0.9,  # Should NOT override in-memory
+            "available_agents": 3,
+        }
+        self.dialer.db = mock_db
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        # In-memory: 1 answered / 2 attempted = 0.5
+        assert metrics["answer_rate"] == 0.5
+        assert metrics["avg_call_duration"] == 200.0
+
+    def test_active_calls_counted(self) -> None:
+        """Contacts with status 'dialing' are counted as active_calls."""
+        campaign = self._make_campaign_with_contacts(
+            [
+                {"id": "c1", "phone": "5550001", "status": "dialing"},
+                {"id": "c2", "phone": "5550002", "status": "dialing"},
+                {"id": "c3", "phone": "5550003", "status": "pending"},
+            ]
+        )
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["active_calls"] == 2
+
+    def test_abandoned_contacts_counted(self) -> None:
+        """Contacts with call_result 'abandoned' appear in the metrics."""
+        campaign = self._make_campaign_with_contacts(
+            [
+                {"id": "c1", "phone": "5550001", "attempts": 1, "call_result": "abandoned"},
+                {"id": "c2", "phone": "5550002", "attempts": 1, "call_result": "failed"},
+            ]
+        )
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["abandoned"] == 1
+        assert metrics["failed"] == 1
+
+    def test_db_exception_handled_gracefully(self) -> None:
+        """If db raises an exception, defaults are returned without error."""
+        campaign = Campaign("dbex", "DB Exception", DialingMode.PROGRESSIVE)
+        mock_db = MagicMock()
+        mock_db.get_campaign_call_stats.side_effect = RuntimeError("connection lost")
+        self.dialer.db = mock_db
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["avg_call_duration"] == 180.0
+        assert metrics["available_agents"] == 1
+
+    def test_connect_rate_computed(self) -> None:
+        """connect_rate is answered / total_attempted."""
+        campaign = self._make_campaign_with_contacts(
+            [
+                {"id": "c1", "phone": "5550001", "attempts": 1, "call_result": "answered"},
+                {"id": "c2", "phone": "5550002", "attempts": 1, "call_result": "no_answer"},
+                {"id": "c3", "phone": "5550003", "attempts": 1, "call_result": "no_answer"},
+                {"id": "c4", "phone": "5550004", "attempts": 1, "call_result": "no_answer"},
+            ]
+        )
+        metrics = self.dialer._compute_campaign_metrics(campaign)
+        assert metrics["connect_rate"] == pytest.approx(0.25)
+
+
+# ---------------------------------------------------------------------------
+# _calculate_pacing tests
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestCalculatePacing:
+    """Tests for PredictiveDialer._calculate_pacing."""
+
+    def setup_method(self) -> None:
+        with patch("pbx.features.predictive_dialing.get_logger") as mgl:
+            mgl.return_value = MagicMock()
+            self.dialer = PredictiveDialer(
+                config={
+                    "features": {
+                        "predictive_dialing": {
+                            "enabled": True,
+                            "max_abandon_rate": 0.05,
+                            "lines_per_agent": 2.0,
+                        }
+                    }
+                }
+            )
+
+    def _metrics(self, **overrides: object) -> dict:
+        """Create a metrics dict with sensible defaults and overrides."""
+        base = {
+            "answer_rate": 0.3,
+            "avg_call_duration": 180.0,
+            "available_agents": 10,
+            "active_calls": 0,
+        }
+        base.update(overrides)
+        return base
+
+    def test_preview_mode(self) -> None:
+        """Preview mode: agent-initiated, dial_interval=0."""
+        campaign = Campaign("p1", "Preview", DialingMode.PREVIEW)
+        pacing = self.dialer._calculate_pacing(campaign, self._metrics())
+        assert pacing["dial_interval_seconds"] == 0.0
+        assert pacing["available_agents"] == 10
+        # Preview still returns target_lines >= 1 (clamped by max)
+        assert pacing["target_lines"] >= 1
+
+    def test_progressive_mode_ratio_is_1(self) -> None:
+        """Progressive mode: 1:1 ratio, target_lines equals available_agents."""
+        campaign = Campaign("p2", "Progressive", DialingMode.PROGRESSIVE)
+        metrics = self._metrics(available_agents=5)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        assert pacing["target_lines"] == 5
+        assert pacing["ratio"] == 1.0
+
+    def test_progressive_mode_dial_interval(self) -> None:
+        """Progressive dial_interval = avg_duration / available_agents."""
+        campaign = Campaign("p3", "Progressive", DialingMode.PROGRESSIVE)
+        metrics = self._metrics(available_agents=5, avg_call_duration=100.0)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        assert pacing["dial_interval_seconds"] == pytest.approx(20.0)
+
+    def test_predictive_mode_overdialing(self) -> None:
+        """Predictive mode overrides ratio based on answer rate."""
+        campaign = Campaign("p4", "Predictive", DialingMode.PREDICTIVE)
+        metrics = self._metrics(available_agents=10, answer_rate=0.5)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        # raw_ratio = 1 / (0.5 * 0.95) ~= 2.105
+        # clamped to lines_per_agent * 2 = 4.0
+        # target = 10 * 2.105 = 21, clamped to min(21, 10*4) = 21
+        assert pacing["target_lines"] >= 10
+        assert pacing["ratio"] > 1.0
+
+    def test_predictive_mode_low_answer_rate(self) -> None:
+        """With low answer rate, predictive mode dials more lines."""
+        campaign = Campaign("p5", "Predictive", DialingMode.PREDICTIVE)
+        metrics_low = self._metrics(available_agents=10, answer_rate=0.1)
+        pacing_low = self.dialer._calculate_pacing(campaign, metrics_low)
+
+        metrics_high = self._metrics(available_agents=10, answer_rate=0.8)
+        pacing_high = self.dialer._calculate_pacing(campaign, metrics_high)
+
+        assert pacing_low["target_lines"] >= pacing_high["target_lines"]
+
+    def test_predictive_mode_clamps_answer_rate_to_minimum(self) -> None:
+        """Even with 0 answer rate, minimum of 0.1 is used (no division by zero)."""
+        campaign = Campaign("p6", "Predictive", DialingMode.PREDICTIVE)
+        metrics = self._metrics(answer_rate=0.0, available_agents=5)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        assert pacing["target_lines"] >= 1
+
+    def test_power_mode(self) -> None:
+        """Power mode: target_lines = available_agents * lines_per_agent."""
+        campaign = Campaign("p7", "Power", DialingMode.POWER)
+        metrics = self._metrics(available_agents=4)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        # lines_per_agent=2.0, so 4 * 2 = 8
+        assert pacing["target_lines"] == 8
+        assert pacing["ratio"] == 2.0
+
+    def test_power_mode_dial_interval(self) -> None:
+        """Power mode dial_interval = avg_duration / target_lines."""
+        campaign = Campaign("p8", "Power", DialingMode.POWER)
+        metrics = self._metrics(available_agents=4, avg_call_duration=160.0)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        # target=8, interval = 160/8 = 20
+        assert pacing["dial_interval_seconds"] == pytest.approx(20.0)
+
+    def test_minimum_target_lines_is_one(self) -> None:
+        """target_lines is always at least 1 even with minimal inputs."""
+        campaign = Campaign("p9", "Progressive", DialingMode.PROGRESSIVE)
+        metrics = self._metrics(available_agents=0)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        assert pacing["target_lines"] >= 1
+
+    def test_active_calls_passed_through(self) -> None:
+        """active_calls from metrics is included in pacing output."""
+        campaign = Campaign("p10", "Progressive", DialingMode.PROGRESSIVE)
+        metrics = self._metrics(active_calls=7)
+        pacing = self.dialer._calculate_pacing(campaign, metrics)
+        assert pacing["active_calls"] == 7
+
+
+# ---------------------------------------------------------------------------
+# start_campaign enhanced paths
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestStartCampaignEnhanced:
+    """Tests for enhanced start_campaign paths with pacing and metrics."""
+
+    def setup_method(self) -> None:
+        with patch("pbx.features.predictive_dialing.get_logger") as mgl:
+            mgl.return_value = MagicMock()
+            self.dialer = PredictiveDialer(
+                config={
+                    "features": {
+                        "predictive_dialing": {
+                            "enabled": True,
+                            "max_abandon_rate": 0.05,
+                            "lines_per_agent": 2.0,
+                        }
+                    }
+                }
+            )
+
+    def test_start_returns_pacing_preview(self) -> None:
+        """start_campaign returns pacing dict for preview mode."""
+        self.dialer.create_campaign("sp1", "Preview Camp", "preview")
+        self.dialer.add_contacts("sp1", [{"id": "c1", "phone_number": "5550001"}])
+        result = self.dialer.start_campaign("sp1")
+        assert result is not None
+        assert result["mode"] == "preview"
+        assert "pacing" in result
+        assert result["auto_dial"] is False
+        assert result["agent_preview"] is True
+
+    def test_start_returns_pacing_progressive(self) -> None:
+        """start_campaign returns lines_to_dial and ratio for progressive mode."""
+        self.dialer.create_campaign("sp2", "Progressive Camp", "progressive")
+        self.dialer.add_contacts("sp2", [{"id": "c1", "phone_number": "5550001"}])
+        result = self.dialer.start_campaign("sp2")
+        assert result["mode"] == "progressive"
+        assert "lines_to_dial" in result
+        assert result["ratio"] == 1.0
+
+    def test_start_returns_pacing_predictive(self) -> None:
+        """start_campaign returns predictive pacing with answer rate and abandon rate."""
+        self.dialer.create_campaign("sp3", "Predictive Camp", "predictive")
+        self.dialer.add_contacts("sp3", [{"id": "c1", "phone_number": "5550001"}])
+        result = self.dialer.start_campaign("sp3")
+        assert result["mode"] == "predictive"
+        assert "lines_to_dial" in result
+        assert "predicted_answer_rate" in result
+        assert "current_abandon_rate" in result
+
+    def test_start_returns_pacing_power(self) -> None:
+        """start_campaign returns lines_to_dial and ratio for power mode."""
+        self.dialer.create_campaign("sp4", "Power Camp", "power")
+        self.dialer.add_contacts("sp4", [{"id": "c1", "phone_number": "5550001"}])
+        result = self.dialer.start_campaign("sp4")
+        assert result["mode"] == "power"
+        assert "lines_to_dial" in result
+        assert result["ratio"] == self.dialer.lines_per_agent
+
+    def test_start_predictive_throttles_on_high_abandon_rate(self) -> None:
+        """When abandon rate exceeds max, predictive mode throttles down."""
+        self.dialer.create_campaign("sp5", "Throttle Camp", "predictive")
+        contacts = [{"id": f"c{i}", "phone_number": f"555000{i}"} for i in range(20)]
+        self.dialer.add_contacts("sp5", contacts)
+
+        # Mark many contacts as abandoned to push abandon rate high
+        for i, contact in enumerate(self.dialer.campaigns["sp5"].contacts):
+            contact.attempts = 1
+            if i < 15:
+                contact.call_result = "abandoned"
+            else:
+                contact.call_result = "answered"
+
+        result = self.dialer.start_campaign("sp5")
+        # Abandon rate = 15/20 = 0.75 > 0.05, so throttled
+        assert result["current_abandon_rate"] > self.dialer.max_abandon_rate
+        # Throttled: lines_to_dial = max(1, available_agents)
+        assert result["lines_to_dial"] >= 1
+
+    def test_start_nonexistent_campaign_returns_none(self) -> None:
+        """Starting a campaign that doesn't exist returns None."""
+        result = self.dialer.start_campaign("nonexistent")
+        assert result is None
+
+
+# ---------------------------------------------------------------------------
+# calculate_abandon_rate enhanced path
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestCalculateAbandonRateEnhanced:
+    """Tests for enhanced calculate_abandon_rate with db integration."""
+
+    def setup_method(self) -> None:
+        with patch("pbx.features.predictive_dialing.get_logger") as mgl:
+            mgl.return_value = MagicMock()
+            self.dialer = PredictiveDialer(config={})
+
+    def test_abandon_rate_no_db_in_memory_only(self) -> None:
+        """Without db, abandon rate is computed from in-memory contacts."""
+        self.dialer.create_campaign("ar1", "Abandon Rate Test", "progressive")
+        campaign = self.dialer.campaigns["ar1"]
+        for i in range(5):
+            c = Contact(f"c{i}", f"555000{i}")
+            c.call_result = "abandoned" if i < 2 else "answered"
+            campaign.contacts.append(c)
+
+        rate = self.dialer.calculate_abandon_rate("ar1")
+        # 2 abandoned, 3 answered => 2/(2+3) = 0.4
+        assert rate == pytest.approx(0.4)
+
+    def test_abandon_rate_with_db_stats(self) -> None:
+        """When db returns CDR stats, they're combined with in-memory counts."""
+        self.dialer.create_campaign("ar2", "Abandon DB Test", "predictive")
+        campaign = self.dialer.campaigns["ar2"]
+
+        # 1 abandoned, 1 answered in-memory
+        c1 = Contact("c1", "5550001")
+        c1.call_result = "abandoned"
+        c2 = Contact("c2", "5550002")
+        c2.call_result = "answered"
+        campaign.contacts.extend([c1, c2])
+
+        mock_db = MagicMock()
+        mock_db.get_campaign_call_stats.return_value = {
+            "abandoned": 3,
+            "answered": 7,
+        }
+        self.dialer.db = mock_db
+
+        rate = self.dialer.calculate_abandon_rate("ar2")
+        # total_abandons = 1 + 3 = 4, total_answered = 1 + 7 = 8
+        # rate = 4 / (4 + 8) = 1/3
+        assert rate == pytest.approx(4.0 / 12.0)
+
+    def test_abandon_rate_db_exception_falls_back(self) -> None:
+        """If db raises, abandon rate still computed from in-memory data."""
+        self.dialer.create_campaign("ar3", "DB Error", "predictive")
+        campaign = self.dialer.campaigns["ar3"]
+        c = Contact("c1", "5550001")
+        c.call_result = "abandoned"
+        campaign.contacts.append(c)
+
+        mock_db = MagicMock()
+        mock_db.get_campaign_call_stats.side_effect = RuntimeError("db down")
+        self.dialer.db = mock_db
+
+        rate = self.dialer.calculate_abandon_rate("ar3")
+        # 1 abandoned, 0 answered => 1/1 = 1.0
+        assert rate == pytest.approx(1.0)
+
+    def test_abandon_rate_no_contacts_returns_zero(self) -> None:
+        """With no answered or abandoned contacts, rate is 0.0."""
+        self.dialer.create_campaign("ar4", "Empty", "progressive")
+        rate = self.dialer.calculate_abandon_rate("ar4")
+        assert rate == 0.0
+
+    def test_abandon_rate_updates_global_counters(self) -> None:
+        """calculate_abandon_rate updates self.total_abandons and self.total_connects."""
+        self.dialer.create_campaign("ar5", "Counters", "progressive")
+        campaign = self.dialer.campaigns["ar5"]
+        for result_val in ["abandoned", "answered", "answered", "connected"]:
+            c = Contact(f"c{result_val}", f"555{result_val}")
+            c.call_result = result_val
+            campaign.contacts.append(c)
+
+        self.dialer.calculate_abandon_rate("ar5")
+        assert self.dialer.total_abandons == 1
+        assert self.dialer.total_connects == 3  # answered + answered + connected
+
+
+# ---------------------------------------------------------------------------
+# dial_contact enhanced paths
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestDialContactEnhanced:
+    """Tests for enhanced dial_contact with PBX core and db integration."""
+
+    def setup_method(self) -> None:
+        with patch("pbx.features.predictive_dialing.get_logger") as mgl:
+            mgl.return_value = MagicMock()
+            self.dialer = PredictiveDialer(
+                config={
+                    "features": {
+                        "predictive_dialing": {
+                            "enabled": True,
+                            "max_abandon_rate": 0.05,
+                            "lines_per_agent": 2.0,
+                        }
+                    }
+                }
+            )
+
+    def _setup_campaign(self, mode: str = "progressive") -> tuple:
+        """Helper: create campaign with one contact and return (campaign_id, contact)."""
+        cid = f"dc_{mode}"
+        self.dialer.create_campaign(cid, f"Dial {mode}", mode)
+        self.dialer.add_contacts(cid, [{"id": "cx1", "phone_number": "5551234567"}])
+        contact = self.dialer.campaigns[cid].contacts[0]
+        return cid, contact
+
+    @patch("pbx.features.predictive_dialing.get_pbx_core", create=True)
+    def test_dial_with_pbx_core_progressive(self, mock_get_pbx) -> None:
+        """Progressive mode bridges to available agent via PBX core."""
+        mock_call_mgr = MagicMock()
+        mock_call_mgr.create_outbound_call.return_value = "call-123"
+        mock_pbx = MagicMock()
+        mock_pbx.call_manager = mock_call_mgr
+
+        with patch("pbx.features.predictive_dialing.get_pbx_core", return_value=mock_pbx):
+            cid, contact = self._setup_campaign("progressive")
+            result = self.dialer.dial_contact(cid, contact)
+
+        assert result["success"] is True
+        assert result["call_id"] == "call-123"
+        mock_call_mgr.bridge_to_available_agent.assert_called_once_with(
+            "call-123", queue="outbound"
+        )
+
+    @patch("pbx.features.predictive_dialing.get_pbx_core", create=True)
+    def test_dial_with_pbx_core_predictive_queues(self, mock_get_pbx) -> None:
+        """Predictive mode queues call for next available agent."""
+        mock_call_mgr = MagicMock()
+        mock_call_mgr.create_outbound_call.return_value = "call-456"
+        mock_pbx = MagicMock()
+        mock_pbx.call_manager = mock_call_mgr
+
+        with patch("pbx.features.predictive_dialing.get_pbx_core", return_value=mock_pbx):
+            cid, contact = self._setup_campaign("predictive")
+            result = self.dialer.dial_contact(cid, contact)
+
+        assert result["success"] is True
+        mock_call_mgr.queue_for_agent.assert_called_once_with("call-456", queue="outbound")
+
+    @patch("pbx.features.predictive_dialing.get_pbx_core", create=True)
+    def test_dial_with_pbx_core_power_queues(self, mock_get_pbx) -> None:
+        """Power mode queues call for next available agent like predictive."""
+        mock_call_mgr = MagicMock()
+        mock_call_mgr.create_outbound_call.return_value = "call-789"
+        mock_pbx = MagicMock()
+        mock_pbx.call_manager = mock_call_mgr
+
+        with patch("pbx.features.predictive_dialing.get_pbx_core", return_value=mock_pbx):
+            cid, contact = self._setup_campaign("power")
+            result = self.dialer.dial_contact(cid, contact)
+
+        assert result["success"] is True
+        mock_call_mgr.queue_for_agent.assert_called_once_with("call-789", queue="outbound")
+
+    def test_dial_import_error_fallback(self) -> None:
+        """When PBX core import fails, dial still succeeds with call_id=None."""
+        with patch(
+            "builtins.__import__",
+            side_effect=lambda name, *a, **kw: (
+                (_ for _ in ()).throw(ImportError("no pbx.core"))
+                if name == "pbx.core.pbx"
+                else __import__(name, *a, **kw)
+            ),
+        ):
+            cid, contact = self._setup_campaign("progressive")
+            result = self.dialer.dial_contact(cid, contact)
+
+        assert result["success"] is True
+        assert result["call_id"] is None
+        assert contact.status == "dialing"
+
+    def test_dial_saves_to_db(self) -> None:
+        """dial_contact saves the dial attempt to the database."""
+        mock_db = MagicMock()
+        self.dialer.db = mock_db
+
+        cid, contact = self._setup_campaign("progressive")
+        result = self.dialer.dial_contact(cid, contact)
+
+        assert result["success"] is True
+        mock_db.save_dial_attempt.assert_called_once()
+        call_kwargs = mock_db.save_dial_attempt.call_args
+        # Verify key fields passed to save_dial_attempt
+        assert call_kwargs.kwargs["campaign_id"] == cid
+        assert call_kwargs.kwargs["contact_id"] == "cx1"
+        assert call_kwargs.kwargs["phone_number"] == "5551234567"
+        assert call_kwargs.kwargs["attempt_number"] == 1
+
+    def test_dial_db_save_exception_does_not_fail(self) -> None:
+        """If db save raises, dial still returns success."""
+        mock_db = MagicMock()
+        mock_db.save_dial_attempt.side_effect = RuntimeError("db write failed")
+        self.dialer.db = mock_db
+
+        cid, contact = self._setup_campaign("progressive")
+        result = self.dialer.dial_contact(cid, contact)
+
+        assert result["success"] is True
+        assert contact.attempts == 1
+
+    def test_dial_increments_attempts_and_status(self) -> None:
+        """dial_contact sets contact.status to 'dialing' and increments attempts."""
+        cid, contact = self._setup_campaign("progressive")
+        assert contact.attempts == 0
+        assert contact.status == "pending"
+
+        self.dialer.dial_contact(cid, contact)
+
+        assert contact.attempts == 1
+        assert contact.status == "dialing"
+        assert contact.last_attempt is not None
+
+    def test_dial_max_attempts_exceeded(self) -> None:
+        """dial_contact returns failure when contact has already hit max attempts."""
+        cid, contact = self._setup_campaign("progressive")
+        campaign = self.dialer.campaigns[cid]
+        contact.attempts = campaign.max_attempts  # Already at max
+
+        result = self.dialer.dial_contact(cid, contact)
+        assert result["success"] is False
+        assert "Max attempts" in result["error"]

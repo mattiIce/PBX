@@ -59,6 +59,12 @@
 - **Microsoft Teams** - Presence sync and meeting escalation
 - **Webhook System** - Event-driven HTTP notifications with HMAC signatures
 
+### AI & Automation
+- **Conversational AI** - Natural language IVR with multi-provider support (OpenAI, Google Dialogflow, Amazon Lex, Azure LUIS) and local NLTK fallback
+- **Predictive Dialing** - Outbound campaign management with four dialing modes (preview, progressive, predictive, power) and Erlang-C pacing algorithms
+- **Predictive Voicemail Drop** - Answering machine detection using energy analysis, beep frequency validation, and silence-ratio heuristics with automated RTP message playback
+- **Video Conferencing** - WebRTC-based video rooms with SDP offer/answer negotiation, ICE candidate relay, screen sharing, and multi-codec support (VP8, VP9, H.264)
+
 ### Security & Compliance
 - **FIPS 140-2 Compliant** - Government-grade encryption (AES-256, SHA-256, PBKDF2)
 - **TLS 1.3 / SIPS / SRTP** - Encrypted signaling and media
@@ -188,9 +194,19 @@ See [COMPLETE_GUIDE.md - Section 9.2](COMPLETE_GUIDE.md#92-rest-api-reference) f
 - **API endpoints**: `/api/analytics/advanced`, `/api/statistics`
 - **Grafana dashboards**: See [grafana/dashboards/](grafana/dashboards/)
 
+## Development
+
+```bash
+make check              # Run all checks (format + lint + test)
+make test               # All tests (233 test files, Python + JavaScript)
+make lint               # ruff check + mypy
+make dev                # Start backend + frontend dev servers
+```
+
+The project includes 76 feature modules, 233 test files, and 18 admin panel pages. See [CLAUDE.md](CLAUDE.md) for full development reference.
+
 ## Known Issues
 
-- **WebRTC Browser Phone** is currently non-functional. Use physical IP phones or SIP softphone clients.
 - **Admin panel after updates**: If the panel doesn't display correctly, press `Ctrl+Shift+R` to force refresh cached files.
 
 See [TROUBLESHOOTING.md](TROUBLESHOOTING.md) for comprehensive troubleshooting.
