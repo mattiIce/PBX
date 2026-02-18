@@ -301,6 +301,73 @@
             color: #3b9dd6;
         }
 
+        /* Dark mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #0f1f33 0%, #1a2332 50%, #1e3a5f 100%);
+            }
+
+            .login-container {
+                background: rgba(30, 42, 58, 0.98);
+                border-color: rgba(93, 173, 226, 0.15);
+            }
+
+            .login-header h1 {
+                color: #e0e6ed;
+            }
+
+            .login-header p {
+                color: #a0aab4;
+            }
+
+            label {
+                color: #cdd5de;
+            }
+
+            input[type="text"],
+            input[type="password"] {
+                background: #243040;
+                border-color: #2a3a4a;
+                color: #e0e6ed;
+            }
+
+            input[type="text"]:hover,
+            input[type="password"]:hover {
+                border-color: #3a4a5a;
+                background: #2a3a4a;
+            }
+
+            input[type="text"]:focus,
+            input[type="password"]:focus {
+                background: #2a3a4a;
+                border-color: #5dade2;
+            }
+
+            .error-message {
+                background: #3a1a1a;
+                color: #ec7063;
+                border-left-color: #e74c3c;
+            }
+
+            .security-note {
+                background: linear-gradient(135deg, #1a2d3a 0%, #1e2a3a 100%);
+                color: #5dade2;
+                border-color: rgba(93, 173, 226, 0.2);
+            }
+
+            .login-footer {
+                color: #6c7a89;
+            }
+
+            .password-toggle {
+                color: #a0aab4;
+            }
+
+            .password-toggle:hover {
+                color: #5dade2;
+            }
+        }
+
         /* Respect reduced motion */
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -351,6 +418,14 @@
                         👁
                     </button>
                 </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 14px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #495057;">
+                    <input type="checkbox" id="remember-me" name="remember" style="accent-color: #3b9dd6;">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" id="forgot-password-link" style="color: #3b9dd6; text-decoration: none; font-weight: 500;" onclick="alert('Please contact your system administrator to reset your password.'); return false;">Forgot password?</a>
             </div>
 
             <button type="submit" class="login-button" id="login-button">
@@ -560,8 +635,30 @@
             passwordToggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
         });
 
-        // Auto-focus extension input
-        extensionInput.focus();
+        // Remember Me: save/restore extension from localStorage
+        const rememberMe = document.getElementById('remember-me');
+        const savedExtension = localStorage.getItem('pbx_remembered_extension');
+        if (savedExtension) {
+            extensionInput.value = savedExtension;
+            rememberMe.checked = true;
+        }
+
+        // Save on successful login
+        const originalSubmit = loginForm.onsubmit;
+        loginForm.addEventListener('submit', () => {
+            if (rememberMe.checked) {
+                localStorage.setItem('pbx_remembered_extension', extensionInput.value.trim());
+            } else {
+                localStorage.removeItem('pbx_remembered_extension');
+            }
+        }, true);
+
+        // Auto-focus: if extension pre-filled, focus password instead
+        if (savedExtension) {
+            passwordInput.focus();
+        } else {
+            extensionInput.focus();
+        }
     </script>
 </body>
 </html>
