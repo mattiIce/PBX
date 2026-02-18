@@ -2210,7 +2210,7 @@ PBX System
 │   │   └── registered_phone.py
 │   └── utils/             - Utilities and helpers
 ├── admin/js/
-│   ├── pages/             - 13 TypeScript page modules
+│   ├── pages/             - 18 TypeScript page modules
 │   ├── ui/                - UI components (tabs, notifications)
 │   ├── api/client.ts      - API client
 │   └── state/store.ts     - State management
@@ -2262,7 +2262,6 @@ DELETE /api/extensions/1005
 # Active Calls
 GET    /api/calls
 GET    /api/calls/{call_id}
-POST   /api/calls/{call_id}/transfer
 DELETE /api/calls/{call_id}
 
 # Call Detail Records
