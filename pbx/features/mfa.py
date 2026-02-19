@@ -14,7 +14,6 @@ import hmac
 import json
 import random
 import secrets
-import sqlite3
 import struct
 import time
 import urllib.error
@@ -780,7 +779,7 @@ class MFAManager:
             self.database.execute(yubikey_devices_table)
             self.database.execute(fido2_credentials_table)
             self.logger.info("MFA database schema initialized (TOTP, YubiKey, FIDO2)")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to initialize MFA schema: {e}")
 
     def enroll_user(self, extension_number: str) -> tuple[bool, str | None, list | None]:
@@ -898,7 +897,7 @@ class MFAManager:
             self.logger.info(f"MFA enrollment initiated for extension {extension_number}")
             return True, provisioning_uri, backup_codes
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"MFA enrollment failed for {extension_number}: {e}")
             return False, None, None
 
@@ -949,7 +948,7 @@ class MFAManager:
 
             return False
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"MFA enrollment verification failed for {extension_number}: {e}")
             return False
 
@@ -1023,7 +1022,7 @@ class MFAManager:
 
             return False
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to check MFA status for {extension_number}: {e}")
             return False
 
@@ -1059,7 +1058,7 @@ class MFAManager:
             self.logger.info(f"MFA disabled for extension {extension_number}")
             return True
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to disable MFA for {extension_number}: {e}")
             return False
 
@@ -1128,7 +1127,7 @@ class MFAManager:
             self.logger.info(f"YubiKey {public_id} enrolled for extension {extension_number}")
             return True, None
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"YubiKey enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
@@ -1190,7 +1189,7 @@ class MFAManager:
             self.logger.info(f"FIDO2 credential enrolled for extension {extension_number}")
             return True, None
 
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"FIDO2 enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
@@ -1273,7 +1272,7 @@ class MFAManager:
 
             return methods
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get enrolled methods for {extension_number}: {e}")
             return methods
 
@@ -1334,7 +1333,7 @@ class MFAManager:
 
             return False
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"YubiKey verification failed for {extension_number}: {e}")
             return False
 
@@ -1385,7 +1384,7 @@ class MFAManager:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get secret for {extension_number}: {e}")
             return None
 
@@ -1436,7 +1435,7 @@ class MFAManager:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get secret for enrollment {extension_number}: {e}")
             import traceback
 
@@ -1489,7 +1488,7 @@ class MFAManager:
 
             return False
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to verify backup code for {extension_number}: {e}")
             return False
 
@@ -1513,7 +1512,7 @@ class MFAManager:
             """
             )
             self.database.execute(update_query, (extension_number,))
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to update last used for {extension_number}: {e}")
 
     def _generate_backup_codes(self, count: int | None = None) -> list:

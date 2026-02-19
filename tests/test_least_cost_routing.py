@@ -2,34 +2,91 @@
 Tests for Least-Cost Routing (LCR) System
 """
 
-import os
-import sqlite3
-import tempfile
 from datetime import time
-from pathlib import Path
 from typing import Any
+from unittest.mock import MagicMock
 
 from pbx.features.least_cost_routing import DialPattern, LeastCostRouting, RateEntry, TimeBasedRate
+
+
+class MockDatabase:
+    """Mock DatabaseBackend for testing"""
+
+    def __init__(self) -> None:
+        self.enabled = True
+        self.tables: dict[str, list[dict]] = {
+            "lcr_rates": [],
+            "lcr_time_rates": [],
+        }
+
+    def execute(self, query: str, params: tuple | None = None) -> bool:
+        query_lower = query.strip().lower()
+        if query_lower.startswith("create table"):
+            return True
+        if query_lower.startswith("delete from lcr_rates"):
+            self.tables["lcr_rates"] = []
+            return True
+        if query_lower.startswith("delete from lcr_time_rates"):
+            self.tables["lcr_time_rates"] = []
+            return True
+        if "into lcr_rates" in query_lower:
+            if params:
+                self.tables["lcr_rates"] = [
+                    r
+                    for r in self.tables["lcr_rates"]
+                    if not (r["trunk_id"] == params[0] and r["pattern"] == params[1])
+                ]
+                self.tables["lcr_rates"].append(
+                    {
+                        "trunk_id": params[0],
+                        "pattern": params[1],
+                        "description": params[2],
+                        "rate_per_minute": params[3],
+                        "connection_fee": params[4],
+                        "minimum_seconds": params[5],
+                        "billing_increment": params[6],
+                    }
+                )
+            return True
+        if "into lcr_time_rates" in query_lower:
+            if params:
+                self.tables["lcr_time_rates"] = [
+                    r for r in self.tables["lcr_time_rates"] if r["name"] != params[0]
+                ]
+                self.tables["lcr_time_rates"].append(
+                    {
+                        "name": params[0],
+                        "start_hour": params[1],
+                        "start_minute": params[2],
+                        "end_hour": params[3],
+                        "end_minute": params[4],
+                        "days_of_week": params[5],
+                        "rate_multiplier": params[6],
+                    }
+                )
+            return True
+        return True
+
+    def fetch_one(self, query: str, params: tuple | None = None) -> dict | None:
+        rows = self.fetch_all(query, params)
+        return rows[0] if rows else None
+
+    def fetch_all(self, query: str, params: tuple | None = None) -> list[dict]:
+        query_lower = query.strip().lower()
+        if "from lcr_rates" in query_lower:
+            return list(self.tables["lcr_rates"])
+        if "from lcr_time_rates" in query_lower:
+            return list(self.tables["lcr_time_rates"])
+        return []
 
 
 class MockPBX:
     """Mock PBX for testing"""
 
-    def __init__(self, db_path: str | None = None) -> None:
+    def __init__(self, database: Any = None) -> None:
         self.trunk_manager = MockTrunkManager()
-        self.config = MockConfig(db_path) if db_path else None
-
-
-class MockConfig:
-    """Mock config for testing"""
-
-    def __init__(self, db_path: str) -> None:
-        self.db_path = db_path
-
-    def get(self, key: str, default: Any = None) -> Any:
-        if key == "database":
-            return {"path": self.db_path}
-        return default
+        self.database = database or MockDatabase()
+        self.config = {}
 
 
 class MockTrunkManager:
@@ -162,16 +219,9 @@ class TestLeastCostRouting:
 
     def setup_method(self) -> None:
         """Set up test environment"""
-        # Create temporary database
-        self.db_fd, self.db_path = tempfile.mkstemp(suffix=".db")
-        self.pbx = MockPBX(self.db_path)
+        self.mock_db = MockDatabase()
+        self.pbx = MockPBX(database=self.mock_db)
         self.lcr = LeastCostRouting(self.pbx)
-
-    def teardown_method(self) -> None:
-        """Clean up test environment"""
-        # Close and remove temporary database
-        os.close(self.db_fd)
-        Path(self.db_path).unlink(missing_ok=True)
 
     def test_add_rate(self) -> None:
         """Test adding a rate"""
@@ -279,40 +329,30 @@ class TestLeastCostRouting:
         """Test that rates are saved to database"""
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
 
-        # Verify in database
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT trunk_id, pattern, rate_per_minute FROM lcr_rates")
-        row = cursor.fetchone()
-        conn.close()
-
-        assert row is not None
-        assert row[0] == "trunk1"
-        assert row[1] == r"^\d{10}$"
-        assert row[2] == 0.01
+        # Verify in mock database
+        rates = self.mock_db.tables["lcr_rates"]
+        assert len(rates) == 1
+        assert rates[0]["trunk_id"] == "trunk1"
+        assert rates[0]["pattern"] == r"^\d{10}$"
+        assert rates[0]["rate_per_minute"] == 0.01
 
     def test_time_rate_persists_to_database(self) -> None:
         """Test that time-based rates are saved to database"""
         self.lcr.add_time_based_rate("Peak Hours", 9, 0, 17, 0, [0, 1, 2, 3, 4], 1.2)
 
-        # Verify in database
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT name, start_hour, rate_multiplier FROM lcr_time_rates")
-        row = cursor.fetchone()
-        conn.close()
-
-        assert row is not None
-        assert row[0] == "Peak Hours"
-        assert row[1] == 9
-        assert row[2] == 1.2
+        # Verify in mock database
+        time_rates = self.mock_db.tables["lcr_time_rates"]
+        assert len(time_rates) == 1
+        assert time_rates[0]["name"] == "Peak Hours"
+        assert time_rates[0]["start_hour"] == 9
+        assert time_rates[0]["rate_multiplier"] == 1.2
 
     def test_rates_load_from_database(self) -> None:
         """Test that rates are loaded from database on initialization"""
         # Add rate and create new LCR instance (simulating restart)
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
 
-        # Create new instance
+        # Create new instance using the same mock database
         lcr2 = LeastCostRouting(self.pbx)
 
         # Verify rate was loaded
@@ -335,14 +375,8 @@ class TestLeastCostRouting:
         self.lcr.add_rate("trunk1", r"^\d{10}$", 0.01, "US Local")
         self.lcr.clear_rates()
 
-        # Verify database is empty
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM lcr_rates")
-        count = cursor.fetchone()[0]
-        conn.close()
-
-        assert count == 0
+        # Verify mock database is empty
+        assert len(self.mock_db.tables["lcr_rates"]) == 0
 
     def test_multiple_rates_persist(self) -> None:
         """Test that multiple rates persist across restarts"""

@@ -4,7 +4,6 @@ Call and voicemail alerts using FCM (Firebase Cloud Messaging - free)
 """
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -142,7 +141,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Mobile push notifications database schema initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error initializing mobile push schema: {e}")
 
     def _load_devices_from_database(self) -> None:
@@ -188,7 +187,7 @@ class MobilePushNotifications:
             cursor.close()
             if rows:
                 self.logger.info(f"Loaded {len(rows)} mobile devices from database")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error loading mobile devices from database: {e}")
 
     def _save_device_to_database(self, user_id: str, device_token: str, platform: str) -> bool:
@@ -224,7 +223,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error saving device to database: {e}")
             return False
 
@@ -258,7 +257,7 @@ class MobilePushNotifications:
             self.database.connection.commit()
             cursor.close()
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error removing device from database: {e}")
             return False
 
@@ -317,7 +316,7 @@ class MobilePushNotifications:
 
             self.database.connection.commit()
             cursor.close()
-        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving notification to database: {e}")
 
     def register_device(self, user_id: str, device_token: str, platform: str = "unknown") -> bool:

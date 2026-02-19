@@ -4,7 +4,6 @@ Comprehensive tests for Recording Announcements (pbx/features/recording_announce
 Covers RecordingAnnouncements class.
 """
 
-import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
@@ -194,7 +193,7 @@ class TestRecordingAnnouncementsInit:
         mock_db = MagicMock()
         mock_db.enabled = True
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("db error")
+        mock_db.connection.cursor.side_effect = Exception("db error")
 
         config = {}
 
@@ -530,7 +529,7 @@ class TestRecordingAnnouncementsLogAnnouncement:
     def test_log_announcement_db_error(self) -> None:
         """Test logging announcement with db error"""
         ra, _mock_db, mock_cursor = self._make_ra_with_db("sqlite")
-        mock_cursor.execute.side_effect = sqlite3.Error("db error")
+        mock_cursor.execute.side_effect = Exception("db error")
 
         # Should not raise
         ra._log_announcement("call-1", "both", True, False, None, False)

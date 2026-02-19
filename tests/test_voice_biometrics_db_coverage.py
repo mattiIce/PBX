@@ -1,7 +1,6 @@
 """Comprehensive tests for VoiceBiometricsDatabase."""
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, call, patch
 
@@ -87,9 +86,9 @@ class TestVoiceBiometricsDatabaseCreateTables:
         self.db.logger.info.assert_called_once_with("Voice biometrics tables created successfully")
 
     def test_create_tables_error(self) -> None:
-        """Test table creation handles sqlite3.Error."""
+        """Test table creation handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("table error")
+        self.mock_cursor.execute.side_effect = Exception("table error")
         result = self.db.create_tables()
         assert result is False
         self.db.logger.error.assert_called_once()
@@ -131,9 +130,9 @@ class TestVoiceBiometricsDatabaseSaveProfile:
         assert "RETURNING id" in sql
 
     def test_save_profile_error(self) -> None:
-        """Test saving profile handles sqlite3.Error."""
+        """Test saving profile handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         result = self.db.save_profile("user-001", "1001", "enrolling")
         assert result is None
         self.db.logger.error.assert_called_once()
@@ -193,9 +192,9 @@ class TestVoiceBiometricsDatabaseGetProfile:
         assert result is None
 
     def test_get_profile_error(self) -> None:
-        """Test getting profile handles sqlite3.Error."""
+        """Test getting profile handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         result = self.db.get_profile("user-001")
         assert result is None
         self.db.logger.error.assert_called_once()
@@ -235,9 +234,9 @@ class TestVoiceBiometricsDatabaseUpdateEnrollmentProgress:
         assert params == (3, "user-001")
 
     def test_update_enrollment_progress_error(self) -> None:
-        """Test updating enrollment progress handles sqlite3.Error."""
+        """Test updating enrollment progress handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("update error")
+        self.mock_cursor.execute.side_effect = Exception("update error")
         self.db.update_enrollment_progress("user-001", 1)
         self.db.logger.error.assert_called_once()
 
@@ -406,9 +405,9 @@ class TestVoiceBiometricsDatabaseSaveVerification:
         assert self.mock_cursor.execute.call_count == 1
 
     def test_save_verification_error(self) -> None:
-        """Test saving verification handles sqlite3.Error."""
+        """Test saving verification handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         self.db.save_verification("user-001", "call-001", True, 0.9)
         self.db.logger.error.assert_called_once()
 
@@ -510,9 +509,9 @@ class TestVoiceBiometricsDatabaseSaveFraudDetection:
         assert params[4] == "[]"
 
     def test_save_fraud_detection_error(self) -> None:
-        """Test saving fraud detection handles sqlite3.Error."""
+        """Test saving fraud detection handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         self.db.save_fraud_detection("call-001", "caller", True, 0.5, [])
         self.db.logger.error.assert_called_once()
 
@@ -606,9 +605,9 @@ class TestVoiceBiometricsDatabaseGetStatistics:
         assert result["failed_verifications"] == 0
 
     def test_get_statistics_error(self) -> None:
-        """Test statistics handles sqlite3.Error."""
+        """Test statistics handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         result = self.db.get_statistics()
         assert result == {}
         self.db.logger.error.assert_called_once()

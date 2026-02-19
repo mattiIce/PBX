@@ -4,7 +4,6 @@ Database initialization script for PBX system
 """
 
 import os
-import sqlite3
 import sys
 
 import psycopg2
@@ -51,7 +50,7 @@ def test_connection() -> bool:
         cur.close()
         conn.close()
         return True
-    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"✗ Connection failed: {e}")
         return False
 
@@ -84,7 +83,7 @@ def verify_tables() -> bool:
         cur.close()
         conn.close()
         return True
-    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"✗ Verification failed: {e}")
         return False
 
@@ -119,7 +118,7 @@ def add_sample_data() -> bool:
         cur.close()
         conn.close()
         return True
-    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"✗ Sample data insertion failed: {e}")
         return False
 

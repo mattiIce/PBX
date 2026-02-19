@@ -293,12 +293,10 @@ class SOC2ControlTester:
             Tuple of (passed, details)
         """
         # Verify database backend supports backup operations
-        db_type = self.config.get("database.type", "sqlite")
+        db_type = self.config.get("database.type", "postgresql")
 
         if db_type == "postgresql":
             return True, "PostgreSQL backend supports automated backup and recovery"
-        if db_type == "sqlite":
-            return True, "SQLite database supports file-based backup procedures"
         return True, "Database backend supports backup operations"
 
     def test_control_pi1_1(self) -> tuple[bool, str]:
@@ -324,7 +322,7 @@ class SOC2ControlTester:
         """
         # Verify processing accuracy controls
         # Database transactions ensure processing accuracy
-        db_type = self.config.get("database.type", "sqlite")
+        db_type = self.config.get("database.type", "postgresql")
 
         return True, f"Transaction integrity enforced by {db_type} database"
 

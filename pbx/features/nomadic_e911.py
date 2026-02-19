@@ -4,7 +4,6 @@ Location-based emergency routing for remote workers
 """
 
 import ipaddress
-import sqlite3
 from typing import Any
 
 from pbx.utils.logger import get_logger
@@ -101,7 +100,7 @@ class NomadicE911Engine:
             self.logger.info(f"Updated E911 location for {extension}")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update E911 location: {e}")
             return False
 
@@ -151,7 +150,7 @@ class NomadicE911Engine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get E911 location: {e}")
             return None
 
@@ -257,7 +256,7 @@ class NomadicE911Engine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to find site by IP: {e}")
             return None
 
@@ -341,7 +340,7 @@ class NomadicE911Engine:
             self.logger.info(f"Created E911 site config: {site_data['site_name']}")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create site config: {e}")
             return False
 
@@ -378,7 +377,7 @@ class NomadicE911Engine:
 
             return sites
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get E911 sites: {e}")
             return []
 
@@ -419,6 +418,6 @@ class NomadicE911Engine:
 
             return history
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get location history: {e}")
             return []

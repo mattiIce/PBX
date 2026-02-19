@@ -3,7 +3,6 @@ Team Messaging Framework
 Built-in chat platform for team collaboration
 """
 
-import sqlite3
 from typing import Any
 
 from pbx.utils.logger import get_logger
@@ -81,7 +80,7 @@ class TeamMessagingEngine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create messaging channel: {e}")
             return None
 
@@ -114,7 +113,7 @@ class TeamMessagingEngine:
             self.logger.info(f"Added {extension} to channel {channel_id}")
             return True
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to add member to channel: {e}")
             return False
 
@@ -166,7 +165,7 @@ class TeamMessagingEngine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send message: {e}")
             return None
 
@@ -208,7 +207,7 @@ class TeamMessagingEngine:
 
             return list(reversed(messages))  # Return in chronological order
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get channel messages: {e}")
             return []
 
@@ -252,7 +251,7 @@ class TeamMessagingEngine:
 
             return channels
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get user channels: {e}")
             return []
 
@@ -288,7 +287,7 @@ class TeamMessagingEngine:
 
             return channels
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get all channels: {e}")
             return []
 
@@ -368,7 +367,7 @@ class FileShareEngine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to upload file: {e}")
             return None
 
@@ -413,6 +412,6 @@ class FileShareEngine:
 
             return files
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get shared files: {e}")
             return []

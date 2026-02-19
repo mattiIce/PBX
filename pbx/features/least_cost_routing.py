@@ -5,7 +5,6 @@ based on destination, time of day, and carrier rates
 """
 
 import re
-import sqlite3
 from datetime import UTC, datetime, time
 from typing import Any
 
@@ -146,13 +145,10 @@ class LeastCostRouting:
         self.pbx = pbx
         self.logger = get_logger()
 
-        # Get database path from PBX config
-        if hasattr(pbx, "config") and pbx.config:
-            self.db_path = pbx.config.get("database", {}).get("path", "pbx.db")
-        else:
-            self.db_path = "pbx.db"
+        # Get shared DatabaseBackend from PBX core
+        self.db = pbx.database if hasattr(pbx, "database") else None
 
-        # Initialize database
+        # Initialize database tables
         self._init_database()
 
         # Rate database - load from DB
@@ -176,16 +172,17 @@ class LeastCostRouting:
 
     def _init_database(self) -> None:
         """Initialize database tables for LCR persistence"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            self.logger.warning("Database not available, LCR persistence disabled")
+            return
 
+        try:
             # Create LCR rates table
-            cursor.execute("""
+            self.db.execute("""
                 CREATE TABLE IF NOT EXISTS lcr_rates (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    trunk_id TEXT NOT NULL,
-                    pattern TEXT NOT NULL,
+                    id SERIAL PRIMARY KEY,
+                    trunk_id VARCHAR(255) NOT NULL,
+                    pattern VARCHAR(255) NOT NULL,
                     description TEXT,
                     rate_per_minute REAL NOT NULL,
                     connection_fee REAL DEFAULT 0.0,
@@ -198,81 +195,75 @@ class LeastCostRouting:
             """)
 
             # Create time-based rates table
-            cursor.execute("""
+            self.db.execute("""
                 CREATE TABLE IF NOT EXISTS lcr_time_rates (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    name TEXT NOT NULL UNIQUE,
+                    id SERIAL PRIMARY KEY,
+                    name VARCHAR(255) NOT NULL UNIQUE,
                     start_hour INTEGER NOT NULL,
                     start_minute INTEGER NOT NULL,
                     end_hour INTEGER NOT NULL,
                     end_minute INTEGER NOT NULL,
-                    days_of_week TEXT NOT NULL,
+                    days_of_week VARCHAR(255) NOT NULL,
                     rate_multiplier REAL NOT NULL,
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 )
             """)
 
-            conn.commit()
-            conn.close()
             self.logger.info("LCR database tables initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error initializing LCR database: {e}")
 
     def _load_from_database(self) -> None:
         """Load rates and time-based rates from database"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            return
 
+        try:
             # Load regular rates
-            cursor.execute("""
+            rows = self.db.fetch_all("""
                 SELECT trunk_id, pattern, description, rate_per_minute,
                        connection_fee, minimum_seconds, billing_increment
                 FROM lcr_rates
             """)
-            rows = cursor.fetchall()
 
             for row in rows:
-                dial_pattern = DialPattern(row[1], row[2] or "")
+                dial_pattern = DialPattern(row["pattern"], row["description"] or "")
                 rate_entry = RateEntry(
-                    trunk_id=row[0],
+                    trunk_id=row["trunk_id"],
                     pattern=dial_pattern,
-                    rate_per_minute=row[3],
-                    connection_fee=row[4],
-                    minimum_seconds=row[5],
-                    billing_increment=row[6],
+                    rate_per_minute=row["rate_per_minute"],
+                    connection_fee=row["connection_fee"],
+                    minimum_seconds=row["minimum_seconds"],
+                    billing_increment=row["billing_increment"],
                 )
                 self.rate_entries.append(rate_entry)
 
             # Load time-based rates
-            cursor.execute("""
+            time_rows = self.db.fetch_all("""
                 SELECT name, start_hour, start_minute, end_hour, end_minute,
                        days_of_week, rate_multiplier
                 FROM lcr_time_rates
             """)
-            time_rows = cursor.fetchall()
 
             for row in time_rows:
                 # Parse days_of_week from comma-separated string
-                days = [int(d) for d in row[5].split(",")]
+                days = [int(d) for d in row["days_of_week"].split(",")]
                 time_rate = TimeBasedRate(
-                    name=row[0],
-                    start_time=time(row[1], row[2]),
-                    end_time=time(row[3], row[4]),
+                    name=row["name"],
+                    start_time=time(row["start_hour"], row["start_minute"]),
+                    end_time=time(row["end_hour"], row["end_minute"]),
                     days_of_week=days,
-                    rate_multiplier=row[6],
+                    rate_multiplier=row["rate_multiplier"],
                 )
                 self.time_based_rates.append(time_rate)
-
-            conn.close()
 
             if rows:
                 self.logger.info(f"Loaded {len(rows)} LCR rates from database")
             if time_rows:
                 self.logger.info(f"Loaded {len(time_rows)} time-based rates from database")
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading LCR rates from database: {e}")
 
     def _save_rate_to_db(
@@ -286,16 +277,23 @@ class LeastCostRouting:
         billing_increment: int = 1,
     ) -> None:
         """Save a rate entry to database"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            return
 
-            cursor.execute(
+        try:
+            self.db.execute(
                 """
-                INSERT OR REPLACE INTO lcr_rates
+                INSERT INTO lcr_rates
                 (trunk_id, pattern, description, rate_per_minute, connection_fee,
                  minimum_seconds, billing_increment, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (trunk_id, pattern) DO UPDATE
+                SET description = EXCLUDED.description,
+                    rate_per_minute = EXCLUDED.rate_per_minute,
+                    connection_fee = EXCLUDED.connection_fee,
+                    minimum_seconds = EXCLUDED.minimum_seconds,
+                    billing_increment = EXCLUDED.billing_increment,
+                    updated_at = CURRENT_TIMESTAMP
             """,
                 (
                     trunk_id,
@@ -308,10 +306,8 @@ class LeastCostRouting:
                 ),
             )
 
-            conn.commit()
-            conn.close()
             self.logger.debug(f"LCR rate saved to database: {trunk_id} - {pattern}")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error saving LCR rate to database: {e}")
 
     def _save_time_rate_to_db(
@@ -325,51 +321,55 @@ class LeastCostRouting:
         multiplier: float,
     ) -> None:
         """Save a time-based rate to database"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            return
 
+        try:
             # Convert days list to comma-separated string
             days_str = ",".join(str(d) for d in days)
 
-            cursor.execute(
+            self.db.execute(
                 """
-                INSERT OR REPLACE INTO lcr_time_rates
+                INSERT INTO lcr_time_rates
                 (name, start_hour, start_minute, end_hour, end_minute,
                  days_of_week, rate_multiplier, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (name) DO UPDATE
+                SET start_hour = EXCLUDED.start_hour,
+                    start_minute = EXCLUDED.start_minute,
+                    end_hour = EXCLUDED.end_hour,
+                    end_minute = EXCLUDED.end_minute,
+                    days_of_week = EXCLUDED.days_of_week,
+                    rate_multiplier = EXCLUDED.rate_multiplier,
+                    updated_at = CURRENT_TIMESTAMP
             """,
                 (name, start_hour, start_minute, end_hour, end_minute, days_str, multiplier),
             )
 
-            conn.commit()
-            conn.close()
             self.logger.debug(f"Time-based rate saved to database: {name}")
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error saving time-based rate to database: {e}")
 
     def _delete_all_rates_from_db(self) -> None:
         """Delete all rates from database"""
+        if not self.db or not self.db.enabled:
+            return
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM lcr_rates")
-            conn.commit()
-            conn.close()
+            self.db.execute("DELETE FROM lcr_rates")
             self.logger.info("All LCR rates deleted from database")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error deleting LCR rates from database: {e}")
 
     def _delete_all_time_rates_from_db(self) -> None:
         """Delete all time-based rates from database"""
+        if not self.db or not self.db.enabled:
+            return
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM lcr_time_rates")
-            conn.commit()
-            conn.close()
+            self.db.execute("DELETE FROM lcr_time_rates")
             self.logger.info("All time-based rates deleted from database")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error deleting time-based rates from database: {e}")
 
     def add_rate(

@@ -4,7 +4,6 @@ Comprehensive tests for Compliance Framework (pbx/features/compliance_framework.
 Covers SOC2ComplianceEngine (the only active/non-commented class).
 """
 
-import sqlite3
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -249,7 +248,7 @@ class TestSOC2ComplianceEngineRegisterControl:
     def test_register_control_db_error(self) -> None:
         """Test registering a control with database error"""
         engine = self._make_engine()
-        engine.db.fetch_one.side_effect = sqlite3.Error("db error")
+        engine.db.fetch_one.side_effect = Exception("db error")
 
         control_data = {"control_id": "ERR1"}
 
@@ -340,7 +339,7 @@ class TestSOC2ComplianceEngineUpdateControlTest:
     def test_update_control_test_db_error(self) -> None:
         """Test updating control test with database error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("db error")
+        engine.db.execute.side_effect = Exception("db error")
 
         result = engine.update_control_test("CC1.1", "test")
 
@@ -427,7 +426,7 @@ class TestSOC2ComplianceEngineGetAllControls:
     def test_get_all_controls_db_error(self) -> None:
         """Test getting controls with db error"""
         engine = self._make_engine()
-        engine.db.fetch_all.side_effect = sqlite3.Error("db error")
+        engine.db.fetch_all.side_effect = Exception("db error")
 
         result = engine.get_all_controls()
 
@@ -512,7 +511,7 @@ class TestSOC2ComplianceEngineGetControlsByCategory:
     def test_get_controls_by_category_db_error(self) -> None:
         """Test getting controls by category with db error"""
         engine = self._make_engine()
-        engine.db.fetch_all.side_effect = sqlite3.Error("db error")
+        engine.db.fetch_all.side_effect = Exception("db error")
 
         result = engine.get_controls_by_category("Security")
 

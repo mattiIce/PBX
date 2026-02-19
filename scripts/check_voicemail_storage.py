@@ -11,8 +11,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import sqlite3
-
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
@@ -61,7 +59,7 @@ def main() -> None:
                 table_exists = next(iter(table_check.values())) if table_check else False
             else:
                 table_check = db.fetch_one(
-                    "SELECT name FROM sqlite_master WHERE type='table' AND name='voicemail_messages'"
+                    "SELECT tablename FROM pg_tables WHERE schemaname='public' AND tablename='voicemail_messages'"
                 )
                 table_exists = table_check is not None
 
@@ -72,7 +70,7 @@ def main() -> None:
             else:
                 print("\n⚠ Note: voicemail_messages table doesn't exist yet")
                 print("  It will be created automatically when PBX starts")
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             print(f"\n⚠ Could not check voicemail count: {e}")
 
         db.disconnect()

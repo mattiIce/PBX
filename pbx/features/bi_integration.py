@@ -14,8 +14,6 @@ from typing import TYPE_CHECKING, Any
 if TYPE_CHECKING:
     from tableauhyperapi import TableDefinition
 
-import sqlite3
-
 from pbx.utils.logger import get_logger
 
 
@@ -167,7 +165,7 @@ class BIIntegration:
                 return [dict(zip(columns, row, strict=False)) for row in results]
             self.logger.error(f"Unsupported database type: {db.db_type}")
             return []
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Query execution failed: {e}")
             return []
 

@@ -1,6 +1,5 @@
 """Comprehensive tests for pbx/utils/migrations.py database migration system."""
 
-import sqlite3
 from unittest.mock import MagicMock, call, patch
 
 import pytest
@@ -225,9 +224,9 @@ class TestInitMigrationsTable:
 
     @patch("pbx.utils.migrations.get_logger")
     def test_returns_false_on_sqlite_error(self, mock_get_logger: MagicMock) -> None:
-        """Must return False on sqlite3.Error."""
+        """Must return False on Exception."""
         db = _make_db_backend()
-        db.execute.side_effect = sqlite3.Error("table locked")
+        db.execute.side_effect = Exception("table locked")
         mgr = MigrationManager(db)
         assert mgr.init_migrations_table() is False
 
@@ -240,9 +239,9 @@ class TestInitMigrationsTable:
 
     @patch("pbx.utils.migrations.get_logger")
     def test_logs_error_on_failure(self, mock_get_logger: MagicMock) -> None:
-        """Must log error on sqlite3.Error."""
+        """Must log error on Exception."""
         db = _make_db_backend()
-        db.execute.side_effect = sqlite3.Error("boom")
+        db.execute.side_effect = Exception("boom")
         mgr = MigrationManager(db)
         mgr.init_migrations_table()
         mgr.logger.error.assert_called_once()
@@ -291,9 +290,9 @@ class TestGetCurrentVersion:
 
     @patch("pbx.utils.migrations.get_logger")
     def test_returns_zero_on_sqlite_error(self, mock_get_logger: MagicMock) -> None:
-        """Must return 0 on sqlite3.Error."""
+        """Must return 0 on Exception."""
         db = _make_db_backend()
-        db.fetch_one.side_effect = sqlite3.Error("no such table")
+        db.fetch_one.side_effect = Exception("no such table")
         mgr = MigrationManager(db)
         assert mgr.get_current_version() == 0
 
@@ -317,7 +316,7 @@ class TestGetCurrentVersion:
     def test_logs_warning_on_error(self, mock_get_logger: MagicMock) -> None:
         """Must log a warning when version cannot be fetched."""
         db = _make_db_backend()
-        db.fetch_one.side_effect = sqlite3.Error("oops")
+        db.fetch_one.side_effect = Exception("oops")
         mgr = MigrationManager(db)
         mgr.get_current_version()
         mgr.logger.warning.assert_called_once()
@@ -429,7 +428,7 @@ class TestApplyMigrations:
         """Must return False when migration execution raises an error."""
         db = _make_db_backend("sqlite")
         db.fetch_one.return_value = {"max_version": 0}
-        db.execute_script.side_effect = sqlite3.Error("syntax error")
+        db.execute_script.side_effect = Exception("syntax error")
         mgr = MigrationManager(db)
         mgr.register_migration(1, "bad", "INVALID SQL")
         assert mgr.apply_migrations() is False
@@ -439,7 +438,7 @@ class TestApplyMigrations:
         """Must log error when migration fails."""
         db = _make_db_backend("sqlite")
         db.fetch_one.return_value = {"max_version": 0}
-        db.execute_script.side_effect = sqlite3.Error("fail")
+        db.execute_script.side_effect = Exception("fail")
         mgr = MigrationManager(db)
         mgr.register_migration(1, "bad", "INVALID SQL")
         mgr.apply_migrations()
@@ -562,7 +561,7 @@ class TestGetMigrationStatus:
         """Must return empty list on error from fetch_all."""
         db = _make_db_backend()
         db.fetch_one.return_value = {"max_version": 0}
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         mgr = MigrationManager(db)
         mgr.register_migration(1, "one", "SQL1")
         status = mgr.get_migration_status()
@@ -573,7 +572,7 @@ class TestGetMigrationStatus:
         """Must log error when status retrieval fails."""
         db = _make_db_backend()
         db.fetch_one.return_value = {"max_version": 0}
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         mgr = MigrationManager(db)
         mgr.register_migration(1, "one", "SQL1")
         mgr.get_migration_status()

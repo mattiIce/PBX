@@ -3,7 +3,6 @@ Call Recording Announcements
 Auto-play recording disclosure before recording starts
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -98,7 +97,7 @@ class RecordingAnnouncements:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Recording announcements database schema initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error initializing recording announcements schema: {e}")
 
     def _log_announcement(
@@ -152,7 +151,7 @@ class RecordingAnnouncements:
 
             self.database.connection.commit()
             cursor.close()
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error logging announcement: {e}")
 
     def _check_audio_file(self) -> bool:

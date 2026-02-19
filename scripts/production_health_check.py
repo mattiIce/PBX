@@ -25,7 +25,6 @@ import argparse
 import json
 import os
 import socket
-import sqlite3
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
@@ -134,7 +133,7 @@ class HealthCheck:
             self.log("Database connectivity", "pass", "critical")
             if not self.critical_only and not self.json_output:
                 print(f"  Version: {version[:50]}")
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.log(f"Database connection failed: {e!s}", "fail", "critical")
 
     def check_redis(self) -> None:

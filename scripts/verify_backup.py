@@ -13,7 +13,6 @@ import argparse
 import json
 import os
 import random
-import sqlite3
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -112,7 +111,7 @@ class BackupVerifier:
                     else:
                         self.log_check("Contains schema", False, "No CREATE statements found")
 
-            except (OSError, sqlite3.Error) as e:
+            except OSError as e:
                 self.log_check("Readable backup file", False, str(e))
                 return False
 
@@ -191,7 +190,6 @@ class BackupVerifier:
             OSError,
             TypeError,
             ValueError,
-            sqlite3.Error,
             subprocess.SubprocessError,
         ) as e:
             self.log_check("Database restore test", False, str(e))

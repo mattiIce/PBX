@@ -1,6 +1,5 @@
 """Comprehensive tests for Skills-Based Routing (SBR) module."""
 
-import sqlite3
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -215,7 +214,7 @@ class TestSkillsBasedRouterInitializeSchema:
         mock_db = MagicMock()
         mock_db.enabled = True
         mock_db.db_type = "sqlite"
-        mock_db.execute.side_effect = sqlite3.Error("Schema error")
+        mock_db.execute.side_effect = Exception("Schema error")
         # Should not raise
         router = SkillsBasedRouter(database=mock_db)
         assert router is not None
@@ -267,7 +266,7 @@ class TestSkillsBasedRouterAddSkill:
         mock_db.db_type = "sqlite"
         router = SkillsBasedRouter(database=mock_db)
         mock_db.execute.reset_mock()
-        mock_db.execute.side_effect = sqlite3.Error("Insert error")
+        mock_db.execute.side_effect = Exception("Insert error")
         result = router.add_skill("python", "Python")
         assert result is True  # Skill still added in-memory
 
@@ -330,7 +329,7 @@ class TestSkillsBasedRouterAssignSkill:
         router = SkillsBasedRouter(database=mock_db)
         router.add_skill("python", "Python")
         mock_db.execute.reset_mock()
-        mock_db.execute.side_effect = sqlite3.Error("DB error")
+        mock_db.execute.side_effect = Exception("DB error")
         result = router.assign_skill_to_agent("1001", "python", 7)
         assert result is True  # Still added in-memory
 
@@ -395,7 +394,7 @@ class TestSkillsBasedRouterRemoveSkill:
         router.add_skill("python", "Python")
         router.assign_skill_to_agent("1001", "python", 7)
         mock_db.execute.reset_mock()
-        mock_db.execute.side_effect = sqlite3.Error("Delete error")
+        mock_db.execute.side_effect = Exception("Delete error")
         result = router.remove_skill_from_agent("1001", "python")
         assert result is True  # Still removed in-memory
 
@@ -463,7 +462,7 @@ class TestSkillsBasedRouterSetQueueRequirements:
         router = SkillsBasedRouter(database=mock_db)
         router.add_skill("python", "Python")
         mock_db.execute.reset_mock()
-        mock_db.execute.side_effect = sqlite3.Error("DB error")
+        mock_db.execute.side_effect = Exception("DB error")
         result = router.set_queue_requirements("Q100", [{"skill_id": "python"}])
         assert result is True  # Still set in-memory
 

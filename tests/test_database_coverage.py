@@ -1,7 +1,6 @@
 """Comprehensive tests for pbx.utils.database module."""
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, PropertyMock, call, patch
 
@@ -104,8 +103,8 @@ class TestDatabaseBackendConnect:
         mock_conn = MagicMock()
         with patch("pbx.utils.database.sqlite3") as mock_sqlite:
             mock_sqlite.connect.return_value = mock_conn
-            mock_sqlite.Row = sqlite3.Row
-            mock_sqlite.Error = sqlite3.Error
+            mock_sqlite.Row = MagicMock
+            mock_sqlite.Error = Exception
             result = db.connect()
         assert result is True
         assert db.enabled is True
@@ -116,8 +115,8 @@ class TestDatabaseBackendConnect:
         config = _make_config()
         db = DatabaseBackend(config)
         with patch("pbx.utils.database.sqlite3") as mock_sqlite:
-            mock_sqlite.connect.side_effect = sqlite3.Error("oops")
-            mock_sqlite.Error = sqlite3.Error
+            mock_sqlite.connect.side_effect = Exception("oops")
+            mock_sqlite.Error = Exception
             result = db.connect()
         assert result is False
         assert db.enabled is False
@@ -178,7 +177,7 @@ class TestDatabaseBackendConnect:
         db = DatabaseBackend(config)
         with patch("pbx.utils.database.sqlite3") as mock_sqlite:
             mock_sqlite.connect.side_effect = RuntimeError("unexpected")
-            mock_sqlite.Error = sqlite3.Error
+            mock_sqlite.Error = Exception
             result = db.connect()
         assert result is False
 
@@ -261,7 +260,7 @@ class TestDatabaseBackendExecuteWithContext:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("permission denied for table")
+        mock_cursor.execute.side_effect = Exception("permission denied for table")
         result = db._execute_with_context("CREATE INDEX ...", "index creation", critical=False)
         assert result is True
         db.connection.rollback.assert_called_once()
@@ -271,7 +270,7 @@ class TestDatabaseBackendExecuteWithContext:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("index already exists")
+        mock_cursor.execute.side_effect = Exception("index already exists")
         result = db._execute_with_context("CREATE INDEX ...", "index creation", critical=True)
         assert result is True
 
@@ -280,7 +279,7 @@ class TestDatabaseBackendExecuteWithContext:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("disk I/O error")
+        mock_cursor.execute.side_effect = Exception("disk I/O error")
         result = db._execute_with_context("SELECT 1", "query")
         assert result is False
         db.connection.rollback.assert_called_once()
@@ -289,7 +288,7 @@ class TestDatabaseBackendExecuteWithContext:
         db = _make_enabled_backend("postgresql")
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("disk I/O error")
+        mock_cursor.execute.side_effect = Exception("disk I/O error")
         result = db._execute_with_context("SELECT 1", "query")
         assert result is False
         db.connection.rollback.assert_not_called()
@@ -378,7 +377,7 @@ class TestDatabaseBackendExecuteScript:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.executescript.side_effect = sqlite3.Error("syntax error")
+        mock_cursor.executescript.side_effect = Exception("syntax error")
         result = db.execute_script("INVALID SQL;")
         assert result is False
         db.connection.rollback.assert_called_once()
@@ -388,7 +387,7 @@ class TestDatabaseBackendExecuteScript:
         db._autocommit = True
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.executescript.side_effect = sqlite3.Error("syntax error")
+        mock_cursor.executescript.side_effect = Exception("syntax error")
         result = db.execute_script("INVALID SQL;")
         assert result is False
         db.connection.rollback.assert_not_called()
@@ -452,7 +451,7 @@ class TestDatabaseBackendFetchOne:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("fail")
+        mock_cursor.execute.side_effect = Exception("fail")
         result = db.fetch_one("SELECT * FROM t")
         assert result is None
         db.connection.rollback.assert_called_once()
@@ -463,7 +462,7 @@ class TestDatabaseBackendFetchOne:
         db.connection.cursor.return_value = mock_cursor
         mock_rdc = MagicMock()
         # Make cursor() raise when called with cursor_factory
-        db.connection.cursor.side_effect = sqlite3.Error("fail")
+        db.connection.cursor.side_effect = Exception("fail")
         with patch("pbx.utils.database.RealDictCursor", mock_rdc, create=True):
             result = db.fetch_one("SELECT * FROM t")
         assert result is None
@@ -532,7 +531,7 @@ class TestDatabaseBackendFetchAll:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("fail")
+        mock_cursor.execute.side_effect = Exception("fail")
         result = db.fetch_all("SELECT * FROM t")
         assert result == []
         db.connection.rollback.assert_called_once()
@@ -542,7 +541,7 @@ class TestDatabaseBackendFetchAll:
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
         mock_rdc = MagicMock()
-        db.connection.cursor.side_effect = sqlite3.Error("fail")
+        db.connection.cursor.side_effect = Exception("fail")
         with patch("pbx.utils.database.RealDictCursor", mock_rdc, create=True):
             result = db.fetch_all("SELECT * FROM t")
         assert result == []
@@ -637,7 +636,7 @@ class TestDatabaseBackendMigrateSchema:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("fail")
+        mock_cursor.execute.side_effect = Exception("fail")
         with patch.object(db, "_apply_framework_migrations"):
             # Should not raise
             db._migrate_schema()
@@ -1065,7 +1064,7 @@ class TestRegisteredPhonesDB:
 
     def test_cleanup_incomplete_registrations_exception(self) -> None:
         phones_db, backend = self._make_phones_db()
-        backend.fetch_one = MagicMock(side_effect=sqlite3.Error("fail"))
+        backend.fetch_one = MagicMock(side_effect=Exception("fail"))
         success, count = phones_db.cleanup_incomplete_registrations()
         assert success is False
         assert count == 0
@@ -1807,7 +1806,7 @@ class TestDatabaseBackendEdgeCases:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("unique constraint violation")
+        mock_cursor.execute.side_effect = Exception("unique constraint violation")
         result = db._execute_with_context("INSERT ...", "insert", critical=True)
         assert result is True  # "unique constraint" matches already_exists
         db.connection.rollback.assert_called_once()
@@ -1817,7 +1816,7 @@ class TestDatabaseBackendEdgeCases:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("must be owner of table foo")
+        mock_cursor.execute.side_effect = Exception("must be owner of table foo")
         result = db._execute_with_context("ALTER TABLE ...", "alter", critical=False)
         assert result is True
 
@@ -1826,7 +1825,7 @@ class TestDatabaseBackendEdgeCases:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("access denied for user")
+        mock_cursor.execute.side_effect = Exception("access denied for user")
         result = db._execute_with_context("DROP TABLE ...", "drop", critical=False)
         assert result is True
 
@@ -1835,7 +1834,7 @@ class TestDatabaseBackendEdgeCases:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("insufficient privileges")
+        mock_cursor.execute.side_effect = Exception("insufficient privileges")
         result = db._execute_with_context("CREATE INDEX ...", "index", critical=False)
         assert result is True
 
@@ -1844,7 +1843,7 @@ class TestDatabaseBackendEdgeCases:
         db._autocommit = True
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("duplicate key value")
+        mock_cursor.execute.side_effect = Exception("duplicate key value")
         result = db._execute_with_context("INSERT ...", "insert", critical=True)
         assert result is True
         db.connection.rollback.assert_not_called()
@@ -1948,7 +1947,7 @@ class TestDatabaseBackendEdgeCases:
         db._autocommit = False
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("permission denied for table")
+        mock_cursor.execute.side_effect = Exception("permission denied for table")
         # With critical=True, permission errors are NOT specially handled
         # The code checks `not critical and any(...)` - so critical=True skips this path
         # Then checks already_exists patterns... "permission denied" doesn't match those

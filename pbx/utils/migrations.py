@@ -3,8 +3,6 @@ Database migration system for PBX features
 Manages schema versioning and migrations
 """
 
-import sqlite3
-
 from pbx.utils.logger import get_logger
 
 
@@ -27,25 +25,21 @@ class MigrationManager:
 
     def _build_migration_sql(self, template: str) -> str:
         """
-        Build database-specific SQL from a template
+        Build PostgreSQL SQL from a template
 
-        Converts template placeholders to database-specific syntax.
+        Converts template placeholders to PostgreSQL syntax.
 
         Args:
             template: SQL template with placeholders
 
         Returns:
-            Database-specific SQL string
+            PostgreSQL SQL string
         """
         replacements = {
-            "{SERIAL}": (
-                "SERIAL PRIMARY KEY"
-                if self.db.db_type == "postgresql"
-                else "INTEGER PRIMARY KEY AUTOINCREMENT"
-            ),
-            "{BOOLEAN_TRUE}": "TRUE" if self.db.db_type == "postgresql" else "1",
-            "{BOOLEAN_FALSE}": "FALSE" if self.db.db_type == "postgresql" else "0",
-            "{BYTEA}": "BYTEA" if self.db.db_type == "postgresql" else "BLOB",
+            "{SERIAL}": "SERIAL PRIMARY KEY",
+            "{BOOLEAN_TRUE}": "TRUE",
+            "{BOOLEAN_FALSE}": "FALSE",
+            "{BYTEA}": "BYTEA",
             "{TEXT}": "TEXT",
         }
 
@@ -68,27 +62,18 @@ class MigrationManager:
     def init_migrations_table(self) -> bool:
         """Create migrations tracking table if it doesn't exist"""
         try:
-            if self.db.db_type == "postgresql":
-                sql = """
-                CREATE TABLE IF NOT EXISTS schema_migrations (
-                    version INTEGER PRIMARY KEY,
-                    name VARCHAR(255) NOT NULL,
-                    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-                """
-            else:  # SQLite
-                sql = """
-                CREATE TABLE IF NOT EXISTS schema_migrations (
-                    version INTEGER PRIMARY KEY,
-                    name TEXT NOT NULL,
-                    applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-                )
-                """
+            sql = """
+            CREATE TABLE IF NOT EXISTS schema_migrations (
+                version INTEGER PRIMARY KEY,
+                name VARCHAR(255) NOT NULL,
+                applied_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+            """
 
             self.db.execute(sql)
             self.logger.info("Migrations table initialized")
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to initialize migrations table: {e}")
             return False
 
@@ -104,7 +89,7 @@ class MigrationManager:
             if result and result.get("max_version") is not None:
                 return result["max_version"]
             return 0
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.warning(f"Could not get current version: {e}")
             return 0
 
@@ -145,11 +130,7 @@ class MigrationManager:
 
                 # Record migration
                 self.db.execute(
-                    (
-                        "INSERT INTO schema_migrations (version, name) VALUES (?, ?)"
-                        if self.db.db_type == "sqlite"
-                        else "INSERT INTO schema_migrations (version, name) VALUES (%s, %s)"
-                    ),
+                    "INSERT INTO schema_migrations (version, name) VALUES (%s, %s)",
                     (migration["version"], migration["name"]),
                 )
 
@@ -158,7 +139,7 @@ class MigrationManager:
             self.logger.info("All migrations applied successfully")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Migration failed: {e}")
             return False
 
@@ -201,7 +182,7 @@ class MigrationManager:
                     )
 
             return status
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get migration status: {e}")
             return []
 

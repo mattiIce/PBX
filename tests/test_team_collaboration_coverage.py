@@ -4,7 +4,6 @@ Comprehensive tests for Team Collaboration features (pbx/features/team_collabora
 Covers TeamMessagingEngine and FileShareEngine.
 """
 
-import sqlite3
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -209,7 +208,7 @@ class TestTeamMessagingEngineCreateChannel:
     def test_create_channel_db_error(self) -> None:
         """Test creating a channel when db raises error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("database error")
+        engine.db.execute.side_effect = Exception("database error")
         channel_data = {"channel_name": "test"}
 
         result = engine.create_channel(channel_data)
@@ -289,7 +288,7 @@ class TestTeamMessagingEngineAddMember:
     def test_add_member_db_error(self) -> None:
         """Test adding member with database error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("constraint violation")
+        engine.db.execute.side_effect = Exception("constraint violation")
 
         result = engine.add_member(1, "1001")
 
@@ -399,7 +398,7 @@ class TestTeamMessagingEngineSendMessage:
     def test_send_message_db_error(self) -> None:
         """Test sending message with db error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("db error")
+        engine.db.execute.side_effect = Exception("db error")
         message_data = {
             "channel_id": 1,
             "sender_extension": "1001",
@@ -480,7 +479,7 @@ class TestTeamMessagingEngineGetChannelMessages:
     def test_get_channel_messages_db_error(self) -> None:
         """Test getting channel messages with db error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("db error")
+        engine.db.execute.side_effect = Exception("db error")
 
         result = engine.get_channel_messages(1)
 
@@ -556,7 +555,7 @@ class TestTeamMessagingEngineGetUserChannels:
     def test_get_user_channels_db_error(self) -> None:
         """Test getting user channels with db error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("db error")
+        engine.db.execute.side_effect = Exception("db error")
 
         result = engine.get_user_channels("1001")
 
@@ -625,7 +624,7 @@ class TestTeamMessagingEngineGetAllChannels:
     def test_get_all_channels_db_error(self) -> None:
         """Test getting all channels with db error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("db error")
+        engine.db.execute.side_effect = Exception("db error")
 
         result = engine.get_all_channels()
 
@@ -826,7 +825,7 @@ class TestFileShareEngineUploadFile:
     def test_upload_file_db_error(self) -> None:
         """Test file upload with database error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("db error")
+        engine.db.execute.side_effect = Exception("db error")
         file_data = {
             "file_name": "test.txt",
             "file_path": "/path/to/test.txt",
@@ -917,7 +916,7 @@ class TestFileShareEngineGetSharedFiles:
     def test_get_shared_files_db_error(self) -> None:
         """Test getting shared files with db error"""
         engine = self._make_engine()
-        engine.db.execute.side_effect = sqlite3.Error("db error")
+        engine.db.execute.side_effect = Exception("db error")
 
         result = engine.get_shared_files("1001")
 

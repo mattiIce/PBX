@@ -4,7 +4,6 @@ Ring multiple devices sequentially or simultaneously
 """
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -60,7 +59,7 @@ class FindMeFollowMe:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("FMFM database schema initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error initializing FMFM schema: {e}")
 
     def _load_configs(self) -> None:
@@ -180,7 +179,7 @@ class FindMeFollowMe:
             self.database.connection.commit()
             cursor.close()
             return True
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving FMFM config to database: {e}")
             return False
 
@@ -200,7 +199,7 @@ class FindMeFollowMe:
             self.database.connection.commit()
             cursor.close()
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error deleting FMFM config from database: {e}")
             return False
 

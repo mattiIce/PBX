@@ -13,8 +13,6 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import sqlite3
-
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 
@@ -101,7 +99,7 @@ def check_connection(config: object) -> bool:
                 ORDER BY table_name
                 """
             else:
-                query = "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+                query = "SELECT tablename FROM pg_tables WHERE schemaname='public' ORDER BY tablename"
 
             tables = db.fetch_all(query)
             if tables:
@@ -133,7 +131,7 @@ def check_connection(config: object) -> bool:
         print(f"  Database enabled: {db.enabled}")
         return False
 
-    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+    except (KeyError, TypeError, ValueError) as e:
         print(f"✗ Connection error: {e}")
         import traceback
 

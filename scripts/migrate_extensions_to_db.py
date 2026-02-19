@@ -51,7 +51,7 @@ def main() -> None:
     # Initialize database
     print("Connecting to database...")
     db_config = {
-        "database.type": config.get("database.type", "sqlite"),
+        "database.type": config.get("database.type", "postgresql"),
         "database.host": config.get("database.host", "localhost"),
         "database.port": config.get("database.port", 5432),
         "database.name": config.get("database.name", "pbx_system"),

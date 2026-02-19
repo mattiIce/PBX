@@ -4,7 +4,6 @@ Comprehensive coverage of VideoConferencingEngine
 """
 
 import hashlib
-import sqlite3
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -165,7 +164,7 @@ class TestVideoConferencingCreateRoom:
 
     def test_create_room_db_error(self) -> None:
         """Test room creation with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.create_room({"room_name": "Error Room"})
 
@@ -265,7 +264,7 @@ class TestVideoConferencingJoinRoom:
 
     def test_join_room_db_error(self) -> None:
         """Test joining room with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.join_room(1, {"extension": "1001"})
 
@@ -323,7 +322,7 @@ class TestVideoConferencingLeaveRoom:
 
     def test_leave_room_db_error(self) -> None:
         """Test leaving room with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.leave_room(1, "1001")
 
@@ -404,7 +403,7 @@ class TestVideoConferencingGetRoom:
 
     def test_get_room_db_error(self) -> None:
         """Test getting room with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.get_room(1)
 
@@ -496,7 +495,7 @@ class TestVideoConferencingGetRoomParticipants:
 
     def test_get_participants_db_error(self) -> None:
         """Test getting participants with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.get_room_participants(1)
 
@@ -601,7 +600,7 @@ class TestVideoConferencingUpdateCodecConfig:
 
     def test_update_codec_db_error(self) -> None:
         """Test codec update with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.update_codec_config({"codec_name": "H264"})
 
@@ -677,7 +676,7 @@ class TestVideoConferencingGetAllRooms:
 
     def test_get_all_rooms_db_error(self) -> None:
         """Test getting all rooms with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.get_all_rooms()
 
@@ -719,7 +718,7 @@ class TestVideoConferencingEnableScreenShare:
 
     def test_enable_screen_share_db_error(self) -> None:
         """Test enabling screen sharing with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.enable_screen_share(1, "1001")
 
@@ -770,7 +769,7 @@ class TestVideoConferencingDisableScreenShare:
 
     def test_disable_screen_share_db_error(self) -> None:
         """Test disabling screen sharing with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.disable_screen_share(1, "1001")
 
@@ -1363,7 +1362,7 @@ class TestVideoConferencingSendSignalingMessage:
 
     def test_send_signaling_message_db_error(self) -> None:
         """Test sending signaling message with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine._send_signaling_message(1, "1002", {"type": "offer"})
 
@@ -1474,7 +1473,7 @@ class TestVideoConferencingGetSignalingMessages:
 
     def test_get_signaling_messages_db_error(self) -> None:
         """Test retrieving messages with database error"""
-        self.db.execute.side_effect = sqlite3.Error("DB error")
+        self.db.execute.side_effect = Exception("DB error")
 
         result = self.engine.get_signaling_messages(1, "1001")
 

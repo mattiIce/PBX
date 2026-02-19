@@ -4,7 +4,6 @@ Central coordinator for all PBX functionality
 """
 
 import re
-import sqlite3
 import struct
 import traceback
 import uuid
@@ -169,17 +168,13 @@ class PBXCore:
             alembic_cfg = AlembicConfig("alembic.ini")
 
             # Build database URL from the same config the app uses
-            if self.database.db_type == "postgresql":
-                db_host = self.config.get("database.host", "localhost")
-                db_port = self.config.get("database.port", 5432)
-                db_name = self.config.get("database.name", "pbx")
-                db_user = self.config.get("database.user", "pbx")
-                db_password = self.config.get("database.password", "")
-                db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
-                alembic_cfg.set_main_option("sqlalchemy.url", db_url)
-            elif self.database.db_type == "sqlite":
-                db_path = self.config.get("database.path", "pbx.db")
-                alembic_cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
+            db_host = self.config.get("database.host", "localhost")
+            db_port = self.config.get("database.port", 5432)
+            db_name = self.config.get("database.name", "pbx")
+            db_user = self.config.get("database.user", "pbx")
+            db_password = self.config.get("database.password", "")
+            db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+            alembic_cfg.set_main_option("sqlalchemy.url", db_url)
 
             upgrade(alembic_cfg, "head")
             self._log_startup("Alembic database migrations applied successfully")
@@ -616,26 +611,17 @@ class PBXCore:
 
         try:
             # Query registered_phones table for this extension
-            # Build query with appropriate placeholder for database type
-            if self.database.db_type == "postgresql":
-                query = """
-                SELECT user_agent FROM registered_phones
-                WHERE extension_number = %s
-                ORDER BY last_registered DESC
-                LIMIT 1
-                """
-            else:
-                query = """
-                SELECT user_agent FROM registered_phones
-                WHERE extension_number = ?
-                ORDER BY last_registered DESC
-                LIMIT 1
-                """
+            query = """
+            SELECT user_agent FROM registered_phones
+            WHERE extension_number = %s
+            ORDER BY last_registered DESC
+            LIMIT 1
+            """
 
             result = self.database.fetch_one(query, (extension_number,))
             if result and result.get("user_agent"):
                 return result["user_agent"]
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.debug(f"Error retrieving User-Agent for extension {extension_number}: {e}")
 
         return None

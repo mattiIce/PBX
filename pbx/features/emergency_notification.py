@@ -4,7 +4,6 @@ Provides emergency contact notifications and 911 call alerts
 """
 
 import json
-import sqlite3
 import threading
 import time
 from datetime import UTC, datetime
@@ -168,7 +167,7 @@ class EmergencyNotificationSystem:
 
             self.logger.info(f"Loaded {len(results)} emergency contacts from database")
 
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Failed to load emergency contacts from database: {e}")
 
     def add_emergency_contact(
@@ -287,7 +286,7 @@ class EmergencyNotificationSystem:
 
             self.database.execute(query, params)
 
-        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Failed to save contact to database: {e}")
 
     def remove_emergency_contact(self, contact_id: str) -> bool:
@@ -314,7 +313,7 @@ class EmergencyNotificationSystem:
                             f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"  # nosec B608 - placeholder is safely parameterized
                         )
                         self.database.execute(query, (contact_id,))
-                    except sqlite3.Error as e:
+                    except Exception as e:
                         self.logger.error(f"Failed to remove contact from database: {e}")
 
                 self.logger.info(f"Removed emergency contact: {contact.name}")
@@ -743,7 +742,7 @@ PBX Emergency Notification System
                 ),
             )
 
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Failed to save notification to database: {e}")
 
     def get_notification_history(self, limit: int = 50) -> list[dict]:

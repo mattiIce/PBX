@@ -645,11 +645,9 @@ class TestQoSMonitorStoreMetrics:
 
     @patch("pbx.features.qos_monitoring.get_logger")
     def test_store_metrics_db_error(self, mock_get_logger) -> None:
-        import sqlite3
-
         mock_pbx = MagicMock()
         mock_pbx.db.enabled = True
-        mock_pbx.db.execute.side_effect = sqlite3.Error("DB error")
+        mock_pbx.db.execute.side_effect = Exception("DB error")
         monitor = QoSMonitor(mock_pbx)
         summary = {
             "call_id": "call-001",

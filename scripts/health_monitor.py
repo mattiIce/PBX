@@ -27,7 +27,6 @@ import argparse
 import json
 import os
 import socket
-import sqlite3
 import subprocess
 import sys
 from datetime import UTC, datetime
@@ -222,7 +221,7 @@ class HealthMonitor:
                         "version": version,
                         "size": db_size,
                     }
-                except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+                except (KeyError, TypeError, ValueError) as e:
                     checks["connectivity"] = {
                         "status": "critical",
                         "message": f"Database connection failed: {e}",

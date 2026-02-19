@@ -5,7 +5,6 @@ Provides password management, rate limiting, and security validation
 
 import re
 import secrets
-import sqlite3
 import time
 from datetime import UTC, datetime
 from typing import ClassVar
@@ -620,7 +619,7 @@ class ThreatDetector:
             self.database.execute(blocked_ips_table)
             self.database.execute(threat_events_table)
             self.logger.info("Threat detection database schema initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to initialize threat detection schema: {e}")
 
     def _get_active_blocks_query(self) -> str:
@@ -664,7 +663,7 @@ class ThreatDetector:
                     self.blocked_ips[ip_address] = {"until": blocked_until_ts, "reason": reason}
 
                 self.logger.info(f"Loaded {len(results)} blocked IPs from database")
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to load blocked IPs from database: {e}")
 
     def is_ip_blocked(self, ip_address: str) -> tuple[bool, str | None]:
@@ -963,7 +962,7 @@ class ThreatDetector:
             """
             )
             self.database.execute(insert_query, (ip_address, event_type, severity, details))
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to log threat event: {e}")
 
     def get_threat_summary(self, hours: int = 24) -> dict[str, object]:
@@ -1033,7 +1032,7 @@ class ThreatDetector:
 
             return summary
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get threat summary: {e}")
             return summary
 

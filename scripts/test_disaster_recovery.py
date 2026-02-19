@@ -15,7 +15,6 @@ import argparse
 import json
 import logging
 import shutil
-import sqlite3
 import subprocess
 import sys
 import time
@@ -355,7 +354,7 @@ class DisasterRecoveryTester:
             self.results["errors"].append(f"Database restore verification failed: {stderr}")
             return False
 
-        except (KeyError, OSError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.results["errors"].append(f"Database restore failed: {e!s}")
             return False
 

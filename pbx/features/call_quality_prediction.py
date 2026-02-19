@@ -3,7 +3,6 @@ Call Quality Prediction
 Proactive network issue detection using ML
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
@@ -118,7 +117,7 @@ class CallQualityPrediction:
                 self.db = CallQualityPredictionDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Call quality prediction database layer initialized")
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Call quality prediction system initialized")

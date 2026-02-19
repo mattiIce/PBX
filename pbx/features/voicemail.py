@@ -2,7 +2,6 @@
 Voicemail system
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -199,7 +198,7 @@ class VoicemailBox:
                         f"✗ Failed to save voicemail metadata to database for extension {self.extension_number}"
                     )
                     self.logger.warning(f"  Message ID: {message_id}")
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.error(f"✗ Error saving voicemail to database: {e}")
                 self.logger.error(f"  Message ID: {message_id}")
                 self.logger.error(f"  Extension: {self.extension_number}")
@@ -250,7 +249,7 @@ class VoicemailBox:
                             ),
                         )
                         self.logger.info("✓ Transcription saved to database")
-                    except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+                    except (KeyError, TypeError, ValueError) as e:
                         self.logger.error(f"✗ Error saving transcription to database: {e}")
             else:
                 self.logger.warning(
@@ -364,7 +363,7 @@ class VoicemailBox:
                         self.logger.info(
                             f"✓ Successfully updated voicemail {message_id} as listened in {self.database.db_type} database"
                         )
-                    except sqlite3.Error as e:
+                    except Exception as e:
                         self.logger.error(f"✗ Error updating voicemail in database: {e}")
                 else:
                     self.logger.warning(
@@ -405,7 +404,7 @@ class VoicemailBox:
                         self.logger.info(
                             f"  ✓ Successfully deleted voicemail {message_id} from {self.database.db_type} database"
                         )
-                    except sqlite3.Error as e:
+                    except Exception as e:
                         self.logger.error(f"  ✗ Error deleting voicemail from database: {e}")
                 else:
                     self.logger.warning("  Database not available - only file deleted")
@@ -503,7 +502,7 @@ class VoicemailBox:
                         f"  Total: {len(self.messages)} messages ({unread_count} unread)"
                     )
                 return
-            except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+            except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"✗ Error loading voicemail messages from database: {e}")
                 self.logger.warning("  Falling back to loading from file system")
                 # Fall back to loading from disk

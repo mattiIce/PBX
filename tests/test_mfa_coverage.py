@@ -4,7 +4,6 @@ import base64
 import hashlib
 import hmac
 import secrets
-import sqlite3
 import struct
 import time
 from unittest.mock import MagicMock, patch
@@ -856,7 +855,7 @@ class TestMFAManagerInit:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.execute.side_effect = sqlite3.Error("fail")
+        db.execute.side_effect = Exception("fail")
         _m = self._make_manager(database=db)
         # Should not raise
 
@@ -943,7 +942,7 @@ class TestMFAManagerEnrollUser:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         m = self._make_manager(db=db)
         ok, _uri, _codes = m.enroll_user("1001")
         assert ok is False
@@ -1018,7 +1017,7 @@ class TestMFAManagerVerifyEnrollment:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.execute.side_effect = sqlite3.Error("fail")
+        db.execute.side_effect = Exception("fail")
         m = self._make_manager(db=db, enabled=True, secret_bytes=secret)
         with patch("pbx.features.mfa.get_logger"):
             from pbx.features.mfa import TOTPGenerator
@@ -1179,7 +1178,7 @@ class TestMFAManagerIsEnabledForUser:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         m = self._make_manager(enabled=True, db=db)
         assert m.is_enabled_for_user("1001") is False
 
@@ -1232,7 +1231,7 @@ class TestMFAManagerDisableForUser:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.execute.side_effect = sqlite3.Error("fail")
+        db.execute.side_effect = Exception("fail")
         m = self._make_manager(db=db)
         assert m.disable_for_user("1001") is False
 
@@ -1335,7 +1334,7 @@ class TestMFAManagerEnrollYubikey:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         m = self._make_manager(db=db, yubikey=True)
         m.yubikey_verifier = MagicMock()
         m.yubikey_verifier.verify_otp.return_value = (True, None)
@@ -1457,7 +1456,7 @@ class TestMFAManagerEnrollFido2:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.execute.side_effect = sqlite3.Error("fail")
+        db.execute.side_effect = Exception("fail")
         m = self._make_manager(db=db, fido2=True)
         m.fido2_verifier = MagicMock()
         m.fido2_verifier.register_credential.return_value = (True, "cred_id_123")
@@ -1563,7 +1562,7 @@ class TestMFAManagerGetEnrolledMethods:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         m = self._make_manager(db=db)
         methods = m.get_enrolled_methods("1001")
         assert methods["totp"] is False
@@ -1672,7 +1671,7 @@ class TestMFAManagerPrivateMethods:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         m = self._make_manager(db=db, yubikey=True)
         m.yubikey_verifier = MagicMock()
         m.yubikey_verifier.extract_public_id.return_value = "cccccccccccc"
@@ -1731,7 +1730,7 @@ class TestMFAManagerPrivateMethods:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         m = self._make_manager(db=db)
         assert m._get_secret("1001") is None
 
@@ -1865,7 +1864,7 @@ class TestMFAManagerPrivateMethods:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.fetch_all.side_effect = sqlite3.Error("fail")
+        db.fetch_all.side_effect = Exception("fail")
         m = self._make_manager(db=db)
         assert m._verify_backup_code("1001", "ABCD-EFGH") is False
 
@@ -1898,7 +1897,7 @@ class TestMFAManagerPrivateMethods:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.execute.side_effect = sqlite3.Error("fail")
+        db.execute.side_effect = Exception("fail")
         m = self._make_manager(db=db)
         m._update_last_used("1001")  # Should not raise
 

@@ -3,7 +3,6 @@ Skills-Based Routing (SBR) System
 Routes calls to agents based on their skills and expertise
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -206,7 +205,7 @@ class SkillsBasedRouter:
             self.database.execute(agent_skills_table)
             self.database.execute(queue_requirements_table)
             self.logger.info("Skills-based routing database schema initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to initialize skills routing schema: {e}")
 
     def add_skill(self, skill_id: str, name: str, description: str = "") -> bool:
@@ -243,7 +242,7 @@ class SkillsBasedRouter:
                 """
                 )
                 self.database.execute(insert_query, (skill_id, name, description))
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.error(f"Failed to store skill in database: {e}")
 
         self.logger.info(f"Added skill: {name} ({skill_id})")
@@ -293,7 +292,7 @@ class SkillsBasedRouter:
                 """
                 )
                 self.database.execute(insert_query, (agent_extension, skill_id, proficiency))
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.error(f"Failed to store agent skill in database: {e}")
 
         self.logger.info(
@@ -330,7 +329,7 @@ class SkillsBasedRouter:
                     """
                     )
                     self.database.execute(delete_query, (agent_extension, skill_id))
-                except sqlite3.Error as e:
+                except Exception as e:
                     self.logger.error(f"Failed to remove agent skill from database: {e}")
 
             self.logger.info(f"Removed skill {skill_id} from agent {agent_extension}")
@@ -395,7 +394,7 @@ class SkillsBasedRouter:
                         insert_query,
                         (queue_number, req.skill_id, req.min_proficiency, req.required),
                     )
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.error(f"Failed to store queue requirements in database: {e}")
 
         self.logger.info(f"set {len(skill_reqs)} skill requirements for queue {queue_number}")

@@ -321,12 +321,12 @@ class TestCheckDatabase:
         mock_db_module = MagicMock()
         mock_db_module.get_database_connection.return_value = None
 
-        checker = ProductionHealthChecker(config={"database": {"type": "sqlite"}})
+        checker = ProductionHealthChecker(config={"database": {"type": "postgresql"}})
         with patch.dict("sys.modules", {"pbx.utils.database": mock_db_module}):
             is_ok, details = checker._check_database()
             assert is_ok is False
             assert details["status"] == "unavailable"
-            assert details["type"] == "sqlite"
+            assert details["type"] == "postgresql"
 
     def test_database_import_error(self) -> None:
         checker = ProductionHealthChecker()
@@ -354,12 +354,10 @@ class TestCheckDatabase:
                 sys.modules["pbx.utils.database"] = saved
 
     def test_database_query_error(self) -> None:
-        import sqlite3
-
         mock_db_module = MagicMock()
-        mock_db_module.get_database_connection.side_effect = sqlite3.Error("query failed")
+        mock_db_module.get_database_connection.side_effect = Exception("query failed")
 
-        checker = ProductionHealthChecker(config={"database": {"type": "sqlite"}})
+        checker = ProductionHealthChecker(config={"database": {"type": "postgresql"}})
         with patch.dict("sys.modules", {"pbx.utils.database": mock_db_module}):
             is_ok, details = checker._check_database()
             assert is_ok is False
@@ -375,7 +373,7 @@ class TestCheckDatabase:
         with patch.dict("sys.modules", {"pbx.utils.database": mock_db_module}):
             is_ok, details = checker._check_database()
             assert is_ok is True
-            assert details["type"] == "sqlite"
+            assert details["type"] == "postgresql"
 
 
 @pytest.mark.unit

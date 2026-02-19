@@ -1,7 +1,6 @@
 """Comprehensive tests for ConversationalAIDatabase."""
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
@@ -87,9 +86,9 @@ class TestConversationalAIDatabaseCreateTables:
         self.db.logger.info.assert_called_once_with("Conversational AI tables created successfully")
 
     def test_create_tables_error(self) -> None:
-        """Test table creation handles sqlite3.Error."""
+        """Test table creation handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("table error")
+        self.mock_cursor.execute.side_effect = Exception("table error")
         result = self.db.create_tables()
         assert result is False
         self.db.logger.error.assert_called_once()
@@ -135,9 +134,9 @@ class TestConversationalAIDatabaseSaveConversation:
         assert "RETURNING id" in sql
 
     def test_save_conversation_error(self) -> None:
-        """Test saving conversation handles sqlite3.Error."""
+        """Test saving conversation handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         started_at = datetime(2026, 1, 15, 10, 30, 0, tzinfo=UTC)
         result = self.db.save_conversation("call-001", "5551234567", started_at)
         assert result is None
@@ -191,9 +190,9 @@ class TestConversationalAIDatabaseSaveMessage:
         assert params[1] == "assistant"
 
     def test_save_message_error(self) -> None:
-        """Test saving message handles sqlite3.Error."""
+        """Test saving message handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         ts = datetime(2026, 1, 15, 10, 31, 0, tzinfo=UTC)
         self.db.save_message(1, "user", "Hello", ts)
         self.db.logger.error.assert_called_once()
@@ -258,9 +257,9 @@ class TestConversationalAIDatabaseSaveIntent:
         assert params[3] == "{}"
 
     def test_save_intent_error(self) -> None:
-        """Test saving intent handles sqlite3.Error."""
+        """Test saving intent handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         ts = datetime(2026, 1, 15, 10, 32, 0, tzinfo=UTC)
         self.db.save_intent(1, "intent", 0.5, {}, ts)
         self.db.logger.error.assert_called_once()
@@ -347,9 +346,9 @@ class TestConversationalAIDatabaseEndConversation:
         datetime.fromisoformat(ended_at)
 
     def test_end_conversation_error(self) -> None:
-        """Test ending conversation handles sqlite3.Error."""
+        """Test ending conversation handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("update error")
+        self.mock_cursor.execute.side_effect = Exception("update error")
         self.db.end_conversation("call-001", "intent", 5)
         self.db.logger.error.assert_called_once()
 
@@ -435,9 +434,9 @@ class TestConversationalAIDatabaseGetConversationHistory:
         assert result[0]["msg_count"] == 5
 
     def test_get_conversation_history_error(self) -> None:
-        """Test getting conversation history handles sqlite3.Error."""
+        """Test getting conversation history handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         result = self.db.get_conversation_history()
         assert result == []
         self.db.logger.error.assert_called_once()
@@ -499,9 +498,9 @@ class TestConversationalAIDatabaseGetIntentStatistics:
         assert result == {}
 
     def test_get_intent_statistics_error(self) -> None:
-        """Test getting intent statistics handles sqlite3.Error."""
+        """Test getting intent statistics handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         result = self.db.get_intent_statistics()
         assert result == {}
         self.db.logger.error.assert_called_once()

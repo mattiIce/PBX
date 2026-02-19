@@ -3,7 +3,6 @@ Real-Time Speech Analytics Framework
 Provides live transcription, sentiment analysis, and call summarization
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -63,7 +62,7 @@ class SpeechAnalyticsEngine:
                     "alert_threshold": float(row[7]) if row[7] else 0.7,
                 }
             return None
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get speech analytics config: {e}")
             return None
 
@@ -137,7 +136,7 @@ class SpeechAnalyticsEngine:
             self.logger.info(f"Updated speech analytics config for {extension}")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update speech analytics config: {e}")
             return False
 
@@ -459,7 +458,7 @@ class SpeechAnalyticsEngine:
                 (call_id, transcript, summary, sentiment["sentiment"], sentiment["score"]),
             )
             return True
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error storing summary: {e}")
             return False
 
@@ -503,7 +502,7 @@ class SpeechAnalyticsEngine:
 
             return configs
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get all speech analytics configs: {e}")
             return []
 
@@ -538,7 +537,7 @@ class SpeechAnalyticsEngine:
                     "created_at": row[6],
                 }
             return None
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error getting call summary: {e}")
             return None
 

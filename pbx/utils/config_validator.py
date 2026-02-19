@@ -86,42 +86,38 @@ class ConfigValidator:
     def _validate_database_config(self) -> None:
         """Validate database configuration."""
         db_config = self.config.get("database", {})
-        db_type = db_config.get("type", "sqlite")
+        db_type = db_config.get("type", "postgresql")
 
-        if db_type == "postgresql":
-            # Check required PostgreSQL settings
-            required = ["host", "port", "name", "user", "password"]
-            for field in required:
-                value = db_config.get(field, "")
+        if db_type != "postgresql":
+            self.errors.append(
+                f"Unsupported database type: '{db_type}'. PostgreSQL is required."
+            )
+            return
 
-                # Check for environment variable placeholders
-                if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
-                    env_var = value[2:-1]  # Extract var name
-                    if not environ.get(env_var):
-                        self.errors.append(
-                            f"Database config '{field}' references undefined "
-                            f"environment variable: {env_var}"
-                        )
-                elif not value:
-                    self.errors.append(f"PostgreSQL config missing required field: {field}")
+        # Check required PostgreSQL settings
+        required = ["host", "port", "name", "user", "password"]
+        for field in required:
+            value = db_config.get(field, "")
 
-            # Warn about default passwords
-            password = db_config.get("password", "")
-            if password and not password.startswith("${"):
-                # Password is hardcoded, not from env var
-                self.warnings.append(
-                    "Database password is hardcoded in config. "
-                    "Recommend using environment variables."
-                )
+            # Check for environment variable placeholders
+            if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+                env_var = value[2:-1]  # Extract var name
+                if not environ.get(env_var):
+                    self.errors.append(
+                        f"Database config '{field}' references undefined "
+                        f"environment variable: {env_var}"
+                    )
+            elif not value:
+                self.errors.append(f"PostgreSQL config missing required field: {field}")
 
-        elif db_type == "sqlite":
-            # Check SQLite path
-            db_path = db_config.get("path", "pbx.db")
-            if not db_path:
-                self.errors.append("SQLite database path is empty")
-
-            # Warn if using SQLite in production
-            self.warnings.append("Using SQLite database. PostgreSQL is recommended for production.")
+        # Warn about default passwords
+        password = db_config.get("password", "")
+        if password and not password.startswith("${"):
+            # Password is hardcoded, not from env var
+            self.warnings.append(
+                "Database password is hardcoded in config. "
+                "Recommend using environment variables."
+            )
 
     def _validate_api_config(self) -> None:
         """Validate API configuration."""

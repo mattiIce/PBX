@@ -4,7 +4,6 @@ SOC 2 type 2 compliance features
 Note: GDPR and PCI DSS engines are commented out as they are not required for US-based operations
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -74,7 +73,7 @@ from pbx.utils.logger import get_logger
 #             )
 #             return True
 #
-#         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+#         except (KeyError, TypeError, ValueError) as e:
 #             self.logger.error(f"Failed to record consent: {e}")
 #             return False
 #
@@ -104,7 +103,7 @@ from pbx.utils.logger import get_logger
 #             self.logger.info(f"Withdrew consent for {extension}: {consent_type}")
 #             return True
 #
-#         except sqlite3.Error as e:
+#         except Exception as e:
 #             self.logger.error(f"Failed to withdraw consent: {e}")
 #             return False
 #
@@ -142,7 +141,7 @@ from pbx.utils.logger import get_logger
 #
 #             return consents
 #
-#         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+#         except (KeyError, TypeError, ValueError) as e:
 #             self.logger.error(f"Failed to get consent status: {e}")
 #             return []
 #
@@ -193,7 +192,7 @@ from pbx.utils.logger import get_logger
 #
 #             return None
 #
-#         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+#         except (KeyError, TypeError, ValueError) as e:
 #             self.logger.error(f"Failed to create data request: {e}")
 #             return None
 #
@@ -222,7 +221,7 @@ from pbx.utils.logger import get_logger
 #             self.logger.info(f"Completed GDPR data request {request_id}")
 #             return True
 #
-#         except sqlite3.Error as e:
+#         except Exception as e:
 #             self.logger.error(f"Failed to complete data request: {e}")
 #             return False
 #
@@ -256,7 +255,7 @@ from pbx.utils.logger import get_logger
 #
 #             return requests
 #
-#         except sqlite3.Error as e:
+#         except Exception as e:
 #             self.logger.error(f"Failed to get pending requests: {e}")
 #             return []
 #
@@ -467,7 +466,7 @@ class SOC2ComplianceEngine:
             self.logger.info(f"Registered SOC 2 control: {control_data['control_id']}")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to register control: {e}")
             return False
 
@@ -499,7 +498,7 @@ class SOC2ComplianceEngine:
             self.logger.info(f"Updated test results for control {control_id}")
             return True
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to update control test: {e}")
             return False
 
@@ -527,7 +526,7 @@ class SOC2ComplianceEngine:
 
             return controls
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get controls: {e}")
             return []
 
@@ -569,7 +568,7 @@ class SOC2ComplianceEngine:
 
             return controls
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get controls by category: {e}")
             return []
 
@@ -667,7 +666,7 @@ class SOC2ComplianceEngine:
 #
 #             return True
 #
-#         except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+#         except (KeyError, TypeError, ValueError) as e:
 #             self.logger.error(f"Failed to log audit event: {e}")
 #             return False
 #
@@ -717,7 +716,7 @@ class SOC2ComplianceEngine:
 #
 #             return logs
 #
-#         except sqlite3.Error as e:
+#         except Exception as e:
 #             self.logger.error(f"Failed to get audit log: {e}")
 #             return []
 #

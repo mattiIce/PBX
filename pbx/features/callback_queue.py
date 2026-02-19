@@ -3,7 +3,6 @@ Callback Queuing System
 Avoid hold time with scheduled callbacks
 """
 
-import sqlite3
 from datetime import UTC, datetime, timedelta
 from enum import Enum
 from typing import Any
@@ -114,7 +113,7 @@ class CallbackQueue:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("Callback queue database schema initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error initializing callback queue schema: {e}")
 
     def _load_callbacks_from_database(self) -> None:
@@ -275,7 +274,7 @@ class CallbackQueue:
             self.database.connection.commit()
             cursor.close()
             return True
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error saving callback to database: {e}")
             return False
 

@@ -8,7 +8,6 @@ Recording Analytics, Voicemail Drop, DNS SRV, SBC, and Data Residency.
 """
 
 import base64
-import sqlite3
 from datetime import UTC, datetime, timedelta
 
 from flask import Blueprint, Response, request
@@ -662,7 +661,7 @@ def get_integration_activity() -> tuple[Response, int]:
             ]
 
             return send_json({"activities": activities}), 200
-        except sqlite3.Error as e:
+        except Exception as e:
             logger.error(f"Error getting integration activity: {e}")
             # Return empty activities instead of error to prevent UI errors
             return send_json({"activities": []}), 200
@@ -722,13 +721,8 @@ def clear_integration_activity() -> tuple[Response, int]:
         try:
             # Delete entries older than 30 days
             cutoff_date = datetime.now(UTC) - timedelta(days=30)
-            delete_query = (
-                """DELETE FROM integration_activity_log
-                   WHERE created_at < ?"""
-                if pbx_core.database.db_type == "sqlite"
-                else """DELETE FROM integration_activity_log
+            delete_query = """DELETE FROM integration_activity_log
                    WHERE created_at < %s"""
-            )
             pbx_core.database.execute(
                 delete_query,
                 (cutoff_date.isoformat(),),
@@ -740,7 +734,7 @@ def clear_integration_activity() -> tuple[Response, int]:
                     "message": "Old activity log entries cleared successfully",
                 }
             ), 200
-        except sqlite3.Error as e:
+        except Exception as e:
             logger.error(f"Error clearing integration activity: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:

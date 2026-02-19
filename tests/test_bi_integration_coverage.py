@@ -7,7 +7,6 @@ and the get_bi_integration module-level factory function.
 
 import csv
 import json
-import sqlite3
 from datetime import UTC, datetime, timedelta
 from io import StringIO
 from pathlib import Path
@@ -294,7 +293,7 @@ class TestExecuteQuery:
         mock_db.enabled = True
         mock_db.connection = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.OperationalError("no such table")
+        mock_db.connection.cursor.side_effect = Exception("no such table")
 
         with patch("pbx.utils.database.get_database", return_value=mock_db):
             result = bi._execute_query(

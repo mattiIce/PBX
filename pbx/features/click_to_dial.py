@@ -3,7 +3,6 @@ Click-to-Dial Framework
 Web and application-based dialing with WebRTC integration
 """
 
-import sqlite3
 import uuid
 from datetime import UTC, datetime
 from typing import Any
@@ -65,7 +64,7 @@ class ClickToDialEngine:
                 }
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get click-to-dial config: {e}")
             return None
 
@@ -129,7 +128,7 @@ class ClickToDialEngine:
             self.logger.info(f"Updated click-to-dial config for {extension}")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update click-to-dial config: {e}")
             return False
 
@@ -245,7 +244,7 @@ class ClickToDialEngine:
 
             return True
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to update call status: {e}")
             return False
 
@@ -288,7 +287,7 @@ class ClickToDialEngine:
 
             return history
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get call history: {e}")
             return []
 
@@ -315,6 +314,6 @@ class ClickToDialEngine:
 
             return configs
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get all click-to-dial configs: {e}")
             return []

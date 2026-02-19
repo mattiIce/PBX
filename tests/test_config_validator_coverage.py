@@ -273,32 +273,36 @@ class TestValidateDatabaseConfig:
         validator._validate_database_config()
         assert any("hardcoded" in w.lower() for w in validator.warnings)
 
-    def test_sqlite_default(self) -> None:
+    def test_non_postgresql_type_rejected(self) -> None:
+        """Non-postgresql database types should produce an error."""
         config = {"database": {"type": "sqlite", "path": "pbx.db"}}
         validator = ConfigValidator(config)
         validator._validate_database_config()
-        assert any("SQLite" in w for w in validator.warnings)
-        path_errors = [e for e in validator.errors if "SQLite" in e and "empty" in e]
-        assert len(path_errors) == 0
+        assert any("Unsupported database type" in e for e in validator.errors)
+        assert any("PostgreSQL is required" in e for e in validator.errors)
 
-    def test_sqlite_empty_path(self) -> None:
-        config = {"database": {"type": "sqlite", "path": ""}}
+    def test_invalid_db_type_rejected(self) -> None:
+        """Arbitrary invalid database types should produce an error."""
+        config = {"database": {"type": "mysql"}}
         validator = ConfigValidator(config)
         validator._validate_database_config()
-        assert any("SQLite database path is empty" in e for e in validator.errors)
+        assert any("Unsupported database type" in e for e in validator.errors)
 
-    def test_default_db_type_sqlite(self) -> None:
+    def test_default_db_type_postgresql(self) -> None:
+        """Default database type should be postgresql, requiring connection fields."""
         config = {"database": {}}
         validator = ConfigValidator(config)
         validator._validate_database_config()
-        assert any("SQLite" in w for w in validator.warnings)
+        # Default is postgresql, so missing required fields should cause errors
+        assert any("missing required" in e.lower() or "host" in e for e in validator.errors)
 
     def test_no_database_config(self) -> None:
+        """Missing database config should default to postgresql and require fields."""
         config = {}
         validator = ConfigValidator(config)
         validator._validate_database_config()
-        # Should default to sqlite and give warnings
-        assert any("SQLite" in w for w in validator.warnings)
+        # Should default to postgresql and error on missing required fields
+        assert any("missing required" in e.lower() or "host" in e for e in validator.errors)
 
 
 @pytest.mark.unit
@@ -780,7 +784,14 @@ class TestValidateConfigOnStartup:
                 "rtp_port_range_end": 20000,
                 "external_ip": "10.0.0.1",
             },
-            "database": {"type": "sqlite", "path": "pbx.db"},
+            "database": {
+                "type": "postgresql",
+                "host": "localhost",
+                "port": 5432,
+                "name": "pbx",
+                "user": "admin",
+                "password": "hardcoded_pw",
+            },
             "api": {"port": 9000},
             "security": {"fips_mode": False},
             "codecs": {"g711_pcmu": {"enabled": True}},

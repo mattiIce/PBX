@@ -18,7 +18,6 @@ Covers:
 - Database integration paths
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
@@ -179,7 +178,7 @@ class TestConversationalAIInit:
 
         with patch(
             "pbx.features.conversational_ai_db.ConversationalAIDatabase",
-            side_effect=sqlite3.Error("db error"),
+            side_effect=Exception("db error"),
         ):
             ai = ConversationalAI(db_backend=mock_db_backend)
 

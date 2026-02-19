@@ -3,7 +3,6 @@ Conversational AI Assistant
 Auto-responses and smart call handling using AI
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -99,7 +98,7 @@ class ConversationalAI:
                 self.db = ConversationalAIDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Conversational AI database layer initialized")
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Conversational AI assistant initialized")

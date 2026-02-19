@@ -5,7 +5,6 @@ and can be pushed to IP phones
 """
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -132,7 +131,7 @@ class PhoneBook:
                 self.entries[entry["extension"]] = entry
 
             self.logger.info(f"Loaded {len(self.entries)} phone book entries from database")
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading phone book from database: {e}")
 
     def add_entry(
@@ -217,7 +216,7 @@ class PhoneBook:
                 if success:
                     self.logger.info(f"Added/updated phone book entry: {extension} - {name}")
                 return success
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.error(f"Error saving phone book entry: {e}")
                 return False
 

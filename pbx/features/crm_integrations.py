@@ -3,7 +3,6 @@ CRM Integration Framework
 HubSpot and Zendesk integration for marketing and support
 """
 
-import sqlite3
 from typing import Any
 
 from pbx.utils.logger import get_logger
@@ -54,7 +53,7 @@ class HubSpotIntegration:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get HubSpot config: {e}")
             return None
 
@@ -125,7 +124,7 @@ class HubSpotIntegration:
             self.logger.info("Updated HubSpot integration config")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update HubSpot config: {e}")
             return False
 
@@ -329,7 +328,7 @@ class HubSpotIntegration:
                 ),
                 (integration_type, action, status, details),
             )
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
 
@@ -377,7 +376,7 @@ class ZendeskIntegration:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get Zendesk config: {e}")
             return None
 
@@ -447,7 +446,7 @@ class ZendeskIntegration:
             self.logger.info("Updated Zendesk integration config")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update Zendesk config: {e}")
             return False
 
@@ -648,7 +647,7 @@ class ZendeskIntegration:
                 ),
                 (integration_type, action, status, details),
             )
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
     def get_activity_log(self, limit: int = 100) -> list[dict]:
@@ -686,6 +685,6 @@ class ZendeskIntegration:
 
             return activities
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get activity log: {e}")
             return []

@@ -9,7 +9,6 @@ system resource monitoring.
 import logging
 import os
 import socket
-import sqlite3
 import time
 from typing import Any
 
@@ -163,7 +162,7 @@ class ProductionHealthChecker:
             from pbx.utils.database import get_database_connection
 
             db_config = self.config.get("database", {})
-            db_type = db_config.get("type", "sqlite")
+            db_type = db_config.get("type", "postgresql")
 
             # Try to get a connection
             conn = get_database_connection(self.config)
@@ -186,7 +185,7 @@ class ProductionHealthChecker:
         except ImportError:
             # Database module not available, that's ok in some configs
             return True, {"status": "not_configured", "message": "Database module not available"}
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Database check failed: {e}")
             return False, {"status": "error", "error": str(e)}
 
