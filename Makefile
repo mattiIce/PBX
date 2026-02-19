@@ -90,6 +90,21 @@ install-production: ## Full production install (system deps, DB, SSL, systemd, n
 install-production-dry-run: ## Dry-run production install (shows what would be done)
 	$(PYTHON) scripts/install_production.py --dry-run
 
+.PHONY: install-service
+install-service: ## Generate and install systemd service file with correct paths
+	@echo -e "$(COLOR_BOLD)Generating systemd service file...$(COLOR_RESET)"
+	@if [ "$$(id -u)" -eq 0 ]; then \
+		$(PYTHON) scripts/generate_service.py --install; \
+	else \
+		echo -e "$(COLOR_YELLOW)Elevating to root for systemd install...$(COLOR_RESET)"; \
+		sudo $$(which $(PYTHON)) scripts/generate_service.py --install; \
+	fi
+	@echo -e "$(COLOR_GREEN)Service installed. Start with: sudo systemctl start pbx$(COLOR_RESET)"
+
+.PHONY: generate-service
+generate-service: ## Generate systemd service file (preview only, no install)
+	@$(PYTHON) scripts/generate_service.py --dry-run
+
 # =============================================================================
 # Code Quality (Ruff + mypy)
 # =============================================================================

@@ -894,7 +894,7 @@ class ProductionInstaller:
             WorkingDirectory={self.project_root}
             EnvironmentFile={self.project_root}/.env
             Environment="PATH={self.venv_path}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-            ExecStartPre={self.venv_path}/bin/alembic -c {self.project_root}/alembic.ini upgrade head
+            ExecStartPre=/bin/bash {self.project_root}/scripts/pre-start.sh
             ExecStart={self.venv_path}/bin/python {self.project_root}/main.py
             Restart=always
             RestartSec=10
