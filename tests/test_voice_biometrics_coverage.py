@@ -183,16 +183,14 @@ class TestVoiceBiometricsInit:
         assert vb.db is None
 
     @patch("pbx.features.voice_biometrics.get_logger")
-    def test_init_db_sqlite_error(self, mock_get_logger: MagicMock) -> None:
-        import sqlite3
-
+    def test_init_db_error(self, mock_get_logger: MagicMock) -> None:
         from pbx.features.voice_biometrics import VoiceBiometrics
 
         mock_db_backend = MagicMock()
         mock_db_backend.enabled = True
 
         mock_vb_db_module = MagicMock()
-        mock_vb_db_module.VoiceBiometricsDatabase.side_effect = sqlite3.Error("db error")
+        mock_vb_db_module.VoiceBiometricsDatabase.side_effect = Exception("db error")
 
         with patch.dict("sys.modules", {"pbx.features.voice_biometrics_db": mock_vb_db_module}):
             vb = VoiceBiometrics(db_backend=mock_db_backend)

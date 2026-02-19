@@ -211,12 +211,10 @@ class TestCheckDatabaseConnectivity:
             assert result is True
 
     @patch("pbx.features.geographic_redundancy.get_logger")
-    def test_db_check_sqlite_error(self, mock_logger: MagicMock) -> None:
-        import sqlite3
-
+    def test_db_check_database_error(self, mock_logger: MagicMock) -> None:
         gr = GeographicRedundancy()
-        with patch("pbx.utils.database.get_database", side_effect=sqlite3.Error("db err")):
-            # Caught by outer except sqlite3.Error, returns True (assume OK)
+        with patch("pbx.utils.database.get_database", side_effect=Exception("db err")):
+            # Caught by outer except, returns True (assume OK)
             result = gr._check_database_connectivity()
             assert result is True
 

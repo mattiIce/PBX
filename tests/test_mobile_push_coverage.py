@@ -6,7 +6,6 @@ with maximum code path coverage.
 """
 
 import json
-import sqlite3
 import sys
 from datetime import UTC, datetime, timedelta
 from typing import Any
@@ -233,9 +232,9 @@ class TestMobilePushNotifications:
         assert found_serial, "PostgreSQL schema should use SERIAL PRIMARY KEY"
 
     def test_initialize_schema_db_error(self) -> None:
-        """sqlite3.Error during schema init is caught and logged."""
+        """Exception during schema init is caught and logged."""
         db = self._make_database()
-        db.connection.cursor.return_value.execute.side_effect = sqlite3.Error("fail")
+        db.connection.cursor.return_value.execute.side_effect = Exception("fail")
         # Should not raise
         instance = self._build_instance(enabled=False, database=db)
         assert instance is not None
@@ -312,13 +311,13 @@ class TestMobilePushNotifications:
         assert found_one, "SQLite load should use WHERE enabled = 1"
 
     def test_load_devices_db_error(self) -> None:
-        """sqlite3.Error during load is caught and logged."""
+        """Exception during load is caught and logged."""
         db = self._make_database()
         cursor = db.connection.cursor.return_value
 
         def execute_side(sql, *args, **kwargs):
             if "SELECT" in str(sql) and "mobile_devices" in str(sql):
-                raise sqlite3.Error("load fail")
+                raise Exception("load fail")
 
         cursor.execute = MagicMock(side_effect=execute_side)
         instance = self._build_instance(enabled=False, database=db)
@@ -385,13 +384,13 @@ class TestMobilePushNotifications:
         assert "ON CONFLICT" in sql_used
 
     def test_save_device_db_error(self) -> None:
-        """sqlite3.Error during save returns False."""
+        """Exception during save returns False."""
         db = self._make_database()
         instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         cursor.execute.reset_mock()
-        cursor.execute.side_effect = sqlite3.Error("write fail")
+        cursor.execute.side_effect = Exception("write fail")
 
         result = instance._save_device_to_database("u1", "tok", "ios")
         assert result is False
@@ -442,13 +441,13 @@ class TestMobilePushNotifications:
         assert "enabled = FALSE" in sql_used
 
     def test_remove_device_db_error(self) -> None:
-        """sqlite3.Error during remove returns False."""
+        """Exception during remove returns False."""
         db = self._make_database()
         instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         cursor.execute.reset_mock()
-        cursor.execute.side_effect = sqlite3.Error("remove fail")
+        cursor.execute.side_effect = Exception("remove fail")
 
         assert instance._remove_device_from_database("u1", "tok") is False
 
@@ -532,13 +531,13 @@ class TestMobilePushNotifications:
         assert params[4] == json.dumps({"type": "incoming_call"})
 
     def test_save_notification_db_error(self) -> None:
-        """sqlite3.Error during save is caught and logged."""
+        """Exception during save is caught and logged."""
         db = self._make_database()
         instance = self._build_instance(enabled=False, database=db)
 
         cursor = db.connection.cursor.return_value
         cursor.execute.reset_mock()
-        cursor.execute.side_effect = sqlite3.Error("save fail")
+        cursor.execute.side_effect = Exception("save fail")
 
         # Should not raise
         instance._save_notification_to_database("u1", "call", "T", "B", {}, True)

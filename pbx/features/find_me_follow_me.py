@@ -4,7 +4,6 @@ Ring multiple devices sequentially or simultaneously
 """
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -40,13 +39,11 @@ class FindMeFollowMe:
             return
 
         # FMFM configurations table
-        # Boolean default value varies by database type
-        bool_default = "TRUE" if self.database.db_type == "postgresql" else "1"
-        fmfm_table = f"""
+        fmfm_table = """
         CREATE TABLE IF NOT EXISTS fmfm_configs (
             extension VARCHAR(20) PRIMARY KEY,
             mode VARCHAR(20) NOT NULL CHECK (mode IN ('sequential', 'simultaneous')),
-            enabled BOOLEAN DEFAULT {bool_default},
+            enabled BOOLEAN DEFAULT TRUE,
             destinations TEXT NOT NULL,
             no_answer_destination VARCHAR(50),
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -60,7 +57,7 @@ class FindMeFollowMe:
             self.database.connection.commit()
             cursor.close()
             self.logger.debug("FMFM database schema initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error initializing FMFM schema: {e}")
 
     def _load_configs(self) -> None:
@@ -124,8 +121,7 @@ class FindMeFollowMe:
         Save FMFM configuration to database
 
         Note: Uses SQL CURRENT_TIMESTAMP for updated_at field instead of
-        datetime.now(timezone.utc) to ensure compatibility between PostgreSQL and SQLite,
-        and to avoid timezone and datetime adapter issues.
+        datetime.now(timezone.utc) to let the database handle timestamp generation.
         """
         if not self.database or not self.database.enabled:
             return False
@@ -142,45 +138,30 @@ class FindMeFollowMe:
             destinations_json = json.dumps(config.get("destinations", []))
 
             # Upsert (insert or update)
-            if self.database.db_type == "postgresql":
-                cursor.execute(
-                    """
-                    INSERT INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
-                    ON CONFLICT (extension) DO UPDATE SET
-                        mode = EXCLUDED.mode,
-                        enabled = EXCLUDED.enabled,
-                        destinations = EXCLUDED.destinations,
-                        no_answer_destination = EXCLUDED.no_answer_destination,
-                        updated_at = CURRENT_TIMESTAMP
-                """,
-                    (
-                        extension,
-                        config.get("mode", "sequential"),
-                        config.get("enabled", True),
-                        destinations_json,
-                        config.get("no_answer_destination"),
-                    ),
-                )
-            else:
-                cursor.execute(
-                    """
-                    INSERT OR REPLACE INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
-                    VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
-                """,
-                    (
-                        extension,
-                        config.get("mode", "sequential"),
-                        1 if config.get("enabled", True) else 0,
-                        destinations_json,
-                        config.get("no_answer_destination"),
-                    ),
-                )
+            cursor.execute(
+                """
+                INSERT INTO fmfm_configs (extension, mode, enabled, destinations, no_answer_destination, updated_at)
+                VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (extension) DO UPDATE SET
+                    mode = EXCLUDED.mode,
+                    enabled = EXCLUDED.enabled,
+                    destinations = EXCLUDED.destinations,
+                    no_answer_destination = EXCLUDED.no_answer_destination,
+                    updated_at = CURRENT_TIMESTAMP
+            """,
+                (
+                    extension,
+                    config.get("mode", "sequential"),
+                    config.get("enabled", True),
+                    destinations_json,
+                    config.get("no_answer_destination"),
+                ),
+            )
 
             self.database.connection.commit()
             cursor.close()
             return True
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error saving FMFM config to database: {e}")
             return False
 
@@ -192,15 +173,12 @@ class FindMeFollowMe:
         try:
             cursor = self.database.connection.cursor()
 
-            if self.database.db_type == "postgresql":
-                cursor.execute("DELETE FROM fmfm_configs WHERE extension = %s", (extension,))
-            else:
-                cursor.execute("DELETE FROM fmfm_configs WHERE extension = ?", (extension,))
+            cursor.execute("DELETE FROM fmfm_configs WHERE extension = %s", (extension,))
 
             self.database.connection.commit()
             cursor.close()
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error deleting FMFM config from database: {e}")
             return False
 

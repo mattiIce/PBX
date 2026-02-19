@@ -1,6 +1,5 @@
 """Comprehensive tests for pbx/features/voicemail.py"""
 
-import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, PropertyMock, patch
@@ -260,7 +259,7 @@ class TestVoicemailBoxInit:
     def test_init_db_load_error_falls_back_to_disk(self, tmp_storage, mock_database) -> None:
         from pbx.features.voicemail import VoicemailBox
 
-        mock_database.fetch_all.side_effect = sqlite3.Error("db error")
+        mock_database.fetch_all.side_effect = Exception("db error")
 
         ext_dir = Path(tmp_storage) / "1001"
         ext_dir.mkdir(parents=True, exist_ok=True)
@@ -375,7 +374,7 @@ class TestVoicemailBoxSaveMessage:
 
     def test_save_message_database_exception(self, voicemail_box, mock_database) -> None:
         voicemail_box.database = mock_database
-        mock_database.execute.side_effect = sqlite3.Error("db error")
+        mock_database.execute.side_effect = Exception("db error")
         msg_id = voicemail_box.save_message("5551234", b"audio data")
         assert msg_id is not None
 
@@ -418,7 +417,7 @@ class TestVoicemailBoxSaveMessage:
 
     def test_save_message_transcription_db_error(self, voicemail_box, mock_database) -> None:
         voicemail_box.database = mock_database
-        mock_database.execute.side_effect = [True, sqlite3.Error("db error")]
+        mock_database.execute.side_effect = [True, Exception("db error")]
         transcription_svc = MagicMock()
         transcription_svc.transcribe.return_value = {
             "success": True,
@@ -602,7 +601,7 @@ class TestVoicemailBoxMarkListened:
     def test_mark_listened_db_error(self, voicemail_box, mock_database) -> None:
         voicemail_box.database = mock_database
         msg_id = voicemail_box.save_message("caller1", b"data1")
-        mock_database.execute.side_effect = sqlite3.Error("db error")
+        mock_database.execute.side_effect = Exception("db error")
         voicemail_box.mark_listened(msg_id)
         assert voicemail_box.messages[0]["listened"] is True  # still marked in memory
 
@@ -644,7 +643,7 @@ class TestVoicemailBoxDeleteMessage:
     def test_delete_message_db_error(self, voicemail_box, mock_database) -> None:
         voicemail_box.database = mock_database
         msg_id = voicemail_box.save_message("caller1", b"data1")
-        mock_database.execute.side_effect = [True, sqlite3.Error("db error")]
+        mock_database.execute.side_effect = [True, Exception("db error")]
         result = voicemail_box.delete_message(msg_id)
         assert result is True  # still succeeds in memory
 

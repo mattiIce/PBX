@@ -1,7 +1,6 @@
 """Comprehensive tests for CallQualityPredictionDatabase."""
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
@@ -79,9 +78,9 @@ class TestCallQualityPredictionDatabaseCreateTables:
         assert any("JSONB" in sql for sql in sql_texts)
 
     def test_create_tables_error(self) -> None:
-        """Test table creation handles sqlite3.Error."""
+        """Test table creation handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("table error")
+        self.mock_cursor.execute.side_effect = Exception("table error")
         result = self.db.create_tables()
         assert result is False
         self.db.logger.error.assert_called_once()
@@ -158,9 +157,9 @@ class TestCallQualityPredictionDatabaseSaveMetrics:
         assert params[6] is None  # mos_score
 
     def test_save_metrics_sqlite_error(self) -> None:
-        """Test saving metrics handles sqlite3.Error."""
+        """Test saving metrics handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         self.db.save_metrics("call-001", {})
         self.db.logger.error.assert_called_once()
 
@@ -272,9 +271,9 @@ class TestCallQualityPredictionDatabaseSavePrediction:
         assert params[8] == json.dumps([])
 
     def test_save_prediction_sqlite_error(self) -> None:
-        """Test saving prediction handles sqlite3.Error."""
+        """Test saving prediction handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         self.db.save_prediction("call-001", {})
         self.db.logger.error.assert_called_once()
 
@@ -357,9 +356,9 @@ class TestCallQualityPredictionDatabaseSaveAlert:
         assert "%s" in sql
 
     def test_save_alert_error(self) -> None:
-        """Test saving alert handles sqlite3.Error."""
+        """Test saving alert handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         self.db.save_alert("call-001", "type", "sev", "msg", 1.0, 2.0)
         self.db.logger.error.assert_called_once()
 
@@ -419,9 +418,9 @@ class TestCallQualityPredictionDatabaseGetRecentPredictions:
         assert result == []
 
     def test_get_recent_predictions_error(self) -> None:
-        """Test getting recent predictions handles sqlite3.Error."""
+        """Test getting recent predictions handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         result = self.db.get_recent_predictions()
         assert result == []
         self.db.logger.error.assert_called_once()
@@ -463,9 +462,9 @@ class TestCallQualityPredictionDatabaseGetActiveAlerts:
         assert "acknowledged = FALSE" in sql
 
     def test_get_active_alerts_error(self) -> None:
-        """Test getting active alerts handles sqlite3.Error."""
+        """Test getting active alerts handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         result = self.db.get_active_alerts()
         assert result == []
         self.db.logger.error.assert_called_once()
@@ -504,9 +503,9 @@ class TestCallQualityPredictionDatabaseAcknowledgeAlert:
         assert params == (10,)
 
     def test_acknowledge_alert_error(self) -> None:
-        """Test acknowledging alert handles sqlite3.Error."""
+        """Test acknowledging alert handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("update error")
+        self.mock_cursor.execute.side_effect = Exception("update error")
         self.db.acknowledge_alert(1)
         self.db.logger.error.assert_called_once()
 
@@ -566,9 +565,9 @@ class TestCallQualityPredictionDatabaseUpdateDailyTrends:
         assert params[7] == 0  # default alert_count
 
     def test_update_daily_trends_error(self) -> None:
-        """Test updating daily trends handles sqlite3.Error."""
+        """Test updating daily trends handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("insert error")
+        self.mock_cursor.execute.side_effect = Exception("insert error")
         self.db.update_daily_trends("endpoint", {})
         self.db.logger.error.assert_called_once()
 
@@ -688,9 +687,9 @@ class TestCallQualityPredictionDatabaseGetStatistics:
         assert result["avg_mos_24h"] == 0.0
 
     def test_get_statistics_error(self) -> None:
-        """Test statistics handles sqlite3.Error."""
+        """Test statistics handles Exception."""
         self.mock_db.db_type = "sqlite"
-        self.mock_cursor.execute.side_effect = sqlite3.Error("query error")
+        self.mock_cursor.execute.side_effect = Exception("query error")
         result = self.db.get_statistics()
         assert result == {}
         self.db.logger.error.assert_called_once()

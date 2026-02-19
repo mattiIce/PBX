@@ -4,7 +4,6 @@ Multi-region trunk registration for disaster recovery
 """
 
 import socket
-import sqlite3
 import time
 from datetime import UTC, datetime
 from enum import Enum
@@ -193,24 +192,18 @@ class GeographicRedundancy:
             if db and db.enabled and db.connection:
                 # Try a simple query
                 try:
-                    if db.db_type == "postgresql":
-                        cursor = db.connection.cursor()
-                        cursor.execute("SELECT 1")
-                        cursor.fetchone()
-                        cursor.close()
-                        return True
-                    if db.db_type == "sqlite":
-                        cursor = db.connection.cursor()
-                        cursor.execute("SELECT 1")
-                        cursor.fetchone()
-                        return True
-                except sqlite3.Error as e:
+                    cursor = db.connection.cursor()
+                    cursor.execute("SELECT 1")
+                    cursor.fetchone()
+                    cursor.close()
+                    return True
+                except Exception as e:
                     self.logger.warning(f"Database query failed: {e}")
                     return False
             else:
                 # Database not configured, assume OK
                 return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.warning(f"Database check failed: {e}")
             # If database module not available, assume OK
             return True

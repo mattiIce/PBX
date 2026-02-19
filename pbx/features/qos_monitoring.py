@@ -3,7 +3,6 @@ QoS (Quality of Service) Monitoring System
 Tracks call quality metrics including jitter, packet loss, latency, and MOS scores
 """
 
-import sqlite3
 import threading
 import time
 from collections import deque
@@ -553,7 +552,7 @@ class QoSMonitor:
 
                 self.pbx.db.execute(query, params)
                 self.logger.debug(f"Stored QoS metrics for call {summary['call_id']} in database")
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to store QoS metrics in database: {e}")
 
     def update_alert_thresholds(self, thresholds: dict) -> None:

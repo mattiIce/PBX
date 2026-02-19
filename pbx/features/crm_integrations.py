@@ -3,7 +3,6 @@ CRM Integration Framework
 HubSpot and Zendesk integration for marketing and support
 """
 
-import sqlite3
 from typing import Any
 
 from pbx.utils.logger import get_logger
@@ -54,7 +53,7 @@ class HubSpotIntegration:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get HubSpot config: {e}")
             return None
 
@@ -84,17 +83,10 @@ class HubSpotIntegration:
                 ]
 
                 self.db.execute(
-                    (
-                        """UPDATE hubspot_integration
-                       SET enabled = ?, api_key_encrypted = ?, portal_id = ?,
-                           sync_contacts = ?, sync_deals = ?, auto_create_contacts = ?
-                       WHERE id = (SELECT MAX(id) FROM hubspot_integration)"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE hubspot_integration
-                       SET enabled = %s, api_key_encrypted = %s, portal_id = %s,
-                           sync_contacts = %s, sync_deals = %s, auto_create_contacts = %s
-                       WHERE id = (SELECT MAX(id) FROM hubspot_integration)"""
-                    ),
+                    """UPDATE hubspot_integration
+                   SET enabled = %s, api_key_encrypted = %s, portal_id = %s,
+                       sync_contacts = %s, sync_deals = %s, auto_create_contacts = %s
+                   WHERE id = (SELECT MAX(id) FROM hubspot_integration)""",
                     tuple(sql_params),
                 )
             else:
@@ -109,15 +101,9 @@ class HubSpotIntegration:
                 ]
 
                 self.db.execute(
-                    (
-                        """INSERT INTO hubspot_integration
-                       (enabled, api_key_encrypted, portal_id, sync_contacts, sync_deals, auto_create_contacts)
-                       VALUES (?, ?, ?, ?, ?, ?)"""
-                        if self.db.db_type == "sqlite"
-                        else """INSERT INTO hubspot_integration
-                       (enabled, api_key_encrypted, portal_id, sync_contacts, sync_deals, auto_create_contacts)
-                       VALUES (%s, %s, %s, %s, %s, %s)"""
-                    ),
+                    """INSERT INTO hubspot_integration
+                   (enabled, api_key_encrypted, portal_id, sync_contacts, sync_deals, auto_create_contacts)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
                     tuple(sql_params),
                 )
 
@@ -125,7 +111,7 @@ class HubSpotIntegration:
             self.logger.info("Updated HubSpot integration config")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update HubSpot config: {e}")
             return False
 
@@ -318,18 +304,12 @@ class HubSpotIntegration:
         """Log integration activity"""
         try:
             self.db.execute(
-                (
-                    """INSERT INTO integration_activity_log
-                   (integration_type, action, status, details)
-                   VALUES (?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO integration_activity_log
-                   (integration_type, action, status, details)
-                   VALUES (%s, %s, %s, %s)"""
-                ),
+                """INSERT INTO integration_activity_log
+               (integration_type, action, status, details)
+               VALUES (%s, %s, %s, %s)""",
                 (integration_type, action, status, details),
             )
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
 
@@ -377,7 +357,7 @@ class ZendeskIntegration:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get Zendesk config: {e}")
             return None
 
@@ -406,17 +386,10 @@ class ZendeskIntegration:
                 ]
 
                 self.db.execute(
-                    (
-                        """UPDATE zendesk_integration
-                       SET enabled = ?, subdomain = ?, api_token_encrypted = ?,
-                           email = ?, auto_create_tickets = ?, default_priority = ?
-                       WHERE id = (SELECT MAX(id) FROM zendesk_integration)"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE zendesk_integration
-                       SET enabled = %s, subdomain = %s, api_token_encrypted = %s,
-                           email = %s, auto_create_tickets = %s, default_priority = %s
-                       WHERE id = (SELECT MAX(id) FROM zendesk_integration)"""
-                    ),
+                    """UPDATE zendesk_integration
+                   SET enabled = %s, subdomain = %s, api_token_encrypted = %s,
+                       email = %s, auto_create_tickets = %s, default_priority = %s
+                   WHERE id = (SELECT MAX(id) FROM zendesk_integration)""",
                     tuple(sql_params),
                 )
             else:
@@ -431,15 +404,9 @@ class ZendeskIntegration:
                 ]
 
                 self.db.execute(
-                    (
-                        """INSERT INTO zendesk_integration
-                       (enabled, subdomain, api_token_encrypted, email, auto_create_tickets, default_priority)
-                       VALUES (?, ?, ?, ?, ?, ?)"""
-                        if self.db.db_type == "sqlite"
-                        else """INSERT INTO zendesk_integration
-                       (enabled, subdomain, api_token_encrypted, email, auto_create_tickets, default_priority)
-                       VALUES (%s, %s, %s, %s, %s, %s)"""
-                    ),
+                    """INSERT INTO zendesk_integration
+                   (enabled, subdomain, api_token_encrypted, email, auto_create_tickets, default_priority)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
                     tuple(sql_params),
                 )
 
@@ -447,7 +414,7 @@ class ZendeskIntegration:
             self.logger.info("Updated Zendesk integration config")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update Zendesk config: {e}")
             return False
 
@@ -637,18 +604,12 @@ class ZendeskIntegration:
         """Log integration activity"""
         try:
             self.db.execute(
-                (
-                    """INSERT INTO integration_activity_log
-                   (integration_type, action, status, details)
-                   VALUES (?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO integration_activity_log
-                   (integration_type, action, status, details)
-                   VALUES (%s, %s, %s, %s)"""
-                ),
+                """INSERT INTO integration_activity_log
+               (integration_type, action, status, details)
+               VALUES (%s, %s, %s, %s)""",
                 (integration_type, action, status, details),
             )
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to log integration activity: {e}")
 
     def get_activity_log(self, limit: int = 100) -> list[dict]:
@@ -663,13 +624,8 @@ class ZendeskIntegration:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, integration_type, action, status, details, created_at FROM integration_activity_log
-                   ORDER BY created_at DESC LIMIT ?"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, integration_type, action, status, details, created_at FROM integration_activity_log
-                   ORDER BY created_at DESC LIMIT %s"""
-                ),
+                """SELECT id, integration_type, action, status, details, created_at FROM integration_activity_log
+               ORDER BY created_at DESC LIMIT %s""",
                 (limit,),
             )
 
@@ -686,6 +642,6 @@ class ZendeskIntegration:
 
             return activities
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get activity log: {e}")
             return []

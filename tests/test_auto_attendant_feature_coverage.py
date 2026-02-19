@@ -1,6 +1,5 @@
 """Comprehensive tests for pbx/features/auto_attendant.py"""
 
-import sqlite3
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -818,68 +817,68 @@ class TestAutoAttendantDbErrors:
     """Tests for database error handling in various methods."""
 
     def test_save_config_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             # Should not raise
             auto_attendant._save_config_to_db()
 
     def test_load_config_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant._load_config_from_db()
             assert result is None
 
     def test_load_menu_options_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             auto_attendant.menu_options = {}
             auto_attendant._load_menu_options_from_db()
             assert auto_attendant.menu_options == {}
 
     def test_save_menu_option_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             auto_attendant._save_menu_option_to_db("1", "1001", "Sales")
 
     def test_delete_menu_option_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             auto_attendant._delete_menu_option_from_db("1")
 
     def test_create_menu_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.create_menu("new", "main", "New Menu")
             assert result is False
 
     def test_update_menu_db_error(self, auto_attendant) -> None:
         auto_attendant.create_menu("support", "main", "Support")
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.update_menu("support", menu_name="Updated")
             assert result is False
 
     def test_delete_menu_db_error(self, auto_attendant) -> None:
         auto_attendant.create_menu("support", "main", "Support")
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.delete_menu("support")
             assert result is False
 
     def test_get_menu_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.get_menu("main")
             assert result is None
 
     def test_list_menus_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.list_menus()
             assert result == []
 
     def test_add_menu_item_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.add_menu_item("main", "1", "extension", "1001")
             assert result is False
 
     def test_remove_menu_item_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.remove_menu_item("main", "1")
             assert result is False
 
     def test_get_menu_items_db_error(self, auto_attendant) -> None:
-        with patch("sqlite3.connect", side_effect=sqlite3.Error("db error")):
+        with patch("sqlite3.connect", side_effect=Exception("db error")):
             result = auto_attendant.get_menu_items("main")
             assert result == []
 

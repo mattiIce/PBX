@@ -1,6 +1,5 @@
 """Comprehensive tests for pbx/features/crm_integrations.py module."""
 
-import sqlite3
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -92,7 +91,7 @@ class TestHubSpotGetConfig:
     @patch("pbx.features.crm_integrations.get_logger")
     def test_get_config_sqlite_error(self, mock_logger: MagicMock) -> None:
         db = _make_db()
-        db.execute.side_effect = sqlite3.Error("db error")
+        db.execute.side_effect = Exception("db error")
         integration = HubSpotIntegration(db, {})
         config = integration.get_config()
         assert config is None
@@ -175,7 +174,7 @@ class TestHubSpotUpdateConfig:
     @patch("pbx.features.crm_integrations.get_logger")
     def test_update_config_error(self, mock_logger: MagicMock) -> None:
         db = _make_db()
-        db.execute.side_effect = sqlite3.Error("db error")
+        db.execute.side_effect = Exception("db error")
         integration = HubSpotIntegration(db, {})
         result = integration.update_config({"enabled": True})
         assert result is False
@@ -585,7 +584,7 @@ class TestHubSpotLogActivity:
     @patch("pbx.features.crm_integrations.get_logger")
     def test_log_activity_db_error(self, mock_logger: MagicMock) -> None:
         db = _make_db()
-        db.execute.side_effect = sqlite3.Error("log error")
+        db.execute.side_effect = Exception("log error")
         integration = HubSpotIntegration(db, {})
         # Should not raise
         integration._log_activity("hubspot", "action", "error", "details")
@@ -664,7 +663,7 @@ class TestZendeskGetConfig:
     @patch("pbx.features.crm_integrations.get_logger")
     def test_get_config_sqlite_error(self, mock_logger: MagicMock) -> None:
         db = _make_db()
-        db.execute.side_effect = sqlite3.Error("db error")
+        db.execute.side_effect = Exception("db error")
         integration = ZendeskIntegration(db, {})
         config = integration.get_config()
         assert config is None
@@ -737,7 +736,7 @@ class TestZendeskUpdateConfig:
     @patch("pbx.features.crm_integrations.get_logger")
     def test_update_config_error(self, mock_logger: MagicMock) -> None:
         db = _make_db()
-        db.execute.side_effect = sqlite3.Error("db error")
+        db.execute.side_effect = Exception("db error")
         integration = ZendeskIntegration(db, {})
         result = integration.update_config({"enabled": True})
         assert result is False
@@ -1214,7 +1213,7 @@ class TestZendeskLogActivity:
     @patch("pbx.features.crm_integrations.get_logger")
     def test_log_activity_db_error(self, mock_logger: MagicMock) -> None:
         db = _make_db()
-        db.execute.side_effect = sqlite3.Error("log error")
+        db.execute.side_effect = Exception("log error")
         integration = ZendeskIntegration(db, {})
         # Should not raise
         integration._log_activity("zendesk", "action", "error", "details")
@@ -1273,7 +1272,7 @@ class TestZendeskGetActivityLog:
     @patch("pbx.features.crm_integrations.get_logger")
     def test_get_activity_log_db_error(self, mock_logger: MagicMock) -> None:
         db = _make_db()
-        db.execute.side_effect = sqlite3.Error("db error")
+        db.execute.side_effect = Exception("db error")
         integration = ZendeskIntegration(db, {})
         activities = integration.get_activity_log()
         assert activities == []

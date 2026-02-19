@@ -18,8 +18,6 @@ from pathlib import Path
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-import sqlite3
-
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend
 from pbx.utils.logger import get_logger
@@ -51,7 +49,7 @@ def migrate_passwords(config_file: str = "config.yml", dry_run: bool = False) ->
 
     # Get security configuration
     db_config = {
-        "database.type": config.get("database.type", "sqlite"),
+        "database.type": config.get("database.type", "postgresql"),
         "database.host": config.get("database.host", "localhost"),
         "database.port": config.get("database.port", 5432),
         "database.name": config.get("database.name", "pbx_system"),
@@ -207,7 +205,7 @@ def migrate_passwords(config_file: str = "config.yml", dry_run: bool = False) ->
                 print("  ✗ Failed to store in database")
                 errors += 1
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             print(f"  ✗ Error: {e}")
             errors += 1
 

@@ -122,18 +122,16 @@ api:
       ca_cert: certs/ca.crt                 # Path to CA certificate (optional)
     # For development/testing, generate self-signed cert with: python scripts/generate_ssl_cert.py
 database:
-  type: postgresql  # Use sqlite by default (change to postgresql for production)
-  # PostgreSQL configuration (used when type: postgresql)
+  type: postgresql
+  # PostgreSQL configuration
   # Environment variables are used with defaults - customize in .env file if needed
   # Defaults: DB_HOST=localhost, DB_PORT=5432, DB_NAME=pbx_system, DB_USER=pbx_user
-  # DB_PASSWORD has no default and MUST be set in .env file for PostgreSQL
+  # DB_PASSWORD has no default and MUST be set in .env file
   host: ${DB_HOST}  # Database host (default: localhost)
   port: ${DB_PORT}  # Database port (default: 5432)
   name: ${DB_NAME}  # Database name (default: pbx_system)
   user: ${DB_USER}  # Database user (default: pbx_user)
-  password: ${DB_PASSWORD}  # Database password (REQUIRED: set in .env file for PostgreSQL)
-  # SQLite configuration (used when type: sqlite)
-  path: pbx.db  # SQLite database file path
+  password: ${DB_PASSWORD}  # Database password (REQUIRED: set in .env file)
 dialplan:
   internal_pattern: ^1[0-9]{3}$
   conference_pattern: ^2[0-9]{3}$

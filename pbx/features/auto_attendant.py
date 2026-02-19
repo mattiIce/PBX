@@ -4,7 +4,6 @@ Provides automated call answering and menu navigation
 """
 
 import contextlib
-import sqlite3
 import time
 from enum import Enum
 from pathlib import Path
@@ -60,8 +59,8 @@ class AutoAttendant:
         self.config = config
         self.pbx_core = pbx_core
 
-        # Database connection
-        self.db_path = config.get("database", {}).get("path", "pbx.db") if config else "pbx.db"
+        # Database connection via shared DatabaseBackend
+        self.db = pbx_core.database if pbx_core and hasattr(pbx_core, "database") else None
         self._init_database()
 
         # Get auto attendant configuration - try database first, then config file
@@ -113,16 +112,17 @@ class AutoAttendant:
 
     def _init_database(self) -> None:
         """Initialize database tables for auto attendant persistence"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            self.logger.warning("Database not available, auto attendant persistence disabled")
+            return
 
+        try:
             # Create auto_attendant_config table
-            cursor.execute(
+            self.db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS auto_attendant_config (
                     id INTEGER PRIMARY KEY CHECK (id = 1),
-                    enabled BOOLEAN DEFAULT 1,
+                    enabled BOOLEAN DEFAULT TRUE,
                     extension TEXT DEFAULT '0',
                     timeout INTEGER DEFAULT 10,
                     max_retries INTEGER DEFAULT 3,
@@ -133,7 +133,7 @@ class AutoAttendant:
             )
 
             # Create auto_attendant_menu_options table (legacy - kept for backward compatibility)
-            cursor.execute(
+            self.db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS auto_attendant_menu_options (
                     digit TEXT PRIMARY KEY,
@@ -146,7 +146,7 @@ class AutoAttendant:
             )
 
             # Create new hierarchical menu structure tables
-            cursor.execute(
+            self.db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS auto_attendant_menus (
                     menu_id TEXT PRIMARY KEY,
@@ -163,10 +163,10 @@ class AutoAttendant:
             """
             )
 
-            cursor.execute(
+            self.db.execute(
                 """
                 CREATE TABLE IF NOT EXISTS auto_attendant_menu_items (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    id SERIAL PRIMARY KEY,
                     menu_id TEXT NOT NULL,
                     digit TEXT NOT NULL,
                     destination_type TEXT NOT NULL DEFAULT 'extension',
@@ -181,31 +181,36 @@ class AutoAttendant:
             )
 
             # Check if main menu exists, if not create it
-            cursor.execute("SELECT COUNT(*) FROM auto_attendant_menus WHERE menu_id = 'main'")
-            if cursor.fetchone()[0] == 0:
-                cursor.execute(
+            row = self.db.fetch_one(
+                "SELECT COUNT(*) AS cnt FROM auto_attendant_menus WHERE menu_id = %s",
+                ("main",),
+            )
+            if row and row["cnt"] == 0:
+                self.db.execute(
                     """
                     INSERT INTO auto_attendant_menus (menu_id, parent_menu_id, menu_name, prompt_text)
-                    VALUES ('main', NULL, 'Main Menu', 'Main menu options')
-                """
+                    VALUES (%s, NULL, %s, %s)
+                """,
+                    ("main", "Main Menu", "Main menu options"),
                 )
 
             # Migrate legacy menu options to new structure if they exist
-            cursor.execute("SELECT COUNT(*) FROM auto_attendant_menu_options")
-            legacy_count = cursor.fetchone()[0]
+            row = self.db.fetch_one("SELECT COUNT(*) AS cnt FROM auto_attendant_menu_options")
+            legacy_count = row["cnt"] if row else 0
 
             if legacy_count > 0:
                 # Check if already migrated
-                cursor.execute(
-                    "SELECT COUNT(*) FROM auto_attendant_menu_items WHERE menu_id = 'main'"
+                row = self.db.fetch_one(
+                    "SELECT COUNT(*) AS cnt FROM auto_attendant_menu_items WHERE menu_id = %s",
+                    ("main",),
                 )
-                migrated_count = cursor.fetchone()[0]
+                migrated_count = row["cnt"] if row else 0
 
                 if migrated_count == 0:
                     self.logger.info(
                         f"Migrating {legacy_count} legacy menu options to new structure"
                     )
-                    cursor.execute(
+                    self.db.execute(
                         """
                         INSERT INTO auto_attendant_menu_items (menu_id, digit, destination_type, destination_value, description)
                         SELECT 'main', digit, 'extension', destination, description
@@ -214,106 +219,111 @@ class AutoAttendant:
                     )
                     self.logger.info("Legacy menu options migrated successfully")
 
-            conn.commit()
-            conn.close()
             self.logger.info("Auto attendant database tables initialized")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error initializing auto attendant database: {e}")
 
     def _load_config_from_db(self) -> dict | None:
         """Load configuration from database"""
+        if not self.db or not self.db.enabled:
+            return None
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute(
-                "SELECT enabled, extension, timeout, max_retries, audio_path FROM auto_attendant_config WHERE id = 1"
+            row = self.db.fetch_one(
+                "SELECT enabled, extension, timeout, max_retries, audio_path "
+                "FROM auto_attendant_config WHERE id = 1"
             )
-            row = cursor.fetchone()
-            conn.close()
 
             if row:
                 return {
-                    "enabled": bool(row[0]),
-                    "extension": row[1],
-                    "timeout": row[2],
-                    "max_retries": row[3],
-                    "audio_path": row[4],
+                    "enabled": bool(row["enabled"]),
+                    "extension": row["extension"],
+                    "timeout": row["timeout"],
+                    "max_retries": row["max_retries"],
+                    "audio_path": row["audio_path"],
                 }
             return None
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading auto attendant config from database: {e}")
             return None
 
     def _save_config_to_db(self) -> None:
         """Save configuration to database"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            return
 
-            # Use INSERT OR REPLACE to handle both insert and update
-            cursor.execute(
+        try:
+            self.db.execute(
                 """
-                INSERT OR REPLACE INTO auto_attendant_config (id, enabled, extension, timeout, max_retries, audio_path, updated_at)
-                VALUES (1, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO auto_attendant_config (id, enabled, extension, timeout, max_retries, audio_path, updated_at)
+                VALUES (1, %s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (id) DO UPDATE
+                SET enabled = EXCLUDED.enabled,
+                    extension = EXCLUDED.extension,
+                    timeout = EXCLUDED.timeout,
+                    max_retries = EXCLUDED.max_retries,
+                    audio_path = EXCLUDED.audio_path,
+                    updated_at = CURRENT_TIMESTAMP
             """,
                 (self.enabled, self.extension, self.timeout, self.max_retries, self.audio_path),
             )
 
-            conn.commit()
-            conn.close()
             self.logger.info("Auto attendant config saved to database")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error saving auto attendant config to database: {e}")
 
     def _load_menu_options_from_db(self) -> None:
         """Load menu options from database"""
+        if not self.db or not self.db.enabled:
+            return
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute(
+            rows = self.db.fetch_all(
                 "SELECT digit, destination, description FROM auto_attendant_menu_options"
             )
-            rows = cursor.fetchall()
-            conn.close()
 
             for row in rows:
-                self.menu_options[row[0]] = {"destination": row[1], "description": row[2] or ""}
+                self.menu_options[row["digit"]] = {
+                    "destination": row["destination"],
+                    "description": row["description"] or "",
+                }
 
             if rows:
                 self.logger.info(f"Loaded {len(rows)} menu options from database")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error loading menu options from database: {e}")
 
     def _save_menu_option_to_db(self, digit: str, destination: str, description: str = "") -> None:
         """Save a menu option to database"""
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            return
 
-            cursor.execute(
+        try:
+            self.db.execute(
                 """
-                INSERT OR REPLACE INTO auto_attendant_menu_options (digit, destination, description, updated_at)
-                VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                INSERT INTO auto_attendant_menu_options (digit, destination, description, updated_at)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (digit) DO UPDATE
+                SET destination = EXCLUDED.destination,
+                    description = EXCLUDED.description,
+                    updated_at = CURRENT_TIMESTAMP
             """,
                 (digit, destination, description),
             )
 
-            conn.commit()
-            conn.close()
             self.logger.info(f"Menu option {digit} saved to database")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error saving menu option to database: {e}")
 
     def _delete_menu_option_from_db(self, digit: str) -> None:
         """Delete a menu option from database"""
+        if not self.db or not self.db.enabled:
+            return
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute("DELETE FROM auto_attendant_menu_options WHERE digit = ?", (digit,))
-            conn.commit()
-            conn.close()
+            self.db.execute("DELETE FROM auto_attendant_menu_options WHERE digit = %s", (digit,))
             self.logger.info(f"Menu option {digit} deleted from database")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error deleting menu option from database: {e}")
 
     def update_config(self, **kwargs) -> None:
@@ -401,26 +411,26 @@ class AutoAttendant:
                 self.logger.error("Cannot create menu: would create circular reference")
                 return False
 
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+            if not self.db or not self.db.enabled:
+                self.logger.error("Cannot create menu: database not available")
+                return False
 
-            cursor.execute(
+            result = self.db.execute(
                 """
                 INSERT INTO auto_attendant_menus
                 (menu_id, parent_menu_id, menu_name, prompt_text, audio_file)
-                VALUES (?, ?, ?, ?, ?)
+                VALUES (%s, %s, %s, %s, %s)
             """,
                 (menu_id, parent_menu_id, menu_name, prompt_text, audio_file),
             )
 
-            conn.commit()
-            conn.close()
+            if not result:
+                self.logger.error(f"Menu '{menu_id}' already exists or insert failed")
+                return False
+
             self.logger.info(f"Created menu '{menu_id}' under parent '{parent_menu_id}'")
             return True
-        except sqlite3.IntegrityError as e:
-            self.logger.error(f"Menu '{menu_id}' already exists: {e}")
-            return False
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error creating menu: {e}")
             return False
 
@@ -443,21 +453,22 @@ class AutoAttendant:
         Returns:
             bool: True if successful
         """
-        try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+        if not self.db or not self.db.enabled:
+            self.logger.error("Cannot update menu: database not available")
+            return False
 
+        try:
             updates = []
             params = []
 
             if menu_name is not None:
-                updates.append("menu_name = ?")
+                updates.append("menu_name = %s")
                 params.append(menu_name)
             if prompt_text is not None:
-                updates.append("prompt_text = ?")
+                updates.append("prompt_text = %s")
                 params.append(prompt_text)
             if audio_file is not None:
-                updates.append("audio_file = ?")
+                updates.append("audio_file = %s")
                 params.append(audio_file)
 
             if not updates:
@@ -467,16 +478,14 @@ class AutoAttendant:
             params.append(menu_id)
 
             # Field names are hardcoded constants; all values use parameterized placeholders in params list
-            cursor.execute(
-                f"UPDATE auto_attendant_menus SET {', '.join(updates)} WHERE menu_id = ?",  # nosec B608
-                params,
+            self.db.execute(
+                f"UPDATE auto_attendant_menus SET {', '.join(updates)} WHERE menu_id = %s",  # nosec B608
+                tuple(params),
             )
 
-            conn.commit()
-            conn.close()
             self.logger.info(f"Updated menu '{menu_id}'")
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error updating menu: {e}")
             return False
 
@@ -490,39 +499,37 @@ class AutoAttendant:
         Returns:
             bool: True if successful
         """
+        if not self.db or not self.db.enabled:
+            self.logger.error("Cannot delete menu: database not available")
+            return False
+
         try:
             if menu_id == "main":
                 self.logger.error("Cannot delete main menu")
                 return False
 
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-
             # Check if any menu items reference this as a submenu destination
-            cursor.execute(
+            row = self.db.fetch_one(
                 """
-                SELECT COUNT(*) FROM auto_attendant_menu_items
-                WHERE destination_type = 'submenu' AND destination_value = ?
+                SELECT COUNT(*) AS cnt FROM auto_attendant_menu_items
+                WHERE destination_type = 'submenu' AND destination_value = %s
             """,
                 (menu_id,),
             )
-            referencing_count = cursor.fetchone()[0]
+            referencing_count = row["cnt"] if row else 0
 
             if referencing_count > 0:
                 self.logger.error(
                     f"Cannot delete menu '{menu_id}': {referencing_count} items reference it"
                 )
-                conn.close()
                 return False
 
             # Delete menu (CASCADE will delete items)
-            cursor.execute("DELETE FROM auto_attendant_menus WHERE menu_id = ?", (menu_id,))
+            self.db.execute("DELETE FROM auto_attendant_menus WHERE menu_id = %s", (menu_id,))
 
-            conn.commit()
-            conn.close()
             self.logger.info(f"Deleted menu '{menu_id}'")
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error deleting menu: {e}")
             return False
 
@@ -536,34 +543,33 @@ class AutoAttendant:
         Returns:
             dict: Menu details or None
         """
+        if not self.db or not self.db.enabled:
+            return None
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute(
+            row = self.db.fetch_one(
                 """
                 SELECT menu_id, parent_menu_id, menu_name, prompt_text, audio_file,
                        timeout, max_retries, created_at, updated_at
-                FROM auto_attendant_menus WHERE menu_id = ?
+                FROM auto_attendant_menus WHERE menu_id = %s
             """,
                 (menu_id,),
             )
-            row = cursor.fetchone()
-            conn.close()
 
             if row:
                 return {
-                    "menu_id": row[0],
-                    "parent_menu_id": row[1],
-                    "menu_name": row[2],
-                    "prompt_text": row[3],
-                    "audio_file": row[4],
-                    "timeout": row[5],
-                    "max_retries": row[6],
-                    "created_at": row[7],
-                    "updated_at": row[8],
+                    "menu_id": row["menu_id"],
+                    "parent_menu_id": row["parent_menu_id"],
+                    "menu_name": row["menu_name"],
+                    "prompt_text": row["prompt_text"],
+                    "audio_file": row["audio_file"],
+                    "timeout": row["timeout"],
+                    "max_retries": row["max_retries"],
+                    "created_at": row["created_at"],
+                    "updated_at": row["updated_at"],
                 }
             return None
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error getting menu: {e}")
             return None
 
@@ -574,29 +580,28 @@ class AutoAttendant:
         Returns:
             list: list of menu dictionaries
         """
+        if not self.db or not self.db.enabled:
+            return []
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute(
+            rows = self.db.fetch_all(
                 """
                 SELECT menu_id, parent_menu_id, menu_name, prompt_text, audio_file
                 FROM auto_attendant_menus ORDER BY menu_id
             """
             )
-            rows = cursor.fetchall()
-            conn.close()
 
             return [
                 {
-                    "menu_id": row[0],
-                    "parent_menu_id": row[1],
-                    "menu_name": row[2],
-                    "prompt_text": row[3],
-                    "audio_file": row[4],
+                    "menu_id": row["menu_id"],
+                    "parent_menu_id": row["parent_menu_id"],
+                    "menu_name": row["menu_name"],
+                    "prompt_text": row["prompt_text"],
+                    "audio_file": row["audio_file"],
                 }
                 for row in rows
             ]
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error listing menus: {e}")
             return []
 
@@ -633,23 +638,27 @@ class AutoAttendant:
                 self.logger.error(f"Submenu '{destination_value}' does not exist")
                 return False
 
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
+            if not self.db or not self.db.enabled:
+                self.logger.error("Cannot add menu item: database not available")
+                return False
 
-            cursor.execute(
+            self.db.execute(
                 """
-                INSERT OR REPLACE INTO auto_attendant_menu_items
+                INSERT INTO auto_attendant_menu_items
                 (menu_id, digit, destination_type, destination_value, description, updated_at)
-                VALUES (?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+                VALUES (%s, %s, %s, %s, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (menu_id, digit) DO UPDATE
+                SET destination_type = EXCLUDED.destination_type,
+                    destination_value = EXCLUDED.destination_value,
+                    description = EXCLUDED.description,
+                    updated_at = CURRENT_TIMESTAMP
             """,
                 (menu_id, digit, destination_type, destination_value, description),
             )
 
-            conn.commit()
-            conn.close()
             self.logger.info(f"Added menu item {digit} to menu '{menu_id}'")
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error adding menu item: {e}")
             return False
 
@@ -664,18 +673,18 @@ class AutoAttendant:
         Returns:
             bool: True if successful
         """
+        if not self.db or not self.db.enabled:
+            self.logger.error("Cannot remove menu item: database not available")
+            return False
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute(
-                "DELETE FROM auto_attendant_menu_items WHERE menu_id = ? AND digit = ?",
+            self.db.execute(
+                "DELETE FROM auto_attendant_menu_items WHERE menu_id = %s AND digit = %s",
                 (menu_id, digit),
             )
-            conn.commit()
-            conn.close()
             self.logger.info(f"Removed menu item {digit} from menu '{menu_id}'")
             return True
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error removing menu item: {e}")
             return False
 
@@ -689,30 +698,29 @@ class AutoAttendant:
         Returns:
             list: list of menu item dictionaries
         """
+        if not self.db or not self.db.enabled:
+            return []
+
         try:
-            conn = sqlite3.connect(self.db_path)
-            cursor = conn.cursor()
-            cursor.execute(
+            rows = self.db.fetch_all(
                 """
                 SELECT digit, destination_type, destination_value, description
-                FROM auto_attendant_menu_items WHERE menu_id = ?
+                FROM auto_attendant_menu_items WHERE menu_id = %s
                 ORDER BY digit
             """,
                 (menu_id,),
             )
-            rows = cursor.fetchall()
-            conn.close()
 
             return [
                 {
-                    "digit": row[0],
-                    "destination_type": row[1],
-                    "destination_value": row[2],
-                    "description": row[3],
+                    "digit": row["digit"],
+                    "destination_type": row["destination_type"],
+                    "destination_value": row["destination_value"],
+                    "description": row["description"],
                 }
                 for row in rows
             ]
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Error getting menu items: {e}")
             return []
 

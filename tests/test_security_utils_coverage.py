@@ -1,6 +1,5 @@
 """Comprehensive tests for pbx/utils/security.py"""
 
-import sqlite3
 import time
 from unittest.mock import MagicMock, patch
 
@@ -750,7 +749,7 @@ class TestThreatDetector:
         db = MagicMock()
         db.enabled = True
         db.db_type = "sqlite"
-        db.execute.side_effect = sqlite3.Error("schema error")
+        db.execute.side_effect = Exception("schema error")
         # Should not raise - error is caught
         _detector = ThreatDetector(database=db, config={})
         logger.error.assert_called()
@@ -817,7 +816,7 @@ class TestThreatDetector:
         db.enabled = True
         db.db_type = "sqlite"
         # First two calls are execute for schema creation; then fetch_all fails
-        db.fetch_all.side_effect = sqlite3.Error("load error")
+        db.fetch_all.side_effect = Exception("load error")
         _detector = ThreatDetector(database=db, config={})
         logger.error.assert_called()
         assert "Failed to load blocked IPs" in logger.error.call_args[0][0]
@@ -1314,7 +1313,7 @@ class TestThreatDetector:
         db.fetch_all.return_value = []
 
         detector = ThreatDetector(database=db, config={})
-        db.execute.side_effect = sqlite3.Error("insert failed")
+        db.execute.side_effect = Exception("insert failed")
         detector._log_threat_event("1.2.3.4", "test", "low", "details")
         logger.error.assert_called()
         assert "Failed to log threat event" in logger.error.call_args[0][0]
@@ -1437,7 +1436,7 @@ class TestThreatDetector:
         db.db_type = "sqlite"
 
         # First fetch_all succeeds (during __init__), second one fails
-        db.fetch_all.side_effect = [[], sqlite3.Error("query failed")]
+        db.fetch_all.side_effect = [[], Exception("query failed")]
 
         detector = ThreatDetector(database=db, config={})
         summary = detector.get_threat_summary()

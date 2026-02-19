@@ -3,7 +3,6 @@ Real-Time Speech Analytics Framework
 Provides live transcription, sentiment analysis, and call summarization
 """
 
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -43,11 +42,7 @@ class SpeechAnalyticsEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    "SELECT id, extension, enabled, transcription_enabled, sentiment_enabled, summarization_enabled, keywords, alert_threshold, created_at, updated_at FROM speech_analytics_configs WHERE extension = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT id, extension, enabled, transcription_enabled, sentiment_enabled, summarization_enabled, keywords, alert_threshold, created_at, updated_at FROM speech_analytics_configs WHERE extension = %s"
-                ),
+                "SELECT id, extension, enabled, transcription_enabled, sentiment_enabled, summarization_enabled, keywords, alert_threshold, created_at, updated_at FROM speech_analytics_configs WHERE extension = %s",
                 (extension,),
             )
 
@@ -63,7 +58,7 @@ class SpeechAnalyticsEngine:
                     "alert_threshold": float(row[7]) if row[7] else 0.7,
                 }
             return None
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get speech analytics config: {e}")
             return None
 
@@ -85,19 +80,11 @@ class SpeechAnalyticsEngine:
             if existing:
                 # Update
                 self.db.execute(
-                    (
-                        """UPDATE speech_analytics_configs
-                       SET enabled = ?, transcription_enabled = ?,
-                           sentiment_enabled = ?, summarization_enabled = ?,
-                           keywords = ?, alert_threshold = ?, updated_at = ?
-                       WHERE extension = ?"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE speech_analytics_configs
-                       SET enabled = %s, transcription_enabled = %s,
-                           sentiment_enabled = %s, summarization_enabled = %s,
-                           keywords = %s, alert_threshold = %s, updated_at = %s
-                       WHERE extension = %s"""
-                    ),
+                    """UPDATE speech_analytics_configs
+                   SET enabled = %s, transcription_enabled = %s,
+                       sentiment_enabled = %s, summarization_enabled = %s,
+                       keywords = %s, alert_threshold = %s, updated_at = %s
+                   WHERE extension = %s""",
                     (
                         config.get("enabled", True),
                         config.get("transcription_enabled", True),
@@ -112,17 +99,10 @@ class SpeechAnalyticsEngine:
             else:
                 # Insert
                 self.db.execute(
-                    (
-                        """INSERT INTO speech_analytics_configs
-                       (extension, enabled, transcription_enabled, sentiment_enabled,
-                        summarization_enabled, keywords, alert_threshold)
-                       VALUES (?, ?, ?, ?, ?, ?, ?)"""
-                        if self.db.db_type == "sqlite"
-                        else """INSERT INTO speech_analytics_configs
-                       (extension, enabled, transcription_enabled, sentiment_enabled,
-                        summarization_enabled, keywords, alert_threshold)
-                       VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-                    ),
+                    """INSERT INTO speech_analytics_configs
+                   (extension, enabled, transcription_enabled, sentiment_enabled,
+                    summarization_enabled, keywords, alert_threshold)
+                   VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                     (
                         extension,
                         config.get("enabled", True),
@@ -137,7 +117,7 @@ class SpeechAnalyticsEngine:
             self.logger.info(f"Updated speech analytics config for {extension}")
             return True
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to update speech analytics config: {e}")
             return False
 
@@ -447,19 +427,13 @@ class SpeechAnalyticsEngine:
             sentiment = self.analyze_sentiment(transcript)
 
             self.db.execute(
-                (
-                    """INSERT INTO call_summaries
-                   (call_id, transcript, summary, sentiment, sentiment_score)
-                   VALUES (?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO call_summaries
-                   (call_id, transcript, summary, sentiment, sentiment_score)
-                   VALUES (%s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO call_summaries
+               (call_id, transcript, summary, sentiment, sentiment_score)
+               VALUES (%s, %s, %s, %s, %s)""",
                 (call_id, transcript, summary, sentiment["sentiment"], sentiment["score"]),
             )
             return True
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error storing summary: {e}")
             return False
 
@@ -503,7 +477,7 @@ class SpeechAnalyticsEngine:
 
             return configs
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get all speech analytics configs: {e}")
             return []
 
@@ -519,11 +493,7 @@ class SpeechAnalyticsEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    "SELECT * FROM call_summaries WHERE call_id = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT * FROM call_summaries WHERE call_id = %s"
-                ),
+                "SELECT * FROM call_summaries WHERE call_id = %s",
                 (call_id,),
             )
 
@@ -538,7 +508,7 @@ class SpeechAnalyticsEngine:
                     "created_at": row[6],
                 }
             return None
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error getting call summary: {e}")
             return None
 

@@ -12,6 +12,111 @@ if TYPE_CHECKING:
     from pbx.features.least_cost_routing import RateEntry
 
 
+class MockDatabase:
+    """Mock DatabaseBackend for testing"""
+
+    def __init__(self) -> None:
+        self.enabled = True
+        self.tables: dict[str, list[dict]] = {
+            "lcr_rates": [],
+            "lcr_time_rates": [],
+        }
+
+    def execute(self, query: str, params: tuple | None = None) -> bool:
+        query_lower = query.strip().lower()
+        if query_lower.startswith("create table"):
+            return True
+        if query_lower.startswith("delete from lcr_rates"):
+            self.tables["lcr_rates"] = []
+            return True
+        if query_lower.startswith("delete from lcr_time_rates"):
+            self.tables["lcr_time_rates"] = []
+            return True
+        if "into lcr_rates" in query_lower:
+            if params:
+                self.tables["lcr_rates"] = [
+                    r
+                    for r in self.tables["lcr_rates"]
+                    if not (r["trunk_id"] == params[0] and r["pattern"] == params[1])
+                ]
+                self.tables["lcr_rates"].append(
+                    {
+                        "trunk_id": params[0],
+                        "pattern": params[1],
+                        "description": params[2],
+                        "rate_per_minute": params[3],
+                        "connection_fee": params[4],
+                        "minimum_seconds": params[5],
+                        "billing_increment": params[6],
+                    }
+                )
+            return True
+        if "into lcr_time_rates" in query_lower:
+            if params:
+                self.tables["lcr_time_rates"] = [
+                    r for r in self.tables["lcr_time_rates"] if r["name"] != params[0]
+                ]
+                self.tables["lcr_time_rates"].append(
+                    {
+                        "name": params[0],
+                        "start_hour": params[1],
+                        "start_minute": params[2],
+                        "end_hour": params[3],
+                        "end_minute": params[4],
+                        "days_of_week": params[5],
+                        "rate_multiplier": params[6],
+                    }
+                )
+            return True
+        return True
+
+    def fetch_one(self, query: str, params: tuple | None = None) -> dict | None:
+        rows = self.fetch_all(query, params)
+        return rows[0] if rows else None
+
+    def fetch_all(self, query: str, params: tuple | None = None) -> list[dict]:
+        query_lower = query.strip().lower()
+        if "from lcr_rates" in query_lower:
+            return list(self.tables["lcr_rates"])
+        if "from lcr_time_rates" in query_lower:
+            return list(self.tables["lcr_time_rates"])
+        return []
+
+
+class MockDatabaseError(MockDatabase):
+    """Mock DatabaseBackend that raises errors on execute/fetch"""
+
+    def __init__(self, error_on: str = "all") -> None:
+        super().__init__()
+        self.error_on = error_on
+
+    def execute(self, query: str, params: tuple | None = None) -> bool:
+        if self.error_on in ("all", "execute"):
+            raise Exception("DB error")
+        return super().execute(query, params)
+
+    def fetch_all(self, query: str, params: tuple | None = None) -> list[dict]:
+        if self.error_on in ("all", "fetch"):
+            raise KeyError("fetch error")
+        return super().fetch_all(query, params)
+
+
+class MockDatabaseDisabled:
+    """Mock DatabaseBackend that is disabled"""
+
+    def __init__(self) -> None:
+        self.enabled = False
+
+    def execute(self, query: str, params: tuple | None = None) -> bool:
+        return False
+
+    def fetch_one(self, query: str, params: tuple | None = None) -> dict | None:
+        return None
+
+    def fetch_all(self, query: str, params: tuple | None = None) -> list[dict]:
+        return []
+
+
 @pytest.mark.unit
 class TestDialPattern:
     """Tests for DialPattern class."""
@@ -220,26 +325,15 @@ class TestLeastCostRouting:
     """Tests for LeastCostRouting class."""
 
     @pytest.fixture(autouse=True)
-    def _setup(self, tmp_path) -> None:
-        self.db_path = str(tmp_path / "test_lcr.db")
+    def _setup(self) -> None:
+        self.mock_db = MockDatabase()
         self.pbx = MagicMock()
-        self.pbx.config = {"database": {"path": self.db_path}}
+        self.pbx.database = self.mock_db
 
         with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
 
             self.lcr = LeastCostRouting(self.pbx)
-
-    def test_init_creates_database(self) -> None:
-        import sqlite3
-
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
-        tables = [row[0] for row in cursor.fetchall()]
-        conn.close()
-        assert "lcr_rates" in tables
-        assert "lcr_time_rates" in tables
 
     def test_init_defaults(self) -> None:
         assert self.lcr.enabled is True
@@ -248,14 +342,14 @@ class TestLeastCostRouting:
         assert self.lcr.total_routes == 0
         assert self.lcr.cost_savings == 0.0
 
-    def test_init_no_config(self) -> None:
-        """PBX with no config uses default db path."""
+    def test_init_no_database(self) -> None:
+        """PBX with no database attribute uses None."""
         pbx = MagicMock(spec=[])
         with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
 
             lcr = LeastCostRouting(pbx)
-            assert lcr.db_path == "pbx.db"
+            assert lcr.db is None
 
     def test_add_rate(self) -> None:
         result = self.lcr.add_rate("trunk-1", r"^1\d{10}$", 0.05, "US LD")
@@ -464,58 +558,54 @@ class TestLeastCostRouting:
 class TestLeastCostRoutingDatabaseErrors:
     """Tests for database error handling in LeastCostRouting."""
 
-    def test_init_database_error(self, tmp_path) -> None:
+    def test_init_database_error(self) -> None:
         """Database init error is handled gracefully."""
+        mock_db = MockDatabaseError(error_on="execute")
         pbx = MagicMock()
-        pbx.config = {"database": {"path": str(tmp_path / "test.db")}}
+        pbx.database = mock_db
 
-        with (
-            patch("pbx.features.least_cost_routing.get_logger"),
-            patch("pbx.features.least_cost_routing.sqlite3") as mock_sqlite,
-        ):
-            mock_sqlite.connect.side_effect = Exception("DB error")
-            mock_sqlite.Error = Exception
-
+        with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
 
             _lcr = LeastCostRouting(pbx)
             # Should not crash - error is logged
 
-    def test_save_rate_db_error(self, tmp_path) -> None:
+    def test_save_rate_db_error(self) -> None:
         """Save rate handles DB errors."""
+        mock_db = MockDatabase()
         pbx = MagicMock()
-        pbx.config = {"database": {"path": str(tmp_path / "test.db")}}
+        pbx.database = mock_db
 
         with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
 
             lcr = LeastCostRouting(pbx)
 
-            with patch("pbx.features.least_cost_routing.sqlite3") as mock_sqlite:
-                mock_sqlite.connect.side_effect = Exception("save error")
-                mock_sqlite.Error = Exception
-                # Should not raise
-                lcr._save_rate_to_db("trunk-1", r".*", 0.05)
+            # Replace db with error-raising mock for the save call
+            lcr.db = MockDatabaseError(error_on="execute")
+            # Should not raise
+            lcr._save_rate_to_db("trunk-1", r".*", 0.05)
 
-    def test_save_time_rate_db_error(self, tmp_path) -> None:
+    def test_save_time_rate_db_error(self) -> None:
         """Save time rate handles DB errors."""
+        mock_db = MockDatabase()
         pbx = MagicMock()
-        pbx.config = {"database": {"path": str(tmp_path / "test.db")}}
+        pbx.database = mock_db
 
         with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
 
             lcr = LeastCostRouting(pbx)
 
-            with patch("pbx.features.least_cost_routing.sqlite3") as mock_sqlite:
-                mock_sqlite.connect.side_effect = Exception("save error")
-                mock_sqlite.Error = Exception
-                lcr._save_time_rate_to_db("Peak", 9, 0, 17, 0, [0, 1], 1.5)
+            # Replace db with error-raising mock for the save call
+            lcr.db = MockDatabaseError(error_on="execute")
+            lcr._save_time_rate_to_db("Peak", 9, 0, 17, 0, [0, 1], 1.5)
 
-    def test_load_from_database_error(self, tmp_path) -> None:
+    def test_load_from_database_error(self) -> None:
         """Load from DB handles errors."""
+        mock_db = MockDatabase()
         pbx = MagicMock()
-        pbx.config = {"database": {"path": str(tmp_path / "test.db")}}
+        pbx.database = mock_db
 
         with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
@@ -524,38 +614,74 @@ class TestLeastCostRoutingDatabaseErrors:
             lcr.rate_entries = []
             lcr.time_based_rates = []
 
-            with patch("pbx.features.least_cost_routing.sqlite3") as mock_sqlite:
-                mock_sqlite.connect.side_effect = Exception("load error")
-                mock_sqlite.Error = Exception
-                lcr._load_from_database()
+            # Replace db with error-raising mock for the load call
+            lcr.db = MockDatabaseError(error_on="fetch")
+            lcr._load_from_database()
             # Should not crash
 
-    def test_delete_all_rates_db_error(self, tmp_path) -> None:
+    def test_delete_all_rates_db_error(self) -> None:
         """Delete all rates handles DB errors."""
+        mock_db = MockDatabase()
         pbx = MagicMock()
-        pbx.config = {"database": {"path": str(tmp_path / "test.db")}}
+        pbx.database = mock_db
 
         with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
 
             lcr = LeastCostRouting(pbx)
 
-            with patch("pbx.features.least_cost_routing.sqlite3") as mock_sqlite:
-                mock_sqlite.connect.side_effect = Exception("delete error")
-                mock_sqlite.Error = Exception
-                lcr._delete_all_rates_from_db()
+            # Replace db with error-raising mock for the delete call
+            lcr.db = MockDatabaseError(error_on="execute")
+            lcr._delete_all_rates_from_db()
 
-    def test_delete_all_time_rates_db_error(self, tmp_path) -> None:
+    def test_delete_all_time_rates_db_error(self) -> None:
         """Delete all time rates handles DB errors."""
+        mock_db = MockDatabase()
         pbx = MagicMock()
-        pbx.config = {"database": {"path": str(tmp_path / "test.db")}}
+        pbx.database = mock_db
 
         with patch("pbx.features.least_cost_routing.get_logger"):
             from pbx.features.least_cost_routing import LeastCostRouting
 
             lcr = LeastCostRouting(pbx)
 
-            with patch("pbx.features.least_cost_routing.sqlite3") as mock_sqlite:
-                mock_sqlite.connect.side_effect = Exception("delete error")
-                mock_sqlite.Error = Exception
-                lcr._delete_all_time_rates_from_db()
+            # Replace db with error-raising mock for the delete call
+            lcr.db = MockDatabaseError(error_on="execute")
+            lcr._delete_all_time_rates_from_db()
+
+    def test_disabled_database_skips_operations(self) -> None:
+        """When database is disabled, all DB operations are skipped."""
+        mock_db = MockDatabaseDisabled()
+        pbx = MagicMock()
+        pbx.database = mock_db
+
+        with patch("pbx.features.least_cost_routing.get_logger"):
+            from pbx.features.least_cost_routing import LeastCostRouting
+
+            lcr = LeastCostRouting(pbx)
+            # Should initialize without errors, just skip DB operations
+            assert lcr.db is not None
+            assert lcr.db.enabled is False
+
+            # These should all be no-ops, not errors
+            lcr._save_rate_to_db("trunk-1", r".*", 0.05)
+            lcr._save_time_rate_to_db("Peak", 9, 0, 17, 0, [0], 1.5)
+            lcr._delete_all_rates_from_db()
+            lcr._delete_all_time_rates_from_db()
+
+    def test_no_database_attribute(self) -> None:
+        """PBX without database attribute creates LCR with db=None."""
+        pbx = MagicMock(spec=[])
+
+        with patch("pbx.features.least_cost_routing.get_logger"):
+            from pbx.features.least_cost_routing import LeastCostRouting
+
+            lcr = LeastCostRouting(pbx)
+            assert lcr.db is None
+
+            # All DB operations should be safe no-ops
+            lcr._save_rate_to_db("trunk-1", r".*", 0.05)
+            lcr._save_time_rate_to_db("Peak", 9, 0, 17, 0, [0], 1.5)
+            lcr._delete_all_rates_from_db()
+            lcr._delete_all_time_rates_from_db()
+            lcr._load_from_database()

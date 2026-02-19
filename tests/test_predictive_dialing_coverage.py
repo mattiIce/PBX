@@ -254,16 +254,14 @@ class TestPredictiveDialerInit:
         assert dialer.db is None
 
     @patch("pbx.features.predictive_dialing.get_logger")
-    def test_init_with_db_backend_sqlite_error(self, mock_get_logger: MagicMock) -> None:
-        """sqlite3.Error during DB init is caught gracefully."""
-        import sqlite3
-
+    def test_init_with_db_backend_database_error(self, mock_get_logger: MagicMock) -> None:
+        """Exception during DB init is caught gracefully."""
         mock_logger = MagicMock()
         mock_get_logger.return_value = mock_logger
         mock_db_backend = MagicMock()
         mock_db_backend.enabled = True
 
-        mock_db_class = MagicMock(side_effect=sqlite3.Error("DB error"))
+        mock_db_class = MagicMock(side_effect=Exception("DB error"))
 
         with patch.dict(
             "sys.modules",

@@ -8,7 +8,6 @@ meaningful exception types.
 
 import json
 import signal
-import sqlite3
 import sys
 import threading
 import time

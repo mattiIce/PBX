@@ -1,6 +1,5 @@
 """Comprehensive tests for click_to_dial feature module."""
 
-import sqlite3
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
@@ -89,7 +88,7 @@ class TestGetConfig:
     def test_get_config_db_error(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.execute.side_effect = sqlite3.Error("Query error")
+        mock_db.execute.side_effect = Exception("Query error")
         engine = ClickToDialEngine(db_backend=mock_db, config={})
         result = engine.get_config("1001")
         assert result is None
@@ -161,7 +160,7 @@ class TestUpdateConfig:
     def test_update_config_db_error(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.execute.side_effect = sqlite3.Error("Update failed")
+        mock_db.execute.side_effect = Exception("Update failed")
         engine = ClickToDialEngine(db_backend=mock_db, config={})
         result = engine.update_config("1001", {"enabled": True})
         assert result is False
@@ -290,7 +289,7 @@ class TestUpdateCallStatus:
     def test_update_status_db_error(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.execute.side_effect = sqlite3.Error("Update failed")
+        mock_db.execute.side_effect = Exception("Update failed")
         engine = ClickToDialEngine(db_backend=mock_db, config={})
         result = engine.update_call_status("c2d-1001-123", "failed")
         assert result is False
@@ -364,7 +363,7 @@ class TestGetCallHistory:
     def test_get_call_history_db_error(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.execute.side_effect = sqlite3.Error("Query error")
+        mock_db.execute.side_effect = Exception("Query error")
         engine = ClickToDialEngine(db_backend=mock_db, config={})
         history = engine.get_call_history("1001")
         assert history == []
@@ -417,7 +416,7 @@ class TestGetAllConfigs:
     @patch("pbx.features.click_to_dial.get_logger")
     def test_get_all_configs_db_error(self, mock_logger: MagicMock) -> None:
         mock_db = MagicMock()
-        mock_db.execute.side_effect = sqlite3.Error("Error")
+        mock_db.execute.side_effect = Exception("Error")
         engine = ClickToDialEngine(db_backend=mock_db, config={})
         configs = engine.get_all_configs()
         assert configs == []

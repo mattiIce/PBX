@@ -4,7 +4,6 @@ Tests all public methods, SQL paths (PostgreSQL and SQLite), and error handling.
 """
 
 import json
-import sqlite3
 from unittest.mock import MagicMock, PropertyMock, patch
 
 import pytest
@@ -79,7 +78,7 @@ class TestCreateTablesSQLite:
 
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("table creation failed")
+        mock_db.connection.cursor.side_effect = Exception("table creation failed")
 
         db = PredictiveDialingDatabase(mock_db)
         result = db.create_tables()
@@ -152,7 +151,7 @@ class TestCreateTablesPostgreSQL:
         mock_db.db_type = "postgresql"
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("pg error")
+        mock_cursor.execute.side_effect = Exception("pg error")
 
         db = PredictiveDialingDatabase(mock_db)
         result = db.create_tables()
@@ -271,7 +270,7 @@ class TestSaveCampaign:
         mock_db.db_type = "sqlite"
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("insert failed")
+        mock_cursor.execute.side_effect = Exception("insert failed")
 
         db = PredictiveDialingDatabase(mock_db)
         campaign_data = {
@@ -403,7 +402,7 @@ class TestSaveContact:
         mock_db.db_type = "sqlite"
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("insert failed")
+        mock_cursor.execute.side_effect = Exception("insert failed")
 
         db = PredictiveDialingDatabase(mock_db)
         contact_data = {"contact_id": "c1", "phone_number": "555"}
@@ -541,7 +540,7 @@ class TestSaveAttempt:
         mock_db.db_type = "sqlite"
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("insert failed")
+        mock_cursor.execute.side_effect = Exception("insert failed")
 
         db = PredictiveDialingDatabase(mock_db)
         db.save_attempt("camp-1", "contact-1", {"call_id": "c1"})
@@ -556,7 +555,7 @@ class TestSaveAttempt:
 
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("cursor error")
+        mock_db.connection.cursor.side_effect = Exception("cursor error")
 
         db = PredictiveDialingDatabase(mock_db)
         db.save_attempt("camp-1", "contact-1", {})
@@ -643,7 +642,7 @@ class TestUpdateCampaignStats:
         mock_db.db_type = "sqlite"
         mock_cursor = MagicMock()
         mock_db.connection.cursor.return_value = mock_cursor
-        mock_cursor.execute.side_effect = sqlite3.Error("update failed")
+        mock_cursor.execute.side_effect = Exception("update failed")
 
         db = PredictiveDialingDatabase(mock_db)
         db.update_campaign_stats("camp-1", {"total_contacts": 10})
@@ -771,7 +770,7 @@ class TestGetCampaign:
 
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("query failed")
+        mock_db.connection.cursor.side_effect = Exception("query failed")
 
         db = PredictiveDialingDatabase(mock_db)
         result = db.get_campaign("camp-1")
@@ -828,7 +827,7 @@ class TestGetAllCampaigns:
 
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("query failed")
+        mock_db.connection.cursor.side_effect = Exception("query failed")
 
         db = PredictiveDialingDatabase(mock_db)
         result = db.get_all_campaigns()
@@ -929,7 +928,7 @@ class TestGetCampaignContacts:
 
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("query failed")
+        mock_db.connection.cursor.side_effect = Exception("query failed")
 
         db = PredictiveDialingDatabase(mock_db)
         result = db.get_campaign_contacts("camp-1")
@@ -1088,7 +1087,7 @@ class TestGetStatistics:
 
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("stats failed")
+        mock_db.connection.cursor.side_effect = Exception("stats failed")
 
         db = PredictiveDialingDatabase(mock_db)
         result = db.get_statistics()
@@ -1103,7 +1102,7 @@ class TestGetStatistics:
 
         mock_db = MagicMock()
         mock_db.db_type = "sqlite"
-        mock_db.connection.cursor.side_effect = sqlite3.Error("query error")
+        mock_db.connection.cursor.side_effect = Exception("query error")
 
         db = PredictiveDialingDatabase(mock_db)
         result = db.get_statistics(campaign_id="camp-1")

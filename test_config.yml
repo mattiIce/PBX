@@ -9,8 +9,12 @@ conference:
   max_participants: 50
   record_conferences: false
 database:
-  path: test_pbx.db
-  type: sqlite
+  type: postgresql
+  host: localhost
+  port: 5432
+  name: pbx_test
+  user: pbx_user
+  password: testpassword
 dialplan:
   conference_pattern: ^2[0-9]{3}$
   internal_pattern: ^1[0-9]{3}$

@@ -3,7 +3,6 @@
 Tests for Callback Queue System
 """
 
-import sqlite3
 from datetime import UTC, datetime, timedelta
 from unittest.mock import MagicMock, patch
 
@@ -199,7 +198,7 @@ class TestInitializeSchema:
 
         mock_db = MagicMock()
         mock_db.enabled = True
-        mock_db.connection.cursor.side_effect = sqlite3.Error("connection failed")
+        mock_db.connection.cursor.side_effect = Exception("connection failed")
 
         queue = CallbackQueue.__new__(CallbackQueue)
         queue.logger = mock_logger
@@ -594,7 +593,7 @@ class TestSaveCallbackToDatabase:
 
         # Make the save cursor execute fail
         save_cursor = MagicMock()
-        save_cursor.execute.side_effect = sqlite3.Error("write error")
+        save_cursor.execute.side_effect = Exception("write error")
         # First cursor calls are from __init__; subsequent ones from _save
         _call_count = mock_db.connection.cursor.call_count
         mock_db.connection.cursor.return_value = save_cursor

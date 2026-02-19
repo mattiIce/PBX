@@ -8,7 +8,6 @@ Measures and records baseline performance metrics for comparison.
 import argparse
 import json
 import os
-import sqlite3
 import subprocess
 import sys
 import time
@@ -204,7 +203,6 @@ class PerformanceBenchmark:
             OSError,
             TypeError,
             ValueError,
-            sqlite3.Error,
             subprocess.SubprocessError,
         ):
             metrics["connection_time_ms"] = -1

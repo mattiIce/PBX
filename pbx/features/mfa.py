@@ -14,7 +14,6 @@ import hmac
 import json
 import random
 import secrets
-import sqlite3
 import struct
 import time
 import urllib.error
@@ -661,8 +660,7 @@ class MFAManager:
     def _initialize_schema(self) -> None:
         """Initialize MFA database tables"""
         # MFA secrets table
-        mfa_secrets_table = (
-            """
+        mfa_secrets_table = """
         CREATE TABLE IF NOT EXISTS mfa_secrets (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) UNIQUE NOT NULL,
@@ -675,25 +673,9 @@ class MFAManager:
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS mfa_secrets (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension_number VARCHAR(20) UNIQUE NOT NULL,
-            secret_encrypted TEXT NOT NULL,
-            secret_salt VARCHAR(255) NOT NULL,
-            enabled BOOLEAN DEFAULT 0,
-            enrolled_at TIMESTAMP,
-            last_used TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         # MFA backup codes table
-        backup_codes_table = (
-            """
+        backup_codes_table = """
         CREATE TABLE IF NOT EXISTS mfa_backup_codes (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) NOT NULL,
@@ -704,23 +686,9 @@ class MFAManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS mfa_backup_codes (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension_number VARCHAR(20) NOT NULL,
-            code_hash VARCHAR(255) NOT NULL,
-            code_salt VARCHAR(255) NOT NULL,
-            used BOOLEAN DEFAULT 0,
-            used_at TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         # YubiKey registered devices table
-        yubikey_devices_table = (
-            """
+        yubikey_devices_table = """
         CREATE TABLE IF NOT EXISTS mfa_yubikey_devices (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) NOT NULL,
@@ -731,23 +699,9 @@ class MFAManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS mfa_yubikey_devices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension_number VARCHAR(20) NOT NULL,
-            public_id VARCHAR(20) UNIQUE NOT NULL,
-            device_name VARCHAR(100),
-            enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_used TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         # FIDO2 credentials table
-        fido2_credentials_table = (
-            """
+        fido2_credentials_table = """
         CREATE TABLE IF NOT EXISTS mfa_fido2_credentials (
             id SERIAL PRIMARY KEY,
             extension_number VARCHAR(20) NOT NULL,
@@ -759,20 +713,6 @@ class MFAManager:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS mfa_fido2_credentials (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension_number VARCHAR(20) NOT NULL,
-            credential_id VARCHAR(255) UNIQUE NOT NULL,
-            public_key TEXT NOT NULL,
-            device_name VARCHAR(100),
-            enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_used TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         try:
             self.database.execute(mfa_secrets_table)
@@ -780,7 +720,7 @@ class MFAManager:
             self.database.execute(yubikey_devices_table)
             self.database.execute(fido2_credentials_table)
             self.logger.info("MFA database schema initialized (TOTP, YubiKey, FIDO2)")
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to initialize MFA schema: {e}")
 
     def enroll_user(self, extension_number: str) -> tuple[bool, str | None, list | None]:
@@ -828,68 +768,40 @@ class MFAManager:
                 # Check if already enrolled
                 query = (
                     "SELECT id, enabled FROM mfa_secrets WHERE extension_number = %s"
-                    if self.database.db_type == "postgresql"
-                    else "SELECT id, enabled FROM mfa_secrets WHERE extension_number = ?"
                 )
                 result = self.database.fetch_all(query, (extension_number,))
 
                 if result:
                     # Update existing enrollment
-                    update_query = (
-                        """
+                    update_query = """
                     UPDATE mfa_secrets
                     SET secret_encrypted = %s, secret_salt = %s, enabled = %s, updated_at = CURRENT_TIMESTAMP
                     WHERE extension_number = %s
                     """
-                        if self.database.db_type == "postgresql"
-                        else """
-                    UPDATE mfa_secrets
-                    SET secret_encrypted = ?, secret_salt = ?, enabled = ?, updated_at = CURRENT_TIMESTAMP
-                    WHERE extension_number = ?
-                    """
-                    )
                     self.database.execute(
                         update_query, (secret_encrypted, salt, False, extension_number)
                     )
                 else:
                     # Insert new enrollment
-                    insert_query = (
-                        """
+                    insert_query = """
                     INSERT INTO mfa_secrets (extension_number, secret_encrypted, secret_salt, enabled)
                     VALUES (%s, %s, %s, %s)
                     """
-                        if self.database.db_type == "postgresql"
-                        else """
-                    INSERT INTO mfa_secrets (extension_number, secret_encrypted, secret_salt, enabled)
-                    VALUES (?, ?, ?, ?)
-                    """
-                    )
                     self.database.execute(
                         insert_query, (extension_number, secret_encrypted, salt, False)
                     )
 
                 # Delete old backup codes
-                delete_query = (
-                    "DELETE FROM mfa_backup_codes WHERE extension_number = %s"
-                    if self.database.db_type == "postgresql"
-                    else "DELETE FROM mfa_backup_codes WHERE extension_number = ?"
-                )
+                delete_query = "DELETE FROM mfa_backup_codes WHERE extension_number = %s"
                 self.database.execute(delete_query, (extension_number,))
 
                 # Store backup codes
                 for code in backup_codes:
                     code_hash, code_salt = self.encryption.hash_password(code)
-                    insert_query = (
-                        """
+                    insert_query = """
                     INSERT INTO mfa_backup_codes (extension_number, code_hash, code_salt)
                     VALUES (%s, %s, %s)
                     """
-                        if self.database.db_type == "postgresql"
-                        else """
-                    INSERT INTO mfa_backup_codes (extension_number, code_hash, code_salt)
-                    VALUES (?, ?, ?)
-                    """
-                    )
                     self.database.execute(insert_query, (extension_number, code_hash, code_salt))
 
             # Generate provisioning URI
@@ -898,7 +810,7 @@ class MFAManager:
             self.logger.info(f"MFA enrollment initiated for extension {extension_number}")
             return True, provisioning_uri, backup_codes
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"MFA enrollment failed for {extension_number}: {e}")
             return False, None, None
 
@@ -929,19 +841,11 @@ class MFAManager:
             if totp.verify(code):
                 # Activate MFA
                 if self.database and self.database.enabled:
-                    update_query = (
-                        """
+                    update_query = """
                     UPDATE mfa_secrets
                     SET enabled = %s, enrolled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
                     WHERE extension_number = %s
                     """
-                        if self.database.db_type == "postgresql"
-                        else """
-                    UPDATE mfa_secrets
-                    SET enabled = ?, enrolled_at = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
-                    WHERE extension_number = ?
-                    """
-                    )
                     self.database.execute(update_query, (True, extension_number))
 
                 self.logger.info(f"MFA activated for extension {extension_number}")
@@ -949,7 +853,7 @@ class MFAManager:
 
             return False
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"MFA enrollment verification failed for {extension_number}: {e}")
             return False
 
@@ -1011,11 +915,7 @@ class MFAManager:
             return False
 
         try:
-            query = (
-                "SELECT enabled FROM mfa_secrets WHERE extension_number = %s"
-                if self.database.db_type == "postgresql"
-                else "SELECT enabled FROM mfa_secrets WHERE extension_number = ?"
-            )
+            query = "SELECT enabled FROM mfa_secrets WHERE extension_number = %s"
             result = self.database.fetch_all(query, (extension_number,))
 
             if result and len(result) > 0:
@@ -1023,7 +923,7 @@ class MFAManager:
 
             return False
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to check MFA status for {extension_number}: {e}")
             return False
 
@@ -1041,25 +941,17 @@ class MFAManager:
             return False
 
         try:
-            update_query = (
-                """
+            update_query = """
             UPDATE mfa_secrets
             SET enabled = %s, updated_at = CURRENT_TIMESTAMP
             WHERE extension_number = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            UPDATE mfa_secrets
-            SET enabled = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE extension_number = ?
-            """
-            )
             self.database.execute(update_query, (False, extension_number))
 
             self.logger.info(f"MFA disabled for extension {extension_number}")
             return True
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to disable MFA for {extension_number}: {e}")
             return False
 
@@ -1095,40 +987,26 @@ class MFAManager:
                 return False, "Could not extract YubiKey public ID"
 
             # Check if already enrolled
-            query = (
-                """
+            query = """
             SELECT id FROM mfa_yubikey_devices
             WHERE public_id = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            SELECT id FROM mfa_yubikey_devices
-            WHERE public_id = ?
-            """
-            )
             result = self.database.fetch_all(query, (public_id,))
 
             if result:
                 return False, "YubiKey already enrolled"
 
             # Insert device
-            insert_query = (
-                """
+            insert_query = """
             INSERT INTO mfa_yubikey_devices (extension_number, public_id, device_name)
             VALUES (%s, %s, %s)
             """
-                if self.database.db_type == "postgresql"
-                else """
-            INSERT INTO mfa_yubikey_devices (extension_number, public_id, device_name)
-            VALUES (?, ?, ?)
-            """
-            )
             self.database.execute(insert_query, (extension_number, public_id, device_name))
 
             self.logger.info(f"YubiKey {public_id} enrolled for extension {extension_number}")
             return True, None
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"YubiKey enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
@@ -1164,17 +1042,10 @@ class MFAManager:
             public_key = credential_data.get("public_key")
 
             # Store in database
-            insert_query = (
-                """
+            insert_query = """
             INSERT INTO mfa_fido2_credentials (extension_number, credential_id, public_key, device_name)
             VALUES (%s, %s, %s, %s)
             """
-                if self.database.db_type == "postgresql"
-                else """
-            INSERT INTO mfa_fido2_credentials (extension_number, credential_id, public_key, device_name)
-            VALUES (?, ?, ?, ?)
-            """
-            )
             # Convert public_key to JSON string if it's a dict/bytes
             if isinstance(public_key, dict | bytes):
                 public_key = (
@@ -1190,7 +1061,7 @@ class MFAManager:
             self.logger.info(f"FIDO2 credential enrolled for extension {extension_number}")
             return True, None
 
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"FIDO2 enrollment failed for {extension_number}: {e}")
             return False, str(e)
 
@@ -1221,59 +1092,35 @@ class MFAManager:
 
             # Get YubiKeys
             if self.yubikey_enabled:
-                query = (
-                    """
+                query = """
                 SELECT public_id, device_name, enrolled_at
                 FROM mfa_yubikey_devices
                 WHERE extension_number = %s
                 """
-                    if self.database.db_type == "postgresql"
-                    else """
-                SELECT public_id, device_name, enrolled_at
-                FROM mfa_yubikey_devices
-                WHERE extension_number = ?
-                """
-                )
                 methods["yubikeys"] = self.database.fetch_all(query, (extension_number,))
 
             # Get FIDO2 credentials
             if self.fido2_enabled:
-                query = (
-                    """
+                query = """
                 SELECT credential_id, device_name, enrolled_at
                 FROM mfa_fido2_credentials
                 WHERE extension_number = %s
                 """
-                    if self.database.db_type == "postgresql"
-                    else """
-                SELECT credential_id, device_name, enrolled_at
-                FROM mfa_fido2_credentials
-                WHERE extension_number = ?
-                """
-                )
                 methods["fido2"] = self.database.fetch_all(query, (extension_number,))
 
             # Get backup code count
-            query = (
-                """
+            query = """
             SELECT COUNT(*) as count
             FROM mfa_backup_codes
             WHERE extension_number = %s AND used = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            SELECT COUNT(*) as count
-            FROM mfa_backup_codes
-            WHERE extension_number = ? AND used = ?
-            """
-            )
             result = self.database.fetch_one(query, (extension_number, False))
             if result:
                 methods["backup_codes"] = result.get("count", 0)
 
             return methods
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get enrolled methods for {extension_number}: {e}")
             return methods
 
@@ -1292,17 +1139,10 @@ class MFAManager:
                 return False
 
             # Check if device is enrolled for this user
-            query = (
-                """
+            query = """
             SELECT id FROM mfa_yubikey_devices
             WHERE extension_number = %s AND public_id = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            SELECT id FROM mfa_yubikey_devices
-            WHERE extension_number = ? AND public_id = ?
-            """
-            )
             result = self.database.fetch_all(query, (extension_number, public_id))
 
             if not result:
@@ -1315,26 +1155,18 @@ class MFAManager:
             valid, _error = self.yubikey_verifier.verify_otp(otp)
             if valid:
                 # Update last used timestamp
-                update_query = (
-                    """
+                update_query = """
                 UPDATE mfa_yubikey_devices
                 SET last_used = CURRENT_TIMESTAMP
                 WHERE extension_number = %s AND public_id = %s
                 """
-                    if self.database.db_type == "postgresql"
-                    else """
-                UPDATE mfa_yubikey_devices
-                SET last_used = CURRENT_TIMESTAMP
-                WHERE extension_number = ? AND public_id = ?
-                """
-                )
                 self.database.execute(update_query, (extension_number, public_id))
                 self.logger.info(f"YubiKey OTP verified for extension {extension_number}")
                 return True
 
             return False
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"YubiKey verification failed for {extension_number}: {e}")
             return False
 
@@ -1344,19 +1176,11 @@ class MFAManager:
             return None
 
         try:
-            query = (
-                """
+            query = """
             SELECT secret_encrypted, secret_salt
             FROM mfa_secrets
             WHERE extension_number = %s AND enabled = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            SELECT secret_encrypted, secret_salt
-            FROM mfa_secrets
-            WHERE extension_number = ? AND enabled = ?
-            """
-            )
             result = self.database.fetch_all(query, (extension_number, True))
 
             if result and len(result) > 0:
@@ -1385,7 +1209,7 @@ class MFAManager:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get secret for {extension_number}: {e}")
             return None
 
@@ -1395,19 +1219,11 @@ class MFAManager:
             return None
 
         try:
-            query = (
-                """
+            query = """
             SELECT secret_encrypted, secret_salt
             FROM mfa_secrets
             WHERE extension_number = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            SELECT secret_encrypted, secret_salt
-            FROM mfa_secrets
-            WHERE extension_number = ?
-            """
-            )
             result = self.database.fetch_all(query, (extension_number,))
 
             if result and len(result) > 0:
@@ -1436,7 +1252,7 @@ class MFAManager:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get secret for enrollment {extension_number}: {e}")
             import traceback
 
@@ -1450,38 +1266,22 @@ class MFAManager:
 
         try:
             # Get unused backup codes
-            query = (
-                """
+            query = """
             SELECT id, code_hash, code_salt
             FROM mfa_backup_codes
             WHERE extension_number = %s AND used = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            SELECT id, code_hash, code_salt
-            FROM mfa_backup_codes
-            WHERE extension_number = ? AND used = ?
-            """
-            )
             codes = self.database.fetch_all(query, (extension_number, False))
 
             # Check each code
             for row in codes:
                 if self.encryption.verify_password(code, row["code_hash"], row["code_salt"]):
                     # Mark as used
-                    update_query = (
-                        """
+                    update_query = """
                     UPDATE mfa_backup_codes
                     SET used = %s, used_at = CURRENT_TIMESTAMP
                     WHERE id = %s
                     """
-                        if self.database.db_type == "postgresql"
-                        else """
-                    UPDATE mfa_backup_codes
-                    SET used = ?, used_at = CURRENT_TIMESTAMP
-                    WHERE id = ?
-                    """
-                    )
                     self.database.execute(update_query, (True, row["id"]))
 
                     self.logger.info(f"Backup code used for extension {extension_number}")
@@ -1489,7 +1289,7 @@ class MFAManager:
 
             return False
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to verify backup code for {extension_number}: {e}")
             return False
 
@@ -1499,21 +1299,13 @@ class MFAManager:
             return
 
         try:
-            update_query = (
-                """
+            update_query = """
             UPDATE mfa_secrets
             SET last_used = CURRENT_TIMESTAMP
             WHERE extension_number = %s
             """
-                if self.database.db_type == "postgresql"
-                else """
-            UPDATE mfa_secrets
-            SET last_used = CURRENT_TIMESTAMP
-            WHERE extension_number = ?
-            """
-            )
             self.database.execute(update_query, (extension_number,))
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to update last used for {extension_number}: {e}")
 
     def _generate_backup_codes(self, count: int | None = None) -> list:

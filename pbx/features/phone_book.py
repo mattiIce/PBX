@@ -5,7 +5,6 @@ and can be pushed to IP phones
 """
 
 import json
-import sqlite3
 from datetime import UTC, datetime
 from typing import Any
 
@@ -67,8 +66,7 @@ class PhoneBook:
 
         self.logger.info("Creating phone_book table...")
 
-        table_sql = (
-            """
+        table_sql = """
         CREATE TABLE IF NOT EXISTS phone_book (
             id SERIAL PRIMARY KEY,
             extension VARCHAR(20) UNIQUE NOT NULL,
@@ -82,22 +80,6 @@ class PhoneBook:
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS phone_book (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            extension VARCHAR(20) UNIQUE NOT NULL,
-            name VARCHAR(255) NOT NULL,
-            department VARCHAR(100),
-            email VARCHAR(255),
-            mobile VARCHAR(50),
-            office_location VARCHAR(100),
-            ad_synced BOOLEAN DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         success = self.database._execute_with_context(table_sql, "phone_book table creation")
 
@@ -132,7 +114,7 @@ class PhoneBook:
                 self.entries[entry["extension"]] = entry
 
             self.logger.info(f"Loaded {len(self.entries)} phone book entries from database")
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Error loading phone book from database: {e}")
 
     def add_entry(
@@ -180,8 +162,7 @@ class PhoneBook:
         # Update database if available
         if self.database and self.database.enabled:
             try:
-                query = (
-                    """
+                query = """
                 INSERT INTO phone_book (extension, name, department, email, mobile,
                                        office_location, ad_synced, updated_at)
                 VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
@@ -194,13 +175,6 @@ class PhoneBook:
                     ad_synced = EXCLUDED.ad_synced,
                     updated_at = EXCLUDED.updated_at
                 """
-                    if self.database.db_type == "postgresql"
-                    else """
-                INSERT OR REPLACE INTO phone_book (extension, name, department, email,
-                                                   mobile, office_location, ad_synced, updated_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """
-                )
 
                 params = (
                     extension,
@@ -217,7 +191,7 @@ class PhoneBook:
                 if success:
                     self.logger.info(f"Added/updated phone book entry: {extension} - {name}")
                 return success
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.error(f"Error saving phone book entry: {e}")
                 return False
 
@@ -242,11 +216,7 @@ class PhoneBook:
 
         # Remove from database
         if self.database and self.database.enabled:
-            query = (
-                "DELETE FROM phone_book WHERE extension = %s"
-                if self.database.db_type == "postgresql"
-                else "DELETE FROM phone_book WHERE extension = ?"
-            )
+            query = "DELETE FROM phone_book WHERE extension = %s"
             return self.database.execute(query, (extension,))
 
         return True

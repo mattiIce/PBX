@@ -3,7 +3,6 @@ Team Messaging Framework
 Built-in chat platform for team collaboration
 """
 
-import sqlite3
 from typing import Any
 
 from pbx.utils.logger import get_logger
@@ -42,15 +41,9 @@ class TeamMessagingEngine:
         """
         try:
             self.db.execute(
-                (
-                    """INSERT INTO team_messaging_channels
-                   (channel_name, description, is_private, created_by)
-                   VALUES (?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO team_messaging_channels
-                   (channel_name, description, is_private, created_by)
-                   VALUES (%s, %s, %s, %s)"""
-                ),
+                """INSERT INTO team_messaging_channels
+               (channel_name, description, is_private, created_by)
+               VALUES (%s, %s, %s, %s)""",
                 (
                     channel_data["channel_name"],
                     channel_data.get("description", ""),
@@ -61,11 +54,7 @@ class TeamMessagingEngine:
 
             # Get created channel ID
             result = self.db.execute(
-                (
-                    "SELECT id FROM team_messaging_channels WHERE channel_name = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT id FROM team_messaging_channels WHERE channel_name = %s"
-                ),
+                "SELECT id FROM team_messaging_channels WHERE channel_name = %s",
                 (channel_data["channel_name"],),
             )
 
@@ -81,7 +70,7 @@ class TeamMessagingEngine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to create messaging channel: {e}")
             return None
 
@@ -99,22 +88,16 @@ class TeamMessagingEngine:
         """
         try:
             self.db.execute(
-                (
-                    """INSERT INTO team_messaging_members
-                   (channel_id, extension, role)
-                   VALUES (?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO team_messaging_members
-                   (channel_id, extension, role)
-                   VALUES (%s, %s, %s)"""
-                ),
+                """INSERT INTO team_messaging_members
+               (channel_id, extension, role)
+               VALUES (%s, %s, %s)""",
                 (channel_id, extension, role),
             )
 
             self.logger.info(f"Added {extension} to channel {channel_id}")
             return True
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to add member to channel: {e}")
             return False
 
@@ -130,15 +113,9 @@ class TeamMessagingEngine:
         """
         try:
             self.db.execute(
-                (
-                    """INSERT INTO team_messages
-                   (channel_id, sender_extension, message_text, message_type)
-                   VALUES (?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO team_messages
-                   (channel_id, sender_extension, message_text, message_type)
-                   VALUES (%s, %s, %s, %s)"""
-                ),
+                """INSERT INTO team_messages
+               (channel_id, sender_extension, message_text, message_type)
+               VALUES (%s, %s, %s, %s)""",
                 (
                     message_data["channel_id"],
                     message_data["sender_extension"],
@@ -149,15 +126,9 @@ class TeamMessagingEngine:
 
             # Get message ID
             result = self.db.execute(
-                (
-                    """SELECT id FROM team_messages
-                   WHERE channel_id = ? AND sender_extension = ?
-                   ORDER BY sent_at DESC LIMIT 1"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id FROM team_messages
-                   WHERE channel_id = %s AND sender_extension = %s
-                   ORDER BY sent_at DESC LIMIT 1"""
-                ),
+                """SELECT id FROM team_messages
+               WHERE channel_id = %s AND sender_extension = %s
+               ORDER BY sent_at DESC LIMIT 1""",
                 (message_data["channel_id"], message_data["sender_extension"]),
             )
 
@@ -166,7 +137,7 @@ class TeamMessagingEngine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to send message: {e}")
             return None
 
@@ -183,15 +154,9 @@ class TeamMessagingEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, channel_id, sender_extension, message_text, message_type, sent_at FROM team_messages
-                   WHERE channel_id = ?
-                   ORDER BY sent_at DESC LIMIT ?"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, channel_id, sender_extension, message_text, message_type, sent_at FROM team_messages
-                   WHERE channel_id = %s
-                   ORDER BY sent_at DESC LIMIT %s"""
-                ),
+                """SELECT id, channel_id, sender_extension, message_text, message_type, sent_at FROM team_messages
+               WHERE channel_id = %s
+               ORDER BY sent_at DESC LIMIT %s""",
                 (channel_id, limit),
             )
 
@@ -208,7 +173,7 @@ class TeamMessagingEngine:
 
             return list(reversed(messages))  # Return in chronological order
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get channel messages: {e}")
             return []
 
@@ -224,17 +189,10 @@ class TeamMessagingEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT c.id, c.channel_name, c.description, c.is_private, c.created_by, c.created_at FROM team_messaging_channels c
-                   INNER JOIN team_messaging_members m ON c.id = m.channel_id
-                   WHERE m.extension = ?
-                   ORDER BY c.channel_name"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT c.id, c.channel_name, c.description, c.is_private, c.created_by, c.created_at FROM team_messaging_channels c
-                   INNER JOIN team_messaging_members m ON c.id = m.channel_id
-                   WHERE m.extension = %s
-                   ORDER BY c.channel_name"""
-                ),
+                """SELECT c.id, c.channel_name, c.description, c.is_private, c.created_by, c.created_at FROM team_messaging_channels c
+               INNER JOIN team_messaging_members m ON c.id = m.channel_id
+               WHERE m.extension = %s
+               ORDER BY c.channel_name""",
                 (extension,),
             )
 
@@ -252,7 +210,7 @@ class TeamMessagingEngine:
 
             return channels
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to get user channels: {e}")
             return []
 
@@ -265,13 +223,8 @@ class TeamMessagingEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, channel_name, description, is_private, created_by, created_at FROM team_messaging_channels
-                   WHERE is_private = ? ORDER BY channel_name"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, channel_name, description, is_private, created_by, created_at FROM team_messaging_channels
-                   WHERE is_private = %s ORDER BY channel_name"""
-                ),
+                """SELECT id, channel_name, description, is_private, created_by, created_at FROM team_messaging_channels
+               WHERE is_private = %s ORDER BY channel_name""",
                 (False,),
             )
 
@@ -288,7 +241,7 @@ class TeamMessagingEngine:
 
             return channels
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get all channels: {e}")
             return []
 
@@ -327,17 +280,10 @@ class FileShareEngine:
         """
         try:
             self.db.execute(
-                (
-                    """INSERT INTO shared_files
-                   (file_name, file_path, file_size, mime_type, uploaded_by,
-                    shared_with, description, expires_at)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO shared_files
-                   (file_name, file_path, file_size, mime_type, uploaded_by,
-                    shared_with, description, expires_at)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO shared_files
+               (file_name, file_path, file_size, mime_type, uploaded_by,
+                shared_with, description, expires_at)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
                     file_data["file_name"],
                     file_data["file_path"],
@@ -352,13 +298,8 @@ class FileShareEngine:
 
             # Get file ID
             result = self.db.execute(
-                (
-                    """SELECT id FROM shared_files
-                   WHERE file_path = ? ORDER BY uploaded_at DESC LIMIT 1"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id FROM shared_files
-                   WHERE file_path = %s ORDER BY uploaded_at DESC LIMIT 1"""
-                ),
+                """SELECT id FROM shared_files
+               WHERE file_path = %s ORDER BY uploaded_at DESC LIMIT 1""",
                 (file_data["file_path"],),
             )
 
@@ -368,7 +309,7 @@ class FileShareEngine:
 
             return None
 
-        except (KeyError, TypeError, ValueError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError) as e:
             self.logger.error(f"Failed to upload file: {e}")
             return None
 
@@ -385,15 +326,9 @@ class FileShareEngine:
         try:
             # Files uploaded by user or shared with them
             result = self.db.execute(
-                (
-                    """SELECT id, file_name, file_path, file_size, mime_type, uploaded_by, shared_with, description, uploaded_at, expires_at FROM shared_files
-                   WHERE uploaded_by = ? OR shared_with LIKE ?
-                   ORDER BY uploaded_at DESC"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, file_name, file_path, file_size, mime_type, uploaded_by, shared_with, description, uploaded_at, expires_at FROM shared_files
-                   WHERE uploaded_by = %s OR shared_with LIKE %s
-                   ORDER BY uploaded_at DESC"""
-                ),
+                """SELECT id, file_name, file_path, file_size, mime_type, uploaded_by, shared_with, description, uploaded_at, expires_at FROM shared_files
+               WHERE uploaded_by = %s OR shared_with LIKE %s
+               ORDER BY uploaded_at DESC""",
                 (extension, f"%{extension}%"),
             )
 
@@ -413,6 +348,6 @@ class FileShareEngine:
 
             return files
 
-        except sqlite3.Error as e:
+        except Exception as e:
             self.logger.error(f"Failed to get shared files: {e}")
             return []

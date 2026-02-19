@@ -5,7 +5,6 @@ Speaker authentication and fraud detection using voice analysis
 
 import hashlib
 import random
-import sqlite3
 import struct
 from datetime import UTC, datetime
 from enum import Enum
@@ -133,7 +132,7 @@ class VoiceBiometrics:
                 self.db = VoiceBiometricsDatabase(self.db_backend)
                 self.db.create_tables()
                 self.logger.info("Voice biometrics database layer initialized")
-            except sqlite3.Error as e:
+            except Exception as e:
                 self.logger.warning(f"Could not initialize database layer: {e}")
 
         self.logger.info("Voice biometrics system initialized")

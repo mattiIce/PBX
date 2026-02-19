@@ -4,7 +4,6 @@ Provides emergency contact notifications and 911 call alerts
 """
 
 import json
-import sqlite3
 import threading
 import time
 from datetime import UTC, datetime
@@ -134,8 +133,8 @@ class EmergencyNotificationSystem:
             self._load_contacts_from_db()
 
     def _get_db_placeholder(self) -> str:
-        """Get database-agnostic placeholder for SQL queries"""
-        return "?" if self.database.db_type == "sqlite" else "%s"
+        """Get placeholder for SQL queries"""
+        return "%s"
 
     def _load_contacts_from_db(self) -> None:
         """Load emergency contacts from database"""
@@ -168,7 +167,7 @@ class EmergencyNotificationSystem:
 
             self.logger.info(f"Loaded {len(results)} emergency contacts from database")
 
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Failed to load emergency contacts from database: {e}")
 
     def add_emergency_contact(
@@ -233,23 +232,14 @@ class EmergencyNotificationSystem:
             existing = self.database.fetch_one(check_query, (contact.id,))
 
             if existing:
-                # Update existing contact with database-agnostic placeholders
-                if self.database.db_type == "sqlite":
-                    query = """
-                        UPDATE emergency_contacts
-                        SET name = ?, extension = ?, phone = ?,
-                            email = ?, priority = ?, notification_methods = ?,
-                            active = ?
-                        WHERE id = ?
-                    """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
-                else:  # PostgreSQL
-                    query = """
-                        UPDATE emergency_contacts
-                        SET name = %s, extension = %s, phone = %s,
-                            email = %s, priority = %s, notification_methods = %s,
-                            active = %s
-                        WHERE id = %s
-                    """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
+                # Update existing contact
+                query = """
+                    UPDATE emergency_contacts
+                    SET name = %s, extension = %s, phone = %s,
+                        email = %s, priority = %s, notification_methods = %s,
+                        active = %s
+                    WHERE id = %s
+                """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
                 params = (
                     contact.name,
                     contact.extension,
@@ -261,19 +251,12 @@ class EmergencyNotificationSystem:
                     contact.id,
                 )
             else:
-                # Insert new contact with database-agnostic placeholders
-                if self.database.db_type == "sqlite":
-                    query = """
-                        INSERT INTO emergency_contacts
-                        (id, name, extension, phone, email, priority, notification_methods, active)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                    """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
-                else:  # PostgreSQL
-                    query = """
-                        INSERT INTO emergency_contacts
-                        (id, name, extension, phone, email, priority, notification_methods, active)
-                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                    """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
+                # Insert new contact
+                query = """
+                    INSERT INTO emergency_contacts
+                    (id, name, extension, phone, email, priority, notification_methods, active)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                """  # nosec B608 - placeholders are safely parameterized, not user-controlled SQL
                 params = (
                     contact.id,
                     contact.name,
@@ -287,7 +270,7 @@ class EmergencyNotificationSystem:
 
             self.database.execute(query, params)
 
-        except (ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Failed to save contact to database: {e}")
 
     def remove_emergency_contact(self, contact_id: str) -> bool:
@@ -314,7 +297,7 @@ class EmergencyNotificationSystem:
                             f"UPDATE emergency_contacts SET active = false WHERE id = {placeholder}"  # nosec B608 - placeholder is safely parameterized
                         )
                         self.database.execute(query, (contact_id,))
-                    except sqlite3.Error as e:
+                    except Exception as e:
                         self.logger.error(f"Failed to remove contact from database: {e}")
 
                 self.logger.info(f"Removed emergency contact: {contact.name}")
@@ -717,19 +700,12 @@ PBX Emergency Notification System
     def _save_notification_to_db(self, notification_record: dict) -> None:
         """Save notification record to database"""
         try:
-            # Insert notification record with database-agnostic placeholders
-            if self.database.db_type == "sqlite":
-                query = """
-                    INSERT INTO emergency_notifications
-                    (id, timestamp, trigger_type, details, contacts_notified, methods_used)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                """  # nosec B608 - placeholders are safely parameterized
-            else:  # PostgreSQL
-                query = """
-                    INSERT INTO emergency_notifications
-                    (id, timestamp, trigger_type, details, contacts_notified, methods_used)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """  # nosec B608 - placeholders are safely parameterized
+            # Insert notification record
+            query = """
+                INSERT INTO emergency_notifications
+                (id, timestamp, trigger_type, details, contacts_notified, methods_used)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """  # nosec B608 - placeholders are safely parameterized
 
             self.database.execute(
                 query,
@@ -743,7 +719,7 @@ PBX Emergency Notification System
                 ),
             )
 
-        except (KeyError, TypeError, ValueError, json.JSONDecodeError, sqlite3.Error) as e:
+        except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Failed to save notification to database: {e}")
 
     def get_notification_history(self, limit: int = 50) -> list[dict]:
