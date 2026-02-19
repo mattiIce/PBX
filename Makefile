@@ -79,8 +79,12 @@ setup: install pre-commit-install ## Full development setup (install + pre-commi
 .PHONY: install-production
 install-production: ## Full production install (system deps, DB, SSL, systemd, nginx, etc.)
 	@echo -e "$(COLOR_BOLD)Running unified production installer...$(COLOR_RESET)"
-	@echo -e "$(COLOR_YELLOW)This must be run as root: sudo make install-production$(COLOR_RESET)"
-	sudo $(PYTHON) scripts/install_production.py
+	@if [ "$$(id -u)" -eq 0 ]; then \
+		$(PYTHON) scripts/install_production.py; \
+	else \
+		echo -e "$(COLOR_YELLOW)Elevating to root (preserving current Python)...$(COLOR_RESET)"; \
+		sudo $$(which $(PYTHON)) scripts/install_production.py; \
+	fi
 
 .PHONY: install-production-dry-run
 install-production-dry-run: ## Dry-run production install (shows what would be done)
