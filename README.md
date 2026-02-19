@@ -77,6 +77,7 @@
 ## Requirements
 
 - Python 3.13+
+- Node.js 22+ (for frontend admin interface)
 - PyYAML, cryptography>=46.0.5
 - Network access for SIP (5060/udp) and RTP (10000-20000/udp) ports
 
@@ -198,12 +199,12 @@ See [COMPLETE_GUIDE.md - Section 9.2](COMPLETE_GUIDE.md#92-rest-api-reference) f
 
 ```bash
 make check              # Run all checks (format + lint + test)
-make test               # All tests (238 test files, Python + JavaScript)
+make test               # All tests (224 test files, Python + JavaScript)
 make lint               # ruff check + mypy
 make dev                # Start backend + frontend dev servers
 ```
 
-The project includes 76 feature modules, 238 test files, and 18 admin panel pages. See [CLAUDE.md](CLAUDE.md) for full development reference.
+The project includes 76 feature modules, 224 test files, and 18 admin panel pages. See [CLAUDE.md](CLAUDE.md) for full development reference.
 
 ## Known Issues
 

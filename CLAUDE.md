@@ -110,7 +110,7 @@ admin/                # Frontend admin interface
 ├── vite.config.js
 └── tsconfig.json
 
-tests/                # Python test suite (238 files)
+tests/                # Python test suite (224 files)
 ├── conftest.py       # Shared fixtures
 ├── integration/      # Integration tests (API, call flow, provisioning)
 └── test_*.py
