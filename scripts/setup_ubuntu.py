@@ -54,7 +54,7 @@ class SetupWizard:
 
     def __init__(self) -> None:
         """Initialize the setup wizard"""
-        self.project_root = Path(__file__).parent.absolute()
+        self.project_root = Path(__file__).resolve().parent.parent
         self.venv_path = self.project_root / "venv"
         self.env_file = self.project_root / ".env"
         self.config_file = self.project_root / "config.yml"
@@ -176,7 +176,11 @@ class SetupWizard:
         self.run_command(
             "apt-get install -y curl ca-certificates", "Installing prerequisites", check=False
         )
-        self.run_command("install -d /usr/share/postgresql-common/pgdg", check=False)
+        self.run_command(
+            "install -d /usr/share/postgresql-common/pgdg",
+            "Creating PostgreSQL PGDG directory",
+            check=False,
+        )
         self.run_command(
             "curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail "
             "https://www.postgresql.org/media/keys/ACCC4CF8.asc",
@@ -201,6 +205,7 @@ class SetupWizard:
             "libspeex-dev",  # Speex codec library
             "postgresql-17",  # Database server (PostgreSQL 17 from PGDG repo)
             "postgresql-contrib",  # PostgreSQL extensions
+            "nginx",  # Reverse proxy
             "python3-venv",  # Python virtual environment
             "python3-pip",  # Python package installer
             "git",  # Version control
@@ -243,9 +248,7 @@ class SetupWizard:
             check=False,
         )
         if ret != 0:
-            self.print_warning(
-                f"Standard venv creation failed ({stderr[:120].strip()})"
-            )
+            self.print_warning(f"Standard venv creation failed ({stderr[:120].strip()})")
             self.print_info("Retrying with --without-pip and manual pip bootstrap...")
             ret2, _, stderr2 = self.run_command(
                 f"python3 -m venv --without-pip {self.venv_path}",
@@ -555,12 +558,259 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         self.print_success("Voice prompts generated")
         return True
 
+    def setup_nginx(self) -> bool:
+        """Set up Nginx reverse proxy"""
+        self.print_header("Configuring Nginx Reverse Proxy")
+
+        # Check if Nginx is installed
+        ret, _, _ = self.run_command("which nginx", "Checking Nginx installation", check=False)
+        if ret != 0:
+            self.print_error("Nginx is not installed")
+            return False
+
+        # Prompt for hostname/domain
+        default_hostname = socket.gethostname()
+        hostname = (
+            input(f"  Domain or hostname for Nginx [{default_hostname}]: ").strip()
+            or default_hostname
+        )
+
+        # Validate hostname
+        if not re.match(r"^[a-zA-Z0-9._-]+$", hostname):
+            self.print_error(
+                "Invalid hostname format. Use only letters, numbers, dots, hyphens, and underscores."
+            )
+            return False
+
+        # Write Nginx site configuration
+        nginx_conf = f"""server {{
+    listen 80;
+    server_name {hostname};
+
+    location / {{
+        proxy_pass http://127.0.0.1:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        # WebSocket support
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_read_timeout 300;
+        proxy_connect_timeout 300;
+        proxy_send_timeout 300;
+    }}
+
+    location /ws {{
+        proxy_pass http://127.0.0.1:8443;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }}
+}}
+"""
+
+        try:
+            Path("/etc/nginx/sites-available/pbx").write_text(nginx_conf)
+        except OSError as e:
+            self.print_error(f"Failed to write Nginx config: {e}")
+            return False
+
+        # Enable the site
+        self.run_command(
+            "ln -sf /etc/nginx/sites-available/pbx /etc/nginx/sites-enabled/",
+            "Enabling Nginx site",
+            check=False,
+        )
+        self.run_command(
+            "rm -f /etc/nginx/sites-enabled/default",
+            "Removing default Nginx site",
+            check=False,
+        )
+
+        # Test Nginx configuration
+        ret, _, stderr = self.run_command("nginx -t", "Testing Nginx configuration", check=False)
+        if ret != 0:
+            self.print_error(f"Nginx configuration test failed: {stderr}")
+            return False
+
+        # Reload/start Nginx
+        self.run_command(
+            "systemctl reload nginx || systemctl start nginx",
+            "Starting Nginx",
+            check=False,
+        )
+        self.run_command("systemctl enable nginx", "Enabling Nginx on boot", check=False)
+
+        self.print_success(f"Nginx configured — proxying to PBX at http://{hostname}")
+        return True
+
+    def configure_config_yml(self) -> bool:
+        """Configure config.yml with user settings"""
+        self.print_header("Configuring config.yml")
+
+        if not self.config_file.exists():
+            self.print_warning("config.yml not found — a default will be created on first run")
+            return True
+
+        self.print_info("Current config.yml found. Let's review key settings.\n")
+
+        response = input("Edit config.yml settings interactively? (Y/n): ").strip().lower()
+        if response == "n":
+            self.print_info("Keeping existing config.yml")
+            return True
+
+        try:
+            config_text = self.config_file.read_text(encoding="utf-8")
+        except OSError as e:
+            self.print_error(f"Failed to read config.yml: {e}")
+            return False
+
+        # Prompt for key settings
+        print("\nServer Configuration:")
+        external_ip = input("  External IP address [192.168.1.14]: ").strip() or ""
+        server_name = input("  Server name [Warden Voip]: ").strip() or ""
+        api_port = input("  API port [9000]: ").strip() or ""
+
+        # Apply changes
+        if external_ip:
+            config_text = re.sub(
+                r"(external_ip:\s*).*",
+                f"\\g<1>{external_ip}",
+                config_text,
+            )
+
+        if server_name:
+            config_text = re.sub(
+                r"(server_name:\s*).*",
+                f"\\g<1>{server_name}",
+                config_text,
+            )
+
+        if api_port:
+            config_text = re.sub(
+                r"(port:\s*)9000",
+                f"\\g<1>{api_port}",
+                config_text,
+                count=1,
+            )
+
+        try:
+            self.config_file.write_text(config_text, encoding="utf-8")
+            self.print_success("config.yml updated")
+        except OSError as e:
+            self.print_error(f"Failed to write config.yml: {e}")
+            return False
+
+        return True
+
+    def configure_env_file(self) -> bool:
+        """Allow user to edit .env settings"""
+        self.print_header("Reviewing .env Configuration")
+
+        if not self.env_file.exists():
+            self.print_warning(".env file not found — skipping")
+            return True
+
+        self.print_info("The .env file contains database and integration credentials.\n")
+
+        response = input("Edit .env settings interactively? (y/N): ").strip().lower()
+        if response != "y":
+            self.print_info("Keeping existing .env settings")
+            return True
+
+        try:
+            env_text = self.env_file.read_text(encoding="utf-8")
+        except OSError as e:
+            self.print_error(f"Failed to read .env file: {e}")
+            return False
+
+        # SMTP configuration
+        print("\nSMTP Configuration (for voicemail-to-email):")
+        smtp_host = input("  SMTP host (leave blank to skip): ").strip()
+        if smtp_host:
+            smtp_port = input("  SMTP port [587]: ").strip() or "587"
+            smtp_user = input("  SMTP username: ").strip()
+            smtp_password = input("  SMTP password: ").strip()
+
+            # Replace commented SMTP lines with actual values
+            env_text = re.sub(r"#\s*SMTP_HOST=.*", f"SMTP_HOST={smtp_host}", env_text)
+            env_text = re.sub(r"#\s*SMTP_PORT=.*", f"SMTP_PORT={smtp_port}", env_text)
+            if smtp_user:
+                env_text = re.sub(r"#\s*SMTP_USERNAME=.*", f"SMTP_USERNAME={smtp_user}", env_text)
+            if smtp_password:
+                env_text = re.sub(
+                    r"#\s*SMTP_PASSWORD=.*", f"SMTP_PASSWORD={smtp_password}", env_text
+                )
+
+        # Redis configuration
+        print("\nRedis Configuration:")
+        redis_password = input("  Redis password (leave blank for none): ").strip()
+        if redis_password:
+            env_text = re.sub(
+                r"#\s*REDIS_PASSWORD=.*", f"REDIS_PASSWORD={redis_password}", env_text
+            )
+
+        try:
+            self.env_file.write_text(env_text, encoding="utf-8")
+            self.env_file.chmod(0o600)
+            self.print_success(".env file updated")
+        except OSError as e:
+            self.print_error(f"Failed to write .env file: {e}")
+            return False
+
+        return True
+
+    def start_pbx(self) -> bool:
+        """Start the PBX server"""
+        self.print_header("Starting Warden VoIP PBX")
+
+        response = input("Start the PBX server now? (Y/n): ").strip().lower()
+        if response == "n":
+            self.print_info("PBX not started. You can start it later with:")
+            self.print_info("  source venv/bin/activate && python main.py")
+            return True
+
+        python_path = self.venv_path / "bin" / "python"
+        main_script = self.project_root / "main.py"
+
+        if not main_script.exists():
+            self.print_error(f"main.py not found at {main_script}")
+            return False
+
+        # Create logs directory if it doesn't exist
+        (self.project_root / "logs").mkdir(exist_ok=True)
+
+        self.print_info("Starting PBX server...")
+        self.print_info(f"  Command: {python_path} {main_script}")
+        self.print_info("  The server will run in the background.")
+        self.print_info("  Press Ctrl+C or run 'kill' to stop it.\n")
+
+        ret, _, stderr = self.run_command(
+            f"nohup {python_path} {main_script} > {self.project_root}/logs/pbx.log 2>&1 &",
+            "Starting PBX server",
+            check=False,
+        )
+
+        if ret != 0:
+            self.print_warning(f"Failed to start PBX server: {stderr}")
+            self.print_info("You can start it manually with:")
+            self.print_info("  source venv/bin/activate && python main.py")
+            return True
+
+        self.print_success("PBX server started")
+        self.print_info(f"Logs: {self.project_root}/logs/pbx.log")
+        return True
+
     def verify_setup(self) -> bool:
         """Verify the setup"""
         self.print_header("Verifying Setup")
 
         checks_passed = 0
-        total_checks = 6
+        total_checks = 7
 
         # Check 1: Virtual environment exists
         if self.venv_path.exists():
@@ -594,7 +844,15 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         else:
             self.print_error("PostgreSQL is not running")
 
-        # Check 5: Python packages installed
+        # Check 5: Nginx is running
+        ret, _, _ = self.run_command("systemctl is-active nginx", "Checking Nginx", check=False)
+        if ret == 0:
+            self.print_success("Nginx is running")
+            checks_passed += 1
+        else:
+            self.print_error("Nginx is not running")
+
+        # Check 6: Python packages installed
         pip_path = self.venv_path / "bin" / "pip"
         ret, stdout, _ = self.run_command(
             f"{pip_path} list", "Checking Python packages", check=False
@@ -605,8 +863,8 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         else:
             self.print_error("Python packages not properly installed")
 
-        # Check 6: Required system packages
-        required_packages = ["espeak", "ffmpeg", "postgresql"]
+        # Check 7: Required system packages
+        required_packages = ["espeak", "ffmpeg", "postgresql", "nginx"]
         all_installed = True
         for package in required_packages:
             ret, _, _ = self.run_command(
@@ -644,8 +902,8 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             self.print_error("Critical check failed: Python packages not properly installed")
             return False
 
-        # Allow non-critical checks to fail (5 out of 6 total)
-        return checks_passed >= 5
+        # Allow non-critical checks to fail (6 out of 7 total)
+        return checks_passed >= 6
 
     def print_next_steps(self) -> None:
         """Print next steps after setup"""
@@ -718,7 +976,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
 
         # Confirm before proceeding
         print(f"\n{Colors.BOLD}This wizard will:{Colors.ENDC}")
-        print("  • Install system dependencies (espeak, ffmpeg, PostgreSQL, etc.)")
+        print("  • Install system dependencies (espeak, ffmpeg, Nginx, PostgreSQL, etc.)")
         print("  • Create Python virtual environment")
         print("  • Install Python packages")
         print("  • Configure PostgreSQL database")
@@ -726,6 +984,10 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         print("  • Initialize database schema")
         print("  • Generate SSL certificate")
         print("  • Generate voice prompts")
+        print("  • Configure Nginx reverse proxy")
+        print("  • Configure config.yml")
+        print("  • Configure .env settings")
+        print("  • Start the PBX server")
         print()
 
         response = input(f"{Colors.BOLD}Continue with setup? (Y/n): {Colors.ENDC}").strip().lower()
@@ -742,7 +1004,11 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             ("Database Schema", self.initialize_database),
             ("SSL Certificate", self.generate_ssl_certificate),
             ("Voice Prompts", self.generate_voice_prompts),
+            ("Nginx Reverse Proxy", self.setup_nginx),
+            ("Configure config.yml", self.configure_config_yml),
+            ("Configure .env", self.configure_env_file),
             ("Setup Verification", self.verify_setup),
+            ("Start PBX", self.start_pbx),
         ]
 
         for step_name, step_func in steps:
