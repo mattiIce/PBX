@@ -141,7 +141,7 @@ def main() -> int:
     print("3. Check the logs for errors:")
     print("   sudo journalctl -u pbx -n 50")
     print("4. Verify the code is up to date:")
-    print("   git log --oneline -1 -- pbx/api/rest_api.py")
+    print("   git log --oneline -1 -- pbx/api/routes/framework.py")
     print("\nSee TROUBLESHOOTING_AUTO_ATTENDANT_MENUS.md for more details.")
     return 1
 
