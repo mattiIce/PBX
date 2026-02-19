@@ -67,6 +67,32 @@ def create_app(pbx_core: object | None = None) -> Flask:
         response.headers["Content-Security-Policy"] = csp
         return response
 
+    # Prometheus API request metrics middleware
+    @app.before_request
+    def _start_request_timer() -> None:
+        import time as _time
+
+        request._prom_start_time = _time.monotonic()  # type: ignore[attr-defined]
+
+    @app.after_request
+    def _record_request_metrics(resp: Response) -> Response:
+        import time as _time
+
+        metrics_exporter = None
+        if pbx_core:
+            metrics_exporter = getattr(pbx_core, "metrics_exporter", None)
+
+        if metrics_exporter and hasattr(request, "_prom_start_time"):
+            duration = _time.monotonic() - request._prom_start_time  # type: ignore[attr-defined]
+            endpoint = request.url_rule.rule if request.url_rule else request.path
+            metrics_exporter.record_api_request(
+                method=request.method,
+                endpoint=endpoint,
+                status_code=resp.status_code,
+                duration=duration,
+            )
+        return resp
+
     register_error_handlers(app)
     _register_blueprints(app)
 

@@ -5,6 +5,7 @@ Central coordinator for all PBX functionality
 
 import re
 import struct
+import threading
 import traceback
 import uuid
 from datetime import UTC, datetime
@@ -116,6 +117,20 @@ class PBXCore:
 
         # Initialize all feature subsystems via FeatureInitializer
         FeatureInitializer.initialize(self)
+
+        # Initialize Prometheus metrics exporter
+        self.metrics_exporter = None
+        self._metrics_running = False
+        self._metrics_thread: threading.Thread | None = None
+        if self.config.get("monitoring.prometheus.enabled", False):
+            from pbx.utils.prometheus_exporter import PBXMetricsExporter
+
+            self.metrics_exporter = PBXMetricsExporter()
+            self.metrics_exporter.set_system_info(
+                version=self.config.get("server.version", "1.0.0"),
+                server_name=self.config.get("server.server_name", "Warden VoIP"),
+            )
+            self._log_startup("Prometheus metrics exporter initialized")
 
         # Initialize API server
         api_host = self.config.get("api.host", "0.0.0.0")  # nosec B104 - API server needs to bind to all interfaces
@@ -279,6 +294,65 @@ class PBXCore:
         if seeded_count > 0:
             self.logger.info(f"Auto-seeded {seeded_count} critical extension(s) at startup")
 
+    def _start_metrics_collector(self) -> None:
+        """Start background thread for periodic system resource metrics."""
+        if not self.metrics_exporter:
+            return
+        self._metrics_running = True
+        interval = self.config.get("monitoring.prometheus.resource_collection_interval", 15)
+        self._metrics_interval = max(1, int(interval) if interval else 15)
+        self._metrics_thread = threading.Thread(
+            target=self._metrics_collection_loop,
+            name="MetricsCollector",
+            daemon=True,
+        )
+        self._metrics_thread.start()
+        self._log_startup("Prometheus metrics collector started")
+
+    def _stop_metrics_collector(self) -> None:
+        """Stop background metrics collection thread."""
+        self._metrics_running = False
+        if self._metrics_thread and self._metrics_thread.is_alive():
+            self._metrics_thread.join(timeout=5)
+        self._metrics_thread = None
+
+    def _metrics_collection_loop(self) -> None:
+        """Periodically collect system resource metrics."""
+        import time
+
+        import psutil
+
+        while self._metrics_running:
+            try:
+                cpu = psutil.cpu_percent(interval=1)
+                mem = psutil.virtual_memory()
+                self.metrics_exporter.update_system_resources(
+                    cpu_percent=cpu,
+                    memory_bytes=mem.used,
+                )
+
+                disk = psutil.disk_usage("/")
+                self.metrics_exporter.disk_usage_bytes.labels(mount_point="/").set(disk.used)
+
+                self.metrics_exporter.update_extensions(
+                    self.extension_registry.get_registered_count()
+                )
+                self.metrics_exporter.active_calls.set(len(self.call_manager.get_active_calls()))
+
+                if hasattr(self, "conference_system") and self.conference_system:
+                    self.metrics_exporter.conferences_active.set(
+                        len(self.conference_system.get_active_rooms())
+                    )
+
+            except Exception as e:
+                self.logger.debug(f"Metrics collection error: {e}")
+
+            # Sleep in small increments so stop is responsive
+            for _ in range(self._metrics_interval):
+                if not self._metrics_running:
+                    break
+                time.sleep(1)
+
     def _load_provisioning_devices(self) -> None:
         """Load provisioning devices from configuration"""
         if not self.phone_provisioning:
@@ -332,6 +406,10 @@ class PBXCore:
             self.logger.info("Security runtime monitoring active")
 
         self.running = True
+
+        # Start Prometheus metrics collector
+        self._start_metrics_collector()
+
         self.logger.info("PBX system started successfully")
         return True
 
@@ -339,6 +417,9 @@ class PBXCore:
         """Stop PBX system"""
         self.logger.info("Stopping PBX system...")
         self.running = False
+
+        # Stop Prometheus metrics collector
+        self._stop_metrics_collector()
 
         # Stop security monitor
         if hasattr(self, "security_monitor"):
@@ -463,6 +544,10 @@ class PBXCore:
                         self.logger.error(f"  Contact URI: {contact}")
                         self.logger.error(f"  Traceback: {traceback.format_exc()}")
 
+                # Record successful registration metric
+                if self.metrics_exporter:
+                    self.metrics_exporter.record_extension_registration("success")
+
                 # Trigger webhook event
                 self.webhook_system.trigger_event(
                     WebhookEvent.EXTENSION_REGISTERED,
@@ -476,6 +561,9 @@ class PBXCore:
                 )
 
                 return True
+            # Record failed registration metric
+            if self.metrics_exporter:
+                self.metrics_exporter.record_extension_registration("failure")
             self.logger.warning(f"Unknown extension {extension_number} attempted registration")
             return False
 
@@ -844,6 +932,15 @@ class PBXCore:
                         )
                     else:
                         self.logger.warning(f"No audio recorded for voicemail on call {call_id}")
+
+            # Record call end metric
+            if self.metrics_exporter:
+                call_duration = call.get_duration() if hasattr(call, "get_duration") else 0.0
+                self.metrics_exporter.record_call_end(
+                    duration=call_duration,
+                    status="completed",
+                    direction=getattr(call, "direction", "inbound"),
+                )
 
             self.call_manager.end_call(call_id)
             self.rtp_relay.release_relay(call_id)

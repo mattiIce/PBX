@@ -1,0 +1,22 @@
+# Prometheus configuration for Warden VoIP PBX
+# See grafana/dashboards/README.md for dashboard setup instructions
+
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # PBX application metrics
+  - job_name: "pbx"
+    static_configs:
+      - targets: ["pbx:9000"]
+    metrics_path: "/metrics"
+    scrape_interval: 15s
+    scrape_timeout: 10s
+
+  # Node Exporter for host-level metrics (optional)
+  # Uncomment if Node Exporter is running on the host
+  # - job_name: "node"
+  #   static_configs:
+  #     - targets: ["host.docker.internal:9100"]
+  #   scrape_interval: 15s

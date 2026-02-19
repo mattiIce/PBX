@@ -1,0 +1,21 @@
+# Kubernetes ServiceMonitor for Prometheus Operator
+# Requires: Prometheus Operator (kube-prometheus-stack) installed in the cluster
+# This is optional — only needed for Kubernetes deployments with Prometheus Operator
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: pbx-server
+  namespace: pbx-system
+  labels:
+    app: pbx-server
+spec:
+  selector:
+    matchLabels:
+      app: pbx-server
+  endpoints:
+    - port: https-api
+      path: /metrics
+      interval: 15s
+      scheme: https
+      tlsConfig:
+        insecureSkipVerify: true

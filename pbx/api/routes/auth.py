@@ -18,6 +18,14 @@ logger = get_logger()
 auth_bp = Blueprint("auth", __name__, url_prefix="/api/auth")
 
 
+def _record_auth_metric(status: str) -> None:
+    """Record authentication attempt metric if exporter is available."""
+    pbx_core = get_pbx_core()
+    exporter = getattr(pbx_core, "metrics_exporter", None) if pbx_core else None
+    if exporter:
+        exporter.record_auth_attempt(status=status)
+
+
 @auth_bp.route("/login", methods=["POST"])
 def handle_login() -> Response:
     """Authenticate extension and return session token."""
@@ -57,6 +65,7 @@ def handle_login() -> Response:
                     email="",
                 )
 
+                _record_auth_metric("success")
                 return send_json(
                     {
                         "success": True,
@@ -67,6 +76,7 @@ def handle_login() -> Response:
                         "email": "",
                     }
                 )
+            _record_auth_metric("failure")
             return send_json({"error": "Invalid credentials"}, 401)
 
         # Get extension from database
@@ -75,6 +85,7 @@ def handle_login() -> Response:
 
         ext = pbx_core.extension_db.get(extension_number)
         if not ext:
+            _record_auth_metric("failure")
             return send_json({"error": "Invalid credentials"}, 401)
 
         # Verify password using voicemail PIN
@@ -93,11 +104,13 @@ def handle_login() -> Response:
         if voicemail_pin_salt:
             # Voicemail PIN is hashed - verify using encryption
             if not encryption.verify_password(password, voicemail_pin_hash, voicemail_pin_salt):
+                _record_auth_metric("failure")
                 return send_json({"error": "Invalid credentials"}, 401)
         else:
             # Voicemail PIN is plain text (legacy) or not set
             # If no voicemail PIN is configured, deny access for security
             if not voicemail_pin_hash or voicemail_pin_hash == "":
+                _record_auth_metric("failure")
                 return send_json({"error": "Invalid credentials"}, 401)
 
             # Ensure both values are strings before comparison
@@ -110,6 +123,7 @@ def handle_login() -> Response:
             if not secrets.compare_digest(
                 password_str.encode("utf-8"), voicemail_pin_str.encode("utf-8")
             ):
+                _record_auth_metric("failure")
                 return send_json({"error": "Invalid credentials"}, 401)
 
         # Generate session token
@@ -123,6 +137,7 @@ def handle_login() -> Response:
             email=ext.get("email"),
         )
 
+        _record_auth_metric("success")
         return send_json(
             {
                 "success": True,

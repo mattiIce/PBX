@@ -115,31 +115,40 @@ def handle_detailed_health() -> Response:
 def handle_prometheus_metrics() -> Response:
     """Prometheus metrics endpoint."""
     try:
+        pbx_core = get_pbx_core()
+        metrics_exporter = getattr(pbx_core, "metrics_exporter", None) if pbx_core else None
+
+        if metrics_exporter:
+            # Serve real prometheus_client metrics
+            metrics_bytes = metrics_exporter.export_metrics()
+            return current_app.response_class(
+                response=metrics_bytes,
+                status=200,
+                mimetype="text/plain; version=0.0.4; charset=utf-8",
+            )
+
+        # Fallback: legacy simplified health metrics
         checker = _get_health_checker()
         _, details = checker.check_readiness()
 
         from pbx.utils.production_health import format_health_check_response
 
         is_healthy = details.get("status") == "ready"
-
         status_code, metrics_text = format_health_check_response(
             is_healthy, details, format_type="prometheus"
         )
-
-        response = current_app.response_class(
+        return current_app.response_class(
             response=metrics_text,
             status=status_code,
             mimetype="text/plain; version=0.0.4",
         )
-        return response
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Metrics endpoint error: {e}")
-        response = current_app.response_class(
+        return current_app.response_class(
             response=f"# ERROR: {e!s}\n",
             status=500,
             mimetype="text/plain",
         )
-        return response
 
 
 @health_bp.route("/api/status")
