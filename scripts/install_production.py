@@ -848,8 +848,12 @@ class ProductionInstaller:
             return True
 
         python_bin = self.venv_path / "bin" / "python"
+        aa_dir = self.project_root / "auto_attendant"
+        vm_dir = self.project_root / "voicemail_prompts"
         ret, _, stderr = self._run(
-            f"{python_bin} {voice_script}",
+            f"{python_bin} {voice_script} "
+            f"--aa-dir {shlex.quote(str(aa_dir))} "
+            f"--vm-dir {shlex.quote(str(vm_dir))}",
             description="Generating voice prompts via TTS",
             check=False,
             timeout=600,
@@ -1124,6 +1128,8 @@ class ProductionInstaller:
         backup_dir = Path("/var/backups/pbx")
         backup_dir.mkdir(parents=True, exist_ok=True)
 
+        db_name = getattr(self, "_db_config", {}).get("DB_NAME", "pbx_system")
+
         backup_script = textwrap.dedent(f"""\
             #!/bin/bash
             # Warden VoIP PBX — Automated Backup Script
@@ -1131,7 +1137,7 @@ class ProductionInstaller:
 
             BACKUP_DIR="/var/backups/pbx"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)
-            DATABASE="pbx_system"
+            DATABASE="{db_name}"
 
             # Database backup
             sudo -u postgres pg_dump "$DATABASE" | gzip > "$BACKUP_DIR/db_$TIMESTAMP.sql.gz"
