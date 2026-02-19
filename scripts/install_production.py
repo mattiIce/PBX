@@ -659,6 +659,7 @@ class ProductionInstaller:
             self._dry("alembic upgrade head / init_database.py")
             return True
 
+        python_bin = self.venv_path / "bin" / "python"
         alembic_bin = self.venv_path / "bin" / "alembic"
         alembic_ini = self.project_root / "alembic.ini"
 
