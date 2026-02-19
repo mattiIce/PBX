@@ -9,10 +9,12 @@ Type=simple
 # Common locations: /opt/pbx, /usr/local/pbx, /home/username/PBX, /root/PBX
 # The setup wizard (scripts/setup_ubuntu.py) sets these automatically.
 WorkingDirectory=/opt/pbx
-# If using a virtual environment (recommended), update to: /opt/pbx/venv/bin/python3
-ExecStart=/opt/pbx/venv/bin/python3 /opt/pbx/main.py
 # Load environment variables from .env if it exists (- prefix = no error if missing)
 EnvironmentFile=-/opt/pbx/.env
+# Run Alembic database migrations before starting the PBX server
+ExecStartPre=/opt/pbx/venv/bin/alembic -c /opt/pbx/alembic.ini upgrade head
+# If using a virtual environment (recommended), update to: /opt/pbx/venv/bin/python3
+ExecStart=/opt/pbx/venv/bin/python3 /opt/pbx/main.py
 # IMPORTANT: Update this to the user who owns the PBX files
 # For better security, create a dedicated 'pbx' user:
 #   sudo useradd -r -s /bin/false pbx
@@ -26,6 +28,10 @@ Restart=on-failure
 RestartSec=5
 StandardOutput=journal
 StandardError=journal
+
+# NOTE: If the PBX is installed under /root/ or /home/, set ProtectHome=false
+# (ProtectHome=true blocks access to those directories, causing 203/EXEC errors).
+# ProtectHome=true
 
 [Install]
 WantedBy=multi-user.target

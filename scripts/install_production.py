@@ -840,6 +840,12 @@ class ProductionInstaller:
             self._dry("Install pbx.service to /etc/systemd/system/")
             return True
 
+        # Disable ProtectHome when installed under /root or /home, because
+        # ProtectHome=true makes those paths inaccessible (causes 203/EXEC).
+        protect_home = "false" if str(self.project_root).startswith(("/root", "/home")) else "true"
+        if protect_home == "false":
+            self._info("Installation under home directory detected — setting ProtectHome=false")
+
         service_content = textwrap.dedent(f"""\
             [Unit]
             Description=Warden VoIP PBX System
@@ -863,8 +869,8 @@ class ProductionInstaller:
             NoNewPrivileges=true
             PrivateTmp=true
             ProtectSystem=full
-            ProtectHome=true
-            ReadWritePaths={self.project_root}/logs {self.project_root}/recordings {self.project_root}/voicemail {self.project_root}/cdr {self.project_root}/moh
+            ProtectHome={protect_home}
+            ReadWritePaths={self.project_root} {self.project_root}/logs {self.project_root}/recordings {self.project_root}/voicemail {self.project_root}/cdr {self.project_root}/moh
 
             # Resource limits
             LimitNOFILE=65536
