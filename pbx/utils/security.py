@@ -373,17 +373,10 @@ class SecurityAuditor:
         """Store audit log in database"""
         import json
 
-        query = (
-            """
+        query = """
         INSERT INTO security_audit (timestamp, event_type, identifier, ip_address, success, details)
         VALUES (%s, %s, %s, %s, %s, %s)
         """
-            if self.database.db_type == "postgresql"
-            else """
-        INSERT INTO security_audit (timestamp, event_type, identifier, ip_address, success, details)
-        VALUES (?, ?, ?, ?, ?, ?)
-        """
-        )
 
         params = (
             log_entry["timestamp"],
@@ -560,8 +553,7 @@ class ThreatDetector:
     def _initialize_schema(self) -> None:
         """Initialize threat detection database tables"""
         # Blocked IPs table
-        blocked_ips_table = (
-            """
+        blocked_ips_table = """
         CREATE TABLE IF NOT EXISTS security_blocked_ips (
             id SERIAL PRIMARY KEY,
             ip_address VARCHAR(45) NOT NULL,
@@ -573,24 +565,9 @@ class ThreatDetector:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS security_blocked_ips (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ip_address VARCHAR(45) NOT NULL,
-            reason TEXT,
-            blocked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            blocked_until TIMESTAMP NOT NULL,
-            unblocked_at TIMESTAMP,
-            auto_unblocked BOOLEAN DEFAULT 0,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         # Threat events table
-        threat_events_table = (
-            """
+        threat_events_table = """
         CREATE TABLE IF NOT EXISTS security_threat_events (
             id SERIAL PRIMARY KEY,
             ip_address VARCHAR(45) NOT NULL,
@@ -601,19 +578,6 @@ class ThreatDetector:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS security_threat_events (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            ip_address VARCHAR(45) NOT NULL,
-            event_type VARCHAR(50) NOT NULL,
-            severity VARCHAR(20) NOT NULL,
-            details TEXT,
-            timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         try:
             self.database.execute(blocked_ips_table)
@@ -623,18 +587,11 @@ class ThreatDetector:
             self.logger.error(f"Failed to initialize threat detection schema: {e}")
 
     def _get_active_blocks_query(self) -> str:
-        """Get SQL query for active blocked IPs based on database type"""
-        if self.database.db_type == "postgresql":
-            return """
-            SELECT ip_address, reason, blocked_until
-            FROM security_blocked_ips
-            WHERE blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
-            """
-        # SQLite
+        """Get SQL query for active blocked IPs"""
         return """
             SELECT ip_address, reason, blocked_until
             FROM security_blocked_ips
-            WHERE blocked_until > datetime('now') AND unblocked_at IS NULL
+            WHERE blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
             """
 
     def _load_blocked_ips_from_database(self) -> None:
@@ -692,21 +649,12 @@ class ThreatDetector:
 
         # Check database for persistent blocks
         if self.database and self.database.enabled:
-            query = (
-                """
+            query = """
             SELECT reason, blocked_until
             FROM security_blocked_ips
             WHERE ip_address = %s AND blocked_until > CURRENT_TIMESTAMP AND unblocked_at IS NULL
             ORDER BY blocked_at DESC LIMIT 1
             """
-                if self.database.db_type == "postgresql"
-                else """
-            SELECT reason, blocked_until
-            FROM security_blocked_ips
-            WHERE ip_address = ? AND blocked_until > datetime('now') AND unblocked_at IS NULL
-            ORDER BY blocked_at DESC LIMIT 1
-            """
-            )
             result = self.database.fetch_one(query, (ip_address,))
 
             if result:
@@ -741,17 +689,10 @@ class ThreatDetector:
 
             blocked_until_dt = dt.now(tz=UTC) + timedelta(seconds=duration)
 
-            insert_query = (
-                """
+            insert_query = """
             INSERT INTO security_blocked_ips (ip_address, reason, blocked_until)
             VALUES (%s, %s, %s)
             """
-                if self.database.db_type == "postgresql"
-                else """
-            INSERT INTO security_blocked_ips (ip_address, reason, blocked_until)
-            VALUES (?, ?, ?)
-            """
-            )
             self.database.execute(insert_query, (ip_address, reason, blocked_until_dt))
 
         self.logger.warning(f"IP {ip_address} blocked: {reason} (duration: {duration}s)")
@@ -770,19 +711,11 @@ class ThreatDetector:
 
         # Update database
         if self.database and self.database.enabled:
-            update_query = (
-                """
+            update_query = """
             UPDATE security_blocked_ips
             SET unblocked_at = CURRENT_TIMESTAMP
             WHERE ip_address = %s AND unblocked_at IS NULL
             """
-                if self.database.db_type == "postgresql"
-                else """
-            UPDATE security_blocked_ips
-            SET unblocked_at = datetime('now')
-            WHERE ip_address = ? AND unblocked_at IS NULL
-            """
-            )
             self.database.execute(update_query, (ip_address,))
 
         self.logger.info(f"IP {ip_address} manually unblocked")
@@ -790,19 +723,11 @@ class ThreatDetector:
     def _auto_unblock_ip(self, ip_address: str) -> None:
         """Auto-unblock IP when duration expires"""
         if self.database and self.database.enabled:
-            update_query = (
-                """
+            update_query = """
             UPDATE security_blocked_ips
             SET unblocked_at = CURRENT_TIMESTAMP, auto_unblocked = %s
             WHERE ip_address = %s AND unblocked_at IS NULL
             """
-                if self.database.db_type == "postgresql"
-                else """
-            UPDATE security_blocked_ips
-            SET unblocked_at = datetime('now'), auto_unblocked = ?
-            WHERE ip_address = ? AND unblocked_at IS NULL
-            """
-            )
             self.database.execute(update_query, (True, ip_address))
 
     def record_failed_attempt(self, ip_address: str, reason: str) -> None:
@@ -950,17 +875,10 @@ class ThreatDetector:
             return
 
         try:
-            insert_query = (
-                """
+            insert_query = """
             INSERT INTO security_threat_events (ip_address, event_type, severity, details)
             VALUES (%s, %s, %s, %s)
             """
-                if self.database.db_type == "postgresql"
-                else """
-            INSERT INTO security_threat_events (ip_address, event_type, severity, details)
-            VALUES (?, ?, ?, ?)
-            """
-            )
             self.database.execute(insert_query, (ip_address, event_type, severity, details))
         except Exception as e:
             self.logger.error(f"Failed to log threat event: {e}")
@@ -994,24 +912,13 @@ class ThreatDetector:
                 hours = 24  # Default to 24 hours if invalid
 
             # Count events by type
-            if self.database.db_type == "postgresql":
-                query = """
+            query = """
                 SELECT event_type, severity, COUNT(*) as count
                 FROM security_threat_events
                 WHERE timestamp > (CURRENT_TIMESTAMP - INTERVAL '%s hours')
                 GROUP BY event_type, severity
                 """
-                results = self.database.fetch_all(query, (hours,))
-            else:
-                # SQLite: build the interval string manually (validated hours
-                # parameter)
-                query = """
-                SELECT event_type, severity, COUNT(*) as count
-                FROM security_threat_events
-                WHERE timestamp > datetime('now', '-{int(hours)} hours')
-                GROUP BY event_type, severity
-                """  # nosec B608 - hours is validated as int
-                results = self.database.fetch_all(query)
+            results = self.database.fetch_all(query, (hours,))
 
             for row in results:
                 event_type = row["event_type"]

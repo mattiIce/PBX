@@ -45,11 +45,7 @@ class ClickToDialEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    "SELECT id, extension, enabled, default_caller_id, auto_answer, browser_notification, created_at FROM click_to_dial_configs WHERE extension = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT id, extension, enabled, default_caller_id, auto_answer, browser_notification, created_at FROM click_to_dial_configs WHERE extension = %s"
-                ),
+                "SELECT id, extension, enabled, default_caller_id, auto_answer, browser_notification, created_at FROM click_to_dial_configs WHERE extension = %s",
                 (extension,),
             )
 
@@ -85,17 +81,10 @@ class ClickToDialEngine:
             if existing:
                 # Update
                 self.db.execute(
-                    (
-                        """UPDATE click_to_dial_configs
-                       SET enabled = ?, default_caller_id = ?, auto_answer = ?,
-                           browser_notification = ?
-                       WHERE extension = ?"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE click_to_dial_configs
-                       SET enabled = %s, default_caller_id = %s, auto_answer = %s,
-                           browser_notification = %s
-                       WHERE extension = %s"""
-                    ),
+                    """UPDATE click_to_dial_configs
+                   SET enabled = %s, default_caller_id = %s, auto_answer = %s,
+                       browser_notification = %s
+                   WHERE extension = %s""",
                     (
                         config.get("enabled", True),
                         config.get("default_caller_id"),
@@ -107,15 +96,9 @@ class ClickToDialEngine:
             else:
                 # Insert
                 self.db.execute(
-                    (
-                        """INSERT INTO click_to_dial_configs
-                       (extension, enabled, default_caller_id, auto_answer, browser_notification)
-                       VALUES (?, ?, ?, ?, ?)"""
-                        if self.db.db_type == "sqlite"
-                        else """INSERT INTO click_to_dial_configs
-                       (extension, enabled, default_caller_id, auto_answer, browser_notification)
-                       VALUES (%s, %s, %s, %s, %s)"""
-                    ),
+                    """INSERT INTO click_to_dial_configs
+                   (extension, enabled, default_caller_id, auto_answer, browser_notification)
+                   VALUES (%s, %s, %s, %s, %s)""",
                     (
                         extension,
                         config.get("enabled", True),
@@ -150,15 +133,9 @@ class ClickToDialEngine:
         try:
             # Log call initiation in database
             self.db.execute(
-                (
-                    """INSERT INTO click_to_dial_history
-                   (extension, destination, call_id, source, status)
-                   VALUES (?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO click_to_dial_history
-                   (extension, destination, call_id, source, status)
-                   VALUES (%s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO click_to_dial_history
+               (extension, destination, call_id, source, status)
+               VALUES (%s, %s, %s, %s, %s)""",
                 (extension, destination, call_id, source, "initiated"),
             )
 
@@ -217,28 +194,16 @@ class ClickToDialEngine:
         try:
             if connected_at:
                 self.db.execute(
-                    (
-                        """UPDATE click_to_dial_history
-                       SET status = ?, connected_at = ?
-                       WHERE call_id = ?"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE click_to_dial_history
-                       SET status = %s, connected_at = %s
-                       WHERE call_id = %s"""
-                    ),
+                    """UPDATE click_to_dial_history
+                   SET status = %s, connected_at = %s
+                   WHERE call_id = %s""",
                     (status, connected_at, call_id),
                 )
             else:
                 self.db.execute(
-                    (
-                        """UPDATE click_to_dial_history
-                       SET status = ?
-                       WHERE call_id = ?"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE click_to_dial_history
-                       SET status = %s
-                       WHERE call_id = %s"""
-                    ),
+                    """UPDATE click_to_dial_history
+                   SET status = %s
+                   WHERE call_id = %s""",
                     (status, call_id),
                 )
 
@@ -261,15 +226,9 @@ class ClickToDialEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, extension, destination, call_id, source, initiated_at, connected_at, status FROM click_to_dial_history
-                   WHERE extension = ?
-                   ORDER BY initiated_at DESC LIMIT ?"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, extension, destination, call_id, source, initiated_at, connected_at, status FROM click_to_dial_history
-                   WHERE extension = %s
-                   ORDER BY initiated_at DESC LIMIT %s"""
-                ),
+                """SELECT id, extension, destination, call_id, source, initiated_at, connected_at, status FROM click_to_dial_history
+               WHERE extension = %s
+               ORDER BY initiated_at DESC LIMIT %s""",
                 (extension, limit),
             )
 

@@ -202,74 +202,44 @@ class CallbackQueue:
             # Prepare values
             status_value = callback["status"].value
 
-            if self.database.db_type == "postgresql":
-                cursor.execute(
-                    """
-                    INSERT INTO callback_requests (
-                        callback_id, queue_id, caller_number, caller_name,
-                        requested_at, callback_time, status, attempts, max_attempts,
-                        agent_id, started_at, completed_at, failed_at, cancelled_at,
-                        notes, updated_at
-                    ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (callback_id) DO UPDATE SET
-                        status = EXCLUDED.status,
-                        attempts = EXCLUDED.attempts,
-                        agent_id = EXCLUDED.agent_id,
-                        started_at = EXCLUDED.started_at,
-                        completed_at = EXCLUDED.completed_at,
-                        failed_at = EXCLUDED.failed_at,
-                        cancelled_at = EXCLUDED.cancelled_at,
-                        notes = EXCLUDED.notes,
-                        updated_at = EXCLUDED.updated_at
-                """,
-                    (
-                        callback_id,
-                        callback["queue_id"],
-                        callback["caller_number"],
-                        callback.get("caller_name"),
-                        callback["requested_at"],
-                        callback["callback_time"],
-                        status_value,
-                        callback["attempts"],
-                        callback["max_attempts"],
-                        callback.get("agent_id"),
-                        callback.get("started_at"),
-                        callback.get("completed_at"),
-                        callback.get("failed_at"),
-                        callback.get("cancelled_at"),
-                        callback.get("notes"),
-                        datetime.now(UTC),
-                    ),
-                )
-            else:
-                cursor.execute(
-                    """
-                    INSERT OR REPLACE INTO callback_requests (
-                        callback_id, queue_id, caller_number, caller_name,
-                        requested_at, callback_time, status, attempts, max_attempts,
-                        agent_id, started_at, completed_at, failed_at, cancelled_at,
-                        notes, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        callback_id,
-                        callback["queue_id"],
-                        callback["caller_number"],
-                        callback.get("caller_name"),
-                        callback["requested_at"],
-                        callback["callback_time"],
-                        status_value,
-                        callback["attempts"],
-                        callback["max_attempts"],
-                        callback.get("agent_id"),
-                        callback.get("started_at"),
-                        callback.get("completed_at"),
-                        callback.get("failed_at"),
-                        callback.get("cancelled_at"),
-                        callback.get("notes"),
-                        datetime.now(UTC),
-                    ),
-                )
+            cursor.execute(
+                """
+                INSERT INTO callback_requests (
+                    callback_id, queue_id, caller_number, caller_name,
+                    requested_at, callback_time, status, attempts, max_attempts,
+                    agent_id, started_at, completed_at, failed_at, cancelled_at,
+                    notes, updated_at
+                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                ON CONFLICT (callback_id) DO UPDATE SET
+                    status = EXCLUDED.status,
+                    attempts = EXCLUDED.attempts,
+                    agent_id = EXCLUDED.agent_id,
+                    started_at = EXCLUDED.started_at,
+                    completed_at = EXCLUDED.completed_at,
+                    failed_at = EXCLUDED.failed_at,
+                    cancelled_at = EXCLUDED.cancelled_at,
+                    notes = EXCLUDED.notes,
+                    updated_at = EXCLUDED.updated_at
+            """,
+                (
+                    callback_id,
+                    callback["queue_id"],
+                    callback["caller_number"],
+                    callback.get("caller_name"),
+                    callback["requested_at"],
+                    callback["callback_time"],
+                    status_value,
+                    callback["attempts"],
+                    callback["max_attempts"],
+                    callback.get("agent_id"),
+                    callback.get("started_at"),
+                    callback.get("completed_at"),
+                    callback.get("failed_at"),
+                    callback.get("cancelled_at"),
+                    callback.get("notes"),
+                    datetime.now(UTC),
+                ),
+            )
 
             self.database.connection.commit()
             cursor.close()

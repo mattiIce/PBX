@@ -413,28 +413,17 @@ class SOC2ComplianceEngine:
         try:
             # Check if control exists
             result = self.db.fetch_one(
-                (
-                    "SELECT id FROM soc2_controls WHERE control_id = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT id FROM soc2_controls WHERE control_id = %s"
-                ),
+                "SELECT id FROM soc2_controls WHERE control_id = %s",
                 (control_data["control_id"],),
             )
 
             if result:
                 # Update
                 self.db.execute(
-                    (
-                        """UPDATE soc2_controls
-                       SET control_category = ?, description = ?,
-                           implementation_status = ?, test_results = ?
-                       WHERE control_id = ?"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE soc2_controls
-                       SET control_category = %s, description = %s,
-                           implementation_status = %s, test_results = %s
-                       WHERE control_id = %s"""
-                    ),
+                    """UPDATE soc2_controls
+                   SET control_category = %s, description = %s,
+                       implementation_status = %s, test_results = %s
+                   WHERE control_id = %s""",
                     (
                         control_data.get("control_category"),
                         control_data.get("description"),
@@ -446,15 +435,9 @@ class SOC2ComplianceEngine:
             else:
                 # Insert
                 self.db.execute(
-                    (
-                        """INSERT INTO soc2_controls
-                       (control_id, control_category, description, implementation_status)
-                       VALUES (?, ?, ?, ?)"""
-                        if self.db.db_type == "sqlite"
-                        else """INSERT INTO soc2_controls
-                       (control_id, control_category, description, implementation_status)
-                       VALUES (%s, %s, %s, %s)"""
-                    ),
+                    """INSERT INTO soc2_controls
+                   (control_id, control_category, description, implementation_status)
+                   VALUES (%s, %s, %s, %s)""",
                     (
                         control_data["control_id"],
                         control_data.get("control_category"),
@@ -483,15 +466,9 @@ class SOC2ComplianceEngine:
         """
         try:
             self.db.execute(
-                (
-                    """UPDATE soc2_controls
-                   SET test_results = ?, last_tested = ?
-                   WHERE control_id = ?"""
-                    if self.db.db_type == "sqlite"
-                    else """UPDATE soc2_controls
-                   SET test_results = %s, last_tested = %s
-                   WHERE control_id = %s"""
-                ),
+                """UPDATE soc2_controls
+               SET test_results = %s, last_tested = %s
+               WHERE control_id = %s""",
                 (test_results, datetime.now(UTC), control_id),
             )
 
@@ -542,15 +519,9 @@ class SOC2ComplianceEngine:
         """
         try:
             result = self.db.fetch_all(
-                (
-                    """SELECT id, control_id, control_category, description, implementation_status, last_tested, test_results FROM soc2_controls
-                   WHERE control_category = ?
-                   ORDER BY control_id"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, control_id, control_category, description, implementation_status, last_tested, test_results FROM soc2_controls
-                   WHERE control_category = %s
-                   ORDER BY control_id"""
-                ),
+                """SELECT id, control_id, control_category, description, implementation_status, last_tested, test_results FROM soc2_controls
+               WHERE control_category = %s
+               ORDER BY control_id""",
                 (category,),
             )
 

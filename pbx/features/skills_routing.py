@@ -151,8 +151,7 @@ class SkillsBasedRouter:
         """
 
         # Agent skills table
-        agent_skills_table = (
-            """
+        agent_skills_table = """
         CREATE TABLE IF NOT EXISTS agent_skills (
             id SERIAL PRIMARY KEY,
             agent_extension VARCHAR(20) NOT NULL,
@@ -162,22 +161,9 @@ class SkillsBasedRouter:
             UNIQUE(agent_extension, skill_id)
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS agent_skills (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            agent_extension VARCHAR(20) NOT NULL,
-            skill_id VARCHAR(50) NOT NULL,
-            proficiency INTEGER NOT NULL CHECK (proficiency >= 1 AND proficiency <= 10),
-            assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            UNIQUE(agent_extension, skill_id)
-        )
-        """
-        )
 
         # Queue skill requirements table
-        queue_requirements_table = (
-            """
+        queue_requirements_table = """
         CREATE TABLE IF NOT EXISTS queue_skill_requirements (
             id SERIAL PRIMARY KEY,
             queue_number VARCHAR(20) NOT NULL,
@@ -187,18 +173,6 @@ class SkillsBasedRouter:
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-            if self.database.db_type == "postgresql"
-            else """
-        CREATE TABLE IF NOT EXISTS queue_skill_requirements (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            queue_number VARCHAR(20) NOT NULL,
-            skill_id VARCHAR(50) NOT NULL,
-            min_proficiency INTEGER NOT NULL CHECK (min_proficiency >= 1 AND min_proficiency <= 10),
-            required BOOLEAN DEFAULT 1,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )
-        """
-        )
 
         try:
             self.database.execute(skills_table)
@@ -230,17 +204,10 @@ class SkillsBasedRouter:
         # Store in database
         if self.database and self.database.enabled:
             try:
-                insert_query = (
-                    """
+                insert_query = """
                 INSERT INTO skills (skill_id, name, description)
                 VALUES (%s, %s, %s)
                 """
-                    if self.database.db_type == "postgresql"
-                    else """
-                INSERT INTO skills (skill_id, name, description)
-                VALUES (?, ?, ?)
-                """
-                )
                 self.database.execute(insert_query, (skill_id, name, description))
             except Exception as e:
                 self.logger.error(f"Failed to store skill in database: {e}")
@@ -278,19 +245,12 @@ class SkillsBasedRouter:
         if self.database and self.database.enabled:
             try:
                 # Try insert first, update if exists
-                insert_query = (
-                    """
+                insert_query = """
                 INSERT INTO agent_skills (agent_extension, skill_id, proficiency)
                 VALUES (%s, %s, %s)
                 ON CONFLICT (agent_extension, skill_id)
                 DO UPDATE SET proficiency = EXCLUDED.proficiency, assigned_at = CURRENT_TIMESTAMP
                 """
-                    if self.database.db_type == "postgresql"
-                    else """
-                INSERT OR REPLACE INTO agent_skills (agent_extension, skill_id, proficiency)
-                VALUES (?, ?, ?)
-                """
-                )
                 self.database.execute(insert_query, (agent_extension, skill_id, proficiency))
             except Exception as e:
                 self.logger.error(f"Failed to store agent skill in database: {e}")
@@ -317,17 +277,10 @@ class SkillsBasedRouter:
             # Remove from database
             if self.database and self.database.enabled:
                 try:
-                    delete_query = (
-                        """
+                    delete_query = """
                     DELETE FROM agent_skills
                     WHERE agent_extension = %s AND skill_id = %s
                     """
-                        if self.database.db_type == "postgresql"
-                        else """
-                    DELETE FROM agent_skills
-                    WHERE agent_extension = ? AND skill_id = ?
-                    """
-                    )
                     self.database.execute(delete_query, (agent_extension, skill_id))
                 except Exception as e:
                     self.logger.error(f"Failed to remove agent skill from database: {e}")
@@ -366,30 +319,17 @@ class SkillsBasedRouter:
         if self.database and self.database.enabled:
             try:
                 # Clear existing requirements
-                delete_query = (
-                    """
+                delete_query = """
                 DELETE FROM queue_skill_requirements WHERE queue_number = %s
                 """
-                    if self.database.db_type == "postgresql"
-                    else """
-                DELETE FROM queue_skill_requirements WHERE queue_number = ?
-                """
-                )
                 self.database.execute(delete_query, (queue_number,))
 
                 # Insert new requirements
                 for req in skill_reqs:
-                    insert_query = (
-                        """
+                    insert_query = """
                     INSERT INTO queue_skill_requirements (queue_number, skill_id, min_proficiency, required)
                     VALUES (%s, %s, %s, %s)
                     """
-                        if self.database.db_type == "postgresql"
-                        else """
-                    INSERT INTO queue_skill_requirements (queue_number, skill_id, min_proficiency, required)
-                    VALUES (?, ?, ?, ?)
-                    """
-                    )
                     self.database.execute(
                         insert_query,
                         (queue_number, req.skill_id, req.min_proficiency, req.required),

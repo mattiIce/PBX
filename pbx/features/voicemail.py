@@ -120,10 +120,8 @@ class VoicemailBox:
         self._load_messages()
 
     def _get_db_placeholder(self) -> str:
-        """Get database parameter placeholder based on database type"""
-        if self.database and self.database.db_type == "postgresql":
-            return "%s"
-        return "?"
+        """Get database parameter placeholder"""
+        return "%s"
 
     def save_message(self, caller_id: str, audio_data: bytes, duration: float | None = None) -> str:
         """

@@ -147,24 +147,14 @@ class BIIntegration:
             query = query.replace(":end_date", f"'{end_date.isoformat()}'")
 
             # Execute query
-            if db.db_type == "postgresql":
-                from psycopg2.extras import RealDictCursor
+            from psycopg2.extras import RealDictCursor
 
-                cursor = db.connection.cursor(cursor_factory=RealDictCursor)
-                cursor.execute(query)
-                results = cursor.fetchall()
-                cursor.close()
-                # Convert RealDictRow to regular dict
-                return [dict(row) for row in results]
-            if db.db_type == "sqlite":
-                cursor = db.connection.cursor()
-                cursor.execute(query)
-                columns = [description[0] for description in cursor.description]
-                results = cursor.fetchall()
-                # Convert tuples to dicts
-                return [dict(zip(columns, row, strict=False)) for row in results]
-            self.logger.error(f"Unsupported database type: {db.db_type}")
-            return []
+            cursor = db.connection.cursor(cursor_factory=RealDictCursor)
+            cursor.execute(query)
+            results = cursor.fetchall()
+            cursor.close()
+            # Convert RealDictRow to regular dict
+            return [dict(row) for row in results]
         except Exception as e:
             self.logger.error(f"Query execution failed: {e}")
             return []

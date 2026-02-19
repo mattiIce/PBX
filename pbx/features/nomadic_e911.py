@@ -50,17 +50,10 @@ class NomadicE911Engine:
 
             # Insert new location
             self.db.execute(
-                (
-                    """INSERT INTO nomadic_e911_locations
-                   (extension, ip_address, location_name, street_address, city, state,
-                    postal_code, country, building, floor, room, latitude, longitude, auto_detected)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO nomadic_e911_locations
-                   (extension, ip_address, location_name, street_address, city, state,
-                    postal_code, country, building, floor, room, latitude, longitude, auto_detected)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO nomadic_e911_locations
+               (extension, ip_address, location_name, street_address, city, state,
+                postal_code, country, building, floor, room, latitude, longitude, auto_detected)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
                     extension,
                     location_data.get("ip_address"),
@@ -85,15 +78,9 @@ class NomadicE911Engine:
                 new_loc = f"{location_data.get('street_address')}, {location_data.get('city')}, {location_data.get('state')}"
 
                 self.db.execute(
-                    (
-                        """INSERT INTO e911_location_updates
-                       (extension, old_location, new_location, update_source)
-                       VALUES (?, ?, ?, ?)"""
-                        if self.db.db_type == "sqlite"
-                        else """INSERT INTO e911_location_updates
-                       (extension, old_location, new_location, update_source)
-                       VALUES (%s, %s, %s, %s)"""
-                    ),
+                    """INSERT INTO e911_location_updates
+                   (extension, old_location, new_location, update_source)
+                   VALUES (%s, %s, %s, %s)""",
                     (extension, old_loc, new_loc, "auto" if auto_detected else "manual"),
                 )
 
@@ -116,15 +103,9 @@ class NomadicE911Engine:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, extension, ip_address, location_name, street_address, city, state, postal_code, country, building, floor, room, latitude, longitude, last_updated, auto_detected FROM nomadic_e911_locations
-                   WHERE extension = ?
-                   ORDER BY last_updated DESC LIMIT 1"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, extension, ip_address, location_name, street_address, city, state, postal_code, country, building, floor, room, latitude, longitude, last_updated, auto_detected FROM nomadic_e911_locations
-                   WHERE extension = %s
-                   ORDER BY last_updated DESC LIMIT 1"""
-                ),
+                """SELECT id, extension, ip_address, location_name, street_address, city, state, postal_code, country, building, floor, room, latitude, longitude, last_updated, auto_detected FROM nomadic_e911_locations
+               WHERE extension = %s
+               ORDER BY last_updated DESC LIMIT 1""",
                 (extension,),
             )
 
@@ -309,17 +290,10 @@ class NomadicE911Engine:
         """
         try:
             self.db.execute(
-                (
-                    """INSERT INTO multi_site_e911_configs
-                   (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin,
-                    street_address, city, state, postal_code, country, building, floor)
-                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO multi_site_e911_configs
-                   (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin,
-                    street_address, city, state, postal_code, country, building, floor)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO multi_site_e911_configs
+               (site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin,
+                street_address, city, state, postal_code, country, building, floor)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                 (
                     site_data["site_name"],
                     site_data["ip_range_start"],
@@ -394,15 +368,9 @@ class NomadicE911Engine:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, extension, old_location, new_location, update_source, updated_at FROM e911_location_updates
-                   WHERE extension = ?
-                   ORDER BY updated_at DESC LIMIT ?"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, extension, old_location, new_location, update_source, updated_at FROM e911_location_updates
-                   WHERE extension = %s
-                   ORDER BY updated_at DESC LIMIT %s"""
-                ),
+                """SELECT id, extension, old_location, new_location, update_source, updated_at FROM e911_location_updates
+               WHERE extension = %s
+               ORDER BY updated_at DESC LIMIT %s""",
                 (extension, limit),
             )
 

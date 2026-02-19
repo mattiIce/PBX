@@ -57,32 +57,17 @@ class RecordingAnnouncements:
         # Announcement logs table
         announcement_table = """
         CREATE TABLE IF NOT EXISTS recording_announcements_log (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             call_id VARCHAR(100) NOT NULL,
             party VARCHAR(20) NOT NULL,
-            announcement_played BOOLEAN DEFAULT 1,
-            consent_required BOOLEAN DEFAULT 0,
+            announcement_played BOOLEAN DEFAULT TRUE,
+            consent_required BOOLEAN DEFAULT FALSE,
             consent_given BOOLEAN,
-            consent_timeout BOOLEAN DEFAULT 0,
+            consent_timeout BOOLEAN DEFAULT FALSE,
             played_at TIMESTAMP NOT NULL,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
-
-        if self.database.db_type == "postgresql":
-            announcement_table = """
-            CREATE TABLE IF NOT EXISTS recording_announcements_log (
-                id SERIAL PRIMARY KEY,
-                call_id VARCHAR(100) NOT NULL,
-                party VARCHAR(20) NOT NULL,
-                announcement_played BOOLEAN DEFAULT TRUE,
-                consent_required BOOLEAN DEFAULT FALSE,
-                consent_given BOOLEAN,
-                consent_timeout BOOLEAN DEFAULT FALSE,
-                played_at TIMESTAMP NOT NULL,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
 
         try:
             cursor = self.database.connection.cursor()
@@ -116,38 +101,21 @@ class RecordingAnnouncements:
         try:
             cursor = self.database.connection.cursor()
 
-            if self.database.db_type == "postgresql":
-                cursor.execute(
-                    """
-                    INSERT INTO recording_announcements_log (call_id, party, announcement_played, consent_required, consent_given, consent_timeout, played_at)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s)
-                """,
-                    (
-                        call_id,
-                        party,
-                        announcement_played,
-                        consent_required,
-                        consent_given,
-                        consent_timeout,
-                        datetime.now(UTC),
-                    ),
-                )
-            else:
-                cursor.execute(
-                    """
-                    INSERT INTO recording_announcements_log (call_id, party, announcement_played, consent_required, consent_given, consent_timeout, played_at)
-                    VALUES (?, ?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        call_id,
-                        party,
-                        1 if announcement_played else 0,
-                        1 if consent_required else 0,
-                        1 if consent_given else (0 if consent_given is False else None),
-                        1 if consent_timeout else 0,
-                        datetime.now(UTC),
-                    ),
-                )
+            cursor.execute(
+                """
+                INSERT INTO recording_announcements_log (call_id, party, announcement_played, consent_required, consent_given, consent_timeout, played_at)
+                VALUES (%s, %s, %s, %s, %s, %s, %s)
+            """,
+                (
+                    call_id,
+                    party,
+                    announcement_played,
+                    consent_required,
+                    consent_given,
+                    consent_timeout,
+                    datetime.now(UTC),
+                ),
+            )
 
             self.database.connection.commit()
             cursor.close()

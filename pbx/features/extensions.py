@@ -88,7 +88,6 @@ class ExtensionRegistry:
         name = db_extension["name"]
 
         # Create config dict from database data
-        # Note: SQLite stores booleans as 0/1, so we need to convert them
         ext_config = {
             "number": number,
             "name": name,

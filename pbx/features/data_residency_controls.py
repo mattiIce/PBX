@@ -275,10 +275,7 @@ class DataResidencyControls:
 
                     # Transfer database records between regions
                     try:
-                        if db.db_type == "sqlite":
-                            placeholder = "?"
-                        else:
-                            placeholder = "%s"
+                        placeholder = "%s"
 
                         # Read the record from the source region table
                         select_query = (

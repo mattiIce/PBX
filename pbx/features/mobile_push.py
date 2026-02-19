@@ -63,64 +63,33 @@ class MobilePushNotifications:
         # Device registrations table
         device_table = """
         CREATE TABLE IF NOT EXISTS mobile_devices (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            id SERIAL PRIMARY KEY,
             user_id VARCHAR(50) NOT NULL,
             device_token VARCHAR(255) NOT NULL UNIQUE,
             platform VARCHAR(20) NOT NULL,
             registered_at TIMESTAMP NOT NULL,
             last_seen TIMESTAMP NOT NULL,
-            enabled BOOLEAN DEFAULT 1,
+            enabled BOOLEAN DEFAULT TRUE,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         """
 
-        if self.database.db_type == "postgresql":
-            device_table = """
-            CREATE TABLE IF NOT EXISTS mobile_devices (
-                id SERIAL PRIMARY KEY,
-                user_id VARCHAR(50) NOT NULL,
-                device_token VARCHAR(255) NOT NULL UNIQUE,
-                platform VARCHAR(20) NOT NULL,
-                registered_at TIMESTAMP NOT NULL,
-                last_seen TIMESTAMP NOT NULL,
-                enabled BOOLEAN DEFAULT TRUE,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-
         # Notification history table
-        if self.database.db_type == "postgresql":
-            notification_table = """
-            CREATE TABLE IF NOT EXISTS push_notifications (
-                id SERIAL PRIMARY KEY,
-                user_id VARCHAR(50) NOT NULL,
-                notification_type VARCHAR(50) NOT NULL,
-                title VARCHAR(200),
-                body TEXT,
-                data TEXT,
-                sent_at TIMESTAMP NOT NULL,
-                success BOOLEAN DEFAULT TRUE,
-                error_message TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
-        else:
-            notification_table = """
-            CREATE TABLE IF NOT EXISTS push_notifications (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id VARCHAR(50) NOT NULL,
-                notification_type VARCHAR(50) NOT NULL,
-                title VARCHAR(200),
-                body TEXT,
-                data TEXT,
-                sent_at TIMESTAMP NOT NULL,
-                success BOOLEAN DEFAULT 1,
-                error_message TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-            )
-            """
+        notification_table = """
+        CREATE TABLE IF NOT EXISTS push_notifications (
+            id SERIAL PRIMARY KEY,
+            user_id VARCHAR(50) NOT NULL,
+            notification_type VARCHAR(50) NOT NULL,
+            title VARCHAR(200),
+            body TEXT,
+            data TEXT,
+            sent_at TIMESTAMP NOT NULL,
+            success BOOLEAN DEFAULT TRUE,
+            error_message TEXT,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )
+        """
 
         try:
             cursor = self.database.connection.cursor()
@@ -152,21 +121,12 @@ class MobilePushNotifications:
         try:
             cursor = self.database.connection.cursor()
 
-            # Handle boolean enabled field for both database types
-            if self.database.db_type == "postgresql":
-                cursor.execute("""
-                    SELECT user_id, device_token, platform, registered_at, last_seen
-                    FROM mobile_devices
-                    WHERE enabled = TRUE
-                    ORDER BY last_seen DESC
-                """)
-            else:
-                cursor.execute("""
-                    SELECT user_id, device_token, platform, registered_at, last_seen
-                    FROM mobile_devices
-                    WHERE enabled = 1
-                    ORDER BY last_seen DESC
-                """)
+            cursor.execute("""
+                SELECT user_id, device_token, platform, registered_at, last_seen
+                FROM mobile_devices
+                WHERE enabled = TRUE
+                ORDER BY last_seen DESC
+            """)
 
             rows = cursor.fetchall()
             for row in rows:
@@ -199,26 +159,17 @@ class MobilePushNotifications:
             cursor = self.database.connection.cursor()
             now = datetime.now(UTC)
 
-            if self.database.db_type == "postgresql":
-                cursor.execute(
-                    """
-                    INSERT INTO mobile_devices (user_id, device_token, platform, registered_at, last_seen, updated_at)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (device_token) DO UPDATE SET
-                        last_seen = EXCLUDED.last_seen,
-                        updated_at = EXCLUDED.updated_at,
-                        enabled = TRUE
-                """,
-                    (user_id, device_token, platform, now, now, now),
-                )
-            else:
-                cursor.execute(
-                    """
-                    INSERT OR REPLACE INTO mobile_devices (user_id, device_token, platform, registered_at, last_seen, enabled, updated_at)
-                    VALUES (?, ?, ?, ?, ?, 1, ?)
-                """,
-                    (user_id, device_token, platform, now, now, now),
-                )
+            cursor.execute(
+                """
+                INSERT INTO mobile_devices (user_id, device_token, platform, registered_at, last_seen, updated_at)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (device_token) DO UPDATE SET
+                    last_seen = EXCLUDED.last_seen,
+                    updated_at = EXCLUDED.updated_at,
+                    enabled = TRUE
+            """,
+                (user_id, device_token, platform, now, now, now),
+            )
 
             self.database.connection.commit()
             cursor.close()
@@ -235,24 +186,14 @@ class MobilePushNotifications:
         try:
             cursor = self.database.connection.cursor()
 
-            if self.database.db_type == "postgresql":
-                cursor.execute(
-                    """
-                    UPDATE mobile_devices
-                    SET enabled = FALSE, updated_at = %s
-                    WHERE user_id = %s AND device_token = %s
-                """,
-                    (datetime.now(UTC), user_id, device_token),
-                )
-            else:
-                cursor.execute(
-                    """
-                    UPDATE mobile_devices
-                    SET enabled = 0, updated_at = ?
-                    WHERE user_id = ? AND device_token = ?
-                """,
-                    (datetime.now(UTC), user_id, device_token),
-                )
+            cursor.execute(
+                """
+                UPDATE mobile_devices
+                SET enabled = FALSE, updated_at = %s
+                WHERE user_id = %s AND device_token = %s
+            """,
+                (datetime.now(UTC), user_id, device_token),
+            )
 
             self.database.connection.commit()
             cursor.close()
@@ -279,40 +220,22 @@ class MobilePushNotifications:
             cursor = self.database.connection.cursor()
             data_json = json.dumps(data) if data else None
 
-            if self.database.db_type == "postgresql":
-                cursor.execute(
-                    """
-                    INSERT INTO push_notifications (user_id, notification_type, title, body, data, sent_at, success, error_message)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-                """,
-                    (
-                        user_id,
-                        notification_type,
-                        title,
-                        body,
-                        data_json,
-                        datetime.now(UTC),
-                        success,
-                        error_message,
-                    ),
-                )
-            else:
-                cursor.execute(
-                    """
-                    INSERT INTO push_notifications (user_id, notification_type, title, body, data, sent_at, success, error_message)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-                """,
-                    (
-                        user_id,
-                        notification_type,
-                        title,
-                        body,
-                        data_json,
-                        datetime.now(UTC),
-                        1 if success else 0,
-                        error_message,
-                    ),
-                )
+            cursor.execute(
+                """
+                INSERT INTO push_notifications (user_id, notification_type, title, body, data, sent_at, success, error_message)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            """,
+                (
+                    user_id,
+                    notification_type,
+                    title,
+                    body,
+                    data_json,
+                    datetime.now(UTC),
+                    success,
+                    error_message,
+                ),
+            )
 
             self.database.connection.commit()
             cursor.close()

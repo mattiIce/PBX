@@ -192,17 +192,11 @@ class GeographicRedundancy:
             if db and db.enabled and db.connection:
                 # Try a simple query
                 try:
-                    if db.db_type == "postgresql":
-                        cursor = db.connection.cursor()
-                        cursor.execute("SELECT 1")
-                        cursor.fetchone()
-                        cursor.close()
-                        return True
-                    if db.db_type == "sqlite":
-                        cursor = db.connection.cursor()
-                        cursor.execute("SELECT 1")
-                        cursor.fetchone()
-                        return True
+                    cursor = db.connection.cursor()
+                    cursor.execute("SELECT 1")
+                    cursor.fetchone()
+                    cursor.close()
+                    return True
                 except Exception as e:
                     self.logger.warning(f"Database query failed: {e}")
                     return False

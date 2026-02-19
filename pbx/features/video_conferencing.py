@@ -47,17 +47,10 @@ class VideoConferencingEngine:
                 password_hash = hashlib.sha256(room_data["password"].encode()).hexdigest()
 
             self.db.execute(
-                (
-                    """INSERT INTO video_conference_rooms
-                   (room_name, owner_extension, max_participants, enable_4k,
-                    enable_screen_share, recording_enabled, password_hash)
-                   VALUES (?, ?, ?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO video_conference_rooms
-                   (room_name, owner_extension, max_participants, enable_4k,
-                    enable_screen_share, recording_enabled, password_hash)
-                   VALUES (%s, %s, %s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO video_conference_rooms
+               (room_name, owner_extension, max_participants, enable_4k,
+                enable_screen_share, recording_enabled, password_hash)
+               VALUES (%s, %s, %s, %s, %s, %s, %s)""",
                 (
                     room_data["room_name"],
                     room_data.get("owner_extension"),
@@ -71,11 +64,7 @@ class VideoConferencingEngine:
 
             # Get created room ID
             result = self.db.execute(
-                (
-                    "SELECT id FROM video_conference_rooms WHERE room_name = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT id FROM video_conference_rooms WHERE room_name = %s"
-                ),
+                "SELECT id FROM video_conference_rooms WHERE room_name = %s",
                 (room_data["room_name"],),
             )
 
@@ -103,15 +92,9 @@ class VideoConferencingEngine:
         """
         try:
             self.db.execute(
-                (
-                    """INSERT INTO video_conference_participants
-                   (room_id, extension, display_name, video_enabled, audio_enabled)
-                   VALUES (?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO video_conference_participants
-                   (room_id, extension, display_name, video_enabled, audio_enabled)
-                   VALUES (%s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO video_conference_participants
+               (room_id, extension, display_name, video_enabled, audio_enabled)
+               VALUES (%s, %s, %s, %s, %s)""",
                 (
                     room_id,
                     participant_data.get("extension"),
@@ -143,15 +126,9 @@ class VideoConferencingEngine:
         """
         try:
             self.db.execute(
-                (
-                    """UPDATE video_conference_participants
-                   SET left_at = ?
-                   WHERE room_id = ? AND extension = ? AND left_at IS NULL"""
-                    if self.db.db_type == "sqlite"
-                    else """UPDATE video_conference_participants
-                   SET left_at = %s
-                   WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
-                ),
+                """UPDATE video_conference_participants
+               SET left_at = %s
+               WHERE room_id = %s AND extension = %s AND left_at IS NULL""",
                 (datetime.now(UTC), room_id, extension),
             )
 
@@ -174,11 +151,7 @@ class VideoConferencingEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    "SELECT id, room_name, owner_extension, max_participants, enable_4k, enable_screen_share, recording_enabled, password_hash, created_at FROM video_conference_rooms WHERE id = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT id, room_name, owner_extension, max_participants, enable_4k, enable_screen_share, recording_enabled, password_hash, created_at FROM video_conference_rooms WHERE id = %s"
-                ),
+                "SELECT id, room_name, owner_extension, max_participants, enable_4k, enable_screen_share, recording_enabled, password_hash, created_at FROM video_conference_rooms WHERE id = %s",
                 (room_id,),
             )
 
@@ -213,13 +186,8 @@ class VideoConferencingEngine:
         """
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, room_id, extension, display_name, joined_at, left_at, video_enabled, audio_enabled, screen_sharing FROM video_conference_participants
-                   WHERE room_id = ? AND left_at IS NULL"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, room_id, extension, display_name, joined_at, left_at, video_enabled, audio_enabled, screen_sharing FROM video_conference_participants
-                   WHERE room_id = %s AND left_at IS NULL"""
-                ),
+                """SELECT id, room_id, extension, display_name, joined_at, left_at, video_enabled, audio_enabled, screen_sharing FROM video_conference_participants
+               WHERE room_id = %s AND left_at IS NULL""",
                 (room_id,),
             )
 
@@ -254,28 +222,17 @@ class VideoConferencingEngine:
         try:
             # Check if codec exists
             result = self.db.execute(
-                (
-                    "SELECT id FROM video_codec_configs WHERE codec_name = ?"
-                    if self.db.db_type == "sqlite"
-                    else "SELECT id FROM video_codec_configs WHERE codec_name = %s"
-                ),
+                "SELECT id FROM video_codec_configs WHERE codec_name = %s",
                 (codec_data["codec_name"],),
             )
 
             if result and result[0]:
                 # Update
                 self.db.execute(
-                    (
-                        """UPDATE video_codec_configs
-                       SET enabled = ?, priority = ?, max_resolution = ?,
-                           max_bitrate = ?, min_bitrate = ?
-                       WHERE codec_name = ?"""
-                        if self.db.db_type == "sqlite"
-                        else """UPDATE video_codec_configs
-                       SET enabled = %s, priority = %s, max_resolution = %s,
-                           max_bitrate = %s, min_bitrate = %s
-                       WHERE codec_name = %s"""
-                    ),
+                    """UPDATE video_codec_configs
+                   SET enabled = %s, priority = %s, max_resolution = %s,
+                       max_bitrate = %s, min_bitrate = %s
+                   WHERE codec_name = %s""",
                     (
                         codec_data.get("enabled", True),
                         codec_data.get("priority", 100),
@@ -288,15 +245,9 @@ class VideoConferencingEngine:
             else:
                 # Insert
                 self.db.execute(
-                    (
-                        """INSERT INTO video_codec_configs
-                       (codec_name, enabled, priority, max_resolution, max_bitrate, min_bitrate)
-                       VALUES (?, ?, ?, ?, ?, ?)"""
-                        if self.db.db_type == "sqlite"
-                        else """INSERT INTO video_codec_configs
-                       (codec_name, enabled, priority, max_resolution, max_bitrate, min_bitrate)
-                       VALUES (%s, %s, %s, %s, %s, %s)"""
-                    ),
+                    """INSERT INTO video_codec_configs
+                   (codec_name, enabled, priority, max_resolution, max_bitrate, min_bitrate)
+                   VALUES (%s, %s, %s, %s, %s, %s)""",
                     (
                         codec_data["codec_name"],
                         codec_data.get("enabled", True),
@@ -364,15 +315,9 @@ class VideoConferencingEngine:
         """
         try:
             self.db.execute(
-                (
-                    """UPDATE video_conference_participants
-                   SET screen_sharing = ?
-                   WHERE room_id = ? AND extension = ? AND left_at IS NULL"""
-                    if self.db.db_type == "sqlite"
-                    else """UPDATE video_conference_participants
-                   SET screen_sharing = %s
-                   WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
-                ),
+                """UPDATE video_conference_participants
+               SET screen_sharing = %s
+               WHERE room_id = %s AND extension = %s AND left_at IS NULL""",
                 (True, room_id, extension),
             )
 
@@ -427,15 +372,9 @@ class VideoConferencingEngine:
         """
         try:
             self.db.execute(
-                (
-                    """UPDATE video_conference_participants
-                   SET screen_sharing = ?
-                   WHERE room_id = ? AND extension = ? AND left_at IS NULL"""
-                    if self.db.db_type == "sqlite"
-                    else """UPDATE video_conference_participants
-                   SET screen_sharing = %s
-                   WHERE room_id = %s AND extension = %s AND left_at IS NULL"""
-                ),
+                """UPDATE video_conference_participants
+               SET screen_sharing = %s
+               WHERE room_id = %s AND extension = %s AND left_at IS NULL""",
                 (False, room_id, extension),
             )
 
@@ -757,15 +696,9 @@ class VideoConferencingEngine:
 
         try:
             self.db.execute(
-                (
-                    """INSERT INTO video_conference_signals
-                   (room_id, to_extension, message_type, message_data, created_at)
-                   VALUES (?, ?, ?, ?, ?)"""
-                    if self.db.db_type == "sqlite"
-                    else """INSERT INTO video_conference_signals
-                   (room_id, to_extension, message_type, message_data, created_at)
-                   VALUES (%s, %s, %s, %s, %s)"""
-                ),
+                """INSERT INTO video_conference_signals
+               (room_id, to_extension, message_type, message_data, created_at)
+               VALUES (%s, %s, %s, %s, %s)""",
                 (
                     room_id,
                     to_extension,
@@ -803,17 +736,10 @@ class VideoConferencingEngine:
 
         try:
             result = self.db.execute(
-                (
-                    """SELECT id, message_type, message_data, created_at
-                   FROM video_conference_signals
-                   WHERE room_id = ? AND to_extension = ?
-                   ORDER BY created_at ASC"""
-                    if self.db.db_type == "sqlite"
-                    else """SELECT id, message_type, message_data, created_at
-                   FROM video_conference_signals
-                   WHERE room_id = %s AND to_extension = %s
-                   ORDER BY created_at ASC"""
-                ),
+                """SELECT id, message_type, message_data, created_at
+               FROM video_conference_signals
+               WHERE room_id = %s AND to_extension = %s
+               ORDER BY created_at ASC""",
                 (room_id, extension),
             )
 
@@ -832,9 +758,7 @@ class VideoConferencingEngine:
 
             # Clean up retrieved messages
             if signal_ids:
-                placeholders = ", ".join(
-                    "?" * len(signal_ids) if self.db.db_type == "sqlite" else "%s" * len(signal_ids)
-                )
+                placeholders = ", ".join(["%s"] * len(signal_ids))
                 self.db.execute(
                     f"DELETE FROM video_conference_signals WHERE id IN ({placeholders})",
                     tuple(signal_ids),
