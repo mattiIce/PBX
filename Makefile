@@ -76,6 +76,16 @@ install-constraints: ## Install with constraints.txt for reproducible builds
 setup: install pre-commit-install ## Full development setup (install + pre-commit hooks)
 	@echo -e "$(COLOR_GREEN)Development environment ready.$(COLOR_RESET)"
 
+.PHONY: install-production
+install-production: ## Full production install (system deps, DB, SSL, systemd, nginx, etc.)
+	@echo -e "$(COLOR_BOLD)Running unified production installer...$(COLOR_RESET)"
+	@echo -e "$(COLOR_YELLOW)This must be run as root: sudo make install-production$(COLOR_RESET)"
+	sudo $(PYTHON) scripts/install_production.py
+
+.PHONY: install-production-dry-run
+install-production-dry-run: ## Dry-run production install (shows what would be done)
+	$(PYTHON) scripts/install_production.py --dry-run
+
 # =============================================================================
 # Code Quality (Ruff + mypy)
 # =============================================================================
