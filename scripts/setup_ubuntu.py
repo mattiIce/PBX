@@ -777,10 +777,12 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             # Fall back to system python3 if venv doesn't exist
             python_path = Path("/usr/bin/python3")
 
+        env_file = self.project_root / ".env"
         service_content = textwrap.dedent(f"""\
             [Unit]
             Description=Warden VoIP PBX System
-            After=network.target postgresql.service
+            Wants=network-online.target
+            After=network-online.target postgresql.service
 
             [Service]
             Type=simple
@@ -788,6 +790,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             Group=root
             WorkingDirectory={self.project_root}
             ExecStart={python_path} {self.project_root}/main.py
+            EnvironmentFile=-{env_file}
             Restart=on-failure
             RestartSec=5
             StandardOutput=journal

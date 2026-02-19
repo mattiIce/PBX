@@ -7,16 +7,6 @@ import logging
 import sys
 import time
 
-# Load .env file BEFORE importing any PBX modules
-# This ensures environment variables (like DEBUG_VM_PIN) are available
-# when modules are imported and initialized
-from pbx.utils.env_loader import load_env_file
-
-load_env_file(".env")
-
-from pbx.core.pbx import PBXCore
-from pbx.utils.graceful_shutdown import setup_graceful_shutdown
-
 # Get logger
 logger = logging.getLogger(__name__)
 
@@ -40,6 +30,16 @@ if __name__ == "__main__":
     print("Warden Voip System v1.0.0")
     print("=" * 60)
 
+    # Load .env file BEFORE importing any PBX modules
+    # This ensures environment variables (like DEBUG_VM_PIN) are available
+    # when modules are imported and initialized
+    try:
+        from pbx.utils.env_loader import load_env_file
+
+        load_env_file(".env")
+    except ImportError:
+        print("Warning: Could not load .env file (env_loader not available)")
+
     # Check dependencies first
     print("\nChecking dependencies...")
     try:
@@ -51,7 +51,7 @@ if __name__ == "__main__":
         if not check_and_report(verbose=verbose, strict=True):
             print("\n✗ Dependency check failed. Install missing packages and try again.")
             sys.exit(1)
-    except (KeyError, TypeError, ValueError) as e:
+    except Exception as e:
         print(f"Warning: Could not check dependencies: {e}")
         print("Continuing anyway...")
 
@@ -112,6 +112,10 @@ if __name__ == "__main__":
     except (KeyError, TypeError, ValueError) as e:
         print(f"\n✗ Security check failed: {e}")
         sys.exit(1)
+
+    # Import PBX modules after dependency and config checks have passed
+    from pbx.core.pbx import PBXCore
+    from pbx.utils.graceful_shutdown import setup_graceful_shutdown
 
     # Create PBX instance
     try:
