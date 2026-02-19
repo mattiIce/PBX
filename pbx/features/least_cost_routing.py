@@ -595,6 +595,9 @@ class LeastCostRouting:
         # Sort by combined score (highest first)
         trunk_scores.sort(key=lambda x: x[1], reverse=True)
 
+        if not trunk_scores:
+            return available_rates[0][0]
+
         return trunk_scores[0][0]
 
     def get_statistics(self) -> dict:

@@ -142,7 +142,8 @@ class ProductionHealthChecker:
                 registered_extensions = len(
                     [e for e in self.pbx_core.extension_registry.get_all() if e.registered]
                 )
-            except Exception:
+            except Exception as e:
+                logger.warning("Failed to get PBX metrics: %s", e)
                 active_calls = 0
                 registered_extensions = 0
 

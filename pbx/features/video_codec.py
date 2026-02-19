@@ -824,6 +824,9 @@ class VideoCodecManager:
         multiplier = quality_multipliers.get(quality, 1.0)
         base_rate = (pixels / 1000000) * 1000  # 1 Mbps per megapixel
 
+        if framerate <= 0:
+            framerate = 30
+
         bitrate = int(base_rate * multiplier * (framerate / 30))
 
         return bitrate

@@ -44,8 +44,8 @@ class OutlookIntegration:
         self.scopes = config.get(
             "integrations.outlook.scopes", ["https://graph.microsoft.com/.default"]
         )
-        self.access_token = None
-        self.msal_app = None
+        self.access_token: str | None = None
+        self.msal_app: object | None = None
 
         if self.enabled:
             if not REQUESTS_AVAILABLE:

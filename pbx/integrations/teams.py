@@ -51,8 +51,8 @@ class TeamsIntegration:
         )
         self.graph_endpoint = "https://graph.microsoft.com/v1.0"
         self.scopes = ["https://graph.microsoft.com/.default"]
-        self.access_token = None
-        self.msal_app = None
+        self.access_token: str | None = None
+        self.msal_app: object | None = None
 
         if self.enabled:
             if not REQUESTS_AVAILABLE:

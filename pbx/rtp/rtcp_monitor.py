@@ -204,6 +204,9 @@ class RTCPMonitor:
         transit = arrival_time - (timestamp / 8000.0)
 
         # Calculate transit time difference
+        if self.transit_time is None:
+            self.transit_time = transit
+            return
         d = abs(transit - self.transit_time)
 
         # Update jitter estimate (RFC 3550 algorithm)

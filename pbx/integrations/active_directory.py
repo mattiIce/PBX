@@ -38,8 +38,8 @@ class ActiveDirectoryIntegration:
         self.bind_password = config.get("integrations.active_directory.bind_password")
         self.use_ssl = config.get("integrations.active_directory.use_ssl", True)
         self.auto_provision = config.get("integrations.active_directory.auto_provision", False)
-        self.connection = None
-        self.server = None
+        self.connection: object | None = None
+        self.server: object | None = None
 
         if self.enabled:
             if not LDAP3_AVAILABLE:

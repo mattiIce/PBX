@@ -4,6 +4,7 @@ import json
 from collections.abc import Callable
 from datetime import date, datetime
 from functools import wraps
+from pathlib import PurePath
 from typing import Any
 
 from flask import Response, current_app, jsonify, request
@@ -14,11 +15,13 @@ logger = get_logger()
 
 
 class DateTimeEncoder(json.JSONEncoder):
-    """Custom JSON encoder that handles datetime objects."""
+    """Custom JSON encoder that handles datetime and Path objects."""
 
     def default(self, obj: object) -> Any:
         if isinstance(obj, datetime | date):
             return obj.isoformat()
+        if isinstance(obj, PurePath):
+            return str(obj)
         return super().default(obj)
 
 

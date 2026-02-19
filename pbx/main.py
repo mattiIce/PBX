@@ -21,7 +21,7 @@ logger = logging.getLogger(__name__)
 
 # Global state
 running = True
-pbx = None
+pbx: PBXCore | None = None
 
 
 def signal_handler(sig: int, frame: object) -> None:
@@ -72,8 +72,8 @@ def main() -> None:
             logger.error("Configuration validation failed")
             sys.exit(1)
 
-        fips_mode = config.get("security.fips_mode", True)
-        enforce_fips = config.get("security.enforce_fips", True)
+        fips_mode = bool(config.get("security.fips_mode", True))
+        enforce_fips = bool(config.get("security.enforce_fips", True))
 
         if fips_mode:
             if not CRYPTO_AVAILABLE:

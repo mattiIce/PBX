@@ -413,8 +413,8 @@ class AutoAttendantHandler:
                 try:
                     pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
                     pbx.rtp_relay.port_pool.sort()
-                except Exception:
-                    pass
+                except Exception as exc:
+                    pbx.logger.error(f"Failed to return RTP port {call.aa_rtp_port}: {exc}")
         finally:
             # End the call
             time.sleep(1)

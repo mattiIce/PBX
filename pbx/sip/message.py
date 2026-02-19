@@ -179,8 +179,9 @@ class SIPMessageBuilder:
 
         # Copy relevant headers from request
         for header in ["Via", "From", "To", "Call-ID", "CSeq"]:
-            if request_msg.get_header(header):
-                response.set_header(header, request_msg.get_header(header))
+            value = request_msg.get_header(header)
+            if value:
+                response.set_header(header, value)
 
         if body:
             response.body = body

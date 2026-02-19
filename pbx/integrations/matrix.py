@@ -39,7 +39,7 @@ class MatrixIntegration:
         # Bot account for sending notifications
         self.bot_username = config.get("integrations.matrix.bot_username")
         self.bot_password = config.get("integrations.matrix.bot_password")
-        self.bot_access_token = None
+        self.bot_access_token: str | None = None
 
         # Notification settings
         self.notification_room = config.get("integrations.matrix.notification_room")

@@ -50,7 +50,7 @@ class LansweeperIntegration:
 
     def _make_request(
         self, endpoint: str, method: str = "GET", data: dict | None = None
-    ) -> dict | None:
+    ) -> dict | list | None:
         """Make API request to Lansweeper"""
         if not REQUESTS_AVAILABLE:
             return None
