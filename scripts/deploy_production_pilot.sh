@@ -158,8 +158,11 @@ install_dependencies() {
     PYTHONWARNINGS="ignore::SyntaxWarning" apt-get install -y \
         postgresql-17 \
         postgresql-contrib \
+        libpq-dev \
         python3-pip \
         python3-venv \
+        python3-dev \
+        build-essential \
         nginx \
         certbot \
         python3-certbot-nginx \
@@ -381,7 +384,7 @@ Group=pbx
 WorkingDirectory=$PROJECT_ROOT
 EnvironmentFile=$PROJECT_ROOT/.env
 Environment="PATH=$PROJECT_ROOT/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-ExecStartPre=$PROJECT_ROOT/venv/bin/python -m alembic -c $PROJECT_ROOT/alembic.ini upgrade head
+ExecStartPre=$PROJECT_ROOT/venv/bin/alembic -c $PROJECT_ROOT/alembic.ini upgrade head
 ExecStart=$PROJECT_ROOT/venv/bin/python $PROJECT_ROOT/main.py
 Restart=always
 RestartSec=10

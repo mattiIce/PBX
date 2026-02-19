@@ -30,6 +30,7 @@ import shlex
 import socket
 import subprocess
 import sys
+import textwrap
 import traceback
 from pathlib import Path
 
@@ -205,9 +206,12 @@ class SetupWizard:
             "libspeex-dev",  # Speex codec library
             "postgresql-17",  # Database server (PostgreSQL 17 from PGDG repo)
             "postgresql-contrib",  # PostgreSQL extensions
+            "libpq-dev",  # PostgreSQL client library headers (for psycopg2)
             "nginx",  # Reverse proxy
             "python3-venv",  # Python virtual environment
             "python3-pip",  # Python package installer
+            "python3-dev",  # Python headers (for building C extensions)
+            "build-essential",  # Compiler toolchain (gcc, make, etc.)
             "git",  # Version control
         ]
 
@@ -764,16 +768,102 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
 
         return True
 
+    def setup_systemd_service(self) -> bool:
+        """Generate and install the systemd service file"""
+        self.print_header("Installing Systemd Service")
+
+        python_path = self.venv_path / "bin" / "python"
+        if not python_path.exists():
+            # Fall back to system python3 if venv doesn't exist
+            python_path = Path("/usr/bin/python3")
+
+        service_content = textwrap.dedent(f"""\
+            [Unit]
+            Description=Warden VoIP PBX System
+            After=network.target postgresql.service
+
+            [Service]
+            Type=simple
+            User=root
+            Group=root
+            WorkingDirectory={self.project_root}
+            ExecStart={python_path} {self.project_root}/main.py
+            Restart=on-failure
+            RestartSec=5
+            StandardOutput=journal
+            StandardError=journal
+
+            [Install]
+            WantedBy=multi-user.target
+        """)
+
+        # Write to project root for reference
+        service_file = self.project_root / "pbx.service"
+        try:
+            service_file.write_text(service_content, encoding="utf-8")
+        except OSError as e:
+            self.print_error(f"Failed to write pbx.service to project root: {e}")
+            return False
+
+        # Install to systemd
+        systemd_path = Path("/etc/systemd/system/pbx.service")
+        try:
+            systemd_path.write_text(service_content, encoding="utf-8")
+        except OSError as e:
+            self.print_error(f"Failed to install pbx.service to {systemd_path}: {e}")
+            return False
+
+        self.print_success(f"Service file installed to {systemd_path}")
+
+        # Reload systemd so it recognizes the new service
+        ret, _, stderr = self.run_command(
+            "systemctl daemon-reload", "Reloading systemd", check=False
+        )
+        if ret != 0:
+            self.print_warning(f"Failed to reload systemd: {stderr}")
+
+        # Enable the service to start on boot
+        ret, _, stderr = self.run_command(
+            "systemctl enable pbx.service", "Enabling PBX service on boot", check=False
+        )
+        if ret != 0:
+            self.print_warning(f"Failed to enable service: {stderr}")
+        else:
+            self.print_success("PBX service enabled (will start on boot)")
+
+        return True
+
     def start_pbx(self) -> bool:
-        """Start the PBX server"""
+        """Start the PBX server via systemd"""
         self.print_header("Starting Warden VoIP PBX")
 
         response = input("Start the PBX server now? (Y/n): ").strip().lower()
         if response == "n":
             self.print_info("PBX not started. You can start it later with:")
-            self.print_info("  source venv/bin/activate && python main.py")
+            self.print_info("  sudo systemctl start pbx")
             return True
 
+        # Create logs directory if it doesn't exist
+        (self.project_root / "logs").mkdir(exist_ok=True)
+
+        # Use systemctl if the service file is installed
+        systemd_service = Path("/etc/systemd/system/pbx.service")
+        if systemd_service.exists():
+            self.print_info("Starting PBX via systemd...")
+            ret, _, stderr = self.run_command(
+                "systemctl start pbx", "Starting PBX service", check=False
+            )
+            if ret != 0:
+                self.print_warning(f"Failed to start PBX service: {stderr}")
+                self.print_info("You can start it manually with:")
+                self.print_info("  sudo systemctl start pbx")
+                return True
+
+            self.print_success("PBX service started")
+            self.print_info("View logs: journalctl -u pbx -f")
+            return True
+
+        # Fall back to direct execution if service file is missing
         python_path = self.venv_path / "bin" / "python"
         main_script = self.project_root / "main.py"
 
@@ -781,13 +871,8 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             self.print_error(f"main.py not found at {main_script}")
             return False
 
-        # Create logs directory if it doesn't exist
-        (self.project_root / "logs").mkdir(exist_ok=True)
-
-        self.print_info("Starting PBX server...")
+        self.print_info("Starting PBX server directly (systemd service not found)...")
         self.print_info(f"  Command: {python_path} {main_script}")
-        self.print_info("  The server will run in the background.")
-        self.print_info("  Press Ctrl+C or run 'kill' to stop it.\n")
 
         ret, _, stderr = self.run_command(
             f"nohup {python_path} {main_script} > {self.project_root}/logs/pbx.log 2>&1 &",
@@ -798,7 +883,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         if ret != 0:
             self.print_warning(f"Failed to start PBX server: {stderr}")
             self.print_info("You can start it manually with:")
-            self.print_info("  source venv/bin/activate && python main.py")
+            self.print_info("  sudo systemctl start pbx")
             return True
 
         self.print_success("PBX server started")
@@ -927,10 +1012,11 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         print("   Open your browser to: https://localhost:9000")
         print("   (You'll need to accept the self-signed certificate)\n")
 
-        print(f"{Colors.OKCYAN}4. Optional - Install as a system service:{Colors.ENDC}")
-        print("   sudo cp pbx.service /etc/systemd/system/")
-        print("   sudo systemctl enable pbx")
-        print("   sudo systemctl start pbx\n")
+        print(f"{Colors.OKCYAN}4. Manage the PBX service:{Colors.ENDC}")
+        print("   sudo systemctl start pbx     # Start the service")
+        print("   sudo systemctl stop pbx      # Stop the service")
+        print("   sudo systemctl restart pbx   # Restart the service")
+        print("   sudo systemctl status pbx    # Check service status\n")
 
         print(f"{Colors.OKCYAN}5. Review the documentation:{Colors.ENDC}")
         print("   README.md - Quick overview")
@@ -987,6 +1073,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
         print("  • Configure Nginx reverse proxy")
         print("  • Configure config.yml")
         print("  • Configure .env settings")
+        print("  • Install systemd service (pbx.service)")
         print("  • Start the PBX server")
         print()
 
@@ -1007,6 +1094,7 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             ("Nginx Reverse Proxy", self.setup_nginx),
             ("Configure config.yml", self.configure_config_yml),
             ("Configure .env", self.configure_env_file),
+            ("Systemd Service", self.setup_systemd_service),
             ("Setup Verification", self.verify_setup),
             ("Start PBX", self.start_pbx),
         ]
