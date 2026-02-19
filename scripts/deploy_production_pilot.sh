@@ -372,6 +372,16 @@ setup_systemd_service() {
 
     # First, populate the repository's pbx.service template file
     log_info "Populating pbx.service template in repository..."
+
+    # Disable ProtectHome when installed under /root or /home, because
+    # ProtectHome=true makes those paths inaccessible (causes 203/EXEC).
+    PROTECT_HOME="true"
+    if [[ "$PROJECT_ROOT" == /root/* ]] || [[ "$PROJECT_ROOT" == /root ]] || \
+       [[ "$PROJECT_ROOT" == /home/* ]]; then
+        PROTECT_HOME="false"
+        log_info "Installation under home directory detected — setting ProtectHome=false"
+    fi
+
     cat > "$PROJECT_ROOT/pbx.service" << EOF
 [Unit]
 Description=Warden VoIP PBX System
@@ -395,8 +405,8 @@ StandardError=journal
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
-ProtectHome=true
-ReadWritePaths=$PROJECT_ROOT/logs $PROJECT_ROOT/recordings $PROJECT_ROOT/voicemail $PROJECT_ROOT/cdr $PROJECT_ROOT/moh
+ProtectHome=$PROTECT_HOME
+ReadWritePaths=$PROJECT_ROOT $PROJECT_ROOT/logs $PROJECT_ROOT/recordings $PROJECT_ROOT/voicemail $PROJECT_ROOT/cdr $PROJECT_ROOT/moh
 
 # Resource limits
 LimitNOFILE=65536
