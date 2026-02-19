@@ -618,6 +618,22 @@ class ProductionInstaller:
         self.env_file.chmod(0o600)
         self._ok(f".env file created at {self.env_file}")
         self._info("Edit .env later to add SMTP, AD, or integration credentials")
+
+        # Verify config.yml exists — PBX cannot start without it
+        config_file = self.project_root / "config.yml"
+        if not config_file.exists():
+            self._warn("config.yml not found in project root")
+            # Check for example configs to copy
+            example_configs = sorted(self.project_root.glob("config*.yml"))
+            if example_configs:
+                self._info(f"Found example config(s): {', '.join(c.name for c in example_configs)}")
+            self._warn(
+                "The PBX requires config.yml to start. "
+                "Create one before running: sudo systemctl start pbx"
+            )
+        else:
+            self._ok("config.yml found")
+
         return True
 
     # ------------------------------------------------------------------
@@ -633,12 +649,16 @@ class ProductionInstaller:
         python_bin = self.venv_path / "bin" / "python"
         alembic_ini = self.project_root / "alembic.ini"
 
+        # Build env dict from .env so child processes get DB credentials
+        db_env = self._load_env_as_dict()
+
         # Try Alembic first
         if alembic_ini.exists():
             ret, _, stderr = self._run(
                 f"cd {self.project_root} && {python_bin} -m alembic upgrade head",
                 description="Running Alembic migrations",
                 check=False,
+                env=db_env,
             )
             if ret == 0:
                 self._ok("Database schema migrated via Alembic")
@@ -652,6 +672,7 @@ class ProductionInstaller:
                 f"{python_bin} {init_script}",
                 description="Running database initialization script",
                 check=False,
+                env=db_env,
             )
             if ret != 0:
                 self._warn(f"init_database.py failed: {stderr[:200]}")
@@ -660,6 +681,27 @@ class ProductionInstaller:
 
         self._ok("Database initialization complete")
         return True
+
+    def _load_env_as_dict(self) -> dict[str, str]:
+        """Load the .env file and return its values as a dict for subprocess env."""
+        env_vars: dict[str, str] = {}
+        if not self.env_file.exists():
+            return env_vars
+        for line in self.env_file.read_text().splitlines():
+            stripped = line.strip()
+            if not stripped or stripped.startswith("#"):
+                continue
+            if "=" not in stripped:
+                continue
+            key, value = stripped.split("=", 1)
+            key = key.strip()
+            value = value.strip()
+            if (value.startswith('"') and value.endswith('"')) or (
+                value.startswith("'") and value.endswith("'")
+            ):
+                value = value[1:-1]
+            env_vars[key] = value
+        return env_vars
 
     # ------------------------------------------------------------------
     # Step 8: SSL Certificate
@@ -794,6 +836,7 @@ class ProductionInstaller:
             User=pbx
             Group=pbx
             WorkingDirectory={self.project_root}
+            EnvironmentFile={self.project_root}/.env
             Environment="PATH={self.venv_path}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
             ExecStartPre={self.venv_path}/bin/python -m alembic -c {self.project_root}/alembic.ini upgrade head
             ExecStart={self.venv_path}/bin/python {self.project_root}/main.py
@@ -1013,7 +1056,7 @@ class ProductionInstaller:
         backup_script = textwrap.dedent(f"""\
             #!/bin/bash
             # Warden VoIP PBX — Automated Backup Script
-            set -e
+            set -eo pipefail
 
             BACKUP_DIR="/var/backups/pbx"
             TIMESTAMP=$(date +%Y%m%d_%H%M%S)

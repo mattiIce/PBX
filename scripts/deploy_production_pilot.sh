@@ -14,7 +14,7 @@
 #   sudo ./scripts/deploy_production_pilot.sh [--dry-run]
 ################################################################################
 
-set -e  # Exit on error
+set -eo pipefail  # Exit on error, catch pipeline failures
 
 # Colors for output
 RED='\033[0;31m'
@@ -166,7 +166,14 @@ install_dependencies() {
         redis-server \
         supervisor \
         ufw \
-        fail2ban
+        fail2ban \
+        espeak \
+        ffmpeg \
+        libopus-dev \
+        portaudio19-dev \
+        libspeex-dev \
+        prometheus \
+        prometheus-node-exporter
 
     log_success "Dependencies installed"
 }
@@ -258,6 +265,7 @@ configure_firewall() {
     # Allow SIP
     ufw allow 5060/udp
     ufw allow 5060/tcp
+    ufw allow 5061/tcp   # SIP TLS
 
     # Allow RTP (audio/video)
     ufw allow 10000:20000/udp
@@ -290,6 +298,8 @@ setup_backup_system() {
     # Create backup script
     cat > /usr/local/bin/pbx-backup.sh << EOF
 #!/bin/bash
+set -eo pipefail
+
 BACKUP_DIR="/var/backups/pbx"
 TIMESTAMP=\$(date +%Y%m%d_%H%M%S)
 DATABASE="pbx_system"
@@ -297,8 +307,18 @@ DATABASE="pbx_system"
 # Database backup
 sudo -u postgres pg_dump \$DATABASE | gzip > "\$BACKUP_DIR/db_\$TIMESTAMP.sql.gz"
 
-# Configuration backup
-tar -czf "\$BACKUP_DIR/config_\$TIMESTAMP.tar.gz" "$PROJECT_ROOT/config.yml"
+# Configuration backup (config + secrets)
+tar -czf "\$BACKUP_DIR/config_\$TIMESTAMP.tar.gz" \
+    "$PROJECT_ROOT/config.yml" \
+    "$PROJECT_ROOT/.env" \
+    2>/dev/null || true
+
+# Voicemail backup (if directory exists)
+if [ -d "$PROJECT_ROOT/voicemail" ]; then
+    tar -czf "\$BACKUP_DIR/voicemail_\$TIMESTAMP.tar.gz" \
+        "$PROJECT_ROOT/voicemail" \
+        2>/dev/null || true
+fi
 
 # Keep only last 30 days of backups
 find "\$BACKUP_DIR" -name "*.gz" -mtime +30 -delete
@@ -308,8 +328,8 @@ EOF
 
     chmod +x /usr/local/bin/pbx-backup.sh
 
-    # Add to crontab (daily at 2 AM)
-    (crontab -l 2>/dev/null; echo "0 2 * * * /usr/local/bin/pbx-backup.sh >> /var/log/pbx-backup.log 2>&1") | crontab -
+    # Add to crontab (daily at 2 AM) — idempotent: removes existing entry first
+    (crontab -l 2>/dev/null | grep -v pbx-backup; echo "0 2 * * * /usr/local/bin/pbx-backup.sh >> /var/log/pbx-backup.log 2>&1") | crontab -
 
     log_success "Backup system configured (daily at 2 AM)"
 }
@@ -351,7 +371,7 @@ setup_systemd_service() {
     log_info "Populating pbx.service template in repository..."
     cat > "$PROJECT_ROOT/pbx.service" << EOF
 [Unit]
-Description=PBX System
+Description=Warden VoIP PBX System
 After=network.target postgresql.service redis.service
 
 [Service]
@@ -359,6 +379,7 @@ Type=simple
 User=pbx
 Group=pbx
 WorkingDirectory=$PROJECT_ROOT
+EnvironmentFile=$PROJECT_ROOT/.env
 Environment="PATH=$PROJECT_ROOT/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 ExecStartPre=$PROJECT_ROOT/venv/bin/python -m alembic -c $PROJECT_ROOT/alembic.ini upgrade head
 ExecStart=$PROJECT_ROOT/venv/bin/python $PROJECT_ROOT/main.py
@@ -390,6 +411,11 @@ EOF
 
     # Create pbx user if doesn't exist (with enhanced security)
     id -u pbx &>/dev/null || useradd -r -s /bin/false -M -d /nonexistent pbx
+
+    # Create required data directories
+    for dir in logs recordings voicemail cdr moh; do
+        mkdir -p "$PROJECT_ROOT/$dir"
+    done
 
     # Set permissions
     chown -R pbx:pbx "$PROJECT_ROOT"
@@ -559,7 +585,7 @@ main() {
 
     # Pre-flight checks
     check_root
-    check_ubuntu_version
+    check_ubuntu_version || log_warning "Continuing despite OS version mismatch..."
     check_system_requirements
     echo ""
 
