@@ -387,7 +387,7 @@ export async function loadLCRRates(): Promise<void> {
 
         if (!response.ok) {
             if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
-                console.info('LCR rates endpoint returned error:', response.status, '(feature may not be enabled)');
+                debugLog('LCR rates endpoint returned error:', response.status, '(feature may not be enabled)');
             } else {
                 console.error('Error loading LCR rates:', response.status);
                 showNotification('Error loading LCR rates', 'error');
@@ -454,7 +454,7 @@ export async function loadLCRRates(): Promise<void> {
     } catch (error: unknown) {
         if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
             const msg = error instanceof Error ? error.message : String(error);
-            console.info('Error loading LCR rates (expected if LCR not enabled):', msg);
+            debugLog('Error loading LCR rates (expected if LCR not enabled):', msg);
         } else {
             console.error('Error loading LCR rates:', error);
             showNotification('Error loading LCR rates', 'error');
@@ -471,7 +471,7 @@ export async function loadLCRStatistics(): Promise<void> {
 
         if (!response.ok) {
             if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
-                console.info('LCR statistics endpoint returned error:', response.status, '(feature may not be enabled)');
+                debugLog('LCR statistics endpoint returned error:', response.status, '(feature may not be enabled)');
             } else {
                 console.error('Error loading LCR statistics:', response.status);
             }
@@ -514,7 +514,7 @@ export async function loadLCRStatistics(): Promise<void> {
     } catch (error: unknown) {
         if ((window as unknown as Record<string, unknown>).suppressErrorNotifications) {
             const msg = error instanceof Error ? error.message : String(error);
-            console.info('Error loading LCR statistics (expected if LCR not enabled):', msg);
+            debugLog('Error loading LCR statistics (expected if LCR not enabled):', msg);
         } else {
             console.error('Error loading LCR statistics:', error);
         }

@@ -337,7 +337,7 @@ function displayClickToDialConfigs(configs) {
     
     // Exit early if container doesn't exist
     if (!container) {
-        console.warn('Click-to-dial configs container not found');
+        debugWarn('Click-to-dial configs container not found');
         return;
     }
 

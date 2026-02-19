@@ -124,7 +124,7 @@ class PhoneBook:
             return
 
         try:
-            query = "SELECT * FROM phone_book ORDER BY name"
+            query = "SELECT id, extension, name, department, email, mobile, office_location, ad_synced, created_at, updated_at FROM phone_book ORDER BY name"
             entries = self.database.fetch_all(query)
 
             self.entries = {}

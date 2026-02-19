@@ -23,6 +23,10 @@ env:
   PYTHON_VERSION: "3.13"
   NODE_VERSION: "22"
   UV_SYSTEM_PYTHON: "1"
+  # Required GitHub Environment Variables (configure in repo Settings > Environments):
+  #   vars.STAGING_URL    - Staging URL, e.g. https://staging-pbx.yourcompany.com
+  #   vars.PRODUCTION_URL - Production URL, e.g. https://pbx.yourcompany.com
+  #   vars.BLUE_URL       - Blue/canary URL, e.g. https://blue-pbx.yourcompany.com
 
 jobs:
   validate:
@@ -131,7 +135,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment:
       name: staging
-      url: https://staging-pbx.example.com
+      url: ${{ vars.STAGING_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -152,10 +156,10 @@ jobs:
         run: sleep 30
 
       - name: Run smoke tests
-        run: python scripts/smoke_tests.py --api-url https://staging-pbx.example.com
+        run: python scripts/smoke_tests.py --api-url ${{ vars.STAGING_URL }}
 
       - name: Run health check
-        run: python scripts/health_monitor.py --api-url https://staging-pbx.example.com
+        run: python scripts/health_monitor.py --api-url ${{ vars.STAGING_URL }}
 
   deploy-production:
     name: Deploy to Production
@@ -164,7 +168,7 @@ jobs:
     runs-on: ubuntu-24.04
     environment:
       name: production
-      url: https://pbx.example.com
+      url: ${{ vars.PRODUCTION_URL }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v6
@@ -194,10 +198,10 @@ jobs:
         run: sleep 30
 
       - name: Run smoke tests (Blue)
-        run: python scripts/smoke_tests.py --api-url https://blue-pbx.example.com
+        run: python scripts/smoke_tests.py --api-url ${{ vars.BLUE_URL }}
 
       - name: Run performance benchmark
-        run: python scripts/benchmark_performance.py --api-url https://blue-pbx.example.com
+        run: python scripts/benchmark_performance.py --api-url ${{ vars.BLUE_URL }}
 
       - name: Switch traffic to Blue
         run: |
@@ -214,7 +218,7 @@ jobs:
           sleep 300
 
       - name: Verify production health
-        run: python scripts/health_monitor.py --api-url https://pbx.example.com
+        run: python scripts/health_monitor.py --api-url ${{ vars.PRODUCTION_URL }}
 
       - name: Notify deployment success
         uses: slackapi/slack-github-action@v2
@@ -251,7 +255,7 @@ jobs:
           echo "::error::Production deployment rolled back"
 
       - name: Verify rollback
-        run: python scripts/smoke_tests.py --api-url https://pbx.example.com
+        run: python scripts/smoke_tests.py --api-url ${{ vars.PRODUCTION_URL }}
 
       - name: Notify rollback
         uses: slackapi/slack-github-action@v2

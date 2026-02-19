@@ -303,13 +303,13 @@ class CallQualityPredictionDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                SELECT * FROM quality_predictions
+                SELECT id, call_id, current_mos, predicted_mos, predicted_quality_level, current_packet_loss, predicted_packet_loss, alert, alert_reasons, recommendations, timestamp, created_at FROM quality_predictions
                 ORDER BY timestamp DESC
                 LIMIT %s
                 """
             else:
                 sql = """
-                SELECT * FROM quality_predictions
+                SELECT id, call_id, current_mos, predicted_mos, predicted_quality_level, current_packet_loss, predicted_packet_loss, alert, alert_reasons, recommendations, timestamp, created_at FROM quality_predictions
                 ORDER BY timestamp DESC
                 LIMIT ?
                 """
@@ -330,13 +330,13 @@ class CallQualityPredictionDatabase:
 
             if self.db.db_type == "postgresql":
                 sql = """
-                SELECT * FROM quality_alerts
+                SELECT id, call_id, alert_type, severity, message, metric_value, threshold_value, timestamp, acknowledged, created_at FROM quality_alerts
                 WHERE acknowledged = FALSE
                 ORDER BY timestamp DESC
                 """
             else:
                 sql = """
-                SELECT * FROM quality_alerts
+                SELECT id, call_id, alert_type, severity, message, metric_value, threshold_value, timestamp, acknowledged, created_at FROM quality_alerts
                 WHERE acknowledged = 0
                 ORDER BY timestamp DESC
                 """

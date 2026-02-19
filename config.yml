@@ -70,6 +70,17 @@ api:
   port: 9000
   enable_cors: true
   require_authentication: true  # Enable API authentication for security
+
+  # Allowed CORS origins for the admin panel.
+  # Set to the actual URL(s) where your admin panel is served.
+  # Example: ["https://admin.yourdomain.com"]
+  # Leave empty to allow same-origin only (most secure).
+  cors_allowed_origins: []
+
+  # Additional CSP connect-src sources for API connections.
+  # Example: ["https://admin.yourdomain.com:9000"]
+  # 'self' and cdn.jsdelivr.net are always included.
+  csp_connect_sources: []
   
   # =============================================================================
   # HTTPS/SSL Configuration

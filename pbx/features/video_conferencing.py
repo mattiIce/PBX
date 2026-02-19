@@ -176,9 +176,9 @@ class VideoConferencingEngine:
         try:
             result = self.db.execute(
                 (
-                    "SELECT * FROM video_conference_rooms WHERE id = ?"
+                    "SELECT id, room_name, owner_extension, max_participants, enable_4k, enable_screen_share, recording_enabled, password_hash, created_at FROM video_conference_rooms WHERE id = ?"
                     if self.db.db_type == "sqlite"
-                    else "SELECT * FROM video_conference_rooms WHERE id = %s"
+                    else "SELECT id, room_name, owner_extension, max_participants, enable_4k, enable_screen_share, recording_enabled, password_hash, created_at FROM video_conference_rooms WHERE id = %s"
                 ),
                 (room_id,),
             )
@@ -215,10 +215,10 @@ class VideoConferencingEngine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM video_conference_participants
+                    """SELECT id, room_id, extension, display_name, joined_at, left_at, video_enabled, audio_enabled, screen_sharing FROM video_conference_participants
                    WHERE room_id = ? AND left_at IS NULL"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM video_conference_participants
+                    else """SELECT id, room_id, extension, display_name, joined_at, left_at, video_enabled, audio_enabled, screen_sharing FROM video_conference_participants
                    WHERE room_id = %s AND left_at IS NULL"""
                 ),
                 (room_id,),
@@ -324,7 +324,7 @@ class VideoConferencingEngine:
         """
         try:
             result = self.db.execute(
-                "SELECT * FROM video_conference_rooms ORDER BY created_at DESC"
+                "SELECT id, room_name, owner_extension, max_participants, enable_4k, enable_screen_share, recording_enabled, password_hash, created_at FROM video_conference_rooms ORDER BY created_at DESC"
             )
 
             rooms = [

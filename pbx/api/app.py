@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from flask import Flask, Response
+from flask import Flask, Response, request
 
 from pbx.api.errors import register_error_handlers
 from pbx.utils.logger import get_logger
@@ -27,21 +27,42 @@ def create_app(pbx_core: object | None = None) -> Flask:
 
     @app.after_request
     def add_security_headers(response: Response) -> Response:
-        response.headers["Access-Control-Allow-Origin"] = "*"
+        # CORS: restrict to configured origins (default: same-origin only)
+        cors_origins: list[str] = []
+        if pbx_core:
+            config = getattr(pbx_core, "config", None)
+            if config:
+                cors_origins = config.get("api.cors_allowed_origins", []) or []
+
+        origin = request.headers.get("Origin", "")
+        if cors_origins and origin in cors_origins:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Vary"] = "Origin"
+
         response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS"
-        response.headers["Access-Control-Allow-Headers"] = "Content-type, Authorization"
-        response.headers["X-Content-type-Options"] = "nosniff"
+        response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization"
+        response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-XSS-Protection"] = "1; mode=block"
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(self), camera=()"
+
+        # Build CSP with configurable connect-src
+        connect_sources = ["'self'"]
+        if pbx_core:
+            config = getattr(pbx_core, "config", None)
+            if config:
+                extra_sources = config.get("api.csp_connect_sources", []) or []
+                connect_sources.extend(extra_sources)
+        connect_src = " ".join(connect_sources)
+
         csp = (
             "default-src 'self'; "
             "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
             "https://cdnjs.cloudflare.com https://unpkg.com; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "
-            "connect-src 'self' http://*:9000 https://*:9000 https://cdn.jsdelivr.net;"
+            f"connect-src {connect_src} https://cdn.jsdelivr.net;"
         )
         response.headers["Content-Security-Policy"] = csp
         return response

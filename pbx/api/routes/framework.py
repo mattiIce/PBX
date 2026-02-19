@@ -646,7 +646,7 @@ def get_integration_activity() -> tuple[Response, int]:
         try:
             # Query integration activity log directly from database
             result = pbx_core.database.execute(
-                """SELECT * FROM integration_activity_log
+                """SELECT id, integration_type, action, status, details, created_at FROM integration_activity_log
                    ORDER BY created_at DESC LIMIT 100"""
             )
 
@@ -752,7 +752,7 @@ def clear_integration_activity() -> tuple[Response, int]:
 # =============================================================================
 
 # GDPR Handlers - COMMENTED OUT (not required for US-only operations)
-# These handlers are preserved but not active, matching the original rest_api.py.
+# These handlers are not active (not required for US-only operations).
 #
 # def get_gdpr_consents(extension): ...
 # def record_gdpr_consent(): ...
@@ -761,7 +761,7 @@ def clear_integration_activity() -> tuple[Response, int]:
 # def get_gdpr_requests(): ...
 
 # PCI DSS Handlers - COMMENTED OUT (not required for US-only operations)
-# These handlers are preserved but not active, matching the original rest_api.py.
+# These handlers are not active.
 #
 # def get_pci_audit_log(): ...
 # def log_pci_event(): ...

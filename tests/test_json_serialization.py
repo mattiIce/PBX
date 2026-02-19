@@ -6,7 +6,7 @@ Tests for JSON serialization of datetime objects in API responses
 import json
 from datetime import UTC, datetime
 
-from pbx.api.rest_api import DateTimeEncoder
+from pbx.api.utils import DateTimeEncoder
 from pbx.utils.config import Config
 from pbx.utils.database import DatabaseBackend, RegisteredPhonesDB
 

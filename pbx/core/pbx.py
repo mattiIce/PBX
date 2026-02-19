@@ -61,6 +61,7 @@ class PBXCore:
         self.registered_phones_db = None
         self.extension_db = None
         if self.database.connect():
+            self._run_alembic_migrations()
             self.database.create_tables()
             from pbx.utils.database import ExtensionDB
 
@@ -148,6 +149,42 @@ class PBXCore:
             # Normal logging
             log_method = getattr(self.logger, level, self.logger.info)
             log_method(message)
+
+    def _run_alembic_migrations(self) -> None:
+        """
+        Run pending Alembic database migrations before starting the application.
+
+        Called during startup after the database connection is established but
+        before create_tables(). This ensures schema migrations from new deployments
+        (git pull + systemctl restart) are applied automatically.
+
+        Non-fatal: if Alembic is unavailable or migrations fail, the app logs a
+        warning and continues (create_tables will handle missing tables via
+        CREATE TABLE IF NOT EXISTS).
+        """
+        try:
+            from alembic.command import upgrade
+            from alembic.config import Config as AlembicConfig
+
+            alembic_cfg = AlembicConfig("alembic.ini")
+
+            # Build database URL from the same config the app uses
+            if self.database.db_type == "postgresql":
+                db_host = self.config.get("database.host", "localhost")
+                db_port = self.config.get("database.port", 5432)
+                db_name = self.config.get("database.name", "pbx")
+                db_user = self.config.get("database.user", "pbx")
+                db_password = self.config.get("database.password", "")
+                db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
+                alembic_cfg.set_main_option("sqlalchemy.url", db_url)
+            elif self.database.db_type == "sqlite":
+                db_path = self.config.get("database.path", "pbx.db")
+                alembic_cfg.set_main_option("sqlalchemy.url", f"sqlite:///{db_path}")
+
+            upgrade(alembic_cfg, "head")
+            self._log_startup("Alembic database migrations applied successfully")
+        except Exception as e:
+            self.logger.warning(f"Alembic migration skipped or failed: {e}")
 
     def _auto_seed_critical_extensions(self) -> None:
         """

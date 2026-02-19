@@ -1,3 +1,26 @@
+"""Dual Migration Mechanism
+==========================
+
+The PBX system uses two complementary mechanisms for database table management:
+
+1. **Alembic migrations** (this directory) manage the 4 core tables:
+   - extensions, call_records, voicemails, registered_phones
+   These tables are versioned here and follow a strict upgrade/downgrade path.
+
+2. **Runtime migrations** (pbx/utils/migrations.py) manage feature module tables
+   using idempotent CREATE TABLE IF NOT EXISTS statements. Feature modules create
+   their own tables on startup, so they do not require Alembic migrations.
+
+Creating new Alembic migrations:
+- Create a new migration for any schema change to the core tables listed above.
+- Generate with: alembic revision -m "description"
+- Always implement both upgrade() and downgrade() functions.
+- Test round-trip: alembic upgrade head && alembic downgrade -1 && alembic upgrade head
+
+Do NOT create retroactive Alembic migrations for feature module tables; they use
+idempotent CREATE TABLE IF NOT EXISTS and are managed at runtime.
+"""
+
 """Initial schema - create all PBX tables.
 
 Revision ID: 001

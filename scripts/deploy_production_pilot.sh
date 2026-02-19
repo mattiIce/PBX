@@ -360,6 +360,7 @@ User=pbx
 Group=pbx
 WorkingDirectory=$PROJECT_ROOT
 Environment="PATH=$PROJECT_ROOT/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+ExecStartPre=$PROJECT_ROOT/venv/bin/python -m alembic -c $PROJECT_ROOT/alembic.ini upgrade head
 ExecStart=$PROJECT_ROOT/venv/bin/python $PROJECT_ROOT/main.py
 Restart=always
 RestartSec=10

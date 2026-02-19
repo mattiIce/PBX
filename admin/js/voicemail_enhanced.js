@@ -251,7 +251,7 @@ window.loadAllVoicemailBoxes = async function() {
 
         const data = await response.json();
         // This could be used to display a summary table of all mailboxes
-        console.log('All voicemail boxes:', data.voicemail_boxes);
+        debugLog('All voicemail boxes:', data.voicemail_boxes);
         return data.voicemail_boxes;
     } catch (error) {
         console.error('Error loading voicemail boxes:', error);

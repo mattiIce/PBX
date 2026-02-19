@@ -15,7 +15,7 @@ const VERBOSE_LOGGING = window.WEBRTC_VERBOSE_LOGGING || false;
 
 function verboseLog(...args) {
     if (VERBOSE_LOGGING) {
-        console.log('[VERBOSE]', ...args);
+        debugLog('[VERBOSE]', ...args);
     }
 }
 
@@ -108,7 +108,7 @@ class WebRTCPhone {
         if (this.statusDiv) {
             this.statusDiv.textContent = message;
             this.statusDiv.className = `webrtc-status ${type}`;
-            console.log(`[WebRTC Phone] ${message}`);
+            debugLog(`[WebRTC Phone] ${message}`);
             verboseLog('Status update:', { message, type });
         }
     }
@@ -183,7 +183,7 @@ class WebRTCPhone {
             stream.getTracks().forEach(track => track.stop());
 
             this.updateStatus('Ready to call (microphone access granted)', 'success');
-            console.log('[WebRTC Phone] Microphone access granted');
+            debugLog('[WebRTC Phone] Microphone access granted');
             return true;
 
         } catch (err) {
@@ -253,7 +253,7 @@ class WebRTCPhone {
 
             // Handle connection state changes
             this.peerConnection.onconnectionstatechange = () => {
-                console.log(`Connection state: ${this.peerConnection.connectionState}`);
+                debugLog(`Connection state: ${this.peerConnection.connectionState}`);
                 verboseLog('Connection state changed:', {
                     connectionState: this.peerConnection.connectionState,
                     iceConnectionState: this.peerConnection.iceConnectionState,
@@ -277,7 +277,7 @@ class WebRTCPhone {
 
             // Handle ICE connection state
             this.peerConnection.oniceconnectionstatechange = () => {
-                console.log(`ICE connection state: ${this.peerConnection.iceConnectionState}`);
+                debugLog(`ICE connection state: ${this.peerConnection.iceConnectionState}`);
                 verboseLog('ICE connection state changed:', {
                     iceConnectionState: this.peerConnection.iceConnectionState,
                     iceGatheringState: this.peerConnection.iceGatheringState
@@ -290,7 +290,7 @@ class WebRTCPhone {
 
             // Handle remote track (incoming audio)
             this.peerConnection.ontrack = (event) => {
-                console.log('Received remote track');
+                debugLog('Received remote track');
                 verboseLog('Remote track received:', {
                     track: event.track,
                     streams: event.streams,
@@ -306,15 +306,15 @@ class WebRTCPhone {
                     const playPromise = this.remoteAudio.play();
                     if (playPromise !== undefined) {
                         playPromise.then(() => {
-                            console.log('Remote audio playback started successfully');
+                            debugLog('Remote audio playback started successfully');
                             this.updateStatus('Audio connected', 'success');
                         }).catch(err => {
-                            console.warn('Audio autoplay prevented:', err);
+                            debugWarn('Audio autoplay prevented:', err);
                             this.updateStatus('Audio ready (click to unmute if needed)', 'warning');
                         });
                     }
                 } else {
-                    console.warn('No remote audio element or streams available');
+                    debugWarn('No remote audio element or streams available');
                 }
             };
 
@@ -401,7 +401,7 @@ class WebRTCPhone {
             verboseLog('Adding local tracks to peer connection...');
             for (const track of this.localStream.getTracks()) {
                 this.peerConnection.addTrack(track, this.localStream);
-                console.log('Added local track to peer connection');
+                debugLog('Added local track to peer connection');
                 verboseLog('Track added:', {
                     trackId: track.id,
                     kind: track.kind,
@@ -421,7 +421,7 @@ class WebRTCPhone {
             await this.peerConnection.setLocalDescription(offer);
             verboseLog('Local description set');
 
-            console.log('SDP Offer created:', offer.sdp);
+            debugLog('SDP Offer created:', offer.sdp);
             verboseLog('Full SDP Offer:', offer.sdp);
 
             // Send offer to PBX
@@ -514,7 +514,7 @@ class WebRTCPhone {
         try {
             // Validate session exists before sending ICE candidate
             if (!this.sessionId) {
-                console.warn('Cannot send ICE candidate: no active session');
+                debugWarn('Cannot send ICE candidate: no active session');
                 verboseLog('ICE candidate send skipped - no session');
                 return;
             }
@@ -538,7 +538,7 @@ class WebRTCPhone {
                     }
                 })
             });
-            console.log('ICE candidate sent');
+            debugLog('ICE candidate sent');
             verboseLog('ICE candidate sent successfully');
         } catch (error) {
             console.error('Error sending ICE candidate:', error);
@@ -555,7 +555,7 @@ class WebRTCPhone {
      */
     async sendDTMF(digit) {
         if (!this.isCallActive || !this.sessionId) {
-            console.warn('Cannot send DTMF: No active call');
+            debugWarn('Cannot send DTMF: No active call');
             return;
         }
 
@@ -580,7 +580,7 @@ class WebRTCPhone {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log(`DTMF '${digit}' sent successfully`);
+                debugLog(`DTMF '${digit}' sent successfully`);
                 verboseLog('DTMF send result:', data);
 
                 // Brief visual feedback in status
@@ -605,7 +605,7 @@ class WebRTCPhone {
     }
 
     async hangup() {
-        console.log('Hanging up call');
+        debugLog('Hanging up call');
 
         // Notify server to terminate the call
         if (this.sessionId || this.callId) {
@@ -627,9 +627,9 @@ class WebRTCPhone {
                 if (hangupResponse.ok) {
                     const hangupData = await hangupResponse.json();
                     verboseLog('Server hangup response:', hangupData);
-                    console.log('Server notified of call termination');
+                    debugLog('Server notified of call termination');
                 } else {
-                    console.warn('Failed to notify server of hangup:', hangupResponse.statusText);
+                    debugWarn('Failed to notify server of hangup:', hangupResponse.statusText);
                     verboseLog('Hangup notification failed:', {
                         status: hangupResponse.status,
                         statusText: hangupResponse.statusText
@@ -684,7 +684,7 @@ class WebRTCPhone {
     setVolume(value) {
         if (this.remoteAudio) {
             this.remoteAudio.volume = value / 100;
-            console.log(`Volume set to ${value}%`);
+            debugLog(`Volume set to ${value}%`);
         }
     }
 }
@@ -707,12 +707,12 @@ async function initWebRTCPhone() {
 
         if (data.success && data.extension) {
             adminExtension = data.extension;
-            console.log('WebRTC Phone using configured extension:', adminExtension);
+            debugLog('WebRTC Phone using configured extension:', adminExtension);
         } else {
-            console.log('WebRTC Phone using default extension:', adminExtension);
+            debugLog('WebRTC Phone using default extension:', adminExtension);
         }
     } catch (error) {
-        console.warn('Failed to load WebRTC phone config, using default:', error);
+        debugWarn('Failed to load WebRTC phone config, using default:', error);
     }
 
     // Create or recreate the WebRTC phone with the configured extension
@@ -724,7 +724,7 @@ async function initWebRTCPhone() {
     }
 
     webrtcPhone = new WebRTCPhone(apiUrl, adminExtension);
-    console.log('WebRTC Phone initialized with extension:', adminExtension);
+    debugLog('WebRTC Phone initialized with extension:', adminExtension);
 
     // Automatically request microphone access on load
     // This prompts the user for permission immediately rather than waiting for a call

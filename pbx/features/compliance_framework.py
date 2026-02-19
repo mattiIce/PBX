@@ -511,7 +511,7 @@ class SOC2ComplianceEngine:
             list of control dictionaries
         """
         try:
-            result = self.db.fetch_all("SELECT * FROM soc2_controls ORDER BY control_id")
+            result = self.db.fetch_all("SELECT id, control_id, control_category, description, implementation_status, last_tested, test_results FROM soc2_controls ORDER BY control_id")
 
             controls = [
                 {
@@ -544,11 +544,11 @@ class SOC2ComplianceEngine:
         try:
             result = self.db.fetch_all(
                 (
-                    """SELECT * FROM soc2_controls
+                    """SELECT id, control_id, control_category, description, implementation_status, last_tested, test_results FROM soc2_controls
                    WHERE control_category = ?
                    ORDER BY control_id"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM soc2_controls
+                    else """SELECT id, control_id, control_category, description, implementation_status, last_tested, test_results FROM soc2_controls
                    WHERE control_category = %s
                    ORDER BY control_id"""
                 ),

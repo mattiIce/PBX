@@ -171,7 +171,6 @@ ignore = [
 [tool.ruff.lint.per-file-ignores]
 "__init__.py" = ["F401"]
 "tests/*" = ["F401", "F811", "ARG", "PLR", "PT", "B011", "PLC0415", "N806", "N803"]
-"pbx/api/rest_api.py" = ["ALL"]  # deprecated file
 "pbx/features/*" = ["PLC0415"]  # lazy imports are intentional for dynamic feature loading
 "pbx/core/*" = ["PLC0415"]  # lazy imports for circular import avoidance
 "pbx/sip/*" = ["PLC0415"]  # lazy imports for circular import avoidance in SIP handlers
@@ -245,7 +244,7 @@ module = ["tests.*", "pbx.tests.*"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
-module = ["pbx.api.rest_api", "pbx.api.license_api"]
+module = ["pbx.api.license_api"]
 ignore_errors = true
 
 [[tool.mypy.overrides]]
@@ -278,7 +277,6 @@ filterwarnings = [
     "error",
     "ignore::DeprecationWarning:twisted.*",
     "ignore::DeprecationWarning:sqlalchemy.*",
-    "ignore:pbx.api.rest_api is deprecated:DeprecationWarning",
     "ignore::pytest.PytestReturnNotNoneWarning",
     "ignore::pytest.PytestUnraisableExceptionWarning",
 ]

@@ -33,7 +33,7 @@ async function loadAutoAttendantPrompts() {
     try {
         const response = await fetch(`${API_BASE}/api/auto-attendant/prompts`);
         if (!response.ok) {
-            console.warn('Failed to load prompts, using defaults');
+            debugWarn('Failed to load prompts, using defaults');
             return;
         }
 
@@ -75,7 +75,7 @@ async function loadAutoAttendantMenuOptions() {
         
         // Only fall back to legacy API if endpoint doesn't exist (404)
         if (response.status === 404) {
-            console.warn(`Menu items endpoint returned 404 for menu '${currentMenuId}', trying legacy API...`);
+            debugWarn(`Menu items endpoint returned 404 for menu '${currentMenuId}', trying legacy API...`);
             return await loadLegacyMenuOptions();
         }
         
@@ -568,7 +568,7 @@ async function parseErrorResponse(response) {
 
         // Generic fallback if we cannot determine a more specific cause.
         // This is a best-effort categorization when no reliable type information is available.
-        console.warn('Unexpected error parsing response:', error);
+        debugWarn('Unexpected error parsing response:', error);
         return { error: 'Unable to read server response' };
     }
 }
@@ -580,7 +580,7 @@ async function loadAvailableMenus() {
         if (response.ok) {
             const data = await response.json();
             availableMenus = data.menus ?? [];
-            console.log(`Loaded ${availableMenus.length} menu(s) for submenu selection`);
+            debugLog(`Loaded ${availableMenus.length} menu(s) for submenu selection`);
             return availableMenus;
         } else {
             const errorData = await parseErrorResponse(response);
@@ -664,7 +664,7 @@ async function updateSubmenuDropdowns() {
             noMenusOption.disabled = true;
             noMenusOption.selected = true;
             parentSelect.appendChild(noMenusOption);
-            console.warn('No menus loaded for parent dropdown');
+            debugWarn('No menus loaded for parent dropdown');
         } else {
             for (const menu of menus) {
                 const option = document.createElement('option');
@@ -675,7 +675,7 @@ async function updateSubmenuDropdowns() {
                 }
                 parentSelect.appendChild(option);
             }
-            console.log(`Populated parent menu dropdown with ${menus.length} menu(s)`);
+            debugLog(`Populated parent menu dropdown with ${menus.length} menu(s)`);
         }
     }
 }
@@ -778,10 +778,10 @@ async function loadMenuTree() {
         
         if (data.menu_tree) {
             treeView.innerHTML = renderMenuTree(data.menu_tree, 0);
-            console.log('Menu tree loaded successfully');
+            debugLog('Menu tree loaded successfully');
         } else {
             treeView.innerHTML = '<p style="color: #666;">No menu structure available</p>';
-            console.warn('Menu tree data is empty');
+            debugWarn('Menu tree data is empty');
         }
     } catch (error) {
         console.error('Error loading menu tree:', error);

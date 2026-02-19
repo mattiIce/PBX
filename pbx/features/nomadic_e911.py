@@ -118,11 +118,11 @@ class NomadicE911Engine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM nomadic_e911_locations
+                    """SELECT id, extension, ip_address, location_name, street_address, city, state, postal_code, country, building, floor, room, latitude, longitude, last_updated, auto_detected FROM nomadic_e911_locations
                    WHERE extension = ?
                    ORDER BY last_updated DESC LIMIT 1"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM nomadic_e911_locations
+                    else """SELECT id, extension, ip_address, location_name, street_address, city, state, postal_code, country, building, floor, room, latitude, longitude, last_updated, auto_detected FROM nomadic_e911_locations
                    WHERE extension = %s
                    ORDER BY last_updated DESC LIMIT 1"""
                 ),
@@ -229,7 +229,7 @@ class NomadicE911Engine:
             Site config with full address details or None
         """
         try:
-            result = self.db.execute("SELECT * FROM multi_site_e911_configs")
+            result = self.db.execute("SELECT id, site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin, street_address, city, state, postal_code, country, building, floor, created_at FROM multi_site_e911_configs")
 
             for row in result or []:
                 site_data = {
@@ -353,7 +353,7 @@ class NomadicE911Engine:
             list of site dictionaries with full address information
         """
         try:
-            result = self.db.execute("SELECT * FROM multi_site_e911_configs ORDER BY site_name")
+            result = self.db.execute("SELECT id, site_name, ip_range_start, ip_range_end, emergency_trunk, psap_number, elin, street_address, city, state, postal_code, country, building, floor, created_at FROM multi_site_e911_configs ORDER BY site_name")
 
             sites = [
                 {
@@ -396,11 +396,11 @@ class NomadicE911Engine:
         try:
             result = self.db.execute(
                 (
-                    """SELECT * FROM e911_location_updates
+                    """SELECT id, extension, old_location, new_location, update_source, updated_at FROM e911_location_updates
                    WHERE extension = ?
                    ORDER BY updated_at DESC LIMIT ?"""
                     if self.db.db_type == "sqlite"
-                    else """SELECT * FROM e911_location_updates
+                    else """SELECT id, extension, old_location, new_location, update_source, updated_at FROM e911_location_updates
                    WHERE extension = %s
                    ORDER BY updated_at DESC LIMIT %s"""
                 ),
