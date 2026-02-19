@@ -237,14 +237,35 @@ class SetupWizard:
                 self.print_info("Using existing virtual environment")
                 return True
 
-        ret, _, _ = self.run_command(
+        ret, _, stderr = self.run_command(
             f"python3 -m venv {self.venv_path}",
             "Creating virtual environment",
             check=False,
         )
         if ret != 0:
-            self.print_error("Failed to create virtual environment")
-            return False
+            self.print_warning(
+                f"Standard venv creation failed ({stderr[:120].strip()})"
+            )
+            self.print_info("Retrying with --without-pip and manual pip bootstrap...")
+            ret2, _, stderr2 = self.run_command(
+                f"python3 -m venv --without-pip {self.venv_path}",
+                "Creating virtual environment (without pip)",
+                check=False,
+            )
+            if ret2 != 0:
+                self.print_error(f"Failed to create virtual environment: {stderr2[:200]}")
+                return False
+            # Bootstrap pip via get-pip.py
+            python_path = self.venv_path / "bin" / "python3"
+            ret3, _, stderr3 = self.run_command(
+                f"curl -sSL https://bootstrap.pypa.io/get-pip.py | {python_path}",
+                "Bootstrapping pip via get-pip.py",
+                check=False,
+                timeout=120,
+            )
+            if ret3 != 0:
+                self.print_error(f"Failed to bootstrap pip: {stderr3[:200]}")
+                return False
 
         self.print_success("Virtual environment created")
 
