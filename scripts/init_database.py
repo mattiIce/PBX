@@ -50,7 +50,7 @@ def test_connection() -> bool:
         cur.close()
         conn.close()
         return True
-    except (KeyError, TypeError, ValueError) as e:
+    except (psycopg2.Error, KeyError, TypeError, ValueError) as e:
         print(f"✗ Connection failed: {e}")
         return False
 
@@ -83,7 +83,7 @@ def verify_tables() -> bool:
         cur.close()
         conn.close()
         return True
-    except (KeyError, TypeError, ValueError) as e:
+    except (psycopg2.Error, KeyError, TypeError, ValueError) as e:
         print(f"✗ Verification failed: {e}")
         return False
 
@@ -118,7 +118,7 @@ def add_sample_data() -> bool:
         cur.close()
         conn.close()
         return True
-    except (KeyError, TypeError, ValueError) as e:
+    except (psycopg2.Error, KeyError, TypeError, ValueError) as e:
         print(f"✗ Sample data insertion failed: {e}")
         return False
 
