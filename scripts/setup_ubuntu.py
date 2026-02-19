@@ -789,8 +789,10 @@ DB_PASSWORD={self.db_config["DB_PASSWORD"]}
             User=root
             Group=root
             WorkingDirectory={self.project_root}
-            ExecStart={python_path} {self.project_root}/main.py
             EnvironmentFile=-{env_file}
+            Environment="PATH={self.venv_path}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+            ExecStartPre=/bin/bash {self.project_root}/scripts/pre-start.sh
+            ExecStart={python_path} {self.project_root}/main.py
             Restart=on-failure
             RestartSec=5
             StandardOutput=journal

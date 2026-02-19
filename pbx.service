@@ -1,3 +1,17 @@
+# ============================================================================
+# Warden VoIP PBX — Systemd Service File (TEMPLATE)
+# ============================================================================
+# This file contains PLACEHOLDER paths (/opt/pbx).  Do NOT copy it directly
+# to /etc/systemd/system/.  Instead, generate a service file with the correct
+# paths for your installation:
+#
+#   make install-service                                  # recommended
+#   sudo python3 scripts/generate_service.py --install    # alternative
+#
+# The generator auto-detects your project root, virtual-environment location,
+# and whether ProtectHome needs to be disabled.
+# ============================================================================
+
 [Unit]
 Description=Warden VoIP PBX System
 Wants=network-online.target
@@ -7,13 +21,14 @@ After=network-online.target postgresql.service
 Type=simple
 # IMPORTANT: Update these paths to match your PBX installation directory
 # Common locations: /opt/pbx, /usr/local/pbx, /home/username/PBX, /root/PBX
-# The setup wizard (scripts/setup_ubuntu.py) sets these automatically.
+# Or use: make install-service (does this automatically)
 WorkingDirectory=/opt/pbx
 # Load environment variables from .env if it exists (- prefix = no error if missing)
 EnvironmentFile=-/opt/pbx/.env
-# Run Alembic database migrations before starting the PBX server
-ExecStartPre=/opt/pbx/venv/bin/alembic -c /opt/pbx/alembic.ini upgrade head
-# If using a virtual environment (recommended), update to: /opt/pbx/venv/bin/python3
+# Ensure the venv's bin directory is on PATH so Python can find installed packages
+Environment="PATH=/opt/pbx/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+# Pre-start script validates prerequisites and runs Alembic migrations
+ExecStartPre=/bin/bash /opt/pbx/scripts/pre-start.sh
 ExecStart=/opt/pbx/venv/bin/python3 /opt/pbx/main.py
 # IMPORTANT: Update this to the user who owns the PBX files
 # For better security, create a dedicated 'pbx' user:
@@ -29,9 +44,17 @@ RestartSec=5
 StandardOutput=journal
 StandardError=journal
 
+# Security hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
 # NOTE: If the PBX is installed under /root/ or /home/, set ProtectHome=false
 # (ProtectHome=true blocks access to those directories, causing 203/EXEC errors).
 # ProtectHome=true
+
+# Resource limits
+LimitNOFILE=65536
+LimitNPROC=4096
 
 [Install]
 WantedBy=multi-user.target
