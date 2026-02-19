@@ -9,14 +9,6 @@ import logging
 import sys
 import time
 
-# Load .env file BEFORE importing any PBX modules
-from pbx.utils.env_loader import load_env_file
-
-load_env_file(".env")
-
-from pbx.core.pbx import PBXCore
-from pbx.utils.graceful_shutdown import setup_graceful_shutdown
-
 logger = logging.getLogger(__name__)
 
 # Global state
@@ -36,6 +28,16 @@ def signal_handler(sig: int, frame: object) -> None:
 def main() -> None:
     """Main entry point for the PBX server."""
     global running, pbx  # noqa: PLW0602
+
+    # Load .env file BEFORE importing any PBX modules
+    # This ensures environment variables (like DEBUG_VM_PIN) are available
+    # when modules are imported and initialized
+    try:
+        from pbx.utils.env_loader import load_env_file
+
+        load_env_file(".env")
+    except ImportError:
+        logger.warning("Could not load .env file (env_loader not available)")
 
     logger.info("=" * 60)
     logger.info("Warden VoIP System v1.0.0")
@@ -102,6 +104,10 @@ def main() -> None:
     except (KeyError, TypeError, ValueError) as e:
         logger.error("Security check failed: %s", e)
         sys.exit(1)
+
+    # Import PBX modules after dependency and config checks have passed
+    from pbx.core.pbx import PBXCore
+    from pbx.utils.graceful_shutdown import setup_graceful_shutdown
 
     # Start PBX
     try:

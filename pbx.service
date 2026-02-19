@@ -1,15 +1,18 @@
 [Unit]
-Description=Warden Voip System
-After=network.target
+Description=Warden VoIP PBX System
+Wants=network-online.target
+After=network-online.target postgresql.service
 
 [Service]
 Type=simple
 # IMPORTANT: Update these paths to match your PBX installation directory
 # Common locations: /opt/pbx, /usr/local/pbx, /home/username/PBX, /root/PBX
-WorkingDirectory=/root/PBX
-# Use python3 from system PATH by default (works with or without venv)
-# If using a virtual environment, update to: /root/PBX/venv/bin/python3
-ExecStart=/usr/bin/python3 /root/PBX/main.py
+# The setup wizard (scripts/setup_ubuntu.py) sets these automatically.
+WorkingDirectory=/opt/pbx
+# If using a virtual environment (recommended), update to: /opt/pbx/venv/bin/python3
+ExecStart=/opt/pbx/venv/bin/python3 /opt/pbx/main.py
+# Load environment variables from .env if it exists (- prefix = no error if missing)
+EnvironmentFile=-/opt/pbx/.env
 # IMPORTANT: Update this to the user who owns the PBX files
 # For better security, create a dedicated 'pbx' user:
 #   sudo useradd -r -s /bin/false pbx
