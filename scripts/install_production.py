@@ -326,9 +326,12 @@ class ProductionInstaller:
             # Database
             "postgresql-17",
             "postgresql-contrib",
-            # Python
+            "libpq-dev",
+            # Python (build deps needed for packages without pre-built wheels)
             "python3-venv",
             "python3-pip",
+            "python3-dev",
+            "build-essential",
             # Web / reverse proxy
             "nginx",
             "certbot",
@@ -376,15 +379,25 @@ class ProductionInstaller:
                 self._run(f"rm -rf {self.venv_path}", check=False)
             else:
                 self._ok("Using existing virtual environment")
-                # Still ensure dependencies are installed
+                # Ensure dependencies are installed using uv or pip
                 uv_path = self.venv_path / "bin" / "uv"
+                pip_path = self.venv_path / "bin" / "pip"
                 if uv_path.exists():
-                    ret, _, _ = self._run(
+                    ret, _, stderr = self._run(
                         f"{uv_path} pip install -e {self.project_root}",
                         description="Ensuring dependencies are up to date",
                         check=False,
                         timeout=900,
                     )
+                elif pip_path.exists():
+                    ret, _, stderr = self._run(
+                        f"{pip_path} install -e {self.project_root}",
+                        description="Ensuring dependencies are up to date",
+                        check=False,
+                        timeout=900,
+                    )
+                else:
+                    self._warn("No pip or uv found in existing venv — dependencies may be missing")
                 return True
 
         ret, _, stderr = self._run(
@@ -646,7 +659,7 @@ class ProductionInstaller:
             self._dry("alembic upgrade head / init_database.py")
             return True
 
-        python_bin = self.venv_path / "bin" / "python"
+        alembic_bin = self.venv_path / "bin" / "alembic"
         alembic_ini = self.project_root / "alembic.ini"
 
         # Build env dict from .env so child processes get DB credentials
@@ -655,7 +668,7 @@ class ProductionInstaller:
         # Try Alembic first
         if alembic_ini.exists():
             ret, _, stderr = self._run(
-                f"cd {self.project_root} && {python_bin} -m alembic upgrade head",
+                f"cd {self.project_root} && {alembic_bin} upgrade head",
                 description="Running Alembic migrations",
                 check=False,
                 env=db_env,
@@ -838,7 +851,7 @@ class ProductionInstaller:
             WorkingDirectory={self.project_root}
             EnvironmentFile={self.project_root}/.env
             Environment="PATH={self.venv_path}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
-            ExecStartPre={self.venv_path}/bin/python -m alembic -c {self.project_root}/alembic.ini upgrade head
+            ExecStartPre={self.venv_path}/bin/alembic -c {self.project_root}/alembic.ini upgrade head
             ExecStart={self.venv_path}/bin/python {self.project_root}/main.py
             Restart=always
             RestartSec=10
