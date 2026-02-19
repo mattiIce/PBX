@@ -393,8 +393,27 @@ class ProductionInstaller:
             check=False,
         )
         if ret != 0:
-            self._err(f"Failed to create venv: {stderr[:200]}")
-            return False
+            self._warn(f"Standard venv creation failed ({stderr[:120].strip()})")
+            self._info("Retrying with --without-pip and manual pip bootstrap...")
+            ret2, _, stderr2 = self._run(
+                f"python3 -m venv --without-pip {self.venv_path}",
+                description="Creating virtual environment (without pip)",
+                check=False,
+            )
+            if ret2 != 0:
+                self._err(f"Failed to create venv: {stderr2[:200]}")
+                return False
+            # Bootstrap pip via get-pip.py
+            python_path = self.venv_path / "bin" / "python3"
+            ret3, _, stderr3 = self._run(
+                f"curl -sSL https://bootstrap.pypa.io/get-pip.py | {python_path}",
+                description="Bootstrapping pip via get-pip.py",
+                check=False,
+                timeout=120,
+            )
+            if ret3 != 0:
+                self._err(f"Failed to bootstrap pip: {stderr3[:200]}")
+                return False
         self._ok("Virtual environment created")
 
         # Install uv
