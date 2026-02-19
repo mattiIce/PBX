@@ -134,7 +134,8 @@ def generate_startup_tests_service(
 
 def install_service(path: Path, content: str) -> None:
     """Write a service file to /etc/systemd/system/ and daemon-reload."""
-    dest = Path("/etc/systemd/system") / path.name
+    # path.stem strips the .generated suffix (e.g. "pbx.service.generated" -> "pbx.service")
+    dest = Path("/etc/systemd/system") / path.stem
     dest.write_text(content, encoding="utf-8")
     print(f"  Installed {dest}")
 
