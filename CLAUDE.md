@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (76 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
+Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (77 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
 
 ## Quick Reference
 
@@ -65,7 +65,7 @@ make pre-commit-run
 ```
 pbx/
 ├── api/              # REST API layer (Flask)
-│   ├── routes/       # 22 route modules organized by feature
+│   ├── routes/       # 23 route modules organized by feature
 │   ├── schemas/      # Request/response validation
 │   ├── app.py        # Flask app factory (create_app)
 │   ├── errors.py     # Error handling
@@ -89,7 +89,7 @@ pbx/
 │   ├── jitter_buffer.py
 │   ├── rfc2833.py    # DTMF event handling (RFC 2833)
 │   └── rtcp_monitor.py
-├── features/         # 76 feature modules (pluggable)
+├── features/         # 77 feature modules (pluggable)
 │   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
 ├── utils/            # Cross-cutting concerns
@@ -110,7 +110,7 @@ admin/                # Frontend admin interface
 ├── vite.config.js
 └── tsconfig.json
 
-tests/                # Python test suite (224 files)
+tests/                # Python test suite (226 files)
 ├── conftest.py       # Shared fixtures
 ├── integration/      # Integration tests (API, call flow, provisioning)
 └── test_*.py
