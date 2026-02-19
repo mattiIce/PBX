@@ -79,7 +79,7 @@ class LicenseManager:
         self.features = self._initialize_features()
 
         # Current license info
-        self.current_license = None
+        self.current_license: dict | None = None
 
         if self.enabled:
             logger.info("Licensing system is ENABLED")

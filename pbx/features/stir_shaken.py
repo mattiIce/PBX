@@ -358,7 +358,7 @@ class STIRSHAKENManager:
         """
         try:
             # Extract PASSporT (between quotes)
-            if '"' in identity_header:
+            if identity_header.count('"') >= 2:
                 start = identity_header.index('"') + 1
                 end = identity_header.index('"', start)
                 passport = identity_header[start:end]
