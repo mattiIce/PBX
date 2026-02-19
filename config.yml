@@ -121,6 +121,14 @@ api:
       # Optional: CA certificate for validation
       ca_cert: certs/ca.crt                 # Path to CA certificate (optional)
     # For development/testing, generate self-signed cert with: python scripts/generate_ssl_cert.py
+
+# Monitoring / Observability
+monitoring:
+  prometheus:
+    enabled: true
+    # Interval (seconds) for background system-resource metric collection
+    resource_collection_interval: 15
+
 database:
   type: postgresql
   # PostgreSQL configuration

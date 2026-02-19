@@ -80,6 +80,7 @@ def mock_pbx_core(mock_config: MagicMock, mock_database: MagicMock) -> MagicMock
     pbx_core.call_manager.get_active_calls.return_value = []
     pbx_core.extension_registry = MagicMock()
     pbx_core.extension_registry.get_all.return_value = []
+    pbx_core.metrics_exporter = None
     return pbx_core
 
 
