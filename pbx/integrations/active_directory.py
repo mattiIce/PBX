@@ -227,13 +227,13 @@ class ActiveDirectoryIntegration:
             user_search_base = self.config.get(
                 "integrations.active_directory.user_search_base", self.base_dn
             )
-            self.logger.error(f"[AD-DEBUG] Search base: {user_search_base}")
+            print(f"[AD-DEBUG] Search base: {user_search_base}", file=sys.stderr, flush=True)
 
             # Determine which AD attribute holds the extension number
             extension_attr = self.config.get(
                 "integrations.active_directory.extension_attribute", "telephoneNumber"
             )
-            self.logger.error(f"[AD-DEBUG] Using attribute '{extension_attr}' for extensions")
+            print(f"[AD-DEBUG] Extension attr: {extension_attr}", file=sys.stderr, flush=True)
 
             # Search for enabled users that have the extension attribute set
             # Also search for ipPhone as a fallback if using telephoneNumber
@@ -251,19 +251,17 @@ class ActiveDirectoryIntegration:
             if extension_attr not in search_attrs:
                 search_attrs.append(extension_attr)
 
-            self.logger.error(f"[AD-DEBUG] LDAP filter: {search_filter}")
+            print(f"[AD-DEBUG] LDAP filter: {search_filter}", file=sys.stderr, flush=True)
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
                 attributes=search_attrs,
             )
-            self.logger.error(f"[AD-DEBUG] LDAP returned {len(self.connection.entries)} entries")
+            print(f"[AD-DEBUG] LDAP returned {len(self.connection.entries)} entries", file=sys.stderr, flush=True)
 
             if not self.connection.entries:
-                self.logger.warning(
-                    f"No users found in Active Directory (filter: {search_filter})"
-                )
+                print("[AD-DEBUG] No entries found, returning 0", file=sys.stderr, flush=True)
                 return {"synced_count": 0, "extensions_to_reboot": []}
 
             self.logger.info(f"Found {len(self.connection.entries)} users in Active Directory")
