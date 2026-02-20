@@ -172,12 +172,15 @@ declare global {
         loadLocationHistory: () => Promise<void>;
         showAddE911SiteModal: () => void;
         editE911Site: ((siteId: number) => void) | ((siteId: string) => void);
-        deleteE911Site: ((siteId: number) => void) | ((siteId: string) => void);
+        deleteE911Site: ((siteId: number) => Promise<void>) | ((siteId: string) => void);
+        removeE911SiteModal: () => void;
         showUpdateLocationModal: () => void;
         updateExtensionLocation: (extension: string) => void;
+        removeLocationModal: () => void;
         showAddSpeechAnalyticsConfigModal: () => void;
         editSpeechAnalyticsConfig: (extension: string) => void;
-        deleteSpeechAnalyticsConfig: (extension: string) => void;
+        deleteSpeechAnalyticsConfig: ((extension: string) => Promise<void>) | ((extension: string) => void);
+        removeSpeechConfigModal: () => void;
 
         // Functions referenced in tabs.ts from .js modules (not yet ported to .ts)
         loadAutoAttendantConfig?: () => void;
