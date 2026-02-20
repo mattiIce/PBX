@@ -218,7 +218,7 @@ export function initializeTabs(): void {
 
             if (nextIndex >= 0) {
                 event.preventDefault();
-                buttons[nextIndex].focus();
+                buttons[nextIndex]?.focus();
             }
         });
     }

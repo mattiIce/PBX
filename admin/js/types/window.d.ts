@@ -1,7 +1,15 @@
 export {};
 
+// Global debug functions defined in index.html <script> block
+declare function debugLog(...args: unknown[]): void;
+declare function debugWarn(...args: unknown[]): void;
+
 declare global {
     interface Window {
+        // Debug helpers (defined inline in index.html)
+        __DEV__: boolean;
+        debugLog: (...args: unknown[]) => void;
+        debugWarn: (...args: unknown[]) => void;
         // api/client.ts
         fetchWithTimeout: (url: string, options?: RequestInit, timeout?: number) => Promise<Response>;
         getAuthHeaders: () => Record<string, string>;
