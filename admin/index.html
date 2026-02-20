@@ -79,6 +79,11 @@
         <header role="banner">
             <div class="header-content">
                 <div class="header-branding">
+                    <button id="sidebar-toggle" class="sidebar-toggle" aria-label="Toggle navigation menu" aria-expanded="false">
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                        <span class="hamburger-line"></span>
+                    </button>
                     <img src="assets/images/warden-voip-logo.png" alt="Warden VoIP logo" class="header-logo">
                     <h1>Warden VoIP Admin Dashboard</h1>
                 </div>
@@ -96,6 +101,8 @@
         </header>
 
         <div class="layout-wrapper">
+            <!-- Sidebar overlay for mobile -->
+            <div id="sidebar-overlay" class="sidebar-overlay"></div>
             <!-- Left Sidebar Navigation -->
             <nav class="sidebar" role="navigation" aria-label="Main navigation">
                 <div class="sidebar-section">
@@ -5298,6 +5305,54 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
                 console.log('Page loaded successfully at', new Date().toISOString());
             }
         }, 3000);
+    </script>
+    <!-- Mobile sidebar toggle -->
+    <script>
+    (function() {
+        const toggle = document.getElementById('sidebar-toggle');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        if (!toggle || !sidebar || !overlay) return;
+
+        function openSidebar() {
+            sidebar.classList.add('open');
+            overlay.classList.add('active');
+            toggle.classList.add('active');
+            toggle.setAttribute('aria-expanded', 'true');
+        }
+
+        function closeSidebar() {
+            sidebar.classList.remove('open');
+            overlay.classList.remove('active');
+            toggle.classList.remove('active');
+            toggle.setAttribute('aria-expanded', 'false');
+        }
+
+        toggle.addEventListener('click', function() {
+            if (sidebar.classList.contains('open')) {
+                closeSidebar();
+            } else {
+                openSidebar();
+            }
+        });
+
+        // Close sidebar when clicking overlay
+        overlay.addEventListener('click', closeSidebar);
+
+        // Close sidebar when a nav item is clicked (on mobile)
+        sidebar.addEventListener('click', function(e) {
+            if (e.target.closest('.tab-button')) {
+                closeSidebar();
+            }
+        });
+
+        // Close sidebar on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
+                closeSidebar();
+            }
+        });
+    })();
     </script>
 </body>
 </html>
