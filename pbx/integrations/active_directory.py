@@ -10,10 +10,12 @@ from pbx.utils.logger import get_logger
 
 try:
     from ldap3 import ALL, SUBTREE, Connection, Server
+    from ldap3.core.exceptions import LDAPException
 
     LDAP3_AVAILABLE = True
 except ImportError:
     LDAP3_AVAILABLE = False
+    LDAPException = Exception  # Fallback so type references don't break
 
 
 class ActiveDirectoryIntegration:
@@ -70,16 +72,22 @@ class ActiveDirectoryIntegration:
         try:
             self.logger.info(f"Connecting to Active Directory: {self.ldap_server}")
 
-            # Create server object
-            self.server = Server(self.ldap_server, get_info=ALL, use_ssl=self.use_ssl)
+            # Create server object with connection timeout
+            self.server = Server(
+                self.ldap_server,
+                get_info=ALL,
+                use_ssl=self.use_ssl,
+                connect_timeout=10,
+            )
 
-            # Create connection
+            # Create connection with receive timeout
             self.connection = Connection(
                 self.server,
                 user=self.bind_dn,
                 password=self.bind_password,
                 auto_bind=True,
                 raise_exceptions=True,
+                receive_timeout=10,
             )
 
             if self.connection.bound:
@@ -88,6 +96,10 @@ class ActiveDirectoryIntegration:
             self.logger.error("Failed to bind to Active Directory")
             return False
 
+        except LDAPException as e:
+            self.logger.error(f"LDAP error connecting to Active Directory: {e}")
+            self.connection = None
+            return False
         except (OSError, ValueError) as e:
             self.logger.error(f"Error connecting to Active Directory: {e}")
             self.connection = None
@@ -138,7 +150,12 @@ class ActiveDirectoryIntegration:
 
             # Attempt to bind with user credentials
             user_conn = Connection(
-                self.server, user=user_dn, password=password, auto_bind=True, raise_exceptions=True
+                self.server,
+                user=user_dn,
+                password=password,
+                auto_bind=True,
+                raise_exceptions=True,
+                receive_timeout=10,
             )
 
             if user_conn.bound:
@@ -168,6 +185,9 @@ class ActiveDirectoryIntegration:
             self.logger.warning(f"Authentication failed for user: {username}")
             return None
 
+        except LDAPException as e:
+            self.logger.error(f"LDAP error authenticating user {username}: {e}")
+            return None
         except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error authenticating user {username}: {e}")
             return None
