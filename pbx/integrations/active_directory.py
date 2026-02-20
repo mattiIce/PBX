@@ -210,6 +210,10 @@ class ActiveDirectoryIntegration:
             int: Number of users synchronized
         """
         if not self.enabled or not self.auto_provision or not LDAP3_AVAILABLE:
+            self.logger.warning(
+                f"AD sync skipped: enabled={self.enabled}, "
+                f"auto_provision={self.auto_provision}, ldap3={LDAP3_AVAILABLE}"
+            )
             return 0
 
         if not self.connect():
