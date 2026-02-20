@@ -1596,6 +1596,8 @@ class PBXCore:
             }
 
         try:
+            import sys
+            print(f"[AD-DEBUG] sync_ad_users called, ad_integration type={type(self.ad_integration)}", file=sys.stderr, flush=True)
             self.logger.info("Manual AD user sync triggered")
             sync_result = self.ad_integration.sync_users(
                 extension_registry=self.extension_registry,

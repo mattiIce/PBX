@@ -209,19 +209,19 @@ class ActiveDirectoryIntegration:
         Returns:
             int: Number of users synchronized
         """
+        import sys
+        print(f"[AD-DEBUG] sync_users called: enabled={self.enabled}, auto_provision={self.auto_provision}, ldap3={LDAP3_AVAILABLE}", file=sys.stderr, flush=True)
+
         if not self.enabled or not self.auto_provision or not LDAP3_AVAILABLE:
-            self.logger.warning(
-                f"AD sync skipped: enabled={self.enabled}, "
-                f"auto_provision={self.auto_provision}, ldap3={LDAP3_AVAILABLE}"
-            )
+            print(f"[AD-DEBUG] SKIPPED: enabled={self.enabled}, auto_provision={self.auto_provision}, ldap3={LDAP3_AVAILABLE}", file=sys.stderr, flush=True)
             return 0
 
         if not self.connect():
-            self.logger.error("Failed to connect to Active Directory")
+            print("[AD-DEBUG] FAILED TO CONNECT", file=sys.stderr, flush=True)
             return 0
 
         try:
-            self.logger.error("[AD-DEBUG] Starting user synchronization from Active Directory...")
+            print("[AD-DEBUG] Starting LDAP search...", file=sys.stderr, flush=True)
 
             # Get user search base
             user_search_base = self.config.get(
