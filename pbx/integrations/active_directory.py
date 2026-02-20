@@ -221,19 +221,19 @@ class ActiveDirectoryIntegration:
             return 0
 
         try:
-            self.logger.info("Starting user synchronization from Active Directory...")
+            self.logger.error("[AD-DEBUG] Starting user synchronization from Active Directory...")
 
             # Get user search base
             user_search_base = self.config.get(
                 "integrations.active_directory.user_search_base", self.base_dn
             )
-            self.logger.info(f"Search base: {user_search_base}")
+            self.logger.error(f"[AD-DEBUG] Search base: {user_search_base}")
 
             # Determine which AD attribute holds the extension number
             extension_attr = self.config.get(
                 "integrations.active_directory.extension_attribute", "telephoneNumber"
             )
-            self.logger.info(f"Using AD attribute '{extension_attr}' for extension numbers")
+            self.logger.error(f"[AD-DEBUG] Using attribute '{extension_attr}' for extensions")
 
             # Search for enabled users that have the extension attribute set
             # Also search for ipPhone as a fallback if using telephoneNumber
@@ -251,14 +251,14 @@ class ActiveDirectoryIntegration:
             if extension_attr not in search_attrs:
                 search_attrs.append(extension_attr)
 
-            self.logger.info(f"LDAP search filter: {search_filter}")
+            self.logger.error(f"[AD-DEBUG] LDAP filter: {search_filter}")
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
                 attributes=search_attrs,
             )
-            self.logger.info(f"LDAP search returned {len(self.connection.entries)} entries")
+            self.logger.error(f"[AD-DEBUG] LDAP returned {len(self.connection.entries)} entries")
 
             if not self.connection.entries:
                 self.logger.warning(
