@@ -209,31 +209,22 @@ class ActiveDirectoryIntegration:
         Returns:
             int: Number of users synchronized
         """
-        import sys
-        print(f"[AD-DEBUG] sync_users called: enabled={self.enabled}, auto_provision={self.auto_provision}, ldap3={LDAP3_AVAILABLE}", file=sys.stderr, flush=True)
-
         if not self.enabled or not self.auto_provision or not LDAP3_AVAILABLE:
-            print(f"[AD-DEBUG] SKIPPED: enabled={self.enabled}, auto_provision={self.auto_provision}, ldap3={LDAP3_AVAILABLE}", file=sys.stderr, flush=True)
             return 0
 
         if not self.connect():
-            print("[AD-DEBUG] FAILED TO CONNECT", file=sys.stderr, flush=True)
             return 0
 
         try:
-            print("[AD-DEBUG] Starting LDAP search...", file=sys.stderr, flush=True)
-
             # Get user search base
             user_search_base = self.config.get(
                 "integrations.active_directory.user_search_base", self.base_dn
             )
-            print(f"[AD-DEBUG] Search base: {user_search_base}", file=sys.stderr, flush=True)
 
             # Determine which AD attribute holds the extension number
             extension_attr = self.config.get(
                 "integrations.active_directory.extension_attribute", "telephoneNumber"
             )
-            print(f"[AD-DEBUG] Extension attr: {extension_attr}", file=sys.stderr, flush=True)
 
             # Search for enabled users that have the extension attribute set
             # Also search for ipPhone as a fallback if using telephoneNumber
@@ -251,17 +242,13 @@ class ActiveDirectoryIntegration:
             if extension_attr not in search_attrs:
                 search_attrs.append(extension_attr)
 
-            print(f"[AD-DEBUG] LDAP filter: {search_filter}", file=sys.stderr, flush=True)
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
                 attributes=search_attrs,
             )
-            print(f"[AD-DEBUG] LDAP returned {len(self.connection.entries)} entries", file=sys.stderr, flush=True)
-
             if not self.connection.entries:
-                print("[AD-DEBUG] No entries found, returning 0", file=sys.stderr, flush=True)
                 return {"synced_count": 0, "extensions_to_reboot": []}
 
             self.logger.info(f"Found {len(self.connection.entries)} users in Active Directory")
@@ -305,8 +292,6 @@ class ActiveDirectoryIntegration:
                     ext_val = entry[extension_attr].value if has_ext_attr else None
                     ip_val = entry.ipPhone.value if has_ipphone else None
                     tel_val = entry.telephoneNumber.value if has_telephone else None
-                    print(f"[AD-DEBUG] User {username}: ext_attr={ext_val}, ipPhone={ip_val}, tel={tel_val}", file=sys.stderr, flush=True)
-
                     if has_ext_attr and ext_val:
                         phone_number = str(entry[extension_attr])
                     elif has_ipphone and ip_val:
@@ -316,14 +301,12 @@ class ActiveDirectoryIntegration:
 
                     # Skip if no username or phone number
                     if not username or not phone_number:
-                        print(f"[AD-DEBUG] SKIP {username}: no phone number", file=sys.stderr, flush=True)
                         skipped_count += 1
                         continue
 
                     # Clean phone number to get just digits (remove spaces,
                     # dashes, etc.)
                     extension_number = re.sub(r"[^0-9]", "", phone_number)
-                    print(f"[AD-DEBUG] User {username}: phone={phone_number} -> ext={extension_number}", file=sys.stderr, flush=True)
 
                     # Validate extension number
                     if not extension_number or len(extension_number) < 3:
@@ -334,7 +317,6 @@ class ActiveDirectoryIntegration:
                         continue
 
                     ad_extension_numbers.add(extension_number)
-                    print(f"[AD-DEBUG] User {username}: ext={extension_number}, use_db={use_database}", file=sys.stderr, flush=True)
 
                     # Get user's AD groups and map to PBX permissions
                     user_groups = (
@@ -348,8 +330,6 @@ class ActiveDirectoryIntegration:
                         existing_ext = extension_db.get(extension_number)
                     else:
                         existing_ext = pbx_config.get_extension(extension_number)
-
-                    print(f"[AD-DEBUG] User {username}: existing_ext={existing_ext is not None} ({type(existing_ext).__name__})", file=sys.stderr, flush=True)
 
                     if existing_ext:
                         # Update existing extension
@@ -369,7 +349,6 @@ class ActiveDirectoryIntegration:
                                 ad_username=username,
                                 # Don't update password - keep existing
                             )
-                            print(f"[AD-DEBUG] User {username}: DB update result={success}", file=sys.stderr, flush=True)
 
                             # Store permissions in extension config if update succeeded
                             # Database may not have columns for all permissions, so we store them
@@ -453,16 +432,15 @@ class ActiveDirectoryIntegration:
                             "ad_username": username,
                         }
 
-                        # Add permissions to extension data
-                        ext_data.update(permissions)
-
                         if use_database:
-                            # Add to database
-                            # NOTE: For production, use FIPS-compliant hashing via pbx.utils.encryption.FIPSEncryption.hash_password()
-                            # Currently storing plain password; system supports
-                            # both plain and hashed passwords
-                            success = extension_db.add(**ext_data)
-                            print(f"[AD-DEBUG] User {username}: DB add result={success}", file=sys.stderr, flush=True)
+                            # Only pass parameters that extension_db.add() accepts
+                            db_fields = {
+                                "number", "name", "password_hash", "email",
+                                "allow_external", "voicemail_pin", "ad_synced",
+                                "ad_username", "is_admin",
+                            }
+                            db_data = {k: v for k, v in ext_data.items() if k in db_fields}
+                            success = extension_db.add(**db_data)
                         else:
                             # Add to config.yml
                             success = pbx_config.add_extension(
@@ -514,9 +492,7 @@ class ActiveDirectoryIntegration:
 
                 except (KeyError, TypeError, ValueError) as e:
                     user_desc = username or "unknown"
-                    import traceback
-                    print(f"[AD-DEBUG] ERROR syncing user {user_desc}: {e}", file=sys.stderr, flush=True)
-                    traceback.print_exc(file=sys.stderr)
+                    self.logger.warning(f"Error syncing user {user_desc}: {e}")
                     continue
 
             # Deactivate extensions for users removed from AD

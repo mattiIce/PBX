@@ -129,9 +129,7 @@ class DatabaseBackend:
         Returns:
             bool: True if successful
         """
-        import sys
         if not self.enabled or not self.connection:
-            print(f"[DB-DEBUG] _execute_with_context: BAIL enabled={self.enabled} conn={self.connection is not None}", file=sys.stderr, flush=True)
             return False
 
         try:
@@ -146,7 +144,6 @@ class DatabaseBackend:
             cursor.close()
             return True
         except Exception as e:
-            print(f"[DB-DEBUG] _execute_with_context EXCEPTION: {type(e).__name__}: {e}", file=sys.stderr, flush=True)
             error_msg = str(e).lower()
             # Check if this is a permission error on existing objects
             permission_errors = [
@@ -195,18 +192,13 @@ class DatabaseBackend:
         Returns:
             bool: True if successful
         """
-        import sys
         if not self.enabled or not self.connection:
             self.logger.error("Execute called but database is not enabled or connected")
             self.logger.error(
                 f"  Enabled: {self.enabled}, Connection: {self.connection is not None}"
             )
-            print(f"[DB-DEBUG] execute: NOT enabled/connected enabled={self.enabled} conn={self.connection is not None}", file=sys.stderr, flush=True)
             return False
-        print(f"[DB-DEBUG] execute: enabled={self.enabled} conn={self.connection is not None} query={query[:80]}", file=sys.stderr, flush=True)
-        result = self._execute_with_context(query, "query execution", params, critical=True)
-        print(f"[DB-DEBUG] execute: _execute_with_context returned {result}", file=sys.stderr, flush=True)
-        return result
+        return self._execute_with_context(query, "query execution", params, critical=True)
 
     def execute_script(self, script: str) -> bool:
         """
@@ -657,6 +649,11 @@ class DatabaseBackend:
             ("voicemail_pin_hash", "VARCHAR(255)"),
             ("voicemail_pin_salt", "VARCHAR(255)"),
             ("is_admin", "BOOLEAN DEFAULT FALSE"),
+            ("ad_synced", "BOOLEAN DEFAULT FALSE"),
+            ("ad_username", "VARCHAR(100)"),
+            ("password_changed_at", "TIMESTAMP"),
+            ("failed_login_attempts", "INTEGER DEFAULT 0"),
+            ("account_locked_until", "TIMESTAMP"),
         ]
 
         for column_name, column_type in extensions_columns:
