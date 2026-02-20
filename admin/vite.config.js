@@ -6,6 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: resolve(__dirname),
+  base: '/admin/',
   build: {
     outDir: 'dist',
     target: 'es2024',

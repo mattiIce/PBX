@@ -1,14 +1,12 @@
 export {};
 
+/* Global debug helpers injected by inline <script> in index.html */
 declare global {
-    // Global debug functions defined in index.html <script> block
-    // eslint-disable-next-line no-var
-    var debugLog: (...args: unknown[]) => void;
-    // eslint-disable-next-line no-var
-    var debugWarn: (...args: unknown[]) => void;
+    function debugLog(...args: unknown[]): void;
+    function debugWarn(...args: unknown[]): void;
+    var __DEV__: boolean;
 
     interface Window {
-        // Debug helpers (defined inline in index.html)
         __DEV__: boolean;
         debugLog: (...args: unknown[]) => void;
         debugWarn: (...args: unknown[]) => void;

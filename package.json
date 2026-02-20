@@ -6,7 +6,7 @@
   "description": "Warden VoIP PBX Admin Panel",
   "scripts": {
     "dev": "vite admin",
-    "build": "tsc --noEmit -p admin/tsconfig.json && vite build admin",
+    "build": "tsc --noEmit -p admin/tsconfig.json && vite build admin && mkdir -p admin/dist/js && cp admin/js/webrtc_phone.js admin/js/framework_features.js admin/js/auto_attendant.js admin/js/voicemail_enhanced.js admin/js/opensource_integrations.js admin/dist/js/",
     "preview": "vite preview admin",
     "test": "jest",
     "test:watch": "jest --watch",

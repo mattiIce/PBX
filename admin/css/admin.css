@@ -11,6 +11,8 @@
    context-specific and do not map to the shared design-token palette.
    ========================================================================== */
 
+@import 'variables.css';
+
 /* Skip Navigation Link (Accessibility) */
 .skip-nav {
     position: absolute;
