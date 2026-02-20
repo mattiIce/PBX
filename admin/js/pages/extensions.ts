@@ -176,6 +176,92 @@ export async function rebootAllPhones(): Promise<void> {
     }
 }
 
+// --- Form submit handlers ---
+
+export function initExtensionForms(): void {
+    const addForm = document.getElementById('add-extension-form') as HTMLFormElement | null;
+    if (addForm) {
+        addForm.addEventListener('submit', async (e: Event) => {
+            e.preventDefault();
+            const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+            const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
+
+            const data = {
+                number: val('add-ext-number'),
+                name: val('add-ext-name'),
+                email: val('add-ext-email'),
+                password: val('add-ext-password'),
+                voicemail_pin: val('add-ext-voicemail-pin'),
+                allow_external: chk('add-ext-allow-external'),
+                is_admin: chk('add-ext-is-admin'),
+            };
+
+            try {
+                const API_BASE = getApiBaseUrl();
+                const response = await fetch(`${API_BASE}/api/extensions`, {
+                    method: 'POST',
+                    headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    showNotification('Extension added successfully', 'success');
+                    closeAddExtensionModal();
+                    loadExtensions();
+                } else {
+                    showNotification(result.error || 'Failed to add extension', 'error');
+                }
+            } catch (err: unknown) {
+                console.error('Error adding extension:', err);
+                showNotification('Failed to add extension', 'error');
+            }
+        });
+    }
+
+    const editForm = document.getElementById('edit-extension-form') as HTMLFormElement | null;
+    if (editForm) {
+        editForm.addEventListener('submit', async (e: Event) => {
+            e.preventDefault();
+            const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+            const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
+
+            const number = val('edit-ext-number');
+            const password = val('edit-ext-password');
+            const voicemailPin = val('edit-ext-voicemail-pin');
+
+            const data: Record<string, unknown> = {
+                name: val('edit-ext-name'),
+                email: val('edit-ext-email'),
+                allow_external: chk('edit-ext-allow-external'),
+                is_admin: chk('edit-ext-is-admin'),
+            };
+            // Only send password/pin if the user entered a value
+            if (password) data.password = password;
+            if (voicemailPin) data.voicemail_pin = voicemailPin;
+
+            try {
+                const API_BASE = getApiBaseUrl();
+                const response = await fetch(`${API_BASE}/api/extensions/${number}`, {
+                    method: 'PUT',
+                    headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+                const result = await response.json();
+                if (response.ok && result.success) {
+                    showNotification('Extension updated successfully', 'success');
+                    closeEditExtensionModal();
+                    loadExtensions();
+                } else {
+                    showNotification(result.error || 'Failed to update extension', 'error');
+                }
+            } catch (err: unknown) {
+                console.error('Error updating extension:', err);
+                showNotification('Failed to update extension', 'error');
+            }
+        });
+    }
+}
+
 // Backward compatibility
 window.loadExtensions = loadExtensions;
 window.showAddExtensionModal = showAddExtensionModal;
@@ -185,3 +271,10 @@ window.closeEditExtensionModal = closeEditExtensionModal;
 window.deleteExtension = deleteExtension;
 window.rebootPhone = rebootPhone;
 window.rebootAllPhones = rebootAllPhones;
+
+// Self-initialize form handlers once the DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initExtensionForms);
+} else {
+    initExtensionForms();
+}
