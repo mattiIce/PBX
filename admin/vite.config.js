@@ -6,6 +6,7 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
   root: resolve(__dirname),
+  base: '/admin/',
   build: {
     outDir: 'dist',
     target: 'es2024',
@@ -15,7 +16,7 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        login: resolve(__dirname, 'html/login.html'),
+        login: resolve(__dirname, 'login.html'),
       },
       output: {
         manualChunks: {
