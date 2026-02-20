@@ -138,7 +138,7 @@ class ActiveDirectoryIntegration:
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberO"],
+                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberOf"],
             )
 
             if not self.connection.entries:
@@ -178,7 +178,7 @@ class ActiveDirectoryIntegration:
                     ),
                     "groups": (
                         [str(g) for g in user_entry.memberOf]
-                        if hasattr(user_entry, "memberO")
+                        if hasattr(user_entry, "memberOf")
                         else []
                     ),
                 }
@@ -233,7 +233,7 @@ class ActiveDirectoryIntegration:
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberO"],
+                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberOf"],
             )
 
             if not self.connection.entries:
@@ -298,7 +298,7 @@ class ActiveDirectoryIntegration:
 
                     # Get user's AD groups and map to PBX permissions
                     user_groups = (
-                        [str(g) for g in entry.memberOf] if hasattr(entry, "memberO") else []
+                        [str(g) for g in entry.memberOf] if hasattr(entry, "memberOf") else []
                     )
                     permissions = self._map_groups_to_permissions(user_groups)
 
@@ -652,7 +652,7 @@ class ActiveDirectoryIntegration:
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=["memberO"],
+                attributes=["memberOf"],
             )
 
             if not self.connection.entries:
@@ -663,7 +663,7 @@ class ActiveDirectoryIntegration:
 
             # Extract group names from DNs
             groups = []
-            if hasattr(user_entry, "memberO"):
+            if hasattr(user_entry, "memberOf"):
                 for group_dn in user_entry.memberOf:
                     # Extract CN from DN (e.g.,
                     # "CN=Sales,OU=Groups,DC=domain,DC=local" -> "Sales")
