@@ -9,7 +9,7 @@ from pbx.utils.logger import get_logger
 
 logger = get_logger()
 
-ADMIN_DIR = str(Path(__file__).resolve().parent.parent.parent / "admin")
+ADMIN_DIR = str(Path(__file__).resolve().parent.parent.parent / "admin" / "dist")
 
 
 def create_app(pbx_core: object | None = None) -> Flask:

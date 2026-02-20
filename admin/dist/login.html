@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- API Base URL - change this if your API server is on a different host/port -->
+    <meta name="api-base-url" content="">
+    <meta name="description" content="Sign in to Warden VoIP PBX administration panel.">
+    <meta name="theme-color" content="#1a365d">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Warden VoIP Login</title>
+    <link rel="icon" type="image/x-icon" href="/admin/assets/favicon-BQap4sXP.ico">
+    <link rel="icon" type="image/png" sizes="192x192" href="/admin/assets/favicon-192-D3qdEI9i.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="/admin/assets/favicon-512-BCF-tvk5.png">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #1a365d 0%, #2c4a6f 50%, #3b9dd6 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Animated background particles */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+            background-size: 50px 50px;
+            animation: drift 60s linear infinite;
+            opacity: 0.3;
+        }
+
+        @keyframes drift {
+            0% {
+                transform: translate(0, 0);
+            }
+            100% {
+                transform: translate(-50px, -50px);
+            }
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(20px);
+            border-radius: 16px;
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.35), 0 10px 30px rgba(0, 0, 0, 0.25);
+            padding: 45px;
+            width: 100%;
+            max-width: 420px;
+            animation: slideUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            z-index: 1;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h1 {
+            font-size: 30px;
+            color: #1a365d;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+
+        .login-header .logo {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 20px;
+            display: block;
+            filter: drop-shadow(0 4px 12px rgba(59, 157, 214, 0.3));
+            transition: transform 0.3s ease;
+        }
+
+        .login-header .logo:hover {
+            transform: scale(1.05) rotate(2deg);
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        input[type="text"],
+        input[type="password"] {
+            width: 100%;
+            padding: 14px 18px;
+            border: 2px solid #e8ecf0;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #f8fafb;
+        }
+
+        input[type="text"]:hover,
+        input[type="password"]:hover {
+            border-color: #d0dae3;
+            background: #ffffff;
+        }
+
+        input[type="text"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #3b9dd6;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 157, 214, 0.15), 0 2px 8px rgba(59, 157, 214, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .error-message {
+            background: #fee;
+            color: #c33;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            display: none;
+            border-left: 4px solid #c33;
+        }
+
+        .error-message.show {
+            display: block;
+        }
+
+        .login-button {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #3b9dd6 0%, #2980b9 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 4px 12px rgba(59, 157, 214, 0.3);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .login-button::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+
+        .login-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 157, 214, 0.45);
+            background: linear-gradient(135deg, #2980b9 0%, #1e5f8a 100%);
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:active::before {
+            width: 400px;
+            height: 400px;
+        }
+
+        .login-button:active {
+            transform: translateY(0);
+        }
+
+        .login-button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .login-footer {
+            text-align: center;
+            margin-top: 30px;
+            color: #6c757d;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Floating animation for logo */
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-10px);
+            }
+        }
+
+        .login-header .logo {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .login-header .logo:hover {
+            animation: none;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            border: 2px solid #fff;
+            border-radius: 50%;
+            border-top-color: transparent;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .login-button .spinner {
+            display: none;
+        }
+
+        .login-button.loading .spinner {
+            display: inline-block;
+        }
+
+        .security-note {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            padding: 14px;
+            border-radius: 10px;
+            margin-top: 24px;
+            font-size: 13px;
+            color: #1e5f8a;
+            text-align: center;
+            border: 1px solid rgba(59, 157, 214, 0.2);
+            font-weight: 500;
+        }
+
+        .password-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            color: #6c757d;
+            padding: 4px;
+            line-height: 1;
+            transition: color 0.2s ease;
+        }
+
+        .password-toggle:hover {
+            color: #3b9dd6;
+        }
+
+        /* Dark mode */
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #0f1f33 0%, #1a2332 50%, #1e3a5f 100%);
+            }
+
+            .login-container {
+                background: rgba(30, 42, 58, 0.98);
+                border-color: rgba(93, 173, 226, 0.15);
+            }
+
+            .login-header h1 {
+                color: #e0e6ed;
+            }
+
+            .login-header p {
+                color: #a0aab4;
+            }
+
+            label {
+                color: #cdd5de;
+            }
+
+            input[type="text"],
+            input[type="password"] {
+                background: #243040;
+                border-color: #2a3a4a;
+                color: #e0e6ed;
+            }
+
+            input[type="text"]:hover,
+            input[type="password"]:hover {
+                border-color: #3a4a5a;
+                background: #2a3a4a;
+            }
+
+            input[type="text"]:focus,
+            input[type="password"]:focus {
+                background: #2a3a4a;
+                border-color: #5dade2;
+            }
+
+            .error-message {
+                background: #3a1a1a;
+                color: #ec7063;
+                border-left-color: #e74c3c;
+            }
+
+            .security-note {
+                background: linear-gradient(135deg, #1a2d3a 0%, #1e2a3a 100%);
+                color: #5dade2;
+                border-color: rgba(93, 173, 226, 0.2);
+            }
+
+            .login-footer {
+                color: #6c7a89;
+            }
+
+            .password-toggle {
+                color: #a0aab4;
+            }
+
+            .password-toggle:hover {
+                color: #5dade2;
+            }
+        }
+
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-header">
+            <img src="/admin/assets/warden-voip-logo-6PQKg6cj.png" alt="Warden VoIP" class="logo">
+            <h1>Warden VoIP</h1>
+            <p>Enter your credentials to continue</p>
+        </div>
+
+        <div id="error-message" class="error-message" role="alert" aria-live="assertive"></div>
+
+        <form id="login-form" aria-label="Login form">
+            <div class="form-group">
+                <label for="extension">Extension Number</label>
+                <input
+                    type="text"
+                    id="extension"
+                    name="extension"
+                    placeholder="e.g., 1001"
+                    required
+                    pattern="[0-9]+"
+                    maxlength="6"
+                    autocomplete="username"
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+                <div class="password-wrapper">
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Enter your password"
+                        required
+                        autocomplete="current-password"
+                    >
+                    <button type="button" class="password-toggle" id="password-toggle" aria-label="Show password" tabindex="-1">
+                        👁
+                    </button>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; font-size: 14px;">
+                <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #495057;">
+                    <input type="checkbox" id="remember-me" name="remember" style="accent-color: #3b9dd6;">
+                    <span>Remember me</span>
+                </label>
+                <a href="#" id="forgot-password-link" style="color: #3b9dd6; text-decoration: none; font-weight: 500;" onclick="alert('Please contact your system administrator to reset your password.'); return false;">Forgot password?</a>
+            </div>
+
+            <button type="submit" class="login-button" id="login-button">
+                <span class="spinner"></span>
+                <span class="button-text">Login</span>
+            </button>
+        </form>
+
+        <div class="security-note">
+            🔒 Your session is secured with encrypted authentication
+        </div>
+        
+        <div id="troubleshooting" class="security-note" style="display:none; background: #fff3cd; color: #856404; margin-top: 10px;">
+            <strong>Connection Troubleshooting:</strong><br>
+            <small id="troubleshooting-details" style="white-space: pre-line;"></small>
+        </div>
+
+        <div class="login-footer">
+            PBX System v1.0
+        </div>
+    </div>
+
+    <script>
+        // Debug logger - only outputs in development
+        window.__DEV__ = ['localhost', '127.0.0.1'].includes(location.hostname) || !['', '80', '443'].includes(location.port);
+        window.debugLog = window.__DEV__ ? console.log.bind(console) : function() {};
+        window.debugWarn = window.__DEV__ ? console.warn.bind(console) : function() {};
+
+        // Constants for API endpoint detection
+        const STANDARD_HTTP_PORT = '80';
+        const STANDARD_HTTPS_PORT = '443';
+        const API_PORT = '9000';
+        
+        // API Base URL - auto-detect or use configured value
+        function getAPIBase() {
+            // Check for meta tag override first
+            const apiMeta = document.querySelector('meta[name="api-base-url"]');
+            if (apiMeta && apiMeta.content) {
+                debugLog('Using API base URL from meta tag:', apiMeta.content);
+                return apiMeta.content;
+            }
+            
+            // If we're on the API port, use current origin
+            if (window.location.port === API_PORT) {
+                debugLog('Detected API port in URL, using current origin');
+                return window.location.origin;
+            }
+            
+            // If accessed through reverse proxy or standard HTTP/HTTPS ports,
+            // try same origin first (API should be proxied)
+            if (window.location.port === '' || 
+                window.location.port === STANDARD_HTTP_PORT || 
+                window.location.port === STANDARD_HTTPS_PORT) {
+                debugLog('Accessed via standard port, will try same origin (reverse proxy)');
+                return window.location.origin;
+            }
+            
+            // Fallback: use current hostname with API port (direct API access)
+            const protocol = window.location.protocol;
+            const hostname = window.location.hostname || 'localhost';
+            const apiBase = `${protocol}//${hostname}:${API_PORT}`;
+            debugLog('Using direct API access:', apiBase);
+            debugLog('Current location:', window.location.href);
+            return apiBase;
+        }
+        
+        const API_BASE = getAPIBase();
+        debugLog('Final API Base URL:', API_BASE);
+        
+        // Test API connectivity on page load
+        async function testAPIConnection() {
+            try {
+                debugLog('Testing API connectivity...');
+                const response = await fetch(`${API_BASE}/api/status`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (response.ok) {
+                    debugLog('API server is reachable');
+                } else {
+                    debugWarn('API server responded with status:', response.status);
+                    showTroubleshooting('API server responded with status ' + response.status + '. The PBX may be starting up.');
+                }
+            } catch (error) {
+                console.error('Cannot reach API server:', error);
+                debugLog('Please verify: PBX server is running, API on port 9000, no firewall blocking, hostname resolves correctly');
+                
+                showTroubleshooting(
+                    'Cannot reach API server at ' + window.location.hostname + ':9000\n' +
+                    'Please check:\n' +
+                    '• PBX server is running\n' +
+                    '• Port 9000 is not blocked by firewall\n' +
+                    '• Console (F12) for detailed error logs'
+                );
+            }
+        }
+        
+        function showTroubleshooting(message) {
+            const troubleshooting = document.getElementById('troubleshooting');
+            const details = document.getElementById('troubleshooting-details');
+            
+            // Use textContent for security (no HTML injection)
+            details.textContent = message;
+            troubleshooting.style.display = 'block';
+        }
+        
+        // Run API test after a short delay to let the page load
+        setTimeout(testAPIConnection, 500);
+
+        const loginForm = document.getElementById('login-form');
+        const loginButton = document.getElementById('login-button');
+        const errorMessage = document.getElementById('error-message');
+        const extensionInput = document.getElementById('extension');
+        const passwordInput = document.getElementById('password');
+
+        loginForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const extension = extensionInput.value.trim();
+            const password = passwordInput.value;
+
+            if (!extension || !password) {
+                showError('Please enter both extension and password');
+                return;
+            }
+
+            // Show loading state
+            loginButton.disabled = true;
+            loginButton.classList.add('loading');
+            hideError();
+
+            try {
+                const response = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        extension: extension,
+                        password: password
+                    })
+                });
+
+                // Check if response is JSON before parsing
+                const contentType = response.headers.get('content-type');
+                if (!contentType || !contentType.includes('application/json')) {
+                    debugWarn('Invalid response type:', contentType, 'status:', response.status);
+                    throw new Error('Server returned invalid response. Please check if the PBX API server is running on port 9000.');
+                }
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Store authentication data
+                    localStorage.setItem('pbx_token', data.token);
+                    localStorage.setItem('pbx_extension', data.extension);
+                    localStorage.setItem('pbx_is_admin', data.is_admin.toString());
+                    localStorage.setItem('pbx_name', data.name || 'User');
+
+                    // Redirect to admin panel
+                    window.location.href = '/admin/index.html';
+                } else {
+                    showError(data.error || 'Invalid credentials');
+                    loginButton.disabled = false;
+                    loginButton.classList.remove('loading');
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Provide more specific error messages (without exposing sensitive data)
+                let errorMsg = 'Connection error. ';
+                if (error.message && error.message.includes('PBX API server')) {
+                    // Use a safe, predefined message
+                    errorMsg = 'Server returned invalid response. Please check if the PBX API server is running on port 9000.';
+                } else if (error.name === 'TypeError' && error.message.includes('fetch')) {
+                    errorMsg += 'Cannot reach API server. Please verify the server is running.';
+                } else if (error.name === 'SyntaxError') {
+                    errorMsg += 'Server returned invalid data. Please contact your administrator.';
+                } else {
+                    errorMsg += 'Please try again or contact your administrator.';
+                }
+                
+                showError(errorMsg);
+                loginButton.disabled = false;
+                loginButton.classList.remove('loading');
+            }
+        });
+
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.classList.add('show');
+        }
+
+        function hideError() {
+            errorMessage.classList.remove('show');
+        }
+
+        // Password visibility toggle
+        const passwordToggle = document.getElementById('password-toggle');
+        passwordToggle.addEventListener('click', () => {
+            const isPassword = passwordInput.type === 'password';
+            passwordInput.type = isPassword ? 'text' : 'password';
+            passwordToggle.textContent = isPassword ? '🔒' : '👁';
+            passwordToggle.setAttribute('aria-label', isPassword ? 'Hide password' : 'Show password');
+        });
+
+        // Remember Me: save/restore extension from localStorage
+        const rememberMe = document.getElementById('remember-me');
+        const savedExtension = localStorage.getItem('pbx_remembered_extension');
+        if (savedExtension) {
+            extensionInput.value = savedExtension;
+            rememberMe.checked = true;
+        }
+
+        // Save on successful login
+        const originalSubmit = loginForm.onsubmit;
+        loginForm.addEventListener('submit', () => {
+            if (rememberMe.checked) {
+                localStorage.setItem('pbx_remembered_extension', extensionInput.value.trim());
+            } else {
+                localStorage.removeItem('pbx_remembered_extension');
+            }
+        }, true);
+
+        // Auto-focus: if extension pre-filled, focus password instead
+        if (savedExtension) {
+            passwordInput.focus();
+        } else {
+            extensionInput.focus();
+        }
+    </script>
+</body>
+</html>
