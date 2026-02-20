@@ -812,6 +812,35 @@ class PBXCore:
                 call.callee_addr = callee_addr
 
         # Now we have both endpoints, complete the RTP relay setup
+        # Cancel no-answer timer if it's running
+        if call and call.no_answer_timer:
+            call.no_answer_timer.cancel()
+            self.logger.info(f"Cancelled no-answer timer for call {call_id}")
+
+        # Check if this is a WebRTC-originated call
+        webrtc_session_id = getattr(call, "webrtc_session_id", None)
+
+        if webrtc_session_id and call.callee_rtp and call.rtp_ports:
+            # --- WebRTC caller: start aiortc ↔ RTP media bridge ---
+            callee_endpoint = (call.callee_rtp["address"], call.callee_rtp["port"])
+
+            if hasattr(self, "webrtc_signaling") and self.webrtc_signaling:
+                session = self.webrtc_signaling.get_session(webrtc_session_id)
+                if session:
+                    self.webrtc_signaling.start_media_bridge(
+                        session, call.rtp_ports[0], callee_endpoint
+                    )
+                    self.logger.info(
+                        f"WebRTC media bridge started for call {call_id}"
+                    )
+
+            # Mark call as connected
+            call.connect()
+            self.cdr_system.mark_answered(call_id)
+            self.logger.info(f"WebRTC call {call_id} connected")
+            return
+
+        # --- Regular SIP-to-SIP path ---
         # Note: caller endpoint (A) was already set when INVITE was received
         if call.caller_rtp and call.callee_rtp and call.rtp_ports:
             caller_endpoint = (call.caller_rtp["address"], call.caller_rtp["port"])
@@ -822,11 +851,6 @@ class PBXCore:
             # relay
             self.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
             self.logger.info(f"RTP relay connected for call {call_id}")
-
-        # Cancel no-answer timer if it's running
-        if call and call.no_answer_timer:
-            call.no_answer_timer.cancel()
-            self.logger.info(f"Cancelled no-answer timer for call {call_id}")
 
         # Mark call as connected
         call.connect()

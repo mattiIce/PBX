@@ -104,15 +104,24 @@ def handle_webrtc_offer() -> Response:
         if not session_id or not sdp:
             return send_json({"error": "session_id and sdp are required"}, 400)
 
-        success = pbx_core.webrtc_signaling.handle_offer(session_id, sdp)
+        answer_sdp = pbx_core.webrtc_signaling.handle_offer(session_id, sdp)
 
-        if success:
+        if answer_sdp and answer_sdp != "__legacy__":
             if verbose_logging:
-                logger.info("[VERBOSE] Offer handled successfully")
+                logger.info("[VERBOSE] Offer handled, SDP answer generated")
+            return send_json({
+                "success": True,
+                "message": "Offer received",
+                "answer_sdp": answer_sdp,
+            })
+        if answer_sdp == "__legacy__":
+            # aiortc unavailable – legacy mode (no real media)
+            if verbose_logging:
+                logger.info("[VERBOSE] Offer stored (legacy, no aiortc)")
             return send_json({"success": True, "message": "Offer received"})
         if verbose_logging:
-            logger.warning("[VERBOSE] Session not found for offer")
-        return send_json({"error": "Session not found"}, 404)
+            logger.warning("[VERBOSE] Session not found or offer processing failed")
+        return send_json({"error": "Session not found or offer processing failed"}, 404)
     except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
             logger.error(f"[VERBOSE] Error handling WebRTC offer: {e}")

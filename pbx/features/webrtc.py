@@ -1,8 +1,15 @@
 """
 WebRTC Browser Calling Support
-Provides WebRTC signaling and integration with PBX SIP infrastructure
+Provides WebRTC signaling and integration with PBX SIP infrastructure.
+
+Uses aiortc for server-side WebRTC (DTLS-SRTP, ICE) so that browsers
+can exchange real media with the PBX's plain-RTP infrastructure.
 """
 
+import asyncio
+import fractions
+import socket
+import struct
 import threading
 import time
 import uuid
@@ -14,6 +21,134 @@ from pbx.utils.logger import get_logger
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+
+# aiortc – server-side WebRTC implementation
+try:
+    from aiortc import MediaStreamTrack, RTCPeerConnection as AiortcPC, RTCSessionDescription
+    from av import AudioFrame
+
+    AIORTC_AVAILABLE = True
+except ImportError:  # graceful degradation
+    AIORTC_AVAILABLE = False
+
+
+logger = get_logger()
+
+
+# ---------------------------------------------------------------------------
+# Audio bridge track – sends audio FROM the PBX TO the browser
+# ---------------------------------------------------------------------------
+
+if AIORTC_AVAILABLE:
+
+    class AudioBridgeTrack(MediaStreamTrack):
+        """MediaStreamTrack that feeds audio from the PBX RTP stream to the browser."""
+
+        kind = "audio"
+
+        def __init__(self, sample_rate: int = 8000, samples_per_frame: int = 160) -> None:
+            super().__init__()
+            self._sample_rate = sample_rate
+            self._samples_per_frame = samples_per_frame
+            self._queue: asyncio.Queue[AudioFrame] = asyncio.Queue(maxsize=200)
+            self._timestamp = 0
+
+        async def recv(self) -> "AudioFrame":
+            """Return the next frame (or silence if nothing queued)."""
+            try:
+                frame = self._queue.get_nowait()
+            except asyncio.QueueEmpty:
+                frame = self._silence_frame()
+            # Pace at ~20 ms per frame to avoid busy-looping
+            await asyncio.sleep(self._samples_per_frame / self._sample_rate)
+            return frame
+
+        def push_frame(self, frame: "AudioFrame") -> None:
+            try:
+                self._queue.put_nowait(frame)
+            except asyncio.QueueFull:
+                pass  # drop oldest – real-time audio cannot block
+
+        def _silence_frame(self) -> "AudioFrame":
+            frame = AudioFrame(format="s16", layout="mono", samples=self._samples_per_frame)
+            for plane in frame.planes:
+                plane.update(bytes(self._samples_per_frame * 2))
+            frame.pts = self._timestamp
+            frame.sample_rate = self._sample_rate
+            frame.time_base = fractions.Fraction(1, self._sample_rate)
+            self._timestamp += self._samples_per_frame
+            return frame
+
+
+# ---------------------------------------------------------------------------
+# RTP ↔ aiortc audio bridge (runs in background threads / coroutines)
+# ---------------------------------------------------------------------------
+
+# u-law lookup tables (replaces removed audioop in Python 3.13)
+_ULAW_ENCODE_TABLE: list[int] | None = None
+_ULAW_DECODE_TABLE: list[int] | None = None
+
+
+def _init_ulaw_tables() -> None:
+    """Lazily build u-law encode / decode lookup tables."""
+    global _ULAW_ENCODE_TABLE, _ULAW_DECODE_TABLE  # noqa: PLW0603
+
+    if _ULAW_DECODE_TABLE is not None:
+        return
+
+    # Decode: 256 entries mapping u-law byte → signed 16-bit sample
+    _ULAW_DECODE_TABLE = []
+    for i in range(256):
+        val = ~i
+        sign = val & 0x80
+        exponent = (val >> 4) & 0x07
+        mantissa = val & 0x0F
+        sample = ((mantissa << 3) + 0x84) << exponent
+        sample -= 0x84
+        _ULAW_DECODE_TABLE.append(-sample if sign else sample)
+
+    # Encode: 65536 entries mapping unsigned index → u-law byte
+    BIAS = 0x84
+    CLIP = 32635
+    _ULAW_ENCODE_TABLE = []
+    for idx in range(65536):
+        sample = idx - 32768  # convert to signed
+        sign_bit = 0
+        if sample < 0:
+            sign_bit = 0x80
+            sample = -sample
+        if sample > CLIP:
+            sample = CLIP
+        sample += BIAS
+        exponent = 7
+        for mask in (0x4000, 0x2000, 0x1000, 0x0800, 0x0400, 0x0200, 0x0100):
+            if sample & mask:
+                break
+            exponent -= 1
+        mantissa = (sample >> (exponent + 3)) & 0x0F
+        _ULAW_ENCODE_TABLE.append(~(sign_bit | (exponent << 4) | mantissa) & 0xFF)
+
+
+def _pcm_to_ulaw(pcm_bytes: bytes) -> bytes:
+    """Convert signed-16-bit-LE PCM to u-law bytes."""
+    _init_ulaw_tables()
+    assert _ULAW_ENCODE_TABLE is not None
+    out = bytearray(len(pcm_bytes) // 2)
+    for i in range(0, len(pcm_bytes), 2):
+        sample = int.from_bytes(pcm_bytes[i : i + 2], "little", signed=True)
+        out[i // 2] = _ULAW_ENCODE_TABLE[sample + 32768]
+    return bytes(out)
+
+
+def _ulaw_to_pcm(ulaw_bytes: bytes) -> bytes:
+    """Convert u-law bytes to signed-16-bit-LE PCM."""
+    _init_ulaw_tables()
+    assert _ULAW_DECODE_TABLE is not None
+    out = bytearray(len(ulaw_bytes) * 2)
+    for i, b in enumerate(ulaw_bytes):
+        sample = _ULAW_DECODE_TABLE[b]
+        out[i * 2 : i * 2 + 2] = sample.to_bytes(2, "little", signed=True)
+    return bytes(out)
 
 
 class WebRTCSession:
@@ -41,6 +176,15 @@ class WebRTCSession:
         self.ice_candidates = []
         self.call_id = None
         self.metadata = {}
+
+        # aiortc server-side peer connection
+        self.pc: Any | None = None  # AiortcPC
+        self.answer_sdp: str | None = None
+        self.bridge_track: Any | None = None  # AudioBridgeTrack → browser
+        self.browser_track: Any | None = None  # Track received from browser
+        self.bridge_socket: socket.socket | None = None  # UDP for RTP relay I/O
+        self.bridge_port: int | None = None
+        self._bridge_running = False
 
     def update_activity(self) -> None:
         """Update last activity timestamp"""
@@ -149,8 +293,21 @@ class WebRTCSignalingServer:
         self.running = False
         self.cleanup_thread = None
 
+        # Dedicated asyncio event loop for aiortc peer connections
+        self._loop: asyncio.AbstractEventLoop | None = None
+        self._loop_thread: threading.Thread | None = None
+
         if self.enabled:
             self.logger.info("WebRTC signaling server enabled")
+            if AIORTC_AVAILABLE:
+                self._loop = asyncio.new_event_loop()
+                self._loop_thread = threading.Thread(
+                    target=self._run_event_loop, daemon=True, name="WebRTCAsyncLoop"
+                )
+                self._loop_thread.start()
+                self.logger.info("aiortc async event loop started")
+            else:
+                self.logger.warning("aiortc not installed – WebRTC media bridge unavailable")
             if self.verbose_logging:
                 self.logger.info("WebRTC verbose logging ENABLED")
                 self.logger.info(f"  STUN servers: {self.stun_servers}")
@@ -182,7 +339,70 @@ class WebRTCSignalingServer:
         self.running = False
         if self.cleanup_thread and self.cleanup_thread.is_alive():
             self.cleanup_thread.join(timeout=5)
+        if self._loop and self._loop.is_running():
+            self._loop.call_soon_threadsafe(self._loop.stop)
         self.logger.info("WebRTC signaling server stopped")
+
+    # ------------------------------------------------------------------
+    # Async event loop helpers
+    # ------------------------------------------------------------------
+
+    def _run_event_loop(self) -> None:
+        """Target for the background thread that runs the aiortc event loop."""
+        asyncio.set_event_loop(self._loop)
+        self._loop.run_forever()
+
+    def _run_async(self, coro: Any, timeout: float = 15.0) -> Any:
+        """Run *coro* on the aiortc event loop from synchronous code."""
+        if not self._loop:
+            raise RuntimeError("aiortc event loop not started")
+        future = asyncio.run_coroutine_threadsafe(coro, self._loop)
+        return future.result(timeout=timeout)
+
+    # ------------------------------------------------------------------
+    # aiortc offer → answer
+    # ------------------------------------------------------------------
+
+    async def _handle_offer_async(self, session: WebRTCSession, sdp: str) -> str | None:
+        """Create an aiortc PeerConnection, process the browser's offer,
+        and return the SDP answer string."""
+        pc = AiortcPC()
+        session.pc = pc
+
+        # Create the bridge track (PBX → browser audio) and add it so
+        # the answer includes an audio media section.
+        bridge_track = AudioBridgeTrack()
+        session.bridge_track = bridge_track
+        pc.addTrack(bridge_track)
+
+        # Capture the browser's audio track when it arrives
+        @pc.on("track")
+        def _on_track(track: Any) -> None:
+            self.logger.info(f"Received browser audio track for session {session.session_id}")
+            session.browser_track = track
+
+        @pc.on("connectionstatechange")
+        async def _on_state() -> None:
+            self.logger.info(
+                f"WebRTC connection state for {session.session_id}: {pc.connectionState}"
+            )
+            if pc.connectionState == "connected":
+                session.state = "connected"
+            elif pc.connectionState in ("failed", "closed"):
+                session.state = "disconnected"
+
+        # Process the browser's offer
+        offer = RTCSessionDescription(sdp=sdp, type="offer")
+        await pc.setRemoteDescription(offer)
+
+        # Generate and apply the answer
+        answer = await pc.createAnswer()
+        await pc.setLocalDescription(answer)
+
+        session.answer_sdp = pc.localDescription.sdp
+        session.state = "connecting"
+        self.logger.info(f"Generated SDP answer for session {session.session_id}")
+        return session.answer_sdp
 
     def _cleanup_worker(self) -> None:
         """Worker thread for cleaning up stale sessions"""
@@ -417,16 +637,23 @@ class WebRTCSignalingServer:
 
         return True
 
-    def handle_offer(self, session_id: str, sdp: str) -> bool:
+    def handle_offer(self, session_id: str, sdp: str) -> str | None:
         """
-        Handle SDP offer from client
+        Handle SDP offer from client.
+
+        When aiortc is available the method creates a server-side
+        RTCPeerConnection and returns the SDP **answer** string so the
+        browser can complete the WebRTC handshake.  Falls back to the
+        legacy store-only behaviour (returns ``"__legacy__"``) when
+        aiortc is missing.
 
         Args:
             session_id: Session identifier
-            sdp: SDP offer
+            sdp: SDP offer from the browser
 
         Returns:
-            True if offer was accepted
+            SDP answer string, ``"__legacy__"`` (aiortc unavailable),
+            or ``None`` on error.
         """
         session = self.get_session(session_id)
         if not session:
@@ -435,10 +662,9 @@ class WebRTCSignalingServer:
                 self.logger.warning("[VERBOSE] Unknown session details:")
                 self.logger.warning(f"  Session ID: {session_id}")
                 self.logger.warning(f"  Active sessions: {list(self.sessions)}")
-            return False
+            return None
 
         session.local_sdp = sdp
-        session.state = "connecting"
         session.update_activity()
 
         self.logger.info(f"Received SDP offer for session: {session_id}")
@@ -448,9 +674,7 @@ class WebRTCSignalingServer:
             self.logger.info("[VERBOSE] SDP offer received:")
             self.logger.info(f"  Session ID: {session_id}")
             self.logger.info(f"  Extension: {session.extension}")
-            self.logger.info("  State transition: -> connecting")
             self.logger.info(f"  SDP length: {len(sdp)} bytes")
-            self.logger.info(f"  Full SDP offer:\n{sdp}")
 
         if self.on_offer_received:
             try:
@@ -458,7 +682,22 @@ class WebRTCSignalingServer:
             except Exception as e:
                 self.logger.error(f"Error in offer received callback: {e}")
 
-        return True
+        # --- aiortc path: generate a real SDP answer ---
+        if AIORTC_AVAILABLE and self._loop:
+            try:
+                answer_sdp = self._run_async(self._handle_offer_async(session, sdp))
+                if answer_sdp:
+                    self.logger.info(f"SDP answer generated for session {session_id}")
+                    return answer_sdp
+                self.logger.error(f"Failed to generate SDP answer for session {session_id}")
+                return None
+            except Exception as e:
+                self.logger.error(f"aiortc error generating SDP answer: {e}")
+                return None
+
+        # --- fallback: store offer only (no real media will flow) ---
+        session.state = "connecting"
+        return "__legacy__"
 
     def handle_answer(self, session_id: str, sdp: str) -> bool:
         """
@@ -521,6 +760,162 @@ class WebRTCSignalingServer:
             self.logger.info(f"  Total candidates for session: {len(session.ice_candidates)}")
 
         return True
+
+    # ------------------------------------------------------------------
+    # RTP ↔ aiortc media bridge
+    # ------------------------------------------------------------------
+
+    def start_media_bridge(
+        self,
+        session: WebRTCSession,
+        relay_port: int,
+        phone_endpoint: tuple[str, int],
+    ) -> bool:
+        """Start bidirectional audio bridge between aiortc and the RTP relay.
+
+        *relay_port* is the PBX RTP relay's local port.  The bridge
+        opens its own UDP socket, sends/receives plain RTP to/from the
+        relay, and converts between aiortc AudioFrames and u-law RTP
+        packets.
+
+        Args:
+            session: The WebRTC session.
+            relay_port: Local port of the PBX RTP relay for this call.
+            phone_endpoint: (ip, port) of the SIP phone (used to
+                configure the relay's endpoint B).
+
+        Returns:
+            True if the bridge was started.
+        """
+        if not AIORTC_AVAILABLE or not session.pc:
+            self.logger.error("Cannot start media bridge: aiortc not available or no PC")
+            return False
+
+        try:
+            # Open a UDP socket that will talk to the RTP relay
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("127.0.0.1", 0))  # OS picks a free port
+            bridge_port = sock.getsockname()[1]
+            sock.settimeout(0.05)  # non-blocking-ish for the reader thread
+
+            session.bridge_socket = sock
+            session.bridge_port = bridge_port
+            session._bridge_running = True
+
+            self.logger.info(
+                f"Media bridge for session {session.session_id}: "
+                f"127.0.0.1:{bridge_port} <-> relay:{relay_port}"
+            )
+
+            # Tell the RTP relay that endpoint A is our bridge socket
+            if self.pbx_core and session.call_id:
+                relay_info = self.pbx_core.rtp_relay.active_relays.get(session.call_id)
+                if relay_info:
+                    handler = relay_info["handler"]
+                    handler.set_endpoints(("127.0.0.1", bridge_port), phone_endpoint)
+
+            relay_addr = ("127.0.0.1", relay_port)
+
+            # --- Thread: RTP relay → aiortc (phone audio → browser) ---
+            def _relay_to_browser() -> None:
+                seq = 0
+                while session._bridge_running:
+                    try:
+                        data, _addr = sock.recvfrom(2048)
+                    except (TimeoutError, OSError):
+                        continue
+                    if len(data) < 12:
+                        continue
+                    # Strip RTP header (12 bytes minimum) and decode u-law payload
+                    payload = data[12:]
+                    pcm = _ulaw_to_pcm(payload)
+                    samples = len(pcm) // 2
+                    frame = AudioFrame(format="s16", layout="mono", samples=samples)
+                    for plane in frame.planes:
+                        plane.update(pcm)
+                    frame.pts = seq * samples
+                    frame.sample_rate = 8000
+                    frame.time_base = fractions.Fraction(1, 8000)
+                    if session.bridge_track:
+                        session.bridge_track.push_frame(frame)
+                    seq += 1
+
+            threading.Thread(
+                target=_relay_to_browser,
+                daemon=True,
+                name=f"WebRTC-R2B-{session.session_id[:8]}",
+            ).start()
+
+            # --- Async coroutine: aiortc → RTP relay (browser audio → phone) ---
+            async def _browser_to_relay() -> None:
+                rtp_seq = 0
+                rtp_ts = 0
+                ssrc = int.from_bytes(uuid.uuid4().bytes[:4], "big")
+                while session._bridge_running:
+                    if not session.browser_track:
+                        await asyncio.sleep(0.02)
+                        continue
+                    try:
+                        frame = await asyncio.wait_for(
+                            session.browser_track.recv(), timeout=0.1
+                        )
+                    except (asyncio.TimeoutError, Exception):
+                        continue
+                    # Resample to 8 kHz mono if needed
+                    pcm = bytes(frame.planes[0])
+                    sr = frame.sample_rate
+                    if sr != 8000:
+                        # Simple decimation (works well for 48→8 kHz)
+                        import array
+
+                        src = array.array("h", pcm)
+                        ratio = sr // 8000
+                        if ratio > 0:
+                            dst = array.array("h", (src[i] for i in range(0, len(src), ratio)))
+                            pcm = dst.tobytes()
+                    ulaw = _pcm_to_ulaw(pcm)
+                    samples = len(ulaw)
+                    # Build RTP packet: V=2, PT=0 (PCMU), with seq/ts/ssrc
+                    header = struct.pack(
+                        "!BBHII",
+                        0x80,  # V=2, no padding/extension/CSRC
+                        0,  # PT=0 (PCMU)
+                        rtp_seq & 0xFFFF,
+                        rtp_ts & 0xFFFFFFFF,
+                        ssrc,
+                    )
+                    try:
+                        sock.sendto(header + ulaw, relay_addr)
+                    except OSError:
+                        pass
+                    rtp_seq += 1
+                    rtp_ts += samples
+
+            if self._loop:
+                asyncio.run_coroutine_threadsafe(_browser_to_relay(), self._loop)
+
+            return True
+        except Exception as e:
+            self.logger.error(f"Error starting media bridge: {e}")
+            return False
+
+    def stop_media_bridge(self, session: WebRTCSession) -> None:
+        """Stop the media bridge for a session."""
+        session._bridge_running = False
+        if session.bridge_socket:
+            try:
+                session.bridge_socket.close()
+            except OSError:
+                pass
+            session.bridge_socket = None
+        if session.pc:
+            if self._loop:
+                try:
+                    asyncio.run_coroutine_threadsafe(session.pc.close(), self._loop)
+                except Exception:
+                    pass
+            session.pc = None
 
     def get_ice_servers_config(self) -> dict:
         """
@@ -948,182 +1343,80 @@ class WebRTCGateway:
                 self.logger.error(f"Failed to allocate RTP ports for WebRTC call {call_id}")
                 return None
 
-            # 6. Handle special extensions (auto attendant, voicemail, etc.)
-            # Check if target is auto attendant
-            if (
-                self.pbx_core.auto_attendant
-                and target_extension == self.pbx_core.auto_attendant.get_extension()
-            ):
-                if self.verbose_logging:
-                    self.logger.info("[VERBOSE] Target is auto attendant, starting session")
+            # 6. Send SIP INVITE to the target phone (regular extension calls)
+            #    Special extensions (AA, voicemail) are handled by the PBX
+            #    call router when the INVITE is processed.
+            dest_ext_obj = self.pbx_core.extension_registry.get(target_extension)
+            if dest_ext_obj and dest_ext_obj.address:
+                # Regular SIP phone – send INVITE with PBX RTP endpoint
+                from pbx.sip.message import SIPMessageBuilder
+                from pbx.sip.sdp import SDPBuilder
 
-                # Mark as auto attendant call
-                call.auto_attendant_active = True
+                server_ip = self.pbx_core._get_server_ip()
+                sip_port = self.pbx_core.config.get("server.sip_port", 5060)
+                dtmf_pt = self.pbx_core._get_dtmf_payload_type()
+                ilbc_mode = self.pbx_core._get_ilbc_mode()
 
-                # Start auto attendant session
-                aa_session = self.pbx_core.auto_attendant.start_session(call_id, from_extension)
-                call.aa_session = aa_session
-
-                if self.verbose_logging:
-                    self.logger.info("[VERBOSE] Auto attendant session started")
-                    self.logger.info(f"[VERBOSE] Initial action: {aa_session.get('action')}")
-
-                # set up RTP player to play the welcome message
-                if aa_session.get("action") == "play" and aa_session.get("file"):
-                    audio_file = aa_session.get("file")
-
-                    # Get caller's RTP endpoint from call
-                    if call.caller_rtp and isinstance(call.caller_rtp, dict):
-                        # Validate RTP info has required fields
-                        caller_address = call.caller_rtp.get("address")
-                        caller_port = call.caller_rtp.get("port")
-
-                        if caller_address and caller_port:
-                            from pbx.rtp.handler import RTPPlayer
-
-                            # Create RTP player to send audio to WebRTC client
-                            player = RTPPlayer(
-                                local_port=call.rtp_ports[0] if call.rtp_ports else None,
-                                remote_host=caller_address,
-                                remote_port=caller_port,
-                                call_id=call_id,
-                            )
-
-                            # Store player reference in call for cleanup
-                            call.rtp_player = player
-
-                            # Start the RTP player
-                            if player.start():
-                                # Play the audio file
-                                if audio_file and Path(audio_file).exists():
-                                    player.play_file(audio_file)
-                                    self.logger.info(
-                                        f"Auto attendant playing welcome message for call {call_id}"
-                                    )
-                                else:
-                                    self.logger.warning(f"Audio file not found: {audio_file}")
-                            else:
-                                self.logger.error(
-                                    f"Failed to start RTP player for auto attendant call {call_id}"
-                                )
-                        else:
-                            self.logger.warning(
-                                f"Incomplete caller RTP info (missing address or port) for call {call_id}"
-                            )
-                    else:
-                        self.logger.warning(
-                            f"No caller RTP info available for auto attendant call {call_id}"
-                        )
-
-            # Check if target is voicemail access (*xxxx pattern)
-            # Use regex to match dialplan pattern for consistency
-            import re
-
-            voicemail_pattern = r"^\*[0-9]{3,4}$"
-            if re.match(voicemail_pattern, target_extension):
-                if self.verbose_logging:
-                    self.logger.info(f"[VERBOSE] Target is voicemail access: {target_extension}")
-
-                # Mark as voicemail access call
-                call.voicemail_access = True
-                target_mailbox = target_extension[1:]  # Remove * prefix
-                call.voicemail_extension = target_mailbox
-
-                self.logger.info(
-                    f"Voicemail access pattern detected for mailbox {target_mailbox} from call {call_id}"
+                callee_sdp = SDPBuilder.build_audio_sdp(
+                    server_ip,
+                    rtp_ports[0],
+                    session_id=call_id,
+                    codecs=None,  # default codecs
+                    dtmf_payload_type=dtmf_pt,
+                    ilbc_mode=ilbc_mode,
                 )
 
-                # ============================================================
-                # RTP SETUP FOR WEBRTC VOICEMAIL ACCESS - BIDIRECTIONAL AUDIO
-                # ============================================================
-                # This mirrors the pattern used for auto attendant and regular
-                # SIP phone voicemail access. Sets up full-duplex audio channel.
-                # ============================================================
+                from_uri = f"sip:{from_extension}@{server_ip}:{sip_port}"
+                to_uri = f"sip:{target_extension}@{server_ip}:{sip_port}"
 
-                # Verify target mailbox exists
-                if self.pbx_core.voicemail_system:
-                    mailbox = self.pbx_core.voicemail_system.get_mailbox(target_mailbox)
+                invite = SIPMessageBuilder.build_request(
+                    method="INVITE",
+                    uri=f"sip:{target_extension}@{server_ip}",
+                    from_addr=f"<{from_uri}>",
+                    to_addr=f"<{to_uri}>",
+                    call_id=call_id,
+                    cseq=1,
+                    body=callee_sdp,
+                )
+                invite.set_header(
+                    "Via",
+                    f"SIP/2.0/UDP {server_ip}:{sip_port};branch=z9hG4bK{uuid.uuid4().hex[:16]}",
+                )
+                invite.set_header(
+                    "Contact", f"<sip:{from_extension}@{server_ip}:{sip_port}>"
+                )
+                invite.set_header("Content-type", "application/sdp")
 
-                    if self.verbose_logging:
-                        self.logger.info("[VERBOSE] Setting up voicemail IVR for WebRTC")
-                        self.logger.info(f"  Mailbox: {target_mailbox}")
-                        self.logger.info(f"  Call ID: {call_id}")
+                # Store invite so handle_callee_answer can send 200 OK
+                call.original_invite = invite
+                call.caller_addr = None  # WebRTC caller — no SIP address
 
-                    # Create VoicemailIVR for this call
-                    from pbx.features.voicemail import VoicemailIVR
+                # Mark that this is a WebRTC-originated call so
+                # handle_callee_answer knows to use the media bridge
+                # instead of sending a SIP 200 OK to the caller.
+                call.webrtc_session_id = session.session_id
 
-                    voicemail_ivr = VoicemailIVR(self.pbx_core.voicemail_system, target_mailbox)
-                    call.voicemail_ivr = voicemail_ivr
+                self.pbx_core.sip_server._send_message(
+                    invite.build(), dest_ext_obj.address
+                )
+                call.callee_addr = dest_ext_obj.address
+                self.logger.info(
+                    f"Sent SIP INVITE to {target_extension} at {dest_ext_obj.address}"
+                )
 
-                    # Mark call as connected (similar to regular SIP voicemail
-                    # access)
-                    call.connect()
-                    if self.verbose_logging:
-                        self.logger.info(f"[VERBOSE] Call marked as connected, state: {call.state}")
-
-                    # Start CDR record for analytics
-                    if hasattr(self.pbx_core, "cdr_system") and self.pbx_core.cdr_system:
-                        self.pbx_core.cdr_system.start_record(
-                            call_id, from_extension, target_extension
-                        )
-                        if self.verbose_logging:
-                            self.logger.info("[VERBOSE] CDR record started")
-
-                    # Get caller's RTP endpoint from call
-                    if call.caller_rtp and isinstance(call.caller_rtp, dict):
-                        caller_address = call.caller_rtp.get("address")
-                        caller_port = call.caller_rtp.get("port")
-
-                        if caller_address and caller_port and call.rtp_ports:
-                            if self.verbose_logging:
-                                self.logger.info(
-                                    "[VERBOSE] Starting voicemail IVR session with RTP"
-                                )
-                                self.logger.info(f"  Caller RTP: {caller_address}:{caller_port}")
-                                self.logger.info(f"  Local RTP port: {call.rtp_ports[0]}")
-
-                            # Start voicemail IVR session in a separate thread
-                            # This handles audio prompts and DTMF input, just
-                            # like regular phones
-                            import threading
-
-                            ivr_thread = threading.Thread(
-                                target=self.pbx_core._voicemail_ivr_session,
-                                args=(call_id, call, mailbox, voicemail_ivr),
-                                daemon=True,
-                            )
-                            ivr_thread.start()
-
-                            self.logger.info(
-                                f"WebRTC voicemail IVR session started for call {call_id}"
-                            )
-                            if self.verbose_logging:
-                                self.logger.info(
-                                    "[VERBOSE] Voicemail IVR thread started successfully"
-                                )
-                        else:
-                            self.logger.warning(
-                                f"Incomplete RTP info for WebRTC voicemail call {call_id}"
-                            )
-                            if self.verbose_logging:
-                                self.logger.warning("[VERBOSE] Missing RTP data:")
-                                self.logger.warning(f"  caller_address: {caller_address}")
-                                self.logger.warning(f"  caller_port: {caller_port}")
-                                self.logger.warning(f"  rtp_ports: {call.rtp_ports}")
-                    else:
-                        self.logger.warning(
-                            f"No caller RTP info available for WebRTC voicemail call {call_id}"
-                        )
-                        if self.verbose_logging:
-                            self.logger.warning(f"[VERBOSE] caller_rtp: {call.caller_rtp}")
-                else:
-                    self.logger.error(f"Voicemail system not available for WebRTC call {call_id}")
-                    if self.verbose_logging:
-                        self.logger.error("[VERBOSE] pbx_core.voicemail_system is None")
-
-            # For regular extension calls, the call is set up
-            # When the target extension answers, the CallManager will bridge
-            # the media
+                # Start no-answer timer
+                no_answer_timeout = self.pbx_core.config.get("voicemail.no_answer_timeout", 30)
+                call.no_answer_timer = threading.Timer(
+                    no_answer_timeout,
+                    self.pbx_core._call_router._handle_no_answer,
+                    args=(call_id,),
+                )
+                call.no_answer_timer.start()
+            else:
+                self.logger.warning(
+                    f"Target {target_extension} has no SIP address; "
+                    "call created but no INVITE sent"
+                )
 
             self.logger.info(
                 f"Call {call_id} initiated from WebRTC session {session_id} to {target_extension}"

@@ -471,6 +471,20 @@ class WebRTCPhone {
                 throw new Error('Offer was rejected by server');
             }
 
+            // Set the SDP answer from the server as the remote description
+            // This completes the WebRTC handshake (ICE + DTLS)
+            if (offerData.answer_sdp) {
+                verboseLog('Setting remote description from server SDP answer');
+                const answer = new RTCSessionDescription({
+                    type: 'answer',
+                    sdp: offerData.answer_sdp,
+                });
+                await this.peerConnection.setRemoteDescription(answer);
+                verboseLog('Remote description set successfully');
+            } else {
+                verboseLog('No SDP answer from server (legacy mode)');
+            }
+
             this.updateStatus(`Calling extension ${targetExt}...`, 'info');
             this.updateUIState('calling');
 
