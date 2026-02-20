@@ -78,15 +78,16 @@ header h1 {
 
 /* Left Sidebar Navigation */
 .sidebar {
-    width: var(--sidebar-width);
+    width: clamp(200px, 20vw, var(--sidebar-width));
     background: linear-gradient(180deg, var(--color-bg-card) 0%, #f8fafb 100%);
     border-right: 1px solid var(--color-border);
     overflow-y: auto;
     overflow-x: hidden;
-    flex-shrink: 0 !important;
+    flex-shrink: 0;
     box-shadow: 2px 0 8px rgba(0, 0, 0, 0.08);
     min-height: 0;
     animation: slideInLeft 0.4s ease-out;
+    transition: width 0.2s ease;
 }
 
 @keyframes slideInLeft {
@@ -159,6 +160,9 @@ header h1 {
 
 .tab-text {
     flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .tab-badge {
@@ -322,7 +326,7 @@ header h1 {
 @media (max-width: 1024px) and (min-width: 769px) {
     /* Tablet layout - smaller sidebar */
     .sidebar {
-        width: 200px;
+        width: clamp(160px, 18vw, 200px);
     }
 
     .sidebar-section-title {
