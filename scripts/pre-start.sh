@@ -72,7 +72,36 @@ if ! "$PYTHON" -c "import yaml" 2>/dev/null; then
 fi
 echo "PBX pre-start: critical Python dependencies OK"
 
+# ---------- Load .env file (if present) ----------
+# This makes DATABASE_URL and DB_* variables available to Alembic so it uses
+# the same credentials as the main PBX application.
+
+ENV_FILE="$PBX_ROOT/.env"
+if [ -f "$ENV_FILE" ]; then
+    echo "PBX pre-start: loading environment from $ENV_FILE"
+    set -a
+    # shellcheck source=/dev/null
+    . "$ENV_FILE"
+    set +a
+fi
+
+# ---------- Build DATABASE_URL for Alembic (if not already set) ----------
+# Construct from individual DB_* variables so Alembic stays in sync with config.yml
+
+if [ -z "${DATABASE_URL:-}" ]; then
+    _db_user="${DB_USER:-pbx_user}"
+    _db_pass="${DB_PASSWORD:-}"
+    _db_host="${DB_HOST:-localhost}"
+    _db_port="${DB_PORT:-5432}"
+    _db_name="${DB_NAME:-pbx_system}"
+    if [ -n "$_db_pass" ]; then
+        export DATABASE_URL="postgresql://${_db_user}:${_db_pass}@${_db_host}:${_db_port}/${_db_name}"
+        echo "PBX pre-start: DATABASE_URL built from DB_* variables"
+    fi
+fi
+
 # ---------- Run Alembic migrations (if available) ----------
+# Migration failures are non-fatal — the PBX app handles DB fallback on its own.
 
 ALEMBIC=""
 for venv_dir in "$PBX_ROOT/venv" "$PBX_ROOT/.venv"; do
@@ -90,8 +119,13 @@ ALEMBIC_INI="$PBX_ROOT/alembic.ini"
 if [ -n "$ALEMBIC" ] && [ -f "$ALEMBIC_INI" ]; then
     echo "PBX pre-start: running Alembic migrations..."
     cd "$PBX_ROOT"
-    "$ALEMBIC" -c "$ALEMBIC_INI" upgrade head
-    echo "PBX pre-start: migrations complete"
+    if "$ALEMBIC" -c "$ALEMBIC_INI" upgrade head; then
+        echo "PBX pre-start: migrations complete"
+    else
+        echo "WARNING: Alembic migrations failed (exit code $?) — continuing startup" >&2
+        echo "  The PBX will attempt to connect to the database on its own." >&2
+        echo "  Check database credentials in .env (DB_PASSWORD) and PostgreSQL status." >&2
+    fi
 else
     echo "PBX pre-start: skipping Alembic migrations"
     if [ -z "$ALEMBIC" ]; then
