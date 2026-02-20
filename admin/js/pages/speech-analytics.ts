@@ -13,14 +13,13 @@ import { escapeHtml } from '../utils/html.ts';
 interface E911Site {
     id: number;
     site_name: string;
-    address: string;
+    street_address: string;
     city: string;
     state: string;
     postal_code: string;
-    ip_ranges?: string;
-    ip_range_start?: string;
-    ip_range_end?: string;
-    psap?: string;
+    ip_range_start: string;
+    ip_range_end: string;
+    psap_number?: string;
     emergency_trunk?: string;
     elin?: string;
     country?: string;
@@ -87,9 +86,9 @@ export async function loadE911Sites(): Promise<void> {
         tableBody.innerHTML = data.sites.map((site: E911Site) => `
             <tr>
                 <td>${escapeHtml(site.site_name)}</td>
-                <td>${escapeHtml(site.address)}, ${escapeHtml(site.city)}, ${escapeHtml(site.state)} ${escapeHtml(site.postal_code)}</td>
-                <td>${escapeHtml(site.ip_ranges ?? 'N/A')}</td>
-                <td>${escapeHtml(site.psap ?? 'Default')}</td>
+                <td>${escapeHtml(site.street_address)}, ${escapeHtml(site.city)}, ${escapeHtml(site.state)} ${escapeHtml(site.postal_code)}</td>
+                <td>${escapeHtml(site.ip_range_start ?? '')} - ${escapeHtml(site.ip_range_end ?? '')}</td>
+                <td>${escapeHtml(site.psap_number ?? 'Default')}</td>
                 <td>
                     <button class="btn btn-sm btn-primary" onclick="editE911Site(${site.id})">Edit</button>
                     <button class="btn btn-sm btn-danger" onclick="deleteE911Site(${site.id})">Delete</button>
@@ -199,7 +198,7 @@ function buildE911SiteForm(site?: E911Site): string {
                     <div class="form-group">
                         <label>Street Address:</label>
                         <input type="text" name="street_address" class="form-control"
-                            value="${escapeHtml(site?.address ?? '')}">
+                            value="${escapeHtml(site?.street_address ?? '')}">
                     </div>
                     <div class="form-group">
                         <label>City:</label>
@@ -241,7 +240,7 @@ function buildE911SiteForm(site?: E911Site): string {
                     <div class="form-group">
                         <label>PSAP Number:</label>
                         <input type="text" name="psap_number" class="form-control"
-                            value="${escapeHtml(site?.psap ?? '')}"
+                            value="${escapeHtml(site?.psap_number ?? '')}"
                             placeholder="Default PSAP">
                     </div>
                     <div class="form-group">
@@ -275,6 +274,7 @@ function buildE911SiteForm(site?: E911Site): string {
 
 async function submitE911Site(form: HTMLFormElement): Promise<void> {
     const formData = new FormData(form);
+    const siteId = formData.get('site_id') as string | null;
     const body: Record<string, string> = {};
     for (const [key, value] of formData.entries()) {
         if (key !== 'site_id' && String(value).trim()) {
@@ -284,14 +284,15 @@ async function submitE911Site(form: HTMLFormElement): Promise<void> {
 
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetchWithTimeout(
-            `${API_BASE}/api/framework/nomadic-e911/create-site`,
-            {
-                method: 'POST',
-                headers: getAuthHeaders(),
-                body: JSON.stringify(body),
-            }
-        );
+        const url = siteId
+            ? `${API_BASE}/api/framework/nomadic-e911/sites/${siteId}`
+            : `${API_BASE}/api/framework/nomadic-e911/create-site`;
+        const method = siteId ? 'PUT' : 'POST';
+        const response = await fetchWithTimeout(url, {
+            method,
+            headers: getAuthHeaders(),
+            body: JSON.stringify(body),
+        });
         const data = await response.json() as { success?: boolean; error?: string };
         if (data.success) {
             showNotification('E911 site saved successfully', 'success');
