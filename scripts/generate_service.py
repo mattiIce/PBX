@@ -73,6 +73,7 @@ def generate_pbx_service(
     return textwrap.dedent(f"""\
         [Unit]
         Description=Warden VoIP PBX System
+        Documentation=https://github.com/mattiIce/PBX
         Wants=network-online.target
         After=network-online.target postgresql.service redis.service
 
@@ -83,10 +84,14 @@ def generate_pbx_service(
         WorkingDirectory={project_root}
         EnvironmentFile=-{project_root}/.env
         Environment="PATH={venv_path}/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+        SyslogIdentifier=pbx
         ExecStartPre=/bin/bash {pre_start}
         ExecStart={python_bin} {project_root}/main.py
         Restart=on-failure
         RestartSec=5
+        # Allow 35s for the PBX graceful shutdown (30s internal timeout + 5s margin)
+        TimeoutStopSec=35
+        KillSignal=SIGINT
         StandardOutput=journal
         StandardError=journal
 
@@ -198,12 +203,14 @@ def main() -> None:
         install_service(pbx_service, pbx_content)
         install_service(tests_service, tests_content)
 
-        subprocess.run(
-            ["systemctl", "daemon-reload"],
-            check=False,
-        )
+        subprocess.run(["systemctl", "daemon-reload"], check=False)
         print("  systemctl daemon-reload complete")
-        print("\nStart the service with: systemctl start pbx")
+
+        subprocess.run(["systemctl", "enable", "pbx.service"], check=False)
+        print("  pbx.service enabled (will start on boot)")
+
+        print("\nStart the service with: sudo systemctl start pbx")
+        print("View logs with:         sudo journalctl -u pbx -f")
 
 
 if __name__ == "__main__":

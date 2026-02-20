@@ -14,8 +14,9 @@
 
 [Unit]
 Description=Warden VoIP PBX System
+Documentation=https://github.com/mattiIce/PBX
 Wants=network-online.target
-After=network-online.target postgresql.service
+After=network-online.target postgresql.service redis.service
 
 [Service]
 Type=simple
@@ -27,6 +28,7 @@ WorkingDirectory=/opt/pbx
 EnvironmentFile=-/opt/pbx/.env
 # Ensure the venv's bin directory is on PATH so Python can find installed packages
 Environment="PATH=/opt/pbx/venv/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+SyslogIdentifier=pbx
 # Pre-start script validates prerequisites and runs Alembic migrations
 ExecStartPre=/bin/bash /opt/pbx/scripts/pre-start.sh
 ExecStart=/opt/pbx/venv/bin/python3 /opt/pbx/main.py
@@ -41,6 +43,9 @@ User=root
 Group=root
 Restart=on-failure
 RestartSec=5
+# Allow 35s for the PBX graceful shutdown (30s internal timeout + 5s margin)
+TimeoutStopSec=35
+KillSignal=SIGINT
 StandardOutput=journal
 StandardError=journal
 

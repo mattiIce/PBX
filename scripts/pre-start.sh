@@ -25,6 +25,24 @@ if [ ! -f "$PBX_ROOT/main.py" ]; then
     exit 1
 fi
 
+# ---------- Validate config.yml ----------
+
+if [ ! -f "$PBX_ROOT/config.yml" ]; then
+    echo "FATAL: config.yml not found at $PBX_ROOT/config.yml" >&2
+    exit 1
+fi
+
+# Check that the configured API port is not already in use
+API_PORT=$(grep -A2 '^api:' "$PBX_ROOT/config.yml" | grep 'port:' | head -1 | sed 's/.*port: *//' | tr -d '[:space:]')
+if [ -n "$API_PORT" ] && command -v ss >/dev/null 2>&1; then
+    if ss -tlnp 2>/dev/null | grep -q ":${API_PORT} "; then
+        echo "WARNING: port $API_PORT is already in use — PBX API may fail to bind" >&2
+        ss -tlnp 2>/dev/null | grep ":${API_PORT} " >&2
+    else
+        echo "PBX pre-start: API port $API_PORT is available"
+    fi
+fi
+
 # ---------- Locate Python interpreter ----------
 
 PYTHON=""
