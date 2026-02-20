@@ -557,7 +557,7 @@ class ActiveDirectoryIntegration:
 
             return {"synced_count": synced_count, "extensions_to_reboot": []}
 
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, LDAPException, TypeError, ValueError) as e:
             self.logger.error(f"Error synchronizing users from Active Directory: {e}")
             import traceback
 
