@@ -349,6 +349,8 @@ class ActiveDirectoryIntegration:
                     else:
                         existing_ext = pbx_config.get_extension(extension_number)
 
+                    print(f"[AD-DEBUG] User {username}: existing_ext={existing_ext is not None} ({type(existing_ext).__name__})", file=sys.stderr, flush=True)
+
                     if existing_ext:
                         # Update existing extension
                         self.logger.debug(
@@ -367,6 +369,7 @@ class ActiveDirectoryIntegration:
                                 ad_username=username,
                                 # Don't update password - keep existing
                             )
+                            print(f"[AD-DEBUG] User {username}: DB update result={success}", file=sys.stderr, flush=True)
 
                             # Store permissions in extension config if update succeeded
                             # Database may not have columns for all permissions, so we store them
@@ -459,6 +462,7 @@ class ActiveDirectoryIntegration:
                             # Currently storing plain password; system supports
                             # both plain and hashed passwords
                             success = extension_db.add(**ext_data)
+                            print(f"[AD-DEBUG] User {username}: DB add result={success}", file=sys.stderr, flush=True)
                         else:
                             # Add to config.yml
                             success = pbx_config.add_extension(
