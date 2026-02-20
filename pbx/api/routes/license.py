@@ -298,7 +298,7 @@ def handle_license_toggle() -> tuple[Response, int]:
         license_manager = get_license_manager()
 
         # Update .env file for persistence
-        env_file = str(Path(__file__).resolve().parent.parent.parent / ".env")
+        env_file = str(Path(__file__).resolve().parent.parent.parent.parent / ".env")
 
         # Read existing .env
         env_lines = []
@@ -307,7 +307,7 @@ def handle_license_toggle() -> tuple[Response, int]:
                 env_lines = f.readlines()
 
         # Check if license lock exists
-        lock_path = str(Path(__file__).resolve().parent.parent.parent / ".license_lock")
+        lock_path = str(Path(__file__).resolve().parent.parent.parent.parent / ".license_lock")
         if Path(lock_path).exists():
             return send_json(
                 {
