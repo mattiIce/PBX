@@ -138,7 +138,7 @@ async function loadOpenSourceIntegrations() {
  */
 async function updateQuickSetupStatus() {
     try {
-        const response = await fetch('/api/config');
+        const response = await fetch('/api/config', {headers: pbxAuthHeaders()});
         const data = await response.json();
         const integrations = data.integrations || {};
 
@@ -246,7 +246,7 @@ async function quickSetupIntegration(integration) {
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 section: 'integrations',
                 data: {
@@ -309,7 +309,7 @@ async function quickSetupIntegration(integration) {
 async function disableIntegration(integration) {
     try {
         // First, get current config
-        const response = await fetch('/api/config');
+        const response = await fetch('/api/config', {headers: pbxAuthHeaders()});
         const data = await response.json();
         const currentConfig = data.integrations?.[integration] ?? {};
 
@@ -319,7 +319,7 @@ async function disableIntegration(integration) {
         // Update config
         const updateResponse = await fetch('/api/config/section', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 section: 'integrations',
                 data: {
@@ -366,7 +366,7 @@ async function disableIntegration(integration) {
 
 async function loadJitsiConfig() {
     try {
-        const response = await fetch('/api/config');
+        const response = await fetch('/api/config', {headers: pbxAuthHeaders()});
         if (!response.ok) {
             if (window.suppressErrorNotifications) {
                 debugLog('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
@@ -416,7 +416,7 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 section: 'integrations',
                 data: { jitsi: config }
@@ -466,7 +466,7 @@ function showJitsiStatus(message, type) {
 
 async function loadMatrixConfig() {
     try {
-        const response = await fetch('/api/config');
+        const response = await fetch('/api/config', {headers: pbxAuthHeaders()});
         if (!response.ok) {
             if (window.suppressErrorNotifications) {
                 debugLog('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
@@ -520,7 +520,7 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 section: 'integrations',
                 data: { matrix: config }
@@ -582,7 +582,7 @@ function showMatrixStatus(message, type) {
 
 async function loadEspoCRMConfig() {
     try {
-        const response = await fetch('/api/config');
+        const response = await fetch('/api/config', {headers: pbxAuthHeaders()});
         if (!response.ok) {
             if (window.suppressErrorNotifications) {
                 debugLog('Config endpoint returned error:', response.status, '(feature may not be available or authentication required)');
@@ -634,7 +634,7 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
     try {
         const response = await fetch('/api/config/section', {
             method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 section: 'integrations',
                 data: { espocrm: config }
@@ -738,7 +738,7 @@ async function createInstantJitsiMeeting() {
     try {
         const response = await fetch('/api/integrations/jitsi/instant', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 room_name: roomName,
                 extension: 'admin'  // Current user extension
@@ -773,7 +773,7 @@ async function scheduleJitsiMeeting() {
     try {
         const response = await fetch('/api/integrations/jitsi/meetings', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 subject: subject,
                 duration: parseInt(duration),
@@ -891,7 +891,7 @@ async function sendMatrixMessage() {
     try {
         const response = await fetch('/api/integrations/matrix/messages', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 room_id: roomId,
                 message: message,
@@ -919,7 +919,7 @@ async function sendMatrixTestNotification() {
     try {
         const response = await fetch('/api/integrations/matrix/notifications', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 message: `🧪 Test notification from PBX Admin Panel - ${new Date().toLocaleString()}`
             })
@@ -951,7 +951,7 @@ async function createMatrixRoom() {
     try {
         const response = await fetch('/api/integrations/matrix/rooms', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 name: roomName,
                 topic: roomTopic
@@ -1028,7 +1028,7 @@ async function searchEspoCRMContact() {
 
         const response = await fetch(`/api/integrations/espocrm/contacts/search?${queryParam}=${encodeURIComponent(searchTerm)}`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' }
+            headers: pbxAuthHeaders()
         });
 
         if (!response.ok) {
@@ -1098,7 +1098,7 @@ async function createEspoCRMContact() {
     try {
         const response = await fetch('/api/integrations/espocrm/contacts', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 name: `${firstName} ${lastName}`,
                 phone: phone,

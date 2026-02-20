@@ -317,7 +317,7 @@ function loadClickToDialTab() {
     // Load configurations
     setTimeout(async () => {
         try {
-            const r = await fetch('/api/framework/click-to-dial/configs');
+            const r = await fetch('/api/framework/click-to-dial/configs', {headers: pbxAuthHeaders()});
             const data = await r.json();
             displayClickToDialConfigs(data.configs ?? []);
         } catch (err) {
@@ -378,7 +378,7 @@ function displayClickToDialConfigs(configs) {
 
 const viewClickToDialHistory = async (extension) => {
     try {
-        const r = await fetch(`/api/framework/click-to-dial/history/${extension}`);
+        const r = await fetch(`/api/framework/click-to-dial/history/${extension}`, {headers: pbxAuthHeaders()});
         const data = await r.json();
         const history = data.history ?? [];
         const container = document.getElementById('click-to-dial-history');
@@ -491,7 +491,7 @@ function loadVideoConferencingTab() {
 
 const loadVideoRooms = async () => {
     try {
-        const r = await fetch('/api/framework/video-conference/rooms');
+        const r = await fetch('/api/framework/video-conference/rooms', {headers: pbxAuthHeaders()});
         const data = await r.json();
         displayVideoRooms(data.rooms ?? []);
     } catch (err) {
@@ -560,7 +560,7 @@ const showCreateRoomDialog = () => {
         try {
             const r = await fetch('/api/framework/video-conference/create-room', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: pbxAuthHeaders(),
                 body: JSON.stringify(data)
             });
             const result = await r.json();
@@ -677,7 +677,7 @@ const loadConversationalAIStats = async () => {
     statsDiv.innerHTML = '<p>Loading statistics...</p>';
 
     try {
-        const r = await fetch('/api/framework/conversational-ai/stats');
+        const r = await fetch('/api/framework/conversational-ai/stats', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const stats = data.statistics ?? {};
         statsDiv.innerHTML = `
@@ -801,7 +801,7 @@ function loadPredictiveDialingTab() {
 
 const loadPredictiveDialingCampaigns = async () => {
     try {
-        const r = await fetch('/api/framework/predictive-dialing/campaigns');
+        const r = await fetch('/api/framework/predictive-dialing/campaigns', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const campaigns = data.campaigns ?? [];
         const container = document.getElementById('campaigns-list');
@@ -852,7 +852,7 @@ const loadPredictiveDialingCampaigns = async () => {
 
 const loadPredictiveDialingStats = async () => {
     try {
-        const r = await fetch('/api/framework/predictive-dialing/statistics');
+        const r = await fetch('/api/framework/predictive-dialing/statistics', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const stats = data.statistics ?? {};
         document.getElementById('total-campaigns').textContent = stats.total_campaigns || 0;
@@ -871,7 +871,7 @@ function showCreateCampaignDialog() {
 
 const toggleCampaign = async (campaignId) => {
     try {
-        await fetch(`/api/framework/predictive-dialing/campaigns/${campaignId}/toggle`, { method: 'POST' });
+        await fetch(`/api/framework/predictive-dialing/campaigns/${campaignId}/toggle`, { method: 'POST', headers: pbxAuthHeaders() });
         await loadPredictiveDialingCampaigns();
     } catch (err) {
         alert(`Error: ${err.message}`);
@@ -955,7 +955,7 @@ function loadVoiceBiometricsTab() {
 
 const loadVoiceBiometricProfiles = async () => {
     try {
-        const r = await fetch('/api/framework/voice-biometrics/profiles');
+        const r = await fetch('/api/framework/voice-biometrics/profiles', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const profiles = data.profiles ?? [];
         const container = document.getElementById('biometric-profiles-list');
@@ -1004,7 +1004,7 @@ const loadVoiceBiometricProfiles = async () => {
 
 const loadVoiceBiometricStats = async () => {
     try {
-        const r = await fetch('/api/framework/voice-biometrics/statistics');
+        const r = await fetch('/api/framework/voice-biometrics/statistics', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const stats = data.statistics ?? {};
         document.getElementById('enrolled-users').textContent = stats.enrolled_users || 0;
@@ -1024,7 +1024,7 @@ function showEnrollUserDialog() {
 const deleteVoiceProfile = async (profileId) => {
     if (confirm('Are you sure you want to delete this voice profile?')) {
         try {
-            await fetch(`/api/framework/voice-biometrics/profiles/${profileId}`, { method: 'DELETE' });
+            await fetch(`/api/framework/voice-biometrics/profiles/${profileId}`, { method: 'DELETE', headers: pbxAuthHeaders() });
             await loadVoiceBiometricProfiles();
         } catch (err) {
             alert(`Error: ${err.message}`);
@@ -1096,7 +1096,7 @@ function loadBIIntegrationTab() {
     // Load statistics on tab load
     (async () => {
         try {
-            const r = await fetch('/api/framework/bi-integration/statistics');
+            const r = await fetch('/api/framework/bi-integration/statistics', {headers: pbxAuthHeaders()});
             const stats = await r.json();
             document.getElementById('bi-stats-display').innerHTML = `
                 <div class="stats-grid">
@@ -1231,7 +1231,7 @@ const exportBIDataset = async (dataset) => {
     try {
         const r = await fetch('/api/framework/bi-integration/export', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 dataset: dataset,
                 format: format,
@@ -1257,7 +1257,7 @@ function loadCallTaggingTab() {
     // Load tags and statistics
     (async () => {
         try {
-            const r = await fetch('/api/framework/call-tagging/statistics');
+            const r = await fetch('/api/framework/call-tagging/statistics', {headers: pbxAuthHeaders()});
             const stats = await r.json();
             document.getElementById('tagging-stats-display').innerHTML = `
                 <div class="stats-grid">
@@ -1358,7 +1358,7 @@ POST /api/framework/call-tagging/classify/{call_id}</pre>
 
 const loadCallTags = async () => {
     try {
-        const r = await fetch('/api/framework/call-tagging/tags');
+        const r = await fetch('/api/framework/call-tagging/tags', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const tags = data.tags ?? [];
         const container = document.getElementById('tags-list');
@@ -1390,7 +1390,7 @@ const loadCallTags = async () => {
 
 const loadTaggingRules = async () => {
     try {
-        const r = await fetch('/api/framework/call-tagging/rules');
+        const r = await fetch('/api/framework/call-tagging/rules', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const rules = data.rules ?? [];
         const container = document.getElementById('tagging-rules-list');
@@ -1438,7 +1438,7 @@ const loadTaggingRules = async () => {
 
 const loadTagStatistics = async () => {
     try {
-        const r = await fetch('/api/framework/call-tagging/statistics');
+        const r = await fetch('/api/framework/call-tagging/statistics', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const stats = data.statistics ?? {};
         document.getElementById('total-tags').textContent = stats.total_tags || 0;
@@ -1465,7 +1465,7 @@ function showCreateRuleDialog() {
 const deleteTag = async (tagId) => {
     if (confirm('Are you sure you want to delete this tag?')) {
         try {
-            await fetch(`/api/framework/call-tagging/tags/${tagId}`, { method: 'DELETE' });
+            await fetch(`/api/framework/call-tagging/tags/${tagId}`, { method: 'DELETE', headers: pbxAuthHeaders() });
             await loadCallTags();
         } catch (err) {
             alert(`Error: ${err.message}`);
@@ -1476,7 +1476,7 @@ const deleteTag = async (tagId) => {
 const deleteRule = async (ruleId) => {
     if (confirm('Are you sure you want to delete this rule?')) {
         try {
-            await fetch(`/api/framework/call-tagging/rules/${ruleId}`, { method: 'DELETE' });
+            await fetch(`/api/framework/call-tagging/rules/${ruleId}`, { method: 'DELETE', headers: pbxAuthHeaders() });
             await loadTaggingRules();
         } catch (err) {
             alert(`Error: ${err.message}`);
@@ -1486,7 +1486,7 @@ const deleteRule = async (ruleId) => {
 
 const toggleRule = async (ruleId) => {
     try {
-        await fetch(`/api/framework/call-tagging/rules/${ruleId}/toggle`, { method: 'POST' });
+        await fetch(`/api/framework/call-tagging/rules/${ruleId}/toggle`, { method: 'POST', headers: pbxAuthHeaders() });
         await loadTaggingRules();
     } catch (err) {
         alert(`Error: ${err.message}`);
@@ -1582,7 +1582,7 @@ const loadMobileAppsStats = async () => {
     devicesDiv.innerHTML = '<p>Loading device statistics...</p>';
 
     try {
-        const r = await fetch('/api/mobile-push/devices');
+        const r = await fetch('/api/mobile-push/devices', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const devices = data.devices ?? [];
         const stats = data.statistics ?? {};
@@ -1729,7 +1729,7 @@ function loadCallBlendingTab() {
     // Load statistics on tab load
     (async () => {
         try {
-            const r = await fetch('/api/framework/call-blending/statistics');
+            const r = await fetch('/api/framework/call-blending/statistics', {headers: pbxAuthHeaders()});
             const stats = await r.json();
             document.getElementById('blending-stats-display').innerHTML = `
                 <div class="stats-grid">
@@ -1763,7 +1763,7 @@ function loadCallBlendingTab() {
     // Load agents list
     (async () => {
         try {
-            const r = await fetch('/api/framework/call-blending/agents');
+            const r = await fetch('/api/framework/call-blending/agents', {headers: pbxAuthHeaders()});
             const data = await r.json();
             const agents = data.agents ?? [];
             const container = document.getElementById('blending-agents-list');
@@ -1873,7 +1873,7 @@ const changeAgentMode = async (agentId, newMode) => {
     try {
         const r = await fetch(`/api/framework/call-blending/agent/${agentId}/mode`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({mode: newMode})
         });
         const result = await r.json();
@@ -1889,7 +1889,7 @@ const changeAgentMode = async (agentId, newMode) => {
 
 const viewAgentDetails = async (agentId) => {
     try {
-        const r = await fetch(`/api/framework/call-blending/agent/${agentId}`);
+        const r = await fetch(`/api/framework/call-blending/agent/${agentId}`, {headers: pbxAuthHeaders()});
         const agent = await r.json();
         alert(`Agent Details:\n\nAgent ID: ${agent.agent_id}\nExtension: ${agent.extension}\nMode: ${agent.mode}\nStatus: ${agent.available ? 'Available' : 'Unavailable'}\nInbound Calls: ${agent.inbound_calls_handled}\nOutbound Calls: ${agent.outbound_calls_handled}`);
     } catch (err) {
@@ -1931,7 +1931,7 @@ function loadGeographicRedundancyTab() {
     // Load statistics on tab load
     (async () => {
         try {
-            const r = await fetch('/api/framework/geo-redundancy/statistics');
+            const r = await fetch('/api/framework/geo-redundancy/statistics', {headers: pbxAuthHeaders()});
             const stats = await r.json();
             document.getElementById('geo-stats-display').innerHTML = `
                 <div class="stats-grid">
@@ -1965,7 +1965,7 @@ function loadGeographicRedundancyTab() {
     // Load regions list
     (async () => {
         try {
-            const r = await fetch('/api/framework/geo-redundancy/regions');
+            const r = await fetch('/api/framework/geo-redundancy/regions', {headers: pbxAuthHeaders()});
             const data = await r.json();
             const regions = data.regions ?? [];
             const container = document.getElementById('geo-regions-list');
@@ -2090,7 +2090,7 @@ const showCreateRegionDialog = async () => {
     try {
         const r = await fetch('/api/framework/geo-redundancy/region', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: pbxAuthHeaders(),
             body: JSON.stringify({
                 region_id: regionId,
                 name: name,
@@ -2116,7 +2116,7 @@ const triggerFailover = async (regionId) => {
     try {
         const r = await fetch(`/api/framework/geo-redundancy/region/${regionId}/failover`, {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'}
+            headers: pbxAuthHeaders()
         });
         const result = await r.json();
         if (result.success) {
@@ -2133,7 +2133,7 @@ const triggerFailover = async (regionId) => {
 
 const viewRegionDetails = async (regionId) => {
     try {
-        const r = await fetch(`/api/framework/geo-redundancy/region/${regionId}`);
+        const r = await fetch(`/api/framework/geo-redundancy/region/${regionId}`, {headers: pbxAuthHeaders()});
         const region = await r.json();
         const details = `Region Details:
 

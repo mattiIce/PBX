@@ -23,7 +23,7 @@ window.loadVoicemailForExtension = async function() {
 
     // Load mailbox details
     try {
-        const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}`);
+        const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}`, {headers: pbxAuthHeaders()});
         if (response.ok) {
             const data = await response.json();
 
@@ -61,7 +61,8 @@ window.exportVoicemailBox = async function() {
 
     try {
         const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}/export`, {
-            method: 'POST'
+            method: 'POST',
+            headers: pbxAuthHeaders()
         });
 
         if (!response.ok) {
@@ -118,7 +119,8 @@ window.clearVoicemailBox = async function() {
 
     try {
         const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}/clear`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: pbxAuthHeaders()
         });
 
         if (response.ok) {
@@ -158,8 +160,11 @@ window.uploadCustomGreeting = async function() {
         }
 
         try {
+            const token = localStorage.getItem('pbx_token');
+            const greetingHeaders = token ? {'Authorization': 'Bearer ' + token} : {};
             const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}/greeting`, {
                 method: 'PUT',
+                headers: greetingHeaders,
                 body: await file.arrayBuffer()
             });
 
@@ -188,7 +193,7 @@ window.downloadCustomGreeting = async function() {
     }
 
     try {
-        const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}/greeting`);
+        const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}/greeting`, {headers: pbxAuthHeaders()});
 
         if (!response.ok) {
             throw new Error('No custom greeting found');
@@ -225,7 +230,8 @@ window.deleteCustomGreeting = async function() {
 
     try {
         const response = await fetch(`${API_BASE}/api/voicemail-boxes/${extension}/greeting`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: pbxAuthHeaders()
         });
 
         if (response.ok) {
@@ -244,7 +250,7 @@ window.deleteCustomGreeting = async function() {
 // Show all voicemail boxes overview
 window.loadAllVoicemailBoxes = async function() {
     try {
-        const response = await fetch(`${API_BASE}/api/voicemail-boxes`);
+        const response = await fetch(`${API_BASE}/api/voicemail-boxes`, {headers: pbxAuthHeaders()});
         if (!response.ok) {
             throw new Error('Failed to load voicemail boxes');
         }

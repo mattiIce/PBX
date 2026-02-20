@@ -5,7 +5,7 @@
 async function loadAutoAttendantConfig() {
     try {
         // Load general configuration
-        const configResponse = await fetch(`${API_BASE}/api/auto-attendant/config`);
+        const configResponse = await fetch(`${API_BASE}/api/auto-attendant/config`, {headers: pbxAuthHeaders()});
         if (configResponse.ok) {
             const config = await configResponse.json();
 
@@ -31,7 +31,7 @@ async function loadAutoAttendantConfig() {
 
 async function loadAutoAttendantPrompts() {
     try {
-        const response = await fetch(`${API_BASE}/api/auto-attendant/prompts`);
+        const response = await fetch(`${API_BASE}/api/auto-attendant/prompts`, {headers: pbxAuthHeaders()});
         if (!response.ok) {
             debugWarn('Failed to load prompts, using defaults');
             return;
@@ -71,7 +71,7 @@ async function loadAutoAttendantPrompts() {
 async function loadAutoAttendantMenuOptions() {
     try {
         // Load menu items for current menu (default: main)
-        const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}/items`);
+        const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}/items`, {headers: pbxAuthHeaders()});
         
         // Only fall back to legacy API if endpoint doesn't exist (404)
         if (response.status === 404) {
@@ -170,7 +170,7 @@ async function loadAutoAttendantMenuOptions() {
 // Load legacy menu options (backward compatibility)
 async function loadLegacyMenuOptions() {
     try {
-        const response = await fetch(`${API_BASE}/api/auto-attendant/menu-options`);
+        const response = await fetch(`${API_BASE}/api/auto-attendant/menu-options`, {headers: pbxAuthHeaders()});
         if (!response.ok) {
             throw new Error('Failed to load menu options');
         }
@@ -255,7 +255,7 @@ async function navigateToMenu(menuId) {
 // Update breadcrumb display
 async function updateMenuBreadcrumb() {
     try {
-        const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}`);
+        const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}`, {headers: pbxAuthHeaders()});
         if (response.ok) {
             const data = await response.json();
             const breadcrumb = document.getElementById('breadcrumb-path');
@@ -293,9 +293,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/config`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: pbxAuthHeaders(),
                     body: JSON.stringify(configData)
                 });
 
@@ -352,7 +350,8 @@ async function deleteMenuOption(digit) {
 
     try {
         const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}/items/${digit}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: pbxAuthHeaders()
         });
 
         if (response.ok) {
@@ -394,9 +393,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}/items`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: pbxAuthHeaders(),
                     body: JSON.stringify(menuData)
                 });
 
@@ -442,9 +439,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/menus/${currentMenuId}/items/${digit}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: pbxAuthHeaders(),
                     body: JSON.stringify(menuData)
                 });
 
@@ -494,9 +489,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/prompts`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: pbxAuthHeaders(),
                     body: JSON.stringify(promptsData)
                 });
 
@@ -576,7 +569,7 @@ async function parseErrorResponse(response) {
 // Load all menus for submenu selection
 async function loadAvailableMenus() {
     try {
-        const response = await fetch(`${API_BASE}/api/auto-attendant/menus`);
+        const response = await fetch(`${API_BASE}/api/auto-attendant/menus`, {headers: pbxAuthHeaders()});
         if (response.ok) {
             const data = await response.json();
             availableMenus = data.menus ?? [];
@@ -758,7 +751,7 @@ async function toggleMenuTreeView() {
 // Load and display menu tree
 async function loadMenuTree() {
     try {
-        const response = await fetch(`${API_BASE}/api/auto-attendant/menu-tree`);
+        const response = await fetch(`${API_BASE}/api/auto-attendant/menu-tree`, {headers: pbxAuthHeaders()});
         if (!response.ok) {
             const errorData = await parseErrorResponse(response);
             console.error(`Failed to load menu tree: ${response.status} ${response.statusText}`, errorData);
@@ -840,9 +833,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const response = await fetch(`${API_BASE}/api/auto-attendant/menus`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: pbxAuthHeaders(),
                     body: JSON.stringify(submenuData)
                 });
                 

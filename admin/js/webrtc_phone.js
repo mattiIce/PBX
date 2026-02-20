@@ -39,6 +39,19 @@ class WebRTCPhone {
         this.initializeUI();
     }
 
+    /**
+     * Get authorization headers including the stored JWT token
+     * @returns {Object} Headers object with Content-Type and Authorization
+     */
+    getAuthHeaders() {
+        const headers = {'Content-Type': 'application/json'};
+        const token = localStorage.getItem('pbx_token');
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+        return headers;
+    }
+
     initializeUI() {
         // Get UI elements
         this.callButton = document.getElementById('webrtc-call-btn');
@@ -204,7 +217,7 @@ class WebRTCPhone {
 
             const response = await fetch(`${this.apiUrl}/api/webrtc/session`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({extension: this.extension})
             });
 
@@ -432,7 +445,7 @@ class WebRTCPhone {
 
             const offerResponse = await fetch(`${this.apiUrl}/api/webrtc/offer`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: this.sessionId,
                     sdp: offer.sdp
@@ -470,7 +483,7 @@ class WebRTCPhone {
 
             const callResponse = await fetch(`${this.apiUrl}/api/webrtc/call`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: this.sessionId,
                     target_extension: targetExt
@@ -528,7 +541,7 @@ class WebRTCPhone {
 
             await fetch(`${this.apiUrl}/api/webrtc/ice-candidate`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: this.sessionId,
                     candidate: {
@@ -565,7 +578,7 @@ class WebRTCPhone {
             // Send DTMF via API
             const response = await fetch(`${this.apiUrl}/api/webrtc/dtmf`, {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: this.getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: this.sessionId,
                     digit: digit,
@@ -617,7 +630,7 @@ class WebRTCPhone {
 
                 const hangupResponse = await fetch(`${this.apiUrl}/api/webrtc/hangup`, {
                     method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
+                    headers: this.getAuthHeaders(),
                     body: JSON.stringify({
                         session_id: this.sessionId,
                         call_id: this.callId
@@ -702,7 +715,9 @@ async function initWebRTCPhone() {
     let adminExtension = DEFAULT_WEBRTC_EXTENSION; // default fallback
 
     try {
-        const response = await fetch('/api/webrtc/phone-config');
+        const token = localStorage.getItem('pbx_token');
+        const configHeaders = token ? {'Authorization': `Bearer ${token}`} : {};
+        const response = await fetch('/api/webrtc/phone-config', {headers: configHeaders});
         const data = await response.json();
 
         if (data.success && data.extension) {

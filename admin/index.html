@@ -5236,6 +5236,15 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         </div>
     </div>
 
+    <script>
+        /** Global auth header helper for vanilla JS modules */
+        function pbxAuthHeaders() {
+            var headers = {'Content-Type': 'application/json'};
+            var token = localStorage.getItem('pbx_token');
+            if (token) { headers['Authorization'] = 'Bearer ' + token; }
+            return headers;
+        }
+    </script>
     <script src="js/webrtc_phone.js?v=20231223"></script>
     <script src="js/framework_features.js?v=20231223"></script>
     <script type="module" src="js/main.js"></script>
