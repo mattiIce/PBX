@@ -299,22 +299,31 @@ class ActiveDirectoryIntegration:
                     # Get extension number: try configured attribute, then
                     # ipPhone, then telephoneNumber
                     phone_number = None
-                    if hasattr(entry, extension_attr) and entry[extension_attr].value:
+                    has_ext_attr = hasattr(entry, extension_attr)
+                    has_ipphone = hasattr(entry, "ipPhone")
+                    has_telephone = hasattr(entry, "telephoneNumber")
+                    ext_val = entry[extension_attr].value if has_ext_attr else None
+                    ip_val = entry.ipPhone.value if has_ipphone else None
+                    tel_val = entry.telephoneNumber.value if has_telephone else None
+                    print(f"[AD-DEBUG] User {username}: ext_attr={ext_val}, ipPhone={ip_val}, tel={tel_val}", file=sys.stderr, flush=True)
+
+                    if has_ext_attr and ext_val:
                         phone_number = str(entry[extension_attr])
-                    elif hasattr(entry, "ipPhone") and entry.ipPhone.value:
+                    elif has_ipphone and ip_val:
                         phone_number = str(entry.ipPhone)
-                    elif hasattr(entry, "telephoneNumber") and entry.telephoneNumber.value:
+                    elif has_telephone and tel_val:
                         phone_number = str(entry.telephoneNumber)
 
                     # Skip if no username or phone number
                     if not username or not phone_number:
-                        self.logger.debug(f"Skipping user {username}: missing required fields")
+                        print(f"[AD-DEBUG] SKIP {username}: no phone number", file=sys.stderr, flush=True)
                         skipped_count += 1
                         continue
 
                     # Clean phone number to get just digits (remove spaces,
                     # dashes, etc.)
                     extension_number = re.sub(r"[^0-9]", "", phone_number)
+                    print(f"[AD-DEBUG] User {username}: phone={phone_number} -> ext={extension_number}", file=sys.stderr, flush=True)
 
                     # Validate extension number
                     if not extension_number or len(extension_number) < 3:
