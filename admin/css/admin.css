@@ -64,6 +64,11 @@ textarea:focus:not(:focus-visible) {
     box-sizing: border-box;
 }
 
+html, body {
+    width: 100%;
+    height: 100%;
+}
+
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: linear-gradient(135deg, var(--color-bg) 0%, var(--color-bg-alt) 100%);
@@ -76,14 +81,16 @@ body {
 }
 
 .container {
+    width: 100%;
     max-width: 100%;
     margin: 0;
     background: var(--color-bg-card);
     box-shadow: none;
-    height: 100vh; /* Fixed height to viewport */
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height - adapts to browser chrome */
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* Prevent container from scrolling */
+    overflow: hidden;
 }
 
 /* Header */
@@ -185,6 +192,7 @@ header h1 {
     flex: 1;
     overflow: hidden;
     min-height: 0; /* Important: allows flex children to shrink below content size */
+    min-width: 0; /* Allows flex container to shrink on window resize */
 }
 
 /* Left Sidebar Navigation */
@@ -287,9 +295,10 @@ header h1 {
 .main-content {
     flex: 1 !important;
     overflow-y: auto;
-    overflow-x: hidden; /* Prevent horizontal scrolling */
+    overflow-x: auto; /* Allow horizontal scroll when content overflows */
     background: var(--color-bg);
     min-height: 0; /* Important: allows scrolling within flex container */
+    min-width: 0; /* Allows flex item to shrink below content size */
 }
 
 /* Tab Content */
@@ -297,6 +306,9 @@ header h1 {
     display: none;
     padding: 30px;
     animation: fadeInUp 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    max-width: 100%;
+    overflow-wrap: break-word;
+    word-wrap: break-word;
 }
 
 .tab-content.active {
