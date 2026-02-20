@@ -616,6 +616,7 @@ integrations:
     use_ssl: true
     auto_provision: true  # Automatically create/update PBX extensions from AD
     deactivate_removed_users: true  # Disable extensions when users are removed from AD
+    extension_attribute: telephoneNumber  # AD attribute for extension numbers (telephoneNumber, ipPhone, etc.)
 
     # Group-based permissions: Map AD security groups to PBX permissions
     # When users are synced, their AD group membership determines their PBX permissions

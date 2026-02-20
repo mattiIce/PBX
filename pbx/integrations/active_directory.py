@@ -223,22 +223,44 @@ class ActiveDirectoryIntegration:
             user_search_base = self.config.get(
                 "integrations.active_directory.user_search_base", self.base_dn
             )
+            self.logger.info(f"Search base: {user_search_base}")
 
-            # Search for all users with telephoneNumber attribute
-            # Using objectClass=user and filtering for accounts with phone
-            # numbers
-            search_filter = "(&(objectClass=user)(telephoneNumber=*)(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
+            # Determine which AD attribute holds the extension number
+            extension_attr = self.config.get(
+                "integrations.active_directory.extension_attribute", "telephoneNumber"
+            )
+            self.logger.info(f"Using AD attribute '{extension_attr}' for extension numbers")
 
+            # Search for enabled users that have the extension attribute set
+            # Also search for ipPhone as a fallback if using telephoneNumber
+            if extension_attr == "telephoneNumber":
+                phone_filter = "(|(telephoneNumber=*)(ipPhone=*))"
+            else:
+                phone_filter = f"({extension_attr}=*)"
+            search_filter = f"(&(objectClass=user){phone_filter}(!(userAccountControl:1.2.840.113556.1.4.803:=2)))"
+
+            search_attrs = [
+                "sAMAccountName", "displayName", "mail",
+                "telephoneNumber", "ipPhone", "memberOf",
+            ]
+            # Include the configured attribute if it's custom
+            if extension_attr not in search_attrs:
+                search_attrs.append(extension_attr)
+
+            self.logger.info(f"LDAP search filter: {search_filter}")
             self.connection.search(
                 search_base=user_search_base,
                 search_filter=search_filter,
                 search_scope=SUBTREE,
-                attributes=["sAMAccountName", "displayName", "mail", "telephoneNumber", "memberOf"],
+                attributes=search_attrs,
             )
+            self.logger.info(f"LDAP search returned {len(self.connection.entries)} entries")
 
             if not self.connection.entries:
-                self.logger.warning("No users found in Active Directory")
-                return 0
+                self.logger.warning(
+                    f"No users found in Active Directory (filter: {search_filter})"
+                )
+                return {"synced_count": 0, "extensions_to_reboot": []}
 
             self.logger.info(f"Found {len(self.connection.entries)} users in Active Directory")
 
@@ -271,9 +293,16 @@ class ActiveDirectoryIntegration:
                         str(entry.displayName) if hasattr(entry, "displayName") else username
                     )
                     email = str(entry.mail) if hasattr(entry, "mail") else None
-                    phone_number = (
-                        str(entry.telephoneNumber) if hasattr(entry, "telephoneNumber") else None
-                    )
+
+                    # Get extension number: try configured attribute, then
+                    # ipPhone, then telephoneNumber
+                    phone_number = None
+                    if hasattr(entry, extension_attr) and entry[extension_attr].value:
+                        phone_number = str(entry[extension_attr])
+                    elif hasattr(entry, "ipPhone") and entry.ipPhone.value:
+                        phone_number = str(entry.ipPhone)
+                    elif hasattr(entry, "telephoneNumber") and entry.telephoneNumber.value:
+                        phone_number = str(entry.telephoneNumber)
 
                     # Skip if no username or phone number
                     if not username or not phone_number:
@@ -281,7 +310,6 @@ class ActiveDirectoryIntegration:
                         skipped_count += 1
                         continue
 
-                    # Use phone number as extension number (Option A)
                     # Clean phone number to get just digits (remove spaces,
                     # dashes, etc.)
                     extension_number = re.sub(r"[^0-9]", "", phone_number)
