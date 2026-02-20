@@ -63,6 +63,15 @@ fi
 
 echo "PBX pre-start: Python = $PYTHON"
 
+# ---------- Check critical Python dependencies ----------
+
+if ! "$PYTHON" -c "import yaml" 2>/dev/null; then
+    echo "FATAL: PyYAML is not installed in $PYTHON" >&2
+    echo "  Fix: $PYTHON -m pip install 'PyYAML>=6.0.3'" >&2
+    exit 1
+fi
+echo "PBX pre-start: critical Python dependencies OK"
+
 # ---------- Run Alembic migrations (if available) ----------
 
 ALEMBIC=""

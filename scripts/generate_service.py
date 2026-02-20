@@ -76,6 +76,9 @@ def generate_pbx_service(
         Documentation=https://github.com/mattiIce/PBX
         Wants=network-online.target
         After=network-online.target postgresql.service redis.service
+        # Stop restarting after 5 failures within 60 seconds
+        StartLimitIntervalSec=60
+        StartLimitBurst=5
 
         [Service]
         Type=simple
