@@ -334,6 +334,7 @@ class ActiveDirectoryIntegration:
                         continue
 
                     ad_extension_numbers.add(extension_number)
+                    print(f"[AD-DEBUG] User {username}: ext={extension_number}, use_db={use_database}", file=sys.stderr, flush=True)
 
                     # Get user's AD groups and map to PBX permissions
                     user_groups = (
@@ -509,7 +510,9 @@ class ActiveDirectoryIntegration:
 
                 except (KeyError, TypeError, ValueError) as e:
                     user_desc = username or "unknown"
-                    self.logger.error(f"Error syncing user {user_desc}: {e}")
+                    import traceback
+                    print(f"[AD-DEBUG] ERROR syncing user {user_desc}: {e}", file=sys.stderr, flush=True)
+                    traceback.print_exc(file=sys.stderr)
                     continue
 
             # Deactivate extensions for users removed from AD
