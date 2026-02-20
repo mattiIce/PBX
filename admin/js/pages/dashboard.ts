@@ -129,7 +129,8 @@ export async function syncADUsers(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
         const response = await fetchWithTimeout(`${API_BASE}/api/integrations/ad/sync`, {
-            method: 'POST'
+            method: 'POST',
+            headers: getAuthHeaders()
         }, AD_SYNC_TIMEOUT);
 
         if (!response.ok) {
