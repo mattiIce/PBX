@@ -355,6 +355,148 @@ class NomadicE911Engine:
             self.logger.error(f"Failed to get E911 sites: {e}")
             return []
 
+    def update_site_config(self, site_id: int, site_data: dict) -> bool:
+        """
+        Update an existing E911 site configuration.
+
+        Args:
+            site_id: ID of the site to update
+            site_data: Updated site configuration
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            self.db.execute(
+                """UPDATE multi_site_e911_configs
+               SET site_name = %s, ip_range_start = %s, ip_range_end = %s,
+                   emergency_trunk = %s, psap_number = %s, elin = %s,
+                   street_address = %s, city = %s, state = %s,
+                   postal_code = %s, country = %s, building = %s, floor = %s
+               WHERE id = %s""",
+                (
+                    site_data["site_name"],
+                    site_data["ip_range_start"],
+                    site_data["ip_range_end"],
+                    site_data.get("emergency_trunk"),
+                    site_data.get("psap_number"),
+                    site_data.get("elin"),
+                    site_data.get("street_address", ""),
+                    site_data.get("city", ""),
+                    site_data.get("state", ""),
+                    site_data.get("postal_code", ""),
+                    site_data.get("country", "USA"),
+                    site_data.get("building", ""),
+                    site_data.get("floor", ""),
+                    site_id,
+                ),
+            )
+
+            self.logger.info(f"Updated E911 site config id={site_id}")
+            return True
+
+        except (KeyError, TypeError, ValueError) as e:
+            self.logger.error(f"Failed to update site config: {e}")
+            return False
+
+    def delete_site_config(self, site_id: int) -> bool:
+        """
+        Delete an E911 site configuration.
+
+        Args:
+            site_id: ID of the site to delete
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            self.db.execute(
+                "DELETE FROM multi_site_e911_configs WHERE id = %s",
+                (site_id,),
+            )
+            self.logger.info(f"Deleted E911 site config id={site_id}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Failed to delete site config: {e}")
+            return False
+
+    def get_all_locations(self, limit: int = 100) -> list[dict]:
+        """
+        Get current emergency locations for all extensions.
+
+        Returns the most recent location for each extension.
+
+        Args:
+            limit: Maximum number of records
+
+        Returns:
+            list of location dictionaries
+        """
+        try:
+            result = self.db.execute(
+                """SELECT DISTINCT ON (extension) id, extension, ip_address, location_name,
+                       street_address, city, state, postal_code, country, building, floor,
+                       room, latitude, longitude, last_updated, auto_detected
+                   FROM nomadic_e911_locations
+                   ORDER BY extension, last_updated DESC
+                   LIMIT %s""",
+                (limit,),
+            )
+
+            locations = []
+            for row in result or []:
+                addr_parts = [p for p in [row[4], row[5], row[6], row[7]] if p]
+                locations.append({
+                    "extension": row[1],
+                    "site_name": row[3],
+                    "address": ", ".join(addr_parts) if addr_parts else None,
+                    "detection_method": "auto" if row[15] else "manual",
+                    "last_updated": str(row[14]) if row[14] else None,
+                    "ip_address": row[2],
+                })
+
+            return locations
+
+        except Exception as e:
+            self.logger.error(f"Failed to get all E911 locations: {e}")
+            return []
+
+    def get_all_location_history(self, limit: int = 50) -> list[dict]:
+        """
+        Get location update history for all extensions.
+
+        Args:
+            limit: Maximum number of records
+
+        Returns:
+            list of location history dictionaries
+        """
+        try:
+            result = self.db.execute(
+                """SELECT id, extension, old_location, new_location, update_source, updated_at
+                   FROM e911_location_updates
+                   ORDER BY updated_at DESC LIMIT %s""",
+                (limit,),
+            )
+
+            history = [
+                {
+                    "timestamp": str(row[5]) if row[5] else None,
+                    "extension": row[1],
+                    "site_name": row[3],
+                    "detection_method": row[4],
+                    "ip_address": None,
+                }
+                for row in result or []
+            ]
+
+            return history
+
+        except Exception as e:
+            self.logger.error(f"Failed to get all E911 location history: {e}")
+            return []
+
     def get_location_history(self, extension: str, limit: int = 10) -> list[dict]:
         """
         Get location update history for extension
@@ -376,10 +518,15 @@ class NomadicE911Engine:
 
             history = [
                 {
+                    "timestamp": str(row[5]) if row[5] else None,
+                    "extension": row[1],
+                    "site_name": row[3],
+                    "detection_method": row[4],
+                    "ip_address": None,
                     "old_location": row[2],
                     "new_location": row[3],
                     "update_source": row[4],
-                    "updated_at": row[5],
+                    "updated_at": str(row[5]) if row[5] else None,
                 }
                 for row in result or []
             ]

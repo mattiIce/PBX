@@ -121,6 +121,28 @@ class SpeechAnalyticsEngine:
             self.logger.error(f"Failed to update speech analytics config: {e}")
             return False
 
+    def delete_config(self, extension: str) -> bool:
+        """
+        Delete speech analytics configuration for an extension.
+
+        Args:
+            extension: Extension number
+
+        Returns:
+            bool: True if successful
+        """
+        try:
+            self.db.execute(
+                "DELETE FROM speech_analytics_configs WHERE extension = %s",
+                (extension,),
+            )
+            self.logger.info(f"Deleted speech analytics config for {extension}")
+            return True
+
+        except Exception as e:
+            self.logger.error(f"Failed to delete speech analytics config: {e}")
+            return False
+
     def analyze_audio_stream(self, call_id: str, audio_chunk: bytes) -> dict:
         """
         Analyze audio stream in real-time

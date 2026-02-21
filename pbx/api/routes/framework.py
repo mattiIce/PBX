@@ -113,6 +113,26 @@ def update_speech_analytics_config(extension: str) -> tuple[Response, int]:
         return send_json({"error": "Database not available"}, 500), 500
 
 
+@framework_bp.route("/speech-analytics/config/<extension>", methods=["DELETE"])
+@require_auth
+def delete_speech_analytics_config(extension: str) -> tuple[Response, int]:
+    """Delete speech analytics configuration for an extension."""
+    pbx_core = get_pbx_core()
+    if pbx_core and pbx_core.database.enabled:
+        try:
+            from pbx.features.speech_analytics import SpeechAnalyticsEngine
+
+            engine = SpeechAnalyticsEngine(pbx_core.database, pbx_core.config)
+            if engine.delete_config(extension):
+                return send_json({"success": True}), 200
+            return send_json({"error": "Failed to delete config"}, 500), 500
+        except Exception as e:
+            logger.error(f"Error deleting speech analytics config: {e}")
+            return send_json({"error": str(e)}, 500), 500
+    else:
+        return send_json({"error": "Database not available"}, 500), 500
+
+
 @framework_bp.route("/speech-analytics/analyze-sentiment", methods=["POST"])
 @require_auth
 def analyze_sentiment() -> tuple[Response, int]:
@@ -502,6 +522,25 @@ def get_e911_location(extension: str) -> tuple[Response, int]:
         return send_json({"error": "Database not available"}, 500), 500
 
 
+@framework_bp.route("/nomadic-e911/locations", methods=["GET"])
+@require_auth
+def get_all_e911_locations() -> tuple[Response, int]:
+    """Get current E911 locations for all extensions."""
+    pbx_core = get_pbx_core()
+    if pbx_core and pbx_core.database.enabled:
+        try:
+            from pbx.features.nomadic_e911 import NomadicE911Engine
+
+            engine = NomadicE911Engine(pbx_core.database, pbx_core.config)
+            locations = engine.get_all_locations()
+            return send_json({"locations": locations}), 200
+        except Exception as e:
+            logger.error(f"Error getting all E911 locations: {e}")
+            return send_json({"error": str(e)}, 500), 500
+    else:
+        return send_json({"error": "Database not available"}, 500), 500
+
+
 @framework_bp.route("/nomadic-e911/history/<extension>", methods=["GET"])
 @require_auth
 def get_e911_history(extension: str) -> tuple[Response, int]:
@@ -516,6 +555,25 @@ def get_e911_history(extension: str) -> tuple[Response, int]:
             return send_json({"history": history}), 200
         except Exception as e:
             logger.error(f"Error getting E911 history: {e}")
+            return send_json({"error": str(e)}, 500), 500
+    else:
+        return send_json({"error": "Database not available"}, 500), 500
+
+
+@framework_bp.route("/nomadic-e911/history", methods=["GET"])
+@require_auth
+def get_all_e911_history() -> tuple[Response, int]:
+    """Get E911 location history for all extensions."""
+    pbx_core = get_pbx_core()
+    if pbx_core and pbx_core.database.enabled:
+        try:
+            from pbx.features.nomadic_e911 import NomadicE911Engine
+
+            engine = NomadicE911Engine(pbx_core.database, pbx_core.config)
+            history = engine.get_all_location_history()
+            return send_json({"history": history}), 200
+        except Exception as e:
+            logger.error(f"Error getting all E911 history: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
         return send_json({"error": "Database not available"}, 500), 500
@@ -584,6 +642,47 @@ def create_e911_site() -> tuple[Response, int]:
             return send_json({"error": "Failed to create site"}, 500), 500
         except Exception as e:
             logger.error(f"Error creating E911 site: {e}")
+            return send_json({"error": str(e)}, 500), 500
+    else:
+        return send_json({"error": "Database not available"}, 500), 500
+
+
+@framework_bp.route("/nomadic-e911/sites/<int:site_id>", methods=["PUT"])
+@require_auth
+def update_e911_site(site_id: int) -> tuple[Response, int]:
+    """Update an existing E911 site configuration."""
+    pbx_core = get_pbx_core()
+    if pbx_core and pbx_core.database.enabled:
+        try:
+            body = get_request_body()
+            from pbx.features.nomadic_e911 import NomadicE911Engine
+
+            engine = NomadicE911Engine(pbx_core.database, pbx_core.config)
+            if engine.update_site_config(site_id, body):
+                return send_json({"success": True}), 200
+            return send_json({"error": "Failed to update site"}, 500), 500
+        except Exception as e:
+            logger.error(f"Error updating E911 site: {e}")
+            return send_json({"error": str(e)}, 500), 500
+    else:
+        return send_json({"error": "Database not available"}, 500), 500
+
+
+@framework_bp.route("/nomadic-e911/sites/<int:site_id>", methods=["DELETE"])
+@require_auth
+def delete_e911_site(site_id: int) -> tuple[Response, int]:
+    """Delete an E911 site configuration."""
+    pbx_core = get_pbx_core()
+    if pbx_core and pbx_core.database.enabled:
+        try:
+            from pbx.features.nomadic_e911 import NomadicE911Engine
+
+            engine = NomadicE911Engine(pbx_core.database, pbx_core.config)
+            if engine.delete_site_config(site_id):
+                return send_json({"success": True}), 200
+            return send_json({"error": "Failed to delete site"}, 500), 500
+        except Exception as e:
+            logger.error(f"Error deleting E911 site: {e}")
             return send_json({"error": str(e)}, 500), 500
     else:
         return send_json({"error": "Database not available"}, 500), 500
@@ -1169,6 +1268,7 @@ def create_tagging_rule() -> tuple[Response, int]:
         name = body.get("name")
         conditions = body.get("conditions", [])
         tag_id = body.get("tag_id")
+        priority = body.get("priority", 100)
 
         if not name or not tag_id:
             return send_json({"error": "Name and tag_id required"}, 400), 400
@@ -1176,7 +1276,7 @@ def create_tagging_rule() -> tuple[Response, int]:
         from pbx.features.call_tagging import get_call_tagging
 
         tagging = get_call_tagging(pbx_core.config if pbx_core else None)
-        rule_id = tagging.create_rule(name, conditions, tag_id)
+        rule_id = tagging.create_rule(name, conditions, tag_id, priority)
         return send_json({"success": True, "rule_id": rule_id}), 200
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error creating tagging rule: {e}")

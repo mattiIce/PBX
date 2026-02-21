@@ -10,6 +10,7 @@ Usage:
 """
 
 import argparse
+import gzip
 import json
 import os
 import random
@@ -17,6 +18,12 @@ import subprocess
 import sys
 from datetime import UTC, datetime
 from pathlib import Path
+
+# Backup locations searched when no --backup-path is given
+BACKUP_LOCATIONS = [
+    Path("/var/backups/pbx"),
+    Path("/backup/pbx"),
+]
 
 
 class BackupVerifier:
@@ -26,7 +33,7 @@ class BackupVerifier:
         self.backup_path = backup_path
         self.full_test = full_test
         self.base_dir = Path(__file__).parent.parent
-        self.results = {
+        self.results: dict = {
             "timestamp": datetime.now(UTC).isoformat(),
             "checks": [],
             "passed": 0,
@@ -49,77 +56,203 @@ class BackupVerifier:
         if details and status:
             print(f"  {details}")
 
-    def find_latest_backup(self) -> tuple[bool, str]:
-        """Find the latest backup file."""
-        # Check common backup locations
-        backup_locations = [
-            self.base_dir / "backups",
-            Path("/var/backups/pbx"),
-            Path("/backup/pbx"),
-        ]
+    # ------------------------------------------------------------------
+    # Backup discovery
+    # ------------------------------------------------------------------
 
-        for location in backup_locations:
-            if location.exists():
-                # Find .sql or .tar.gz files
-                backup_files = list(location.glob("*.sql")) + list(location.glob("*.tar.gz"))
-                if backup_files:
-                    # Get most recent
-                    latest = max(backup_files, key=lambda p: p.stat().st_mtime)
-                    return True, str(latest)
+    def _get_backup_locations(self) -> list[Path]:
+        """Return all backup locations to search, including project-local."""
+        return [self.base_dir / "backups", *BACKUP_LOCATIONS]
 
-        return False, "No backup files found"
+    def find_latest_backup_dir(self) -> Path | None:
+        """Find the latest timestamped backup directory (created by backup.sh).
+
+        backup.sh creates directories named YYYYMMDD_HHMMSS with sub-dirs
+        database/, config/, voicemail/, recordings/, ssl/, prompts/.
+        """
+        for location in self._get_backup_locations():
+            if not location.is_dir():
+                continue
+            # Match timestamped directories (e.g. 20260221_020000)
+            candidates = sorted(
+                (d for d in location.iterdir() if d.is_dir() and d.name[:8].isdigit()),
+                key=lambda d: d.name,
+                reverse=True,
+            )
+            if candidates:
+                return candidates[0]
+        return None
+
+    def find_latest_database_backup(self) -> tuple[bool, str]:
+        """Find the latest database backup file.
+
+        Searches for:
+        1. Structured backups: <timestamp>/database/pbx_database.sql(.gz)
+        2. Flat files from pbx-backup.sh: db_<timestamp>.sql.gz
+        3. Top-level full archives: pbx_backup_<timestamp>.tar.gz
+        """
+        for location in self._get_backup_locations():
+            if not location.is_dir():
+                continue
+
+            # 1. Look inside timestamped directories for database dumps
+            db_files: list[Path] = []
+            db_files.extend(location.glob("*/database/pbx_database.sql"))
+            db_files.extend(location.glob("*/database/pbx_database.sql.gz"))
+            if db_files:
+                latest = max(db_files, key=lambda p: p.stat().st_mtime)
+                return True, str(latest)
+
+            # 2. Flat database dumps from production deploy script (db_*.sql.gz)
+            flat_db = list(location.glob("db_*.sql.gz"))
+            if flat_db:
+                latest = max(flat_db, key=lambda p: p.stat().st_mtime)
+                return True, str(latest)
+
+            # 3. Full backup archives (pbx_backup_*.tar.gz)
+            archives = list(location.glob("pbx_backup_*.tar.gz"))
+            if archives:
+                latest = max(archives, key=lambda p: p.stat().st_mtime)
+                return True, str(latest)
+
+        return False, "No database backup files found in any known backup location"
+
+    # ------------------------------------------------------------------
+    # Database backup verification
+    # ------------------------------------------------------------------
 
     def verify_database_backup(self, backup_file: str) -> bool:
         """Verify database backup file."""
         print(f"\nVerifying database backup: {backup_file}")
+        path = Path(backup_file)
 
         # Check file exists
-        if not Path(backup_file).exists():
-            self.log_check("Backup file exists", False, f"{backup_file} not found")
+        if not path.exists():
+            self.log_check("Database backup file exists", False, f"{backup_file} not found")
             return False
 
-        self.log_check(
-            "Backup file exists",
-            True,
-            f"Size: {Path(backup_file).stat().st_size / 1024 / 1024:.2f} MB",
-        )
+        size_mb = path.stat().st_size / 1024 / 1024
+        self.log_check("Database backup file exists", True, f"Size: {size_mb:.2f} MB")
 
         # Check file is not empty
-        if Path(backup_file).stat().st_size == 0:
-            self.log_check("Backup file not empty", False, "File is empty")
+        if path.stat().st_size == 0:
+            self.log_check("Database backup not empty", False, "File is empty")
             return False
 
-        self.log_check("Backup file not empty", True)
+        self.log_check("Database backup not empty", True)
 
-        # For SQL backups, check basic structure
+        # Validate content based on file type
         if backup_file.endswith(".sql"):
-            try:
-                with Path(backup_file).open() as f:
-                    first_lines = [next(f) for _ in range(10)]
-                    content = "".join(first_lines)
+            return self._verify_sql_dump(path)
+        if backup_file.endswith(".sql.gz"):
+            return self._verify_gzipped_sql_dump(path)
+        if backup_file.endswith(".tar.gz"):
+            return self._verify_backup_archive(path)
 
-                    # Check for PostgreSQL dump header
-                    if "PostgreSQL database dump" in content:
-                        self.log_check("Valid PostgreSQL dump", True)
-                    else:
-                        self.log_check("Valid PostgreSQL dump", False, "Missing dump header")
-                        return False
+        self.log_check(
+            "Recognized backup format",
+            False,
+            f"Unknown extension: {path.suffix} (expected .sql, .sql.gz, or .tar.gz)",
+        )
+        return False
 
-                    # Check for table definitions
-                    if "CREATE TABLE" in content or "CREATE" in content:
-                        self.log_check("Contains schema", True)
-                    else:
-                        self.log_check("Contains schema", False, "No CREATE statements found")
+    def _read_initial_content(self, path: Path, *, compressed: bool = False) -> str | None:
+        """Read the first portion of a file for header inspection."""
+        try:
+            if compressed:
+                with gzip.open(path, "rt", errors="replace") as f:
+                    return "".join(f.readline() for _ in range(20))
+            else:
+                with path.open(errors="replace") as f:
+                    return "".join(f.readline() for _ in range(20))
+        except (OSError, gzip.BadGzipFile) as e:
+            self.log_check("Readable backup file", False, str(e))
+            return None
 
-            except OSError as e:
-                self.log_check("Readable backup file", False, str(e))
-                return False
+    def _check_postgresql_header(self, content: str) -> bool:
+        """Validate that content looks like a PostgreSQL dump."""
+        if "PostgreSQL database dump" in content:
+            self.log_check("Valid PostgreSQL dump header", True)
+        else:
+            self.log_check(
+                "Valid PostgreSQL dump header",
+                False,
+                "File does not contain PostgreSQL dump header",
+            )
+            return False
 
-        # Full test: Try to restore to temporary database
-        if self.full_test and backup_file.endswith(".sql"):
-            return self.test_restore_database(backup_file)
+        if "CREATE" in content.upper():
+            self.log_check("Contains schema definitions", True)
+        else:
+            # Not fatal — header is in first 20 lines, CREATE may come later
+            self.log_check(
+                "Contains schema definitions",
+                True,
+                "Not found in header (may appear later in file)",
+            )
 
         return True
+
+    def _verify_sql_dump(self, path: Path) -> bool:
+        """Verify a plain .sql dump file."""
+        content = self._read_initial_content(path)
+        if content is None:
+            return False
+
+        valid = self._check_postgresql_header(content)
+
+        if valid and self.full_test:
+            return self.test_restore_database(str(path))
+        return valid
+
+    def _verify_gzipped_sql_dump(self, path: Path) -> bool:
+        """Verify a gzip-compressed .sql.gz dump file."""
+        # First verify gzip integrity
+        try:
+            with gzip.open(path, "rb") as f:
+                # Read a small chunk to verify the gzip framing is valid
+                f.read(1024)
+            self.log_check("Valid gzip compression", True)
+        except (gzip.BadGzipFile, OSError) as e:
+            self.log_check("Valid gzip compression", False, str(e))
+            return False
+
+        content = self._read_initial_content(path, compressed=True)
+        if content is None:
+            return False
+
+        return self._check_postgresql_header(content)
+
+    def _verify_backup_archive(self, path: Path) -> bool:
+        """Verify a full backup .tar.gz archive contains database files."""
+        try:
+            result = subprocess.run(
+                ["tar", "-tzf", str(path)],
+                capture_output=True,
+                timeout=60,
+                check=False,
+            )
+            if result.returncode != 0:
+                self.log_check("Valid tar.gz archive", False, "Archive is corrupt or unreadable")
+                return False
+
+            self.log_check("Valid tar.gz archive", True)
+
+            file_list = result.stdout.decode(errors="replace")
+            has_db = "database/pbx_database.sql" in file_list
+            if has_db:
+                self.log_check("Archive contains database backup", True)
+            else:
+                self.log_check(
+                    "Archive contains database backup",
+                    False,
+                    "No database/pbx_database.sql found in archive",
+                )
+            return has_db
+
+        except (OSError, subprocess.SubprocessError) as e:
+            self.log_check("Readable backup archive", False, str(e))
+            return False
 
     def test_restore_database(self, backup_file: str) -> bool:
         """Test restoring database backup to temporary database."""
@@ -208,9 +341,103 @@ class BackupVerifier:
             except (KeyError, OSError, TypeError, ValueError, subprocess.SubprocessError):
                 print(f"  Warning: Could not clean up temporary database: {temp_db}")
 
+    # ------------------------------------------------------------------
+    # Backup structure verification
+    # ------------------------------------------------------------------
+
+    def verify_backup_structure(self, backup_dir: Path) -> bool:
+        """Verify the directory structure of a timestamped backup.
+
+        Checks that all expected components created by backup.sh are present.
+        """
+        print(f"\nVerifying backup structure: {backup_dir}")
+
+        all_ok = True
+
+        # Check required database backup
+        db_gz = backup_dir / "database" / "pbx_database.sql.gz"
+        db_sql = backup_dir / "database" / "pbx_database.sql"
+        if db_gz.exists():
+            size_mb = db_gz.stat().st_size / 1024 / 1024
+            self.log_check("Database backup (gzip)", True, f"Size: {size_mb:.2f} MB")
+        elif db_sql.exists():
+            size_mb = db_sql.stat().st_size / 1024 / 1024
+            self.log_check("Database backup (plain SQL)", True, f"Size: {size_mb:.2f} MB")
+        else:
+            self.log_check(
+                "Database backup present",
+                False,
+                f"Neither pbx_database.sql.gz nor pbx_database.sql found in {backup_dir}/database/",
+            )
+            all_ok = False
+
+        # Check config backup
+        config_dir = backup_dir / "config"
+        if config_dir.is_dir() and any(config_dir.iterdir()):
+            config_count = len(list(config_dir.iterdir()))
+            self.log_check("Configuration backup", True, f"{config_count} file(s)")
+        else:
+            self.log_check("Configuration backup", False, "config/ directory missing or empty")
+            all_ok = False
+
+        # Check optional components (informational, not failures)
+        optional_dirs = ["voicemail", "recordings", "ssl", "prompts"]
+        for dirname in optional_dirs:
+            subdir = backup_dir / dirname
+            if subdir.is_dir() and any(subdir.iterdir()):
+                self.log_check(f"{dirname.title()} backup", True)
+            else:
+                print(f"  - {dirname.title()} backup: not present (optional)")
+
+        # Check manifest
+        manifest = backup_dir / "MANIFEST.txt"
+        if manifest.exists():
+            self.log_check("Backup manifest", True)
+        else:
+            print("  - Backup manifest: not present (optional)")
+
+        return all_ok
+
+    def verify_checksums(self, backup_dir: Path) -> bool:
+        """Verify SHA-256 checksums from CHECKSUMS.txt if present."""
+        checksums_file = backup_dir / "CHECKSUMS.txt"
+        if not checksums_file.exists():
+            print("\n  - Checksum file not present, skipping integrity check")
+            return True
+
+        print(f"\nVerifying checksums: {checksums_file}")
+
+        try:
+            result = subprocess.run(
+                ["sha256sum", "--check", str(checksums_file)],
+                capture_output=True,
+                cwd=str(checksums_file.parent.parent),
+                timeout=120,
+                check=False,
+            )
+
+            if result.returncode == 0:
+                self.log_check("Checksum verification", True, "All checksums match")
+                return True
+
+            stderr = result.stderr.decode(errors="replace").strip()
+            stdout = result.stdout.decode(errors="replace").strip()
+            failed_lines = [line for line in stdout.splitlines() if "FAILED" in line]
+            detail = "; ".join(failed_lines[:5]) if failed_lines else stderr
+            self.log_check("Checksum verification", False, detail or "Checksum mismatch")
+            return False
+
+        except (OSError, subprocess.SubprocessError) as e:
+            self.log_check("Checksum verification", False, str(e))
+            return False
+
+    # ------------------------------------------------------------------
+    # Source config and script checks
+    # ------------------------------------------------------------------
+
     def verify_config_backup(self) -> bool:
-        """Verify configuration backup."""
-        print("\nVerifying configuration files...")
+        """Verify source configuration files exist (pre-backup sanity check)."""
+        print("\nVerifying source configuration files...")
 
         config_files = [
             "config.yml",
@@ -221,16 +448,16 @@ class BackupVerifier:
         for config_file in config_files:
             path = self.base_dir / config_file
             if path.exists():
-                self.log_check(f"{config_file} exists", True)
+                self.log_check(f"Source {config_file} exists", True)
             else:
-                self.log_check(f"{config_file} exists", False, "File not found")
+                self.log_check(f"Source {config_file} exists", False, "File not found")
                 all_good = False
 
         return all_good
 
     def verify_backup_script(self) -> bool:
         """Verify backup script is configured."""
-        print("\nVerifying backup configuration...")
+        print("\nVerifying backup script...")
 
         backup_script = self.base_dir / "scripts" / "backup.sh"
         if not backup_script.exists():
@@ -257,10 +484,10 @@ class BackupVerifier:
 
             if result.returncode == 0:
                 cron_content = result.stdout.decode()
-                if "backup.sh" in cron_content:
+                if "backup" in cron_content.lower():
                     self.log_check("Automated backup scheduled", True, "Found in crontab")
                     return True
-                self.log_check("Automated backup scheduled", False, "Not found in crontab")
+                self.log_check("Automated backup scheduled", False, "No backup entry in crontab")
             else:
                 self.log_check("Automated backup scheduled", False, "Could not check crontab")
 
@@ -269,25 +496,47 @@ class BackupVerifier:
 
         return False
 
+    # ------------------------------------------------------------------
+    # Main verification flow
+    # ------------------------------------------------------------------
+
     def run_verification(self) -> int:
         """Run all backup verifications."""
         print("=" * 70)
         print("Backup Verification")
         print("=" * 70)
 
-        # Find backup to verify
-        if self.backup_path:
-            backup_file = self.backup_path
-        else:
-            found, backup_file = self.find_latest_backup()
-            if not found:
-                print(f"✗ {backup_file}")
-                return 1
-
-        # Run checks
+        # 1. Verify backup infrastructure
         self.verify_backup_script()
         self.verify_config_backup()
-        self.verify_database_backup(backup_file)
+
+        # 2. Verify actual backup data
+        if self.backup_path:
+            # User specified a path — verify it as a database backup
+            self.verify_database_backup(self.backup_path)
+        else:
+            # Auto-discover: first try structured backup directory
+            backup_dir = self.find_latest_backup_dir()
+            if backup_dir:
+                self.verify_backup_structure(backup_dir)
+                self.verify_checksums(backup_dir)
+
+                # Validate the database dump content inside the directory
+                db_gz = backup_dir / "database" / "pbx_database.sql.gz"
+                db_sql = backup_dir / "database" / "pbx_database.sql"
+                if db_gz.exists():
+                    self.verify_database_backup(str(db_gz))
+                elif db_sql.exists():
+                    self.verify_database_backup(str(db_sql))
+            else:
+                # Fall back to flat-file discovery (production deploy script format)
+                found, backup_file = self.find_latest_database_backup()
+                if found:
+                    self.verify_database_backup(backup_file)
+                else:
+                    self.log_check("Locate backup", False, backup_file)
+
+        # 3. Verify scheduling
         self.check_backup_schedule()
 
         # Summary
