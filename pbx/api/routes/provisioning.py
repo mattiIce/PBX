@@ -91,7 +91,7 @@ def handle_get_provisioning_phones() -> Response:
 @provisioning_bp.route("/api/registered-atas", methods=["GET"])
 @require_admin
 def handle_get_registered_atas() -> Response:
-    """Get all registered ATA devices from database."""
+    """Get all registered ATA devices from database (legacy path)."""
     pbx_core = get_pbx_core()
     if pbx_core and hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
         try:
@@ -115,7 +115,7 @@ def handle_get_registered_atas() -> Response:
                         enhanced["model"] = provisioned_atas[ext].model
                         atas.append(enhanced)
 
-            return send_json(atas)
+            return send_json({"atas": atas})
         except (KeyError, TypeError, ValueError) as e:
             logger.error(f"Error loading registered ATAs from database: {e}")
             return send_json(
@@ -123,7 +123,7 @@ def handle_get_registered_atas() -> Response:
             )
     else:
         logger.warning("Database not available or not configured")
-        return send_json([])
+        return send_json({"atas": []})
 
 
 @provisioning_bp.route("/api/provisioning/vendors", methods=["GET"])
@@ -275,7 +275,7 @@ def handle_get_registered_phones() -> Response:
     if pbx_core and hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
         try:
             phones = pbx_core.registered_phones_db.list_all()
-            return send_json(phones)
+            return send_json({"phones": phones})
         except Exception as e:
             logger.error(f"Error loading registered phones from database: {e}")
             logger.error(
@@ -300,7 +300,44 @@ def handle_get_registered_phones() -> Response:
                 logger.warning(
                     f"  registered_phones_db is None: {pbx_core.registered_phones_db is None}"
                 )
-        return send_json([])
+        return send_json({"phones": []})
+
+
+@provisioning_bp.route("/api/registered-phones/atas", methods=["GET"])
+@require_admin
+def handle_get_registered_phones_atas() -> Response:
+    """Get all registered ATA devices (frontend-compatible path)."""
+    pbx_core = get_pbx_core()
+    if pbx_core and hasattr(pbx_core, "registered_phones_db") and pbx_core.registered_phones_db:
+        try:
+            # Get all registered phones
+            all_phones = pbx_core.registered_phones_db.list_all()
+
+            # Filter to only ATAs by checking provisioning data
+            atas = []
+            if hasattr(pbx_core, "phone_provisioning"):
+                provisioned_atas = {
+                    d.extension_number: d for d in pbx_core.phone_provisioning.get_atas()
+                }
+
+                for phone in all_phones:
+                    ext = phone.get("extension_number")
+                    if ext and ext in provisioned_atas:
+                        enhanced = dict(phone)
+                        enhanced["device_type"] = "ata"
+                        enhanced["vendor"] = provisioned_atas[ext].vendor
+                        enhanced["model"] = provisioned_atas[ext].model
+                        atas.append(enhanced)
+
+            return send_json({"atas": atas})
+        except (KeyError, TypeError, ValueError) as e:
+            logger.error(f"Error loading registered ATAs from database: {e}")
+            return send_json(
+                {"error": str(e), "details": "Check server logs for full error details"}, 500
+            )
+    else:
+        logger.warning("Database not available or not configured")
+        return send_json({"atas": []})
 
 
 @provisioning_bp.route("/api/registered-phones/with-mac", methods=["GET"])

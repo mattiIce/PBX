@@ -33,7 +33,7 @@ interface RegisteredATAsResponse {
 }
 
 export async function loadRegisteredPhones(): Promise<void> {
-    const tbody = document.getElementById('registered-phones-body') as HTMLElement | null;
+    const tbody = document.getElementById('registered-phones-table-body') as HTMLElement | null;
     if (!tbody) return;
 
     try {
@@ -42,8 +42,8 @@ export async function loadRegisteredPhones(): Promise<void> {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data: RegisteredPhonesResponse = await response.json();
-        const phones = data.phones ?? [];
+        const data = await response.json();
+        const phones: RegisteredPhone[] = Array.isArray(data) ? data : (data.phones ?? []);
 
         if (phones.length === 0) {
             tbody.innerHTML = '<tr><td colspan="6">No registered phones</td></tr>';
@@ -67,7 +67,7 @@ export async function loadRegisteredPhones(): Promise<void> {
 }
 
 export async function loadRegisteredATAs(): Promise<void> {
-    const tbody = document.getElementById('registered-atas-body') as HTMLElement | null;
+    const tbody = document.getElementById('registered-atas-table-body') as HTMLElement | null;
     if (!tbody) return;
 
     try {
@@ -76,8 +76,8 @@ export async function loadRegisteredATAs(): Promise<void> {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data: RegisteredATAsResponse = await response.json();
-        const atas = data.atas ?? [];
+        const data = await response.json();
+        const atas: RegisteredATA[] = Array.isArray(data) ? data : (data.atas ?? []);
 
         if (atas.length === 0) {
             tbody.innerHTML = '<tr><td colspan="5">No registered ATAs</td></tr>';
@@ -95,6 +95,7 @@ export async function loadRegisteredATAs(): Promise<void> {
         `).join('');
     } catch (error: unknown) {
         console.error('Error loading ATAs:', error);
+        tbody.innerHTML = '<tr><td colspan="5">Error loading ATAs</td></tr>';
     }
 }
 

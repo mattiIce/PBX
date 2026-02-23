@@ -134,6 +134,7 @@ def handle_phone_lookup(identifier: str) -> Response:
     return send_json(result)
 
 
+@phones_bp.route("/api/phones/reboot-all", methods=["POST"])
 @phones_bp.route("/api/phones/reboot", methods=["POST"])
 @require_admin
 def handle_reboot_phones() -> Response:
