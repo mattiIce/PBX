@@ -95,6 +95,14 @@ declare global {
         loadPhonebookSettings: () => Promise<void>;
         deleteDevice: (macAddress: string) => Promise<void>;
         viewTemplate: (...args: string[]) => void | Promise<void>;
+        updateModelOptions: () => void;
+        toggleProvisioningEnabled: () => void;
+        saveProvisioningSettings: () => Promise<void>;
+        toggleLdapPhonebookSettings: () => void;
+        toggleRemotePhonebookSettings: () => void;
+        savePhonebookSettings: () => Promise<void>;
+        reloadTemplates: () => Promise<void>;
+        resetAddDeviceForm: () => void;
 
         // pages/phones.ts
         loadRegisteredPhones: () => Promise<void>;
