@@ -89,6 +89,7 @@ def handle_get_provisioning_phones() -> Response:
 
 
 @provisioning_bp.route("/api/registered-atas", methods=["GET"])
+@provisioning_bp.route("/api/registered-phones/atas", methods=["GET"])
 @require_admin
 def handle_get_registered_atas() -> Response:
     """Get all registered ATA devices from database."""

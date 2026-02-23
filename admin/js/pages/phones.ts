@@ -8,32 +8,25 @@ import { showNotification } from '../ui/notifications.ts';
 import { escapeHtml } from '../utils/html.ts';
 
 interface RegisteredPhone {
-    extension?: string;
-    name?: string;
+    extension_number?: string;
     ip_address?: string;
+    mac_address?: string;
     user_agent?: string;
-    registered_at?: string;
-    status?: string;
-}
-
-interface RegisteredPhonesResponse {
-    phones?: RegisteredPhone[];
+    last_registered?: string;
 }
 
 interface RegisteredATA {
-    mac_address?: string;
-    model?: string;
+    extension_number?: string;
     ip_address?: string;
-    ports?: number;
-    status?: string;
-}
-
-interface RegisteredATAsResponse {
-    atas?: RegisteredATA[];
+    mac_address?: string;
+    vendor?: string;
+    model?: string;
+    user_agent?: string;
+    last_registered?: string;
 }
 
 export async function loadRegisteredPhones(): Promise<void> {
-    const tbody = document.getElementById('registered-phones-body') as HTMLElement | null;
+    const tbody = document.getElementById('registered-phones-table-body') as HTMLElement | null;
     if (!tbody) return;
 
     try {
@@ -42,32 +35,30 @@ export async function loadRegisteredPhones(): Promise<void> {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data: RegisteredPhonesResponse = await response.json();
-        const phones = data.phones ?? [];
+        const phones: RegisteredPhone[] = await response.json();
 
         if (phones.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">No registered phones</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="5">No registered phones</td></tr>';
             return;
         }
 
         tbody.innerHTML = phones.map(p => `
             <tr>
-                <td>${escapeHtml(p.extension || '')}</td>
-                <td>${escapeHtml(p.name || '')}</td>
+                <td>${escapeHtml(p.extension_number || '')}</td>
                 <td>${escapeHtml(p.ip_address || '')}</td>
+                <td>${escapeHtml(p.mac_address || '')}</td>
                 <td>${escapeHtml(p.user_agent || '')}</td>
-                <td>${escapeHtml(p.registered_at || '')}</td>
-                <td><span class="status-badge ${p.status === 'online' ? 'connected' : 'disconnected'}">${p.status || 'unknown'}</span></td>
+                <td>${escapeHtml(p.last_registered || '')}</td>
             </tr>
         `).join('');
     } catch (error: unknown) {
         console.error('Error loading registered phones:', error);
-        tbody.innerHTML = '<tr><td colspan="6">Error loading phones</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="5">Error loading phones</td></tr>';
     }
 }
 
 export async function loadRegisteredATAs(): Promise<void> {
-    const tbody = document.getElementById('registered-atas-body') as HTMLElement | null;
+    const tbody = document.getElementById('registered-atas-table-body') as HTMLElement | null;
     if (!tbody) return;
 
     try {
@@ -76,25 +67,28 @@ export async function loadRegisteredATAs(): Promise<void> {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data: RegisteredATAsResponse = await response.json();
-        const atas = data.atas ?? [];
+        const atas: RegisteredATA[] = await response.json();
 
         if (atas.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="5">No registered ATAs</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6">No registered ATAs</td></tr>';
             return;
         }
 
-        tbody.innerHTML = atas.map(a => `
+        tbody.innerHTML = atas.map(a => {
+            const vendorModel = [a.vendor, a.model].filter(Boolean).join(' ');
+            return `
             <tr>
-                <td>${escapeHtml(a.mac_address || '')}</td>
-                <td>${escapeHtml(a.model || '')}</td>
+                <td>${escapeHtml(a.extension_number || '')}</td>
                 <td>${escapeHtml(a.ip_address || '')}</td>
-                <td>${escapeHtml(a.ports?.toString() || '')}</td>
-                <td><span class="status-badge ${a.status === 'online' ? 'connected' : 'disconnected'}">${a.status || 'unknown'}</span></td>
+                <td>${escapeHtml(a.mac_address || '')}</td>
+                <td>${escapeHtml(vendorModel)}</td>
+                <td>${escapeHtml(a.user_agent || '')}</td>
+                <td>${escapeHtml(a.last_registered || '')}</td>
             </tr>
-        `).join('');
+        `}).join('');
     } catch (error: unknown) {
         console.error('Error loading ATAs:', error);
+        tbody.innerHTML = '<tr><td colspan="6">Error loading ATAs</td></tr>';
     }
 }
 
