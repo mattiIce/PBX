@@ -126,7 +126,11 @@ def handle_get_registered_atas() -> Response:
         logger.warning("Database not available or not configured")
         return send_json([])
 
-
+@provisioning_bp.route("/api/registered-phones/atas", methods=["GET"])
+@require_admin
+def handle_get_registered_phones_atas_compat() -> Response:
+    """Backward compatible endpoint (older frontend calls this path)."""
+    return handle_get_registered_atas()
 @provisioning_bp.route("/api/provisioning/vendors", methods=["GET"])
 @require_auth
 def handle_get_provisioning_vendors() -> Response:
