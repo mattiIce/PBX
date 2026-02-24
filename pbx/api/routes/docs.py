@@ -72,8 +72,11 @@ def architecture_diagrams() -> Response:
         Returns 404 if the file is not found.
     """
     try:
-        docs_dir = Path(__file__).resolve().parent.parent.parent.parent / "docs"
-        diagram_file = docs_dir / "ARCHITECTURE_DIAGRAMS.html"
+        import pbx
+
+        pbx_package_dir = Path(pbx.__file__).resolve().parent
+        project_root = pbx_package_dir.parent
+        diagram_file = project_root / "docs" / "ARCHITECTURE_DIAGRAMS.html"
 
         if not diagram_file.exists() or not diagram_file.is_file():
             return send_json({"error": "Architecture diagrams not found"}, 404)
