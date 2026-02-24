@@ -43,19 +43,11 @@ P240 = 2                      # Stage Method (1=Dial Tone First, 2=Dial Immediat
 # SIP Account 2 (FXS Port 2) - Second line configuration
 # NOTE: Configure second extension by registering device again with different extension
 # ============================================================================
-# For HT802, you can configure a second extension by:
-# 1. Register the device once for port 1 (above configuration)
-# 2. Manually configure port 2 in the web UI, or
-# 3. Use multi-extension provisioning (contact administrator)
+# For HT802 with second extension support:
+# Use multi-extension provisioning (contact administrator for port 2 config)
 #
 # Port 2 uses parameters with +700 offset (e.g., P747 instead of P47 for SIP Server)
-# Example Port 2 settings (uncomment and modify if needed):
-# P971 = Extension2Name       # Port 2 Account Name
-# P970 = 1002                 # Port 2 SIP User ID (different extension)
-# P735 = 1002                 # Port 2 Authenticate ID
-# P734 = password2            # Port 2 Authenticate Password  
-# P747 = {{SIP_SERVER}}       # Port 2 SIP Server (same as port 1)
-# P748 = {{SIP_PORT}}         # Port 2 SIP Port
+# Configure port 2 via provisioning system if needed
 
 # ============================================================================
 # Shared Settings (Both Ports)

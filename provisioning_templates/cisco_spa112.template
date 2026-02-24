@@ -76,16 +76,7 @@
 <!-- NOTE: Typically configured separately with a different extension -->
 <!-- ============================================================================ -->
 <Line_Enable_2_>No</Line_Enable_2_>
-<!-- To enable port 2, manually configure via web UI or use multi-extension provisioning -->
-<!-- Example configuration (uncomment and modify for second extension):
-<Line_Enable_2_>Yes</Line_Enable_2_>
-<Display_Name_2_>Extension 2</Display_Name_2_>
-<User_ID_2_>1002</User_ID_2_>
-<Auth_ID_2_>1002</Auth_ID_2_>
-<Password_2_>password2</Password_2_>
-<Proxy_2_>{{SIP_SERVER}}</Proxy_2_>
-<Register_2_>Yes</Register_2_>
--->
+<!-- Note: Line 2 disabled by default (configure via provisioning system) -->
 
 <!-- ============================================================================ -->
 <!-- System Parameters -->
