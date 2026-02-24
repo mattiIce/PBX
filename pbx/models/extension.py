@@ -19,6 +19,7 @@ class Extension(TimestampMixin, Base):
     number: Mapped[str] = mapped_column(String(20), unique=True, nullable=False)
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    sip_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     voicemail_enabled: Mapped[bool] = mapped_column(Boolean, default=True, server_default="1")
     voicemail_pin_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)

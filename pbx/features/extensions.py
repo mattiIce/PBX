@@ -92,6 +92,7 @@ class ExtensionRegistry:
             "number": number,
             "name": name,
             "email": db_extension.get("email", ""),
+            "password": db_extension.get("sip_password", ""),
             "password_hash": db_extension.get("password_hash", ""),
             "allow_external": bool(db_extension.get("allow_external", True)),
             "voicemail_pin_hash": db_extension.get("voicemail_pin_hash", ""),

@@ -653,6 +653,7 @@ class DatabaseBackend:
             ("password_changed_at", "TIMESTAMP"),
             ("failed_login_attempts", "INTEGER DEFAULT 0"),
             ("account_locked_until", "TIMESTAMP"),
+            ("sip_password", "VARCHAR(255)"),  # SIP authentication password for phone provisioning
         ]
 
         for column_name, column_type in extensions_columns:
@@ -1145,6 +1146,7 @@ class ExtensionDB:
         ad_synced: bool = False,
         ad_username: str | None = None,
         is_admin: bool = False,
+        sip_password: str | None = None,
     ) -> bool:
         """
         Add a new extension
@@ -1159,6 +1161,7 @@ class ExtensionDB:
             ad_synced: Whether synced from Active Directory
             ad_username: Active Directory username (optional)
             is_admin: Whether extension has admin privileges (optional)
+            sip_password: SIP authentication password for phone provisioning (optional)
 
         Returns:
             bool: True if successful
@@ -1172,8 +1175,8 @@ class ExtensionDB:
             return False
 
         query = """
-        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO extensions (number, name, email, password_hash, allow_external, voicemail_pin_hash, voicemail_pin_salt, ad_synced, ad_username, is_admin, sip_password)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
         """
 
         return self.db.execute(
@@ -1189,6 +1192,7 @@ class ExtensionDB:
                 ad_synced,
                 ad_username,
                 is_admin,
+                sip_password,
             ),
         )
 
@@ -1203,7 +1207,7 @@ class ExtensionDB:
             dict: Extension data or None
         """
         query = """
-        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions WHERE number = %s
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at, sip_password FROM extensions WHERE number = %s
         """
         return self.db.fetch_one(query, (number,))
 
@@ -1215,7 +1219,7 @@ class ExtensionDB:
             list: list of all extensions
         """
         query = """
-        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions ORDER BY number
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at, sip_password FROM extensions ORDER BY number
         """
         return self.db.fetch_all(query)
 
@@ -1227,7 +1231,7 @@ class ExtensionDB:
             list: list of AD-synced extensions
         """
         query = """
-        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at FROM extensions WHERE ad_synced = %s ORDER BY number
+        SELECT id, number, name, email, password_hash, password_salt, allow_external, voicemail_pin_hash, voicemail_pin_salt, is_admin, ad_synced, ad_username, password_changed_at, failed_login_attempts, account_locked_until, created_at, updated_at, sip_password FROM extensions WHERE ad_synced = %s ORDER BY number
         """
         return self.db.fetch_all(query, (True,))
 
@@ -1242,6 +1246,7 @@ class ExtensionDB:
         ad_synced: bool | None = None,
         ad_username: str | None = None,
         is_admin: bool | None = None,
+        sip_password: str | None = None,
     ) -> bool:
         """
         Update an extension
@@ -1256,6 +1261,7 @@ class ExtensionDB:
             ad_synced: Whether synced from Active Directory (optional)
             ad_username: Active Directory username (optional)
             is_admin: Whether extension has admin privileges (optional)
+            sip_password: SIP authentication password for phone provisioning (optional)
 
         Returns:
             bool: True if successful
@@ -1305,6 +1311,10 @@ class ExtensionDB:
         if is_admin is not None:
             updates.append("is_admin = %s")
             params.append(is_admin)
+
+        if sip_password is not None:
+            updates.append("sip_password = %s")
+            params.append(sip_password)
 
         if not updates:
             return True  # Nothing to update
