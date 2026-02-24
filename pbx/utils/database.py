@@ -419,14 +419,13 @@ class DatabaseBackend:
         CREATE TABLE IF NOT EXISTS registered_phones (
             id {SERIAL},
             mac_address VARCHAR(20),
-            extension_number VARCHAR(20) NOT NULL,
+            extension VARCHAR(20) NOT NULL,
             user_agent VARCHAR(255),
             ip_address VARCHAR(50) NOT NULL,
-            first_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            last_registered TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-            contact_uri VARCHAR(255),
-            UNIQUE(mac_address, extension_number),
-            UNIQUE(ip_address, extension_number)
+            registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            expires_at TIMESTAMP,
+            UNIQUE(mac_address, extension),
+            UNIQUE(ip_address, extension)
         )
         """
         )
@@ -566,7 +565,7 @@ class DatabaseBackend:
             "CREATE INDEX IF NOT EXISTS idx_vm_extension ON voicemail_messages(extension_number)",
             "CREATE INDEX IF NOT EXISTS idx_vm_listened ON voicemail_messages(listened)",
             "CREATE INDEX IF NOT EXISTS idx_phones_mac ON registered_phones(mac_address)",
-            "CREATE INDEX IF NOT EXISTS idx_phones_extension ON registered_phones(extension_number)",
+            "CREATE INDEX IF NOT EXISTS idx_phones_extension ON registered_phones(extension)",
             "CREATE INDEX IF NOT EXISTS idx_provisioned_mac ON provisioned_devices(mac_address)",
             "CREATE INDEX IF NOT EXISTS idx_provisioned_extension ON provisioned_devices(extension_number)",
             "CREATE INDEX IF NOT EXISTS idx_provisioned_vendor ON provisioned_devices(vendor)",
@@ -885,29 +884,22 @@ class RegisteredPhonesDB:
 
         if existing:
             # Update existing registration
-            # Preserve existing values if new values are None (device didn't
-            # send them)
+            # Preserve existing values if new values are None (device didn't send them)
             updated_mac = mac_address if mac_address is not None else existing.get("mac_address")
             updated_ip = ip_address if ip_address is not None else existing.get("ip_address")
             updated_user_agent = (
                 user_agent if user_agent is not None else existing.get("user_agent")
             )
-            updated_contact_uri = (
-                contact_uri if contact_uri is not None else existing.get("contact_uri")
-            )
 
             query = """
             UPDATE registered_phones
-            SET mac_address = %s, ip_address = %s, user_agent = %s,
-                contact_uri = %s, last_registered = %s
+            SET mac_address = %s, ip_address = %s, user_agent = %s
             WHERE id = %s
             """
             params = (
                 updated_mac,
                 updated_ip,
                 updated_user_agent,
-                updated_contact_uri,
-                datetime.now(UTC),
                 existing["id"],
             )
             success = self.db.execute(query, params)
@@ -915,12 +907,10 @@ class RegisteredPhonesDB:
         # Insert new registration
         query = """
             INSERT INTO registered_phones
-            (mac_address, extension_number, ip_address, user_agent, contact_uri,
-             first_registered, last_registered)
-            VALUES (%s, %s, %s, %s, %s, %s, %s)
+            (mac_address, extension, ip_address, user_agent)
+            VALUES (%s, %s, %s, %s)
             """
-        now = datetime.now(UTC)
-        params = (mac_address, extension_number, ip_address, user_agent, contact_uri, now, now)
+        params = (mac_address, extension_number, ip_address, user_agent)
         success = self.db.execute(query, params)
         return (success, mac_address)
 
@@ -937,12 +927,12 @@ class RegisteredPhonesDB:
         """
         if extension_number:
             query = """
-            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
-            WHERE mac_address = %s AND extension_number = %s
+            SELECT id, mac_address, extension as extension_number, user_agent, ip_address, registered_at FROM registered_phones
+            WHERE mac_address = %s AND extension = %s
             """
             return self.db.fetch_one(query, (mac_address, extension_number))
         query = """
-            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones WHERE mac_address = %s
+            SELECT id, mac_address, extension as extension_number, user_agent, ip_address, registered_at FROM registered_phones WHERE mac_address = %s
             """
         return self.db.fetch_one(query, (mac_address,))
 
@@ -959,12 +949,12 @@ class RegisteredPhonesDB:
         """
         if extension_number:
             query = """
-            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
-            WHERE ip_address = %s AND extension_number = %s
+            SELECT id, mac_address, extension as extension_number, user_agent, ip_address, registered_at FROM registered_phones
+            WHERE ip_address = %s AND extension = %s
             """
             return self.db.fetch_one(query, (ip_address, extension_number))
         query = """
-            SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones WHERE ip_address = %s
+            SELECT id, mac_address, extension as extension_number, user_agent, ip_address, registered_at FROM registered_phones WHERE ip_address = %s
             """
         return self.db.fetch_one(query, (ip_address,))
 
@@ -979,9 +969,9 @@ class RegisteredPhonesDB:
             list: list of phone registration data
         """
         query = """
-        SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
-        WHERE extension_number = %s
-        ORDER BY last_registered DESC
+        SELECT id, mac_address, extension as extension_number, user_agent, ip_address, registered_at FROM registered_phones
+        WHERE extension = %s
+        ORDER BY registered_at DESC
         """
         return self.db.fetch_all(query, (extension_number,))
 
@@ -993,8 +983,8 @@ class RegisteredPhonesDB:
             list: list of all phone registrations
         """
         query = """
-        SELECT id, mac_address, extension_number, user_agent, ip_address, first_registered, last_registered, contact_uri FROM registered_phones
-        ORDER BY last_registered DESC
+        SELECT id, mac_address, extension as extension_number, user_agent, ip_address, registered_at FROM registered_phones
+        ORDER BY registered_at DESC
         """
         return self.db.fetch_all(query)
 
@@ -1035,11 +1025,11 @@ class RegisteredPhonesDB:
 
         query = """
         UPDATE registered_phones
-        SET extension_number = %s, last_registered = %s
+        SET extension = %s
         WHERE mac_address = %s
         """
 
-        params = (new_extension_number, datetime.now(UTC), mac_address)
+        params = (new_extension_number, mac_address)
         success = self.db.execute(query, params)
 
         if success:
@@ -1062,7 +1052,7 @@ class RegisteredPhonesDB:
             SELECT COUNT(*) as count FROM registered_phones
             WHERE mac_address IS NULL OR mac_address = ''
                OR ip_address IS NULL OR ip_address = ''
-               OR extension_number IS NULL OR extension_number = ''
+               OR extension IS NULL OR extension = ''
             """
             result = self.db.fetch_one(count_query)
             count = result["count"] if result else 0
@@ -1076,7 +1066,7 @@ class RegisteredPhonesDB:
             DELETE FROM registered_phones
             WHERE mac_address IS NULL OR mac_address = ''
                OR ip_address IS NULL OR ip_address = ''
-               OR extension_number IS NULL OR extension_number = ''
+               OR extension IS NULL OR extension = ''
             """
             success = self.db.execute(delete_query)
 
