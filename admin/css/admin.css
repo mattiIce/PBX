@@ -160,12 +160,13 @@ header h1 {
 .status-badge {
     padding: 8px 16px;
     border-radius: 20px;
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--color-bg-hover);
     font-size: 0.85rem;
     font-weight: 500;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    border: 1px solid var(--color-border);
     backdrop-filter: blur(10px);
     transition: all 0.3s ease;
+    color: var(--color-text);
 }
 
 .status-badge:hover {
@@ -265,7 +266,7 @@ header h1 {
 
 .tab-button.active {
     color: var(--color-focus-ring);
-    background: linear-gradient(90deg, #e8f6fc 0%, #f0f9ff 100%);
+    background: var(--color-bg-hover);
     border-left-color: var(--color-focus-ring);
     font-weight: 600;
 }
@@ -418,7 +419,7 @@ header h1 {
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
 }
@@ -540,7 +541,7 @@ header h1 {
 
 .data-table td {
     padding: 14px 16px;
-    border-bottom: 1px solid #f0f3f5;
+    border-bottom: 1px solid var(--color-border);
     font-size: 0.9rem;
 }
 
@@ -617,9 +618,11 @@ header h1 {
 .form-group input[type="number"] {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     font-size: 1rem;
+    background: var(--color-bg-input);
+    color: var(--color-text);
 }
 
 .form-group input[type="text"]:focus,
@@ -639,12 +642,14 @@ header h1 {
 .form-group textarea {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--color-border);
     border-radius: 5px;
     font-size: 1rem;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
     resize: vertical;
     line-height: 1.5;
+    background: var(--color-bg-input);
+    color: var(--color-text);
 }
 
 .form-group textarea:focus {
@@ -857,10 +862,12 @@ header h1 {
 
 #vm-extension-select {
     padding: 8px 12px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
     margin-right: 10px;
     font-size: 1rem;
+    background: var(--color-bg-input);
+    color: var(--color-text);
 }
 
 /* Error Message Styling */
@@ -969,10 +976,12 @@ header h1 {
 
 #analytics-period {
     padding: 8px 12px;
-    border: 1px solid #ced4da;
+    border: 1px solid var(--color-border);
     border-radius: 4px;
     font-size: 1rem;
     margin-left: 10px;
+    background: var(--color-bg-input);
+    color: var(--color-text);
 }
 
 .info-box {
@@ -1076,7 +1085,7 @@ h3 {
     width: 0;
     height: 0;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
     transform: translate(-50%, -50%);
     transition: width 0.6s, height 0.6s;
 }
@@ -1280,7 +1289,7 @@ select:focus {
 }
 
 .phone-display {
-    background: rgba(255, 255, 255, 0.95);
+    background: var(--color-bg-card);
     padding: 25px;
     border-radius: 12px;
     color: var(--color-text);
@@ -1806,7 +1815,7 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .sidebar-toggle:hover {
-    background: rgba(255, 255, 255, 0.15);
+    background: var(--color-bg-hover);
 }
 
 .hamburger-line {
