@@ -187,13 +187,13 @@ export function initExtensionForms(): void {
             const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
 
             const data = {
-                number: val('add-ext-number'),
-                name: val('add-ext-name'),
-                email: val('add-ext-email'),
-                password: val('add-ext-password'),
-                voicemail_pin: val('add-ext-voicemail-pin'),
-                allow_external: chk('add-ext-allow-external'),
-                is_admin: chk('add-ext-is-admin'),
+                number: val('new-ext-number'),
+                name: val('new-ext-name'),
+                email: val('new-ext-email'),
+                password: val('new-ext-password'),
+                voicemail_pin: val('new-ext-voicemail-pin'),
+                allow_external: chk('new-ext-allow-external'),
+                is_admin: chk('new-ext-is-admin'),
             };
 
             try {

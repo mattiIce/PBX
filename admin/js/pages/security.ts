@@ -83,7 +83,7 @@ export async function loadCallbackQueue(): Promise<void> {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: CallbackQueueResponse = await response.json();
 
-        const tbody = document.getElementById('callback-queue-body') as HTMLElement | null;
+        const tbody = document.getElementById('callback-list') as HTMLElement | null;
         if (!tbody) return;
 
         const queue = data.queue ?? [];
@@ -152,7 +152,7 @@ export async function loadMobilePushDevices(): Promise<void> {
         if (!response.ok) return;
         const data: MobilePushDevicesResponse = await response.json();
 
-        const container = document.getElementById('mobile-push-devices') as HTMLElement | null;
+        const container = document.getElementById('mobile-devices-list') as HTMLElement | null;
         if (!container) return;
 
         const devices = data.devices ?? [];
@@ -181,7 +181,7 @@ export async function loadSpeechAnalyticsConfigs(): Promise<void> {
         if (!response.ok) return;
         const data: SpeechAnalyticsResponse = await response.json();
 
-        const container = document.getElementById('speech-analytics-configs') as HTMLElement | null;
+        const container = document.getElementById('speech-analytics-configs-table') as HTMLElement | null;
         if (container) {
             container.innerHTML = JSON.stringify(data.configs ?? [], null, 2);
         }

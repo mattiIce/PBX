@@ -63,8 +63,7 @@ export async function loadConfig(): Promise<void> {
         // Populate other config sections
         if (config.voicemail) {
             const el = (id: string): HTMLElement | null => document.getElementById(id);
-            if (el('vm-max-duration')) (el('vm-max-duration') as HTMLInputElement).value = String(config.voicemail.max_duration ?? 120);
-            if (el('vm-max-messages')) (el('vm-max-messages') as HTMLInputElement).value = String(config.voicemail.max_messages ?? 100);
+            if (el('voicemail-max-duration')) (el('voicemail-max-duration') as HTMLInputElement).value = String(config.voicemail.max_duration ?? 120);
         }
     } catch (error: unknown) {
         console.error('Error loading config:', error);
@@ -128,7 +127,7 @@ export async function loadSSLStatus(): Promise<void> {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: SSLStatus = await response.json();
 
-        const statusEl = document.getElementById('ssl-status') as HTMLElement | null;
+        const statusEl = document.getElementById('ssl-status-info') as HTMLElement | null;
         if (statusEl) {
             statusEl.textContent = data.enabled ? 'Enabled' : 'Disabled';
             statusEl.className = `status-badge ${data.enabled ? 'enabled' : 'disabled'}`;
@@ -169,9 +168,46 @@ export async function generateSSLCertificate(): Promise<void> {
     }
 }
 
+export async function refreshSSLStatus(): Promise<void> {
+    await loadSSLStatus();
+    showNotification('SSL status refreshed', 'success');
+}
+
+const CONFIG_FORM_SECTIONS = [
+    'features-config',
+    'voicemail-config',
+    'email-config',
+    'recording-config',
+    'security-config',
+    'advanced-features',
+    'conference-config',
+    'ssl-config',
+] as const;
+
+function initConfigForms(): void {
+    for (const section of CONFIG_FORM_SECTIONS) {
+        const form = document.getElementById(`${section}-form`) as HTMLFormElement | null;
+        if (form) {
+            form.addEventListener('submit', async (e: Event) => {
+                e.preventDefault();
+                await saveConfigSection(section);
+            });
+        }
+    }
+}
+
 // Backward compatibility
 window.loadConfig = loadConfig;
 window.loadFeaturesStatus = loadFeaturesStatus;
 window.saveConfigSection = saveConfigSection;
 window.loadSSLStatus = loadSSLStatus;
 window.generateSSLCertificate = generateSSLCertificate;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy backward compat
+(window as any).refreshSSLStatus = refreshSSLStatus;
+
+// Self-initialize form handlers once the DOM is ready
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initConfigForms);
+} else {
+    initConfigForms();
+}

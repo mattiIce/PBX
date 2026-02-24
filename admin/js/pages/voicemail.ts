@@ -123,7 +123,7 @@ export async function playVoicemail(extension: string, messageId: string): Promi
     try {
         const API_BASE = getApiBaseUrl();
         const url = `${API_BASE}/api/voicemail/${extension}/${messageId}/audio`;
-        const player = document.getElementById('voicemail-audio-player') as HTMLAudioElement | null;
+        const player = document.getElementById('vm-audio-player') as HTMLAudioElement | null;
         if (player) {
             player.src = url;
             player.play();
@@ -174,6 +174,29 @@ export async function deleteVoicemail(extension: string, messageId: string): Pro
     }
 }
 
+export function closeVoicemailPlayer(): void {
+    const player = document.getElementById('vm-audio-player') as HTMLAudioElement | null;
+    if (player) {
+        player.pause();
+        player.src = '';
+    }
+    const playerSection = document.getElementById('voicemail-player-section') as HTMLElement | null;
+    if (playerSection) playerSection.style.display = 'none';
+}
+
+export function toggleVoicemailView(): void {
+    const cardsView = document.getElementById('voicemail-cards-view') as HTMLElement | null;
+    const tableView = document.getElementById('voicemail-table-view') as HTMLElement | null;
+    const toggleBtn = document.getElementById('toggle-voicemail-view-btn') as HTMLElement | null;
+
+    if (cardsView && tableView) {
+        const showingCards = cardsView.style.display !== 'none';
+        cardsView.style.display = showingCards ? 'none' : 'block';
+        tableView.style.display = showingCards ? 'block' : 'none';
+        if (toggleBtn) toggleBtn.textContent = showingCards ? 'Switch to Card View' : 'Switch to Table View';
+    }
+}
+
 // Backward compatibility
 window.loadVoicemailTab = loadVoicemailTab;
 window.loadVoicemailForExtension = loadVoicemailForExtension;
@@ -181,3 +204,6 @@ window.playVoicemail = playVoicemail;
 window.downloadVoicemail = downloadVoicemail;
 window.deleteVoicemail = deleteVoicemail;
 window.markVoicemailRead = markVoicemailRead;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy backward compat
+(window as any).closeVoicemailPlayer = closeVoicemailPlayer;
+(window as any).toggleVoicemailView = toggleVoicemailView;

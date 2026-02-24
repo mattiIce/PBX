@@ -72,12 +72,15 @@ declare global {
         downloadVoicemail: (extension: string, messageId: string) => Promise<void>;
         deleteVoicemail: (extension: string, messageId: string) => Promise<void>;
         markVoicemailRead: (extension: string, messageId: string) => Promise<void>;
+        closeVoicemailPlayer: () => void;
+        toggleVoicemailView: () => void;
 
         // pages/calls.ts
         loadCalls: () => Promise<void>;
         loadCodecStatus: () => Promise<void>;
         loadDTMFConfig: () => Promise<void>;
         saveDTMFConfig: () => Promise<void>;
+        saveCodecConfig: (event?: Event) => Promise<void>;
 
         // pages/config.ts
         loadConfig: () => Promise<void>;
@@ -85,6 +88,7 @@ declare global {
         saveConfigSection: (section: string) => Promise<void>;
         loadSSLStatus: () => Promise<void>;
         generateSSLCertificate: () => Promise<void>;
+        refreshSSLStatus: () => Promise<void>;
 
         // pages/provisioning.ts
         loadProvisioning: () => Promise<void>;
@@ -138,6 +142,13 @@ declare global {
         loadEmergencyContacts: () => Promise<void>;
         loadEmergencyHistory: () => Promise<void>;
         deleteEmergencyContact: (contactId: string) => Promise<void>;
+        showAddEmergencyContactModal: () => void;
+        closeAddEmergencyContactModal: () => void;
+        showTriggerEmergencyModal: () => void;
+        closeTriggerEmergencyModal: () => void;
+        addEmergencyContact: (event: Event) => Promise<void>;
+        triggerEmergency: (event: Event) => Promise<void>;
+        testEmergencyNotification: () => Promise<void>;
 
         // pages/phone_book.ts
         loadPhoneBook: () => Promise<void>;
@@ -162,6 +173,8 @@ declare global {
         // pages/analytics.ts
         loadAnalytics: () => Promise<void>;
         loadQoSMetrics: () => Promise<void>;
+        clearQoSAlerts: () => Promise<void>;
+        saveQoSThresholds: (event?: Event) => Promise<void>;
 
         // pages/click-to-dial.ts
         loadClickToDialConfigs: () => Promise<void>;

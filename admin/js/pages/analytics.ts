@@ -153,6 +153,59 @@ export async function loadQoSMetrics(): Promise<void> {
     }
 }
 
+export async function clearQoSAlerts(): Promise<void> {
+    try {
+        const API_BASE = getApiBaseUrl();
+        const response = await fetch(`${API_BASE}/api/qos/alerts`, {
+            method: 'DELETE',
+            headers: getAuthHeaders()
+        });
+        if (response.ok) {
+            const container = document.getElementById('qos-alerts-list') as HTMLElement | null;
+            if (container) container.innerHTML = '<div class="info-box">No quality alerts</div>';
+            showNotification('QoS alerts cleared', 'success');
+        } else {
+            showNotification('Failed to clear QoS alerts', 'error');
+        }
+    } catch (error: unknown) {
+        console.error('Error clearing QoS alerts:', error);
+        showNotification('Failed to clear QoS alerts', 'error');
+    }
+}
+
+export async function saveQoSThresholds(event?: Event): Promise<void> {
+    if (event) event.preventDefault();
+    try {
+        const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+
+        const data = {
+            mos_threshold: parseFloat(val('qos-mos-threshold')) || 3.5,
+            jitter_threshold: parseInt(val('qos-jitter-threshold'), 10) || 30,
+            packet_loss_threshold: parseFloat(val('qos-packet-loss-threshold')) || 1.0,
+            latency_threshold: parseInt(val('qos-latency-threshold'), 10) || 150,
+        };
+
+        const API_BASE = getApiBaseUrl();
+        const response = await fetch(`${API_BASE}/api/qos/thresholds`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+
+        if (response.ok) {
+            showNotification('QoS thresholds saved', 'success');
+        } else {
+            showNotification('Failed to save QoS thresholds', 'error');
+        }
+    } catch (error: unknown) {
+        console.error('Error saving QoS thresholds:', error);
+        showNotification('Failed to save QoS thresholds', 'error');
+    }
+}
+
 // Backward compatibility
 window.loadAnalytics = loadAnalytics;
 window.loadQoSMetrics = loadQoSMetrics;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy backward compat
+(window as any).clearQoSAlerts = clearQoSAlerts;
+(window as any).saveQoSThresholds = saveQoSThresholds;

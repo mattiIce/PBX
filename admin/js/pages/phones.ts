@@ -33,7 +33,7 @@ interface RegisteredATAsResponse {
 }
 
 export async function loadRegisteredPhones(): Promise<void> {
-    const tbody = document.getElementById('registered-phones-body') as HTMLElement | null;
+    const tbody = document.getElementById('registered-phones-table-body') as HTMLElement | null;
     if (!tbody) return;
 
     try {
@@ -67,7 +67,7 @@ export async function loadRegisteredPhones(): Promise<void> {
 }
 
 export async function loadRegisteredATAs(): Promise<void> {
-    const tbody = document.getElementById('registered-atas-body') as HTMLElement | null;
+    const tbody = document.getElementById('registered-atas-table-body') as HTMLElement | null;
     if (!tbody) return;
 
     try {
