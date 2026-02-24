@@ -302,7 +302,7 @@ export async function addSIPTrunk(event: Event): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const response = await fetchWithTimeout(`${API_BASE}/api/sip-trunks`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(trunkData)
         });
 
@@ -352,7 +352,7 @@ export async function testTrunk(trunkId: string): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const response = await fetchWithTimeout(`${API_BASE}/api/sip-trunks/test`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify({ trunk_id: trunkId })
         });
 
@@ -582,12 +582,35 @@ export function closeLCRRateModal(): void {
     if (modal) modal.remove();
 }
 
+function validateLCRPattern(pattern: string): { valid: boolean; error?: string } {
+    if (!pattern || pattern.trim().length === 0) {
+        return { valid: false, error: 'Pattern cannot be empty' };
+    }
+
+    try {
+        // Test if the pattern is a valid regex
+        new RegExp(pattern);
+        return { valid: true };
+    } catch (e: unknown) {
+        const errorMsg = e instanceof Error ? e.message : 'Invalid regex pattern';
+        return { valid: false, error: `Invalid regex: ${errorMsg}` };
+    }
+}
+
 export async function addLCRRate(event: Event): Promise<void> {
     event.preventDefault();
 
+    const patternInput = (document.getElementById('lcr-pattern') as HTMLInputElement).value;
+    const patternValidation = validateLCRPattern(patternInput);
+
+    if (!patternValidation.valid) {
+        showNotification(patternValidation.error || 'Invalid LCR pattern', 'error');
+        return;
+    }
+
     const rateData = {
         trunk_id: (document.getElementById('lcr-trunk-id') as HTMLInputElement).value,
-        pattern: (document.getElementById('lcr-pattern') as HTMLInputElement).value,
+        pattern: patternInput,
         description: (document.getElementById('lcr-description') as HTMLInputElement).value,
         rate_per_minute: parseFloat((document.getElementById('lcr-rate-per-minute') as HTMLInputElement).value),
         connection_fee: parseFloat((document.getElementById('lcr-connection-fee') as HTMLInputElement).value),
@@ -599,7 +622,7 @@ export async function addLCRRate(event: Event): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const response = await fetchWithTimeout(`${API_BASE}/api/lcr/rate`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(rateData)
         });
 
@@ -613,7 +636,7 @@ export async function addLCRRate(event: Event): Promise<void> {
         }
     } catch (error: unknown) {
         console.error('Error adding LCR rate:', error);
-        showNotification('Error adding LCR rate', 'error');
+        showNotification(`Error adding LCR rate: ${error instanceof Error ? error.message : 'Unknown error'}`, 'error');
     }
 }
 
@@ -707,7 +730,7 @@ export async function addTimeRate(event: Event): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const response = await fetchWithTimeout(`${API_BASE}/api/lcr/time-rate`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(timeRateData)
         });
 
@@ -734,7 +757,8 @@ export async function clearLCRRates(): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const response = await fetchWithTimeout(`${API_BASE}/api/lcr/clear-rates`, {
             method: 'POST',
-            headers: getAuthHeaders()
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
         });
 
         const data: ApiSuccessResponse = await response.json();

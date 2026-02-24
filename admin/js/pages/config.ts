@@ -5,6 +5,7 @@
 
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { withButtonGuard } from '../utils/debounce.ts';
 
 interface VoicemailConfig {
     max_duration?: number;
@@ -100,10 +101,10 @@ export async function saveConfigSection(section: string): Promise<void> {
         const formData = new FormData(form);
         const data = Object.fromEntries(formData.entries());
 
-        const response = await fetch(`${API_BASE}/api/config/${section}`, {
-            method: 'POST',
+        const response = await fetch(`${API_BASE}/api/config/section`, {
+            method: 'PUT',
             headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
-            body: JSON.stringify(data)
+            body: JSON.stringify({ section, data })
         });
 
         if (response.ok) {
@@ -114,7 +115,7 @@ export async function saveConfigSection(section: string): Promise<void> {
         }
     } catch (error: unknown) {
         console.error(`Error saving ${section} config:`, error);
-        showNotification('Failed to save configuration', 'error');
+        showNotification(`Failed to save ${section} configuration`, 'error');
     }
 }
 
@@ -154,16 +155,18 @@ export async function loadSSLStatus(): Promise<void> {
 export async function generateSSLCertificate(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/ssl/generate`, {
+        const response = await fetch(`${API_BASE}/api/ssl/generate-certificate`, {
             method: 'POST',
-            headers: getAuthHeaders()
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({})
         });
 
         if (response.ok) {
-            showNotification('SSL certificate generated successfully', 'success');
+            showNotification('SSL certificate generated successfully. Server restart required.', 'success');
             loadSSLStatus();
         } else {
-            showNotification('Failed to generate SSL certificate', 'error');
+            const error: ErrorResponse = await response.json();
+            showNotification(error.error || 'Failed to generate SSL certificate', 'error');
         }
     } catch (error: unknown) {
         console.error('Error generating SSL certificate:', error);

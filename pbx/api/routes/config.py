@@ -504,3 +504,75 @@ def generate_ssl_certificate() -> tuple[Response, int]:
         logger.error(f"Failed to generate SSL certificate: {e}")
         traceback.print_exc()
         return send_json({"error": str(e)}, 500), 500
+
+
+@config_bp.route("/api/config/codecs", methods=["GET"])
+@require_admin
+def get_codecs() -> tuple[Response, int]:
+    """Get supported audio codecs and their status."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500), 500
+
+    try:
+        # Return supported codecs with their enabled status
+        codecs = [
+            {"name": "G.711-ulaw", "enabled": True, "priority": 1},
+            {"name": "G.711-alaw", "enabled": True, "priority": 2},
+            {"name": "G.729", "enabled": pbx_core.config.get("codecs.g729.enabled", True), "priority": 3},
+            {"name": "GSM-FR", "enabled": pbx_core.config.get("codecs.gsm.enabled", False), "priority": 4},
+            {"name": "iLBC", "enabled": pbx_core.config.get("codecs.ilbc.enabled", False), "priority": 5},
+            {"name": "Opus", "enabled": pbx_core.config.get("codecs.opus.enabled", True), "priority": 6},
+        ]
+        return send_json({"codecs": codecs}), 200
+    except (KeyError, TypeError, ValueError) as e:
+        return send_json({"error": str(e)}, 500), 500
+
+
+@config_bp.route("/api/config/codecs", methods=["POST", "PUT"])
+@require_admin
+def update_codecs() -> tuple[Response, int]:
+    """Update audio codec configuration."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500), 500
+
+    try:
+        body = get_request_body()
+        if not body:
+            return send_json({"error": "Request body required"}, 400), 400
+
+        # Update codec configuration in pbx_core.config
+        codecs = body.get("codecs", [])
+        for codec in codecs:
+            codec_name = codec.get("name", "").lower()
+            enabled = codec.get("enabled", False)
+            priority = codec.get("priority", 0)
+
+            # Map codec name to config key
+            config_key_map = {
+                "g.729": "codecs.g729.enabled",
+                "g729": "codecs.g729.enabled",
+                "gsm-fr": "codecs.gsm.enabled",
+                "gsm": "codecs.gsm.enabled",
+                "ilbc": "codecs.ilbc.enabled",
+                "opus": "codecs.opus.enabled",
+            }
+
+            config_key = config_key_map.get(codec_name)
+            if config_key:
+                pbx_core.config.config.setdefault("codecs", {})[config_key.split(".")[1]] = {"enabled": enabled, "priority": priority}
+
+        # Save configuration
+        success = pbx_core.config.save()
+
+        if success:
+            return send_json(
+                {
+                    "success": True,
+                    "message": "Codec configuration updated successfully. PBX restart may be required.",
+                }
+            ), 200
+        return send_json({"error": "Failed to save codec configuration"}, 500), 500
+    except (KeyError, TypeError, ValueError) as e:
+        return send_json({"error": str(e)}, 500), 500
