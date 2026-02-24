@@ -414,6 +414,36 @@ def handle_webrtc_dtmf() -> Response:
 # ========== WebRTC GET Routes ==========
 
 
+@webrtc_bp.route("/api/webrtc/call-status", methods=["GET"])
+@require_auth
+def handle_webrtc_call_status() -> Response:
+    """Get the current status of a WebRTC call.
+
+    Query parameters:
+        call_id: The call identifier to check status for.
+
+    Returns call state (calling, ringing, connected, ended) so the
+    browser can play appropriate local tones (ringback, etc.).
+    """
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX core not available"}, 500)
+
+    call_id = request.args.get("call_id")
+    if not call_id:
+        return send_json({"error": "call_id query parameter is required"}, 400)
+
+    if not hasattr(pbx_core, "call_manager"):
+        return send_json({"error": "Call manager not available"}, 500)
+
+    call = pbx_core.call_manager.get_call(call_id)
+    if not call:
+        # Call may have ended and been removed from active calls
+        return send_json({"success": True, "state": "ended"})
+
+    return send_json({"success": True, "state": call.state.value})
+
+
 @webrtc_bp.route("/api/webrtc/sessions", methods=["GET"])
 @require_auth
 def handle_get_webrtc_sessions() -> Response:
