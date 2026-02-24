@@ -162,7 +162,7 @@ export async function showAddZoneModal(): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const response = await fetch(`${API_BASE}/api/paging/zones`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(zoneData)
         });
         const data: ApiResponse = await response.json();
@@ -173,8 +173,8 @@ export async function showAddZoneModal(): Promise<void> {
             showNotification(data.message ?? 'Failed to add zone', 'error');
         }
     } catch (error: unknown) {
-        console.error('Error adding zone:', error);
-        showNotification('Error adding zone', 'error');
+        console.error(`Error adding zone ${name}:`, error);
+        showNotification(`Error adding zone ${name}`, 'error');
     }
 }
 
@@ -199,7 +199,7 @@ export async function showAddDeviceModal(): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const response = await fetch(`${API_BASE}/api/paging/devices`, {
             method: 'POST',
-            headers: getAuthHeaders(),
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
             body: JSON.stringify(deviceData)
         });
         const data: ApiResponse = await response.json();
@@ -210,8 +210,8 @@ export async function showAddDeviceModal(): Promise<void> {
             showNotification(data.message ?? 'Failed to add device', 'error');
         }
     } catch (error: unknown) {
-        console.error('Error adding device:', error);
-        showNotification('Error adding device', 'error');
+        console.error(`Error adding device ${name}:`, error);
+        showNotification(`Error adding device ${name}`, 'error');
     }
 }
 

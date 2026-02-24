@@ -53,17 +53,25 @@ export async function loadCodecStatus(): Promise<void> {
         const response = await fetchWithTimeout(`${API_BASE}/api/config/codecs`, {
             headers: getAuthHeaders()
         });
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        if (!response.ok) throw new Error(`Failed to load codecs (HTTP ${response.status})`);
         const data: CodecResponse = await response.json();
 
         const container = document.getElementById('codec-status') as HTMLElement | null;
-        if (container && data.codecs) {
-            container.innerHTML = data.codecs.map(c =>
-                `<div class="codec-item">${escapeHtml(c.name)} - ${c.enabled ? 'Enabled' : 'Disabled'}</div>`
-            ).join('');
+        if (container) {
+            if (data.codecs && data.codecs.length > 0) {
+                container.innerHTML = data.codecs.map(c =>
+                    `<div class="codec-item">${escapeHtml(c.name)} - <span class="status-${c.enabled ? 'enabled' : 'disabled'}">${c.enabled ? 'Enabled' : 'Disabled'}</span></div>`
+                ).join('');
+            } else {
+                container.innerHTML = '<div class="info-box">No codecs configured</div>';
+            }
         }
     } catch (error: unknown) {
         console.error('Error loading codec status:', error);
+        const container = document.getElementById('codec-status') as HTMLElement | null;
+        if (container) {
+            container.innerHTML = '<div class="error-box">Failed to load codec configuration</div>';
+        }
     }
 }
 

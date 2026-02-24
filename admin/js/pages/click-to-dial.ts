@@ -66,6 +66,25 @@ const STATUS_CLASS_MAP: Record<string, string> = {
     'no-answer': 'warning'
 };
 
+// --- Helper Functions ---
+
+async function loadExtensionsForClickToDial(): Promise<ExtensionEntry[]> {
+    try {
+        const API_BASE = getApiBaseUrl();
+        const response = await fetchWithTimeout(
+            `${API_BASE}/api/extensions`,
+            { headers: getAuthHeaders() }
+        );
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const data: { extensions?: ExtensionEntry[] } = await response.json();
+        return data.extensions ?? [];
+    } catch (error: unknown) {
+        console.error('Error loading extensions for click-to-dial:', error);
+        // Fall back to window.currentExtensions if available
+        return (window as { currentExtensions?: ExtensionEntry[] }).currentExtensions ?? [];
+    }
+}
+
 // --- Click-to-Dial Configs ---
 
 export async function loadClickToDialConfigs(): Promise<void> {
@@ -82,12 +101,14 @@ export async function loadClickToDialConfigs(): Promise<void> {
             return;
         }
 
+        // Load extensions from API instead of relying on window global
+        const currentExtensions = await loadExtensionsForClickToDial();
+
         // Populate extension selects
         const extensionSelect = document.getElementById('ctd-extension-select') as HTMLSelectElement | null;
         const historyExtensionSelect = document.getElementById('ctd-history-extension') as HTMLSelectElement | null;
-        const currentExtensions = (window as { currentExtensions?: ExtensionEntry[] }).currentExtensions;
 
-        if (extensionSelect && currentExtensions) {
+        if (extensionSelect && currentExtensions.length > 0) {
             extensionSelect.innerHTML = '<option value="">Select Extension</option>';
             for (const ext of currentExtensions) {
                 const option = document.createElement('option');
@@ -95,9 +116,11 @@ export async function loadClickToDialConfigs(): Promise<void> {
                 option.textContent = `${ext.number} - ${ext.name}`;
                 extensionSelect.appendChild(option);
             }
+        } else if (extensionSelect) {
+            extensionSelect.innerHTML = '<option value="">No extensions available</option>';
         }
 
-        if (historyExtensionSelect && currentExtensions) {
+        if (historyExtensionSelect && currentExtensions.length > 0) {
             historyExtensionSelect.innerHTML = '<option value="">All Extensions</option>';
             for (const ext of currentExtensions) {
                 const option = document.createElement('option');
@@ -105,6 +128,8 @@ export async function loadClickToDialConfigs(): Promise<void> {
                 option.textContent = `${ext.number} - ${ext.name}`;
                 historyExtensionSelect.appendChild(option);
             }
+        } else if (historyExtensionSelect) {
+            historyExtensionSelect.innerHTML = '<option value="">No extensions available</option>';
         }
 
         // Populate configurations table

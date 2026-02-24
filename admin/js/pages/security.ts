@@ -77,7 +77,7 @@ export async function loadFraudAlerts(): Promise<void> {
 export async function loadCallbackQueue(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/calls/callback-queue`, {
+        const response = await fetch(`${API_BASE}/api/callback-queue/list`, {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
@@ -112,13 +112,16 @@ export async function loadCallbackQueue(): Promise<void> {
 export async function startCallback(callbackId: string): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/calls/callback/${callbackId}/start`, {
+        const response = await fetch(`${API_BASE}/api/callback-queue/start`, {
             method: 'POST',
-            headers: getAuthHeaders()
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ callback_id: callbackId, agent_id: 'admin' })
         });
         if (response.ok) {
             showNotification('Callback initiated', 'success');
             loadCallbackQueue();
+        } else {
+            showNotification('Failed to start callback', 'error');
         }
     } catch (error: unknown) {
         console.error('Error starting callback:', error);
@@ -129,13 +132,16 @@ export async function startCallback(callbackId: string): Promise<void> {
 export async function cancelCallback(callbackId: string): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/calls/callback/${callbackId}/cancel`, {
+        const response = await fetch(`${API_BASE}/api/callback-queue/cancel`, {
             method: 'POST',
-            headers: getAuthHeaders()
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify({ callback_id: callbackId })
         });
         if (response.ok) {
             showNotification('Callback cancelled', 'success');
             loadCallbackQueue();
+        } else {
+            showNotification('Failed to cancel callback', 'error');
         }
     } catch (error: unknown) {
         console.error('Error cancelling callback:', error);
@@ -146,10 +152,10 @@ export async function cancelCallback(callbackId: string): Promise<void> {
 export async function loadMobilePushDevices(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/integrations/mobile-push/devices`, {
+        const response = await fetch(`${API_BASE}/api/mobile-push/devices`, {
             headers: getAuthHeaders()
         });
-        if (!response.ok) return;
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: MobilePushDevicesResponse = await response.json();
 
         const container = document.getElementById('mobile-devices-list') as HTMLElement | null;
@@ -183,7 +189,31 @@ export async function loadSpeechAnalyticsConfigs(): Promise<void> {
 
         const container = document.getElementById('speech-analytics-configs-table') as HTMLElement | null;
         if (container) {
-            container.innerHTML = JSON.stringify(data.configs ?? [], null, 2);
+            const configs = data.configs ?? [];
+            if (configs.length === 0) {
+                container.innerHTML = '<div class="info-box">No speech analytics configurations</div>';
+            } else {
+                container.innerHTML = `
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Configuration</th>
+                                <th>Status</th>
+                                <th>Details</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${configs.map((config: any) => `
+                                <tr>
+                                    <td>${escapeHtml(config.name || 'N/A')}</td>
+                                    <td>${escapeHtml(config.status || 'inactive')}</td>
+                                    <td><small>${escapeHtml(JSON.stringify(config))}</small></td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+            }
         }
     } catch (error: unknown) {
         console.error('Error loading speech analytics:', error);

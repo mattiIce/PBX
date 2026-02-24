@@ -131,10 +131,10 @@ export async function deleteEmergencyContact(contactId: string): Promise<void> {
 export async function loadE911Sites(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/emergency/e911/sites`, {
+        const response = await fetch(`${API_BASE}/api/framework/nomadic-e911/sites`, {
             headers: getAuthHeaders()
         });
-        if (!response.ok) return;
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: E911SitesResponse = await response.json();
 
         const container = document.getElementById('e911-sites-table') as HTMLElement | null;
@@ -152,16 +152,18 @@ export async function loadE911Sites(): Promise<void> {
             `).join('');
     } catch (error: unknown) {
         console.error('Error loading E911 sites:', error);
+        const container = document.getElementById('e911-sites-table') as HTMLElement | null;
+        if (container) container.innerHTML = '<div class="error-box">Failed to load E911 sites</div>';
     }
 }
 
 export async function loadExtensionLocations(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/emergency/e911/locations`, {
+        const response = await fetch(`${API_BASE}/api/framework/nomadic-e911/locations`, {
             headers: getAuthHeaders()
         });
-        if (!response.ok) return;
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: ExtensionLocationsResponse = await response.json();
 
         const container = document.getElementById('extension-locations-table') as HTMLElement | null;
