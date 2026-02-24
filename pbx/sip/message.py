@@ -147,7 +147,8 @@ class SIPMessage:
         if self.body:
             lines.append(self.body)
 
-        return "\r\n".join(lines)
+        # RFC 3261: Messages must end with CRLFCRLF (double CRLF)
+        return "\r\n".join(lines) + "\r\n"
 
     def __str__(self) -> str:
         """Return the string representation of this SIP message."""
