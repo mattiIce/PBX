@@ -66,7 +66,7 @@ make pre-commit-run
 ```
 pbx/
 ├── api/              # REST API layer (Flask)
-│   ├── routes/       # 22 route modules organized by feature
+│   ├── routes/       # 23 route modules organized by feature
 │   ├── schemas/      # Request/response validation (5 schema modules)
 │   ├── app.py        # Flask app factory (create_app)
 │   ├── errors.py     # Error handling
@@ -93,7 +93,7 @@ pbx/
 │   ├── jitter_buffer.py
 │   ├── rfc2833.py    # DTMF event handling (RFC 2833)
 │   └── rtcp_monitor.py
-├── features/         # 76 feature modules (pluggable)
+├── features/         # 77 feature modules (pluggable)
 │   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
 │   ├── base.py       # Declarative base
