@@ -9,6 +9,7 @@ and voicemail fallback routing.
 import re
 import threading
 import time
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -247,9 +248,12 @@ class CallRouter:
             )
 
             # Forward INVITE to callee
+            # REQUEST-URI should point to the callee's registered address
+            callee_ip = dest_ext_obj.address[0]
+            callee_port = dest_ext_obj.address[1] if len(dest_ext_obj.address) > 1 else 5060
             invite_to_callee = SIPMessageBuilder.build_request(
                 method="INVITE",
-                uri=f"sip:{to_ext}@{server_ip}",
+                uri=f"sip:{to_ext}@{callee_ip}:{callee_port}",
                 from_addr=from_header,
                 to_addr=to_header,
                 call_id=call_id,
@@ -258,10 +262,16 @@ class CallRouter:
             )
 
             # Add required headers
-            invite_to_callee.set_header("Via", message.get_header("Via"))
+            # Generate PBX's own Via header so responses come back to the PBX
+            branch_id = str(uuid.uuid4()).replace("-", "")
+            sip_port = pbx.config.get('server.sip_port', 5060)
+            invite_to_callee.set_header(
+                "Via",
+                f"SIP/2.0/UDP {server_ip}:{sip_port};branch=z9hG4bK{branch_id}"
+            )
             invite_to_callee.set_header(
                 "Contact",
-                f"<sip:{from_ext}@{server_ip}:{pbx.config.get('server.sip_port', 5060)}>",
+                f"<sip:{from_ext}@{server_ip}:{sip_port}>",
             )
             invite_to_callee.set_header("Content-type", "application/sdp")
 
