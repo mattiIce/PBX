@@ -27,6 +27,36 @@ provisioning_bp = Blueprint("provisioning", __name__)
 # MAC address placeholders that indicate misconfiguration
 MAC_ADDRESS_PLACEHOLDERS = ["{mac}", "{MAC}", "{Ma}"]
 
+# Known common/model config filenames requested by Yealink-based phones (including Zultys)
+# during their boot provisioning sequence. These are fleet-wide config files, not per-device.
+# Pattern: zip<model>_common, y followed by 12+ digits (Yealink model-common configs)
+_YEALINK_COMMON_CFG_RE = re.compile(r"^y0{6,}\d*$")
+_ZULTYS_COMMON_CFG_RE = re.compile(r"^zip\d+[a-z]?_common$")
+
+
+def _is_common_config_request(filename: str) -> bool:
+    """Check if the requested filename is a known fleet-wide common config file.
+
+    Yealink-based phones (including Zultys ZIP 33G/37G) request these files
+    during boot as part of their layered provisioning sequence. They are not
+    per-device configs and can be safely served as empty/minimal configs.
+
+    Args:
+        filename: The filename portion without .cfg extension.
+
+    Returns:
+        True if this is a recognized common config request.
+    """
+    if _ZULTYS_COMMON_CFG_RE.match(filename):
+        return True
+    return bool(_YEALINK_COMMON_CFG_RE.match(filename))
+
+
+# Minimal valid Yealink-format config returned for common config requests
+_MINIMAL_YEALINK_CFG = """#!version:1.0.0.1
+## Common configuration — no fleet-wide overrides configured
+"""
+
 
 def _get_provisioning_url_info() -> tuple[str, str, Any, str]:
     """Get provisioning URL information (protocol, server IP, port).
@@ -484,6 +514,17 @@ def handle_provisioning_request(path: str) -> Response:
                 400,
             )
 
+        # Handle fleet-wide common config files (e.g. zip37g_common.cfg, y000000000028.cfg)
+        # These are part of the Yealink/Zultys layered boot sequence and are not per-device.
+        # Return a minimal valid config so the phone proceeds without logging errors.
+        if _is_common_config_request(mac):
+            logger.debug(f"Common config request: {mac}.cfg — returning minimal config")
+            return current_app.response_class(
+                response=_MINIMAL_YEALINK_CFG,
+                status=200,
+                mimetype="text/plain",
+            )
+
         logger.info(f"  MAC address from request: {mac}")
 
         # Generate configuration
@@ -550,6 +591,19 @@ def handle_provisioning_request(path: str) -> Response:
         logger.error(f"  Path: {path}")
         logger.error(f"  Traceback: {traceback.format_exc()}")
         return send_json({"error": str(e)}, 500)
+
+
+@provisioning_bp.route("/provision/<path:path>.boot", methods=["GET"])
+def handle_boot_file_request(path: str) -> Response:
+    """Handle Yealink/Zultys boot file requests.
+
+    Yealink-based phones (including Zultys ZIP 33G/37G) request .boot files
+    during their boot sequence (e.g. y000000000000.boot, <MAC>.boot).
+    Return a minimal boot response so these don't generate Flask 404 noise.
+    """
+    filename = path.rsplit("/", maxsplit=1)[-1]
+    logger.debug(f"Boot file request: {filename}.boot — returning empty response")
+    return current_app.response_class(response="", status=200, mimetype="text/plain")
 
 
 # ---------------------------------------------------------------------------

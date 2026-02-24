@@ -667,6 +667,80 @@ class TestProvisioningRequest:
 
 
 # ---------------------------------------------------------------------------
+# GET /provision/<name>.cfg — common config files
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestCommonConfigRequest:
+    """Tests for fleet-wide common config file requests (Zultys/Yealink boot sequence)."""
+
+    def test_zultys_zip37g_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/zip37g_common.cfg")
+        assert resp.status_code == 200
+        assert b"#!version:1.0.0.1" in resp.data
+        # Should NOT call generate_config for common files
+        mock_pbx_core.phone_provisioning.generate_config.assert_not_called()
+
+    def test_zultys_zip33g_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/zip33g_common.cfg")
+        assert resp.status_code == 200
+        assert b"#!version:1.0.0.1" in resp.data
+
+    def test_zultys_zip33i_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/zip33i_common.cfg")
+        assert resp.status_code == 200
+
+    def test_yealink_universal_common(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/y000000000000.cfg")
+        assert resp.status_code == 200
+        assert b"#!version:1.0.0.1" in resp.data
+
+    def test_yealink_model_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        # y000000000028 is the T46G model-common config
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/y000000000028.cfg")
+        assert resp.status_code == 200
+
+    def test_real_mac_not_treated_as_common(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        """Ensure actual MAC addresses are not caught by common config detection."""
+        mock_pbx_core.phone_provisioning = MagicMock()
+        mock_pbx_core.phone_provisioning.generate_config.return_value = (None, None)
+        resp = api_client.get("/provision/000bea85bc14.cfg")
+        # Should fall through to normal MAC handling (404 because device not registered)
+        assert resp.status_code == 404
+        mock_pbx_core.phone_provisioning.generate_config.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# GET /provision/<name>.boot — boot files
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestBootFileRequest:
+    """Tests for Yealink/Zultys boot file requests."""
+
+    def test_universal_boot_file(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/y000000000000.boot")
+        assert resp.status_code == 200
+
+    def test_mac_boot_file(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/000bea85bc14.boot")
+        assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
 # POST /api/provisioning/devices
 # ---------------------------------------------------------------------------
 
