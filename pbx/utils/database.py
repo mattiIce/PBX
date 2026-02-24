@@ -155,7 +155,6 @@ class DatabaseBackend:
             already_exists_errors = [
                 "already exists",
                 "duplicate",
-                "unique constraint",
             ]
 
             if not critical and any(pattern in error_msg for pattern in permission_errors):
@@ -171,6 +170,19 @@ class DatabaseBackend:
                 if self.connection and not self._autocommit:
                     self.connection.rollback()
                 return True
+            # Check for UNIQUE constraint violations - only suppress for schema operations
+            # Data operations (INSERT/UPDATE/DELETE) should fail visibly
+            if "unique constraint" in error_msg:
+                is_schema_operation = any(
+                    keyword in context.lower()
+                    for keyword in ["table creation", "index creation", "schema"]
+                )
+                if is_schema_operation:
+                    self.logger.debug(f"UNIQUE constraint already exists: {e}")
+                    if self.connection and not self._autocommit:
+                        self.connection.rollback()
+                    return True
+                # For data operations, treat as a real error - don't suppress
             # This is an actual error - log verbosely
             self.logger.error(f"Error during {context}: {e}")
             self.logger.error(f"  Query: {query}")
