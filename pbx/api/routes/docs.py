@@ -72,7 +72,7 @@ def architecture_diagrams() -> Response:
         Returns 404 if the file is not found.
     """
     try:
-        docs_dir = Path(__file__).resolve().parent.parent.parent / "docs"
+        docs_dir = Path(__file__).resolve().parent.parent.parent.parent / "docs"
         diagram_file = docs_dir / "ARCHITECTURE_DIAGRAMS.html"
 
         if not diagram_file.exists() or not diagram_file.is_file():
