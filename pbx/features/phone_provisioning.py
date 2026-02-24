@@ -467,15 +467,17 @@ remote_phonebook.url = {{REMOTE_PHONEBOOK_URL}}
 remote_phonebook.refresh_interval = {{REMOTE_PHONEBOOK_REFRESH}}
 
 # Line Keys
-linekey.2.type = 15
-linekey.2.line = 1
-linekey.2.value = %NULL%
-linekey.2.label = %NULL%
+# NOTE: ZIP 33G will only ever use 1 line (account.1), so unused line keys are configured for paging.
+# Type 3 = Intercom/Paging. If additional lines are needed in future, change type to 15 and set line = N.
+linekey.2.type = 3
+linekey.2.label = Paging
+linekey.2.value = 700
+linekey.2.line = %NULL%
 
-linekey.3.type = 15
-linekey.3.line = 1
-linekey.3.value = %NULL%
-linekey.3.label = %NULL%
+linekey.3.type = 3
+linekey.3.label = Paging
+linekey.3.value = 700
+linekey.3.line = %NULL%
 """
         self.add_template("zultys", "zip33g", zultys_zip33g_template)
 
@@ -650,15 +652,17 @@ remote_phonebook.url = {{REMOTE_PHONEBOOK_URL}}
 remote_phonebook.refresh_interval = {{REMOTE_PHONEBOOK_REFRESH}}
 
 # Line Keys
-linekey.2.type = 15
-linekey.2.line = 1
-linekey.2.value = %NULL%
-linekey.2.label = %NULL%
+# NOTE: ZIP 37G will only ever use 1 line (account.1), so unused line keys are configured for paging.
+# Type 3 = Intercom/Paging. If additional lines are needed in future, change type to 15 and set line = N.
+linekey.2.type = 3
+linekey.2.label = Paging
+linekey.2.value = 700
+linekey.2.line = %NULL%
 
-linekey.3.type = 15
-linekey.3.line = 1
-linekey.3.value = %NULL%
-linekey.3.label = %NULL%
+linekey.3.type = 3
+linekey.3.label = Paging
+linekey.3.value = 700
+linekey.3.line = %NULL%
 """
         self.add_template("zultys", "zip37g", zultys_zip37g_template)
 
