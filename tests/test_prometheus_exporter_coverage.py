@@ -654,3 +654,54 @@ class TestPBXMetricsExporterSystemInfo:
         assert b"2.0.0" in metrics
         assert b"pbx-server-01" in metrics
         assert b"production" in metrics
+
+
+@pytest.mark.unit
+class TestPBXMetricsExporterEndpointSanitization:
+    """Tests for endpoint sanitization to prevent cardinality explosion."""
+
+    def test_sanitize_endpoint_numeric_ids(self) -> None:
+        """Test that numeric IDs are replaced with {id} placeholder."""
+        exporter = PBXMetricsExporter()
+
+        sanitized = exporter._sanitize_endpoint("/api/calls/123/transfer/456")
+        assert sanitized == "/api/calls/{id}/transfer/{id}"
+
+    def test_sanitize_endpoint_uuid(self) -> None:
+        """Test that UUIDs are replaced with {uuid} placeholder."""
+        exporter = PBXMetricsExporter()
+
+        uuid_endpoint = "/api/sessions/550e8400-e29b-41d4-a716-446655440000"
+        sanitized = exporter._sanitize_endpoint(uuid_endpoint)
+        assert sanitized == "/api/sessions/{uuid}"
+
+    def test_sanitize_endpoint_mixed_ids_and_uuids(self) -> None:
+        """Test that both numeric IDs and UUIDs are replaced."""
+        exporter = PBXMetricsExporter()
+
+        endpoint = "/api/calls/123/sessions/550e8400-e29b-41d4-a716-446655440000"
+        sanitized = exporter._sanitize_endpoint(endpoint)
+        assert "{id}" in sanitized
+        assert "{uuid}" in sanitized
+
+    def test_sanitize_endpoint_no_ids(self) -> None:
+        """Test that endpoints without IDs remain unchanged."""
+        exporter = PBXMetricsExporter()
+
+        endpoint = "/api/extensions/list"
+        sanitized = exporter._sanitize_endpoint(endpoint)
+        assert sanitized == endpoint
+
+    def test_record_api_request_with_dynamic_endpoint(self) -> None:
+        """Test that API requests with dynamic endpoints are sanitized."""
+        exporter = PBXMetricsExporter()
+
+        exporter.record_api_request("GET", "/api/calls/123", 200, 0.05)
+        exporter.record_api_request("GET", "/api/calls/456", 200, 0.03)
+
+        metrics = exporter.export_metrics()
+        # Should have sanitized endpoint in metrics
+        assert b"/api/calls/{id}" in metrics
+        # Should not have the original numeric IDs in metrics
+        assert b"/api/calls/123" not in metrics
+        assert b"/api/calls/456" not in metrics
