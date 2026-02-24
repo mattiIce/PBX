@@ -2,18 +2,19 @@
 
 ## Project Overview
 
-Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (77 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
+Warden VoIP is a comprehensive VoIP/PBX system built from scratch in Python 3.13+. It implements the full SIP protocol stack, RTP media handling, and an extensive feature set (76 modules) without depending on Asterisk or FreeSWITCH. The project includes a modern admin web interface built with TypeScript/Vite.
 
 ## Quick Reference
 
 | Item | Value |
 |------|-------|
-| Language | Python 3.13+ (backend), TypeScript (frontend) |
+| Language | Python 3.13+ (backend), TypeScript 5.9 (frontend) |
+| Node.js | >=22 required |
 | Package manager | `uv pip` (Python), `npm` (frontend) |
-| Build system | `hatchling` (Python), `vite` (frontend) |
-| Test framework | `pytest` (Python), `jest` (frontend) |
-| Linter/Formatter | `ruff` (Python), `markdownlint-cli2` (Markdown) |
-| Type checker | `mypy` (strict mode) |
+| Build system | `hatchling` (Python), `vite` 7.3 (frontend) |
+| Test framework | `pytest` 9+ (Python), `jest` 30 (frontend) |
+| Linter/Formatter | `ruff` 0.15 (Python), `markdownlint-cli2` (Markdown) |
+| Type checker | `mypy` 1.19 (strict mode, Python), `tsc` (TypeScript) |
 | Line length | 100 characters |
 | Entry point | `pbx/main.py` → `pbx-server` console script |
 
@@ -65,12 +66,15 @@ make pre-commit-run
 ```
 pbx/
 ├── api/              # REST API layer (Flask)
-│   ├── routes/       # 23 route modules organized by feature
-│   ├── schemas/      # Request/response validation
+│   ├── routes/       # 22 route modules organized by feature
+│   ├── schemas/      # Request/response validation (5 schema modules)
 │   ├── app.py        # Flask app factory (create_app)
 │   ├── errors.py     # Error handling
-│   ├── openapi.py    # OpenAPI documentation
-│   └── server.py     # API server initialization
+│   ├── license_api.py          # License management API
+│   ├── openapi.py              # OpenAPI documentation
+│   ├── opensource_integration_api.py  # OSS integration API
+│   ├── server.py     # API server initialization
+│   └── utils.py      # API utilities
 ├── core/             # Core PBX engine
 │   ├── pbx.py        # PBXCore - central coordinator
 │   ├── call.py       # Call state machine
@@ -89,31 +93,53 @@ pbx/
 │   ├── jitter_buffer.py
 │   ├── rfc2833.py    # DTMF event handling (RFC 2833)
 │   └── rtcp_monitor.py
-├── features/         # 77 feature modules (pluggable)
+├── features/         # 76 feature modules (pluggable)
 │   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
-├── utils/            # Cross-cutting concerns
+│   ├── base.py       # Declarative base
+│   ├── extension.py
+│   ├── voicemail.py
+│   ├── call_record.py
+│   └── registered_phone.py
+├── utils/            # Cross-cutting concerns (25 modules)
 │   ├── config.py     # YAML config management
 │   ├── database.py   # DB abstraction (PostgreSQL/SQLite)
 │   ├── encryption.py # FIPS 140-2 encryption
-│   └── tls_support.py
+│   ├── tls_support.py
+│   ├── migrations.py # Runtime CREATE TABLE IF NOT EXISTS
+│   ├── security.py / security_middleware.py / security_monitor.py
+│   ├── logger.py / audit_logger.py
+│   ├── licensing.py / license_admin.py
+│   ├── prometheus_exporter.py    # Metrics export
+│   ├── graceful_shutdown.py
+│   └── ...           # audio, dtmf, tts, env_loader, etc.
 └── integrations/     # Third-party integrations
+    ├── active_directory.py
+    ├── teams.py / zoom.py / jitsi.py / matrix.py
+    ├── outlook.py
+    ├── espocrm.py
+    └── lansweeper.py
 
-admin/                # Frontend admin interface
-├── js/
-│   ├── pages/        # Page modules (TypeScript)
-│   ├── api/client.ts # API client
-│   ├── state/store.ts # State management
-│   └── ui/           # UI components
-├── css/              # Stylesheets
-├── tests/            # Jest tests
+admin/                # Frontend admin interface (root package.json)
+├── index.html        # Main dashboard entry
+├── login.html        # Login page
 ├── vite.config.js
-└── tsconfig.json
+├── tsconfig.json     # Path aliases: @api, @state, @ui, @utils, @pages
+├── js/
+│   ├── main.js       # Entry point
+│   ├── api/client.ts # API client (fetch wrapper with auth)
+│   ├── pages/        # 18 page modules (TypeScript)
+│   ├── state/store.ts # State management
+│   ├── ui/           # UI components (notifications, tabs)
+│   ├── utils/        # Helpers (debounce, html, refresh)
+│   └── types/        # Type definitions (window.d.ts)
+├── css/              # Stylesheets
+└── tests/            # Jest tests (jsdom environment)
 
-tests/                # Python test suite (226 files)
+tests/                # Python test suite (226 test files)
 ├── conftest.py       # Shared fixtures
-├── integration/      # Integration tests (API, call flow, provisioning)
-└── test_*.py
+├── integration/      # Integration tests (3 files: API auth, call flow, provisioning)
+└── test_*.py         # Unit and feature coverage tests
 ```
 
 ### Key Patterns
@@ -142,10 +168,14 @@ tests/                # Python test suite (226 files)
 
 ### TypeScript (Frontend)
 
+- **TypeScript 5.9** with strict mode enabled
 - **Target**: ES2024
-- **Strict mode** enabled
-- **Build tool**: Vite 7.3
-- **Testing**: Jest with jsdom
+- **Module resolution**: `bundler` (ESNext modules)
+- **Build tool**: Vite 7.3 (base path `/admin/`, dev server proxies `/api` to `:9000`)
+- **Testing**: Jest 30 with jsdom, transpiled via `@swc/jest`
+- **Path aliases** in `tsconfig.json`: `@api/*`, `@state/*`, `@ui/*`, `@utils/*`, `@pages/*`
+- **Node.js >=22** required
+- **Indentation**: 2 spaces (per `.editorconfig`)
 
 ### YAML
 
@@ -162,6 +192,8 @@ make test-js           # Run all JavaScript tests
 make test-unit         # Only unit tests: pytest -m unit
 make test-integration  # Only integration tests: pytest -m integration
 make test-cov          # With coverage (80% minimum)
+make test-parallel     # Tests in parallel with pytest-xdist
+make test-failed       # Re-run only previously failed tests
 ```
 
 ### Test Conventions
@@ -178,6 +210,9 @@ make test-cov          # With coverage (80% minimum)
 - API tests should use the `api_client` fixture (provides a Flask test client)
 - SIP protocol tests should use `sip_message_factory` to construct messages
 - Tests are relaxed on linting rules: `F401`, `F811`, `ARG`, `PLR`, `PT`, `B011`, `PLC0415`, `N806`, `N803` are ignored
+- Python coverage minimum: 80% (`--cov-fail-under=80`)
+- JavaScript coverage minimum: 65% (branches, functions, lines, statements)
+- Frontend tests live in `admin/tests/*.test.{js,ts}` and use `@jest/globals`
 
 ## CI/CD
 
@@ -231,11 +266,19 @@ Configured in `.pre-commit-config.yaml`:
 | `pbx/sip/server.py` | SIP protocol server |
 | `pbx/utils/config.py` | Configuration management |
 | `pbx/utils/database.py` | Database abstraction layer |
+| `pbx/utils/migrations.py` | Runtime table creation for feature modules |
 | `pyproject.toml` | Build config, dependencies, ruff, mypy, pytest settings |
+| `package.json` | Frontend deps, Jest config, npm scripts (root level) |
 | `Makefile` | All development commands |
 | `config.yml` | Runtime configuration |
-| `docker-compose.yml` | Container orchestration |
+| `docker-compose.yml` | Container orchestration (PostgreSQL 17 + Redis 7) |
 | `Dockerfile` | Multi-stage build (python:3.14-slim-bookworm) |
+| `VERSION` | Project version file |
+| `constraints.txt` | Pinned dependency versions for reproducible builds |
+| `requirements.lock` | Locked requirements |
+| `uv.lock` | uv lockfile |
+| `alembic.ini` | Alembic migration configuration |
+| `healthcheck.py` | Docker health check script |
 
 ## Ruff Rules Summary
 
@@ -261,7 +304,7 @@ Per-file overrides:
 - `__init__.py`: `F401` ignored (re-exports)
 - `tests/*`: Relaxed rules (`F401`, `F811`, `ARG`, `PLR`, `PT`, `B011`, `PLC0415`, `N806`, `N803`)
 - `pbx/api/rest_api.py`: All rules ignored (deprecated file)
-- `pbx/features/*`, `pbx/core/*`, `pbx/api/routes/*`, `pbx/api/app.py`, `pbx/api/server.py`, `pbx/api/utils.py`, `pbx/api/license_api.py`, `pbx/api/opensource_integration_api.py`, `pbx/rtp/handler.py`, `pbx/main.py`, `pbx/utils/*`, `pbx/integrations/*`: `PLC0415` ignored (lazy imports intentional)
+- `pbx/features/*`, `pbx/core/*`, `pbx/sip/*`, `pbx/api/routes/*`, `pbx/api/app.py`, `pbx/api/server.py`, `pbx/api/utils.py`, `pbx/api/license_api.py`, `pbx/api/opensource_integration_api.py`, `pbx/rtp/handler.py`, `pbx/main.py`, `pbx/utils/*`, `pbx/integrations/*`: `PLC0415` ignored (lazy imports intentional)
 - `scripts/*`: `PLC0415`, `PLW1510`, `PT028` ignored
 
 ## Known Technical Debt
@@ -284,12 +327,38 @@ Per-file overrides:
 |------|---------|-------------|
 | Single Alembic migration | `alembic/versions/` | Only `001_initial_schema.py` exists. Migration discipline documentation has been added to the file. Feature modules use runtime `CREATE TABLE IF NOT EXISTS` via `pbx/utils/migrations.py`. Future core table changes must use Alembic. |
 
+## Docker
+
+- **Base image**: `python:3.14-slim-bookworm` (multi-stage build)
+- **Non-root user**: `pbx` (UID 1000)
+- **Exposed ports**: 5060/udp (SIP), 10000-20000/udp (RTP), 9000/tcp (HTTP API)
+- **Health check**: `healthcheck.py`
+- **Services** (`docker-compose.yml`): PostgreSQL 17 (`postgres:17-alpine`), Redis 7 (`redis:7-alpine`)
+- **Network**: `pbx-network` bridge
+
 ## Deployment
 
 - **Ubuntu setup**: `scripts/setup_ubuntu.py` (automated wizard)
+- **Production install**: `make install-production` (runs `scripts/install_production.py`)
 - **Production deploy**: `scripts/deploy_production_pilot.sh`
+- **Systemd service**: `make install-service` (runs `scripts/generate_service.py`)
 - **Reverse proxy**: `scripts/setup_reverse_proxy.sh` (Nginx) or Apache variant
-- **SSL certs**: `scripts/generate_ssl_cert.py`
-- **Kubernetes**: manifests in `kubernetes/`
-- **Terraform**: IaC in `terraform/`
-- **Monitoring**: Grafana dashboards in `grafana/`
+- **SSL certs**: `scripts/generate_ssl_cert.py`, `scripts/letsencrypt_manager.py`
+- **Kubernetes**: manifests in `kubernetes/` (deployment, service, PVC, ServiceMonitor)
+- **Terraform**: IaC in `terraform/aws/`
+- **Monitoring**: Grafana dashboards in `grafana/`, Prometheus config in `prometheus.yml`
+- **Zero-downtime deploy**: `scripts/zero_downtime_deploy.sh`
+- **Backup/Recovery**: `scripts/backup.sh`, `scripts/emergency_recovery.sh`
+
+## Resource Directories
+
+| Directory | Purpose |
+|-----------|---------|
+| `auto_attendant/` | Auto attendant audio/config resources |
+| `moh/` | Music on Hold audio files |
+| `voicemail_prompts/` | Voicemail system audio prompts |
+| `provisioning_templates/` | Phone provisioning config templates |
+| `docs/` | Additional documentation |
+| `examples/` | Example configurations |
+| `screenshots/` | UI screenshots and images |
+| `scripts/` | 67 operational, setup, testing, and maintenance scripts |
