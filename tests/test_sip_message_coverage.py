@@ -322,8 +322,8 @@ class TestSIPMessageBuild:
         msg.method = "INVITE"
         msg.uri = "sip:1002@pbx.local"
         result = msg.build()
-        # Should have empty line separator but no body after it
-        assert result.endswith("\r\n")
+        # RFC 3261: SIP messages must end with CRLFCRLF
+        assert result.endswith("\r\n\r\n")
 
     def test_build_preserves_header_order(self) -> None:
         msg = SIPMessage()
