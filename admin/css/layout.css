@@ -139,15 +139,15 @@ header h1 {
 }
 
 .tab-button:hover {
-    background: #f8f9fa;
-    color: #3b9dd6;
-    border-left-color: #e1e8ed;
+    background: var(--color-bg-hover);
+    color: var(--color-focus-ring);
+    border-left-color: var(--color-border);
 }
 
 .tab-button.active {
-    color: #3b9dd6;
-    background: linear-gradient(90deg, #e8f6fc 0%, #f0f9ff 100%);
-    border-left-color: #3b9dd6;
+    color: var(--color-focus-ring);
+    background: var(--color-bg-hover);
+    border-left-color: var(--color-focus-ring);
     font-weight: 600;
 }
 
@@ -221,7 +221,7 @@ header h1 {
 }
 
 .section-header h2 {
-    color: #2c3e50;
+    color: var(--color-text);
     margin-bottom: 10px;
     font-size: 1.5rem;
     font-weight: 600;
