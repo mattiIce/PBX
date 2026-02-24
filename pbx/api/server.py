@@ -11,7 +11,6 @@ import traceback
 from pathlib import Path
 from typing import Any
 
-from pbx.api.app import create_app
 from pbx.utils.logger import get_logger
 
 logger = get_logger()
@@ -42,6 +41,8 @@ class PBXFlaskServer:
         self.ssl_context: ssl.SSLContext | None = None
 
         # Create Flask app
+        from pbx.api.app import create_app
+
         self.app = create_app(pbx_core)
 
         # Configure SSL/TLS if enabled

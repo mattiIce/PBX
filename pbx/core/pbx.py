@@ -11,7 +11,6 @@ import uuid
 from datetime import UTC, datetime
 from typing import Any
 
-from pbx.api.server import PBXFlaskServer
 from pbx.core.auto_attendant_handler import AutoAttendantHandler
 from pbx.core.call import CallManager
 from pbx.core.call_router import CallRouter
@@ -135,6 +134,8 @@ class PBXCore:
         # Initialize API server
         api_host = self.config.get("api.host", "0.0.0.0")  # nosec B104 - API server needs to bind to all interfaces
         api_port = self.config.get("api.port", 9000)
+        from pbx.api.server import PBXFlaskServer
+
         self.api_server = PBXFlaskServer(self, api_host, api_port)
 
         # Initialize handler classes for delegated functionality
