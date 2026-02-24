@@ -123,7 +123,7 @@ async function loadAutoAttendantMenuOptions() {
             // Destination column
             const destCell = document.createElement('td');
             if (option.destination_type === 'submenu') {
-                destCell.innerHTML = `<span style="color: #4CAF50; font-weight: bold;">${escapeHtml(option.destination_value)}</span>`;
+                destCell.innerHTML = `<span style="color: var(--color-success); font-weight: bold;">${escapeHtml(option.destination_value)}</span>`;
             } else {
                 destCell.textContent = option.destination_value;
             }
@@ -773,7 +773,7 @@ async function loadMenuTree() {
             treeView.innerHTML = renderMenuTree(data.menu_tree, 0);
             debugLog('Menu tree loaded successfully');
         } else {
-            treeView.innerHTML = '<p style="color: #666;">No menu structure available</p>';
+            treeView.innerHTML = '<p style="color: var(--color-text-secondary);">No menu structure available</p>';
             debugWarn('Menu tree data is empty');
         }
     } catch (error) {
@@ -802,11 +802,11 @@ function renderMenuTree(menu, level) {
             html += `📌 ${escapeHtml(item.digit)}: ${escapeHtml(item.description ?? 'No description')} `;
 
             if (item.destination_type === 'submenu' && item.submenu) {
-                html += `<span style="color: #4CAF50;">[Submenu]</span>`;
+                html += `<span style="color: var(--color-success);">[Submenu]</span>`;
                 html += '</div>';
                 html += renderMenuTree(item.submenu, level + 2);
             } else {
-                html += `<span style="color: #666;">(${escapeHtml(item.destination_type)}: ${escapeHtml(item.destination_value)})</span>`;
+                html += `<span style="color: var(--color-text-secondary);">(${escapeHtml(item.destination_type)}: ${escapeHtml(item.destination_value)})</span>`;
                 html += '</div>';
             }
         }

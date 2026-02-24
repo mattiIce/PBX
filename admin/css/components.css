@@ -1142,11 +1142,100 @@
 }
 
 .status-integration-required {
-    background: #2196f3 !important;
+    background: var(--color-info) !important;
     color: white;
 }
 
 .status-disabled {
-    background: #9e9e9e !important;
+    background: var(--color-text-muted) !important;
     color: white;
+}
+
+/* ---- Themed Info and Stat Cards ---- */
+/* Blue/Info theme - for information boxes */
+.info-card-blue {
+    background: linear-gradient(135deg, #e3f2fd 0%, #bbdefb 100%);
+    border-left: 4px solid #2196f3;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+@media (prefers-color-scheme: dark) {
+    .info-card-blue {
+        background: linear-gradient(135deg, #1a3a5c 0%, #1e5a8e 100%);
+        border-left-color: #5dade2;
+    }
+}
+
+/* Green theme - for success/positive features */
+.stat-card-green {
+    background: linear-gradient(135deg, #e8f5e9 0%, #c8e6c9 100%);
+    border-left: 4px solid #4caf50;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.stat-card-green small {
+    color: #2e7d32;
+}
+
+@media (prefers-color-scheme: dark) {
+    .stat-card-green {
+        background: linear-gradient(135deg, #1a3a2a 0%, #2d5a3a 100%);
+        border-left-color: #2ecc71;
+    }
+
+    .stat-card-green small {
+        color: #58d68d;
+    }
+}
+
+/* Orange/Warning theme - for caution/notices */
+.stat-card-orange {
+    background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+    border-left: 4px solid #ff9800;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.stat-card-orange small {
+    color: #e65100;
+}
+
+@media (prefers-color-scheme: dark) {
+    .stat-card-orange {
+        background: linear-gradient(135deg, #3a2f1a 0%, #5a4a2a 100%);
+        border-left-color: #f5b041;
+    }
+
+    .stat-card-orange small {
+        color: #f8b739;
+    }
+}
+
+/* Red/Danger theme - for errors/issues */
+.stat-card-red {
+    background: linear-gradient(135deg, #ffebee 0%, #ffcdd2 100%);
+    border-left: 4px solid #f44336;
+    padding: 15px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+}
+
+.stat-card-red small {
+    color: #c62828;
+}
+
+@media (prefers-color-scheme: dark) {
+    .stat-card-red {
+        background: linear-gradient(135deg, #3a1a1a 0%, #5a2a2a 100%);
+        border-left-color: #e74c3c;
+    }
+
+    .stat-card-red small {
+        color: #ec7063;
+    }
 }

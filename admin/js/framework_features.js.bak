@@ -7,7 +7,7 @@
 function loadFrameworkOverview() {
     const content = `
         <h2>🎯 Framework Features Overview</h2>
-        <div class="info-card-blue">
+        <div class="info-box" style="background: #e3f2fd; border-left: 4px solid #2196f3; padding: 15px; margin-bottom: 20px;">
             <p><strong>100% Free & Open Source</strong> - All framework features use only free and open-source technologies. No paid services required!</p>
             <p style="margin-top: 10px;"><strong>Implementation Status Legend:</strong></p>
             <p style="margin: 5px 0;"><span class="status-badge status-fully-implemented">✅ Fully Implemented</span> = Production-ready with complete admin UI</p>
@@ -17,51 +17,51 @@ function loadFrameworkOverview() {
 
         <h3 style="margin-top: 30px;">✅ Fully Implemented Features (Production-Ready)</h3>
         <div class="stats-grid">
-            <div class="stat-card-green">
+            <div class="stat-card" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
                 <div class="stat-icon">📲</div>
                 <h3>Click-to-Dial</h3>
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
                 <p>Web-based dialing with full PBX integration</p>
-                <small class="stat-card-green-text">✓ SIP call creation ✓ Auto-answer ✓ Call history ✓ REST API</small>
+                <small style="color: #2e7d32; display: block; margin-top: 8px;">✓ SIP call creation ✓ Auto-answer ✓ Call history ✓ REST API</small>
                 <button onclick="switchTab('click-to-dial')" class="btn-success" style="margin-top: 10px;">Use Now</button>
             </div>
-            <div class="stat-card-green">
+            <div class="stat-card" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
                 <div class="stat-icon">📢</div>
                 <h3>Paging System</h3>
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
                 <p>Overhead paging with zone management</p>
-                <small class="stat-card-green-text">✓ Zone configuration ✓ DAC management ✓ Active monitoring ✓ Full REST API</small>
+                <small style="color: #2e7d32; display: block; margin-top: 8px;">✓ Zone configuration ✓ DAC management ✓ Active monitoring ✓ Full REST API</small>
                 <button onclick="switchTab('paging')" class="btn-success" style="margin-top: 10px;">Use Now</button>
             </div>
-            <div class="stat-card-green">
+            <div class="stat-card" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
                 <div class="stat-icon">🎙️</div>
                 <h3>Speech Analytics</h3>
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
                 <p>Real-time transcription and sentiment analysis (FREE: Vosk offline)</p>
-                <small class="stat-card-green-text">✓ Live transcription ✓ Sentiment analysis ✓ Call summaries ✓ No cloud costs</small>
+                <small style="color: #2e7d32; display: block; margin-top: 8px;">✓ Live transcription ✓ Sentiment analysis ✓ Call summaries ✓ No cloud costs</small>
                 <button onclick="switchTab('speech-analytics')" class="btn-success" style="margin-top: 10px;">Use Now</button>
             </div>
-            <div class="stat-card-green">
+            <div class="stat-card" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
                 <div class="stat-icon">📍</div>
                 <h3>Nomadic E911</h3>
                 <div style="margin: 10px 0;">
                     <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 </div>
                 <p>Location-based emergency routing for remote workers</p>
-                <small class="stat-card-green-text">✓ IP tracking ✓ Multi-site support ✓ Location history ✓ REST API</small>
+                <small style="color: #2e7d32; display: block; margin-top: 8px;">✓ IP tracking ✓ Multi-site support ✓ Location history ✓ REST API</small>
                 <button onclick="switchTab('nomadic-e911')" class="btn-success" style="margin-top: 10px;">Use Now</button>
             </div>
         </div>
 
         <h3 style="margin-top: 30px;">🔧 Enhanced Admin UI Features (Live Data Integration)</h3>
         <div class="stats-grid">
-            <div class="stat-card-orange">
+            <div class="stat-card" style="background: #fff3e0; border-left: 4px solid #ff9800;">
                 <div class="stat-icon">🤖</div>
                 <h3>Conversational AI</h3>
                 <div style="margin: 10px 0;">
@@ -71,7 +71,7 @@ function loadFrameworkOverview() {
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Live statistics ✓ API integration ⚠ Needs AI service (free options available)</small>
                 <button onclick="switchTab('conversational-ai')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
-            <div class="stat-card-orange">
+            <div class="stat-card" style="background: #fff3e0; border-left: 4px solid #ff9800;">
                 <div class="stat-icon">📞</div>
                 <h3>Predictive Dialing</h3>
                 <div style="margin: 10px 0;">
@@ -81,7 +81,7 @@ function loadFrameworkOverview() {
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Campaign tracking ✓ Statistics dashboard ⚠ Needs dialer engine (free options available)</small>
                 <button onclick="switchTab('predictive-dialing')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
-            <div class="stat-card-orange">
+            <div class="stat-card" style="background: #fff3e0; border-left: 4px solid #ff9800;">
                 <div class="stat-icon">🔊</div>
                 <h3>Voice Biometrics</h3>
                 <div style="margin: 10px 0;">
@@ -91,7 +91,7 @@ function loadFrameworkOverview() {
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Profile management ✓ Verification tracking ⚠ Needs biometric engine (free options available)</small>
                 <button onclick="switchTab('voice-biometrics')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
-            <div class="stat-card-orange">
+            <div class="stat-card" style="background: #fff3e0; border-left: 4px solid #ff9800;">
                 <div class="stat-icon">📈</div>
                 <h3>BI Integration</h3>
                 <div style="margin: 10px 0;">
@@ -101,7 +101,7 @@ function loadFrameworkOverview() {
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Export functionality ✓ Multiple formats ⚠ Needs BI tool (free options available)</small>
                 <button onclick="switchTab('bi-integration')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
-            <div class="stat-card-orange">
+            <div class="stat-card" style="background: #fff3e0; border-left: 4px solid #ff9800;">
                 <div class="stat-icon">🏷️</div>
                 <h3>Call Tagging</h3>
                 <div style="margin: 10px 0;">
@@ -111,7 +111,7 @@ function loadFrameworkOverview() {
                 <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Tag management ✓ Live statistics ⚠ Needs AI classifier (free options available)</small>
                 <button onclick="switchTab('call-tagging')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
-            <div class="stat-card-orange">
+            <div class="stat-card" style="background: #fff3e0; border-left: 4px solid #ff9800;">
                 <div class="stat-icon">📱</div>
                 <h3>Mobile Apps</h3>
                 <div style="margin: 10px 0;">
