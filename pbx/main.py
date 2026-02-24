@@ -5,6 +5,8 @@ Provides the main() function used by the pbx-server console script
 defined in pyproject.toml.
 """
 
+from __future__ import annotations
+
 import logging
 import sys
 import time
@@ -144,3 +146,11 @@ def main() -> None:
         if pbx:
             pbx.stop()
         sys.exit(1)
+
+
+if __name__ == "__main__":
+    import signal
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
+    main()
