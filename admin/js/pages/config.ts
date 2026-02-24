@@ -134,14 +134,17 @@ export async function loadSSLStatus(): Promise<void> {
         }
 
         if (data.certificate) {
-            const certEl = document.getElementById('ssl-cert-details') as HTMLElement | null;
-            if (certEl) {
-                certEl.innerHTML = `
-                    <div>Subject: ${data.certificate.subject || 'N/A'}</div>
-                    <div>Issuer: ${data.certificate.issuer || 'N/A'}</div>
-                    <div>Expires: ${data.certificate.expires || 'N/A'}</div>
-                `;
-            }
+            const certSection = document.getElementById('cert-details-section') as HTMLElement | null;
+            if (certSection) certSection.style.display = 'block';
+
+            const subjectEl = document.getElementById('cert-subject') as HTMLInputElement | null;
+            const issuerEl = document.getElementById('cert-issuer') as HTMLInputElement | null;
+            const validFromEl = document.getElementById('cert-valid-from') as HTMLInputElement | null;
+            const validUntilEl = document.getElementById('cert-valid-until') as HTMLInputElement | null;
+            if (subjectEl) subjectEl.value = data.certificate.subject || 'N/A';
+            if (issuerEl) issuerEl.value = data.certificate.issuer || 'N/A';
+            if (validFromEl) validFromEl.value = data.certificate.expires || 'N/A';
+            if (validUntilEl) validUntilEl.value = data.certificate.expires || 'N/A';
         }
     } catch (error: unknown) {
         console.error('Error loading SSL status:', error);

@@ -66,11 +66,11 @@ function updateAnalyticsOverview(data: AnalyticsOverview): void {
     const totalCalls = el('analytics-total-calls');
     const avgDuration = el('analytics-avg-duration');
     const answerRate = el('analytics-answer-rate');
-    const activeNow = el('analytics-active-now');
+    const answeredCalls = el('analytics-answered-calls');
     if (totalCalls) totalCalls.textContent = String(data.total_calls ?? 0);
     if (avgDuration) avgDuration.textContent = `${data.avg_duration ?? 0}s`;
     if (answerRate) answerRate.textContent = `${data.answer_rate ?? 0}%`;
-    if (activeNow) activeNow.textContent = String(data.active_calls ?? 0);
+    if (answeredCalls) answeredCalls.textContent = String(data.active_calls ?? 0);
 }
 
 function renderDailyTrendsChart(trends: ChartData): void {

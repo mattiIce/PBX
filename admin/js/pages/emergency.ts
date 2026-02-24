@@ -203,12 +203,21 @@ export function closeTriggerEmergencyModal(): void {
 export async function addEmergencyContact(event: Event): Promise<void> {
     event.preventDefault();
     const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+    const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
+
+    const methods: string[] = [];
+    if (chk('method-call')) methods.push('call');
+    if (chk('method-page')) methods.push('page');
+    if (chk('method-email')) methods.push('email');
+    if (chk('method-sms')) methods.push('sms');
 
     const data = {
         name: val('emergency-contact-name'),
+        extension: val('emergency-contact-extension'),
         phone: val('emergency-contact-phone'),
-        role: val('emergency-contact-role'),
+        email: val('emergency-contact-email'),
         priority: val('emergency-contact-priority'),
+        notification_methods: methods,
     };
 
     try {
@@ -236,8 +245,9 @@ export async function triggerEmergency(event: Event): Promise<void> {
     const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
 
     const data = {
-        message: val('emergency-message'),
-        type: val('emergency-type'),
+        type: val('trigger-type'),
+        details: val('trigger-details'),
+        info: val('trigger-info'),
     };
 
     try {

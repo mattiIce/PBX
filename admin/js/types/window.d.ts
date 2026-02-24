@@ -168,6 +168,11 @@ declare global {
         loadLicenseStatus: () => Promise<void>;
         loadLicenseFeatures: () => Promise<void>;
         installLicense: () => Promise<void>;
+        generateLicense: () => Promise<void>;
+        autoInstallGeneratedLicense: () => Promise<void>;
+        toggleLicensing: (enabled: boolean) => Promise<void>;
+        revokeLicense: () => Promise<void>;
+        removeLicenseLock: () => Promise<void>;
         initLicenseManagement: () => void;
 
         // pages/analytics.ts
