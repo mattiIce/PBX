@@ -13,8 +13,10 @@
 <!-- Regional Parameters -->
 <!-- ============================================================================ -->
 <Dictionary_Server_Script></Dictionary_Server_Script>
-<Time_Zone>GMT-08:00</Time_Zone>
+<Time_Zone>GMT-05:00</Time_Zone>
 <NTP_Server>pool.ntp.org</NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
 <!-- ============================================================================ -->
 <!-- Line 1 (FXS Port 1) Configuration -->
@@ -74,22 +76,13 @@
 <!-- NOTE: Typically configured separately with a different extension -->
 <!-- ============================================================================ -->
 <Line_Enable_2_>No</Line_Enable_2_>
-<!-- To enable port 2, manually configure via web UI or use multi-extension provisioning -->
-<!-- Example configuration (uncomment and modify for second extension):
-<Line_Enable_2_>Yes</Line_Enable_2_>
-<Display_Name_2_>Extension 2</Display_Name_2_>
-<User_ID_2_>1002</User_ID_2_>
-<Auth_ID_2_>1002</Auth_ID_2_>
-<Password_2_>password2</Password_2_>
-<Proxy_2_>{{SIP_SERVER}}</Proxy_2_>
-<Register_2_>Yes</Register_2_>
--->
+<!-- Note: Line 2 disabled by default (configure via provisioning system) -->
 
 <!-- ============================================================================ -->
 <!-- System Parameters -->
 <!-- ============================================================================ -->
 <Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
-<Secondary_NTP_Server>time.nist.gov</Secondary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
 
 <!-- Network Configuration -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>

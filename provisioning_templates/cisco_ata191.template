@@ -18,9 +18,9 @@
 <!-- ============================================================================ -->
 <!-- Regional Parameters -->
 <!-- ============================================================================ -->
-<Time_Zone>GMT-08:00</Time_Zone>
+<Time_Zone>GMT-05:00</Time_Zone>
 <Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
-<Secondary_NTP_Server>time.nist.gov</Secondary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
 <Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
 <Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
@@ -116,28 +116,9 @@
 
 <!-- ============================================================================ -->
 <!-- Line 2 (FXS Port 2) Configuration -->
-<!-- NOTE: Typically configured separately with a different extension -->
+<!-- NOTE: Line 2 disabled by default (configure via provisioning system) -->
 <!-- ============================================================================ -->
 <Line_Enable_2_>No</Line_Enable_2_>
-<!-- To enable port 2, set Line_Enable_2_ to Yes and configure these settings: -->
-<!--
-<Display_Name_2_>{{EXTENSION_NAME_2}}</Display_Name_2_>
-<User_ID_2_>{{EXTENSION_NUMBER_2}}</User_ID_2_>
-<Auth_ID_2_>{{EXTENSION_NUMBER_2}}</Auth_ID_2_>
-<Password_2_>{{EXTENSION_PASSWORD_2}}</Password_2_>
-<Proxy_2_>{{SIP_SERVER}}</Proxy_2_>
-<Register_2_>Yes</Register_2_>
-<Register_Expires_2_>3600</Register_Expires_2_>
-<Preferred_Codec_2_>G711u</Preferred_Codec_2_>
-<Second_Preferred_Codec_2_>G711a</Second_Preferred_Codec_2_>
-<Third_Preferred_Codec_2_>G729a</Third_Preferred_Codec_2_>
-<DTMF_Tx_Method_2_>AVT</DTMF_Tx_Method_2_>
-<FAX_Enable_T38_2_>Yes</FAX_Enable_T38_2_>
-<Echo_Canc_Enable_2_>Yes</Echo_Canc_Enable_2_>
-<Caller_ID_Method_2_>Bellcore(N.Amer,China)</Caller_ID_Method_2_>
-<Txgain_2_>0</Txgain_2_>
-<Rxgain_2_>0</Rxgain_2_>
--->
 
 <!-- ============================================================================ -->
 <!-- System Parameters -->
