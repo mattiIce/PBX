@@ -691,7 +691,7 @@ class TestCommonConfigRequest:
         resp = api_client.get("/provision/zip37g_common.cfg")
         assert resp.status_code == 200
         assert b"wallpaper_upload.url" in resp.data
-        assert b"wallpaper_zip37g.jpg" in resp.data
+        assert b"wallpaper_warden.jpg" in resp.data
         assert b"auto_provision.repeat.enable" in resp.data
 
     def test_zultys_zip33g_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:

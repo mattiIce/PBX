@@ -61,8 +61,14 @@ account.1.codec.6.priority = 6
 account.1.codec.6.name = iLBC
 account.1.codec.6.ptime = 30
 
-account.1.codec.7.enable = 0
-account.1.codec.7.priority = 0
+# Codec 7: Speex - Open source speech codec (narrowband mode)
+account.1.codec.7.enable = 1
+account.1.codec.7.payload_type = 98
+account.1.codec.7.priority = 7
+account.1.codec.7.name = SPEEX
+
+account.1.codec.8.enable = 0
+account.1.codec.8.priority = 0
 
 # RTP Settings
 account.1.rtp.port_min = 10000
@@ -145,10 +151,13 @@ local_time.summer_time = 1
 # ============================================================================
 voice.ring_vol = 7
 voice.handset.tone_vol = 11
+voice.handset.ring_vol = 7
 voice.handset.spk_vol = 11
 voice.handfree.tone_vol = 15
+voice.handfree.ring_vol = 15
 voice.handfree.spk_vol = 15
 voice.headset.tone_vol = 11
+voice.headset.ring_vol = 7
 voice.headset.spk_vol = 11
 voice.vad = 1
 voice.comfort_noise = 1
@@ -164,7 +173,11 @@ phone_setting.call_return_user_name = {{EXTENSION_NUMBER}}
 phone_setting.call_return_number = {{EXTENSION_NUMBER}}
 phone_setting.call_return_server = {{SIP_SERVER}}
 phone_setting.display_name_method = 1
+phone_setting.call_history.dialed_calls = 100
+phone_setting.call_history.missed_calls = 100
+phone_setting.call_history.received_calls = 100
 phone_setting.backlight_time = 60
+phone_setting.backlight_timeout = 1
 phone_setting.lcd_contrast = 5
 phone_setting.language = English
 
@@ -209,8 +222,14 @@ linekey.2.type = 15
 linekey.2.line = 1
 linekey.2.value = %NULL%
 linekey.2.label = %NULL%
+linekey.2.extension = %NULL%
+linekey.2.xml_phonebook = 0
+linekey.2.pickup_value = %NULL%
 
 linekey.3.type = 15
 linekey.3.line = 1
 linekey.3.value = %NULL%
 linekey.3.label = %NULL%
+linekey.3.extension = %NULL%
+linekey.3.xml_phonebook = 0
+linekey.3.pickup_value = %NULL%

@@ -106,13 +106,17 @@
          voice.vadEnable="1"/>
 
   <!-- ================================================================== -->
-  <!-- Phone Display -->
+  <!-- Phone Display / Branding -->
   <!-- ================================================================== -->
   <up up.backlight.idleIntensity="1"
       up.backlight.onIntensity="3"
       up.backlight.timeout="60"
       up.screenSaver.type="2"
       up.screenSaver.wait="600"/>
+
+  <!-- Warden VoIP Wallpaper (480x272 color LCD) -->
+  <bg bg.hiRes.color.bm="{{PROVISION_RESOURCE_URL}}/wallpaper_warden.jpg"
+      bg.hiRes.color.selection="2"/>
 
   <!-- ================================================================== -->
   <!-- LDAP Directory -->

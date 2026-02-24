@@ -13,8 +13,10 @@
 <!-- Regional Parameters -->
 <!-- ============================================================================ -->
 <Dictionary_Server_Script></Dictionary_Server_Script>
-<Time_Zone>GMT-08:00</Time_Zone>
+<Time_Zone>GMT-05:00</Time_Zone>
 <NTP_Server>pool.ntp.org</NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
 <!-- ============================================================================ -->
 <!-- Line 1 (FXS Port 1) Configuration -->
@@ -89,7 +91,7 @@
 <!-- System Parameters -->
 <!-- ============================================================================ -->
 <Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
-<Secondary_NTP_Server>time.nist.gov</Secondary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
 
 <!-- Network Configuration -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>

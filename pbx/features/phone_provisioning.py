@@ -98,6 +98,12 @@ class PhoneTemplate:
             "{{DTMF_PAYLOAD_TYPE}}", str(dtmf_config.get("payload_type", "101"))
         )
 
+        # Provisioning resource URL (for wallpaper, branding assets, etc.)
+        config = config.replace(
+            "{{PROVISION_RESOURCE_URL}}",
+            str(server_config.get("provision_resource_url", "")),
+        )
+
         return config
 
 
@@ -672,6 +678,7 @@ account.1.sip_server.1.address = {{SIP_SERVER}}
 account.1.sip_server.1.port = {{SIP_PORT}}
 account.1.sip_server.1.expires = 3600
 account.1.sip_server.1.retry_counts = 3
+account.1.sip_server.1.failover_timeout = 5
 account.1.sip_server.1.transport = 0
 account.1.sip_server_host.legacy = {{SIP_SERVER}}
 account.1.reregister_enable = 1
@@ -694,14 +701,24 @@ account.1.codec.4.payload_type = 18
 account.1.codec.4.priority = 4
 account.1.codec.4.name = G729
 account.1.codec.5.enable = 1
-account.1.codec.5.payload_type = 97
+account.1.codec.5.payload_type = 2
 account.1.codec.5.priority = 5
-account.1.codec.5.name = iLBC
-account.1.codec.5.ptime = 30
-account.1.codec.6.enable = 0
+account.1.codec.5.name = G726-32
+account.1.codec.6.enable = 1
+account.1.codec.6.payload_type = 97
+account.1.codec.6.priority = 6
+account.1.codec.6.name = iLBC
+account.1.codec.6.ptime = 30
+account.1.codec.7.enable = 1
+account.1.codec.7.payload_type = 98
+account.1.codec.7.priority = 7
+account.1.codec.7.name = SPEEX
+account.1.codec.8.enable = 0
+account.1.codec.8.priority = 0
 
 account.1.rtp.port_min = 10000
 account.1.rtp.port_max = 20000
+account.1.rtp.packet_time = 20
 
 account.1.dtmf.type = 2
 account.1.dtmf.info_type = 0
@@ -716,17 +733,27 @@ account.1.dialed_calllog = 1
 account.1.answered_calllog = 1
 account.1.earlymedia = 1
 account.1.session_timer = 0
+account.1.srtp_mode = 0
+account.1.auto_answer = 0
 account.1.nat.udp_update_time = 30
 account.1.nat.rport = 1
 account.1.blf.subscribe_period = 3600
+account.1.blf.list_uri =
 account.1.subscribe_mwi = 1
 account.1.call_waiting = 1
+account.1.anonymous_call = 0
+account.1.reject_anonymous_call = 0
 account.1.dnd.enable = 0
 account.1.send_line_id = 1
 account.1.enable_user_equal_phone = 1
 
 network.dhcp = 1
+network.dhcp_vlan = 0
+network.vlan.internet_port_enable = 0
+network.vlan.internet_port_priority = 5
+network.vlan.internet_port_vid = 1
 network.lldp.enable = 1
+network.lldp.packet_interval = 120
 network.qos.enable = 1
 network.qos.voice.priority = 6
 network.qos.signaling.priority = 5
@@ -735,28 +762,48 @@ local_time.time_zone = -5
 local_time.time_zone_name = United States-Eastern Time
 local_time.ntp_server1 = pool.ntp.org
 local_time.ntp_server2 = time.google.com
+local_time.dhcp_time = 1
 local_time.summer_time = 1
 
 voice.ring_vol = 7
 voice.handset.tone_vol = 11
+voice.handset.ring_vol = 7
 voice.handset.spk_vol = 11
 voice.handfree.tone_vol = 15
+voice.handfree.ring_vol = 15
 voice.handfree.spk_vol = 15
 voice.headset.tone_vol = 11
+voice.headset.ring_vol = 7
 voice.headset.spk_vol = 11
+voice.vad = 1
+voice.comfort_noise = 1
 voice.echo_cancellation = 1
 voice.noise_reduction = 1
 
 phone_setting.redial_number = {{EXTENSION_NUMBER}}
 phone_setting.redial_server = {{SIP_SERVER}}
+phone_setting.call_return_user_name = {{EXTENSION_NUMBER}}
+phone_setting.call_return_number = {{EXTENSION_NUMBER}}
+phone_setting.call_return_server = {{SIP_SERVER}}
+phone_setting.display_name_method = 1
+phone_setting.call_history.dialed_calls = 100
+phone_setting.call_history.missed_calls = 100
+phone_setting.call_history.received_calls = 100
 phone_setting.backlight_time = 60
+phone_setting.backlight_timeout = 1
+phone_setting.lcd_contrast = 5
 phone_setting.language = English
 
 auto_provision.mode = 1
 auto_provision.dhcp_option.enable = 1
+auto_provision.dhcp_option.list_user_options = %NULL%
 auto_provision.dhcp_option.option60_value = 66
+auto_provision.dhcp_option.option43_enable = 1
 auto_provision.repeat.enable = 1
 auto_provision.repeat.minutes = 1440
+auto_provision.pnp.enable = 1
+auto_provision.server.url =
+auto_provision.server.auth_enable = 0
 
 ldap.enable = {{LDAP_ENABLE}}
 ldap.server = {{LDAP_SERVER}}
@@ -779,6 +826,17 @@ linekey.2.type = 15
 linekey.2.line = 1
 linekey.2.value = %NULL%
 linekey.2.label = %NULL%
+linekey.2.extension = %NULL%
+linekey.2.xml_phonebook = 0
+linekey.2.pickup_value = %NULL%
+
+linekey.3.type = 15
+linekey.3.line = 1
+linekey.3.value = %NULL%
+linekey.3.label = %NULL%
+linekey.3.extension = %NULL%
+linekey.3.xml_phonebook = 0
+linekey.3.pickup_value = %NULL%
 """
         self.add_template("yealink", "t46s", yealink_t46s_template)
 
@@ -798,6 +856,7 @@ account.1.sip_server.1.address = {{SIP_SERVER}}
 account.1.sip_server.1.port = {{SIP_PORT}}
 account.1.sip_server.1.expires = 3600
 account.1.sip_server.1.retry_counts = 3
+account.1.sip_server.1.failover_timeout = 5
 account.1.sip_server.1.transport = 0
 account.1.sip_server_host.legacy = {{SIP_SERVER}}
 account.1.reregister_enable = 1
@@ -819,10 +878,25 @@ account.1.codec.4.enable = 1
 account.1.codec.4.payload_type = 18
 account.1.codec.4.priority = 4
 account.1.codec.4.name = G729
-account.1.codec.5.enable = 0
+account.1.codec.5.enable = 1
+account.1.codec.5.payload_type = 2
+account.1.codec.5.priority = 5
+account.1.codec.5.name = G726-32
+account.1.codec.6.enable = 1
+account.1.codec.6.payload_type = 97
+account.1.codec.6.priority = 6
+account.1.codec.6.name = iLBC
+account.1.codec.6.ptime = 30
+account.1.codec.7.enable = 1
+account.1.codec.7.payload_type = 98
+account.1.codec.7.priority = 7
+account.1.codec.7.name = SPEEX
+account.1.codec.8.enable = 0
+account.1.codec.8.priority = 0
 
 account.1.rtp.port_min = 10000
 account.1.rtp.port_max = 20000
+account.1.rtp.packet_time = 20
 
 account.1.dtmf.type = 2
 account.1.dtmf.info_type = 0
@@ -837,17 +911,26 @@ account.1.dialed_calllog = 1
 account.1.answered_calllog = 1
 account.1.earlymedia = 1
 account.1.session_timer = 0
+account.1.srtp_mode = 0
+account.1.auto_answer = 0
 account.1.nat.udp_update_time = 30
 account.1.nat.rport = 1
 account.1.blf.subscribe_period = 3600
+account.1.blf.list_uri =
 account.1.subscribe_mwi = 1
 account.1.call_waiting = 1
+account.1.anonymous_call = 0
+account.1.reject_anonymous_call = 0
 account.1.dnd.enable = 0
 account.1.send_line_id = 1
 account.1.enable_user_equal_phone = 1
 
 network.dhcp = 1
+network.dhcp_vlan = 0
+network.vlan.internet_port_enable = 0
+network.vlan.internet_port_priority = 5
 network.lldp.enable = 1
+network.lldp.packet_interval = 120
 network.qos.enable = 1
 network.qos.voice.priority = 6
 network.qos.signaling.priority = 5
@@ -856,26 +939,48 @@ local_time.time_zone = -5
 local_time.time_zone_name = United States-Eastern Time
 local_time.ntp_server1 = pool.ntp.org
 local_time.ntp_server2 = time.google.com
+local_time.dhcp_time = 1
 local_time.summer_time = 1
 
 voice.ring_vol = 7
 voice.handset.tone_vol = 11
+voice.handset.ring_vol = 7
 voice.handset.spk_vol = 11
 voice.handfree.tone_vol = 15
+voice.handfree.ring_vol = 15
 voice.handfree.spk_vol = 15
+voice.headset.tone_vol = 11
+voice.headset.ring_vol = 7
+voice.headset.spk_vol = 11
+voice.vad = 1
+voice.comfort_noise = 1
 voice.echo_cancellation = 1
 voice.noise_reduction = 1
 
 phone_setting.redial_number = {{EXTENSION_NUMBER}}
 phone_setting.redial_server = {{SIP_SERVER}}
+phone_setting.call_return_user_name = {{EXTENSION_NUMBER}}
+phone_setting.call_return_number = {{EXTENSION_NUMBER}}
+phone_setting.call_return_server = {{SIP_SERVER}}
+phone_setting.display_name_method = 1
+phone_setting.call_history.dialed_calls = 100
+phone_setting.call_history.missed_calls = 100
+phone_setting.call_history.received_calls = 100
 phone_setting.backlight_time = 60
+phone_setting.backlight_timeout = 1
+phone_setting.lcd_contrast = 5
 phone_setting.language = English
 
 auto_provision.mode = 1
 auto_provision.dhcp_option.enable = 1
+auto_provision.dhcp_option.list_user_options = %NULL%
 auto_provision.dhcp_option.option60_value = 66
+auto_provision.dhcp_option.option43_enable = 1
 auto_provision.repeat.enable = 1
 auto_provision.repeat.minutes = 1440
+auto_provision.pnp.enable = 1
+auto_provision.server.url =
+auto_provision.server.auth_enable = 0
 
 ldap.enable = {{LDAP_ENABLE}}
 ldap.server = {{LDAP_SERVER}}
@@ -898,6 +1003,17 @@ linekey.2.type = 15
 linekey.2.line = 1
 linekey.2.value = %NULL%
 linekey.2.label = %NULL%
+linekey.2.extension = %NULL%
+linekey.2.xml_phonebook = 0
+linekey.2.pickup_value = %NULL%
+
+linekey.3.type = 15
+linekey.3.line = 1
+linekey.3.value = %NULL%
+linekey.3.label = %NULL%
+linekey.3.extension = %NULL%
+linekey.3.xml_phonebook = 0
+linekey.3.pickup_value = %NULL%
 """
         self.add_template("yealink", "t28g", yealink_t28g_template)
 
@@ -913,7 +1029,11 @@ linekey.2.label = %NULL%
        reg.1.server.1.address="{{SIP_SERVER}}"
        reg.1.server.1.port="{{SIP_PORT}}"
        reg.1.server.1.expires="3600"
-       reg.1.lineKeys="1"/>
+       reg.1.server.1.retryTimeOut="300"
+       reg.1.server.1.retryMaxCount="3"
+       reg.1.lineKeys="1"
+       reg.1.type="private"
+       reg.1.ringType="ringer2"/>
 
   <voice voice.codecPref.G711_Mu="1"
          voice.codecPref.G711_A="2"
@@ -921,36 +1041,72 @@ linekey.2.label = %NULL%
          voice.codecPref.G729_AB="4"
          voice.codecPref.iLBC="5"/>
 
-  <tone tone.dtmf.rfc2833Control="1"
+  <tone tone.dtmf.level="-13"
+        tone.dtmf.onTime="100"
+        tone.dtmf.offTime="100"
+        tone.dtmf.viaRtp="1"
+        tone.dtmf.rfc2833Control="1"
         tone.dtmf.rfc2833Payload="{{DTMF_PAYLOAD_TYPE}}"/>
 
   <msg msg.mwi.1.subscribe="*{{EXTENSION_NUMBER}}"
+       msg.mwi.1.callBackMode="contact"
        msg.mwi.1.callBack="*{{EXTENSION_NUMBER}}"/>
 
-  <call call.callWaiting.enable="1"
-        call.doNotDisturb.enable="0"/>
+  <call call.remotePartyID.1.render="1"
+        call.remotePartyID.1.stage="1"
+        call.callWaiting.enable="1"
+        call.callWaiting.ring="beep"
+        call.doNotDisturb.enable="0"
+        call.callsPerLineKey="24"
+        call.autoAnswer.micMute="0"/>
 
-  <feature feature.callList.enabled="1"/>
+  <feature feature.callList.enabled="1"
+           feature.callListMissed.enabled="1"
+           feature.enhancedCallDisplay="1"
+           feature.directedCallPickup.enabled="1"/>
 
-  <nat nat.keepalive.interval="30"/>
+  <nat nat.keepalive.interval="30"
+       nat.ip="0.0.0.0"/>
 
   <device device.net.dhcpEnabled="1"
-          device.net.lldpEnabled="1"/>
+          device.net.lldpEnabled="1"
+          device.net.cdpEnabled="1"/>
 
   <qos qos.ethernet.rtp.user_priority="6"
-       qos.ip.rtp.dscp="46"/>
+       qos.ethernet.callControl.user_priority="5"
+       qos.ip.rtp.dscp="46"
+       qos.ip.callControl.dscp="26"/>
 
   <tcpIpApp tcpIpApp.sntp.address="pool.ntp.org"
-            tcpIpApp.sntp.gmtOffset="-18000"/>
+            tcpIpApp.sntp.address.overrideDHCP="0"
+            tcpIpApp.sntp.gmtOffset="-18000"
+            tcpIpApp.sntp.resyncPeriod="3600"/>
 
-  <voice voice.echoSuppressor.enable="1"
-         voice.ns.hf.enable="1"/>
+  <voice voice.volume.persist.handset="1"
+         voice.volume.persist.handsfree="1"
+         voice.volume.persist.headset="1"
+         voice.echoSuppressor.enable="1"
+         voice.ns.hf.enable="1"
+         voice.vadEnable="1"/>
+
+  <up up.backlight.idleIntensity="1"
+      up.backlight.onIntensity="3"
+      up.backlight.timeout="60"
+      up.screenSaver.type="2"
+      up.screenSaver.wait="600"/>
+
+  <bg bg.hiRes.color.bm="{{PROVISION_RESOURCE_URL}}/wallpaper_warden.jpg"
+      bg.hiRes.color.selection="2"/>
 
   <dir dir.corp.address="{{LDAP_SERVER}}"
        dir.corp.port="{{LDAP_PORT}}"
        dir.corp.baseDN="{{LDAP_BASE}}"
        dir.corp.user="{{LDAP_USER}}"
        dir.corp.password="{{LDAP_PASSWORD}}"/>
+
+  <prov prov.polling.enabled="1"
+        prov.polling.period="86400"
+        prov.polling.time="01:00"/>
 </polycomConfig>
 """
         self.add_template("polycom", "vvx450", polycom_vvx450_template)
@@ -1018,6 +1174,7 @@ P34 = {{EXTENSION_PASSWORD}}
 P47 = {{SIP_SERVER}}
 P48 = {{SIP_PORT}}
 P2 = 3600
+P2312 = 3600
 P130 = 0
 
 P57 = 0
@@ -1035,6 +1192,7 @@ P33 = *{{EXTENSION_NUMBER}}
 P2355 = 1
 
 P298 = 1
+P197 = 0
 P2347 = 1
 P2348 = 1
 P2349 = 1
@@ -1050,10 +1208,16 @@ P3000 = 46
 P64 = pool.ntp.org
 P65 = time.google.com
 P30 = -5
+P75 = 2
 
+P200 = 6
+P201 = 5
+P202 = 5
 P191 = 1
 P192 = 0
 P2336 = 60
+P122 = 1
+P2916 = {{PROVISION_RESOURCE_URL}}/wallpaper_warden.jpg
 
 P1411 = 0
 P194 = 1440
@@ -1144,8 +1308,13 @@ P2351 = 1
         # Cisco SPA112 (2-Port ATA) template
         cisco_spa112_template = """<flat-profile>
 <Provision_Enable>No</Provision_Enable>
-<Time_Zone>GMT-08:00</Time_Zone>
+<Resync_On_Reset>No</Resync_On_Reset>
+
+<!-- Regional Parameters -->
+<Time_Zone>GMT-05:00</Time_Zone>
 <NTP_Server>pool.ntp.org</NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
 <!-- Line 1 Configuration -->
 <Line_Enable_1_>Yes</Line_Enable_1_>
@@ -1157,34 +1326,67 @@ P2351 = 1
 <Register_1_>Yes</Register_1_>
 <Register_Expires_1_>3600</Register_Expires_1_>
 
-<!-- Codecs -->
+<!-- Codecs - Optimized for analog and fax -->
 <Preferred_Codec_1_>G711u</Preferred_Codec_1_>
 <Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<Third_Preferred_Codec_1_>G729a</Third_Preferred_Codec_1_>
+<G729a_Enable_1_>Yes</G729a_Enable_1_>
 <G711u_Enable_1_>Yes</G711u_Enable_1_>
 <G711a_Enable_1_>Yes</G711a_Enable_1_>
+<G726-16_Enable_1_>No</G726-16_Enable_1_>
+<G726-24_Enable_1_>No</G726-24_Enable_1_>
+<G726-32_Enable_1_>No</G726-32_Enable_1_>
+<G726-40_Enable_1_>No</G726-40_Enable_1_>
 
 <!-- DTMF -->
 <DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+<DTMF_Tx_Mode_1_>Strict</DTMF_Tx_Mode_1_>
+<RTP_Packet_Size_1_>0.020</RTP_Packet_Size_1_>
 
 <!-- Fax - T.38 -->
 <FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+<FAX_T38_Redundancy_1_>1</FAX_T38_Redundancy_1_>
+<FAX_Passthru_Method_1_>NSE</FAX_Passthru_Method_1_>
 
-<!-- Echo Cancellation -->
+<!-- Voice Processing -->
+<Silence_Supp_Enable_1_>No</Silence_Supp_Enable_1_>
 <Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+<Echo_Canc_Adapt_Enable_1_>Yes</Echo_Canc_Adapt_Enable_1_>
+<Echo_Supp_Enable_1_>Yes</Echo_Supp_Enable_1_>
+
+<!-- Caller ID -->
+<Caller_ID_Method_1_>Bellcore(N.Amer,China)</Caller_ID_Method_1_>
+<Caller_ID_FSK_Standard_1_>bell202</Caller_ID_FSK_Standard_1_>
+
+<!-- Audio -->
+<Txgain_1_>0</Txgain_1_>
+<Rxgain_1_>0</Rxgain_1_>
 
 <!-- Line 2 Disabled by Default -->
 <Line_Enable_2_>No</Line_Enable_2_>
 
+<!-- System Parameters -->
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
+
 <!-- Network -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>
+<Enable_VLAN>No</Enable_VLAN>
 
 <!-- SIP -->
 <SIP_Port>{{SIP_PORT}}</SIP_Port>
 <RTP_Port_Min>16384</RTP_Port_Min>
 <RTP_Port_Max>16482</RTP_Port_Max>
+<SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
+<RTP_TOS_DiffServ_Value>0xb8</RTP_TOS_DiffServ_Value>
 
-<!-- Regional Settings -->
+<!-- Regional Settings (FCC/North America) -->
+<Ring_Waveform>Sinusoid</Ring_Waveform>
+<Ring_Frequency>20</Ring_Frequency>
+<Ring_Voltage>75</Ring_Voltage>
 <FXS_Port_Impedance>600</FXS_Port_Impedance>
+<Hook_Flash_Timer_Min>0.1</Hook_Flash_Timer_Min>
+<Hook_Flash_Timer_Max>0.9</Hook_Flash_Timer_Max>
 </flat-profile>
 """
         self.add_template("cisco", "spa112", cisco_spa112_template)
@@ -1192,8 +1394,13 @@ P2351 = 1
         # Cisco SPA122 (2-Port ATA with Router) template
         cisco_spa122_template = """<flat-profile>
 <Provision_Enable>No</Provision_Enable>
-<Time_Zone>GMT-08:00</Time_Zone>
+<Resync_On_Reset>No</Resync_On_Reset>
+
+<!-- Regional Parameters -->
+<Time_Zone>GMT-05:00</Time_Zone>
 <NTP_Server>pool.ntp.org</NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
 <!-- Line 1 Configuration -->
 <Line_Enable_1_>Yes</Line_Enable_1_>
@@ -1205,37 +1412,70 @@ P2351 = 1
 <Register_1_>Yes</Register_1_>
 <Register_Expires_1_>3600</Register_Expires_1_>
 
-<!-- Codecs -->
+<!-- Codecs - Optimized for analog and fax -->
 <Preferred_Codec_1_>G711u</Preferred_Codec_1_>
 <Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<Third_Preferred_Codec_1_>G729a</Third_Preferred_Codec_1_>
+<G729a_Enable_1_>Yes</G729a_Enable_1_>
 <G711u_Enable_1_>Yes</G711u_Enable_1_>
 <G711a_Enable_1_>Yes</G711a_Enable_1_>
 
 <!-- DTMF -->
 <DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+<DTMF_Tx_Mode_1_>Strict</DTMF_Tx_Mode_1_>
+<RTP_Packet_Size_1_>0.020</RTP_Packet_Size_1_>
 
 <!-- Fax - T.38 -->
 <FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+<FAX_T38_Redundancy_1_>1</FAX_T38_Redundancy_1_>
+<FAX_Passthru_Method_1_>NSE</FAX_Passthru_Method_1_>
 
-<!-- Echo Cancellation -->
+<!-- Voice Processing -->
+<Silence_Supp_Enable_1_>No</Silence_Supp_Enable_1_>
 <Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+<Echo_Canc_Adapt_Enable_1_>Yes</Echo_Canc_Adapt_Enable_1_>
+<Echo_Supp_Enable_1_>Yes</Echo_Supp_Enable_1_>
+
+<!-- Caller ID -->
+<Caller_ID_Method_1_>Bellcore(N.Amer,China)</Caller_ID_Method_1_>
+<Caller_ID_FSK_Standard_1_>bell202</Caller_ID_FSK_Standard_1_>
+
+<!-- Audio -->
+<Txgain_1_>0</Txgain_1_>
+<Rxgain_1_>0</Rxgain_1_>
 
 <!-- Line 2 Disabled by Default -->
 <Line_Enable_2_>No</Line_Enable_2_>
 
-<!-- Router Settings -->
+<!-- Router Configuration (SPA122 specific) -->
 <WAN_Connection_Type>DHCP</WAN_Connection_Type>
 <Router_Enable>Yes</Router_Enable>
 <LAN_IP_Address>192.168.0.1</LAN_IP_Address>
+<LAN_Netmask>255.255.255.0</LAN_Netmask>
 <DHCP_Server_Enable>Yes</DHCP_Server_Enable>
+<DHCP_Starting_IP>192.168.0.100</DHCP_Starting_IP>
+<DHCP_Number_of_Users>50</DHCP_Number_of_Users>
+<DHCP_Lease_Time>1440</DHCP_Lease_Time>
+
+<!-- System Parameters -->
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
 
 <!-- SIP -->
 <SIP_Port>{{SIP_PORT}}</SIP_Port>
 <RTP_Port_Min>16384</RTP_Port_Min>
 <RTP_Port_Max>16482</RTP_Port_Max>
+<SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
+<RTP_TOS_DiffServ_Value>0xb8</RTP_TOS_DiffServ_Value>
 
-<!-- Regional Settings -->
+<!-- Regional Settings (FCC/North America) -->
+<Ring_Waveform>Sinusoid</Ring_Waveform>
+<Ring_Frequency>20</Ring_Frequency>
+<Ring_Voltage>75</Ring_Voltage>
 <FXS_Port_Impedance>600</FXS_Port_Impedance>
+<Hook_Flash_Timer_Min>0.1</Hook_Flash_Timer_Min>
+<Hook_Flash_Timer_Max>0.9</Hook_Flash_Timer_Max>
+<Enable_QOS>Yes</Enable_QOS>
 </flat-profile>
 """
         self.add_template("cisco", "spa122", cisco_spa122_template)
@@ -1243,8 +1483,16 @@ P2351 = 1
         # Cisco ATA 191 (2-Port Enterprise ATA) template
         cisco_ata191_template = """<flat-profile>
 <Provision_Enable>No</Provision_Enable>
-<Time_Zone>GMT-08:00</Time_Zone>
+<Resync_On_Reset>Yes</Resync_On_Reset>
+<Resync_Random_Delay>2</Resync_Random_Delay>
+<Resync_Periodic>3600</Resync_Periodic>
+
+<!-- Regional Parameters -->
+<Time_Zone>GMT-05:00</Time_Zone>
 <Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
 <!-- Line 1 Configuration -->
 <Line_Enable_1_>Yes</Line_Enable_1_>
@@ -1256,37 +1504,83 @@ P2351 = 1
 <Register_1_>Yes</Register_1_>
 <Register_Expires_1_>3600</Register_Expires_1_>
 
-<!-- Codecs -->
+<!-- Codecs - Optimized for analog and fax -->
 <Preferred_Codec_1_>G711u</Preferred_Codec_1_>
 <Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<Third_Preferred_Codec_1_>G729a</Third_Preferred_Codec_1_>
+<G729a_Enable_1_>Yes</G729a_Enable_1_>
 <G711u_Enable_1_>Yes</G711u_Enable_1_>
 <G711a_Enable_1_>Yes</G711a_Enable_1_>
+<G726-16_Enable_1_>No</G726-16_Enable_1_>
+<G726-24_Enable_1_>No</G726-24_Enable_1_>
+<G726-32_Enable_1_>No</G726-32_Enable_1_>
+<G726-40_Enable_1_>No</G726-40_Enable_1_>
+<G722_Enable_1_>No</G722_Enable_1_>
+<iLBC_Enable_1_>No</iLBC_Enable_1_>
 
 <!-- DTMF -->
-<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+<DTMF_Tx_Method_1_>AVT</DTMF_Tx_Method_1_>
+<DTMF_Tx_Mode_1_>Strict</DTMF_Tx_Mode_1_>
+<Hook_Flash_Tx_Method_1_>None</Hook_Flash_Tx_Method_1_>
+<RTP_Packet_Size_1_>0.020</RTP_Packet_Size_1_>
 
 <!-- Fax - T.38 -->
 <FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+<FAX_Codec_Symmetric_1_>Yes</FAX_Codec_Symmetric_1_>
+<FAX_T38_Redundancy_1_>1</FAX_T38_Redundancy_1_>
+<FAX_Passthru_Method_1_>NSE</FAX_Passthru_Method_1_>
+<FAX_Passthru_Codec_1_>G711u</FAX_Passthru_Codec_1_>
+<FAX_Disable_ECAN_1_>Yes</FAX_Disable_ECAN_1_>
 
-<!-- Echo Cancellation -->
+<!-- Voice Processing -->
+<Silence_Supp_Enable_1_>No</Silence_Supp_Enable_1_>
 <Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+<Echo_Canc_Adapt_Enable_1_>Yes</Echo_Canc_Adapt_Enable_1_>
+<Echo_Supp_Enable_1_>Yes</Echo_Supp_Enable_1_>
+
+<!-- Caller ID -->
+<Caller_ID_Method_1_>Bellcore(N.Amer,China)</Caller_ID_Method_1_>
+<Caller_ID_FSK_Standard_1_>bell202</Caller_ID_FSK_Standard_1_>
+
+<!-- Audio -->
+<Txgain_1_>0</Txgain_1_>
+<Rxgain_1_>0</Rxgain_1_>
+
+<!-- Call Features -->
+<Call_Waiting_Serv_1_>Yes</Call_Waiting_Serv_1_>
+<DND_Serv_1_>No</DND_Serv_1_>
 
 <!-- Line 2 Disabled by Default -->
 <Line_Enable_2_>No</Line_Enable_2_>
 
 <!-- Network -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>
-
-<!-- PoE Support -->
+<Enable_VLAN>No</Enable_VLAN>
 <PoE_Enable>Yes</PoE_Enable>
 
 <!-- SIP -->
 <SIP_Port>{{SIP_PORT}}</SIP_Port>
 <RTP_Port_Min>16384</RTP_Port_Min>
 <RTP_Port_Max>16482</RTP_Port_Max>
+<SIP_Transport_1_>UDP</SIP_Transport_1_>
 
-<!-- Regional Settings -->
+<!-- QoS -->
+<SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
+<RTP_TOS_DiffServ_Value>0xb8</RTP_TOS_DiffServ_Value>
+<Enable_QOS>Yes</Enable_QOS>
+
+<!-- Regional Settings (FCC/North America) -->
+<Ring_Waveform>Sinusoid</Ring_Waveform>
+<Ring_Frequency>20</Ring_Frequency>
+<Ring_Voltage>75</Ring_Voltage>
 <FXS_Port_Impedance>600</FXS_Port_Impedance>
+<Hook_Flash_Timer_Min>0.1</Hook_Flash_Timer_Min>
+<Hook_Flash_Timer_Max>0.9</Hook_Flash_Timer_Max>
+
+<!-- Dial Plan -->
+<Dial_Plan_1_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_1_>
+<Interdigit_Long_Timer>10</Interdigit_Long_Timer>
+<Interdigit_Short_Timer>3</Interdigit_Short_Timer>
 </flat-profile>
 """
         self.add_template("cisco", "ata191", cisco_ata191_template)
@@ -1294,8 +1588,16 @@ P2351 = 1
         # Cisco ATA 192 (2-Port Enterprise ATA) template
         cisco_ata192_template = """<flat-profile>
 <Provision_Enable>No</Provision_Enable>
-<Time_Zone>GMT-08:00</Time_Zone>
+<Resync_On_Reset>Yes</Resync_On_Reset>
+<Resync_Random_Delay>2</Resync_Random_Delay>
+<Resync_Periodic>3600</Resync_Periodic>
+
+<!-- Regional Parameters -->
+<Time_Zone>GMT-05:00</Time_Zone>
 <Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
 <!-- Line 1 Configuration -->
 <Line_Enable_1_>Yes</Line_Enable_1_>
@@ -1307,34 +1609,82 @@ P2351 = 1
 <Register_1_>Yes</Register_1_>
 <Register_Expires_1_>3600</Register_Expires_1_>
 
-<!-- Codecs -->
+<!-- Codecs - Optimized for analog and fax -->
 <Preferred_Codec_1_>G711u</Preferred_Codec_1_>
 <Second_Preferred_Codec_1_>G711a</Second_Preferred_Codec_1_>
+<Third_Preferred_Codec_1_>G729a</Third_Preferred_Codec_1_>
+<G729a_Enable_1_>Yes</G729a_Enable_1_>
 <G711u_Enable_1_>Yes</G711u_Enable_1_>
 <G711a_Enable_1_>Yes</G711a_Enable_1_>
+<G726-16_Enable_1_>No</G726-16_Enable_1_>
+<G726-24_Enable_1_>No</G726-24_Enable_1_>
+<G726-32_Enable_1_>No</G726-32_Enable_1_>
+<G726-40_Enable_1_>No</G726-40_Enable_1_>
+<G722_Enable_1_>No</G722_Enable_1_>
+<iLBC_Enable_1_>No</iLBC_Enable_1_>
 
 <!-- DTMF -->
-<DTMF_Tx_Method_1_>Auto</DTMF_Tx_Method_1_>
+<DTMF_Tx_Method_1_>AVT</DTMF_Tx_Method_1_>
+<DTMF_Tx_Mode_1_>Strict</DTMF_Tx_Mode_1_>
+<Hook_Flash_Tx_Method_1_>None</Hook_Flash_Tx_Method_1_>
+<RTP_Packet_Size_1_>0.020</RTP_Packet_Size_1_>
 
 <!-- Fax - T.38 -->
 <FAX_Enable_T38_1_>Yes</FAX_Enable_T38_1_>
+<FAX_Codec_Symmetric_1_>Yes</FAX_Codec_Symmetric_1_>
+<FAX_T38_Redundancy_1_>1</FAX_T38_Redundancy_1_>
+<FAX_Passthru_Method_1_>NSE</FAX_Passthru_Method_1_>
+<FAX_Passthru_Codec_1_>G711u</FAX_Passthru_Codec_1_>
+<FAX_Disable_ECAN_1_>Yes</FAX_Disable_ECAN_1_>
 
-<!-- Echo Cancellation -->
+<!-- Voice Processing -->
+<Silence_Supp_Enable_1_>No</Silence_Supp_Enable_1_>
 <Echo_Canc_Enable_1_>Yes</Echo_Canc_Enable_1_>
+<Echo_Canc_Adapt_Enable_1_>Yes</Echo_Canc_Adapt_Enable_1_>
+<Echo_Supp_Enable_1_>Yes</Echo_Supp_Enable_1_>
+
+<!-- Caller ID -->
+<Caller_ID_Method_1_>Bellcore(N.Amer,China)</Caller_ID_Method_1_>
+<Caller_ID_FSK_Standard_1_>bell202</Caller_ID_FSK_Standard_1_>
+
+<!-- Audio -->
+<Txgain_1_>0</Txgain_1_>
+<Rxgain_1_>0</Rxgain_1_>
+
+<!-- Call Features -->
+<Call_Waiting_Serv_1_>Yes</Call_Waiting_Serv_1_>
+<DND_Serv_1_>No</DND_Serv_1_>
 
 <!-- Line 2 Disabled by Default -->
 <Line_Enable_2_>No</Line_Enable_2_>
 
 <!-- Network -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>
+<Enable_VLAN>No</Enable_VLAN>
 
 <!-- SIP -->
 <SIP_Port>{{SIP_PORT}}</SIP_Port>
 <RTP_Port_Min>16384</RTP_Port_Min>
 <RTP_Port_Max>16482</RTP_Port_Max>
+<SIP_Transport_1_>UDP</SIP_Transport_1_>
 
-<!-- Regional Settings -->
+<!-- QoS -->
+<SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
+<RTP_TOS_DiffServ_Value>0xb8</RTP_TOS_DiffServ_Value>
+<Enable_QOS>Yes</Enable_QOS>
+
+<!-- Regional Settings (FCC/North America) -->
+<Ring_Waveform>Sinusoid</Ring_Waveform>
+<Ring_Frequency>20</Ring_Frequency>
+<Ring_Voltage>75</Ring_Voltage>
 <FXS_Port_Impedance>600</FXS_Port_Impedance>
+<Hook_Flash_Timer_Min>0.1</Hook_Flash_Timer_Min>
+<Hook_Flash_Timer_Max>0.9</Hook_Flash_Timer_Max>
+
+<!-- Dial Plan -->
+<Dial_Plan_1_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_1_>
+<Interdigit_Long_Timer>10</Interdigit_Long_Timer>
+<Interdigit_Short_Timer>3</Interdigit_Short_Timer>
 
 <!-- Multiplatform -->
 <Multiplatform_Enable>Yes</Multiplatform_Enable>
@@ -1746,10 +2096,13 @@ P2351 = 1
         }
 
         # Build server config dict
+        server_ip = self.config.get("server.external_ip", "127.0.0.1")
+        api_port = self.config.get("api.port", 9000)
         server_config = {
-            "sip_host": self.config.get("server.external_ip", "127.0.0.1"),
+            "sip_host": server_ip,
             "sip_port": self.config.get("server.sip_port", 5060),
             "server_name": self.config.get("server.server_name", "PBX"),
+            "provision_resource_url": f"http://{server_ip}:{api_port}/provision/resources",
         }
 
         # Add LDAP phonebook configuration

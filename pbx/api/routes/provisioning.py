@@ -43,8 +43,13 @@ MAC_ADDRESS_PLACEHOLDERS = ["{mac}", "{MAC}", "{Ma}"]
 _YEALINK_COMMON_CFG_RE = re.compile(r"^y0{6,}\d*$")
 _ZULTYS_COMMON_CFG_RE = re.compile(r"^zip\d+[a-z]?_common$")
 
-# Zultys models with color screens that support wallpaper (based on Yealink T46G)
-_COLOR_SCREEN_MODELS = {"zip37g"}
+# Models with color screens that support wallpaper via Yealink common/model config.
+# Includes Zultys OEM names and Yealink model-level config IDs (y + 12 digits).
+_COLOR_SCREEN_MODELS = {
+    "zip37g",           # Zultys ZIP 37G (T46G OEM, 480x272)
+    "y000000000028",    # Yealink T46G (480x272 color)
+    "y000000000069",    # Yealink T46S (480x272 color)
+}
 
 
 def _is_common_config_request(filename: str) -> bool:
@@ -68,8 +73,8 @@ def _is_common_config_request(filename: str) -> bool:
 def _build_common_config(filename: str) -> str:
     """Build fleet-wide common config content appropriate for the requesting model.
 
-    For color-screen models (ZIP 37G), includes wallpaper/branding settings.
-    For grayscale models (ZIP 33G) and generic Yealink configs, returns minimal config.
+    For color-screen models, includes wallpaper/branding settings.
+    For grayscale models and generic Yealink configs, returns minimal config.
 
     Args:
         filename: The config filename without .cfg extension (e.g. 'zip37g_common').
@@ -92,26 +97,25 @@ def _build_common_config(filename: str) -> str:
     ]
 
     if model in _COLOR_SCREEN_MODELS:
-        # ZIP 37G (T46G-based) has a 480x272 color LCD — push wallpaper
+        # Color-screen Yealink-based phones (480x272 LCD) — push Warden VoIP wallpaper
         lines.extend(
             [
                 "# Wallpaper / Branding",
-                f"wallpaper_upload.url = {resource_base}/wallpaper_zip37g.jpg",
-                "phone_setting.backgrounds = Config:wallpaper_zip37g.jpg",
+                f"wallpaper_upload.url = {resource_base}/wallpaper_warden.jpg",
+                "phone_setting.backgrounds = Config:wallpaper_warden.jpg",
                 "",
             ]
         )
 
-    # Common settings applicable to all Zultys models
-    if _ZULTYS_COMMON_CFG_RE.match(filename):
-        lines.extend(
-            [
-                "# Auto-provisioning refresh (check for config updates every 24 hours)",
-                "auto_provision.repeat.enable = 1",
-                "auto_provision.repeat.minutes = 1440",
-                "",
-            ]
-        )
+    # Common settings applicable to all Yealink-based models (Zultys and native Yealink)
+    lines.extend(
+        [
+            "# Auto-provisioning refresh (check for config updates every 24 hours)",
+            "auto_provision.repeat.enable = 1",
+            "auto_provision.repeat.minutes = 1440",
+            "",
+        ]
+    )
 
     return "\n".join(lines) + "\n"
 

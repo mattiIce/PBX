@@ -64,7 +64,6 @@ P2351 = 1  # Send Remote-Party-ID header
 # NAT / Firewall
 # ============================================================================
 P52 = 30   # NAT Keep-Alive interval (seconds)
-P197 = 1   # Enable rport
 
 # ============================================================================
 # Network Settings
@@ -96,10 +95,11 @@ P191 = 1   # Echo cancellation enable
 P192 = 0   # Echo cancellation tail length (0=auto)
 
 # ============================================================================
-# Phone Display
+# Phone Display / Branding
 # ============================================================================
 P2336 = 60 # Backlight timeout (seconds)
 P122 = 1   # LCD contrast
+P2916 = {{PROVISION_RESOURCE_URL}}/wallpaper_warden.jpg  # Wallpaper image URL
 
 # ============================================================================
 # Auto Provisioning
