@@ -78,13 +78,25 @@ def architecture_diagrams() -> Response:
         project_root = pbx_package_dir.parent
         diagram_file = project_root / "docs" / "ARCHITECTURE_DIAGRAMS.html"
 
+        logger.debug(
+            f"Looking for architecture diagrams at: {diagram_file} "
+            f"(exists: {diagram_file.exists()})"
+        )
+
         if not diagram_file.exists() or not diagram_file.is_file():
+            logger.warning(
+                f"Architecture diagrams not found at {diagram_file}"
+            )
             return send_json({"error": "Architecture diagrams not found"}, 404)
 
         with diagram_file.open("r", encoding="utf-8") as f:
             content = f.read()
 
+        logger.debug(f"Successfully served architecture diagrams ({len(content)} bytes)")
         return Response(content, mimetype="text/html")
-    except (OSError, TypeError, ValueError) as e:
-        logger.error(f"Error serving architecture diagrams: {e}")
+    except Exception as e:
+        logger.error(
+            f"Error serving architecture diagrams: {type(e).__name__}: {e}",
+            exc_info=True,
+        )
         return send_json({"error": "Failed to serve architecture diagrams"}, 500)
