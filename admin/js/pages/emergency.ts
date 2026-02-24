@@ -56,7 +56,7 @@ export async function loadEmergencyContacts(): Promise<void> {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: EmergencyContactsResponse = await response.json();
 
-        const tbody = document.getElementById('emergency-contacts-body') as HTMLElement | null;
+        const tbody = document.getElementById('emergency-contacts-table') as HTMLElement | null;
         if (!tbody) return;
 
         const contacts = data.contacts ?? [];
@@ -93,7 +93,7 @@ export async function loadEmergencyHistory(): Promise<void> {
         if (!response.ok) return;
         const data: EmergencyHistoryResponse = await response.json();
 
-        const container = document.getElementById('emergency-history') as HTMLElement | null;
+        const container = document.getElementById('emergency-history-table') as HTMLElement | null;
         if (!container) return;
 
         const history = data.history ?? [];
@@ -137,7 +137,7 @@ export async function loadE911Sites(): Promise<void> {
         if (!response.ok) return;
         const data: E911SitesResponse = await response.json();
 
-        const container = document.getElementById('e911-sites-list') as HTMLElement | null;
+        const container = document.getElementById('e911-sites-table') as HTMLElement | null;
         if (!container) return;
 
         const sites = data.sites ?? [];
@@ -164,7 +164,7 @@ export async function loadExtensionLocations(): Promise<void> {
         if (!response.ok) return;
         const data: ExtensionLocationsResponse = await response.json();
 
-        const container = document.getElementById('extension-locations-list') as HTMLElement | null;
+        const container = document.getElementById('extension-locations-table') as HTMLElement | null;
         if (container) {
             const locations = data.locations ?? [];
             container.innerHTML = locations.length === 0
@@ -180,9 +180,125 @@ export async function loadExtensionLocations(): Promise<void> {
     }
 }
 
+export function showAddEmergencyContactModal(): void {
+    const modal = document.getElementById('add-emergency-contact-modal') as HTMLElement | null;
+    if (modal) modal.classList.add('active');
+}
+
+export function closeAddEmergencyContactModal(): void {
+    const modal = document.getElementById('add-emergency-contact-modal') as HTMLElement | null;
+    if (modal) modal.classList.remove('active');
+}
+
+export function showTriggerEmergencyModal(): void {
+    const modal = document.getElementById('trigger-emergency-modal') as HTMLElement | null;
+    if (modal) modal.classList.add('active');
+}
+
+export function closeTriggerEmergencyModal(): void {
+    const modal = document.getElementById('trigger-emergency-modal') as HTMLElement | null;
+    if (modal) modal.classList.remove('active');
+}
+
+export async function addEmergencyContact(event: Event): Promise<void> {
+    event.preventDefault();
+    const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+    const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
+
+    const methods: string[] = [];
+    if (chk('method-call')) methods.push('call');
+    if (chk('method-page')) methods.push('page');
+    if (chk('method-email')) methods.push('email');
+    if (chk('method-sms')) methods.push('sms');
+
+    const data = {
+        name: val('emergency-contact-name'),
+        extension: val('emergency-contact-extension'),
+        phone: val('emergency-contact-phone'),
+        email: val('emergency-contact-email'),
+        priority: val('emergency-contact-priority'),
+        notification_methods: methods,
+    };
+
+    try {
+        const API_BASE = getApiBaseUrl();
+        const response = await fetch(`${API_BASE}/api/emergency/contacts`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (response.ok) {
+            showNotification('Emergency contact added', 'success');
+            closeAddEmergencyContactModal();
+            loadEmergencyContacts();
+        } else {
+            showNotification('Failed to add emergency contact', 'error');
+        }
+    } catch (error: unknown) {
+        console.error('Error adding emergency contact:', error);
+        showNotification('Failed to add emergency contact', 'error');
+    }
+}
+
+export async function triggerEmergency(event: Event): Promise<void> {
+    event.preventDefault();
+    const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+
+    const data = {
+        type: val('trigger-type'),
+        details: val('trigger-details'),
+        info: val('trigger-info'),
+    };
+
+    try {
+        const API_BASE = getApiBaseUrl();
+        const response = await fetch(`${API_BASE}/api/emergency/trigger`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(data),
+        });
+        if (response.ok) {
+            showNotification('Emergency notification sent', 'success');
+            closeTriggerEmergencyModal();
+            loadEmergencyHistory();
+        } else {
+            showNotification('Failed to trigger emergency', 'error');
+        }
+    } catch (error: unknown) {
+        console.error('Error triggering emergency:', error);
+        showNotification('Failed to trigger emergency', 'error');
+    }
+}
+
+export async function testEmergencyNotification(): Promise<void> {
+    try {
+        const API_BASE = getApiBaseUrl();
+        const response = await fetch(`${API_BASE}/api/emergency/test`, {
+            method: 'POST',
+            headers: getAuthHeaders(),
+        });
+        if (response.ok) {
+            showNotification('Test notification sent successfully', 'success');
+        } else {
+            showNotification('Failed to send test notification', 'error');
+        }
+    } catch (error: unknown) {
+        console.error('Error testing emergency notification:', error);
+        showNotification('Failed to send test notification', 'error');
+    }
+}
+
 // Backward compatibility
 window.loadEmergencyContacts = loadEmergencyContacts;
 window.loadEmergencyHistory = loadEmergencyHistory;
 window.deleteEmergencyContact = deleteEmergencyContact;
 window.loadE911Sites = loadE911Sites;
 window.loadExtensionLocations = loadExtensionLocations;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy backward compat
+(window as any).showAddEmergencyContactModal = showAddEmergencyContactModal;
+(window as any).closeAddEmergencyContactModal = closeAddEmergencyContactModal;
+(window as any).showTriggerEmergencyModal = showTriggerEmergencyModal;
+(window as any).closeTriggerEmergencyModal = closeTriggerEmergencyModal;
+(window as any).addEmergencyContact = addEmergencyContact;
+(window as any).triggerEmergency = triggerEmergency;
+(window as any).testEmergencyNotification = testEmergencyNotification;

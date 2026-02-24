@@ -58,7 +58,7 @@ export async function loadPagingZones(): Promise<void> {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: PagingZonesResponse = await response.json();
 
-        const tbody = document.getElementById('paging-zones-body') as HTMLElement | null;
+        const tbody = document.getElementById('paging-zones-table-body') as HTMLElement | null;
         if (!tbody) return;
 
         const zones = data.zones ?? [];
@@ -89,7 +89,7 @@ export async function loadPagingDevices(): Promise<void> {
         if (!response.ok) return;
         const data: PagingDevicesResponse = await response.json();
 
-        const container = document.getElementById('paging-devices-list') as HTMLElement | null;
+        const container = document.getElementById('paging-devices-table-body') as HTMLElement | null;
         if (container) {
             const devices = data.devices ?? [];
             container.innerHTML = devices.length === 0
@@ -110,7 +110,7 @@ export async function loadActivePages(): Promise<void> {
         if (!response.ok) return;
         const data: ActivePagesResponse = await response.json();
 
-        const container = document.getElementById('active-pages') as HTMLElement | null;
+        const container = document.getElementById('active-pages-table-body') as HTMLElement | null;
         if (container) {
             const pages = data.pages ?? [];
             container.innerHTML = pages.length === 0

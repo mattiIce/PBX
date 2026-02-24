@@ -79,7 +79,7 @@ export async function loadDTMFConfig(): Promise<void> {
         const modeSelect = document.getElementById('dtmf-mode') as HTMLSelectElement | null;
         if (modeSelect) modeSelect.value = data.mode ?? 'rfc2833';
 
-        const threshold = document.getElementById('dtmf-threshold') as HTMLInputElement | null;
+        const threshold = document.getElementById('dtmf-detection-threshold') as HTMLInputElement | null;
         if (threshold) threshold.value = String(data.threshold ?? -30);
     } catch (error: unknown) {
         console.error('Error loading DTMF config:', error);
@@ -91,7 +91,7 @@ export async function saveDTMFConfig(): Promise<void> {
         const API_BASE = getApiBaseUrl();
         const config = {
             mode: (document.getElementById('dtmf-mode') as HTMLSelectElement | null)?.value ?? 'rfc2833',
-            threshold: parseInt((document.getElementById('dtmf-threshold') as HTMLInputElement | null)?.value ?? '-30')
+            threshold: parseInt((document.getElementById('dtmf-detection-threshold') as HTMLInputElement | null)?.value ?? '-30')
         };
 
         const response = await fetch(`${API_BASE}/api/config/dtmf`, {
@@ -111,8 +111,37 @@ export async function saveDTMFConfig(): Promise<void> {
     }
 }
 
+export async function saveCodecConfig(event?: Event): Promise<void> {
+    if (event) event.preventDefault();
+    try {
+        const API_BASE = getApiBaseUrl();
+        const form = document.getElementById('codec-config-form') as HTMLFormElement | null;
+        if (!form) return;
+
+        const formData = new FormData(form);
+        const data = Object.fromEntries(formData.entries());
+
+        const response = await fetch(`${API_BASE}/api/config/codecs`, {
+            method: 'POST',
+            headers: { ...getAuthHeaders(), 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        if (response.ok) {
+            showNotification('Codec configuration saved', 'success');
+        } else {
+            showNotification('Failed to save codec configuration', 'error');
+        }
+    } catch (error: unknown) {
+        console.error('Error saving codec config:', error);
+        showNotification('Failed to save codec configuration', 'error');
+    }
+}
+
 // Backward compatibility
 window.loadCalls = loadCalls;
 window.loadCodecStatus = loadCodecStatus;
 window.loadDTMFConfig = loadDTMFConfig;
 window.saveDTMFConfig = saveDTMFConfig;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy backward compat
+(window as any).saveCodecConfig = saveCodecConfig;
