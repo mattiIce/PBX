@@ -1,12 +1,18 @@
 """API documentation Blueprint routes.
 
 Serves Swagger UI for interactive API documentation and the
-OpenAPI JSON specification.
+OpenAPI JSON specification, as well as architecture diagrams.
 """
+
+from pathlib import Path
 
 from flask import Blueprint, Response, jsonify
 
 from pbx.api.openapi import get_openapi_spec
+from pbx.api.utils import send_json
+from pbx.utils.logger import get_logger
+
+logger = get_logger()
 
 docs_bp = Blueprint("docs", __name__)
 
@@ -55,3 +61,27 @@ def swagger_ui() -> Response:
 </body>
 </html>"""
     return Response(html, mimetype="text/html")
+
+
+@docs_bp.route("/api/docs/architecture")
+def architecture_diagrams() -> Response:
+    """Serve the architecture diagrams HTML file.
+
+    Returns:
+        Rendered HTML page with interactive architecture diagrams.
+        Returns 404 if the file is not found.
+    """
+    try:
+        docs_dir = Path(__file__).resolve().parent.parent.parent / "docs"
+        diagram_file = docs_dir / "ARCHITECTURE_DIAGRAMS.html"
+
+        if not diagram_file.exists() or not diagram_file.is_file():
+            return send_json({"error": "Architecture diagrams not found"}, 404)
+
+        with diagram_file.open("r", encoding="utf-8") as f:
+            content = f.read()
+
+        return Response(content, mimetype="text/html")
+    except (OSError, TypeError, ValueError) as e:
+        logger.error(f"Error serving architecture diagrams: {e}")
+        return send_json({"error": "Failed to serve architecture diagrams"}, 500)
