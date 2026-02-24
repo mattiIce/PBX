@@ -670,9 +670,9 @@ header h1 {
     margin-top: 15px;
     padding: 10px;
     background: var(--color-warning-bg);
-    border: 1px solid #ffc107;
+    border: 1px solid var(--color-warning);
     border-radius: 5px;
-    color: #856404;
+    color: var(--color-warning);
     font-size: 0.9rem;
 }
 
@@ -806,7 +806,7 @@ header h1 {
 
 /* Loading Spinner */
 .spinner {
-    border: 3px solid #f3f3f3;
+    border: 3px solid var(--color-border);
     border-top: 3px solid var(--color-focus-ring);
     border-radius: 50%;
     width: 40px;
@@ -850,7 +850,7 @@ header h1 {
 }
 
 .btn-info:hover {
-    background: #2563eb;
+    background: var(--color-info);
 }
 
 .no-data {
@@ -877,7 +877,7 @@ header h1 {
     padding: 20px;
     text-align: center;
     background-color: var(--color-danger-bg);
-    border: 1px solid #f5c6cb;
+    border: 1px solid var(--color-danger-bg);
     border-radius: 4px;
 }
 
@@ -926,7 +926,7 @@ header h1 {
 }
 
 .ad-status-item span {
-    color: #212529;
+    color: var(--color-text);
     font-size: 1rem;
 }
 
@@ -1027,7 +1027,7 @@ header h1 {
 }
 
 .badge-ata {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
     color: var(--color-text-inverse);
     padding: 4px 10px;
     border-radius: 12px;
@@ -1038,7 +1038,7 @@ header h1 {
 }
 
 .badge-phone {
-    background: linear-gradient(135deg, var(--color-info) 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--color-info) 0%, var(--color-info) 100%);
     color: var(--color-text-inverse);
     padding: 4px 10px;
     border-radius: 12px;
@@ -1309,27 +1309,27 @@ select:focus {
 }
 
 .webrtc-status.info {
-    background: #e3f2fd;
-    color: #1976d2;
-    border: 1px solid #90caf9;
+    background: var(--color-info-bg);
+    color: var(--color-info);
+    border: 1px solid var(--color-info);
 }
 
 .webrtc-status.success {
-    background: #e8f5e9;
+    background: var(--color-success-bg);
     color: #2e7d32;
-    border: 1px solid #81c784;
+    border: 1px solid var(--color-success);
 }
 
 .webrtc-status.warning {
-    background: #fff3e0;
-    color: #f57c00;
-    border: 1px solid #ffb74d;
+    background: var(--color-warning-bg);
+    color: var(--color-warning);
+    border: 1px solid var(--color-warning);
 }
 
 .webrtc-status.error {
-    background: #ffebee;
-    color: #c62828;
-    border: 1px solid #e57373;
+    background: var(--color-danger-bg);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
 }
 
 .phone-input-group input[type="text"] {
@@ -1364,11 +1364,11 @@ select:focus {
 }
 
 #webrtc-call-btn {
-    background: linear-gradient(135deg, #4caf50, #45a049);
+    background: linear-gradient(135deg, var(--color-success), var(--color-success-light));
 }
 
 #webrtc-call-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #45a049, #3d8b40);
+    background: linear-gradient(135deg, var(--color-success-light), #3d8b40);
 }
 
 #webrtc-hangup-btn {
@@ -1376,7 +1376,7 @@ select:focus {
 }
 
 #webrtc-hangup-btn:hover:not(:disabled) {
-    background: linear-gradient(135deg, #e53935, #c62828);
+    background: linear-gradient(135deg, #e53935, var(--color-danger));
 }
 
 #webrtc-mute-btn {
@@ -1922,7 +1922,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 /* Framework Feature Status Badges */
 .status-fully-implemented {
-    background: #4caf50 !important;
+    background: var(--color-success) !important;
     color: var(--color-text-inverse);
 }
 

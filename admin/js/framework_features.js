@@ -248,7 +248,7 @@ function loadFrameworkOverview() {
             </div>
         </div>
 
-        <div class="section-card" style="margin-top: 30px; background: #e8f5e9; border-left: 4px solid #4caf50;">
+        <div class="section-card" style="margin-top: 30px; class="stat-card-green" style="background: var(--color-success-bg); border-left: 4px solid var(--color-success);">
             <h3>💚 100% Free & Open Source</h3>
             <div class="info-box" style="background: white;">
                 <p><strong>All framework features can be implemented using only free and open-source technologies:</strong></p>
@@ -263,7 +263,7 @@ function loadFrameworkOverview() {
                     <li>✅ <strong>FFmpeg:</strong> FREE audio/video processing</li>
                     <li>✅ <strong>Kamailio/OpenSIPS:</strong> FREE SIP servers for SBC</li>
                 </ul>
-                <p style="margin-top: 15px; font-weight: bold; color: #2e7d32;">💰 Total Cost: $0 - No licensing fees, no cloud costs, no subscriptions!</p>
+                <p style="margin-top: 15px; font-weight: bold; color: var(--color-success);">💰 Total Cost: $0 - No licensing fees, no cloud costs, no subscriptions!</p>
             </div>
         </div>
 
@@ -292,7 +292,7 @@ function loadFrameworkOverview() {
 function loadClickToDialTab() {
     const content = `
         <h2>📲 Click-to-Dial Configuration</h2>
-        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+        <div class="info-box" style="class="stat-card-green" style="background: var(--color-success-bg); border-left: 4px solid var(--color-success);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-fully-implemented">✅ Fully Implemented</span>
                 <strong>Production Ready</strong>
@@ -425,7 +425,7 @@ const viewClickToDialHistory = async (extension) => {
 function loadVideoConferencingTab() {
     const content = `
         <h2>📹 Video Conferencing</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -588,7 +588,7 @@ function hideCreateRoomDialog() {
 function loadConversationalAITab() {
     return `
         <h2>🤖 Conversational AI Assistant</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -754,7 +754,7 @@ const submitConversationalAIConfig = async (e) => {
 function loadPredictiveDialingTab() {
     const content = `
         <h2>📞 Predictive Dialing</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -996,7 +996,7 @@ const toggleCampaign = async (campaignId) => {
 function loadVoiceBiometricsTab() {
     const content = `
         <h2>🔊 Voice Biometrics</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -1213,7 +1213,7 @@ const deleteVoiceProfile = async (profileId) => {
 function loadCallQualityPredictionTab() {
     return `
         <h2>📊 Call Quality Prediction</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -1242,7 +1242,7 @@ function loadCallQualityPredictionTab() {
 function loadVideoCodecTab() {
     return `
         <h2>🎬 Video Codecs (H.264/H.265)</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -1301,7 +1301,7 @@ function loadBIIntegrationTab() {
 
     const content = `
         <h2>📈 Business Intelligence Integration</h2>
-        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+        <div class="info-box" style="class="stat-card-green" style="background: var(--color-success-bg); border-left: 4px solid var(--color-success);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-fully-implemented">✅ API Connected</span>
                 <strong>REST API Endpoints Active</strong>
@@ -1462,7 +1462,7 @@ function loadCallTaggingTab() {
 
     const content = `
         <h2>🏷️ Call Tagging & Categorization</h2>
-        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+        <div class="info-box" style="class="stat-card-green" style="background: var(--color-success-bg); border-left: 4px solid var(--color-success);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-fully-implemented">✅ API Connected</span>
                 <strong>REST API Endpoints Active</strong>
@@ -1830,7 +1830,7 @@ const toggleRule = async (ruleId) => {
 function loadMobileAppsTab() {
     return `
         <h2>📱 Mobile Apps Framework</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Backend Infrastructure Ready</strong>
@@ -2055,7 +2055,7 @@ const submitMobileAppsConfig = async (e) => {
 function loadMobileNumberPortabilityTab() {
     return `
         <h2>🔄 Mobile Number Portability</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2084,7 +2084,7 @@ function loadMobileNumberPortabilityTab() {
 function loadRecordingAnalyticsTab() {
     return `
         <h2>🎙️ Call Recording Analytics</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2208,7 +2208,7 @@ function loadCallBlendingTab() {
 
     return `
         <h2>🔀 Call Blending</h2>
-        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+        <div class="info-box" style="class="stat-card-green" style="background: var(--color-success-bg); border-left: 4px solid var(--color-success);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-fully-implemented">✅ API Connected</span>
                 <strong>REST API Endpoints Active</strong>
@@ -2286,7 +2286,7 @@ const viewAgentDetails = async (agentId) => {
 function loadVoicemailDropTab() {
     return `
         <h2>📭 Predictive Voicemail Drop</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2381,7 +2381,7 @@ function loadGeographicRedundancyTab() {
                             else if (region.status === 'standby') statusColor = '#ff9800';
 
                             return `
-                                <tr ${region.is_active ? 'style="background: #e8f5e9;"' : ''}>
+                                <tr ${region.is_active ? 'style="class="stat-card-green" style="background: var(--color-success-bg);"' : ''}>
                                     <td>
                                         ${region.region_id}
                                         ${region.is_active ? '<span class="status-badge status-online">ACTIVE</span>' : ''}
@@ -2415,7 +2415,7 @@ function loadGeographicRedundancyTab() {
 
     return `
         <h2>🌍 Geographic Redundancy</h2>
-        <div class="info-box" style="background: #e8f5e9; border-left: 4px solid #4caf50;">
+        <div class="info-box" style="class="stat-card-green" style="background: var(--color-success-bg); border-left: 4px solid var(--color-success);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-fully-implemented">✅ API Connected</span>
                 <strong>REST API Endpoints Active</strong>
@@ -2542,7 +2542,7 @@ Last Health Check: ${region.last_health_check || 'Never'}`;
 function loadDNSSRVFailoverTab() {
     return `
         <h2>🌐 DNS SRV Failover</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2571,7 +2571,7 @@ function loadDNSSRVFailoverTab() {
 function loadSessionBorderControllerTab() {
     return `
         <h2>🛡️ Session Border Controller</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2600,7 +2600,7 @@ function loadSessionBorderControllerTab() {
 function loadDataResidencyTab() {
     return `
         <h2>🗺️ Data Residency Controls</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2629,7 +2629,7 @@ function loadDataResidencyTab() {
 function loadTeamMessagingTab() {
     return `
         <h2>💬 Team Messaging</h2>
-        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid var(--color-warning);">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2683,14 +2683,14 @@ features:
 
         <div class="section-card">
             <h3>💚 100% Free Options</h3>
-            <div class="info-box" style="background: #e8f5e9;">
+            <div class="info-box" style="class="stat-card-green" style="background: var(--color-success-bg);">
                 <p><strong>All team messaging options are free and open source:</strong></p>
                 <ul>
                     <li>✅ <strong>Matrix:</strong> FREE federated messaging (like email for chat)</li>
                     <li>✅ <strong>Rocket.Chat:</strong> FREE community edition with unlimited users</li>
                     <li>✅ <strong>Mattermost:</strong> FREE team edition</li>
                 </ul>
-                <p style="margin-top: 15px; font-weight: bold; color: #2e7d32;">💰 Total Cost: $0 vs $96-240/user/year for Slack/Teams!</p>
+                <p style="margin-top: 15px; font-weight: bold; color: var(--color-success);">💰 Total Cost: $0 vs $96-240/user/year for Slack/Teams!</p>
             </div>
         </div>
     `;
