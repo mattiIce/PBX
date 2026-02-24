@@ -68,7 +68,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
                 <p>AI assistant with live statistics (FREE: Rasa, ChatterBot)</p>
-                <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Live statistics ✓ API integration ⚠ Needs AI service (free options available)</small>
+                <small class="stat-card-orange-text" style=" display: block; margin-top: 8px;">✓ Full UI ✓ Live statistics ✓ API integration ⚠ Needs AI service (free options available)</small>
                 <button onclick="switchTab('conversational-ai')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card-orange">
@@ -78,7 +78,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
                 <p>Campaign management with live statistics (FREE: Vicidial)</p>
-                <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Campaign tracking ✓ Statistics dashboard ⚠ Needs dialer engine (free options available)</small>
+                <small class="stat-card-orange-text" style=" display: block; margin-top: 8px;">✓ Full UI ✓ Campaign tracking ✓ Statistics dashboard ⚠ Needs dialer engine (free options available)</small>
                 <button onclick="switchTab('predictive-dialing')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card-orange">
@@ -88,7 +88,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
                 <p>Speaker authentication with enrollment tracking (FREE: speaker-recognition)</p>
-                <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Profile management ✓ Verification tracking ⚠ Needs biometric engine (free options available)</small>
+                <small class="stat-card-orange-text" style=" display: block; margin-top: 8px;">✓ Full UI ✓ Profile management ✓ Verification tracking ⚠ Needs biometric engine (free options available)</small>
                 <button onclick="switchTab('voice-biometrics')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card-orange">
@@ -98,7 +98,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
                 <p>Dataset browser with export (FREE: Metabase, Superset, Redash)</p>
-                <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Export functionality ✓ Multiple formats ⚠ Needs BI tool (free options available)</small>
+                <small class="stat-card-orange-text" style=" display: block; margin-top: 8px;">✓ Full UI ✓ Export functionality ✓ Multiple formats ⚠ Needs BI tool (free options available)</small>
                 <button onclick="switchTab('bi-integration')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card-orange">
@@ -108,7 +108,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
                 <p>Tag management with analytics (FREE: spaCy NLP)</p>
-                <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Tag management ✓ Live statistics ⚠ Needs AI classifier (free options available)</small>
+                <small class="stat-card-orange-text" style=" display: block; margin-top: 8px;">✓ Full UI ✓ Tag management ✓ Live statistics ⚠ Needs AI classifier (free options available)</small>
                 <button onclick="switchTab('call-tagging')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card-orange">
@@ -118,7 +118,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-enhanced">🔧 Enhanced Admin UI</span>
                 </div>
                 <p>Device management with statistics (FREE: React Native + WebRTC)</p>
-                <small style="color: #e65100; display: block; margin-top: 8px;">✓ Full UI ✓ Device tracking ✓ Push config ⚠ Needs native app development (free frameworks available)</small>
+                <small class="stat-card-orange-text" style=" display: block; margin-top: 8px;">✓ Full UI ✓ Device tracking ✓ Push config ⚠ Needs native app development (free frameworks available)</small>
                 <button onclick="switchTab('mobile-push')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
         </div>
@@ -132,7 +132,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>ML-based QoS prediction (FREE: scikit-learn)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Metrics tracking ✓ Alerting ⚠ Needs ML model (free framework available)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Metrics tracking ✓ Alerting ⚠ Needs ML model (free framework available)</small>
                 <button onclick="switchTab('call-quality-prediction')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
 
@@ -143,7 +143,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Video codec support (FREE: FFmpeg, OpenH264)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Codec negotiation ✓ Bandwidth calc ⚠ Needs FFmpeg/OpenH264 (free)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Codec negotiation ✓ Bandwidth calc ⚠ Needs FFmpeg/OpenH264 (free)</small>
                 <button onclick="switchTab('video-codec')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -153,7 +153,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Use business number on mobile device</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ DID mapping ✓ Simultaneous ring ⚠ Needs mobile integration</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ DID mapping ✓ Simultaneous ring ⚠ Needs mobile integration</small>
                 <button onclick="switchTab('mobile-number-portability')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -163,7 +163,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>AI analysis of recorded calls (FREE: Vosk + spaCy)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Sentiment ✓ Keywords ⚠ Needs NLP service (free options available)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Sentiment ✓ Keywords ⚠ Needs NLP service (free options available)</small>
                 <button onclick="switchTab('recording-analytics')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -173,7 +173,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Mix inbound/outbound calls for efficiency</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Mode switching ✓ Priority distribution ⚠ Needs queue integration</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Mode switching ✓ Priority distribution ⚠ Needs queue integration</small>
                 <button onclick="switchTab('call-blending')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -183,7 +183,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Auto-leave message on voicemail detection (FREE: pyAudioAnalysis)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ AMD ✓ Message library ⚠ Needs detection algorithm (free options available)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ AMD ✓ Message library ⚠ Needs detection algorithm (free options available)</small>
                 <button onclick="switchTab('voicemail-drop')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -193,7 +193,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Multi-region trunk registration with failover</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Region management ✓ Health monitoring ⚠ Needs multi-region setup</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Region management ✓ Health monitoring ⚠ Needs multi-region setup</small>
                 <button onclick="switchTab('geo-redundancy')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -203,7 +203,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Automatic server failover using DNS SRV (FREE: BIND, PowerDNS)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Priority selection ✓ Load balancing ⚠ Needs DNS SRV records (free DNS servers available)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Priority selection ✓ Load balancing ⚠ Needs DNS SRV records (free DNS servers available)</small>
                 <button onclick="switchTab('dns-srv-failover')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -213,7 +213,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Enhanced security and NAT traversal (FREE: Kamailio, OpenSIPS)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Topology hiding ✓ Security filtering ⚠ Needs SBC deployment (free options available)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Topology hiding ✓ Security filtering ⚠ Needs SBC deployment (free options available)</small>
                 <button onclick="switchTab('session-border-controller')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -223,7 +223,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Geographic data storage options for compliance</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Region management ✓ GDPR support ⚠ Needs multi-region storage</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Region management ✓ GDPR support ⚠ Needs multi-region storage</small>
                 <button onclick="switchTab('data-residency')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -233,7 +233,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>HD/4K video calls with screen sharing (FREE: Jitsi, BigBlueButton)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Room management ✓ Participant tracking ⚠ Needs video service (free options available)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Room management ✓ Participant tracking ⚠ Needs video service (free options available)</small>
                 <button onclick="switchTab('video-conferencing')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
             <div class="stat-card">
@@ -243,7 +243,7 @@ function loadFrameworkOverview() {
                     <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 </div>
                 <p>Slack/Teams alternative with channels and file sharing (FREE: Matrix, Rocket.Chat)</p>
-                <small style="color: #666; display: block; margin-top: 8px;">✓ Channel management ✓ Message tracking ⚠ Needs messaging server (free options available)</small>
+                <small style="color: var(--color-text-secondary);" display: block; margin-top: 8px;">✓ Channel management ✓ Message tracking ⚠ Needs messaging server (free options available)</small>
                 <button onclick="switchTab('team-messaging')" class="btn-primary" style="margin-top: 10px;">Configure</button>
             </div>
         </div>
@@ -425,7 +425,7 @@ const viewClickToDialHistory = async (extension) => {
 function loadVideoConferencingTab() {
     const content = `
         <h2>📹 Video Conferencing</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -588,7 +588,7 @@ function hideCreateRoomDialog() {
 function loadConversationalAITab() {
     return `
         <h2>🤖 Conversational AI Assistant</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -662,7 +662,7 @@ function loadConversationalAITab() {
                     <li>⚠️ Update config.yml with provider settings</li>
                 </ul>
                 <p style="margin-top: 15px;"><strong>Example config.yml:</strong></p>
-                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+                <pre style="background: var(--color-bg-hover);" padding: 10px; border-radius: 4px; overflow-x: auto;">
 features:
   conversational_ai:
     enabled: true
@@ -707,7 +707,7 @@ const loadConversationalAIStats = async () => {
         `;
     } catch (err) {
         // API endpoint not yet implemented or feature not enabled - show friendly message
-        statsDiv.innerHTML = `<p style="color: #666;"><em>Statistics unavailable. The API endpoint (/api/framework/conversational-ai/stats) will be available when the feature is enabled with an AI provider configured.</em></p>`;
+        statsDiv.innerHTML = `<p style="color: var(--color-text-secondary);""><em>Statistics unavailable. The API endpoint (/api/framework/conversational-ai/stats) will be available when the feature is enabled with an AI provider configured.</em></p>`;
     }
 };
 
@@ -754,7 +754,7 @@ const submitConversationalAIConfig = async (e) => {
 function loadPredictiveDialingTab() {
     const content = `
         <h2>📞 Predictive Dialing</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -801,19 +801,19 @@ function loadPredictiveDialingTab() {
             <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
                 <div class="stat-card">
                     <h4>📋 Preview Mode</h4>
-                    <p style="color: #666; font-size: 14px;">Agent reviews contact before dialing</p>
+                    <p style="color: var(--color-text-secondary);" font-size: 14px;">Agent reviews contact before dialing</p>
                 </div>
                 <div class="stat-card">
                     <h4>➡️ Progressive Mode</h4>
-                    <p style="color: #666; font-size: 14px;">Auto-dial when agent available</p>
+                    <p style="color: var(--color-text-secondary);" font-size: 14px;">Auto-dial when agent available</p>
                 </div>
                 <div class="stat-card">
                     <h4>🤖 Predictive Mode</h4>
-                    <p style="color: #666; font-size: 14px;">AI predicts agent availability</p>
+                    <p style="color: var(--color-text-secondary);" font-size: 14px;">AI predicts agent availability</p>
                 </div>
                 <div class="stat-card">
                     <h4>⚡ Power Mode</h4>
-                    <p style="color: #666; font-size: 14px;">Multiple dials per agent</p>
+                    <p style="color: var(--color-text-secondary);" font-size: 14px;">Multiple dials per agent</p>
                 </div>
             </div>
         </div>
@@ -850,7 +850,7 @@ const loadPredictiveDialingCampaigns = async () => {
         const container = document.getElementById('campaigns-list');
 
         if (campaigns.length === 0) {
-            container.innerHTML = '<p style="color: #666;">No campaigns created yet. Framework ready for campaign management.</p>';
+            container.innerHTML = '<p style="color: var(--color-text-secondary);"">No campaigns created yet. Framework ready for campaign management.</p>';
             return;
         }
 
@@ -889,7 +889,7 @@ const loadPredictiveDialingCampaigns = async () => {
         container.innerHTML = html;
     } catch (err) {
         document.getElementById('campaigns-list').innerHTML =
-            '<p style="color: #666;">Framework ready. Campaigns will appear when feature is enabled.</p>';
+            '<p style="color: var(--color-text-secondary);"">Framework ready. Campaigns will appear when feature is enabled.</p>';
     }
 };
 
@@ -996,7 +996,7 @@ const toggleCampaign = async (campaignId) => {
 function loadVoiceBiometricsTab() {
     const content = `
         <h2>🔊 Voice Biometrics</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -1075,7 +1075,7 @@ const loadVoiceBiometricProfiles = async () => {
         const container = document.getElementById('biometric-profiles-list');
 
         if (profiles.length === 0) {
-            container.innerHTML = '<p style="color: #666;">No users enrolled yet. Framework ready for voice enrollment.</p>';
+            container.innerHTML = '<p style="color: var(--color-text-secondary);"">No users enrolled yet. Framework ready for voice enrollment.</p>';
             return;
         }
 
@@ -1112,7 +1112,7 @@ const loadVoiceBiometricProfiles = async () => {
         container.innerHTML = html;
     } catch (err) {
         document.getElementById('biometric-profiles-list').innerHTML =
-            '<p style="color: #666;">Framework ready. Voice profiles will appear when feature is enabled.</p>';
+            '<p style="color: var(--color-text-secondary);"">Framework ready. Voice profiles will appear when feature is enabled.</p>';
     }
 };
 
@@ -1213,7 +1213,7 @@ const deleteVoiceProfile = async (profileId) => {
 function loadCallQualityPredictionTab() {
     return `
         <h2>📊 Call Quality Prediction</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -1242,7 +1242,7 @@ function loadCallQualityPredictionTab() {
 function loadVideoCodecTab() {
     return `
         <h2>🎬 Video Codecs (H.264/H.265)</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -1324,22 +1324,22 @@ function loadBIIntegrationTab() {
                 <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));">
                     <div class="stat-card">
                         <h4>📞 Call Detail Records (CDR)</h4>
-                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Complete call history with caller, callee, duration, and disposition</p>
+                        <p style="color: var(--color-text-secondary);" font-size: 14px; margin: 10px 0;">Complete call history with caller, callee, duration, and disposition</p>
                         <button onclick="exportBIDataset('cdr')" class="btn-primary btn-sm">Export CDR</button>
                     </div>
                     <div class="stat-card">
                         <h4>📊 Queue Statistics</h4>
-                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Call queue metrics, wait times, and agent performance</p>
+                        <p style="color: var(--color-text-secondary);" font-size: 14px; margin: 10px 0;">Call queue metrics, wait times, and agent performance</p>
                         <button onclick="exportBIDataset('queue_stats')" class="btn-primary btn-sm">Export Queue Stats</button>
                     </div>
                     <div class="stat-card">
                         <h4>📡 QoS Metrics</h4>
-                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Call quality data including MOS, jitter, packet loss</p>
+                        <p style="color: var(--color-text-secondary);" font-size: 14px; margin: 10px 0;">Call quality data including MOS, jitter, packet loss</p>
                         <button onclick="exportBIDataset('qos_metrics')" class="btn-primary btn-sm">Export QoS</button>
                     </div>
                     <div class="stat-card">
                         <h4>👥 Extension Usage</h4>
-                        <p style="color: #666; font-size: 14px; margin: 10px 0;">Per-extension usage, call volumes, and trends</p>
+                        <p style="color: var(--color-text-secondary);" font-size: 14px; margin: 10px 0;">Per-extension usage, call volumes, and trends</p>
                         <button onclick="exportBIDataset('extension_usage')" class="btn-primary btn-sm">Export Analytics</button>
                     </div>
                 </div>
@@ -1382,7 +1382,7 @@ function loadBIIntegrationTab() {
                     <li>⚠️ Direct BI tool API connections - <strong>Requires credentials</strong></li>
                 </ul>
                 <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
-                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+                <pre style="background: var(--color-bg-hover);" padding: 10px; border-radius: 4px; overflow-x: auto;">
 GET  /api/framework/bi-integration/datasets
 GET  /api/framework/bi-integration/statistics
 GET  /api/framework/bi-integration/export/{dataset}
@@ -1506,7 +1506,7 @@ function loadCallTaggingTab() {
                     <li>⚠️ AI classification service - <strong>Requires external AI</strong></li>
                 </ul>
                 <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
-                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+                <pre style="background: var(--color-bg-hover);" padding: 10px; border-radius: 4px; overflow-x: auto;">
 GET  /api/framework/call-tagging/tags
 GET  /api/framework/call-tagging/rules
 GET  /api/framework/call-tagging/statistics
@@ -1541,7 +1541,7 @@ const loadCallTags = async () => {
         const container = document.getElementById('tags-list');
 
         if (tags.length === 0) {
-            container.innerHTML = '<p style="color: #666;">No tags created yet. Click "+ Create Tag" to add your first tag.</p>';
+            container.innerHTML = '<p style="color: var(--color-text-secondary);"">No tags created yet. Click "+ Create Tag" to add your first tag.</p>';
             return;
         }
 
@@ -1573,7 +1573,7 @@ const loadTaggingRules = async () => {
         const container = document.getElementById('tagging-rules-list');
 
         if (rules.length === 0) {
-            container.innerHTML = '<p style="color: #666;">No auto-tagging rules created yet.</p>';
+            container.innerHTML = '<p style="color: var(--color-text-secondary);"">No auto-tagging rules created yet.</p>';
             return;
         }
 
@@ -1830,7 +1830,7 @@ const toggleRule = async (ruleId) => {
 function loadMobileAppsTab() {
     return `
         <h2>📱 Mobile Apps Framework</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Backend Infrastructure Ready</strong>
@@ -2010,7 +2010,7 @@ const loadMobileAppsStats = async () => {
                     <div class="stat-label">Active</div>
                 </div>
             </div>
-            <p style="color: #666;"><em>Framework ready. Devices will appear when mobile apps are deployed and users register.</em></p>
+            <p style="color: var(--color-text-secondary);""><em>Framework ready. Devices will appear when mobile apps are deployed and users register.</em></p>
         `;
     }
 };
@@ -2055,7 +2055,7 @@ const submitMobileAppsConfig = async (e) => {
 function loadMobileNumberPortabilityTab() {
     return `
         <h2>🔄 Mobile Number Portability</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2084,7 +2084,7 @@ function loadMobileNumberPortabilityTab() {
 function loadRecordingAnalyticsTab() {
     return `
         <h2>🎙️ Call Recording Analytics</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2154,7 +2154,7 @@ function loadCallBlendingTab() {
             const container = document.getElementById('blending-agents-list');
 
             if (agents.length === 0) {
-                container.innerHTML = '<p style="color: #666;">No agents registered for call blending yet.</p>';
+                container.innerHTML = '<p style="color: var(--color-text-secondary);"">No agents registered for call blending yet.</p>';
                 return;
             }
 
@@ -2202,7 +2202,7 @@ function loadCallBlendingTab() {
             container.innerHTML = html;
         } catch (err) {
             console.error('Error loading agents:', err);
-            document.getElementById('blending-agents-list').innerHTML = '<p style="color: #666;">No agents available.</p>';
+            document.getElementById('blending-agents-list').innerHTML = '<p style="color: var(--color-text-secondary);"">No agents available.</p>';
         }
     })();
 
@@ -2243,7 +2243,7 @@ function loadCallBlendingTab() {
                     <li>⚠️ Queue system integration - <strong>Requires configuration</strong></li>
                 </ul>
                 <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
-                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+                <pre style="background: var(--color-bg-hover);" padding: 10px; border-radius: 4px; overflow-x: auto;">
 GET  /api/framework/call-blending/agents
 GET  /api/framework/call-blending/statistics
 GET  /api/framework/call-blending/agent/{agent_id}
@@ -2286,7 +2286,7 @@ const viewAgentDetails = async (agentId) => {
 function loadVoicemailDropTab() {
     return `
         <h2>📭 Predictive Voicemail Drop</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2356,7 +2356,7 @@ function loadGeographicRedundancyTab() {
             const container = document.getElementById('geo-regions-list');
 
             if (regions.length === 0) {
-                container.innerHTML = '<p style="color: #666;">No regions configured yet. Click "+ Add Region" to create your first region.</p>';
+                container.innerHTML = '<p style="color: var(--color-text-secondary);"">No regions configured yet. Click "+ Add Region" to create your first region.</p>';
                 return;
             }
 
@@ -2409,7 +2409,7 @@ function loadGeographicRedundancyTab() {
             container.innerHTML = html;
         } catch (err) {
             console.error('Error loading regions:', err);
-            document.getElementById('geo-regions-list').innerHTML = '<p style="color: #666;">No regions available.</p>';
+            document.getElementById('geo-regions-list').innerHTML = '<p style="color: var(--color-text-secondary);"">No regions available.</p>';
         }
     })();
 
@@ -2451,7 +2451,7 @@ function loadGeographicRedundancyTab() {
                     <li>⚠️ Multi-region infrastructure - <strong>Requires deployment</strong></li>
                 </ul>
                 <p style="margin-top: 15px;"><strong>Active API Endpoints:</strong></p>
-                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+                <pre style="background: var(--color-bg-hover);" padding: 10px; border-radius: 4px; overflow-x: auto;">
 GET  /api/framework/geo-redundancy/regions
 GET  /api/framework/geo-redundancy/statistics
 GET  /api/framework/geo-redundancy/region/{region_id}
@@ -2542,7 +2542,7 @@ Last Health Check: ${region.last_health_check || 'Never'}`;
 function loadDNSSRVFailoverTab() {
     return `
         <h2>🌐 DNS SRV Failover</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2571,7 +2571,7 @@ function loadDNSSRVFailoverTab() {
 function loadSessionBorderControllerTab() {
     return `
         <h2>🛡️ Session Border Controller</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2600,7 +2600,7 @@ function loadSessionBorderControllerTab() {
 function loadDataResidencyTab() {
     return `
         <h2>🗺️ Data Residency Controls</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2629,7 +2629,7 @@ function loadDataResidencyTab() {
 function loadTeamMessagingTab() {
     return `
         <h2>💬 Team Messaging</h2>
-        <div class="info-box" style="background: #fff3cd; border-left: 4px solid #ff9800;">
+        <div class="info-box" class="stat-card-orange" style=" border-left: 4px solid #ff9800;">
             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
                 <span class="status-badge status-framework-only">⚙️ Framework Only</span>
                 <strong>Database & APIs Ready</strong>
@@ -2671,7 +2671,7 @@ function loadTeamMessagingTab() {
                     <li>Create initial channels and invite team members</li>
                 </ol>
                 <p style="margin-top: 15px;"><strong>Example config.yml:</strong></p>
-                <pre style="background: #f5f5f5; padding: 10px; border-radius: 4px; overflow-x: auto;">
+                <pre style="background: var(--color-bg-hover);" padding: 10px; border-radius: 4px; overflow-x: auto;">
 features:
   team_messaging:
     enabled: true

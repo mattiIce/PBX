@@ -71,12 +71,12 @@
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%,  var(--color-success-light) 100%);
     color: white;
 }
 
 .btn-success:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    background: linear-gradient(135deg, var(--color-success-light) 0%, var(--color-success-light) 100%);
     box-shadow: 0 6px 16px rgba(16, 185, 129, 0.35);
     transform: translateY(-2px);
 }
@@ -86,12 +86,12 @@
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(135deg, var(--color-danger) 0%,  var(--color-danger-hover) 100%);
     color: white;
 }
 
 .btn-danger:hover {
-    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    background: linear-gradient(135deg, var(--color-danger-hover) 0%, var(--color-danger-hover) 100%);
     box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
     transform: translateY(-2px);
 }
@@ -101,12 +101,12 @@
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+    background: linear-gradient(135deg, var(--color-text-secondary) 0%, var(--color-text-muted) 100%);
     color: white;
 }
 
 .btn-secondary:hover {
-    background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+    background: linear-gradient(135deg, var(--color-text-muted) 0%, #495057 100%);
     box-shadow: 0 6px 16px rgba(108, 117, 125, 0.35);
     transform: translateY(-2px);
 }
@@ -122,11 +122,11 @@
 }
 
 .btn-info {
-    background: #3b82f6;
+    background: var(--color-info);
 }
 
 .btn-info:hover {
-    background: #2563eb;
+    background: var(--color-info);
 }
 
 .action-buttons {
@@ -195,7 +195,7 @@
 
 .stat-label {
     font-size: 0.85rem;
-    color: #6c757d;
+    color: var(--color-text-secondary);
     font-weight: 500;
 }
 
@@ -271,7 +271,7 @@
 
 .data-table .loading {
     text-align: center;
-    color: #6c757d;
+    color: var(--color-text-secondary);
     padding: 40px;
 }
 
@@ -294,19 +294,19 @@
 }
 
 .status-badge.connected {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    background: linear-gradient(135deg, var(--color-success) 0%,  var(--color-success-light) 100%);
     border-color: rgba(16, 185, 129, 0.3);
     box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
 .status-badge.disconnected {
-    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    background: linear-gradient(135deg, var(--color-danger) 0%,  var(--color-danger-hover) 100%);
     border-color: rgba(239, 68, 68, 0.3);
     box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
 }
 
 .status-online {
-    color: #10b981;
+    color: var(--color-success);
     font-weight: 600;
 }
 
@@ -316,13 +316,13 @@
     width: 8px;
     height: 8px;
     border-radius: 50%;
-    background: #10b981;
+    background: var(--color-success);
     margin-right: 6px;
     animation: pulse 2s ease-in-out infinite;
 }
 
 .status-offline {
-    color: #6c757d;
+    color: var(--color-text-secondary);
 }
 
 .status-offline::before {
@@ -550,32 +550,32 @@
 }
 
 .badge-secondary {
-    background: #6c757d;
+    background: var(--color-text-secondary);
     color: white;
 }
 
 .badge-success {
-    background: #10b981;
+    background: var(--color-success);
     color: white;
 }
 
 .badge-info {
-    background: #3b82f6;
+    background: var(--color-info);
     color: white;
 }
 
 .badge-warning {
-    background: #f59e0b;
+    background: var(--color-warning);
     color: white;
 }
 
 .badge-danger {
-    background: #ef4444;
+    background: var(--color-danger);
     color: white;
 }
 
 .badge-ata {
-    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    background: linear-gradient(135deg, var(--color-accent) 0%, var(--color-accent-hover) 100%);
     color: white;
     padding: 4px 10px;
     border-radius: 12px;
@@ -586,7 +586,7 @@
 }
 
 .badge-phone {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    background: linear-gradient(135deg, var(--color-info) 0%, var(--color-info) 100%);
     color: white;
     padding: 4px 10px;
     border-radius: 12px;
@@ -609,11 +609,11 @@
 }
 
 .ad-badge {
-    background: #10b981;
+    background: var(--color-success);
 }
 
 .admin-badge {
-    background: #f59e0b;
+    background: var(--color-warning);
 }
 
 #ad-status-badge {
@@ -625,12 +625,12 @@
 }
 
 #ad-status-badge.enabled {
-    background: #10b981;
+    background: var(--color-success);
     color: white;
 }
 
 #ad-status-badge.disabled {
-    background: #6c757d;
+    background: var(--color-text-secondary);
     color: white;
 }
 
@@ -648,13 +648,13 @@
 .no-data, .error-message {
     text-align: center;
     padding: 40px 20px;
-    color: #6c757d;
+    color: var(--color-text-secondary);
     font-style: italic;
 }
 
 .no-data {
     text-align: center;
-    color: #6b7280;
+    color: var(--color-text-secondary);
     font-style: italic;
     padding: 20px;
 }
@@ -667,15 +667,15 @@
 }
 
 .alert-box.warning {
-    background-color: #fef3c7;
-    border-color: #f59e0b;
-    color: #92400e;
+    background-color: var(--color-warning-bg);
+    border-color: var(--color-warning);
+    color: var(--color-warning);
 }
 
 .alert-box.error {
-    background-color: #fee2e2;
-    border-color: #ef4444;
-    color: #991b1b;
+    background-color: var(--color-danger-bg);
+    border-color: var(--color-danger);
+    color: var(--color-danger);
 }
 
 .info-box {
@@ -745,36 +745,36 @@
 
 /* ---- QoS Quality Indicators ---- */
 .quality-excellent {
-    color: #10b981;
+    color: var(--color-success);
     font-weight: bold;
 }
 
 .quality-good {
-    color: #3b82f6;
+    color: var(--color-info);
     font-weight: bold;
 }
 
 .quality-fair {
-    color: #f59e0b;
+    color: var(--color-warning);
     font-weight: bold;
 }
 
 .quality-poor {
-    color: #ef4444;
+    color: var(--color-danger);
     font-weight: bold;
 }
 
 .quality-bad {
-    color: #dc2626;
+    color: var(--color-danger-hover);
     font-weight: bold;
-    background-color: #fee2e2;
+    background-color: var(--color-danger-bg);
     padding: 2px 6px;
     border-radius: 3px;
 }
 
 /* ---- QoS Diagnostics ---- */
 .diagnostic-row {
-    background-color: #fef3c7;
+    background-color: var(--color-warning-bg);
 }
 
 .diagnostic-cell {
@@ -783,9 +783,9 @@
 
 .diagnostic-alert {
     padding: 12px 16px;
-    background-color: #fef3c7;
-    border-left: 4px solid #f59e0b;
-    color: #92400e;
+    background-color: var(--color-warning-bg);
+    border-left: 4px solid var(--color-warning);
+    color: var(--color-warning);
     font-size: 0.9em;
 }
 
@@ -800,11 +800,11 @@
 }
 
 .one-way-audio-issue {
-    background-color: #fee2e2;
+    background-color: var(--color-danger-bg);
 }
 
 .one-way-audio-issue td {
-    color: #991b1b;
+    color: var(--color-danger);
 }
 
 /* ---- WebRTC Phone Widget ---- */
@@ -844,7 +844,7 @@
 
 .webrtc-status.success {
     background: #e8f5e9;
-    color: #2e7d32;
+    color: var(--color-success);
     border: 1px solid #81c784;
 }
 
@@ -1178,7 +1178,7 @@
 }
 
 .stat-card-green small {
-    color: #2e7d32;
+    color: var(--color-success);
 }
 
 @media (prefers-color-scheme: dark) {
