@@ -325,17 +325,25 @@ remote_phonebook.url = {{REMOTE_PHONEBOOK_URL}}
 # Remote phone book refresh interval in minutes
 remote_phonebook.refresh_interval = {{REMOTE_PHONEBOOK_REFRESH}}
 
-# Line Key Configuration (extensible - customize as needed)
-linekey.2.type = 15
-linekey.2.line = 1
+# Line Key Configuration
+# NOTE: For single-extension phones, disable unused line keys to prevent
+# simultaneous registration attempts. Type 0 = disabled/not configured.
+# If provisioning multiple extensions on the same device, configure additional
+# accounts (account.2, account.3) and set linekey.3.line = 2, linekey.4.line = 3, etc.
+
+# Line key 2 (disabled by default)
+# Set type = 15 and line = N to enable for account N, where N is account number
+linekey.2.type = 0
+linekey.2.line = %NULL%
 linekey.2.value = %NULL%
 linekey.2.label = %NULL%
 linekey.2.extension = %NULL%
 linekey.2.xml_phonebook = 0
 linekey.2.pickup_value = %NULL%
 
-linekey.3.type = 15
-linekey.3.line = 1
+# Line key 3 (disabled by default)
+linekey.3.type = 0
+linekey.3.line = %NULL%
 linekey.3.value = %NULL%
 linekey.3.label = %NULL%
 linekey.3.extension = %NULL%
