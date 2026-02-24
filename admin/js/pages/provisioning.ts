@@ -15,14 +15,10 @@ interface ProvisioningDevice {
     extension_number?: string;
     label?: string;
     status?: string;
-    created?: string;
+    created_at?: string;
     last_provisioned?: string;
     config_url?: string;
     device_type?: string;
-}
-
-interface ProvisioningDevicesResponse {
-    devices?: ProvisioningDevice[];
 }
 
 interface VendorsResponse {
@@ -31,10 +27,12 @@ interface VendorsResponse {
 }
 
 interface ProvisioningTemplate {
-    name: string;
+    name?: string;
     vendor?: string;
     model?: string;
     manufacturer?: string;
+    is_custom?: boolean;
+    template_path?: string;
     type?: string;
     size?: number;
 }
@@ -119,12 +117,13 @@ export async function loadProvisioningDevices(): Promise<void> {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
-        const data: ProvisioningDevicesResponse = await response.json();
+        const raw: ProvisioningDevice[] | { devices?: ProvisioningDevice[] } = await response.json();
 
         const tbody = document.getElementById('provisioning-devices-table-body') as HTMLElement | null;
         if (!tbody) return;
 
-        const devices = data.devices || [];
+        // API returns a plain array; handle both shapes defensively
+        const devices: ProvisioningDevice[] = Array.isArray(raw) ? raw : (raw.devices || []);
         if (devices.length === 0) {
             tbody.innerHTML = '<tr><td colspan="8">No provisioned devices</td></tr>';
             return;
@@ -137,7 +136,7 @@ export async function loadProvisioningDevices(): Promise<void> {
                 <td>${escapeHtml(d.device_type || 'phone')}</td>
                 <td>${escapeHtml(d.vendor || '')}</td>
                 <td>${escapeHtml(d.model || '')}</td>
-                <td>${escapeHtml(d.created || '')}</td>
+                <td>${escapeHtml(d.created_at || '')}</td>
                 <td>${escapeHtml(d.last_provisioned || 'Never')}</td>
                 <td><button class="btn btn-danger btn-sm" onclick="deleteDevice('${escapeHtml(d.mac_address || '')}')">Delete</button></td>
             </tr>
@@ -165,15 +164,17 @@ export async function loadProvisioningTemplates(): Promise<void> {
             return;
         }
 
-        container.innerHTML = templates.map(t => `
+        container.innerHTML = templates.map(t => {
+            const templateName = t.name || `${t.vendor || 'unknown'}_${t.model || 'unknown'}`;
+            return `
             <tr>
                 <td>${escapeHtml(t.vendor || t.manufacturer || 'Generic')}</td>
                 <td>${escapeHtml(t.model || '')}</td>
-                <td>${escapeHtml(t.type || 'config')}</td>
+                <td>${escapeHtml(t.is_custom ? 'custom' : 'built-in')}</td>
                 <td>${t.size ? `${t.size} bytes` : '-'}</td>
-                <td><button class="btn btn-sm btn-secondary" onclick="viewTemplate('${escapeHtml(t.name)}')">View</button></td>
-            </tr>
-        `).join('');
+                <td><button class="btn btn-sm btn-secondary" onclick="viewTemplate('${escapeHtml(templateName)}')">View</button></td>
+            </tr>`;
+        }).join('');
     } catch (error: unknown) {
         console.error('Error loading templates:', error);
     }
