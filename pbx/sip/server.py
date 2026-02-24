@@ -363,9 +363,13 @@ class SIPServer:
             if ext_config:
                 password = ext_config.get("sip_password") or ext_config.get("password")
 
+        # If still no password found, use default format (must match provisioning system)
         if not password:
-            self.logger.warning(f"No credentials found for extension {username}")
-            return False
+            password = f"ext{username}"
+            self.logger.debug(
+                f"Using default SIP password for extension {username}. "
+                f"Recommend setting explicit sip_password in database."
+            )
 
         # Compute expected digest response (RFC 2617)
         ha1 = hashlib.md5(  # nosec B324 - MD5 required by SIP digest auth RFC 2617

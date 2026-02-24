@@ -2093,10 +2093,21 @@ P2351 = 1
         self.logger.info(f"  Extension found: {extension.number} ({extension.name})")
 
         # Build extension config dict
+        sip_password = extension.config.get("password", "")
+
+        # If no SIP password is set, use a default based on extension number
+        # This ensures phones can register even if sip_password is not explicitly set
+        if not sip_password:
+            sip_password = f"ext{extension.number}"
+            self.logger.warning(
+                f"  No SIP password found for extension {extension.number}. "
+                f"Using default password format. Recommend setting explicit SIP password in database."
+            )
+
         extension_config = {
             "number": extension.number,
             "name": extension.name,
-            "password": extension.config.get("password", ""),
+            "password": sip_password,
         }
 
         # Build server config dict
