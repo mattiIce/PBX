@@ -143,7 +143,7 @@
 
 /* ---- Cards ---- */
 .stat-card {
-    background: linear-gradient(135deg, var(--color-bg-card) 0%, #f8fafb 100%);
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-hover) 100%);
     color: var(--color-text);
     padding: 28px var(--space-lg);
     border-radius: var(--radius-lg);
@@ -235,7 +235,7 @@
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    background: white;
+    background: var(--color-bg-card);
 }
 
 .data-table thead {
@@ -337,7 +337,7 @@
 
 /* ---- Forms ---- */
 .config-section {
-    background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-hover) 100%);
     padding: 28px;
     border-radius: 12px;
     margin-bottom: 24px;
@@ -351,7 +351,7 @@
 }
 
 .config-section h3 {
-    color: #2c3e50;
+    color: var(--color-text);
     margin-bottom: 20px;
     font-size: 1.2rem;
     font-weight: 600;
@@ -707,12 +707,12 @@
 }
 
 .call-item {
-    background: #ffffff;
+    background: var(--color-bg-card);
     padding: 15px;
     margin-bottom: 10px;
     border-radius: 4px;
-    border: 1px solid #e1e8ed;
-    border-left: 4px solid #3b9dd6;
+    border: 1px solid var(--color-border);
+    border-left: 4px solid var(--color-focus-ring);
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
 }
 

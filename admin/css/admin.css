@@ -1689,7 +1689,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .voicemail-card {
     background: var(--color-bg-card);
-    border: 1px solid #e5e7eb;
+    border: 1px solid var(--color-border);
     border-radius: 8px;
     padding: 20px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
@@ -1703,7 +1703,7 @@ input[type="range"]::-moz-range-thumb:hover {
 
 .voicemail-card.unread {
     border-left: 4px solid var(--color-focus-ring);
-    background: linear-gradient(135deg, var(--color-bg-card) 0%, #e8f6fc 100%);
+    background: linear-gradient(135deg, var(--color-bg-card) 0%, var(--color-bg-hover) 100%);
 }
 
 .voicemail-card-header {
@@ -1716,7 +1716,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .voicemail-from {
     font-size: 18px;
     font-weight: 600;
-    color: #1f2937;
+    color: var(--color-text);
 }
 
 .voicemail-status-badge {
@@ -1732,8 +1732,8 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .voicemail-status-badge.read {
-    background: #e5e7eb;
-    color: #6b7280;
+    background: var(--color-border);
+    color: var(--color-text-secondary);
 }
 
 .voicemail-meta {
@@ -1741,7 +1741,7 @@ input[type="range"]::-moz-range-thumb:hover {
     gap: 15px;
     margin-bottom: 12px;
     font-size: 14px;
-    color: #6b7280;
+    color: var(--color-text-secondary);
 }
 
 .voicemail-meta-item {
@@ -1751,14 +1751,14 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .voicemail-transcription {
-    background: #f9fafb;
-    border-left: 3px solid #10b981;
+    background: var(--color-bg-hover);
+    border-left: 3px solid var(--color-success);
     padding: 12px;
     margin: 12px 0;
     border-radius: 4px;
     font-size: 14px;
     line-height: 1.6;
-    color: #374151;
+    color: var(--color-text);
     font-style: italic;
 }
 
@@ -1766,7 +1766,7 @@ input[type="range"]::-moz-range-thumb:hover {
     display: block;
     margin-top: 8px;
     font-size: 12px;
-    color: #6b7280;
+    color: var(--color-text-secondary);
     font-style: normal;
 }
 
@@ -1783,8 +1783,8 @@ input[type="range"]::-moz-range-thumb:hover {
 }
 
 .transcription-box {
-    background: #f9fafb;
-    border: 1px solid #e5e7eb;
+    background: var(--color-bg-hover);
+    border: 1px solid var(--color-border);
     border-radius: 6px;
     padding: 15px;
     margin-top: 10px;
@@ -1793,7 +1793,7 @@ input[type="range"]::-moz-range-thumb:hover {
 .transcription-box p {
     margin: 0;
     line-height: 1.7;
-    color: #374151;
+    color: var(--color-text);
 }
 
 /* ========================================

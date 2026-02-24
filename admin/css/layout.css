@@ -79,7 +79,7 @@ header h1 {
 /* Left Sidebar Navigation */
 .sidebar {
     width: clamp(200px, 20vw, var(--sidebar-width));
-    background: linear-gradient(180deg, var(--color-bg-card) 0%, #f8fafb 100%);
+    background: linear-gradient(180deg, var(--color-bg-card) 0%, var(--color-bg-hover) 100%);
     border-right: 1px solid var(--color-border);
     overflow-y: auto;
     overflow-x: hidden;
