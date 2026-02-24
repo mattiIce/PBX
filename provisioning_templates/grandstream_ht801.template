@@ -2,13 +2,14 @@
 # Single FXS port for connecting one analog phone or fax machine
 
 # Basic Settings
-P2 = admin                    # Admin Password (change in production!)
+# P2 = admin                  # Admin Password — change via web UI after first boot
 P196 = {{EXTENSION_NAME}}     # Product Name/Label
 
 # Network Settings  
 P8 = 0                        # DHCP enabled
 P64 = pool.ntp.org            # NTP Server
-P30 = 13                      # GMT-8 (adjust for your timezone)
+P65 = time.google.com         # Secondary NTP Server
+P30 = -5                      # Timezone offset (EST = -5)
 
 # SIP Account 1 (FXS Port 1)
 P271 = {{EXTENSION_NAME}}     # Account Name

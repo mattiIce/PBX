@@ -667,6 +667,135 @@ class TestProvisioningRequest:
 
 
 # ---------------------------------------------------------------------------
+# GET /provision/<name>.cfg — common config files
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestCommonConfigRequest:
+    """Tests for fleet-wide common config file requests (Zultys/Yealink boot sequence)."""
+
+    def test_zultys_zip37g_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/zip37g_common.cfg")
+        assert resp.status_code == 200
+        assert b"#!version:1.0.0.1" in resp.data
+        # Should NOT call generate_config for common files
+        mock_pbx_core.phone_provisioning.generate_config.assert_not_called()
+
+    def test_zultys_zip37g_common_includes_wallpaper(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        """ZIP 37G has a color screen and should receive wallpaper settings."""
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/zip37g_common.cfg")
+        assert resp.status_code == 200
+        assert b"wallpaper_upload.url" in resp.data
+        assert b"wallpaper_warden.jpg" in resp.data
+        assert b"auto_provision.repeat.enable" in resp.data
+
+    def test_zultys_zip33g_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/zip33g_common.cfg")
+        assert resp.status_code == 200
+        assert b"#!version:1.0.0.1" in resp.data
+        # ZIP 33G has grayscale screen — no wallpaper
+        assert b"wallpaper" not in resp.data
+        # But should still get auto-provision refresh settings
+        assert b"auto_provision.repeat.enable" in resp.data
+
+    def test_zultys_zip33i_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/zip33i_common.cfg")
+        assert resp.status_code == 200
+
+    def test_yealink_universal_common(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/y000000000000.cfg")
+        assert resp.status_code == 200
+        assert b"#!version:1.0.0.1" in resp.data
+
+    def test_yealink_model_common(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        # y000000000028 is the T46G model-common config
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/y000000000028.cfg")
+        assert resp.status_code == 200
+
+    def test_real_mac_not_treated_as_common(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        """Ensure actual MAC addresses are not caught by common config detection."""
+        mock_pbx_core.phone_provisioning = MagicMock()
+        mock_pbx_core.phone_provisioning.generate_config.return_value = (None, None)
+        resp = api_client.get("/provision/000bea85bc14.cfg")
+        # Should fall through to normal MAC handling (404 because device not registered)
+        assert resp.status_code == 404
+        mock_pbx_core.phone_provisioning.generate_config.assert_called_once()
+
+
+# ---------------------------------------------------------------------------
+# GET /provision/<name>.boot — boot files
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestBootFileRequest:
+    """Tests for Yealink/Zultys boot file requests."""
+
+    def test_universal_boot_file(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/y000000000000.boot")
+        assert resp.status_code == 200
+        assert b"overwrite_mode" in resp.data
+
+    def test_mac_boot_file(self, api_client: FlaskClient, mock_pbx_core: MagicMock) -> None:
+        mock_pbx_core.phone_provisioning = MagicMock()
+        resp = api_client.get("/provision/000bea85bc14.boot")
+        assert resp.status_code == 200
+
+
+# ---------------------------------------------------------------------------
+# GET /provision/resources/<filename> — static provisioning assets
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestProvisioningResources:
+    """Tests for static provisioning resource serving (wallpaper, etc.)."""
+
+    def test_wallpaper_served(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock, tmp_path
+    ) -> None:
+        # Create a fake wallpaper file in a temp provisioning_templates dir
+        mock_pbx_core.config = MagicMock()
+        mock_pbx_core.config.get.return_value = str(tmp_path)
+        fake_jpg = tmp_path / "wallpaper_zip37g.jpg"
+        fake_jpg.write_bytes(b"\xff\xd8\xff\xe0FAKEJPEG")
+
+        resp = api_client.get("/provision/resources/wallpaper_zip37g.jpg")
+        assert resp.status_code == 200
+        assert resp.content_type == "image/jpeg"
+        assert b"FAKEJPEG" in resp.data
+
+    def test_resource_not_found(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock, tmp_path
+    ) -> None:
+        mock_pbx_core.config = MagicMock()
+        mock_pbx_core.config.get.return_value = str(tmp_path)
+
+        resp = api_client.get("/provision/resources/nonexistent.jpg")
+        assert resp.status_code == 404
+
+    def test_path_traversal_blocked(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        resp = api_client.get("/provision/resources/../../../etc/passwd")
+        assert resp.status_code == 400
+
+
+# ---------------------------------------------------------------------------
 # POST /api/provisioning/devices
 # ---------------------------------------------------------------------------
 
