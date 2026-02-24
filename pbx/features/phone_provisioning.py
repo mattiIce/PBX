@@ -467,19 +467,17 @@ remote_phonebook.url = {{REMOTE_PHONEBOOK_URL}}
 remote_phonebook.refresh_interval = {{REMOTE_PHONEBOOK_REFRESH}}
 
 # Line Keys
-# NOTE: For single-extension phones, disable unused line keys to prevent
-# simultaneous registration attempts. Type 0 = disabled/not configured.
-# If provisioning multiple extensions on the same device, configure additional
-# accounts (account.2, account.3) and set linekey.3.line = 2, linekey.4.line = 3, etc.
-linekey.2.type = 0
+# NOTE: ZIP 33G will only ever use 1 line (account.1), so unused line keys are configured for paging.
+# Type 3 = Intercom/Paging. If additional lines are needed in future, change type to 15 and set line = N.
+linekey.2.type = 3
+linekey.2.label = Paging
+linekey.2.value = 700
 linekey.2.line = %NULL%
-linekey.2.value = %NULL%
-linekey.2.label = %NULL%
 
-linekey.3.type = 0
+linekey.3.type = 3
+linekey.3.label = Paging
+linekey.3.value = 700
 linekey.3.line = %NULL%
-linekey.3.value = %NULL%
-linekey.3.label = %NULL%
 """
         self.add_template("zultys", "zip33g", zultys_zip33g_template)
 
@@ -654,23 +652,17 @@ remote_phonebook.url = {{REMOTE_PHONEBOOK_URL}}
 remote_phonebook.refresh_interval = {{REMOTE_PHONEBOOK_REFRESH}}
 
 # Line Keys
-# NOTE: For single-extension phones, disable unused line keys to prevent
-# simultaneous registration attempts. Type 0 = disabled/not configured.
-# If provisioning multiple extensions on the same device, configure additional
-# accounts (account.2, account.3) and set linekey.3.line = 2, linekey.4.line = 3, etc.
-
-# Line key 2 (disabled by default)
-# Set type = 15 and line = N to enable for account N, where N is account number
-linekey.2.type = 0
+# NOTE: ZIP 37G will only ever use 1 line (account.1), so unused line keys are configured for paging.
+# Type 3 = Intercom/Paging. If additional lines are needed in future, change type to 15 and set line = N.
+linekey.2.type = 3
+linekey.2.label = Paging
+linekey.2.value = 700
 linekey.2.line = %NULL%
-linekey.2.value = %NULL%
-linekey.2.label = %NULL%
 
-# Line key 3 (disabled by default)
-linekey.3.type = 0
+linekey.3.type = 3
+linekey.3.label = Paging
+linekey.3.value = 700
 linekey.3.line = %NULL%
-linekey.3.value = %NULL%
-linekey.3.label = %NULL%
 """
         self.add_template("zultys", "zip37g", zultys_zip37g_template)
 
