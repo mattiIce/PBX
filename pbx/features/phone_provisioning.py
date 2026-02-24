@@ -228,12 +228,30 @@ class PhoneProvisioning:
             self.logger.info("Phone provisioning will use in-memory storage only")
 
         # Initialize built-in templates
-        self._load_builtin_templates()
+        try:
+            self._load_builtin_templates()
+        except Exception as e:
+            self.logger.error(f"Failed to load built-in templates: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
 
         # Load custom templates if configured
-        self._load_custom_templates()
+        try:
+            self._load_custom_templates()
+        except Exception as e:
+            self.logger.error(f"Failed to load custom templates: {e}")
+            import traceback
+            self.logger.debug(traceback.format_exc())
 
-        self.logger.info("Phone provisioning initialized")
+        # Ensure we have at least built-in templates loaded
+        if not self.templates:
+            self.logger.warning("No templates loaded! Retrying built-in templates...")
+            try:
+                self._load_builtin_templates()
+            except Exception as e:
+                self.logger.error(f"Failed to retry loading built-in templates: {e}")
+
+        self.logger.info(f"Phone provisioning initialized with {len(self.templates)} templates")
         self.logger.info(
             f"Provisioning URL format: {self.config.get('provisioning.url_format', 'Not configured')}"
         )
@@ -2223,7 +2241,7 @@ P2351 = 1
             list of vendor names
         """
         vendors = set()
-        for vendor, _model in self.templates:
+        for (vendor, _model), _template in self.templates.items():
             vendors.add(vendor)
         return sorted(vendors)
 
@@ -2240,13 +2258,13 @@ P2351 = 1
         if vendor:
             models = []
             vendor = vendor.lower()
-            for v, m in self.templates:
+            for (v, m), _template in self.templates.items():
                 if v == vendor:
                     models.append(m)
             return sorted(models)
         # Return dict of vendor -> models
         result = {}
-        for v, m in self.templates:
+        for (v, m), _template in self.templates.items():
             if v not in result:
                 result[v] = []
             result[v].append(m)
