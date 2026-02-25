@@ -1390,11 +1390,38 @@ class SIPServer:
                         if call.caller_addr:
                             self._send_message(message.build(), call.caller_addr)
 
+            elif message.status_code == 183:
+                # Session Progress (early media) - forward to caller
+                self.logger.info(f"Session progress for call {call_id}")
+                if call_id:
+                    call = self.pbx_core.call_manager.get_call(call_id)
+                    if call and call.caller_addr:
+                        self._send_message(message.build(), call.caller_addr)
+
             elif message.status_code == 200:
                 # OK - callee answered
                 self.logger.info(f"Callee answered call {call_id}")
                 if call_id:
                     self.pbx_core.handle_callee_answer(call_id, message, addr)
+
+            elif message.status_code and message.status_code >= 400:
+                # Error response from callee (4xx/5xx/6xx) - forward to caller
+                # so their phone can stop waiting and play an appropriate tone.
+                # Common cases: 486 Busy Here, 488 Not Acceptable Here,
+                # 480 Temporarily Unavailable, 603 Decline.
+                self.logger.warning(
+                    f"Callee error {message.status_code} for call {call_id}"
+                )
+                if call_id:
+                    call = self.pbx_core.call_manager.get_call(call_id)
+                    if call:
+                        # Cancel no-answer timer since the callee already responded
+                        if call.no_answer_timer:
+                            call.no_answer_timer.cancel()
+                        if call.caller_addr:
+                            self._send_message(message.build(), call.caller_addr)
+                        # End the call on our side
+                        self.pbx_core.end_call(call_id)
 
     def _send_response(
         self, status_code: int, status_text: str, request: SIPMessage, addr: AddrTuple
