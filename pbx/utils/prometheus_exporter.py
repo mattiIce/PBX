@@ -330,6 +330,31 @@ class PBXMetricsExporter:
         """
         self.extension_registrations_total.labels(status=status).inc()
 
+    def _sanitize_endpoint(self, endpoint: str) -> str:
+        """
+        Sanitize endpoint to prevent label cardinality explosion.
+
+        Replaces numeric IDs and UUIDs with placeholders to reduce unique label values.
+
+        Args:
+            endpoint: Raw endpoint path
+
+        Returns:
+            Sanitized endpoint path
+        """
+        import re
+
+        # Replace UUID patterns: 550e8400-e29b-41d4-a716-446655440000
+        endpoint = re.sub(
+            r"[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}",
+            "{uuid}",
+            endpoint,
+            flags=re.IGNORECASE,
+        )
+        # Replace numeric IDs: /123, /456, etc.
+        endpoint = re.sub(r"/\d+", "/{id}", endpoint)
+        return endpoint
+
     def record_api_request(
         self, method: str, endpoint: str, status_code: int, duration: float
     ) -> None:
@@ -342,10 +367,15 @@ class PBXMetricsExporter:
             status_code: HTTP status code
             duration: Request duration in seconds
         """
+        # Sanitize endpoint to prevent label cardinality explosion
+        sanitized_endpoint = self._sanitize_endpoint(endpoint)
+
         self.api_requests_total.labels(
-            method=method, endpoint=endpoint, status=str(status_code)
+            method=method, endpoint=sanitized_endpoint, status=str(status_code)
         ).inc()
-        self.api_request_duration.labels(method=method, endpoint=endpoint).observe(duration)
+        self.api_request_duration.labels(method=method, endpoint=sanitized_endpoint).observe(
+            duration
+        )
 
     def update_system_resources(self, cpu_percent: float, memory_bytes: int) -> None:
         """
