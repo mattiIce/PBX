@@ -30,6 +30,13 @@ class WebRTCPhone {
         this.isCallActive = false;
         this.remoteAudio = null;
 
+        // Tone generation state
+        this._audioCtx = null;
+        this._ringbackNodes = null; // {osc1, osc2, gain} for ringback tone
+        this._ringbackTimer = null; // interval for 2s-on/4s-off cadence
+        this._callStatusPollTimer = null; // poll timer for call progress
+        this._currentCallState = null; // last known server-side call state
+
         verboseLog('WebRTC Phone constructor called:', {
             apiUrl: this.apiUrl,
             extension: this.extension
@@ -37,6 +44,207 @@ class WebRTCPhone {
 
         // Initialize UI elements
         this.initializeUI();
+    }
+
+    // ---- Web Audio helpers ----
+
+    /**
+     * Lazily create or resume the AudioContext.
+     * Must be called from a user-gesture context the first time.
+     */
+    _ensureAudioCtx() {
+        if (!this._audioCtx) {
+            this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        }
+        if (this._audioCtx.state === 'suspended') {
+            this._audioCtx.resume();
+        }
+        return this._audioCtx;
+    }
+
+    /**
+     * Play a North American ringback tone (440 Hz + 480 Hz, 2 s on / 4 s off).
+     * The tone continues until stopRingbackTone() is called.
+     */
+    startRingbackTone() {
+        if (this._ringbackNodes) return; // already playing
+        try {
+            const ctx = this._ensureAudioCtx();
+            const gain = ctx.createGain();
+            gain.gain.value = 0; // start silent
+            gain.connect(ctx.destination);
+
+            const osc1 = ctx.createOscillator();
+            osc1.frequency.value = 440;
+            osc1.connect(gain);
+            osc1.start();
+
+            const osc2 = ctx.createOscillator();
+            osc2.frequency.value = 480;
+            osc2.connect(gain);
+            osc2.start();
+
+            this._ringbackNodes = { osc1, osc2, gain };
+
+            // Cadence: 2 s on, 4 s off (total period 6 s)
+            const RING_ON_MS = 2000;
+            const RING_OFF_MS = 4000;
+            let on = true;
+            gain.gain.value = 0.15; // start with tone on
+
+            this._ringbackTimer = setInterval(() => {
+                on = !on;
+                gain.gain.value = on ? 0.15 : 0;
+            }, on ? RING_ON_MS : RING_OFF_MS);
+
+            // Use a more precise cadence with two alternating timeouts
+            clearInterval(this._ringbackTimer);
+            const cycle = () => {
+                if (!this._ringbackNodes) return;
+                this._ringbackNodes.gain.gain.value = 0.15;
+                this._ringbackTimer = setTimeout(() => {
+                    if (!this._ringbackNodes) return;
+                    this._ringbackNodes.gain.gain.value = 0;
+                    this._ringbackTimer = setTimeout(cycle, RING_OFF_MS);
+                }, RING_ON_MS);
+            };
+            cycle();
+
+            verboseLog('Ringback tone started');
+        } catch (err) {
+            console.error('[WebRTC Phone] Error starting ringback tone:', err);
+        }
+    }
+
+    /**
+     * Stop the ringback tone.
+     */
+    stopRingbackTone() {
+        if (this._ringbackTimer) {
+            clearTimeout(this._ringbackTimer);
+            this._ringbackTimer = null;
+        }
+        if (this._ringbackNodes) {
+            try {
+                this._ringbackNodes.osc1.stop();
+                this._ringbackNodes.osc2.stop();
+                this._ringbackNodes.gain.disconnect();
+            } catch (_) { /* already stopped */ }
+            this._ringbackNodes = null;
+            verboseLog('Ringback tone stopped');
+        }
+    }
+
+    /**
+     * Play a short DTMF-style tone for a keypad press.
+     * Uses the standard DTMF dual-tone frequency pairs.
+     * @param {string} digit - 0-9, *, or #
+     */
+    playDTMFTone(digit) {
+        // Standard DTMF frequency pairs
+        const DTMF_FREQS = {
+            '1': [697, 1209], '2': [697, 1336], '3': [697, 1477],
+            '4': [770, 1209], '5': [770, 1336], '6': [770, 1477],
+            '7': [852, 1209], '8': [852, 1336], '9': [852, 1477],
+            '*': [941, 1209], '0': [941, 1336], '#': [941, 1477],
+        };
+        const freqs = DTMF_FREQS[digit];
+        if (!freqs) return;
+
+        try {
+            const ctx = this._ensureAudioCtx();
+            const gain = ctx.createGain();
+            gain.gain.value = 0.15;
+            gain.connect(ctx.destination);
+
+            const osc1 = ctx.createOscillator();
+            osc1.frequency.value = freqs[0];
+            osc1.connect(gain);
+
+            const osc2 = ctx.createOscillator();
+            osc2.frequency.value = freqs[1];
+            osc2.connect(gain);
+
+            const now = ctx.currentTime;
+            osc1.start(now);
+            osc2.start(now);
+            // Stop after 150 ms
+            osc1.stop(now + 0.15);
+            osc2.stop(now + 0.15);
+            // Ramp down to avoid click
+            gain.gain.setValueAtTime(0.15, now + 0.12);
+            gain.gain.linearRampToValueAtTime(0, now + 0.15);
+
+            verboseLog('DTMF tone played for digit:', digit);
+        } catch (err) {
+            console.error('[WebRTC Phone] Error playing DTMF tone:', err);
+        }
+    }
+
+    // ---- Call status polling ----
+
+    /**
+     * Start polling the server for call status changes.
+     * Detects ringing → connected → ended transitions so we can
+     * start/stop the ringback tone and update the UI.
+     */
+    _startCallStatusPolling() {
+        if (this._callStatusPollTimer) return;
+        this._currentCallState = 'calling';
+
+        const poll = async () => {
+            if (!this.callId) {
+                this._stopCallStatusPolling();
+                return;
+            }
+            try {
+                const response = await fetch(
+                    `${this.apiUrl}/api/webrtc/call-status?call_id=${encodeURIComponent(this.callId)}`,
+                    { headers: this.getAuthHeaders() }
+                );
+                if (!response.ok) return;
+                const data = await response.json();
+                if (!data.success) return;
+
+                const newState = data.state;
+                if (newState === this._currentCallState) return;
+
+                verboseLog('Call state changed:', this._currentCallState, '->', newState);
+                const prevState = this._currentCallState;
+                this._currentCallState = newState;
+
+                if (newState === 'ringing' && prevState === 'calling') {
+                    // Callee's phone is ringing – play ringback tone
+                    this.startRingbackTone();
+                    this.updateStatus(`Ringing...`, 'info');
+                } else if (newState === 'connected') {
+                    // Call answered – stop ringback
+                    this.stopRingbackTone();
+                    this.updateStatus('Call connected', 'success');
+                    this.updateUIState('connected');
+                } else if (newState === 'ended') {
+                    // Call ended remotely
+                    this.stopRingbackTone();
+                    this._stopCallStatusPolling();
+                    this.updateStatus('Call ended by remote party', 'info');
+                    this.hangup();
+                }
+            } catch (err) {
+                verboseLog('Call status poll error:', err);
+            }
+        };
+
+        // Poll every 500 ms for responsive feedback
+        this._callStatusPollTimer = setInterval(poll, 500);
+        // Also run immediately
+        poll();
+    }
+
+    _stopCallStatusPolling() {
+        if (this._callStatusPollTimer) {
+            clearInterval(this._callStatusPollTimer);
+            this._callStatusPollTimer = null;
+        }
     }
 
     /**
@@ -104,6 +312,8 @@ class WebRTCPhone {
             button.addEventListener('click', (e) => {
                 const digit = e.currentTarget.getAttribute('data-digit');
                 if (digit && this.isCallActive) {
+                    // Play local DTMF tone for audible feedback
+                    this.playDTMFTone(digit);
                     this.sendDTMF(digit);
                     // Visual feedback
                     e.currentTarget.classList.add('pressed');
@@ -275,14 +485,18 @@ class WebRTCPhone {
                 });
 
                 if (this.peerConnection.connectionState === 'connected') {
+                    // WebRTC media path is connected – stop ringback
+                    this.stopRingbackTone();
                     this.updateStatus('Call connected', 'success');
                     this.updateUIState('connected');
                 } else if (this.peerConnection.connectionState === 'failed') {
                     verboseLog('Connection FAILED - checking stats...');
+                    this.stopRingbackTone();
                     this.updateStatus('Connection failed', 'error');
                     this.hangup();
                 } else if (this.peerConnection.connectionState === 'disconnected') {
                     verboseLog('Connection DISCONNECTED');
+                    this.stopRingbackTone();
                     this.updateStatus('Call disconnected', 'warning');
                     this.hangup();
                 }
@@ -516,10 +730,16 @@ class WebRTCPhone {
             if (callData.success) {
                 this.isCallActive = true;
                 this.callId = callData.call_id; // Store call ID for hangup
-                this.updateStatus(`Calling ${targetExt}... (Call ID: ${callData.call_id})`, 'success');
+                this.updateStatus(`Calling ${targetExt}...`, 'info');
                 verboseLog('Call initiated successfully:', {
                     callId: callData.call_id
                 });
+
+                // Start ringback tone immediately (callee is being contacted)
+                this.startRingbackTone();
+
+                // Start polling for call status to detect ringing/connected/ended
+                this._startCallStatusPolling();
             } else {
                 verboseLog('Call initiation failed:', callData);
                 throw new Error(callData.error ?? 'Failed to initiate call');
@@ -633,6 +853,10 @@ class WebRTCPhone {
 
     async hangup() {
         debugLog('Hanging up call');
+
+        // Stop any local tones and polling
+        this.stopRingbackTone();
+        this._stopCallStatusPolling();
 
         // Notify server to terminate the call
         if (this.sessionId || this.callId) {
