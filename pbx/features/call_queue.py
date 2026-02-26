@@ -145,7 +145,7 @@ class CallQueue:
         if extension in self.agents:
             del self.agents[extension]
 
-    def enqueue(self, call_id: str, caller_extension: str) -> None:
+    def enqueue(self, call_id: str, caller_extension: str) -> QueuedCall | None:
         """
         Add call to queue
 
@@ -260,7 +260,7 @@ class CallQueue:
 
         return assignments
 
-    def get_queue_status(self) -> dict | None:
+    def get_queue_status(self) -> dict:
         """Get queue status information"""
         available_agents = sum(1 for a in self.agents.values() if a.is_available())
 
@@ -336,6 +336,6 @@ class QueueSystem:
             all_assignments.extend(assignments)
         return all_assignments
 
-    def get_all_status(self) -> dict | None:
+    def get_all_status(self) -> list[dict]:
         """Get status of all queues"""
         return [q.get_queue_status() for q in self.queues.values()]
