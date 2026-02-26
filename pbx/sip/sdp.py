@@ -102,9 +102,12 @@ class SDPSession:
                 # Get connection info (prefer media-level, fallback to
                 # session-level)
                 connection = media.get("connection", self.connection)
+                address = connection.get("address")
+                if not address:
+                    return None
 
                 return {
-                    "address": connection.get("address"),
+                    "address": address,
                     "port": media["port"],
                     "formats": media["formats"],
                 }

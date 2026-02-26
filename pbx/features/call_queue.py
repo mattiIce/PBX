@@ -241,15 +241,22 @@ class CallQueue:
 
         # Assign calls to available agents
         while self.queue:
-            agent = self.get_next_agent()
-            if not agent:
+            result = self.get_next_agent()
+            if not result:
                 break
 
             call = self.dequeue()
             if call:
-                agent.set_busy(call.call_id)
-                assignments.append((call, agent))
-                self.logger.info(f"Assigned call {call.call_id} to agent {agent.extension}")
+                # RING_ALL returns a list of agents; other strategies return a single agent
+                if isinstance(result, list):
+                    for agent in result:
+                        agent.set_busy(call.call_id)
+                    assignments.append((call, result))
+                    self.logger.info(f"Assigned call {call.call_id} to {len(result)} agents (ring all)")
+                else:
+                    result.set_busy(call.call_id)
+                    assignments.append((call, result))
+                    self.logger.info(f"Assigned call {call.call_id} to agent {result.extension}")
 
         return assignments
 
@@ -321,7 +328,7 @@ class QueueSystem:
             return queue.enqueue(call_id, caller_extension) is not None
         return False
 
-    def process_all_queues(self) -> int:
+    def process_all_queues(self) -> list:
         """Process all queues and return assignments"""
         all_assignments = []
         for queue in self.queues.values():

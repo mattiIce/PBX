@@ -111,7 +111,7 @@ class EmergencyHandler:
                 relay_info = pbx.rtp_relay.active_relays.get(call_id)
                 if relay_info:
                     handler = relay_info["handler"]
-                    handler.set_endpoint1(caller_endpoint)
+                    handler.set_endpoints(caller_endpoint, None)
                     pbx.logger.info("Emergency call RTP relay configured")
 
         # Route through emergency trunk if available

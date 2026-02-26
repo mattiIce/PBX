@@ -261,7 +261,7 @@ class CallRouter:
                 from_addr=from_header,
                 to_addr=to_header,
                 call_id=call_id,
-                cseq=int(message.get_header("CSeq").split()[0]),
+                cseq=int((message.get_header("CSeq") or "1 INVITE").split()[0]),
                 body=callee_sdp_body,
             )
 
@@ -423,7 +423,7 @@ class CallRouter:
             from_addr=call.callee_invite.get_header("From"),
             to_addr=call.callee_invite.get_header("To"),
             call_id=call_id,
-            cseq=int(call.callee_invite.get_header("CSeq").split()[0]),
+            cseq=int((call.callee_invite.get_header("CSeq") or "1 CANCEL").split()[0]),
         )
         cancel_request.set_header("Via", call.callee_invite.get_header("Via"))
         self.pbx_core.sip_server._send_message(cancel_request.build(), call.callee_addr)

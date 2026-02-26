@@ -13,7 +13,7 @@ interface Extension {
     email?: string;
     registered: boolean;
     allow_external: boolean;
-    voicemail_pin_hash?: string;
+    voicemail_enabled?: boolean;
     ad_synced?: boolean;
     is_admin?: boolean;
 }
@@ -60,7 +60,7 @@ export async function loadExtensions(): Promise<void> {
                     ${ext.registered ? 'Online' : 'Offline'}
                 </td>
                 <td>${ext.allow_external ? 'Yes' : 'No'}</td>
-                <td>${ext.voicemail_pin_hash ? 'Set' : 'Not Set'}</td>
+                <td>${ext.voicemail_enabled ? 'Set' : 'Not Set'}</td>
                 <td>
                     <button class="btn btn-primary" onclick="editExtension('${escapeHtml(ext.number)}')">Edit</button>
                     ${ext.registered ? `<button class="btn btn-secondary" onclick="rebootPhone('${escapeHtml(ext.number)}')">Reboot</button>` : ''}

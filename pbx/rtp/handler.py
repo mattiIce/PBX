@@ -346,6 +346,7 @@ class RTPRelayHandler:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.settimeout(1.0)
             self.socket.bind(
                 ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
             )
@@ -559,6 +560,8 @@ class RTPRelayHandler:
                         # This is rare since endpoint_a is usually set first
                         self.logger.debug("Packet from B dropped - waiting for A endpoint")
 
+            except TimeoutError:
+                continue
             except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
                 if self.running:
                     self.logger.error(f"Error in RTP relay loop: {e}")

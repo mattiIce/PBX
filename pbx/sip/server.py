@@ -533,6 +533,10 @@ class SIPServer:
                     )
                     self._send_message(response_487.build(), addr)
 
+                # Forward CANCEL to callee to stop their phone from ringing
+                if call.callee_addr and hasattr(call, "callee_invite") and call.callee_invite:
+                    self.pbx_core._call_router._send_cancel_to_callee(call, call_id)
+
                 # End the call
                 self.pbx_core.end_call(call_id)
                 self.logger.info(f"Call {call_id} cancelled and terminated")

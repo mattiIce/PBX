@@ -242,7 +242,7 @@ class DNSSRVFailover:
         cumulative = 0
         for record in records:
             cumulative += record.weight
-            if rand <= cumulative:
+            if rand < cumulative:
                 return record
 
         return records[-1]
