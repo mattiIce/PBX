@@ -402,6 +402,9 @@ class RFC2833Sender:
                 )
                 time.sleep(0.01)  # 10ms between end packets
 
+            # Advance timestamp past this event for the next DTMF digit
+            self.timestamp = (self.timestamp + duration_units) & 0xFFFFFFFF
+
             self.logger.info(f"Sent RFC 2833 DTMF digit: {digit}")
             return True
 
@@ -420,6 +423,10 @@ class RFC2833Sender:
             payload_type: RTP payload type (defaults to instance payload_type).
             marker: Marker bit.
         """
+        if not self.socket:
+            self.logger.error("Cannot send DTMF - sender not started")
+            return
+
         # Use instance payload_type if not specified
         pt = payload_type if payload_type is not None else self.payload_type
 

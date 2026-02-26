@@ -66,6 +66,7 @@ class RTPHandler:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self.socket.settimeout(1.0)
             self.socket.bind(
                 ("0.0.0.0", self.local_port)  # nosec B104 - RTP needs to bind all interfaces
             )
@@ -96,6 +97,8 @@ class RTPHandler:
             try:
                 data, addr = self.socket.recvfrom(2048)
                 self._handle_rtp_packet(data, addr)
+            except TimeoutError:
+                continue
             except OSError as e:
                 if self.running:
                     self.logger.error(f"Error receiving RTP packet: {e}")
@@ -147,7 +150,7 @@ class RTPHandler:
         Returns:
             True if sent successfully.
         """
-        if not self.remote_host or not self.remote_port:
+        if not self.socket or not self.remote_host or not self.remote_port:
             return False
 
         try:
@@ -170,8 +173,7 @@ class RTPHandler:
 
             # Update sequence and timestamp
             self.sequence_number = (self.sequence_number + 1) & 0xFFFF
-            # Simplified, should be based on sample rate
-            self.timestamp += len(payload)
+            self.timestamp = (self.timestamp + len(payload)) & 0xFFFFFFFF
 
             return True
         except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
@@ -1064,9 +1066,12 @@ class RTPPlayer:
                             # Extract left channel (assuming interleaved
                             # samples)
                             if audio_format == WAV_FORMAT_PCM:  # PCM 16-bit
-                                # Extract every other 16-bit sample (left channel)
-                                # More efficient using slice with step
-                                audio_data = audio_data[::4] + audio_data[1::4]
+                                # Extract left channel: take 2 bytes (one 16-bit sample)
+                                # from each 4-byte stereo frame (L-low, L-high, R-low, R-high)
+                                audio_data = b"".join(
+                                    audio_data[i:i + 2]
+                                    for i in range(0, len(audio_data), 4)
+                                )
                             else:  # 8-bit formats (G.711, G.722)
                                 audio_data = audio_data[::2]
 
