@@ -215,7 +215,9 @@ class JitterBuffer:
 
         # Expected time based on timestamp (assuming 8kHz sample rate)
         if self.last_timestamp is not None:
-            timestamp_diff = abs(packet.timestamp - self.last_timestamp)
+            # Handle 32-bit unsigned timestamp wraparound
+            raw_diff = (packet.timestamp - self.last_timestamp) & 0xFFFFFFFF
+            timestamp_diff = raw_diff if raw_diff < 0x80000000 else (0x100000000 - raw_diff)
             expected_time = timestamp_diff / 8000.0  # Convert to seconds
 
             # Transit time difference

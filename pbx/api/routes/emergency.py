@@ -125,9 +125,9 @@ def handle_add_emergency_contact() -> Response:
 
 
 @emergency_bp.route("/trigger", methods=["POST"])
-@require_auth
+@require_admin
 def handle_trigger_emergency_notification() -> Response:
-    """Manually trigger emergency notification."""
+    """Manually trigger emergency notification. Requires admin privileges."""
     emergency_system, error = _get_emergency_system()
     if error:
         return error
@@ -148,9 +148,9 @@ def handle_trigger_emergency_notification() -> Response:
 
 
 @emergency_bp.route("/contacts/<contact_id>", methods=["DELETE"])
-@require_auth
+@require_admin
 def handle_delete_emergency_contact(contact_id: str) -> Response:
-    """Delete emergency contact."""
+    """Delete emergency contact. Requires admin privileges."""
     emergency_system, error = _get_emergency_system()
     if error:
         return error

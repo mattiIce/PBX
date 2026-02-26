@@ -210,10 +210,10 @@ class ActiveDirectoryIntegration:
             int: Number of users synchronized
         """
         if not self.enabled or not self.auto_provision or not LDAP3_AVAILABLE:
-            return 0
+            return {"synced_count": 0, "extensions_to_reboot": []}
 
         if not self.connect():
-            return 0
+            return {"synced_count": 0, "extensions_to_reboot": []}
 
         try:
             # Get user search base

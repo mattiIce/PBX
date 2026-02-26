@@ -5,6 +5,7 @@ Provides JWT-like token generation and verification
 
 import base64
 import hashlib
+import hmac
 import json
 import secrets
 import time
@@ -137,7 +138,7 @@ class SessionToken:
             message = f"{header_encoded}.{payload_encoded}"
             signature_expected = self._sign(message)
 
-            if signature_provided != signature_expected:
+            if not hmac.compare_digest(signature_provided, signature_expected):
                 self.logger.warning("Token signature verification failed")
                 return False, None
 

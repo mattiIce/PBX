@@ -1003,6 +1003,11 @@ class PBXCore:
         if call:
             self.logger.info(f"Ending call {call_id}")
 
+            # Cancel no-answer timer if still running
+            if call.no_answer_timer:
+                call.no_answer_timer.cancel()
+                call.no_answer_timer = None
+
             # If this is a voicemail recording, complete it first
             if call.routed_to_voicemail and hasattr(call, "voicemail_recorder"):
                 # Cancel the timer if it exists
@@ -1086,7 +1091,7 @@ class PBXCore:
             self.logger.info(
                 f"Queued DTMF '{dtmf_digit}' from SIP INFO for voicemail IVR on call {call_id}"
             )
-        elif hasattr(call, "auto_attendant") and call.auto_attendant:
+        elif hasattr(call, "auto_attendant_active") and call.auto_attendant_active:
             self.logger.info(
                 f"Queued DTMF '{dtmf_digit}' from SIP INFO for auto-attendant on call {call_id}"
             )
@@ -1225,7 +1230,7 @@ class PBXCore:
             )
             invite_msg.body = transfer_sdp
             invite_msg.set_header("Content-type", "application/sdp")
-            invite_msg.set_header("Content-Length", str(len(transfer_sdp)))
+            invite_msg.set_header("Content-Length", str(len(transfer_sdp.encode("utf-8"))))
 
         # Send INVITE to new destination
         self.sip_server._send_message(invite_msg.build(), dest_addr)
@@ -1236,6 +1241,12 @@ class PBXCore:
         new_call.caller_rtp = call.caller_rtp
         new_call.caller_addr = call.caller_addr
         new_call.rtp_ports = call.rtp_ports
+
+        # Transfer RTP relay ownership from old call to new call before ending
+        # the old call (end_call releases the relay, which would kill audio)
+        relay_info = self.rtp_relay.active_relays.pop(call_id, None)
+        if relay_info:
+            self.rtp_relay.active_relays[new_call_id] = relay_info
 
         # Send BYE to the transferring party (the party that initiated transfer)
         if call.callee_addr:
@@ -1249,7 +1260,7 @@ class PBXCore:
             )
             self.sip_server._send_message(bye_msg.build(), call.callee_addr)
 
-        # End the original call
+        # End the original call (relay already transferred, so release_relay is a no-op)
         self.call_manager.end_call(call_id)
         self.cdr_system.end_record(call_id, hangup_cause="blind_transfer")
 

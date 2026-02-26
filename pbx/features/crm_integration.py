@@ -75,7 +75,7 @@ class CallerInfo:
         caller_info.source = data.get("source")
 
         if data.get("last_contact"):
-            with contextlib.suppress(BaseException):
+            with contextlib.suppress(ValueError, TypeError):
                 caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
 
         return caller_info
@@ -235,7 +235,7 @@ class ExternalCRMLookupProvider(CRMLookupProvider):
                 caller_info.source = self.name.lower()
 
                 if data.get("last_contact"):
-                    with contextlib.suppress(BaseException):
+                    with contextlib.suppress(ValueError, TypeError):
                         caller_info.last_contact = datetime.fromisoformat(data["last_contact"])
 
                 if data.get("contact_count"):

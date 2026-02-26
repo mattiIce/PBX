@@ -151,6 +151,7 @@ function initializeLogout() {
 
     logoutButton.addEventListener('click', async () => {
         const token = localStorage.getItem('pbx_token');
+        const headers = getAuthHeaders();
 
         localStorage.removeItem('pbx_token');
         localStorage.removeItem('pbx_extension');
@@ -162,7 +163,7 @@ function initializeLogout() {
             if (token) {
                 await fetch(`${getApiBaseUrl()}/api/auth/logout`, {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers,
                 });
             }
         } catch (error) {

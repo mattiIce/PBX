@@ -207,7 +207,7 @@ class RFC2833Receiver:
         """Stop RFC 2833 receiver."""
         self.running = False
         if self.socket:
-            with contextlib.suppress(BaseException):
+            with contextlib.suppress(OSError):
                 self.socket.close()
         self.logger.info(f"RFC 2833 receiver stopped on port {self.local_port}")
 
@@ -352,7 +352,7 @@ class RFC2833Sender:
     def stop(self) -> None:
         """Stop RFC 2833 sender."""
         if self.socket:
-            with contextlib.suppress(BaseException):
+            with contextlib.suppress(OSError):
                 self.socket.close()
         self.logger.info(f"RFC 2833 sender stopped on port {self.local_port}")
 
@@ -402,6 +402,9 @@ class RFC2833Sender:
                 )
                 time.sleep(0.01)  # 10ms between end packets
 
+            # Advance timestamp past this event for the next DTMF digit
+            self.timestamp = (self.timestamp + duration_units) & 0xFFFFFFFF
+
             self.logger.info(f"Sent RFC 2833 DTMF digit: {digit}")
             return True
 
@@ -420,6 +423,10 @@ class RFC2833Sender:
             payload_type: RTP payload type (defaults to instance payload_type).
             marker: Marker bit.
         """
+        if not self.socket:
+            self.logger.error("Cannot send DTMF - sender not started")
+            return
+
         # Use instance payload_type if not specified
         pt = payload_type if payload_type is not None else self.payload_type
 

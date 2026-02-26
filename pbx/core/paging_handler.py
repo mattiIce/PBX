@@ -234,7 +234,7 @@ class PagingHandler:
             dac_call_id = str(uuid.uuid4())
 
             # Build SDP for DAC connection (sendonly - paging is one-way audio)
-            dac_rtp_port: int = call.rtp_ports[1] if call.rtp_ports else 10001
+            dac_rtp_port: int = call.rtp_ports[0] if call.rtp_ports else 10000
             dac_sdp = SDPBuilder.build_audio_sdp(server_ip, dac_rtp_port, session_id=dac_call_id)
 
             # Build INVITE to DAC device

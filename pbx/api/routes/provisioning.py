@@ -230,11 +230,6 @@ def handle_get_registered_atas() -> Response:
         logger.warning("Database not available or not configured")
         return send_json([])
 
-@provisioning_bp.route("/api/registered-phones/atas", methods=["GET"])
-@require_admin
-def handle_get_registered_phones_atas_compat() -> Response:
-    """Backward compatible endpoint (older frontend calls this path)."""
-    return handle_get_registered_atas()
 @provisioning_bp.route("/api/provisioning/vendors", methods=["GET"])
 @require_auth
 def handle_get_provisioning_vendors() -> Response:
@@ -365,7 +360,7 @@ def handle_get_provisioning_requests() -> Response:
         return send_json({"error": "Phone provisioning not enabled"}, 500)
 
     # Get limit from query parameter if provided
-    limit = int(request.args.get("limit", 50))
+    limit = request.args.get("limit", 50, type=int)
 
     requests_history = pbx_core.phone_provisioning.get_request_history(limit=limit)
     return send_json(
@@ -378,6 +373,7 @@ def handle_get_provisioning_requests() -> Response:
 
 
 @provisioning_bp.route("/api/registered-phones", methods=["GET"])
+@require_auth
 def handle_get_registered_phones() -> Response:
     """Get all registered phones from database."""
     pbx_core = get_pbx_core()
@@ -413,6 +409,7 @@ def handle_get_registered_phones() -> Response:
 
 
 @provisioning_bp.route("/api/registered-phones/with-mac", methods=["GET"])
+@require_auth
 def handle_get_registered_phones_with_mac() -> Response:
     """Get registered phones with MAC addresses from provisioning system."""
     pbx_core = get_pbx_core()
@@ -461,6 +458,7 @@ def handle_get_registered_phones_with_mac() -> Response:
 
 
 @provisioning_bp.route("/api/registered-phones/extension/<number>", methods=["GET"])
+@require_auth
 def handle_get_registered_phones_by_extension(number: str) -> Response:
     """Get registered phones for a specific extension."""
     pbx_core = get_pbx_core()

@@ -139,9 +139,15 @@ class SIPServer:
             try:
                 data, addr = self.socket.recvfrom(4096)
 
+                try:
+                    message_text = data.decode("utf-8")
+                except UnicodeDecodeError:
+                    self.logger.warning(f"Malformed UTF-8 from {addr}, using lossy decode")
+                    message_text = data.decode("utf-8", errors="replace")
+
                 # Handle message in separate thread
                 handler_thread = threading.Thread(
-                    target=self._handle_message, args=(data.decode("utf-8"), addr)
+                    target=self._handle_message, args=(message_text, addr)
                 )
                 handler_thread.daemon = True
                 handler_thread.start()
@@ -411,13 +417,14 @@ class SIPServer:
             to_header = message.get_header("To")
             call_id = message.get_header("Call-ID")
 
+            # Send 100 Trying immediately per RFC 3261 Section 8.2.6.1
+            # to suppress INVITE retransmissions before doing any routing work
+            self._send_response(100, "Trying", message, addr)
+
             # Route call through PBX core
             success = self.pbx_core.route_call(from_header, to_header, call_id, message, addr)
 
-            if success:
-                self._send_response(100, "Trying", message, addr)
-                # Actual call setup would continue asynchronously
-            else:
+            if not success:
                 self._send_response(404, "Not Found", message, addr)
         else:
             self._send_response(200, "OK", message, addr)
@@ -506,14 +513,39 @@ class SIPServer:
 
     def _handle_cancel(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle CANCEL request.
+        Handle CANCEL request per RFC 3261 Section 9.2.
+
+        Sends 200 OK for the CANCEL itself, then terminates the pending
+        INVITE transaction with a 487 Request Terminated response.
 
         Args:
             message: SIPMessage object.
             addr: Source address tuple.
         """
         self.logger.info(f"CANCEL request from {addr}")
+
+        # Send 200 OK for the CANCEL request itself
         self._send_response(200, "OK", message, addr)
+
+        # Find and terminate the matching call
+        call_id = message.get_header("Call-ID")
+        if call_id and self.pbx_core:
+            call = self.pbx_core.call_manager.get_call(call_id)
+            if call:
+                # Send 487 Request Terminated for the original INVITE
+                if hasattr(call, "original_invite") and call.original_invite:
+                    response_487 = SIPMessageBuilder.build_response(
+                        487, "Request Terminated", call.original_invite
+                    )
+                    self._send_message(response_487.build(), addr)
+
+                # Forward CANCEL to callee to stop their phone from ringing
+                if call.callee_addr and hasattr(call, "callee_invite") and call.callee_invite:
+                    self.pbx_core._call_router._send_cancel_to_callee(call, call_id)
+
+                # End the call
+                self.pbx_core.end_call(call_id)
+                self.logger.info(f"Call {call_id} cancelled and terminated")
 
     def _handle_options(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
@@ -657,7 +689,7 @@ class SIPServer:
         if body:
             notify_msg.body = body
             notify_msg.set_header("Content-type", content_type)
-            notify_msg.set_header("Content-Length", str(len(body)))
+            notify_msg.set_header("Content-Length", str(len(body.encode("utf-8"))))
 
         self._send_message(notify_msg.build(), addr)
         self.logger.debug(f"Sent NOTIFY for event {event} to {addr}")
@@ -871,7 +903,7 @@ class SIPServer:
                         )
                         invite_msg.body = transfer_sdp
                         invite_msg.set_header("Content-type", "application/sdp")
-                        invite_msg.set_header("Content-Length", str(len(transfer_sdp)))
+                        invite_msg.set_header("Content-Length", str(len(transfer_sdp.encode("utf-8"))))
 
                     # Send INVITE to transfer destination
                     self._send_message(invite_msg.build(), dest_addr)
@@ -885,6 +917,11 @@ class SIPServer:
                     new_call.caller_rtp = call.caller_rtp
                     new_call.caller_addr = call.caller_addr
                     new_call.rtp_ports = call.rtp_ports
+
+                    # Transfer RTP relay ownership before ending old call
+                    relay_info = self.pbx_core.rtp_relay.active_relays.pop(call_id, None)
+                    if relay_info:
+                        self.pbx_core.rtp_relay.active_relays[new_call_id] = relay_info
 
                     # Send success NOTIFY
                     self._send_transfer_notify(message, addr, "SIP/2.0 200 OK", call_id)
@@ -949,7 +986,7 @@ class SIPServer:
 
         # Body is the SIP status line fragment
         notify_msg.body = sipfrag_status
-        notify_msg.set_header("Content-Length", str(len(sipfrag_status)))
+        notify_msg.set_header("Content-Length", str(len(sipfrag_status.encode("utf-8"))))
 
         self._send_message(notify_msg.build(), addr)
         self.logger.debug(f"Sent transfer NOTIFY: {sipfrag_status}")
@@ -1062,13 +1099,15 @@ class SIPServer:
 
             if dest_addr:
                 # Forward the MESSAGE to the recipient
+                cseq_header = message.get_header("CSeq") or "1 MESSAGE"
+                cseq_num = cseq_header.split()[0]
                 fwd_msg = SIPMessageBuilder.build_request(
                     method="MESSAGE",
                     uri=f"sip:{dest_extension}@{dest_addr[0]}:{dest_addr[1]}",
                     from_addr=from_header or "",
                     to_addr=to_header or "",
                     call_id=message.get_header("Call-ID") or "",
-                    cseq=message.get_header("CSeq") or "1 MESSAGE",
+                    cseq=cseq_num,
                     body=message.body,
                 )
                 if content_type:
@@ -1399,9 +1438,11 @@ class SIPServer:
                         self._send_message(message.build(), call.caller_addr)
 
             elif message.status_code == 200:
-                # OK - callee answered
-                self.logger.info(f"Callee answered call {call_id}")
-                if call_id:
+                # OK - only process as callee answer if this is a response to INVITE
+                # (200 OK is also sent for BYE, CANCEL, OPTIONS, etc.)
+                cseq_header = message.get_header("CSeq") or ""
+                if call_id and "INVITE" in cseq_header:
+                    self.logger.info(f"Callee answered call {call_id}")
                     self.pbx_core.handle_callee_answer(call_id, message, addr)
 
             elif message.status_code and message.status_code >= 400:
@@ -1447,6 +1488,9 @@ class SIPServer:
             addr: Destination address tuple (host, port).
         """
         try:
+            if not self.socket:
+                self.logger.warning("Cannot send message: socket is closed")
+                return
             self.socket.sendto(message.encode("utf-8"), addr)
             self.logger.debug(f"Sent message to {addr}")
         except OSError as e:

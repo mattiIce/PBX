@@ -170,6 +170,10 @@ class CallRouter:
         dest_ext_obj = pbx.extension_registry.get(to_ext)
         if not dest_ext_obj or not dest_ext_obj.address:
             pbx.logger.error(f"Cannot get address for extension {to_ext}")
+            # Release allocated RTP relay and clean up call to prevent resource leaks
+            if rtp_ports:
+                pbx.rtp_relay.release_relay(call_id)
+            pbx.call_manager.end_call(call_id)
             return False
 
         # Check if destination is a WebRTC extension
@@ -257,7 +261,7 @@ class CallRouter:
                 from_addr=from_header,
                 to_addr=to_header,
                 call_id=call_id,
-                cseq=int(message.get_header("CSeq").split()[0]),
+                cseq=int((message.get_header("CSeq") or "1 INVITE").split()[0]),
                 body=callee_sdp_body,
             )
 
@@ -419,7 +423,7 @@ class CallRouter:
             from_addr=call.callee_invite.get_header("From"),
             to_addr=call.callee_invite.get_header("To"),
             call_id=call_id,
-            cseq=int(call.callee_invite.get_header("CSeq").split()[0]),
+            cseq=int((call.callee_invite.get_header("CSeq") or "1 CANCEL").split()[0]),
         )
         cancel_request.set_header("Via", call.callee_invite.get_header("Via"))
         self.pbx_core.sip_server._send_message(cancel_request.build(), call.callee_addr)

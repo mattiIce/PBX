@@ -816,7 +816,7 @@ class ConversationalAI:
         # Azure LUIS prediction endpoint
         url = f"{config['endpoint']}"
         # Append query parameter for the utterance
-        encoded_text = urllib.request.quote(text)
+        encoded_text = urllib.parse.quote(text)
         prediction_url = f"{url}?query={encoded_text}&verbose=false&show-all-intents=false"
 
         req = urllib.request.Request(

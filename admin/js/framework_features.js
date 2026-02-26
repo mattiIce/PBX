@@ -324,7 +324,7 @@ function loadClickToDialTab() {
             const errorContainer = document.getElementById('click-to-dial-configs-list');
             if (errorContainer) {
                 errorContainer.innerHTML =
-                    `<div class="error-box">Error loading configurations: ${err.message}</div>`;
+                    `<div class="error-box">Error loading configurations: ${escapeHtml(err.message)}</div>`;
             }
         }
     }, 100);
@@ -360,12 +360,12 @@ function displayClickToDialConfigs(configs) {
             <tbody>
                 ${configs.map(config => `
                     <tr>
-                        <td>${config.extension}</td>
+                        <td>${escapeHtml(String(config.extension))}</td>
                         <td>${config.enabled ? '✅ Yes' : '❌ No'}</td>
                         <td>${config.auto_answer ? '✅ Yes' : '❌ No'}</td>
                         <td>${config.browser_notification ? '✅ Yes' : '❌ No'}</td>
                         <td>
-                            <button onclick="viewClickToDialHistory('${config.extension}')" class="btn-secondary btn-sm">View History</button>
+                            <button onclick="viewClickToDialHistory('${escapeHtml(String(config.extension))}')" class="btn-secondary btn-sm">View History</button>
                         </td>
                     </tr>
                 `).join('')}
@@ -384,12 +384,12 @@ const viewClickToDialHistory = async (extension) => {
         const container = document.getElementById('click-to-dial-history');
 
         if (history.length === 0) {
-            container.innerHTML = `<p>No call history for extension ${extension}</p>`;
+            container.innerHTML = `<p>No call history for extension ${escapeHtml(String(extension))}</p>`;
             return;
         }
 
         const html = `
-            <h4>Call History for Extension ${extension}</h4>
+            <h4>Call History for Extension ${escapeHtml(String(extension))}</h4>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -403,9 +403,9 @@ const viewClickToDialHistory = async (extension) => {
                 <tbody>
                     ${history.map(call => `
                         <tr>
-                            <td>${call.destination}</td>
-                            <td>${call.source}</td>
-                            <td><span class="status-badge status-${call.status}">${call.status}</span></td>
+                            <td>${escapeHtml(String(call.destination))}</td>
+                            <td>${escapeHtml(String(call.source))}</td>
+                            <td><span class="status-badge status-${escapeHtml(String(call.status))}">${escapeHtml(String(call.status))}</span></td>
                             <td>${new Date(call.initiated_at).toLocaleString()}</td>
                             <td>${call.connected_at ? new Date(call.connected_at).toLocaleString() : '-'}</td>
                         </tr>
@@ -417,7 +417,7 @@ const viewClickToDialHistory = async (extension) => {
         container.innerHTML = html;
     } catch (err) {
         document.getElementById('click-to-dial-history').innerHTML =
-            `<div class="error-box">Error loading history: ${err.message}</div>`;
+            `<div class="error-box">Error loading history: ${escapeHtml(err.message)}</div>`;
     }
 };
 
@@ -496,7 +496,7 @@ const loadVideoRooms = async () => {
         displayVideoRooms(data.rooms ?? []);
     } catch (err) {
         document.getElementById('video-rooms-list').innerHTML =
-            `<div class="error-box">Error loading rooms: ${err.message}</div>`;
+            `<div class="error-box">Error loading rooms: ${escapeHtml(err.message)}</div>`;
     }
 };
 
@@ -524,8 +524,8 @@ function displayVideoRooms(rooms) {
             <tbody>
                 ${rooms.map(room => `
                     <tr>
-                        <td>${room.room_name}</td>
-                        <td>${room.owner_extension || '-'}</td>
+                        <td>${escapeHtml(room.room_name)}</td>
+                        <td>${escapeHtml(room.owner_extension || '-')}</td>
                         <td>${room.max_participants}</td>
                         <td>${room.enable_4k ? '✅' : '❌'}</td>
                         <td>${room.enable_screen_share ? '✅' : '❌'}</td>
@@ -736,7 +736,7 @@ const submitConversationalAIConfig = async (e) => {
     try {
         const r = await fetch('/api/framework/conversational-ai/config', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: pbxAuthHeaders(),
             body: JSON.stringify(data)
         });
         const result = await r.json();
@@ -870,14 +870,14 @@ const loadPredictiveDialingCampaigns = async () => {
                 <tbody>
                     ${campaigns.map(c => `
                         <tr>
-                            <td><strong>${c.name}</strong></td>
-                            <td>${c.mode}</td>
-                            <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                            <td><strong>${escapeHtml(c.name)}</strong></td>
+                            <td>${escapeHtml(c.mode)}</td>
+                            <td><span class="status-badge status-${escapeHtml(c.status)}">${escapeHtml(c.status)}</span></td>
                             <td>${c.total_contacts || 0}</td>
                             <td>${c.dialed || 0}</td>
                             <td>${c.connected || 0}</td>
                             <td>
-                                <button onclick="toggleCampaign('${c.id}')" class="btn-secondary btn-sm">
+                                <button onclick="toggleCampaign('${escapeHtml(String(c.id))}')" class="btn-secondary btn-sm">
                                     ${c.status === 'active' ? 'Pause' : 'Start'}
                                 </button>
                             </td>
@@ -966,7 +966,7 @@ function showCreateCampaignDialog() {
         try {
             const r = await fetch('/api/framework/predictive-dialing/campaign', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: pbxAuthHeaders(),
                 body: JSON.stringify(data)
             });
             const result = await r.json();

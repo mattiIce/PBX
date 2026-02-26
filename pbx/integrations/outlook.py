@@ -132,11 +132,13 @@ class OutlookIntegration:
 
         # Default to today's events if not specified
         if not start_time:
-            start_time = datetime.now(UTC).replace(hour=0, minute=0, second=0).isoformat() + "Z"
+            start_dt = datetime.now(UTC).replace(hour=0, minute=0, second=0, tzinfo=None)
+            start_time = start_dt.isoformat() + "Z"
         if not end_time:
-            end_time = (datetime.now(UTC) + timedelta(days=1)).replace(
-                hour=0, minute=0, second=0
-            ).isoformat() + "Z"
+            end_dt = (datetime.now(UTC) + timedelta(days=1)).replace(
+                hour=0, minute=0, second=0, tzinfo=None
+            )
+            end_time = end_dt.isoformat() + "Z"
 
         try:
             self.logger.info(f"Fetching calendar events for {user_email}")
@@ -207,7 +209,11 @@ class OutlookIntegration:
                 if not event.get("is_cancelled"):
                     # Parse event times as timezone-aware
                     event_start = datetime.fromisoformat(event["start"])
+                    if event_start.tzinfo is None:
+                        event_start = event_start.replace(tzinfo=UTC)
                     event_end = datetime.fromisoformat(event["end"])
+                    if event_end.tzinfo is None:
+                        event_end = event_end.replace(tzinfo=UTC)
 
                     if event_start <= now <= event_end:
                         return "busy"
@@ -315,6 +321,8 @@ class OutlookIntegration:
             # Parse timestamp
             if isinstance(timestamp, str):
                 start_time = datetime.fromisoformat(timestamp)
+                if start_time.tzinfo is None:
+                    start_time = start_time.replace(tzinfo=UTC)
             else:
                 start_time = datetime.now(UTC)
 

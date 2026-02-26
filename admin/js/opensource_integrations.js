@@ -430,7 +430,7 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
             showJitsiStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showJitsiStatus(`Error: ${error.message}`, 'error');
+        showJitsiStatus(`Error: ${escapeHtml(error.message)}`, 'error');
     }
 });
 
@@ -456,8 +456,10 @@ async function testJitsiConnection() {
 }
 
 function showJitsiStatus(message, type) {
+    const validTypes = ['success', 'error', 'warning', 'info'];
+    const safeType = validTypes.includes(type) ? type : 'info';
     const statusDiv = document.getElementById('jitsi-status');
-    statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    statusDiv.innerHTML = `<div class="alert alert-${safeType}">${message}</div>`;
 }
 
 // =============================================================================
@@ -534,7 +536,7 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
             showMatrixStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showMatrixStatus(`Error: ${error.message}`, 'error');
+        showMatrixStatus(`Error: ${escapeHtml(error.message)}`, 'error');
     }
 });
 
@@ -563,17 +565,19 @@ async function testMatrixConnection() {
         const versionList = versions.versions?.join(', ') ?? 'Unknown';
 
         showMatrixStatus(
-            `✅ Homeserver is accessible!<br>Supported versions: ${versionList}<br><small>Note: Full authentication test requires server-side validation</small>`,
+            `✅ Homeserver is accessible!<br>Supported versions: ${escapeHtml(versionList)}<br><small>Note: Full authentication test requires server-side validation</small>`,
             'success'
         );
     } catch (error) {
-        showMatrixStatus(`❌ Connection failed: ${error.message}`, 'error');
+        showMatrixStatus(`❌ Connection failed: ${escapeHtml(error.message)}`, 'error');
     }
 }
 
 function showMatrixStatus(message, type) {
+    const validTypes = ['success', 'error', 'warning', 'info'];
+    const safeType = validTypes.includes(type) ? type : 'info';
     const statusDiv = document.getElementById('matrix-status');
-    statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    statusDiv.innerHTML = `<div class="alert alert-${safeType}">${message}</div>`;
 }
 
 // =============================================================================
@@ -648,7 +652,7 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
             showEspoCRMStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showEspoCRMStatus(`Error: ${error.message}`, 'error');
+        showEspoCRMStatus(`Error: ${escapeHtml(error.message)}`, 'error');
     }
 });
 
@@ -676,20 +680,22 @@ async function testEspoCRMConnection() {
         if (response.ok) {
             const data = await response.json();
             showEspoCRMStatus(
-                `✅ Connection successful!<br>Connected as: ${data.userName ?? 'Unknown'}<br>EspoCRM is ready for integration.`,
+                `✅ Connection successful!<br>Connected as: ${escapeHtml(data.userName ?? 'Unknown')}<br>EspoCRM is ready for integration.`,
                 'success'
             );
         } else {
             throw new Error(`API returned status ${response.status}`);
         }
     } catch (error) {
-        showEspoCRMStatus(`❌ Connection failed: ${error.message}<br>Check API URL and API Key.`, 'error');
+        showEspoCRMStatus(`❌ Connection failed: ${escapeHtml(error.message)}<br>Check API URL and API Key.`, 'error');
     }
 }
 
 function showEspoCRMStatus(message, type) {
+    const validTypes = ['success', 'error', 'warning', 'info'];
+    const safeType = validTypes.includes(type) ? type : 'info';
     const statusDiv = document.getElementById('espocrm-status');
-    statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    statusDiv.innerHTML = `<div class="alert alert-${safeType}">${message}</div>`;
 }
 
 // =============================================================================
@@ -982,7 +988,7 @@ function showMatrixMessageResult(message, type) {
     const resultDiv = document.getElementById('matrix-message-result');
     const textEl = document.getElementById('matrix-message-result-text');
 
-    textEl.innerHTML = message;
+    textEl.textContent = message;
     resultDiv.style.display = 'block';
     resultDiv.querySelector('.info-box').style.backgroundColor =
         type === 'success' ? '#e8f5e9' : '#ffebee';
@@ -1135,7 +1141,7 @@ function showEspoCRMCreateResult(message) {
     const resultDiv = document.getElementById('espocrm-create-result');
     const textEl = document.getElementById('espocrm-create-result-text');
 
-    textEl.innerHTML = message;
+    textEl.textContent = message;
     resultDiv.style.display = 'block';
 
     // Auto-hide after 5 seconds

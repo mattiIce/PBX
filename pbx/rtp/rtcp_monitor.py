@@ -162,16 +162,18 @@ class RTCPMonitor:
         if self.stats.last_sequence is None:
             self.stats.last_sequence = sequence
             self.stats.highest_sequence = sequence
+            self._base_sequence = sequence
+            self._base_cycles = 0
             return
 
         # Handle sequence wraparound
         seq_diff = sequence - self.stats.last_sequence
 
         if seq_diff > 32768:
-            # Negative wraparound
+            # Large forward jump interpreted as backward (late/reordered packet)
             seq_diff -= 65536
         elif seq_diff < -32768:
-            # Positive wraparound
+            # Large backward jump interpreted as forward wraparound
             seq_diff += 65536
             self.stats.sequence_cycles += 1
 
@@ -179,11 +181,10 @@ class RTCPMonitor:
         if seq_diff > 0:
             self.stats.highest_sequence = sequence
 
-        # Calculate expected packets
+        # Calculate expected packets using the first sequence as the base
         extended_max = self.stats.sequence_cycles * 65536 + self.stats.highest_sequence
-        if self.stats.last_sequence is not None:
-            extended_base = self.stats.sequence_cycles * 65536 + self.stats.last_sequence
-            self.stats.packets_expected = extended_max - extended_base + 1
+        extended_base = self._base_cycles * 65536 + self._base_sequence
+        self.stats.packets_expected = extended_max - extended_base + 1
 
         self.stats.last_sequence = sequence
 
@@ -197,17 +198,20 @@ class RTCPMonitor:
         """
         if self.last_arrival_time is None:
             self.last_arrival_time = arrival_time
-            self.transit_time = arrival_time - (timestamp / 8000.0)
+            self._last_rtp_timestamp = timestamp
+            self.transit_time = 0.0
             return
 
-        # Calculate transit time
-        transit = arrival_time - (timestamp / 8000.0)
+        # Calculate transit time using deltas to handle 32-bit timestamp wraparound
+        arrival_diff = arrival_time - self.last_arrival_time
+        # Handle 32-bit unsigned wraparound for RTP timestamps
+        raw_ts_diff = (timestamp - self._last_rtp_timestamp) & 0xFFFFFFFF
+        if raw_ts_diff >= 0x80000000:
+            raw_ts_diff = raw_ts_diff - 0x100000000
+        rtp_diff_seconds = raw_ts_diff / 8000.0
 
-        # Calculate transit time difference
-        if self.transit_time is None:
-            self.transit_time = transit
-            return
-        d = abs(transit - self.transit_time)
+        # Transit time difference (RFC 3550 D(i-1,i))
+        d = abs(arrival_diff - rtp_diff_seconds)
 
         # Update jitter estimate (RFC 3550 algorithm)
         # J(i) = J(i-1) + (|D(i-1,i)| - J(i-1))/16
@@ -216,7 +220,7 @@ class RTCPMonitor:
         self.stats.jitter_ms = jitter_seconds * 1000.0
 
         # Update for next calculation
-        self.transit_time = transit
+        self._last_rtp_timestamp = timestamp
         self.last_arrival_time = arrival_time
 
     def _calculate_packet_loss(self) -> None:

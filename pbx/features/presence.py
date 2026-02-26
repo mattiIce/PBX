@@ -41,15 +41,21 @@ class UserPresence:
         self.in_call = False
         self.call_id = None
 
-    def set_status(self, status: str, custom_message: str = "") -> None:
+    def set_status(self, status: str | PresenceStatus, custom_message: str = "") -> None:
         """
         set presence status
 
         Args:
-            status: PresenceStatus enum value
+            status: PresenceStatus enum value or string status name
             custom_message: Optional custom status message
         """
-        self.status = status
+        if isinstance(status, str):
+            try:
+                self.status = PresenceStatus(status)
+            except ValueError:
+                self.status = PresenceStatus.AVAILABLE
+        else:
+            self.status = status
         self.custom_message = custom_message
         self.last_status_change = datetime.now(UTC)
         self.last_activity = datetime.now(UTC)
@@ -158,7 +164,7 @@ class PresenceSystem:
         if user:
             user.set_status(status, custom_message)
             self._notify_subscribers(extension)
-            self.logger.debug(f"set status for {extension}: {status.value}")
+            self.logger.debug(f"set status for {extension}: {status}")
             return True
         return False
 

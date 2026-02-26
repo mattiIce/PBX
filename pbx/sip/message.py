@@ -33,7 +33,9 @@ class SIPMessage:
         Args:
             raw_message: Raw SIP message string.
         """
-        lines = raw_message.split("\r\n")
+        # Normalize line endings: handle both CRLF (RFC 3261) and bare LF
+        normalized = raw_message.replace("\r\n", "\n").replace("\r", "\n")
+        lines = normalized.split("\n")
 
         # Validate that we have at least one line
         if not lines:
@@ -83,7 +85,7 @@ class SIPMessage:
 
     def get_header(self, name: str) -> str | None:
         """
-        Get header value by name.
+        Get header value by name (case-insensitive per RFC 3261 Section 7.3.1).
 
         Args:
             name: Header name to look up.
@@ -91,7 +93,16 @@ class SIPMessage:
         Returns:
             Header value string, or None if not found.
         """
-        return self.headers.get(name)
+        # Try exact match first for performance
+        value = self.headers.get(name)
+        if value is not None:
+            return value
+        # Case-insensitive fallback per RFC 3261
+        name_lower = name.lower()
+        for key, val in self.headers.items():
+            if key.lower() == name_lower:
+                return val
+        return None
 
     def set_header(self, name: str, value: str) -> None:
         """
@@ -186,7 +197,7 @@ class SIPMessageBuilder:
 
         if body:
             response.body = body
-            response.set_header("Content-Length", str(len(body)))
+            response.set_header("Content-Length", str(len(body.encode("utf-8"))))
         else:
             response.set_header("Content-Length", "0")
 
@@ -228,7 +239,7 @@ class SIPMessageBuilder:
 
         if body:
             request.body = body
-            request.set_header("Content-Length", str(len(body)))
+            request.set_header("Content-Length", str(len(body.encode("utf-8"))))
         else:
             request.set_header("Content-Length", "0")
 
