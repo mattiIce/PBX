@@ -574,8 +574,10 @@ async function testMatrixConnection() {
 }
 
 function showMatrixStatus(message, type) {
+    const validTypes = ['success', 'error', 'warning', 'info'];
+    const safeType = validTypes.includes(type) ? type : 'info';
     const statusDiv = document.getElementById('matrix-status');
-    statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    statusDiv.innerHTML = `<div class="alert alert-${safeType}">${message}</div>`;
 }
 
 // =============================================================================
@@ -690,8 +692,10 @@ async function testEspoCRMConnection() {
 }
 
 function showEspoCRMStatus(message, type) {
+    const validTypes = ['success', 'error', 'warning', 'info'];
+    const safeType = validTypes.includes(type) ? type : 'info';
     const statusDiv = document.getElementById('espocrm-status');
-    statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    statusDiv.innerHTML = `<div class="alert alert-${safeType}">${message}</div>`;
 }
 
 // =============================================================================

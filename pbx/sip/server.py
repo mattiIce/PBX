@@ -689,7 +689,7 @@ class SIPServer:
         if body:
             notify_msg.body = body
             notify_msg.set_header("Content-type", content_type)
-            notify_msg.set_header("Content-Length", str(len(body)))
+            notify_msg.set_header("Content-Length", str(len(body.encode("utf-8"))))
 
         self._send_message(notify_msg.build(), addr)
         self.logger.debug(f"Sent NOTIFY for event {event} to {addr}")
@@ -903,7 +903,7 @@ class SIPServer:
                         )
                         invite_msg.body = transfer_sdp
                         invite_msg.set_header("Content-type", "application/sdp")
-                        invite_msg.set_header("Content-Length", str(len(transfer_sdp)))
+                        invite_msg.set_header("Content-Length", str(len(transfer_sdp.encode("utf-8"))))
 
                     # Send INVITE to transfer destination
                     self._send_message(invite_msg.build(), dest_addr)
@@ -986,7 +986,7 @@ class SIPServer:
 
         # Body is the SIP status line fragment
         notify_msg.body = sipfrag_status
-        notify_msg.set_header("Content-Length", str(len(sipfrag_status)))
+        notify_msg.set_header("Content-Length", str(len(sipfrag_status.encode("utf-8"))))
 
         self._send_message(notify_msg.build(), addr)
         self.logger.debug(f"Sent transfer NOTIFY: {sipfrag_status}")

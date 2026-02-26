@@ -1230,7 +1230,7 @@ class PBXCore:
             )
             invite_msg.body = transfer_sdp
             invite_msg.set_header("Content-type", "application/sdp")
-            invite_msg.set_header("Content-Length", str(len(transfer_sdp)))
+            invite_msg.set_header("Content-Length", str(len(transfer_sdp.encode("utf-8"))))
 
         # Send INVITE to new destination
         self.sip_server._send_message(invite_msg.build(), dest_addr)

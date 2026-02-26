@@ -417,7 +417,7 @@ const viewClickToDialHistory = async (extension) => {
         container.innerHTML = html;
     } catch (err) {
         document.getElementById('click-to-dial-history').innerHTML =
-            `<div class="error-box">Error loading history: ${err.message}</div>`;
+            `<div class="error-box">Error loading history: ${escapeHtml(err.message)}</div>`;
     }
 };
 
@@ -496,7 +496,7 @@ const loadVideoRooms = async () => {
         displayVideoRooms(data.rooms ?? []);
     } catch (err) {
         document.getElementById('video-rooms-list').innerHTML =
-            `<div class="error-box">Error loading rooms: ${err.message}</div>`;
+            `<div class="error-box">Error loading rooms: ${escapeHtml(err.message)}</div>`;
     }
 };
 
