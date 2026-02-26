@@ -1003,6 +1003,11 @@ class PBXCore:
         if call:
             self.logger.info(f"Ending call {call_id}")
 
+            # Cancel no-answer timer if still running
+            if call.no_answer_timer:
+                call.no_answer_timer.cancel()
+                call.no_answer_timer = None
+
             # If this is a voicemail recording, complete it first
             if call.routed_to_voicemail and hasattr(call, "voicemail_recorder"):
                 # Cancel the timer if it exists

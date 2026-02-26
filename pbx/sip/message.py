@@ -33,7 +33,9 @@ class SIPMessage:
         Args:
             raw_message: Raw SIP message string.
         """
-        lines = raw_message.split("\r\n")
+        # Normalize line endings: handle both CRLF (RFC 3261) and bare LF
+        normalized = raw_message.replace("\r\n", "\n").replace("\r", "\n")
+        lines = normalized.split("\n")
 
         # Validate that we have at least one line
         if not lines:

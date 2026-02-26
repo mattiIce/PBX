@@ -139,9 +139,15 @@ class SIPServer:
             try:
                 data, addr = self.socket.recvfrom(4096)
 
+                try:
+                    message_text = data.decode("utf-8")
+                except UnicodeDecodeError:
+                    self.logger.warning(f"Malformed UTF-8 from {addr}, using lossy decode")
+                    message_text = data.decode("utf-8", errors="replace")
+
                 # Handle message in separate thread
                 handler_thread = threading.Thread(
-                    target=self._handle_message, args=(data.decode("utf-8"), addr)
+                    target=self._handle_message, args=(message_text, addr)
                 )
                 handler_thread.daemon = True
                 handler_thread.start()

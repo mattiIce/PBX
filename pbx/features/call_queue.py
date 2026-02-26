@@ -106,7 +106,7 @@ class CallQueue:
         self,
         queue_number: str,
         name: str,
-        strategy: str = QueueStrategy.ROUND_ROBIN,
+        strategy: QueueStrategy = QueueStrategy.ROUND_ROBIN,
         max_wait_time: int = 300,
         max_queue_size: int = 50,
     ) -> None:
@@ -289,7 +289,7 @@ class QueueSystem:
         self.logger = get_logger()
 
     def create_queue(
-        self, queue_number: str, name: str, strategy: str = QueueStrategy.ROUND_ROBIN
+        self, queue_number: str, name: str, strategy: QueueStrategy = QueueStrategy.ROUND_ROBIN
     ) -> Any:
         """
         Create new queue
