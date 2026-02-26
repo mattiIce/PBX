@@ -669,7 +669,7 @@ def handle_dnd_override() -> tuple[Response, int]:
 
 
 @security_bp.route("/api/dnd/rule/<rule_id>", methods=["DELETE"])
-@require_auth
+@require_admin
 def handle_delete_dnd_rule(rule_id: str) -> tuple[Response, int]:
     """Handle deleting DND rule."""
     pbx_core = get_pbx_core()

@@ -260,13 +260,13 @@ class DNSSRVFailover:
         """
         self.logger.debug(f"Checking health: {target}:{port}")
 
+        sock = None
         try:
             # Perform TCP connection test
             sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             sock.settimeout(2.0)  # 2 second timeout
 
             result = sock.connect_ex((target, port))
-            sock.close()
 
             if result == 0:
                 # Connection successful
@@ -283,6 +283,9 @@ class DNSSRVFailover:
             # Other errors
             self.logger.error(f"Health check error for {target}:{port}: {e}")
             return False
+        finally:
+            if sock:
+                sock.close()
 
     def mark_server_failed(
         self, service: str, protocol: str, domain: str, target: str, port: int

@@ -44,7 +44,7 @@ class EmergencyHandler:
             True if emergency call was handled
         """
         from pbx.sip.message import SIPMessageBuilder
-        from pbx.sip.sdp import SDPBuilder, SDPSession
+        from pbx.sip.sdp import SDPSession
 
         pbx = self.pbx_core
 
@@ -183,32 +183,18 @@ class EmergencyHandler:
         if hasattr(pbx, "cdr_system"):
             pbx.cdr_system.add_metadata(call_id, "emergency_compliance", compliance_log)
 
-        server_ip: str = pbx._get_server_ip()
-
-        # Build SDP for response
-        caller_codecs: list[str]
-        if caller_sdp:
-            caller_codecs = caller_sdp.get("formats", ["0", "8"])
-        else:
-            caller_codecs = ["0", "8"]
-
-        rtp_port: int = rtp_ports[0] if rtp_ports else 10000
-        response_sdp = SDPBuilder.build_audio_sdp(
-            local_ip=server_ip,
-            local_port=rtp_port,
-            session_id=call_id,
-            codecs=caller_codecs,
-        )
-
-        # Send 200 OK
-        ok_response = SIPMessageBuilder.build_response(
-            status_code=200,
-            status_text="OK",
+        # Send 100 Trying to the caller immediately.
+        # Do NOT send 200 OK yet — the trunk's 200 OK will be relayed
+        # via the normal SIP response path (handle_callee_answer), which
+        # sets up the RTP relay and sends a proper 200 OK with SDP to
+        # the caller.  Sending 200 OK prematurely would give a false
+        # "connected" indication and leave the audio path broken.
+        trying_response = SIPMessageBuilder.build_response(
+            status_code=100,
+            status_text="Trying",
             request_msg=message,
-            body=response_sdp,
         )
-
-        pbx.sip_server._send_message(ok_response.build(), from_addr)
+        pbx.sip_server._send_message(trying_response.build(), from_addr)
 
         pbx.logger.critical("Emergency call acknowledged and routed")
         pbx.logger.critical(f"Trunk: {routing_info.get('trunk_name', 'Unknown')}")

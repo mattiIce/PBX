@@ -360,12 +360,12 @@ function displayClickToDialConfigs(configs) {
             <tbody>
                 ${configs.map(config => `
                     <tr>
-                        <td>${config.extension}</td>
+                        <td>${escapeHtml(String(config.extension))}</td>
                         <td>${config.enabled ? '✅ Yes' : '❌ No'}</td>
                         <td>${config.auto_answer ? '✅ Yes' : '❌ No'}</td>
                         <td>${config.browser_notification ? '✅ Yes' : '❌ No'}</td>
                         <td>
-                            <button onclick="viewClickToDialHistory('${config.extension}')" class="btn-secondary btn-sm">View History</button>
+                            <button onclick="viewClickToDialHistory('${escapeHtml(String(config.extension))}')" class="btn-secondary btn-sm">View History</button>
                         </td>
                     </tr>
                 `).join('')}
@@ -384,12 +384,12 @@ const viewClickToDialHistory = async (extension) => {
         const container = document.getElementById('click-to-dial-history');
 
         if (history.length === 0) {
-            container.innerHTML = `<p>No call history for extension ${extension}</p>`;
+            container.innerHTML = `<p>No call history for extension ${escapeHtml(String(extension))}</p>`;
             return;
         }
 
         const html = `
-            <h4>Call History for Extension ${extension}</h4>
+            <h4>Call History for Extension ${escapeHtml(String(extension))}</h4>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -403,9 +403,9 @@ const viewClickToDialHistory = async (extension) => {
                 <tbody>
                     ${history.map(call => `
                         <tr>
-                            <td>${call.destination}</td>
-                            <td>${call.source}</td>
-                            <td><span class="status-badge status-${call.status}">${call.status}</span></td>
+                            <td>${escapeHtml(String(call.destination))}</td>
+                            <td>${escapeHtml(String(call.source))}</td>
+                            <td><span class="status-badge status-${escapeHtml(String(call.status))}">${escapeHtml(String(call.status))}</span></td>
                             <td>${new Date(call.initiated_at).toLocaleString()}</td>
                             <td>${call.connected_at ? new Date(call.connected_at).toLocaleString() : '-'}</td>
                         </tr>

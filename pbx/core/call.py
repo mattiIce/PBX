@@ -109,6 +109,8 @@ class Call:
 class CallManager:
     """Manages active calls"""
 
+    MAX_HISTORY_SIZE = 10000
+
     def __init__(self) -> None:
         """Initialize call manager"""
         self.active_calls: dict[str, Call] = {}
@@ -156,6 +158,9 @@ class CallManager:
         if call:
             call.end()
             self.call_history.append(call)
+            # Prevent unbounded memory growth in long-running systems
+            if len(self.call_history) > self.MAX_HISTORY_SIZE:
+                self.call_history = self.call_history[-self.MAX_HISTORY_SIZE:]
             del self.active_calls[call_id]
             return True
         return False

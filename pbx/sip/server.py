@@ -1488,6 +1488,9 @@ class SIPServer:
             addr: Destination address tuple (host, port).
         """
         try:
+            if not self.socket:
+                self.logger.warning("Cannot send message: socket is closed")
+                return
             self.socket.sendto(message.encode("utf-8"), addr)
             self.logger.debug(f"Sent message to {addr}")
         except OSError as e:

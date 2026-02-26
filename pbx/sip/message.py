@@ -197,7 +197,7 @@ class SIPMessageBuilder:
 
         if body:
             response.body = body
-            response.set_header("Content-Length", str(len(body)))
+            response.set_header("Content-Length", str(len(body.encode("utf-8"))))
         else:
             response.set_header("Content-Length", "0")
 
@@ -239,7 +239,7 @@ class SIPMessageBuilder:
 
         if body:
             request.body = body
-            request.set_header("Content-Length", str(len(body)))
+            request.set_header("Content-Length", str(len(body.encode("utf-8"))))
         else:
             request.set_header("Content-Length", "0")
 

@@ -456,8 +456,10 @@ async function testJitsiConnection() {
 }
 
 function showJitsiStatus(message, type) {
+    const validTypes = ['success', 'error', 'warning', 'info'];
+    const safeType = validTypes.includes(type) ? type : 'info';
     const statusDiv = document.getElementById('jitsi-status');
-    statusDiv.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+    statusDiv.innerHTML = `<div class="alert alert-${safeType}">${message}</div>`;
 }
 
 // =============================================================================
