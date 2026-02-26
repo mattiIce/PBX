@@ -446,13 +446,15 @@ class JitsiIntegration:
         Returns:
             HTML embed code
         """
+        from html import escape
+
         url = f"{self.server_url}/{room_name}"
 
         embed = f"""
 <iframe
     allow="camera; microphone; fullscreen; display-capture; autoplay"
-    src="{url}"
-    style="height: {height}px; width: {width}px; border: 0px;">
+    src="{escape(url, quote=True)}"
+    style="height: {escape(str(height))}px; width: {escape(str(width))}px; border: 0px;">
 </iframe>
 """
         return embed.strip()

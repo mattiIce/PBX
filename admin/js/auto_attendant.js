@@ -783,7 +783,7 @@ async function loadMenuTree() {
         const treeView = document.getElementById('menu-tree-view');
         if (treeView) {
             treeView.innerHTML = `<p class="error-message">
-                <strong>Error:</strong> ${error.message}<br>
+                <strong>Error:</strong> ${escapeHtml(error.message)}<br>
                 <small>Check the browser console for more details.</small>
             </p>`;
         }

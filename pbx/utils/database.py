@@ -98,7 +98,7 @@ class DatabaseBackend:
             self.logger.info("✓ Successfully connected to PostgreSQL database")
             self.logger.info(f"  Connection established: {host}:{port}/{database}")
             return True
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError, ValueError, OSError) as e:
             self.logger.error(f"✗ PostgreSQL connection failed: {e}")
             self.logger.warning("Voicemail and other data will be stored ONLY in file system")
             self.logger.warning(

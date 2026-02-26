@@ -434,6 +434,8 @@ def handle_get_webrtc_sessions() -> Response:
 def handle_get_webrtc_phone_config() -> Response:
     """Get WebRTC phone extension configuration."""
     pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500)
     try:
         # Get the configured extension for the webrtc admin phone
         extension = pbx_core.extension_db.get_config(
@@ -487,6 +489,8 @@ def handle_get_webrtc_session(subpath: str) -> Response:
 def handle_set_webrtc_phone_config() -> Response:
     """set WebRTC phone extension configuration."""
     pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500)
     try:
         data = get_request_body()
         extension = data.get("extension")

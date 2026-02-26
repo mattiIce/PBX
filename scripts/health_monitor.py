@@ -221,7 +221,7 @@ class HealthMonitor:
                         "version": version,
                         "size": db_size,
                     }
-                except (KeyError, TypeError, ValueError) as e:
+                except (KeyError, TypeError, ValueError, OSError) as e:
                     checks["connectivity"] = {
                         "status": "critical",
                         "message": f"Database connection failed: {e}",

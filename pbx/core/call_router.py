@@ -170,6 +170,10 @@ class CallRouter:
         dest_ext_obj = pbx.extension_registry.get(to_ext)
         if not dest_ext_obj or not dest_ext_obj.address:
             pbx.logger.error(f"Cannot get address for extension {to_ext}")
+            # Release allocated RTP relay and clean up call to prevent resource leaks
+            if rtp_ports:
+                pbx.rtp_relay.release_relay(call_id)
+            pbx.call_manager.end_call(call_id)
             return False
 
         # Check if destination is a WebRTC extension

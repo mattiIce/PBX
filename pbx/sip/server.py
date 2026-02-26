@@ -411,13 +411,14 @@ class SIPServer:
             to_header = message.get_header("To")
             call_id = message.get_header("Call-ID")
 
+            # Send 100 Trying immediately per RFC 3261 Section 8.2.6.1
+            # to suppress INVITE retransmissions before doing any routing work
+            self._send_response(100, "Trying", message, addr)
+
             # Route call through PBX core
             success = self.pbx_core.route_call(from_header, to_header, call_id, message, addr)
 
-            if success:
-                self._send_response(100, "Trying", message, addr)
-                # Actual call setup would continue asynchronously
-            else:
+            if not success:
                 self._send_response(404, "Not Found", message, addr)
         else:
             self._send_response(200, "OK", message, addr)
@@ -907,6 +908,11 @@ class SIPServer:
                     new_call.caller_addr = call.caller_addr
                     new_call.rtp_ports = call.rtp_ports
 
+                    # Transfer RTP relay ownership before ending old call
+                    relay_info = self.pbx_core.rtp_relay.active_relays.pop(call_id, None)
+                    if relay_info:
+                        self.pbx_core.rtp_relay.active_relays[new_call_id] = relay_info
+
                     # Send success NOTIFY
                     self._send_transfer_notify(message, addr, "SIP/2.0 200 OK", call_id)
 
@@ -1083,13 +1089,15 @@ class SIPServer:
 
             if dest_addr:
                 # Forward the MESSAGE to the recipient
+                cseq_header = message.get_header("CSeq") or "1 MESSAGE"
+                cseq_num = cseq_header.split()[0]
                 fwd_msg = SIPMessageBuilder.build_request(
                     method="MESSAGE",
                     uri=f"sip:{dest_extension}@{dest_addr[0]}:{dest_addr[1]}",
                     from_addr=from_header or "",
                     to_addr=to_header or "",
                     call_id=message.get_header("Call-ID") or "",
-                    cseq=message.get_header("CSeq") or "1 MESSAGE",
+                    cseq=cseq_num,
                     body=message.body,
                 )
                 if content_type:
@@ -1420,9 +1428,11 @@ class SIPServer:
                         self._send_message(message.build(), call.caller_addr)
 
             elif message.status_code == 200:
-                # OK - callee answered
-                self.logger.info(f"Callee answered call {call_id}")
-                if call_id:
+                # OK - only process as callee answer if this is a response to INVITE
+                # (200 OK is also sent for BYE, CANCEL, OPTIONS, etc.)
+                cseq_header = message.get_header("CSeq") or ""
+                if call_id and "INVITE" in cseq_header:
+                    self.logger.info(f"Callee answered call {call_id}")
                     self.pbx_core.handle_callee_answer(call_id, message, addr)
 
             elif message.status_code and message.status_code >= 400:

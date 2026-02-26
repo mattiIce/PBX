@@ -524,8 +524,8 @@ function displayVideoRooms(rooms) {
             <tbody>
                 ${rooms.map(room => `
                     <tr>
-                        <td>${room.room_name}</td>
-                        <td>${room.owner_extension || '-'}</td>
+                        <td>${escapeHtml(room.room_name)}</td>
+                        <td>${escapeHtml(room.owner_extension || '-')}</td>
                         <td>${room.max_participants}</td>
                         <td>${room.enable_4k ? '✅' : '❌'}</td>
                         <td>${room.enable_screen_share ? '✅' : '❌'}</td>
@@ -736,7 +736,7 @@ const submitConversationalAIConfig = async (e) => {
     try {
         const r = await fetch('/api/framework/conversational-ai/config', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: pbxAuthHeaders(),
             body: JSON.stringify(data)
         });
         const result = await r.json();
@@ -870,14 +870,14 @@ const loadPredictiveDialingCampaigns = async () => {
                 <tbody>
                     ${campaigns.map(c => `
                         <tr>
-                            <td><strong>${c.name}</strong></td>
-                            <td>${c.mode}</td>
-                            <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                            <td><strong>${escapeHtml(c.name)}</strong></td>
+                            <td>${escapeHtml(c.mode)}</td>
+                            <td><span class="status-badge status-${escapeHtml(c.status)}">${escapeHtml(c.status)}</span></td>
                             <td>${c.total_contacts || 0}</td>
                             <td>${c.dialed || 0}</td>
                             <td>${c.connected || 0}</td>
                             <td>
-                                <button onclick="toggleCampaign('${c.id}')" class="btn-secondary btn-sm">
+                                <button onclick="toggleCampaign('${escapeHtml(String(c.id))}')" class="btn-secondary btn-sm">
                                     ${c.status === 'active' ? 'Pause' : 'Start'}
                                 </button>
                             </td>
@@ -966,7 +966,7 @@ function showCreateCampaignDialog() {
         try {
             const r = await fetch('/api/framework/predictive-dialing/campaign', {
                 method: 'POST',
-                headers: {'Content-Type': 'application/json'},
+                headers: pbxAuthHeaders(),
                 body: JSON.stringify(data)
             });
             const result = await r.json();

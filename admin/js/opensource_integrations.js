@@ -430,7 +430,7 @@ document.getElementById('jitsi-config-form')?.addEventListener('submit', async f
             showJitsiStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showJitsiStatus(`Error: ${error.message}`, 'error');
+        showJitsiStatus(`Error: ${escapeHtml(error.message)}`, 'error');
     }
 });
 
@@ -534,7 +534,7 @@ document.getElementById('matrix-config-form')?.addEventListener('submit', async 
             showMatrixStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showMatrixStatus(`Error: ${error.message}`, 'error');
+        showMatrixStatus(`Error: ${escapeHtml(error.message)}`, 'error');
     }
 });
 
@@ -563,11 +563,11 @@ async function testMatrixConnection() {
         const versionList = versions.versions?.join(', ') ?? 'Unknown';
 
         showMatrixStatus(
-            `✅ Homeserver is accessible!<br>Supported versions: ${versionList}<br><small>Note: Full authentication test requires server-side validation</small>`,
+            `✅ Homeserver is accessible!<br>Supported versions: ${escapeHtml(versionList)}<br><small>Note: Full authentication test requires server-side validation</small>`,
             'success'
         );
     } catch (error) {
-        showMatrixStatus(`❌ Connection failed: ${error.message}`, 'error');
+        showMatrixStatus(`❌ Connection failed: ${escapeHtml(error.message)}`, 'error');
     }
 }
 
@@ -648,7 +648,7 @@ document.getElementById('espocrm-config-form')?.addEventListener('submit', async
             showEspoCRMStatus('Failed to save configuration', 'error');
         }
     } catch (error) {
-        showEspoCRMStatus(`Error: ${error.message}`, 'error');
+        showEspoCRMStatus(`Error: ${escapeHtml(error.message)}`, 'error');
     }
 });
 
@@ -676,14 +676,14 @@ async function testEspoCRMConnection() {
         if (response.ok) {
             const data = await response.json();
             showEspoCRMStatus(
-                `✅ Connection successful!<br>Connected as: ${data.userName ?? 'Unknown'}<br>EspoCRM is ready for integration.`,
+                `✅ Connection successful!<br>Connected as: ${escapeHtml(data.userName ?? 'Unknown')}<br>EspoCRM is ready for integration.`,
                 'success'
             );
         } else {
             throw new Error(`API returned status ${response.status}`);
         }
     } catch (error) {
-        showEspoCRMStatus(`❌ Connection failed: ${error.message}<br>Check API URL and API Key.`, 'error');
+        showEspoCRMStatus(`❌ Connection failed: ${escapeHtml(error.message)}<br>Check API URL and API Key.`, 'error');
     }
 }
 

@@ -1237,6 +1237,12 @@ class PBXCore:
         new_call.caller_addr = call.caller_addr
         new_call.rtp_ports = call.rtp_ports
 
+        # Transfer RTP relay ownership from old call to new call before ending
+        # the old call (end_call releases the relay, which would kill audio)
+        relay_info = self.rtp_relay.active_relays.pop(call_id, None)
+        if relay_info:
+            self.rtp_relay.active_relays[new_call_id] = relay_info
+
         # Send BYE to the transferring party (the party that initiated transfer)
         if call.callee_addr:
             bye_msg = SIPMessageBuilder.build_request(
@@ -1249,7 +1255,7 @@ class PBXCore:
             )
             self.sip_server._send_message(bye_msg.build(), call.callee_addr)
 
-        # End the original call
+        # End the original call (relay already transferred, so release_relay is a no-op)
         self.call_manager.end_call(call_id)
         self.cdr_system.end_record(call_id, hangup_cause="blind_transfer")
 

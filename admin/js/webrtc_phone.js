@@ -9,12 +9,8 @@
  * 4. Make your call - you'll see detailed [VERBOSE] logs in the console
  */
 
-// Verbose logging flag - can be enabled via environment or console
-// Set window.WEBRTC_VERBOSE_LOGGING = true in browser console for verbose logs
-const VERBOSE_LOGGING = window.WEBRTC_VERBOSE_LOGGING || false;
-
 function verboseLog(...args) {
-    if (VERBOSE_LOGGING) {
+    if (window.WEBRTC_VERBOSE_LOGGING) {
         debugLog('[VERBOSE]', ...args);
     }
 }
@@ -68,13 +64,13 @@ class WebRTCPhone {
             this.remoteAudio = document.createElement('audio');
             this.remoteAudio.id = 'webrtc-remote-audio';
             this.remoteAudio.autoplay = true;
-            this.remoteAudio.playsinline = true;
+            this.remoteAudio.playsInline = true;
             document.body.appendChild(this.remoteAudio);
         }
 
         // Ensure audio element is ready for playback
         this.remoteAudio.autoplay = true;
-        this.remoteAudio.playsinline = true;
+        this.remoteAudio.playsInline = true;
         this.remoteAudio.volume = 0.8; // Set initial volume
 
         // Set up event listeners
@@ -611,7 +607,7 @@ class WebRTCPhone {
                 verboseLog('DTMF send result:', data);
 
                 // Brief visual feedback in status
-                const currentStatus = this.statusDiv.textContent;
+                const currentStatus = this.statusDiv?.textContent ?? '';
                 this.updateStatus(`Sent: ${digit}`, 'info');
                 setTimeout(() => {
                     if (this.isCallActive) {

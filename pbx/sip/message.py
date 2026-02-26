@@ -83,7 +83,7 @@ class SIPMessage:
 
     def get_header(self, name: str) -> str | None:
         """
-        Get header value by name.
+        Get header value by name (case-insensitive per RFC 3261 Section 7.3.1).
 
         Args:
             name: Header name to look up.
@@ -91,7 +91,16 @@ class SIPMessage:
         Returns:
             Header value string, or None if not found.
         """
-        return self.headers.get(name)
+        # Try exact match first for performance
+        value = self.headers.get(name)
+        if value is not None:
+            return value
+        # Case-insensitive fallback per RFC 3261
+        name_lower = name.lower()
+        for key, val in self.headers.items():
+            if key.lower() == name_lower:
+                return val
+        return None
 
     def set_header(self, name: str, value: str) -> None:
         """

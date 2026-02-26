@@ -234,6 +234,7 @@ class AutoAttendantHandler:
 
             pbx.logger.info(f"[Auto Attendant] Starting audio playback for call {call_id}")
             audio_played: bool = False
+            transferred: bool = False
 
             if audio_file and Path(audio_file).exists():
                 pbx.logger.info(f"[Auto Attendant] Playing welcome file: {audio_file}")
@@ -356,7 +357,9 @@ class AutoAttendantHandler:
                         # Transfer the call using existing transfer_call method
                         if call_id:
                             success = pbx.transfer_call(call_id, destination)
-                            if not success:
+                            if success:
+                                transferred = True
+                            else:
                                 pbx.logger.warning(
                                     f"Failed to transfer call {call_id} to {destination}"
                                 )
@@ -387,7 +390,9 @@ class AutoAttendantHandler:
                     pbx.logger.info(f"Auto attendant timeout, transferring to {destination}")
                     if call_id:
                         success = pbx.transfer_call(call_id, destination)
-                        if not success:
+                        if success:
+                            transferred = True
+                        else:
                             pbx.logger.warning(
                                 f"Failed to transfer call {call_id} to {destination} on timeout"
                             )
@@ -416,6 +421,7 @@ class AutoAttendantHandler:
                 except Exception as exc:
                     pbx.logger.error(f"Failed to return RTP port {call.aa_rtp_port}: {exc}")
         finally:
-            # End the call
-            time.sleep(1)
-            pbx.end_call(call_id)
+            # Only end the call if it was not successfully transferred
+            if not transferred:
+                time.sleep(1)
+                pbx.end_call(call_id)

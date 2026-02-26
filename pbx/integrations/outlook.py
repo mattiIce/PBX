@@ -209,7 +209,11 @@ class OutlookIntegration:
                 if not event.get("is_cancelled"):
                     # Parse event times as timezone-aware
                     event_start = datetime.fromisoformat(event["start"])
+                    if event_start.tzinfo is None:
+                        event_start = event_start.replace(tzinfo=UTC)
                     event_end = datetime.fromisoformat(event["end"])
+                    if event_end.tzinfo is None:
+                        event_end = event_end.replace(tzinfo=UTC)
 
                     if event_start <= now <= event_end:
                         return "busy"
@@ -317,6 +321,8 @@ class OutlookIntegration:
             # Parse timestamp
             if isinstance(timestamp, str):
                 start_time = datetime.fromisoformat(timestamp)
+                if start_time.tzinfo is None:
+                    start_time = start_time.replace(tzinfo=UTC)
             else:
                 start_time = datetime.now(UTC)
 

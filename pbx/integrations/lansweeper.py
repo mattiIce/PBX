@@ -337,7 +337,9 @@ class LansweeperIntegration:
         if not self.enabled:
             return []
 
-        result = self._make_request(f"assets/search?q={query}")
+        from urllib.parse import quote
+
+        result = self._make_request(f"assets/search?q={quote(query)}")
 
         if result and isinstance(result, list):
             return result

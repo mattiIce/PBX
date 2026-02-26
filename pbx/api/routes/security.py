@@ -173,7 +173,7 @@ def handle_get_mfa_status(subpath: str) -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         enabled = pbx_core.mfa_manager.is_enabled_for_user(extension)
 
@@ -202,7 +202,7 @@ def handle_get_mfa_methods(subpath: str) -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         methods = pbx_core.mfa_manager.get_enrolled_methods(extension)
 
@@ -229,7 +229,7 @@ def handle_mfa_enroll() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension_number)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         success, provisioning_uri, backup_codes = pbx_core.mfa_manager.enroll_user(extension_number)
 
@@ -266,7 +266,7 @@ def handle_mfa_verify_enrollment() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension_number)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         success = pbx_core.mfa_manager.verify_enrollment(extension_number, code)
 
@@ -320,7 +320,7 @@ def handle_mfa_disable() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension_number)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         success = pbx_core.mfa_manager.disable_for_user(extension_number)
 
@@ -351,7 +351,7 @@ def handle_mfa_enroll_yubikey() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension_number)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         success, error = pbx_core.mfa_manager.enroll_yubikey(extension_number, otp, device_name)
 
@@ -382,7 +382,7 @@ def handle_mfa_enroll_fido2() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension_number)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         success, error = pbx_core.mfa_manager.enroll_fido2(
             extension_number, credential_data, device_name
@@ -538,7 +538,7 @@ def handle_get_dnd_status(subpath: str) -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         status = pbx_core.dnd_scheduler.get_status(extension)
 
@@ -561,7 +561,7 @@ def handle_get_dnd_rules(subpath: str) -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         rules = pbx_core.dnd_scheduler.get_rules(extension)
 
@@ -590,7 +590,7 @@ def handle_add_dnd_rule() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         rule_id = pbx_core.dnd_scheduler.add_rule(extension, rule_type, config)
 
@@ -620,7 +620,7 @@ def handle_register_calendar_user() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         pbx_core.dnd_scheduler.register_calendar_user(extension, email)
 
@@ -651,7 +651,7 @@ def handle_dnd_override() -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         # Convert status string to PresenceStatus enum
         from pbx.features.presence import PresenceStatus
@@ -698,7 +698,7 @@ def handle_clear_dnd_override(extension: str) -> tuple[Response, int]:
         # Verify the user has access to this extension
         allowed, error_response = check_extension_access(extension)
         if not allowed:
-            return error_response, 403
+            return error_response
 
         pbx_core.dnd_scheduler.clear_manual_override(extension)
 
