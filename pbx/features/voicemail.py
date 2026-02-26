@@ -16,6 +16,8 @@ except ImportError:
     EMAIL_NOTIFIER_AVAILABLE = False
 
 try:
+    from pbx.features.voicemail_transcription import VoicemailTranscriptionService  # noqa: F401
+
     TRANSCRIPTION_AVAILABLE = True
 except ImportError:
     TRANSCRIPTION_AVAILABLE = False

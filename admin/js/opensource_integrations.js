@@ -982,7 +982,7 @@ function showMatrixMessageResult(message, type) {
     const resultDiv = document.getElementById('matrix-message-result');
     const textEl = document.getElementById('matrix-message-result-text');
 
-    textEl.innerHTML = message;
+    textEl.textContent = message;
     resultDiv.style.display = 'block';
     resultDiv.querySelector('.info-box').style.backgroundColor =
         type === 'success' ? '#e8f5e9' : '#ffebee';
@@ -1135,7 +1135,7 @@ function showEspoCRMCreateResult(message) {
     const resultDiv = document.getElementById('espocrm-create-result');
     const textEl = document.getElementById('espocrm-create-result-text');
 
-    textEl.innerHTML = message;
+    textEl.textContent = message;
     resultDiv.style.display = 'block';
 
     // Auto-hide after 5 seconds

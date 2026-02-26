@@ -132,11 +132,13 @@ class OutlookIntegration:
 
         # Default to today's events if not specified
         if not start_time:
-            start_time = datetime.now(UTC).replace(hour=0, minute=0, second=0).isoformat() + "Z"
+            start_dt = datetime.now(UTC).replace(hour=0, minute=0, second=0, tzinfo=None)
+            start_time = start_dt.isoformat() + "Z"
         if not end_time:
-            end_time = (datetime.now(UTC) + timedelta(days=1)).replace(
-                hour=0, minute=0, second=0
-            ).isoformat() + "Z"
+            end_dt = (datetime.now(UTC) + timedelta(days=1)).replace(
+                hour=0, minute=0, second=0, tzinfo=None
+            )
+            end_time = end_dt.isoformat() + "Z"
 
         try:
             self.logger.info(f"Fetching calendar events for {user_email}")

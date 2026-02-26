@@ -915,7 +915,7 @@ class ThreatDetector:
             query = """
                 SELECT event_type, severity, COUNT(*) as count
                 FROM security_threat_events
-                WHERE timestamp > (CURRENT_TIMESTAMP - INTERVAL '%s hours')
+                WHERE timestamp > (CURRENT_TIMESTAMP - INTERVAL '1 hour' * %s)
                 GROUP BY event_type, severity
                 """
             results = self.database.fetch_all(query, (hours,))

@@ -260,14 +260,14 @@ async function updateMenuBreadcrumb() {
             const data = await response.json();
             const breadcrumb = document.getElementById('breadcrumb-path');
             if (breadcrumb) {
-                let path = data.menu.menu_name;
-                
+                let path = escapeHtml(data.menu.menu_name);
+
                 // Build breadcrumb path
                 if (currentMenuId !== 'main') {
                     // Add back button
                     path = `<button class="btn btn-secondary" onclick="navigateToMenu('main')" style="margin-right: 10px;">⬅️ Back to Main</button> ${path}`;
                 }
-                
+
                 breadcrumb.innerHTML = path;
             }
         }

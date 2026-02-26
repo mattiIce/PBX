@@ -324,7 +324,7 @@ function loadClickToDialTab() {
             const errorContainer = document.getElementById('click-to-dial-configs-list');
             if (errorContainer) {
                 errorContainer.innerHTML =
-                    `<div class="error-box">Error loading configurations: ${err.message}</div>`;
+                    `<div class="error-box">Error loading configurations: ${escapeHtml(err.message)}</div>`;
             }
         }
     }, 100);

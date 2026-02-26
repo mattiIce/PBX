@@ -591,6 +591,8 @@ class VoicemailHandler:
                     # Process detected DTMF digit (from either SIP INFO or
                     # in-band)
                     if digit:
+                        # Reset inactivity timer on any DTMF input
+                        last_audio_check = time.time()
                         # Handle DTMF input through IVR
                         pbx.logger.info(
                             f"[VM IVR] Processing DTMF '{digit}' through IVR state machine..."

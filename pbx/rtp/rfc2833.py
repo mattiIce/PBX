@@ -207,7 +207,7 @@ class RFC2833Receiver:
         """Stop RFC 2833 receiver."""
         self.running = False
         if self.socket:
-            with contextlib.suppress(BaseException):
+            with contextlib.suppress(OSError):
                 self.socket.close()
         self.logger.info(f"RFC 2833 receiver stopped on port {self.local_port}")
 
@@ -352,7 +352,7 @@ class RFC2833Sender:
     def stop(self) -> None:
         """Stop RFC 2833 sender."""
         if self.socket:
-            with contextlib.suppress(BaseException):
+            with contextlib.suppress(OSError):
                 self.socket.close()
         self.logger.info(f"RFC 2833 sender stopped on port {self.local_port}")
 

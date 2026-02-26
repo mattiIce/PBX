@@ -100,6 +100,30 @@ def get_request_body() -> dict[str, Any]:
     return request.get_json(silent=True) or {}
 
 
+def check_extension_access(extension: str) -> tuple[bool, Response | None]:
+    """Check if the authenticated user can access the given extension's resources.
+
+    Admins can access any extension. Regular users can only access their own.
+
+    Returns:
+        tuple of (allowed, error_response). If allowed is False, error_response
+        contains the 403 JSON response to return.
+    """
+    payload = getattr(request, "auth_payload", None)
+    if not payload:
+        return False, send_json({"error": "Authentication required"}, 401)
+
+    is_admin = payload.get("is_admin", False)
+    if is_admin:
+        return True, None
+
+    user_extension = payload.get("extension")
+    if str(user_extension) != str(extension):
+        return False, send_json({"error": "Not authorized to access this extension"}, 403)
+
+    return True, None
+
+
 def get_query_params() -> dict[str, Any]:
     """Get query parameters as a dict."""
     return dict(request.args)

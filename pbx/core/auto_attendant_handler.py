@@ -261,7 +261,7 @@ class AutoAttendantHandler:
                             "[Auto Attendant] ✗ Failed to play generated welcome audio"
                         )
                 finally:
-                    with contextlib.suppress(BaseException):
+                    with contextlib.suppress(OSError):
                         Path(temp_file_path).unlink()
 
             time.sleep(0.5)
@@ -293,7 +293,7 @@ class AutoAttendantHandler:
                     else:
                         pbx.logger.error("[Auto Attendant] ✗ Failed to play generated menu audio")
                 finally:
-                    with contextlib.suppress(BaseException):
+                    with contextlib.suppress(OSError):
                         Path(temp_file_path).unlink()
 
             # Main loop - wait for DTMF input
@@ -348,7 +348,7 @@ class AutoAttendantHandler:
                             try:
                                 player.play_file(temp_file_path)
                             finally:
-                                with contextlib.suppress(BaseException):
+                                with contextlib.suppress(OSError):
                                     Path(temp_file_path).unlink()
 
                         time.sleep(0.5)

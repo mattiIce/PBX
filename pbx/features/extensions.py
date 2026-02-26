@@ -278,6 +278,8 @@ class ExtensionRegistry:
                     return False
             else:
                 # Fallback to plain text comparison (not recommended for production)
+                if config_password is None:
+                    return False
                 # Use constant-time comparison to prevent timing attacks
                 self.logger.warning(
                     f"Extension {number} using plain text password - "

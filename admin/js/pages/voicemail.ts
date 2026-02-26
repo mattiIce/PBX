@@ -5,6 +5,7 @@
 
 import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { escapeHtml } from '../utils/html.ts';
 
 interface VoicemailExtension {
     number: string;
@@ -100,7 +101,7 @@ function updateVoicemailView(messages: VoicemailMessage[] | undefined, extension
         return `
             <div class="voicemail-card ${isUnread ? 'unread' : ''}">
                 <div class="voicemail-card-header">
-                    <div class="voicemail-from">${msg.caller_id}</div>
+                    <div class="voicemail-from">${escapeHtml(msg.caller_id)}</div>
                     <span class="voicemail-status-badge ${isUnread ? 'unread' : 'read'}">
                         ${isUnread ? 'NEW' : 'READ'}
                     </span>

@@ -34,7 +34,6 @@ class StatisticsEngine:
         Returns:
             Dictionary with comprehensive statistics
         """
-        datetime.now(UTC)
         stats = {
             "overview": self._get_overview_stats(days),
             "daily_trends": self._get_daily_trends(days),

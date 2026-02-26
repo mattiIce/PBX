@@ -160,13 +160,13 @@ class ProductionHealthChecker:
     def _check_database(self) -> tuple[bool, dict[str, Any]]:
         """Check database connectivity."""
         try:
-            from pbx.utils.database import get_database_connection
+            from pbx.utils.database import get_database
 
             db_config = self.config.get("database", {})
             db_type = db_config.get("type", "postgresql")
 
             # Try to get a connection
-            conn = get_database_connection(self.config)
+            conn = get_database(self.config)
             if not conn:
                 return False, {
                     "status": "unavailable",

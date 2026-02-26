@@ -108,7 +108,7 @@ class LansweeperIntegration:
         # Check cache
         if mac_normalized in self.asset_cache:
             cached = self.asset_cache[mac_normalized]
-            if (datetime.now(UTC) - cached["cached_at"]).seconds < self.cache_ttl:
+            if (datetime.now(UTC) - cached["cached_at"]).total_seconds() < self.cache_ttl:
                 return cached["data"]
 
         # Query Lansweeper API

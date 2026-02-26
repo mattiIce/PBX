@@ -872,7 +872,7 @@ class RTPPlayer:
 
         with self.lock:
             header = struct.pack(
-                ">BBHII", byte0, byte1, self.sequence_number, self.timestamp, self.ssrc
+                "!BBHII", byte0, byte1, self.sequence_number, self.timestamp, self.ssrc
             )
 
         return header + payload

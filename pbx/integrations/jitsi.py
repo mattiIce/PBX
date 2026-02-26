@@ -171,15 +171,15 @@ class JitsiIntegration:
         Returns:
             Meeting URL with JWT token if configured
         """
-        url = f"{self.server_url}/{room_name}"
-
-        # Add display name to URL
-        url += f'#userInfo.displayName="{participant_name}"'
+        base_url = f"{self.server_url}/{room_name}"
 
         # Add JWT token if configured
         if self.app_id and self.app_secret:
             jwt_token = self._generate_jwt_token(room_name, participant_name, is_moderator)
-            url = f"{self.server_url}/{room_name}?jwt={jwt_token}"
+            base_url = f"{base_url}?jwt={jwt_token}"
+
+        # Add display name as URL fragment (must come after query string)
+        url = f'{base_url}#userInfo.displayName="{participant_name}"'
 
         return url
 
@@ -288,7 +288,7 @@ class JitsiIntegration:
                 "aud": self.app_id,
                 "room": room_name,
                 "exp": now + (expiry_hours * 3600),
-                "nb": now - 10,
+                "nbf": now - 10,
                 "context": {"user": {"name": user_name, "moderator": is_moderator}},
             }
 

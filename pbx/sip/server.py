@@ -506,14 +506,35 @@ class SIPServer:
 
     def _handle_cancel(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
-        Handle CANCEL request.
+        Handle CANCEL request per RFC 3261 Section 9.2.
+
+        Sends 200 OK for the CANCEL itself, then terminates the pending
+        INVITE transaction with a 487 Request Terminated response.
 
         Args:
             message: SIPMessage object.
             addr: Source address tuple.
         """
         self.logger.info(f"CANCEL request from {addr}")
+
+        # Send 200 OK for the CANCEL request itself
         self._send_response(200, "OK", message, addr)
+
+        # Find and terminate the matching call
+        call_id = message.get_header("Call-ID")
+        if call_id and self.pbx_core:
+            call = self.pbx_core.call_manager.get_call(call_id)
+            if call:
+                # Send 487 Request Terminated for the original INVITE
+                if hasattr(call, "original_invite") and call.original_invite:
+                    response_487 = SIPMessageBuilder.build_response(
+                        487, "Request Terminated", call.original_invite
+                    )
+                    self._send_message(response_487.build(), addr)
+
+                # End the call
+                self.pbx_core.end_call(call_id)
+                self.logger.info(f"Call {call_id} cancelled and terminated")
 
     def _handle_options(self, message: SIPMessage, addr: AddrTuple) -> None:
         """

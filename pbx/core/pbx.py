@@ -1086,7 +1086,7 @@ class PBXCore:
             self.logger.info(
                 f"Queued DTMF '{dtmf_digit}' from SIP INFO for voicemail IVR on call {call_id}"
             )
-        elif hasattr(call, "auto_attendant") and call.auto_attendant:
+        elif hasattr(call, "auto_attendant_active") and call.auto_attendant_active:
             self.logger.info(
                 f"Queued DTMF '{dtmf_digit}' from SIP INFO for auto-attendant on call {call_id}"
             )
