@@ -80,39 +80,41 @@ class FindMeFollowMe:
 
         try:
             cursor = self.database.connection.cursor()
-            cursor.execute("""
-                SELECT extension, mode, enabled, destinations, no_answer_destination, updated_at
-                FROM fmfm_configs
-            """)
+            try:
+                cursor.execute("""
+                    SELECT extension, mode, enabled, destinations, no_answer_destination, updated_at
+                    FROM fmfm_configs
+                """)
 
-            rows = cursor.fetchall()
-            for row in rows:
-                extension, mode, enabled, destinations_json, no_answer, updated_at = row
+                rows = cursor.fetchall()
+                for row in rows:
+                    extension, mode, enabled, destinations_json, no_answer, updated_at = row
 
-                # Parse destinations from JSON
-                try:
-                    destinations = json.loads(destinations_json)
-                except json.JSONDecodeError:
-                    self.logger.warning(
-                        f"Invalid JSON in destinations for extension {extension}, skipping"
-                    )
-                    destinations = []
+                    # Parse destinations from JSON
+                    try:
+                        destinations = json.loads(destinations_json)
+                    except json.JSONDecodeError:
+                        self.logger.warning(
+                            f"Invalid JSON in destinations for extension {extension}, skipping"
+                        )
+                        destinations = []
 
-                config = {
-                    "extension": extension,
-                    "mode": mode,
-                    "enabled": bool(enabled),
-                    "destinations": destinations,
-                    "updated_at": updated_at,
-                }
+                    config = {
+                        "extension": extension,
+                        "mode": mode,
+                        "enabled": bool(enabled),
+                        "destinations": destinations,
+                        "updated_at": updated_at,
+                    }
 
-                if no_answer:
-                    config["no_answer_destination"] = no_answer
+                    if no_answer:
+                        config["no_answer_destination"] = no_answer
 
-                self.user_configs[extension] = config
+                    self.user_configs[extension] = config
 
-            cursor.close()
-            self.logger.info(f"Loaded {len(rows)} FMFM configurations from database")
+                self.logger.info(f"Loaded {len(rows)} FMFM configurations from database")
+            finally:
+                cursor.close()
         except (KeyError, TypeError, ValueError, json.JSONDecodeError) as e:
             self.logger.error(f"Error loading FMFM configs from database: {e}")
 

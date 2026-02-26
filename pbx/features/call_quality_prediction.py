@@ -214,6 +214,9 @@ class CallQualityPrediction:
         else:
             predicted_mos = None
 
+        # Number of intervals ahead to predict
+        prediction_intervals = 3
+
         # Fallback to weighted moving average if ML not available
         if predicted_mos is None:
             # Apply exponential weighted moving average for smoothing

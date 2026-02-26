@@ -237,7 +237,7 @@ class DNSSRVFailover:
             return random.choice(records)
 
         # Weighted random selection
-        rand = random.randint(0, total_weight)
+        rand = random.randint(0, total_weight - 1)
 
         cumulative = 0
         for record in records:

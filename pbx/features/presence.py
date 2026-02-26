@@ -158,7 +158,7 @@ class PresenceSystem:
         if user:
             user.set_status(status, custom_message)
             self._notify_subscribers(extension)
-            self.logger.debug(f"set status for {extension}: {status.value}")
+            self.logger.debug(f"set status for {extension}: {status}")
             return True
         return False
 
