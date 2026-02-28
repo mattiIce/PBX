@@ -81,8 +81,13 @@ export async function loadSupportedVendors(): Promise<void> {
         supportedVendors = data.vendors || [];
         supportedModels = data.models || {};
         populateProvisioningFormDropdowns();
+        populateSupportedVendorsList();
     } catch (error: unknown) {
         console.error('Error loading vendors:', error);
+        const container = document.getElementById('supported-vendors-list');
+        if (container) {
+            container.innerHTML = '<p>Failed to load supported vendors.</p>';
+        }
     }
 }
 
@@ -251,6 +256,28 @@ function populateProvisioningFormDropdowns(): void {
         option.textContent = v;
         vendorSelect.appendChild(option);
     }
+}
+
+function populateSupportedVendorsList(): void {
+    const container = document.getElementById('supported-vendors-list');
+    if (!container) return;
+
+    if (supportedVendors.length === 0) {
+        container.innerHTML = '<p>No supported vendors found.</p>';
+        return;
+    }
+
+    const vendorSections = supportedVendors.map(vendor => {
+        const models = supportedModels[vendor] || supportedModels[vendor.toLowerCase()] || [];
+        const modelList = models.length > 0
+            ? models.map(m => `<span class="badge">${escapeHtml(m.toUpperCase())}</span>`).join(' ')
+            : '<em>No models</em>';
+        return `<div style="margin-bottom: 8px;">
+            <strong>${escapeHtml(vendor.charAt(0).toUpperCase() + vendor.slice(1))}</strong>: ${modelList}
+        </div>`;
+    }).join('');
+
+    container.innerHTML = vendorSections;
 }
 
 export function updateModelOptions(): void {

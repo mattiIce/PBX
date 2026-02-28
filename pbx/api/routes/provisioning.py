@@ -230,6 +230,7 @@ def handle_get_registered_atas() -> Response:
         logger.warning("Database not available or not configured")
         return send_json([])
 
+
 @provisioning_bp.route("/api/provisioning/vendors", methods=["GET"])
 @require_auth
 def handle_get_provisioning_vendors() -> Response:
