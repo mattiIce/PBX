@@ -9,12 +9,8 @@
  * 4. Make your call - you'll see detailed [VERBOSE] logs in the console
  */
 
-// Verbose logging flag - can be enabled via environment or console
-// Set window.WEBRTC_VERBOSE_LOGGING = true in browser console for verbose logs
-const VERBOSE_LOGGING = window.WEBRTC_VERBOSE_LOGGING || false;
-
 function verboseLog(...args) {
-    if (VERBOSE_LOGGING) {
+    if (window.WEBRTC_VERBOSE_LOGGING) {
         debugLog('[VERBOSE]', ...args);
     }
 }
@@ -29,6 +25,13 @@ class WebRTCPhone {
         this.localStream = null;
         this.isCallActive = false;
         this.remoteAudio = null;
+
+        // Call status polling
+        this._statusPollTimer = null;
+        this._ringbackCtx = null;   // AudioContext for ringback tone
+        this._ringbackOsc = null;
+        this._ringbackGain = null;
+        this._ringbackTimer = null;
 
         verboseLog('WebRTC Phone constructor called:', {
             apiUrl: this.apiUrl,
@@ -68,13 +71,13 @@ class WebRTCPhone {
             this.remoteAudio = document.createElement('audio');
             this.remoteAudio.id = 'webrtc-remote-audio';
             this.remoteAudio.autoplay = true;
-            this.remoteAudio.playsinline = true;
+            this.remoteAudio.playsInline = true;
             document.body.appendChild(this.remoteAudio);
         }
 
         // Ensure audio element is ready for playback
         this.remoteAudio.autoplay = true;
-        this.remoteAudio.playsinline = true;
+        this.remoteAudio.playsInline = true;
         this.remoteAudio.volume = 0.8; // Set initial volume
 
         // Set up event listeners
@@ -434,8 +437,39 @@ class WebRTCPhone {
             await this.peerConnection.setLocalDescription(offer);
             verboseLog('Local description set');
 
-            debugLog('SDP Offer created:', offer.sdp);
-            verboseLog('Full SDP Offer:', offer.sdp);
+            // Wait for ICE gathering to complete so all candidates are
+            // included in the SDP.  Without this, the offer may lack
+            // server-reflexive / relay candidates required for NAT traversal
+            // and the aiortc server-side PC will never establish connectivity.
+            debugLog('Waiting for ICE gathering to complete...');
+            await new Promise((resolve) => {
+                if (this.peerConnection.iceGatheringState === 'complete') {
+                    resolve();
+                    return;
+                }
+                const checkState = () => {
+                    if (this.peerConnection.iceGatheringState === 'complete') {
+                        this.peerConnection.removeEventListener(
+                            'icegatheringstatechange', checkState);
+                        resolve();
+                    }
+                };
+                this.peerConnection.addEventListener(
+                    'icegatheringstatechange', checkState);
+                // Timeout after 5 seconds so we don't block forever
+                setTimeout(() => {
+                    this.peerConnection.removeEventListener(
+                        'icegatheringstatechange', checkState);
+                    debugLog('ICE gathering timed out after 5 s, proceeding with available candidates');
+                    resolve();
+                }, 5000);
+            });
+
+            // Use the complete local description which now includes all
+            // gathered ICE candidates
+            const completeOffer = this.peerConnection.localDescription;
+            debugLog('SDP Offer created (ICE gathering done):', completeOffer.sdp);
+            verboseLog('Full SDP Offer:', completeOffer.sdp);
 
             // Send offer to PBX
             verboseLog('Sending offer to PBX:', {
@@ -448,7 +482,7 @@ class WebRTCPhone {
                 headers: this.getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: this.sessionId,
-                    sdp: offer.sdp
+                    sdp: completeOffer.sdp
                 })
             });
 
@@ -516,10 +550,12 @@ class WebRTCPhone {
             if (callData.success) {
                 this.isCallActive = true;
                 this.callId = callData.call_id; // Store call ID for hangup
-                this.updateStatus(`Calling ${targetExt}... (Call ID: ${callData.call_id})`, 'success');
+                this.updateStatus(`Calling ${targetExt}...`, 'info');
                 verboseLog('Call initiated successfully:', {
                     callId: callData.call_id
                 });
+                // Start polling for call status (ringing/connected/ended)
+                this._startStatusPolling();
             } else {
                 verboseLog('Call initiation failed:', callData);
                 throw new Error(callData.error ?? 'Failed to initiate call');
@@ -611,7 +647,7 @@ class WebRTCPhone {
                 verboseLog('DTMF send result:', data);
 
                 // Brief visual feedback in status
-                const currentStatus = this.statusDiv.textContent;
+                const currentStatus = this.statusDiv?.textContent ?? '';
                 this.updateStatus(`Sent: ${digit}`, 'info');
                 setTimeout(() => {
                     if (this.isCallActive) {
@@ -633,6 +669,10 @@ class WebRTCPhone {
 
     async hangup() {
         debugLog('Hanging up call');
+
+        // Stop ringback tone and status polling
+        this._stopRingback();
+        this._stopStatusPolling();
 
         // Notify server to terminate the call
         if (this.sessionId || this.callId) {
@@ -712,6 +752,125 @@ class WebRTCPhone {
         if (this.remoteAudio) {
             this.remoteAudio.volume = value / 100;
             debugLog(`Volume set to ${value}%`);
+        }
+    }
+
+    // ------------------------------------------------------------------
+    // Ringback tone – standard North American cadence (2s on, 4s off)
+    // using 440 Hz + 480 Hz dual-tone via Web Audio API
+    // ------------------------------------------------------------------
+
+    _startRingback() {
+        if (this._ringbackOsc) return; // already playing
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const gain = ctx.createGain();
+            gain.gain.value = 0.15; // gentle volume
+
+            // Two oscillators for the dual-tone ringback
+            const osc1 = ctx.createOscillator();
+            osc1.frequency.value = 440;
+            const osc2 = ctx.createOscillator();
+            osc2.frequency.value = 480;
+
+            osc1.connect(gain);
+            osc2.connect(gain);
+            gain.connect(ctx.destination);
+
+            osc1.start();
+            osc2.start();
+
+            this._ringbackCtx = ctx;
+            this._ringbackOsc = [osc1, osc2];
+            this._ringbackGain = gain;
+
+            // Cadence: 2s on, 4s off, repeat
+            let on = true;
+            this._ringbackTimer = setInterval(() => {
+                on = !on;
+                gain.gain.setValueAtTime(on ? 0.15 : 0, ctx.currentTime);
+            }, on ? 2000 : 4000);
+
+            // Better cadence: schedule precisely
+            clearInterval(this._ringbackTimer);
+            const cycle = () => {
+                if (!this._ringbackCtx) return;
+                gain.gain.setValueAtTime(0.15, ctx.currentTime);
+                gain.gain.setValueAtTime(0, ctx.currentTime + 2.0);
+                this._ringbackTimer = setTimeout(cycle, 6000);
+            };
+            cycle();
+
+            debugLog('Ringback tone started');
+        } catch (err) {
+            debugWarn('Could not start ringback tone:', err);
+        }
+    }
+
+    _stopRingback() {
+        if (this._ringbackTimer) {
+            clearTimeout(this._ringbackTimer);
+            this._ringbackTimer = null;
+        }
+        if (this._ringbackOsc) {
+            this._ringbackOsc.forEach(o => { try { o.stop(); } catch (_e) { /* ok */ } });
+            this._ringbackOsc = null;
+        }
+        if (this._ringbackCtx) {
+            try { this._ringbackCtx.close(); } catch (_e) { /* ok */ }
+            this._ringbackCtx = null;
+        }
+        this._ringbackGain = null;
+    }
+
+    // ------------------------------------------------------------------
+    // Call status polling – detects ringing / connected / ended
+    // ------------------------------------------------------------------
+
+    _startStatusPolling() {
+        if (this._statusPollTimer) return;
+        this._statusPollTimer = setInterval(() => this._pollCallStatus(), 1000);
+        verboseLog('Call status polling started');
+    }
+
+    _stopStatusPolling() {
+        if (this._statusPollTimer) {
+            clearInterval(this._statusPollTimer);
+            this._statusPollTimer = null;
+            verboseLog('Call status polling stopped');
+        }
+    }
+
+    async _pollCallStatus() {
+        if (!this.sessionId) return;
+        try {
+            const resp = await fetch(`${this.apiUrl}/api/webrtc/call-status`, {
+                method: 'POST',
+                headers: this.getAuthHeaders(),
+                body: JSON.stringify({
+                    session_id: this.sessionId,
+                    call_id: this.callId
+                })
+            });
+            if (!resp.ok) return;
+            const data = await resp.json();
+            verboseLog('Call status poll:', data);
+
+            if (data.status === 'ringing') {
+                this._startRingback();
+                this.updateStatus('Ringing...', 'info');
+            } else if (data.status === 'connected') {
+                this._stopRingback();
+                this.updateStatus('Call connected', 'success');
+                this.updateUIState('connected');
+            } else if (data.status === 'ended') {
+                this._stopRingback();
+                this._stopStatusPolling();
+                this.updateStatus('Call ended by remote', 'info');
+                this.hangup();
+            }
+        } catch (_err) {
+            // Network blip – ignore, will retry on next tick
         }
     }
 }
