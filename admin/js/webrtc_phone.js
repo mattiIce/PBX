@@ -430,8 +430,39 @@ class WebRTCPhone {
             await this.peerConnection.setLocalDescription(offer);
             verboseLog('Local description set');
 
-            debugLog('SDP Offer created:', offer.sdp);
-            verboseLog('Full SDP Offer:', offer.sdp);
+            // Wait for ICE gathering to complete so all candidates are
+            // included in the SDP.  Without this, the offer may lack
+            // server-reflexive / relay candidates required for NAT traversal
+            // and the aiortc server-side PC will never establish connectivity.
+            debugLog('Waiting for ICE gathering to complete...');
+            await new Promise((resolve) => {
+                if (this.peerConnection.iceGatheringState === 'complete') {
+                    resolve();
+                    return;
+                }
+                const checkState = () => {
+                    if (this.peerConnection.iceGatheringState === 'complete') {
+                        this.peerConnection.removeEventListener(
+                            'icegatheringstatechange', checkState);
+                        resolve();
+                    }
+                };
+                this.peerConnection.addEventListener(
+                    'icegatheringstatechange', checkState);
+                // Timeout after 5 seconds so we don't block forever
+                setTimeout(() => {
+                    this.peerConnection.removeEventListener(
+                        'icegatheringstatechange', checkState);
+                    debugLog('ICE gathering timed out after 5 s, proceeding with available candidates');
+                    resolve();
+                }, 5000);
+            });
+
+            // Use the complete local description which now includes all
+            // gathered ICE candidates
+            const completeOffer = this.peerConnection.localDescription;
+            debugLog('SDP Offer created (ICE gathering done):', completeOffer.sdp);
+            verboseLog('Full SDP Offer:', completeOffer.sdp);
 
             // Send offer to PBX
             verboseLog('Sending offer to PBX:', {
@@ -444,7 +475,7 @@ class WebRTCPhone {
                 headers: this.getAuthHeaders(),
                 body: JSON.stringify({
                     session_id: this.sessionId,
-                    sdp: offer.sdp
+                    sdp: completeOffer.sdp
                 })
             });
 

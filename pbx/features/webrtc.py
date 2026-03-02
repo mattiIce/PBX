@@ -24,7 +24,13 @@ if TYPE_CHECKING:
 
 # aiortc – server-side WebRTC implementation
 try:
-    from aiortc import MediaStreamTrack, RTCPeerConnection as AiortcPC, RTCSessionDescription
+    from aiortc import (
+        MediaStreamTrack,
+        RTCConfiguration,
+        RTCIceServer,
+        RTCPeerConnection as AiortcPC,
+        RTCSessionDescription,
+    )
     from av import AudioFrame
 
     AIORTC_AVAILABLE = True
@@ -46,7 +52,7 @@ if AIORTC_AVAILABLE:
 
         kind = "audio"
 
-        def __init__(self, sample_rate: int = 8000, samples_per_frame: int = 160) -> None:
+        def __init__(self, sample_rate: int = 48000, samples_per_frame: int = 960) -> None:
             super().__init__()
             self._sample_rate = sample_rate
             self._samples_per_frame = samples_per_frame
@@ -149,6 +155,44 @@ def _ulaw_to_pcm(ulaw_bytes: bytes) -> bytes:
         sample = _ULAW_DECODE_TABLE[b]
         out[i * 2 : i * 2 + 2] = sample.to_bytes(2, "little", signed=True)
     return bytes(out)
+
+
+def _upsample_8k_to_48k(pcm_8k: bytes) -> bytes:
+    """Upsample 8 kHz signed-16-bit-LE PCM to 48 kHz via linear interpolation."""
+    import array
+
+    src = array.array("h", pcm_8k)
+    n = len(src)
+    if n == 0:
+        return b""
+    ratio = 6  # 48000 / 8000
+    dst = array.array("h", [0] * (n * ratio))
+    for i in range(n - 1):
+        s0 = src[i]
+        diff = src[i + 1] - s0
+        base = i * ratio
+        for j in range(ratio):
+            dst[base + j] = s0 + diff * j // ratio
+    # Replicate last sample across remaining positions
+    base = (n - 1) * ratio
+    last = src[-1]
+    for j in range(ratio):
+        dst[base + j] = last
+    return dst.tobytes()
+
+
+def _downsample_48k_to_8k(pcm_48k: bytes) -> bytes:
+    """Downsample 48 kHz signed-16-bit-LE PCM to 8 kHz with averaging (anti-alias)."""
+    import array
+
+    src = array.array("h", pcm_48k)
+    ratio = 6
+    out_len = len(src) // ratio
+    dst = array.array(
+        "h",
+        [sum(src[i * ratio : i * ratio + ratio]) // ratio for i in range(out_len)],
+    )
+    return dst.tobytes()
 
 
 class WebRTCSession:
@@ -366,7 +410,20 @@ class WebRTCSignalingServer:
     async def _handle_offer_async(self, session: WebRTCSession, sdp: str) -> str | None:
         """Create an aiortc PeerConnection, process the browser's offer,
         and return the SDP answer string."""
-        pc = AiortcPC()
+        # Configure STUN/TURN so the server-side ICE agent can discover
+        # its public address and include reflexive/relay candidates in
+        # the SDP answer.  Without this the answer only contains host
+        # candidates, which breaks connectivity through NAT.
+        ice_servers = [RTCIceServer(urls=s) for s in self.stun_servers]
+        ice_servers.extend(
+            RTCIceServer(
+                urls=tc.get("url", ""),
+                username=tc.get("username", ""),
+                credential=tc.get("credential", ""),
+            )
+            for tc in self.turn_servers
+        )
+        pc = AiortcPC(configuration=RTCConfiguration(iceServers=ice_servers))
         session.pc = pc
 
         # Create the bridge track (PBX → browser audio) and add it so
@@ -820,26 +877,48 @@ class WebRTCSignalingServer:
             # --- Thread: RTP relay → aiortc (phone audio → browser) ---
             def _relay_to_browser() -> None:
                 seq = 0
-                while session._bridge_running:
-                    try:
-                        data, _addr = sock.recvfrom(2048)
-                    except (TimeoutError, OSError):
-                        continue
-                    if len(data) < 12:
-                        continue
-                    # Strip RTP header (12 bytes minimum) and decode u-law payload
-                    payload = data[12:]
-                    pcm = _ulaw_to_pcm(payload)
-                    samples = len(pcm) // 2
-                    frame = AudioFrame(format="s16", layout="mono", samples=samples)
-                    for plane in frame.planes:
-                        plane.update(pcm)
-                    frame.pts = seq * samples
-                    frame.sample_rate = 8000
-                    frame.time_base = fractions.Fraction(1, 8000)
-                    if session.bridge_track:
-                        session.bridge_track.push_frame(frame)
-                    seq += 1
+                try:
+                    while session._bridge_running:
+                        try:
+                            data, _addr = sock.recvfrom(2048)
+                        except (TimeoutError, OSError):
+                            continue
+                        if len(data) < 12:
+                            continue
+                        # Parse RTP header to determine actual header length
+                        # (accounts for CSRC entries) and verify payload type.
+                        cc = data[0] & 0x0F
+                        has_ext = (data[0] >> 4) & 0x01
+                        header_len = 12 + 4 * cc
+                        if has_ext and len(data) > header_len + 4:
+                            ext_len = struct.unpack(
+                                "!H", data[header_len + 2 : header_len + 4]
+                            )[0]
+                            header_len += 4 + ext_len * 4
+                        if len(data) <= header_len:
+                            continue
+                        payload = data[header_len:]
+                        # Decode u-law to 8 kHz PCM then upsample to 48 kHz
+                        # so the AudioBridgeTrack delivers Opus-native frames
+                        # to the browser via aiortc.
+                        pcm_8k = _ulaw_to_pcm(payload)
+                        pcm_48k = _upsample_8k_to_48k(pcm_8k)
+                        samples = len(pcm_48k) // 2
+                        frame = AudioFrame(
+                            format="s16", layout="mono", samples=samples
+                        )
+                        for plane in frame.planes:
+                            plane.update(pcm_48k)
+                        frame.pts = seq * samples
+                        frame.sample_rate = 48000
+                        frame.time_base = fractions.Fraction(1, 48000)
+                        if session.bridge_track:
+                            session.bridge_track.push_frame(frame)
+                        seq += 1
+                except Exception:
+                    self.logger.exception(
+                        f"relay_to_browser crashed for session {session.session_id}"
+                    )
 
             threading.Thread(
                 target=_relay_to_browser,
@@ -852,45 +931,62 @@ class WebRTCSignalingServer:
                 rtp_seq = 0
                 rtp_ts = 0
                 ssrc = int.from_bytes(uuid.uuid4().bytes[:4], "big")
-                while session._bridge_running:
-                    if not session.browser_track:
-                        await asyncio.sleep(0.02)
-                        continue
-                    try:
-                        frame = await asyncio.wait_for(
-                            session.browser_track.recv(), timeout=0.1
-                        )
-                    except (asyncio.TimeoutError, Exception):
-                        continue
-                    # Resample to 8 kHz mono if needed
-                    pcm = bytes(frame.planes[0])
-                    sr = frame.sample_rate
-                    if sr != 8000:
-                        # Simple decimation (works well for 48→8 kHz)
-                        import array
+                try:
+                    while session._bridge_running:
+                        if not session.browser_track:
+                            await asyncio.sleep(0.02)
+                            continue
+                        try:
+                            frame = await asyncio.wait_for(
+                                session.browser_track.recv(), timeout=0.1
+                            )
+                        except TimeoutError:
+                            continue
+                        except Exception:
+                            continue
+                        # Downsample to 8 kHz mono with anti-aliasing
+                        pcm = bytes(frame.planes[0])
+                        sr = frame.sample_rate
+                        if sr == 48000:
+                            pcm = _downsample_48k_to_8k(pcm)
+                        elif sr != 8000 and sr > 8000:
+                            import array
 
-                        src = array.array("h", pcm)
-                        ratio = sr // 8000
-                        if ratio > 0:
-                            dst = array.array("h", (src[i] for i in range(0, len(src), ratio)))
-                            pcm = dst.tobytes()
-                    ulaw = _pcm_to_ulaw(pcm)
-                    samples = len(ulaw)
-                    # Build RTP packet: V=2, PT=0 (PCMU), with seq/ts/ssrc
-                    header = struct.pack(
-                        "!BBHII",
-                        0x80,  # V=2, no padding/extension/CSRC
-                        0,  # PT=0 (PCMU)
-                        rtp_seq & 0xFFFF,
-                        rtp_ts & 0xFFFFFFFF,
-                        ssrc,
+                            src = array.array("h", pcm)
+                            ratio = sr // 8000
+                            if ratio > 1:
+                                # Average groups of `ratio` samples (basic LPF)
+                                out_len = len(src) // ratio
+                                dst = array.array(
+                                    "h",
+                                    [
+                                        sum(src[i * ratio : i * ratio + ratio])
+                                        // ratio
+                                        for i in range(out_len)
+                                    ],
+                                )
+                                pcm = dst.tobytes()
+                        ulaw = _pcm_to_ulaw(pcm)
+                        samples = len(ulaw)
+                        # Build RTP packet: V=2, PT=0 (PCMU), with seq/ts/ssrc
+                        header = struct.pack(
+                            "!BBHII",
+                            0x80,  # V=2, no padding/extension/CSRC
+                            0 | 0x80 if rtp_seq == 0 else 0,  # marker on first pkt
+                            rtp_seq & 0xFFFF,
+                            rtp_ts & 0xFFFFFFFF,
+                            ssrc,
+                        )
+                        try:
+                            sock.sendto(header + ulaw, relay_addr)
+                        except OSError:
+                            pass
+                        rtp_seq += 1
+                        rtp_ts += samples
+                except Exception:
+                    self.logger.exception(
+                        f"browser_to_relay crashed for session {session.session_id}"
                     )
-                    try:
-                        sock.sendto(header + ulaw, relay_addr)
-                    except OSError:
-                        pass
-                    rtp_seq += 1
-                    rtp_ts += samples
 
             if self._loop:
                 asyncio.run_coroutine_threadsafe(_browser_to_relay(), self._loop)
