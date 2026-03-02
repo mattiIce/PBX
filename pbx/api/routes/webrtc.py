@@ -411,6 +411,74 @@ def handle_webrtc_dtmf() -> Response:
         return send_json({"error": str(e)}, 500)
 
 
+# ========== WebRTC Call Status ==========
+
+
+@webrtc_bp.route("/api/webrtc/call-status", methods=["POST"])
+@require_auth
+def handle_webrtc_call_status() -> Response:
+    """Get current call status for a WebRTC session.
+
+    Used by the browser to poll for call state changes (ringing,
+    connected, ended) since there is no WebSocket push channel.
+    """
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not available"}, 500)
+
+    try:
+        data = get_request_body()
+        session_id = data.get("session_id")
+        call_id = data.get("call_id")
+
+        if not session_id:
+            return send_json({"error": "session_id is required"}, 400)
+
+        # Look up session
+        session = None
+        if hasattr(pbx_core, "webrtc_signaling"):
+            session = pbx_core.webrtc_signaling.get_session(session_id)
+
+        if not session:
+            return send_json({"status": "ended", "reason": "session_gone"})
+
+        # Use call_id from request or from session
+        effective_call_id = call_id or session.call_id
+
+        if not effective_call_id:
+            return send_json({"status": "setting_up"})
+
+        # Look up call
+        call = None
+        if hasattr(pbx_core, "call_manager"):
+            call = pbx_core.call_manager.get_call(effective_call_id)
+
+        if not call:
+            return send_json({"status": "ended", "reason": "call_gone"})
+
+        # Map internal call state to a simple status string
+        call_state = getattr(call, "state", "unknown")
+        status = "unknown"
+        if call_state in ("new", "init", "initiated"):
+            status = "setting_up"
+        elif call_state in ("ringing", "alerting", "early"):
+            status = "ringing"
+        elif call_state in ("connected", "active", "answered"):
+            status = "connected"
+        elif call_state in ("ended", "terminated", "bye"):
+            status = "ended"
+        else:
+            status = call_state
+
+        return send_json({
+            "status": status,
+            "call_id": effective_call_id,
+        })
+
+    except (KeyError, TypeError, ValueError) as e:
+        return send_json({"error": str(e)}, 500)
+
+
 # ========== WebRTC GET Routes ==========
 
 
