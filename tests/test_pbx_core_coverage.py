@@ -1780,3 +1780,99 @@ class TestSyncAdUsers:
 
         assert result["success"] is True
         assert result["phone_book_synced"] == 0
+
+
+class TestExtractContactAddress:
+    """Tests for _extract_contact_address method which parses SIP Contact headers."""
+
+    def test_contact_with_port(self) -> None:
+        """Extract IP and port from Contact header with explicit port."""
+        pbx = _make_pbx_core_shell()
+        contact = "<sip:1501@192.168.1.100:5060>"
+        fallback_addr = ("192.168.1.100", 12345)  # Ephemeral port from UDP
+
+        result = pbx._extract_contact_address(contact, fallback_addr)
+
+        assert result == ("192.168.1.100", 5060)
+
+    def test_contact_without_port(self) -> None:
+        """Extract IP with default port 5060 when Contact header omits port."""
+        pbx = _make_pbx_core_shell()
+        contact = "<sip:1501@192.168.1.100>"
+        fallback_addr = ("192.168.1.100", 12345)
+
+        result = pbx._extract_contact_address(contact, fallback_addr)
+
+        assert result == ("192.168.1.100", 5060)
+
+    def test_contact_with_parameters(self) -> None:
+        """Extract IP and port from Contact with SIP parameters."""
+        pbx = _make_pbx_core_shell()
+        contact = "<sip:1501@192.168.1.100:5061;mac=00:15:65:12:34:56>"
+        fallback_addr = ("192.168.1.100", 12345)
+
+        result = pbx._extract_contact_address(contact, fallback_addr)
+
+        assert result == ("192.168.1.100", 5061)
+
+    def test_contact_with_transport_parameter(self) -> None:
+        """Extract IP and port when Contact has transport parameter."""
+        pbx = _make_pbx_core_shell()
+        contact = "<sip:1501@192.168.1.100:5060;transport=udp>"
+        fallback_addr = ("192.168.1.100", 12345)
+
+        result = pbx._extract_contact_address(contact, fallback_addr)
+
+        assert result == ("192.168.1.100", 5060)
+
+    def test_no_contact_header(self) -> None:
+        """When Contact header is None, use fallback address."""
+        pbx = _make_pbx_core_shell()
+        fallback_addr = ("192.168.1.100", 12345)
+
+        result = pbx._extract_contact_address(None, fallback_addr)
+
+        assert result == fallback_addr
+
+    def test_empty_contact_header(self) -> None:
+        """When Contact header is empty, use fallback address."""
+        pbx = _make_pbx_core_shell()
+        fallback_addr = ("192.168.1.100", 12345)
+
+        result = pbx._extract_contact_address("", fallback_addr)
+
+        assert result == fallback_addr
+
+    def test_malformed_contact_header(self) -> None:
+        """When Contact header is malformed, use fallback address."""
+        pbx = _make_pbx_core_shell()
+        contact = "malformed-contact-header"
+        fallback_addr = ("192.168.1.100", 12345)
+
+        result = pbx._extract_contact_address(contact, fallback_addr)
+
+        assert result == fallback_addr
+
+    def test_ipv4_address_parsing(self) -> None:
+        """Correctly extract IPv4 addresses."""
+        pbx = _make_pbx_core_shell()
+        contact = "<sip:1501@10.0.0.50:5060>"
+        fallback_addr = ("192.168.1.100", 12345)
+
+        result = pbx._extract_contact_address(contact, fallback_addr)
+
+        assert result == ("10.0.0.50", 5060)
+
+    def test_different_port_from_udp_source(self) -> None:
+        """Correctly prefer Contact port over UDP source port (the fix!)."""
+        pbx = _make_pbx_core_shell()
+        # This is the key scenario: phone sends from ephemeral port,
+        # but Contact header says it listens on 5060
+        contact = "<sip:1501@192.168.1.100:5060>"
+        udp_source_addr = ("192.168.1.100", 54321)  # Ephemeral port
+
+        result = pbx._extract_contact_address(contact, udp_source_addr)
+
+        # Should use Contact's port, not UDP source port
+        assert result == ("192.168.1.100", 5060)
+        assert result != udp_source_addr
