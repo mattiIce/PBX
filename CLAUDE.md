@@ -325,7 +325,7 @@ Per-file overrides:
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| Single Alembic migration | `alembic/versions/` | Only `001_initial_schema.py` exists. Migration discipline documentation has been added to the file. Feature modules use runtime `CREATE TABLE IF NOT EXISTS` via `pbx/utils/migrations.py`. Future core table changes must use Alembic. |
+| Few Alembic migrations | `alembic/versions/` | Only `001_initial_schema.py` and `002_add_sip_password_field.py` exist. Migration discipline documentation has been added. Feature modules use runtime `CREATE TABLE IF NOT EXISTS` via `pbx/utils/migrations.py`. Future core table changes must use Alembic. |
 
 ## Docker
 
