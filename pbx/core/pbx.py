@@ -447,6 +447,47 @@ class PBXCore:
 
         self.logger.info("PBX system stopped")
 
+    def _extract_contact_address(
+        self, contact: str | None, addr: tuple[str, int]
+    ) -> tuple[str, int]:
+        """
+        Extract SIP address and port from Contact header.
+
+        SIP phones send their listening address in the Contact header during
+        REGISTER. This is more reliable than the UDP source address, which
+        might use an ephemeral port.
+
+        Args:
+            contact: Contact header value (e.g., "<sip:1501@192.168.1.100:5060>")
+            addr: Fallback address (UDP source address)
+
+        Returns:
+            Tuple of (ip_address, port) to use for phone registration
+        """
+        if not contact:
+            return addr
+
+        # Parse Contact header to extract SIP address and port
+        # Format: <sip:extension@ip:port[;params]> or <sip:extension@ip[;params]>
+        contact_match = re.search(r"sip:[^@]+@([^:;>]+)(?::(\d+))?", contact)
+        if contact_match:
+            ip_address = contact_match.group(1)
+            port_str = contact_match.group(2)
+            port = int(port_str) if port_str else 5060
+
+            # Validate the extracted address
+            if ip_address and port:
+                contact_addr = (ip_address, port)
+                # Log when we use Contact header address instead of UDP source
+                if contact_addr != addr:
+                    self.logger.debug(
+                        f"Using Contact address {contact_addr} instead of UDP source {addr}"
+                    )
+                return contact_addr
+
+        # If we can't parse the Contact header, fall back to UDP source address
+        return addr
+
     def register_extension(
         self,
         from_header: str,
@@ -505,12 +546,15 @@ class PBXCore:
                     self.logger.debug(f"Extension {extension_number} found in config")
 
             if extension_exists:
-                self.extension_registry.register(extension_number, addr)
-                self.logger.info(f"Extension {extension_number} registered from {addr}")
+                # Extract the phone's listening address from Contact header
+                # This is more reliable than UDP source address
+                registered_addr = self._extract_contact_address(contact, addr)
+                self.extension_registry.register(extension_number, registered_addr)
+                self.logger.info(f"Extension {extension_number} registered from {registered_addr}")
 
                 # Store phone registration in database
                 if self.registered_phones_db:
-                    ip_address = addr[0]  # Extract IP from (host, port) tuple
+                    ip_address = registered_addr[0]  # Extract IP from (host, port) tuple
 
                     # Try to extract MAC address from Contact URI or User-Agent
                     # Common patterns:
@@ -554,8 +598,8 @@ class PBXCore:
                     WebhookEvent.EXTENSION_REGISTERED,
                     {
                         "extension": extension_number,
-                        "ip_address": addr[0],
-                        "port": addr[1],
+                        "ip_address": registered_addr[0],
+                        "port": registered_addr[1],
                         "user_agent": user_agent,
                         "timestamp": datetime.now(UTC).isoformat(),
                     },
