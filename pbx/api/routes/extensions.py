@@ -46,7 +46,7 @@ def get_extensions() -> tuple[Response, int]:
                     "registered": e.registered,
                     "allow_external": e.config.get("allow_external", True),
                     "ad_synced": e.config.get("ad_synced", False),
-                    "voicemail_pin_hash": e.config.get("voicemail_pin_hash"),
+                    "voicemail_enabled": e.config.get("voicemail_pin_hash") is not None,
                     "is_admin": e.config.get("is_admin", False),
                 }
                 for e in extensions

@@ -460,7 +460,9 @@ class MatrixIntegration:
                 members = [
                     event.get("state_key")
                     for event in result["chunk"]
-                    if event.get("type") == "m.room.member" and event.get("membership") == "join"
+                    if event.get("type") == "m.room.member"
+                    and event.get("content", {}).get("membership") == "join"
+                    and event.get("state_key")
                 ]
                 return members
 

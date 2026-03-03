@@ -160,13 +160,13 @@ class ProductionHealthChecker:
     def _check_database(self) -> tuple[bool, dict[str, Any]]:
         """Check database connectivity."""
         try:
-            from pbx.utils.database import get_database_connection
+            from pbx.utils.database import get_database
 
             db_config = self.config.get("database", {})
             db_type = db_config.get("type", "postgresql")
 
             # Try to get a connection
-            conn = get_database_connection(self.config)
+            conn = get_database(self.config)
             if not conn:
                 return False, {
                     "status": "unavailable",
@@ -174,19 +174,21 @@ class ProductionHealthChecker:
                     "message": "Could not establish connection",
                 }
 
-            # Try a simple query
-            cursor = conn.cursor()
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-            cursor.close()
-            conn.close()
+            # Try a simple query using DatabaseBackend's API
+            result = conn.fetch_one("SELECT 1 AS alive")
+            if result is None and not conn.enabled:
+                return False, {
+                    "status": "unavailable",
+                    "type": db_type,
+                    "message": "Database query failed",
+                }
 
             return True, {"status": "connected", "type": db_type}
 
         except ImportError:
             # Database module not available, that's ok in some configs
             return True, {"status": "not_configured", "message": "Database module not available"}
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError, ValueError, OSError) as e:
             logger.error(f"Database check failed: {e}")
             return False, {"status": "error", "error": str(e)}
 

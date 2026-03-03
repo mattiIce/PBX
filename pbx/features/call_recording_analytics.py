@@ -409,7 +409,7 @@ class RecordingAnalytics:
             total_indicators = positive_count + negative_count
             if total_indicators > 0:
                 sentiment_score = (positive_count - negative_count) / total_indicators
-                min(total_indicators / 10.0, 1.0)
+                confidence = min(total_indicators / 10.0, 1.0)
 
             # Determine overall sentiment
             if sentiment_score > 0.2:

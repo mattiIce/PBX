@@ -133,7 +133,7 @@ class HealthCheck:
             self.log("Database connectivity", "pass", "critical")
             if not self.critical_only and not self.json_output:
                 print(f"  Version: {version[:50]}")
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, TypeError, ValueError, OSError) as e:
             self.log(f"Database connection failed: {e!s}", "fail", "critical")
 
     def check_redis(self) -> None:
@@ -218,8 +218,9 @@ class HealthCheck:
         cert_paths = [
             self.base_dir / "certs" / "server.crt",
             self.base_dir / "server.crt",
-            Path("/etc/letsencrypt/live/*/fullchain.pem"),
         ]
+        # Expand glob pattern for Let's Encrypt certificates
+        cert_paths.extend(Path("/etc/letsencrypt/live").glob("*/fullchain.pem"))
 
         cert_found = False
         for cert_path in cert_paths:

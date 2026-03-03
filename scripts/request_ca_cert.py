@@ -198,7 +198,7 @@ def load_ca_config_from_yml(config_file: str = "config.yml") -> dict:
             "server_url": ca_config.get("server_url"),
             "endpoint": ca_config.get("request_endpoint", "/api/sign-cert"),
             "ca_cert": ca_config.get("ca_cert"),
-            "cert_dir": str(Path(ssl_config.get("cert_file", "certs/server.crt").parent))
+            "cert_dir": str(Path(ssl_config.get("cert_file", "certs/server.crt")).parent)
             or "certs",
         }
     except (KeyError, OSError, TypeError, ValueError) as e:

@@ -311,7 +311,7 @@ class YubiKeyOTPVerifier:
         """
         try:
             # Generate random nonce for replay protection
-            nonce = base64.b64encode(secrets.token_bytes(16)).decode("utf-8")
+            nonce = secrets.token_hex(20)
 
             # Build request parameters
             params = self._build_yubico_params(otp, nonce)

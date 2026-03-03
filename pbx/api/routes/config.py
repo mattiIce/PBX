@@ -344,13 +344,21 @@ def get_ssl_status() -> tuple[Response, int]:
                     cert = x509.load_pem_x509_certificate(cert_data, default_backend())
 
                     now = datetime.now(UTC)
+                    # Use _utc variants for timezone-aware datetimes (cryptography >= 42)
+                    valid_from = getattr(cert, "not_valid_before_utc", cert.not_valid_before)
+                    valid_until = getattr(cert, "not_valid_after_utc", cert.not_valid_after)
+                    # Ensure timezone-aware for comparison
+                    if valid_from.tzinfo is None:
+                        valid_from = valid_from.replace(tzinfo=UTC)
+                    if valid_until.tzinfo is None:
+                        valid_until = valid_until.replace(tzinfo=UTC)
                     cert_details = {
                         "subject": cert.subject.rfc4514_string(),
                         "issuer": cert.issuer.rfc4514_string(),
-                        "valid_from": cert.not_valid_before.isoformat(),
-                        "valid_until": cert.not_valid_after.isoformat(),
-                        "is_expired": cert.not_valid_after < now,
-                        "days_until_expiry": (cert.not_valid_after - now).days,
+                        "valid_from": valid_from.isoformat(),
+                        "valid_until": valid_until.isoformat(),
+                        "is_expired": valid_until < now,
+                        "days_until_expiry": (valid_until - now).days,
                         "serial_number": str(cert.serial_number),
                     }
             except (KeyError, OSError, TypeError, ValueError) as e:

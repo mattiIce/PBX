@@ -243,15 +243,16 @@ def handle_license_install() -> tuple[Response, int]:
 def handle_license_revoke() -> tuple[Response, int]:
     """Revoke current license (license admin only)."""
     # Check license admin authorization
-    is_authorized, _ = _require_license_admin()
+    is_authorized, payload = _require_license_admin()
     if not is_authorized:
+        status_code = payload.get("status_code", 401) if isinstance(payload, dict) else 401
         return send_json(
             {
                 "success": False,
                 "error": "Unauthorized. License management requires administrator authentication.",
             },
-            401,
-        ), 401
+            status_code,
+        ), status_code
 
     try:
         from pbx.utils.licensing import get_license_manager

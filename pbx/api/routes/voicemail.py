@@ -13,6 +13,7 @@ from pathlib import Path
 from flask import Blueprint, Response, current_app, request
 
 from pbx.api.utils import (
+    check_extension_access,
     get_pbx_core,
     get_request_body,
     require_auth,
@@ -43,6 +44,11 @@ def handle_get_voicemail(subpath: str) -> Response:
             return send_json({"error": "Invalid path"}, 400)
 
         extension = parts[0]
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
 
         # Get mailbox
         mailbox = pbx_core.voicemail_system.get_mailbox(extension)
@@ -121,6 +127,12 @@ def handle_update_voicemail(subpath: str) -> Response:
             return send_json({"error": "Invalid path"}, 400)
 
         extension = parts[0]
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         body = get_request_body()
 
         # Get mailbox
@@ -164,6 +176,11 @@ def handle_delete_voicemail(subpath: str) -> Response:
         extension = parts[0]
         message_id = parts[1]
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         # Get mailbox
         mailbox = pbx_core.voicemail_system.get_mailbox(extension)
 
@@ -190,7 +207,15 @@ def handle_get_voicemail_boxes() -> Response:
         vm_system = pbx_core.voicemail_system
         boxes = []
 
+        # Non-admin users should only see their own voicemail box
+        payload = getattr(request, "auth_payload", None)
+        is_admin = payload.get("is_admin", False) if payload else False
+        user_extension = payload.get("extension") if payload else None
+
         for extension, mailbox in vm_system.mailboxes.items():
+            if not is_admin and str(extension) != str(user_extension):
+                continue
+
             messages = mailbox.get_messages(unread_only=False)
             unread_count = len(mailbox.get_messages(unread_only=True))
 
@@ -243,6 +268,11 @@ def _handle_get_voicemail_box_details(subpath: str) -> Response:
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         vm_system = pbx_core.voicemail_system
         mailbox = vm_system.get_mailbox(extension)
         messages = mailbox.get_messages(unread_only=False)
@@ -291,6 +321,11 @@ def _handle_get_voicemail_greeting(subpath: str) -> Response:
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         vm_system = pbx_core.voicemail_system
         mailbox = vm_system.get_mailbox(extension)
         greeting_path = mailbox.get_greeting_path()
@@ -329,6 +364,11 @@ def handle_export_voicemail_box(subpath: str) -> Response:
 
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
 
         vm_system = pbx_core.voicemail_system
         mailbox = vm_system.get_mailbox(extension)
@@ -408,6 +448,11 @@ def handle_upload_voicemail_greeting(subpath: str) -> Response:
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         # Get audio data from request body
         audio_data = request.get_data()
         if not audio_data:
@@ -443,6 +488,11 @@ def handle_clear_voicemail_box(subpath: str) -> Response:
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         vm_system = pbx_core.voicemail_system
         mailbox = vm_system.get_mailbox(extension)
         messages = mailbox.get_messages(unread_only=False)
@@ -477,6 +527,11 @@ def handle_delete_voicemail_greeting(subpath: str) -> Response:
 
         if not extension:
             return send_json({"error": "Invalid path"}, 400)
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
 
         vm_system = pbx_core.voicemail_system
         mailbox = vm_system.get_mailbox(extension)

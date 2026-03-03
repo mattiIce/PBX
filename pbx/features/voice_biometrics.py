@@ -647,7 +647,7 @@ class VoiceBiometrics:
 
         try:
             # Parse 16-bit PCM audio data first
-            len(audio_data) // 2
+            num_samples = len(audio_data) // 2
             samples = []
 
             # Process in pairs of bytes (16-bit samples)

@@ -46,6 +46,7 @@ class Call:
         self.callee_rtp: dict[str, Any] | None = None  # Callee's RTP endpoint info
         self.callee_addr: tuple[str, int] | None = None  # Callee's SIP address
         self.original_invite: Any | None = None  # Original INVITE message from caller
+        self.callee_invite: Any | None = None  # INVITE sent to callee (for CANCEL reference)
         self.no_answer_timer: Any | None = None  # Timer for routing to voicemail
         self.routed_to_voicemail: bool = False  # Flag to track if routed to VM
         self.transferred: bool = False  # Flag to track if call has been transferred
@@ -108,6 +109,8 @@ class Call:
 class CallManager:
     """Manages active calls"""
 
+    MAX_HISTORY_SIZE = 10000
+
     def __init__(self) -> None:
         """Initialize call manager"""
         self.active_calls: dict[str, Call] = {}
@@ -155,6 +158,9 @@ class CallManager:
         if call:
             call.end()
             self.call_history.append(call)
+            # Prevent unbounded memory growth in long-running systems
+            if len(self.call_history) > self.MAX_HISTORY_SIZE:
+                self.call_history = self.call_history[-self.MAX_HISTORY_SIZE:]
             del self.active_calls[call_id]
             return True
         return False

@@ -1131,7 +1131,7 @@ def export_bi_dataset() -> tuple[Response, int]:
 
 
 @framework_bp.route("/bi-integration/dataset", methods=["POST"])
-@require_auth
+@require_admin
 def create_bi_dataset() -> tuple[Response, int]:
     """Create custom BI dataset."""
     try:
@@ -1476,7 +1476,7 @@ def create_geo_region() -> tuple[Response, int]:
 
 
 @framework_bp.route("/geo-redundancy/region/<region_id>/failover", methods=["POST"])
-@require_auth
+@require_admin
 def trigger_geo_failover(region_id: str) -> tuple[Response, int]:
     """Trigger geo failover for a region."""
     try:
@@ -1648,7 +1648,7 @@ def process_ai_input() -> tuple[Response, int]:
 
 
 @framework_bp.route("/conversational-ai/config", methods=["POST"])
-@require_auth
+@require_admin
 def configure_ai_provider() -> tuple[Response, int]:
     """Configure AI provider."""
     try:

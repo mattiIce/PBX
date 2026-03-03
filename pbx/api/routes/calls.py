@@ -224,24 +224,24 @@ def export_analytics() -> Response | tuple[Response, int]:
             with tempfile.NamedTemporaryFile(mode="w", delete=False, suffix=".csv") as temp_file:
                 csv_path = temp_file.name
 
-            if pbx_core.statistics_engine.export_to_csv(analytics["records"], csv_path):
-                # Read the file and send as response
-                with Path(csv_path).open("rb") as f:
-                    csv_data = f.read()
+            try:
+                if pbx_core.statistics_engine.export_to_csv(analytics["records"], csv_path):
+                    # Read the file and send as response
+                    with Path(csv_path).open("rb") as f:
+                        csv_data = f.read()
 
-                # Clean up temp file
-                Path(csv_path).unlink()
-
-                response = current_app.response_class(
-                    response=csv_data,
-                    status=200,
-                    mimetype="text/csv",
-                )
-                response.headers["Content-Disposition"] = (
-                    f'attachment; filename="cdr_export_{start_date}_to_{end_date}.csv"'
-                )
-                return response
-            return send_json({"error": "Failed to export data"}, 500), 500
+                    response = current_app.response_class(
+                        response=csv_data,
+                        status=200,
+                        mimetype="text/csv",
+                    )
+                    response.headers["Content-Disposition"] = (
+                        f'attachment; filename="cdr_export_{start_date}_to_{end_date}.csv"'
+                    )
+                    return response
+                return send_json({"error": "Failed to export data"}, 500), 500
+            finally:
+                Path(csv_path).unlink(missing_ok=True)
 
         except (KeyError, OSError, TypeError, ValueError) as e:
             logger.error(f"Error exporting analytics: {e}")

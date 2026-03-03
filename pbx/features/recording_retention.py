@@ -295,7 +295,7 @@ class RecordingRetentionManager:
                     archived_files.append(str(recording_file))
                     archived_size += file_size
                     self.archived_count += 1
-                except (KeyError, TypeError, ValueError) as e:
+                except OSError as e:
                     self.logger.error(f"Error archiving {recording_file}: {e}")
 
         self.logger.info(f"Archived {len(archived_files)} recordings to {archive_path}")

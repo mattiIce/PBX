@@ -112,7 +112,7 @@ class LicenseManager:
         env_enabled = getenv("PBX_LICENSING_ENABLED", "").lower()
         if env_enabled in ("true", "1", "yes", "on"):
             return True
-        if env_enabled in ("false", "0", "no", "of"):
+        if env_enabled in ("false", "0", "no", "off"):
             return False
 
         # Config file (third priority)

@@ -686,7 +686,7 @@ class PredictiveDialer:
             "total_calls_made": self.total_calls_made,
             "total_connects": self.total_connects,
             "total_abandons": self.total_abandons,
-            "abandon_rate": self.total_abandons / max(1, self.total_connects),
+            "abandon_rate": self.total_abandons / max(1, self.total_connects + self.total_abandons),
             "enabled": self.enabled,
         }
 

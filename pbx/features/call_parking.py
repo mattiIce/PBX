@@ -83,7 +83,7 @@ class CallParkingSystem:
         """
         for slot in range(self.park_range_start, self.park_range_end + 1):
             if slot not in self.parked_calls:
-                return slot
+                return str(slot)
         return None
 
     def park_call(

@@ -574,7 +574,7 @@ class DNDScheduler:
                     PresenceStatus.IN_MEETING,
                 ]:
                     self._remove_dnd_status(extension)
-                    del self.previous_statuses[extension]
+                    self.previous_statuses.pop(extension, None)
 
             except (KeyError, TypeError, ValueError) as e:
                 self.logger.error(f"Error checking DND for {extension}: {e}")

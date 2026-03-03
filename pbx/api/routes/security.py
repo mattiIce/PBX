@@ -3,6 +3,7 @@
 from flask import Blueprint, Response, request
 
 from pbx.api.utils import (
+    check_extension_access,
     get_pbx_core,
     get_request_body,
     require_admin,
@@ -168,6 +169,12 @@ def handle_get_mfa_status(subpath: str) -> tuple[Response, int]:
 
     try:
         extension = subpath.rsplit("/", maxsplit=1)[-1]
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         enabled = pbx_core.mfa_manager.is_enabled_for_user(extension)
 
         return send_json(
@@ -191,6 +198,12 @@ def handle_get_mfa_methods(subpath: str) -> tuple[Response, int]:
 
     try:
         extension = subpath.rsplit("/", maxsplit=1)[-1]
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         methods = pbx_core.mfa_manager.get_enrolled_methods(extension)
 
         return send_json({"extension": extension, "methods": methods}), 200
@@ -212,6 +225,11 @@ def handle_mfa_enroll() -> tuple[Response, int]:
 
         if not extension_number:
             return send_json({"error": "extension is required"}, 400), 400
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension_number)
+        if not allowed:
+            return error_response
 
         success, provisioning_uri, backup_codes = pbx_core.mfa_manager.enroll_user(extension_number)
 
@@ -244,6 +262,11 @@ def handle_mfa_verify_enrollment() -> tuple[Response, int]:
 
         if not extension_number or not code:
             return send_json({"error": "extension and code are required"}, 400), 400
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension_number)
+        if not allowed:
+            return error_response
 
         success = pbx_core.mfa_manager.verify_enrollment(extension_number, code)
 
@@ -294,6 +317,11 @@ def handle_mfa_disable() -> tuple[Response, int]:
         if not extension_number:
             return send_json({"error": "extension is required"}, 400), 400
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension_number)
+        if not allowed:
+            return error_response
+
         success = pbx_core.mfa_manager.disable_for_user(extension_number)
 
         if success:
@@ -320,6 +348,11 @@ def handle_mfa_enroll_yubikey() -> tuple[Response, int]:
         if not extension_number or not otp:
             return send_json({"error": "extension and otp are required"}, 400), 400
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension_number)
+        if not allowed:
+            return error_response
+
         success, error = pbx_core.mfa_manager.enroll_yubikey(extension_number, otp, device_name)
 
         if success:
@@ -345,6 +378,11 @@ def handle_mfa_enroll_fido2() -> tuple[Response, int]:
 
         if not extension_number or not credential_data:
             return send_json({"error": "extension and credential_data are required"}, 400), 400
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension_number)
+        if not allowed:
+            return error_response
 
         success, error = pbx_core.mfa_manager.enroll_fido2(
             extension_number, credential_data, device_name
@@ -496,6 +534,12 @@ def handle_get_dnd_status(subpath: str) -> tuple[Response, int]:
 
     try:
         extension = subpath.rsplit("/", maxsplit=1)[-1]
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         status = pbx_core.dnd_scheduler.get_status(extension)
 
         return send_json(status), 200
@@ -513,6 +557,12 @@ def handle_get_dnd_rules(subpath: str) -> tuple[Response, int]:
 
     try:
         extension = subpath.rsplit("/", maxsplit=1)[-1]
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         rules = pbx_core.dnd_scheduler.get_rules(extension)
 
         return send_json({"extension": extension, "rules": rules}), 200
@@ -536,6 +586,11 @@ def handle_add_dnd_rule() -> tuple[Response, int]:
 
         if not extension or not rule_type:
             return send_json({"error": "extension and rule_type are required"}, 400), 400
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
 
         rule_id = pbx_core.dnd_scheduler.add_rule(extension, rule_type, config)
 
@@ -561,6 +616,11 @@ def handle_register_calendar_user() -> tuple[Response, int]:
 
         if not extension or not email:
             return send_json({"error": "extension and email are required"}, 400), 400
+
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
 
         pbx_core.dnd_scheduler.register_calendar_user(extension, email)
 
@@ -588,6 +648,11 @@ def handle_dnd_override() -> tuple[Response, int]:
         if not extension or not status:
             return send_json({"error": "extension and status are required"}, 400), 400
 
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         # Convert status string to PresenceStatus enum
         from pbx.features.presence import PresenceStatus
 
@@ -604,7 +669,7 @@ def handle_dnd_override() -> tuple[Response, int]:
 
 
 @security_bp.route("/api/dnd/rule/<rule_id>", methods=["DELETE"])
-@require_auth
+@require_admin
 def handle_delete_dnd_rule(rule_id: str) -> tuple[Response, int]:
     """Handle deleting DND rule."""
     pbx_core = get_pbx_core()
@@ -630,6 +695,11 @@ def handle_clear_dnd_override(extension: str) -> tuple[Response, int]:
         return send_json({"error": "DND Scheduler not available"}, 500), 500
 
     try:
+        # Verify the user has access to this extension
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
         pbx_core.dnd_scheduler.clear_manual_override(extension)
 
         return send_json({"success": True, "message": f"Override cleared for {extension}"}), 200

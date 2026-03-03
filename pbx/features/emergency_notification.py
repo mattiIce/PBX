@@ -517,7 +517,7 @@ class EmergencyNotificationSystem:
                 subject = f"🚨 EMERGENCY ALERT: {trigger_type}"
 
                 # Build email body
-                body = """EMERGENCY NOTIFICATION
+                body = f"""EMERGENCY NOTIFICATION
 
 type: {trigger_type}
 Time: {details.get('timestamp', datetime.now(UTC))}
@@ -576,17 +576,17 @@ PBX Emergency Notification System
         msg.attach(MIMEText(body, "plain"))
 
         # Connect and send
-        if email_notifier.use_tls:
-            server = smtplib.SMTP(email_notifier.smtp_host, email_notifier.smtp_port)
-            server.starttls()
-        else:
-            server = smtplib.SMTP(email_notifier.smtp_host, email_notifier.smtp_port)
+        server = smtplib.SMTP(email_notifier.smtp_host, email_notifier.smtp_port)
+        try:
+            if email_notifier.use_tls:
+                server.starttls()
 
-        if email_notifier.username and email_notifier.password:
-            server.login(email_notifier.username, email_notifier.password)
+            if email_notifier.username and email_notifier.password:
+                server.login(email_notifier.username, email_notifier.password)
 
-        server.send_message(msg)
-        server.quit()
+            server.send_message(msg)
+        finally:
+            server.quit()
 
     def _send_sms_notification(
         self, contact: EmergencyContact, trigger_type: str, details: dict

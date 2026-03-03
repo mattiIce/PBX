@@ -107,8 +107,10 @@ class SSOAuthService:
                 # Try treating it as raw XML
                 decoded_response = saml_response
 
-            # Parse XML
-            root = ElementTree.fromstring(decoded_response)
+            # Parse XML safely - disable entity expansion to prevent XXE attacks
+            parser = ElementTree.XMLParser()
+            parser.entity = {}  # Disable entity expansion
+            root = ElementTree.fromstring(decoded_response, parser=parser)
 
             # Define SAML namespaces
             ns = {

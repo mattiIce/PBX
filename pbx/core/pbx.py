@@ -627,19 +627,24 @@ class PBXCore:
             user_agent: User-Agent header string
 
         Returns:
-            Phone model identifier string or None
-            Possible values: 'ZIP33G', 'ZIP37G', or None for unknown/other
+            Phone model identifier string or None.
+            Possible values: 'YEALINK_T33G', 'ZIP33G', 'ZIP37G', or None for unknown/other
         """
         if not user_agent:
             return None
 
         user_agent_upper = user_agent.upper()
 
-        # Check for Zultys ZIP33G
+        # Check for Yealink T33G (before ZIP checks to avoid substring matches)
+        # Typical UA: "Yealink SIP-T33G 124.86.0.40 00:15:65:XX:XX:XX"
+        if "T33G" in user_agent_upper and "ZIP" not in user_agent_upper:
+            return "YEALINK_T33G"
+
+        # Check for Zultys ZIP33G (OEM rebrand of Yealink T28G)
         if "ZIP33G" in user_agent_upper or "ZIP 33G" in user_agent_upper:
             return "ZIP33G"
 
-        # Check for Zultys ZIP37G
+        # Check for Zultys ZIP37G (OEM rebrand of Yealink T46G)
         if "ZIP37G" in user_agent_upper or "ZIP 37G" in user_agent_upper:
             return "ZIP37G"
 
@@ -661,6 +666,13 @@ class PBXCore:
         # Get DTMF payload type from config (default 101)
         dtmf_payload_type = self.config.get("features.dtmf.payload_type", 101)
         dtmf_pt_str = str(dtmf_payload_type)
+
+        if phone_model == "YEALINK_T33G":
+            # Yealink T33G: supports G.711 (PCMU/PCMA), G.722, G.729
+            # Payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729
+            codecs = ["0", "8", "9", "18", dtmf_pt_str]
+            self.logger.debug(f"Using Yealink T33G codec set: PCMU/PCMA/G722/G729 ({codecs})")
+            return codecs
 
         if phone_model == "ZIP37G":
             # ZIP37G: Use PCMU/PCMA only
@@ -684,6 +696,56 @@ class PBXCore:
 
         # Ultimate fallback - standard codec list
         return ["0", "8", "9", "18", "2", dtmf_pt_str]
+
+    def _get_compatible_codecs(
+        self, phone_model: str | None, answered_codecs: list[str] | None
+    ) -> list[str]:
+        """
+        Compute codecs compatible with both the phone model and the answered codec set.
+
+        When the PBX relays RTP without transcoding, both call legs must use the
+        same codec.  This method intersects the callee's answered codecs with the
+        phone-model-specific set (if any) so the 200 OK sent to the caller only
+        offers codecs that both sides support.
+
+        Args:
+            phone_model: Phone model identifier (from _detect_phone_model)
+            answered_codecs: Codecs the remote side actually selected (from SDP answer)
+
+        Returns:
+            list of codec payload types as strings
+        """
+        dtmf_payload_type = self.config.get("features.dtmf.payload_type", 101)
+        dtmf_pt_str = str(dtmf_payload_type)
+
+        model_codecs = self._get_codecs_for_phone_model(phone_model)
+
+        if not answered_codecs:
+            return model_codecs
+
+        # Build intersection preserving the answered codec order (callee's preference)
+        model_set = set(model_codecs)
+        compatible = [c for c in answered_codecs if c in model_set]
+
+        # Always include DTMF telephone-event if both sides have it
+        if dtmf_pt_str in model_set and dtmf_pt_str not in compatible:
+            compatible.append(dtmf_pt_str)
+
+        # Ensure the intersection has at least one audio codec (not just DTMF)
+        has_audio_codec = any(c != dtmf_pt_str for c in compatible)
+        if compatible and has_audio_codec:
+            self.logger.debug(
+                f"Compatible codecs for {phone_model or 'unknown'}: {compatible}"
+            )
+            return compatible
+
+        # If intersection is empty, fall back to the answered codecs to avoid
+        # a completely empty SDP.  The phone will 488 if truly incompatible.
+        self.logger.warning(
+            f"No codec overlap between model {phone_model} and answered {answered_codecs}, "
+            f"falling back to answered codecs"
+        )
+        return answered_codecs
 
     def _get_phone_user_agent(self, extension_number: str) -> str | None:
         """
@@ -863,20 +925,36 @@ class PBXCore:
         server_ip = self._get_server_ip()
 
         if call.rtp_ports and call.caller_addr:
-            # Determine which codecs to offer based on caller's phone model
-            # Get caller's User-Agent to detect phone model
+            # Extract the callee's answered codecs from their 200 OK SDP.
+            # The callee's 200 OK contains the codec(s) they actually selected,
+            # so we must reflect those back to the caller to ensure both sides
+            # use the same codec. The RTP relay does not transcode — if we offer
+            # the caller their original full codec list they may pick a different
+            # codec than the callee chose, resulting in no audio.
+            callee_answered_codecs: list[str] | None = None
+            if callee_sdp:
+                callee_answered_codecs = callee_sdp.get("formats", None)
+                if callee_answered_codecs:
+                    self.logger.info(
+                        f"Callee answered with codecs: {callee_answered_codecs}"
+                    )
+
+            # Get caller's phone model for any model-specific filtering
             caller_user_agent = self._get_phone_user_agent(call.from_extension)
             caller_phone_model = self._detect_phone_model(caller_user_agent)
 
-            # Extract caller's codecs from the original INVITE
+            # Use the callee's answered codecs so both sides agree on the codec.
+            # Fall back to the caller's original codecs only if the callee's
+            # 200 OK had no SDP (shouldn't happen in practice).
             caller_codecs = call.caller_rtp.get("formats", None) if call.caller_rtp else None
+            answered_codecs = callee_answered_codecs or caller_codecs
 
-            # Select appropriate codecs for the caller's phone
-            # - ZIP37G: PCMU/PCMA only
-            # - ZIP33G: G726/G729/G722 only
-            # - Other phones: use caller's codecs (existing behavior)
-            codecs_for_caller = self._get_codecs_for_phone_model(
-                caller_phone_model, default_codecs=caller_codecs
+            # For phones with model-specific codec requirements, compute the
+            # intersection of the callee's answered codecs and the phone model's
+            # supported codecs.  This ensures the caller gets a codec it supports
+            # that the callee has already committed to.
+            codecs_for_caller = self._get_compatible_codecs(
+                caller_phone_model, answered_codecs
             )
 
             if caller_phone_model:
@@ -924,6 +1002,11 @@ class PBXCore:
         call = self.call_manager.get_call(call_id)
         if call:
             self.logger.info(f"Ending call {call_id}")
+
+            # Cancel no-answer timer if still running
+            if call.no_answer_timer:
+                call.no_answer_timer.cancel()
+                call.no_answer_timer = None
 
             # If this is a voicemail recording, complete it first
             if call.routed_to_voicemail and hasattr(call, "voicemail_recorder"):
@@ -1008,7 +1091,7 @@ class PBXCore:
             self.logger.info(
                 f"Queued DTMF '{dtmf_digit}' from SIP INFO for voicemail IVR on call {call_id}"
             )
-        elif hasattr(call, "auto_attendant") and call.auto_attendant:
+        elif hasattr(call, "auto_attendant_active") and call.auto_attendant_active:
             self.logger.info(
                 f"Queued DTMF '{dtmf_digit}' from SIP INFO for auto-attendant on call {call_id}"
             )
@@ -1147,7 +1230,7 @@ class PBXCore:
             )
             invite_msg.body = transfer_sdp
             invite_msg.set_header("Content-type", "application/sdp")
-            invite_msg.set_header("Content-Length", str(len(transfer_sdp)))
+            invite_msg.set_header("Content-Length", str(len(transfer_sdp.encode("utf-8"))))
 
         # Send INVITE to new destination
         self.sip_server._send_message(invite_msg.build(), dest_addr)
@@ -1158,6 +1241,12 @@ class PBXCore:
         new_call.caller_rtp = call.caller_rtp
         new_call.caller_addr = call.caller_addr
         new_call.rtp_ports = call.rtp_ports
+
+        # Transfer RTP relay ownership from old call to new call before ending
+        # the old call (end_call releases the relay, which would kill audio)
+        relay_info = self.rtp_relay.active_relays.pop(call_id, None)
+        if relay_info:
+            self.rtp_relay.active_relays[new_call_id] = relay_info
 
         # Send BYE to the transferring party (the party that initiated transfer)
         if call.callee_addr:
@@ -1171,7 +1260,7 @@ class PBXCore:
             )
             self.sip_server._send_message(bye_msg.build(), call.callee_addr)
 
-        # End the original call
+        # End the original call (relay already transferred, so release_relay is a no-op)
         self.call_manager.end_call(call_id)
         self.cdr_system.end_record(call_id, hangup_cause="blind_transfer")
 

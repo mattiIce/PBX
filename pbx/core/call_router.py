@@ -170,6 +170,10 @@ class CallRouter:
         dest_ext_obj = pbx.extension_registry.get(to_ext)
         if not dest_ext_obj or not dest_ext_obj.address:
             pbx.logger.error(f"Cannot get address for extension {to_ext}")
+            # Release allocated RTP relay and clean up call to prevent resource leaks
+            if rtp_ports:
+                pbx.rtp_relay.release_relay(call_id)
+            pbx.call_manager.end_call(call_id)
             return False
 
         # Check if destination is a WebRTC extension
@@ -220,12 +224,12 @@ class CallRouter:
             callee_user_agent = pbx._get_phone_user_agent(to_ext)
             callee_phone_model = pbx._detect_phone_model(callee_user_agent)
 
-            # Select appropriate codecs for the callee's phone
-            # - ZIP37G: PCMU/PCMA only
-            # - ZIP33G: G726/G729/G722 only
-            # - Other phones: use caller's codecs (existing behavior)
-            codecs_for_callee = pbx._get_codecs_for_phone_model(
-                callee_phone_model, default_codecs=caller_codecs
+            # Select codecs that are compatible with both the callee's phone
+            # model and the caller's offered codecs.  This ensures the callee
+            # can only choose a codec the caller also supports, preventing
+            # codec mismatches when the RTP relay forwards without transcoding.
+            codecs_for_callee = pbx._get_compatible_codecs(
+                callee_phone_model, caller_codecs
             )
 
             if callee_phone_model:
@@ -257,7 +261,7 @@ class CallRouter:
                 from_addr=from_header,
                 to_addr=to_header,
                 call_id=call_id,
-                cseq=int(message.get_header("CSeq").split()[0]),
+                cseq=int((message.get_header("CSeq") or "1 INVITE").split()[0]),
                 body=callee_sdp_body,
             )
 
@@ -330,6 +334,19 @@ class CallRouter:
             pbx.logger.info(
                 f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}"
             )
+
+            # Immediately send 180 Ringing to the caller so they hear ringback
+            # tone while waiting for the callee to answer.  Without this, the
+            # caller only has a "100 Trying" and hears silence until the callee
+            # phone sends its own 180 (which some phones delay or skip).
+            if call.original_invite and call.caller_addr:
+                ringing_response = SIPMessageBuilder.build_response(
+                    180, "Ringing", call.original_invite
+                )
+                pbx.sip_server._send_message(
+                    ringing_response.build(), call.caller_addr
+                )
+                pbx.logger.info(f"Sent 180 Ringing to caller for call {call_id}")
 
             # Start no-answer timer to route to voicemail if not answered
             no_answer_timeout: int = pbx.config.get("voicemail.no_answer_timeout", 30)
@@ -406,7 +423,7 @@ class CallRouter:
             from_addr=call.callee_invite.get_header("From"),
             to_addr=call.callee_invite.get_header("To"),
             call_id=call_id,
-            cseq=int(call.callee_invite.get_header("CSeq").split()[0]),
+            cseq=int((call.callee_invite.get_header("CSeq") or "1 CANCEL").split()[0]),
         )
         cancel_request.set_header("Via", call.callee_invite.get_header("Via"))
         self.pbx_core.sip_server._send_message(cancel_request.build(), call.callee_addr)
