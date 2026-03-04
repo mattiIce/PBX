@@ -335,6 +335,10 @@ class CallRouter:
                 f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}"
             )
 
+            # Mark call as ringing internally so that status polling
+            # (used by WebRTC clients) can detect the state transition.
+            call.ring()
+
             # Immediately send 180 Ringing to the caller so they hear ringback
             # tone while waiting for the callee to answer.  Without this, the
             # caller only has a "100 Trying" and hears silence until the callee
@@ -517,8 +521,17 @@ class CallRouter:
         # Send CANCEL to the callee to stop their phone from ringing
         self._send_cancel_to_callee(call, call_id)
 
-        # Answer the call to allow voicemail recording
+        # Answer the call to allow voicemail recording.
+        # For WebRTC-originated calls, caller_addr is None (no SIP
+        # endpoint to send a 200 OK to), so the voicemail answer
+        # path will fail.  In that case, end the call so the WebRTC
+        # client's status polling sees "ended" and stops ringing.
         if not self._answer_call_for_voicemail(call, call_id):
+            pbx.logger.info(
+                f"Cannot answer call {call_id} for voicemail "
+                "(WebRTC or missing caller info), ending call"
+            )
+            pbx.call_manager.end_call(call_id)
             return
 
         # Play voicemail greeting and beep tone to caller
