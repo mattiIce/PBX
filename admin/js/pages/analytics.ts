@@ -5,6 +5,7 @@
 
 import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { escapeHtml } from '../utils/html.ts';
 
 declare const Chart: any;
 
@@ -13,21 +14,30 @@ interface ChartData {
     data?: number[];
 }
 
+interface TopCaller {
+    extension?: string;
+    calls?: number;
+    total_duration?: number;
+    avg_duration?: number;
+}
+
 interface AnalyticsOverview {
     total_calls?: number;
+    answered_calls?: number;
     avg_duration?: number;
     answer_rate?: number;
-    active_calls?: number;
     daily_trends?: ChartData;
     hourly_distribution?: ChartData;
     disposition?: ChartData;
+    top_callers?: TopCaller[];
 }
 
 interface QoSData {
     avg_mos?: number;
-    avg_jitter?: number;
-    avg_packet_loss?: number;
-    avg_latency?: number;
+    active_calls?: number;
+    total_calls?: number;
+    calls_with_issues?: number;
+    metrics?: unknown[];
 }
 
 interface ChartInstance {
@@ -42,14 +52,17 @@ function isChartJsAvailable(): boolean {
 
 export async function loadAnalytics(): Promise<void> {
     try {
+        const periodSelect = document.getElementById('analytics-period') as HTMLSelectElement | null;
+        const days = periodSelect?.value ?? '7';
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/analytics/overview`, {
+        const response = await fetch(`${API_BASE}/api/analytics/overview?days=${days}`, {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: AnalyticsOverview = await response.json();
 
         updateAnalyticsOverview(data);
+        renderTopCallers(data.top_callers ?? []);
 
         if (isChartJsAvailable()) {
             if (data.daily_trends) renderDailyTrendsChart(data.daily_trends);
@@ -70,7 +83,26 @@ function updateAnalyticsOverview(data: AnalyticsOverview): void {
     if (totalCalls) totalCalls.textContent = String(data.total_calls ?? 0);
     if (avgDuration) avgDuration.textContent = `${data.avg_duration ?? 0}s`;
     if (answerRate) answerRate.textContent = `${data.answer_rate ?? 0}%`;
-    if (answeredCalls) answeredCalls.textContent = String(data.active_calls ?? 0);
+    if (answeredCalls) answeredCalls.textContent = String(data.answered_calls ?? 0);
+}
+
+function renderTopCallers(callers: TopCaller[]): void {
+    const tbody = document.getElementById('top-callers-table');
+    if (!tbody) return;
+
+    if (callers.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="loading">No call data available</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = callers.map(c =>
+        `<tr>
+            <td>${escapeHtml(String(c.extension ?? 'Unknown'))}</td>
+            <td>${c.calls ?? 0}</td>
+            <td>${((c.total_duration ?? 0) / 60).toFixed(1)}</td>
+            <td>${(c.avg_duration ?? 0).toFixed(1)}</td>
+        </tr>`
+    ).join('');
 }
 
 function renderDailyTrendsChart(trends: ChartData): void {
@@ -140,14 +172,28 @@ export async function loadQoSMetrics(): Promise<void> {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: QoSData = await response.json();
 
-        const mosEl = document.getElementById('qos-mos');
-        const jitterEl = document.getElementById('qos-jitter');
-        const packetLossEl = document.getElementById('qos-packet-loss');
-        const latencyEl = document.getElementById('qos-latency');
-        if (mosEl) mosEl.textContent = data.avg_mos?.toFixed(2) ?? 'N/A';
-        if (jitterEl) jitterEl.textContent = `${data.avg_jitter ?? 0}ms`;
-        if (packetLossEl) packetLossEl.textContent = `${data.avg_packet_loss ?? 0}%`;
-        if (latencyEl) latencyEl.textContent = `${data.avg_latency ?? 0}ms`;
+        const activeCalls = data.active_calls ?? 0;
+        const metrics = data.metrics as Record<string, number>[] ?? [];
+
+        // Compute average MOS from per-call metrics
+        let avgMos = 0;
+        let callsWithIssues = 0;
+        if (metrics.length > 0) {
+            const mosValues = metrics.map(m => m.mos_score ?? 0).filter(v => v > 0);
+            avgMos = mosValues.length > 0
+                ? mosValues.reduce((a, b) => a + b, 0) / mosValues.length
+                : 0;
+            callsWithIssues = mosValues.filter(v => v < 3.5).length;
+        }
+
+        const mosEl = document.getElementById('qos-avg-mos');
+        const activeCallsEl = document.getElementById('qos-active-calls');
+        const totalCallsEl = document.getElementById('qos-total-calls');
+        const issuesEl = document.getElementById('qos-calls-with-issues');
+        if (mosEl) mosEl.textContent = avgMos > 0 ? avgMos.toFixed(2) : 'N/A';
+        if (activeCallsEl) activeCallsEl.textContent = String(activeCalls);
+        if (totalCallsEl) totalCallsEl.textContent = String(metrics.length);
+        if (issuesEl) issuesEl.textContent = String(callsWithIssues);
     } catch (error: unknown) {
         console.error('Error loading QoS metrics:', error);
     }
@@ -161,7 +207,7 @@ export async function clearQoSAlerts(): Promise<void> {
             headers: getAuthHeaders()
         });
         if (response.ok) {
-            const container = document.getElementById('qos-alerts-list') as HTMLElement | null;
+            const container = document.getElementById('qos-alerts-container') as HTMLElement | null;
             if (container) container.innerHTML = '<div class="info-box">No quality alerts</div>';
             showNotification('QoS alerts cleared', 'success');
         } else {
@@ -179,10 +225,10 @@ export async function saveQoSThresholds(event?: Event): Promise<void> {
         const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
 
         const data = {
-            mos_threshold: parseFloat(val('qos-mos-threshold')) || 3.5,
-            jitter_threshold: parseInt(val('qos-jitter-threshold'), 10) || 30,
-            packet_loss_threshold: parseFloat(val('qos-packet-loss-threshold')) || 1.0,
-            latency_threshold: parseInt(val('qos-latency-threshold'), 10) || 150,
+            mos_min: parseFloat(val('qos-threshold-mos')) || 3.5,
+            jitter_max: parseInt(val('qos-threshold-jitter'), 10) || 50,
+            packet_loss_max: parseFloat(val('qos-threshold-loss')) || 2.0,
+            latency_max: parseInt(val('qos-threshold-latency'), 10) || 300,
         };
 
         const API_BASE = getApiBaseUrl();

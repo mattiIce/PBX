@@ -144,6 +144,54 @@ def get_statistics() -> tuple[Response, int]:
         return send_json({"error": "Statistics engine not initialized"}, 500), 500
 
 
+@calls_bp.route("/api/analytics/overview", methods=["GET"])
+@require_auth
+def get_analytics_overview() -> tuple[Response, int]:
+    """Get analytics overview for the analytics tab."""
+    pbx_core = get_pbx_core()
+    if pbx_core and hasattr(pbx_core, "statistics_engine"):
+        try:
+            days = request.args.get("days", 7, type=int)
+            stats = pbx_core.statistics_engine.get_dashboard_statistics(days)
+            overview = stats.get("overview", {})
+            daily_trends_raw = stats.get("daily_trends", [])
+            hourly_raw = stats.get("hourly_distribution", [])
+            disposition_raw = stats.get("call_disposition", [])
+            top_callers = stats.get("top_callers", [])
+
+            # Reshape data for frontend chart consumption
+            daily_trends = {
+                "labels": [t["date"] for t in daily_trends_raw],
+                "data": [t["total_calls"] for t in daily_trends_raw],
+            }
+            hourly_distribution = {
+                "labels": [f"{h['hour']:02d}:00" for h in hourly_raw],
+                "data": [h["calls"] for h in hourly_raw],
+            }
+            disposition = {
+                "labels": [d["disposition"] for d in disposition_raw],
+                "data": [d["count"] for d in disposition_raw],
+            }
+
+            result = {
+                "total_calls": overview.get("total_calls", 0),
+                "answered_calls": overview.get("answered_calls", 0),
+                "answer_rate": overview.get("answer_rate", 0),
+                "avg_duration": overview.get("avg_call_duration", 0),
+                "daily_trends": daily_trends,
+                "hourly_distribution": hourly_distribution,
+                "disposition": disposition,
+                "top_callers": top_callers,
+            }
+
+            return send_json(result), 200
+        except (KeyError, TypeError, ValueError) as e:
+            logger.error(f"Error getting analytics overview: {e}")
+            return send_json({"error": f"Error getting analytics overview: {e!s}"}, 500), 500
+    else:
+        return send_json({"error": "Statistics engine not initialized"}, 500), 500
+
+
 @calls_bp.route("/api/analytics/advanced", methods=["GET"])
 @require_auth
 def get_advanced_analytics() -> tuple[Response, int]:
