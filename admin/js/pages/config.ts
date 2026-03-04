@@ -5,6 +5,7 @@
 
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { escapeHtml } from '../utils/html.ts';
 import { withButtonGuard } from '../utils/debounce.ts';
 
 interface VoicemailConfig {
@@ -17,8 +18,16 @@ interface FullConfig {
     voicemail?: VoicemailConfig;
 }
 
+interface FeatureEntry {
+    enabled: boolean;
+    description: string;
+}
+
 interface FeaturesResponse {
     features?: Record<string, boolean>;
+    core?: Record<string, FeatureEntry>;
+    advanced?: Record<string, FeatureEntry>;
+    integrations?: Record<string, FeatureEntry>;
 }
 
 interface SSLCertificate {
@@ -81,15 +90,38 @@ export async function loadFeaturesStatus(): Promise<void> {
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data: FeaturesResponse = await response.json();
 
-        if (data.features) {
-            for (const [key, enabled] of Object.entries(data.features)) {
-                const el = document.getElementById(`feature-${key.replace(/_/g, '-')}`) as HTMLInputElement | null;
-                if (el) el.checked = enabled;
-            }
-        }
+        renderFeatureTable('core-features-table', data.core);
+        renderFeatureTable('advanced-features-table', data.advanced);
+        renderFeatureTable('integration-features-table', data.integrations);
     } catch (error: unknown) {
         console.error('Error loading features status:', error);
+        showNotification('Failed to load feature status', 'error');
     }
+}
+
+function renderFeatureTable(
+    elementId: string,
+    features: Record<string, FeatureEntry> | undefined,
+): void {
+    const tbody = document.getElementById(elementId) as HTMLElement | null;
+    if (!tbody) return;
+
+    if (!features || Object.keys(features).length === 0) {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No features found</td></tr>';
+        return;
+    }
+
+    tbody.innerHTML = Object.entries(features).map(([key, feature]) => {
+        const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+        const badge = feature.enabled
+            ? '<span class="badge" style="background:#10b981;">Enabled</span>'
+            : '<span class="badge" style="background:#6b7280;">Disabled</span>';
+        return `<tr>
+            <td><strong>${escapeHtml(label)}</strong></td>
+            <td>${badge}</td>
+            <td>${escapeHtml(feature.description)}</td>
+        </tr>`;
+    }).join('');
 }
 
 export async function saveConfigSection(section: string): Promise<void> {

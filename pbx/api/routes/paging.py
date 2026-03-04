@@ -151,6 +151,33 @@ def handle_configure_paging_device() -> Response:
         return send_json({"error": str(e)}, 500)
 
 
+@paging_bp.route("/devices/<device_id>", methods=["DELETE"])
+@require_auth
+def handle_delete_paging_device(device_id: str) -> Response:
+    """Delete a paging DAC device."""
+    pbx_core = get_pbx_core()
+    if not pbx_core or not hasattr(pbx_core, "paging_system"):
+        return send_json({"error": "Paging system not enabled"}, 500)
+
+    if not pbx_core.paging_system or not pbx_core.paging_system.enabled:
+        return send_json({"error": "Paging system not enabled"}, 500)
+
+    try:
+        remove_fn = getattr(pbx_core.paging_system, "remove_dac_device", None)
+        if remove_fn:
+            success = remove_fn(device_id)
+        else:
+            return send_json({"error": "Device removal not supported"}, 501)
+
+        if success:
+            return send_json(
+                {"success": True, "message": f"Paging device removed: {device_id}"}
+            )
+        return send_json({"error": "Failed to remove paging device"}, 500)
+    except Exception as e:
+        return send_json({"error": str(e)}, 500)
+
+
 @paging_bp.route("/zones/<extension>", methods=["DELETE"])
 @require_auth
 def handle_delete_paging_zone(extension: str) -> Response:

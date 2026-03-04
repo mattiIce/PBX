@@ -160,7 +160,7 @@ export async function rebootAllPhones(): Promise<void> {
 
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/phones/reboot-all`, {
+        const response = await fetch(`${API_BASE}/api/phones/reboot`, {
             method: 'POST',
             headers: getAuthHeaders()
         });

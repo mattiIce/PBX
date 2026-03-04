@@ -477,3 +477,6 @@ window.initiateClickToDial = initiateClickToDial;
 window.loadClickToDialHistory = loadClickToDialHistory;
 window.loadWebRTCPhoneConfig = loadWebRTCPhoneConfig;
 window.saveWebRTCPhoneConfig = saveWebRTCPhoneConfig;
+
+// Tab loader alias — tabs.ts references this name
+(window as any).loadClickToDialTab = loadClickToDialConfigs;

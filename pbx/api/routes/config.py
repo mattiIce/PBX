@@ -188,6 +188,118 @@ def get_full_config() -> tuple[Response, int]:
         return send_json({"error": str(e)}, 500), 500
 
 
+@config_bp.route("/api/config/features", methods=["GET"])
+@require_admin
+def get_features_config() -> tuple[Response, int]:
+    """Get feature flags and their status for the System Features tab."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500), 500
+
+    core_features = {
+        "call_recording": {
+            "enabled": pbx_core.config.get("features.call_recording", True),
+            "description": "Record incoming and outgoing calls",
+        },
+        "call_transfer": {
+            "enabled": pbx_core.config.get("features.call_transfer", True),
+            "description": "Blind and attended call transfer",
+        },
+        "call_hold": {
+            "enabled": pbx_core.config.get("features.call_hold", True),
+            "description": "Place calls on hold with music",
+        },
+        "conference": {
+            "enabled": pbx_core.config.get("features.conference", True),
+            "description": "Multi-party conference calling",
+        },
+        "voicemail": {
+            "enabled": pbx_core.config.get("features.voicemail", True),
+            "description": "Voicemail boxes with email notification",
+        },
+        "call_parking": {
+            "enabled": pbx_core.config.get("features.call_parking", True),
+            "description": "Park and retrieve calls from any extension",
+        },
+        "call_queues": {
+            "enabled": pbx_core.config.get("features.call_queues", True),
+            "description": "ACD call queues with agent management",
+        },
+        "presence": {
+            "enabled": pbx_core.config.get("features.presence", True),
+            "description": "BLF / presence monitoring across extensions",
+        },
+        "music_on_hold": {
+            "enabled": pbx_core.config.get("features.music_on_hold", True),
+            "description": "Music on hold for callers waiting",
+        },
+        "auto_attendant": {
+            "enabled": pbx_core.config.get("features.auto_attendant", True),
+            "description": "IVR auto attendant with DTMF menus",
+        },
+    }
+
+    advanced_features = {
+        "webrtc": {
+            "enabled": pbx_core.config.get("features.webrtc.enabled", True),
+            "description": "Browser-based WebRTC softphone",
+        },
+        "webhooks": {
+            "enabled": pbx_core.config.get("features.webhooks.enabled", False),
+            "description": "HTTP webhook event notifications",
+        },
+        "hot_desking": {
+            "enabled": pbx_core.config.get("features.hot_desking.enabled", True),
+            "description": "Log in to any phone with your extension",
+        },
+        "voicemail_transcription": {
+            "enabled": pbx_core.config.get(
+                "features.voicemail_transcription.enabled", True
+            ),
+            "description": "Speech-to-text voicemail transcription",
+        },
+        "call_recording_announcements": {
+            "enabled": pbx_core.config.get(
+                "features.call_recording_announcements.enabled", False
+            ),
+            "description": "Play recording announcements to callers",
+        },
+        "fraud_detection": {
+            "enabled": pbx_core.config.get("features.fraud_detection.enabled", True),
+            "description": "Detect and alert on suspicious call patterns",
+        },
+    }
+
+    integration_features = {
+        "crm_integration": {
+            "enabled": pbx_core.config.get("features.crm_integration.enabled", True),
+            "description": "CRM screen pop and call logging",
+        },
+        "active_directory": {
+            "enabled": pbx_core.config.get("integrations.active_directory.enabled", False),
+            "description": "Sync users and groups from Active Directory",
+        },
+        "jitsi": {
+            "enabled": pbx_core.config.get("integrations.jitsi.enabled", False),
+            "description": "Jitsi Meet video conferencing integration",
+        },
+        "matrix": {
+            "enabled": pbx_core.config.get("integrations.matrix.enabled", False),
+            "description": "Matrix/Element chat integration",
+        },
+        "espocrm": {
+            "enabled": pbx_core.config.get("integrations.espocrm.enabled", False),
+            "description": "EspoCRM contact and call management",
+        },
+    }
+
+    return send_json({
+        "core": core_features,
+        "advanced": advanced_features,
+        "integrations": integration_features,
+    }), 200
+
+
 @config_bp.route("/api/config/dtmf", methods=["GET"])
 def get_dtmf_config() -> tuple[Response, int]:
     """Get DTMF configuration."""
