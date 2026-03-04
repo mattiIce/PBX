@@ -1,5 +1,5 @@
 /** Global API base URL for vanilla JS modules */
-var API_BASE = (function() {
+window.API_BASE = (function() {
     var port = window.location.port;
     if (port === '9000' || port === '' || port === '80' || port === '443') {
         return window.location.origin;
@@ -8,9 +8,9 @@ var API_BASE = (function() {
 })();
 
 /** Global auth header helper for vanilla JS modules */
-function pbxAuthHeaders() {
+window.pbxAuthHeaders = function() {
     var headers = {'Content-Type': 'application/json'};
     var token = localStorage.getItem('pbx_token');
     if (token) { headers['Authorization'] = 'Bearer ' + token; }
     return headers;
-}
+};
