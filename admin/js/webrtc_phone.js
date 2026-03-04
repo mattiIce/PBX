@@ -763,10 +763,10 @@ class WebRTCPhone {
                     callId: callData.call_id
                 });
 
-                // Ringback tone is started by _startCallStatusPolling()
-                // once the server confirms the callee's phone is ringing
-                // (SIP 180 Ringing received). Starting it here would be
-                // premature — the INVITE may not have reached the phone yet.
+                // Start ringback tone immediately so the caller gets
+                // audible feedback while the call is being set up.
+                // Polling will stop it once the call connects or ends.
+                this.startRingbackTone();
 
                 // Start polling for call status to detect ringing/connected/ended
                 this._startCallStatusPolling();
