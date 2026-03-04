@@ -467,10 +467,11 @@ def handle_webrtc_call_status() -> Response:
             return send_json({"status": "ended", "reason": "call_gone"})
 
         # Map internal call state to a simple status string
-        call_state = getattr(call, "state", "unknown")
+        raw_state = getattr(call, "state", "unknown")
+        call_state = raw_state.value if hasattr(raw_state, "value") else str(raw_state)
         status = "unknown"
-        if call_state in ("new", "init", "initiated"):
-            status = "setting_up"
+        if call_state in ("idle", "new", "init", "initiated", "calling"):
+            status = "calling"
         elif call_state in ("ringing", "alerting", "early"):
             status = "ringing"
         elif call_state in ("connected", "active", "answered"):
@@ -519,9 +520,22 @@ def handle_webrtc_call_status_get() -> Response:
     call = pbx_core.call_manager.get_call(call_id)
     if not call:
         # Call may have ended and been removed from active calls
-        return send_json({"success": True, "state": "ended"})
+        return send_json({"success": True, "status": "ended", "call_id": call_id})
 
-    return send_json({"success": True, "state": call.state.value})
+    # Map internal call state to a simple status string, consistent with POST endpoint
+    call_state = call.state.value if hasattr(call.state, "value") else str(call.state)
+    if call_state in ("idle", "calling", "init", "initiated"):
+        status = "calling"
+    elif call_state in ("ringing", "alerting", "early"):
+        status = "ringing"
+    elif call_state in ("connected", "active", "answered"):
+        status = "connected"
+    elif call_state in ("ended", "terminated", "bye"):
+        status = "ended"
+    else:
+        status = call_state
+
+    return send_json({"success": True, "status": status, "call_id": call_id})
 
 
 @webrtc_bp.route("/api/webrtc/sessions", methods=["GET"])
