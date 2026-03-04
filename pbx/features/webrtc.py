@@ -1013,6 +1013,166 @@ class WebRTCSignalingServer:
                     pass
             session.pc = None
 
+    def start_service_media_bridge(
+        self,
+        session: WebRTCSession,
+        service_port: int,
+    ) -> int | None:
+        """Start a media bridge between WebRTC and a local service port.
+
+        Unlike ``start_media_bridge`` which routes through the RTP relay to a
+        remote SIP phone, this method connects the WebRTC audio directly to a
+        local service port where ``RTPPlayer``/``RTPDTMFListener`` (or
+        ``RTPRecorder``) are bound.  This is used for virtual-extension calls
+        (auto-attendant, voicemail, paging) where no SIP phone is involved.
+
+        Args:
+            session: The WebRTC session.
+            service_port: Local UDP port used by the service (RTPPlayer /
+                RTPDTMFListener).
+
+        Returns:
+            The bridge socket port, or ``None`` on failure.
+        """
+        if not AIORTC_AVAILABLE or not session.pc:
+            self.logger.error(
+                "Cannot start service media bridge: aiortc not available or no PC"
+            )
+            return None
+
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("127.0.0.1", 0))
+            bridge_port = sock.getsockname()[1]
+            sock.settimeout(0.05)
+
+            session.bridge_socket = sock
+            session.bridge_port = bridge_port
+            session._bridge_running = True
+
+            self.logger.info(
+                f"Service media bridge for session {session.session_id}: "
+                f"127.0.0.1:{bridge_port} <-> service:{service_port}"
+            )
+
+            service_addr = ("127.0.0.1", service_port)
+
+            # --- Thread: service → browser (RTPPlayer audio → WebRTC) ---
+            def _service_to_browser() -> None:
+                seq = 0
+                try:
+                    while session._bridge_running:
+                        try:
+                            data, _addr = sock.recvfrom(2048)
+                        except (TimeoutError, OSError):
+                            continue
+                        if len(data) < 12:
+                            continue
+                        # Parse RTP header (account for CSRC / extensions)
+                        cc = data[0] & 0x0F
+                        has_ext = (data[0] >> 4) & 0x01
+                        header_len = 12 + 4 * cc
+                        if has_ext and len(data) > header_len + 4:
+                            ext_len = struct.unpack(
+                                "!H", data[header_len + 2 : header_len + 4]
+                            )[0]
+                            header_len += 4 + ext_len * 4
+                        if len(data) <= header_len:
+                            continue
+                        payload = data[header_len:]
+                        pcm_8k = _ulaw_to_pcm(payload)
+                        pcm_48k = _upsample_8k_to_48k(pcm_8k)
+                        samples = len(pcm_48k) // 2
+                        frame = AudioFrame(
+                            format="s16", layout="mono", samples=samples
+                        )
+                        for plane in frame.planes:
+                            plane.update(pcm_48k)
+                        frame.pts = seq * samples
+                        frame.sample_rate = 48000
+                        frame.time_base = fractions.Fraction(1, 48000)
+                        if session.bridge_track:
+                            session.bridge_track.push_frame(frame)
+                        seq += 1
+                except Exception:
+                    self.logger.exception(
+                        f"service_to_browser crashed for session {session.session_id}"
+                    )
+
+            threading.Thread(
+                target=_service_to_browser,
+                daemon=True,
+                name=f"WebRTC-S2B-{session.session_id[:8]}",
+            ).start()
+
+            # --- Async: browser → service (WebRTC audio → RTPRecorder/DTMFListener) ---
+            async def _browser_to_service() -> None:
+                rtp_seq = 0
+                rtp_ts = 0
+                ssrc = int.from_bytes(uuid.uuid4().bytes[:4], "big")
+                try:
+                    while session._bridge_running:
+                        if not session.browser_track:
+                            await asyncio.sleep(0.02)
+                            continue
+                        try:
+                            frame = await asyncio.wait_for(
+                                session.browser_track.recv(), timeout=0.1
+                            )
+                        except TimeoutError:
+                            continue
+                        except Exception:
+                            continue
+                        pcm = bytes(frame.planes[0])
+                        sr = frame.sample_rate
+                        if sr == 48000:
+                            pcm = _downsample_48k_to_8k(pcm)
+                        elif sr != 8000 and sr > 8000:
+                            import array
+
+                            src = array.array("h", pcm)
+                            ratio = sr // 8000
+                            if ratio > 1:
+                                out_len = len(src) // ratio
+                                dst = array.array(
+                                    "h",
+                                    [
+                                        sum(src[i * ratio : i * ratio + ratio])
+                                        // ratio
+                                        for i in range(out_len)
+                                    ],
+                                )
+                                pcm = dst.tobytes()
+                        ulaw = _pcm_to_ulaw(pcm)
+                        samples = len(ulaw)
+                        header = struct.pack(
+                            "!BBHII",
+                            0x80,
+                            0 | 0x80 if rtp_seq == 0 else 0,
+                            rtp_seq & 0xFFFF,
+                            rtp_ts & 0xFFFFFFFF,
+                            ssrc,
+                        )
+                        try:
+                            sock.sendto(header + ulaw, service_addr)
+                        except OSError:
+                            pass
+                        rtp_seq += 1
+                        rtp_ts += samples
+                except Exception:
+                    self.logger.exception(
+                        f"browser_to_service crashed for session {session.session_id}"
+                    )
+
+            if self._loop:
+                asyncio.run_coroutine_threadsafe(_browser_to_service(), self._loop)
+
+            return bridge_port
+        except Exception as e:
+            self.logger.error(f"Error starting service media bridge: {e}")
+            return None
+
     def get_ice_servers_config(self) -> dict:
         """
         Get ICE servers configuration for client
@@ -1508,6 +1668,165 @@ class WebRTCGateway:
                     args=(call_id,),
                 )
                 call.no_answer_timer.start()
+            elif is_valid_dialplan:
+                # Virtual extension (AA, voicemail, paging, etc.)
+                # These services run locally — no SIP INVITE needed.
+                # Release the relay (not needed) and allocate a raw port
+                # for the service's RTPPlayer / DTMFListener.
+                self.pbx_core.rtp_relay.release_relay(call_id)
+
+                try:
+                    service_port: int = self.pbx_core.rtp_relay.port_pool.pop(0)
+                except IndexError:
+                    self.logger.error(
+                        f"No available RTP ports for service call {call_id}"
+                    )
+                    return None
+
+                call.rtp_ports = (service_port, service_port + 1)
+                call.aa_rtp_port = service_port  # for port-pool cleanup
+
+                # Start service media bridge (WebRTC ↔ local service port)
+                # The bridge lives on the signaling server which owns the
+                # asyncio event loop needed for the browser→service path.
+                bridge_port = (
+                    webrtc_signaling.start_service_media_bridge(session, service_port)
+                    if webrtc_signaling
+                    else None
+                )
+                if not bridge_port:
+                    self.logger.error(
+                        f"Failed to start service media bridge for {call_id}"
+                    )
+                    self.pbx_core.rtp_relay.port_pool.append(service_port)
+                    return None
+
+                # Point caller_rtp at the bridge so RTPPlayer sends there
+                call.caller_rtp = {
+                    "address": "127.0.0.1",
+                    "port": bridge_port,
+                    "formats": [0, 8],
+                }
+                call.webrtc_session_id = session.session_id
+                call.caller_addr = None  # No SIP address
+
+                pbx = self.pbx_core
+
+                # --- Auto Attendant ---
+                if (
+                    pbx.auto_attendant
+                    and target_extension == pbx.auto_attendant.get_extension()
+                ):
+                    call.auto_attendant_active = True
+                    pbx.cdr_system.start_record(
+                        call_id, from_extension, target_extension
+                    )
+                    call.connect()
+                    aa_session = pbx.auto_attendant.start_session(
+                        call_id, from_extension
+                    )
+                    call.aa_session = aa_session
+                    threading.Thread(
+                        target=pbx._auto_attendant_session,
+                        args=(call_id, call, aa_session),
+                        daemon=True,
+                    ).start()
+                    self.logger.info(
+                        f"WebRTC call {call_id} routed to auto attendant"
+                    )
+
+                # --- Voicemail Access (*xxxx) ---
+                elif (
+                    target_extension.startswith("*")
+                    and 4 <= len(target_extension) <= 5
+                    and target_extension[1:].isdigit()
+                ):
+                    target_ext = target_extension[1:]
+                    call.voicemail_access = True
+                    call.voicemail_extension = target_ext
+
+                    mailbox = pbx.voicemail_system.get_mailbox(target_ext)
+                    pbx.cdr_system.start_record(
+                        call_id, from_extension, target_extension
+                    )
+                    call.connect()
+
+                    from pbx.features.voicemail import VoicemailIVR
+
+                    voicemail_ivr = VoicemailIVR(
+                        pbx.voicemail_system, target_ext
+                    )
+                    call.voicemail_ivr = voicemail_ivr
+                    threading.Thread(
+                        target=pbx._voicemail_ivr_session,
+                        args=(call_id, call, mailbox, voicemail_ivr),
+                        daemon=True,
+                    ).start()
+                    self.logger.info(
+                        f"WebRTC call {call_id} routed to voicemail for {target_ext}"
+                    )
+
+                # --- Paging (7xx / all-call) ---
+                elif (
+                    pbx.paging_system
+                    and pbx.paging_system.is_paging_extension(target_extension)
+                ):
+                    page_id = pbx.paging_system.initiate_page(
+                        from_extension, target_extension
+                    )
+                    if page_id:
+                        page_info = pbx.paging_system.get_page_info(page_id)
+                        call.paging_active = True
+                        call.page_id = page_id
+                        call.paging_zones = (
+                            page_info.get("zone_names", "Unknown")
+                            if page_info
+                            else "Unknown"
+                        )
+                        pbx.cdr_system.start_record(
+                            call_id, from_extension, target_extension
+                        )
+                        call.connect()
+
+                        # Locate DAC device from zone config
+                        dac_device: dict[str, Any] | None = None
+                        zones = (
+                            page_info.get("zones", []) if page_info else []
+                        )
+                        if zones:
+                            dac_device_id = zones[0].get("dac_device")
+                            if dac_device_id:
+                                for device in pbx.paging_system.get_dac_devices():
+                                    if device.get("device_id") == dac_device_id:
+                                        dac_device = device
+                                        break
+                        if dac_device:
+                            threading.Thread(
+                                target=pbx._paging_session,
+                                args=(
+                                    call_id,
+                                    call,
+                                    dac_device,
+                                    page_info,
+                                ),
+                                daemon=True,
+                            ).start()
+                        self.logger.info(
+                            f"WebRTC call {call_id} routed to paging "
+                            f"({call.paging_zones})"
+                        )
+                    else:
+                        self.logger.error(
+                            f"Failed to initiate page for {target_extension}"
+                        )
+
+                # --- Unsupported dialplan pattern ---
+                else:
+                    self.logger.warning(
+                        f"Dialplan target {target_extension} not yet "
+                        "supported via WebRTC"
+                    )
+                    call.connect()
             else:
                 self.logger.warning(
                     f"Target {target_extension} has no SIP address; "
