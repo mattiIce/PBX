@@ -284,14 +284,14 @@ class TestDatabaseBackendExecuteWithContext:
         assert result is False
         db.connection.rollback.assert_called_once()
 
-    def test_actual_error_no_rollback_when_autocommit(self) -> None:
+    def test_actual_error_rollback_when_autocommit(self) -> None:
         db = _make_enabled_backend("postgresql")
         mock_cursor = MagicMock()
         db.connection.cursor.return_value = mock_cursor
         mock_cursor.execute.side_effect = Exception("disk I/O error")
         result = db._execute_with_context("SELECT 1", "query")
         assert result is False
-        db.connection.rollback.assert_not_called()
+        db.connection.rollback.assert_called_once()
 
 
 @pytest.mark.unit
@@ -390,7 +390,7 @@ class TestDatabaseBackendExecuteScript:
         mock_cursor.executescript.side_effect = Exception("syntax error")
         result = db.execute_script("INVALID SQL;")
         assert result is False
-        db.connection.rollback.assert_not_called()
+        db.connection.rollback.assert_called_once()
 
 
 @pytest.mark.unit
@@ -466,7 +466,7 @@ class TestDatabaseBackendFetchOne:
         with patch("pbx.utils.database.RealDictCursor", mock_rdc, create=True):
             result = db.fetch_one("SELECT * FROM t")
         assert result is None
-        db.connection.rollback.assert_not_called()
+        db.connection.rollback.assert_called_once()
 
 
 @pytest.mark.unit
@@ -545,7 +545,7 @@ class TestDatabaseBackendFetchAll:
         with patch("pbx.utils.database.RealDictCursor", mock_rdc, create=True):
             result = db.fetch_all("SELECT * FROM t")
         assert result == []
-        db.connection.rollback.assert_not_called()
+        db.connection.rollback.assert_called_once()
 
 
 @pytest.mark.unit
@@ -1846,7 +1846,7 @@ class TestDatabaseBackendEdgeCases:
         mock_cursor.execute.side_effect = Exception("duplicate key value")
         result = db._execute_with_context("INSERT ...", "insert", critical=True)
         assert result is True
-        db.connection.rollback.assert_not_called()
+        db.connection.rollback.assert_called_once()
 
     def test_postgresql_fetch_one_uses_real_dict_cursor(self) -> None:
         db = _make_enabled_backend("postgresql")
