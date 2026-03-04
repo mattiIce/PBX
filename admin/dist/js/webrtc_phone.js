@@ -30,6 +30,7 @@ class WebRTCPhone {
         this._audioCtx = null;
         this._ringbackNodes = null; // {osc1, osc2, gain} for ringback tone
         this._ringbackTimer = null; // interval for 2s-on/4s-off cadence
+        this._ringbackSafetyTimer = null; // safety timeout to stop ringback
         this._callStatusPollTimer = null; // poll timer for call progress
         this._currentCallState = null; // last known server-side call state
 
@@ -64,6 +65,13 @@ class WebRTCPhone {
      */
     startRingbackTone() {
         if (this._ringbackNodes) return; // already playing
+        // Safety timeout: stop ringback after 60 seconds to prevent
+        // infinite ringing if the server never reports a state change.
+        if (this._ringbackSafetyTimer) clearTimeout(this._ringbackSafetyTimer);
+        this._ringbackSafetyTimer = setTimeout(() => {
+            debugLog('[WebRTC Phone] Ringback safety timeout reached (60s), stopping');
+            this.stopRingbackTone();
+        }, 60000);
         try {
             const ctx = this._ensureAudioCtx();
             const gain = ctx.createGain();
@@ -116,6 +124,10 @@ class WebRTCPhone {
      * Stop the ringback tone.
      */
     stopRingbackTone() {
+        if (this._ringbackSafetyTimer) {
+            clearTimeout(this._ringbackSafetyTimer);
+            this._ringbackSafetyTimer = null;
+        }
         if (this._ringbackTimer) {
             clearTimeout(this._ringbackTimer);
             this._ringbackTimer = null;

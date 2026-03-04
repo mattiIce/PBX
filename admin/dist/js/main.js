@@ -189,7 +189,7 @@ async function checkConnection() {
 
         if (response.ok) {
             statusBadge.textContent = 'Connected';
-            statusBadge.classList.remove('disconnected');
+            statusBadge.classList.remove('connecting', 'disconnected');
             statusBadge.classList.add('connected');
         } else {
             throw new Error('Connection failed');
@@ -197,7 +197,7 @@ async function checkConnection() {
     } catch (error) {
         console.error('Connection check failed:', error);
         statusBadge.textContent = 'Disconnected';
-        statusBadge.classList.remove('connected');
+        statusBadge.classList.remove('connecting', 'connected');
         statusBadge.classList.add('disconnected');
     }
 }
@@ -206,20 +206,24 @@ async function checkConnection() {
 document.addEventListener('DOMContentLoaded', async () => {
     debugLog('DOMContentLoaded event fired - starting initialization');
 
-    // Initialize user context first (async) — this will call showTab() when ready
-    await initializeUserContext();
-    debugLog('User context initialization awaited');
+    // Start connection check immediately — don't wait for user context
+    checkConnection();
+    setInterval(checkConnection, 10000);
 
-    // Then initialize other components
+    // Initialize synchronous UI components right away
     debugLog('Initializing tabs, forms, and logout');
     initializeTabs();
     initializeForms();
     initializeLogout();
     initializeRefreshButton();
-    checkConnection();
 
-    // Auto-refresh connection status every 10 seconds
-    setInterval(checkConnection, 10000);
+    // Initialize user context (async) — this will call showTab() when ready
+    try {
+        await initializeUserContext();
+        debugLog('User context initialization complete');
+    } catch (error) {
+        console.error('User context initialization failed:', error);
+    }
 
     debugLog('Page initialization complete');
 });
