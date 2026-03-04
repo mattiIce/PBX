@@ -34,6 +34,10 @@ declare global {
         switchTab: (tabName: string) => void;
         initializeTabs: () => void;
 
+        // ui/modal.ts
+        openModal: (modalId: string) => void;
+        closeModal: (modalId: string) => void;
+
         // utils/refresh.ts
         executeBatched: (
             promiseFunctions: Array<(() => Promise<unknown>) | Promise<unknown>>,

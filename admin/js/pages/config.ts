@@ -6,6 +6,7 @@
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
 import { withButtonGuard } from '../utils/debounce.ts';
+import { el } from '../utils/dom.ts';
 
 interface VoicemailConfig {
     max_duration?: number;
@@ -63,7 +64,7 @@ export async function loadConfig(): Promise<void> {
 
         // Populate other config sections
         if (config.voicemail) {
-            const el = (id: string): HTMLElement | null => document.getElementById(id);
+            // el imported from @utils/dom
             if (el('voicemail-max-duration')) (el('voicemail-max-duration') as HTMLInputElement).value = String(config.voicemail.max_duration ?? 120);
         }
     } catch (error: unknown) {

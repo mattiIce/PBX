@@ -51,13 +51,28 @@ export function showNotification(message: string, type: NotificationType = 'info
     // Create notification element
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
+
+    // Accessibility: announce to screen readers
+    if (type === 'error') {
+        notification.setAttribute('role', 'alert');
+        notification.setAttribute('aria-live', 'assertive');
+    } else {
+        notification.setAttribute('role', 'status');
+        notification.setAttribute('aria-live', 'polite');
+    }
+
+    const bgColor = type === 'success' ? 'var(--color-success, #10b981)'
+        : type === 'error' ? 'var(--color-danger, #ef4444)'
+        : type === 'warning' ? 'var(--color-warning, #f59e0b)'
+        : 'var(--color-info, #3b82f6)';
+
     notification.style.cssText = `
         position: fixed;
         top: 80px;
         right: 20px;
         max-width: 400px;
         padding: 15px 20px;
-        background: ${type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : type === 'warning' ? '#f59e0b' : '#3b82f6'};
+        background: ${bgColor};
         color: white;
         border-radius: 8px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.15);
@@ -107,12 +122,14 @@ export function displayError(error: Error | { message?: string; stack?: string; 
     const errorDiv = document.createElement('div');
     errorDiv.id = errorId;
     errorDiv.className = 'error-notification';
+    errorDiv.setAttribute('role', 'alert');
+    errorDiv.setAttribute('aria-live', 'assertive');
     errorDiv.style.cssText = `
         position: fixed;
         top: 70px;
         right: 20px;
         max-width: 450px;
-        background: #f44336;
+        background: var(--color-danger, #f44336);
         color: white;
         padding: 15px 20px;
         border-radius: 8px;

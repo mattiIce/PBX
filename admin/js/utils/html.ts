@@ -67,11 +67,11 @@ export function getDuration(startTime: string): string {
  */
 export function getStatusBadge(status: string): string {
     const badges: Record<string, string> = {
-        'registered': '<span class="badge" style="background: #10b981;">&#x2705; Registered</span>',
-        'unregistered': '<span class="badge" style="background: #6b7280;">&#x26AA; Unregistered</span>',
-        'failed': '<span class="badge" style="background: #ef4444;">&#x274C; Failed</span>',
-        'disabled': '<span class="badge" style="background: #9ca3af;">&#x23F8;&#xFE0F; Disabled</span>',
-        'degraded': '<span class="badge" style="background: #f59e0b;">&#x26A0;&#xFE0F; Degraded</span>',
+        'registered': '<span class="badge" style="background: var(--color-success, #10b981);">&#x2705; Registered</span>',
+        'unregistered': '<span class="badge" style="background: var(--color-text-secondary, #6b7280);">&#x26AA; Unregistered</span>',
+        'failed': '<span class="badge" style="background: var(--color-danger, #ef4444);">&#x274C; Failed</span>',
+        'disabled': '<span class="badge" style="background: var(--color-text-muted, #9ca3af);">&#x23F8;&#xFE0F; Disabled</span>',
+        'degraded': '<span class="badge" style="background: var(--color-warning, #f59e0b);">&#x26A0;&#xFE0F; Degraded</span>',
     };
     return badges[status] || status;
 }
@@ -81,10 +81,10 @@ export function getStatusBadge(status: string): string {
  */
 export function getHealthBadge(health: string): string {
     const badges: Record<string, string> = {
-        'healthy': '<span class="badge" style="background: #10b981;">&#x1F49A; Healthy</span>',
-        'warning': '<span class="badge" style="background: #f59e0b;">&#x26A0;&#xFE0F; Warning</span>',
-        'critical': '<span class="badge" style="background: #f59e0b;">&#x1F534; Critical</span>',
-        'down': '<span class="badge" style="background: #ef4444;">&#x1F480; Down</span>',
+        'healthy': '<span class="badge" style="background: var(--color-success, #10b981);">&#x1F49A; Healthy</span>',
+        'warning': '<span class="badge" style="background: var(--color-warning, #f59e0b);">&#x26A0;&#xFE0F; Warning</span>',
+        'critical': '<span class="badge" style="background: var(--color-warning, #f59e0b);">&#x1F534; Critical</span>',
+        'down': '<span class="badge" style="background: var(--color-danger, #ef4444);">&#x1F480; Down</span>',
     };
     return badges[health] || health;
 }
@@ -94,11 +94,11 @@ export function getHealthBadge(health: string): string {
  */
 export function getPriorityBadge(priority: number): string {
     const badges: Record<number, string> = {
-        1: '<span class="badge" style="background: #ef4444;">1 - Highest</span>',
-        2: '<span class="badge" style="background: #f97316;">2 - High</span>',
-        3: '<span class="badge" style="background: #eab308;">3 - Medium</span>',
-        4: '<span class="badge" style="background: #3b82f6;">4 - Low</span>',
-        5: '<span class="badge" style="background: #6b7280;">5 - Lowest</span>',
+        1: '<span class="badge" style="background: var(--color-danger, #ef4444);">1 - Highest</span>',
+        2: '<span class="badge" style="background: var(--color-warning, #f97316);">2 - High</span>',
+        3: '<span class="badge" style="background: var(--color-warning, #eab308);">3 - Medium</span>',
+        4: '<span class="badge" style="background: var(--color-info, #3b82f6);">4 - Low</span>',
+        5: '<span class="badge" style="background: var(--color-text-secondary, #6b7280);">5 - Lowest</span>',
     };
     return badges[priority] || `<span class="badge">${priority}</span>`;
 }

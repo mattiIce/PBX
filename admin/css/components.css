@@ -518,6 +518,10 @@
     color: var(--color-text-secondary);
     cursor: pointer;
     transition: color 0.3s;
+    background: none;
+    border: none;
+    padding: 0;
+    line-height: 1;
 }
 
 .close:hover {

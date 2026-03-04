@@ -5,7 +5,9 @@
 
 import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { openModal, closeModal } from '../ui/modal.ts';
 import { escapeHtml } from '../utils/html.ts';
+import { val } from '../utils/dom.ts';
 
 interface EmergencyContact {
     id: string;
@@ -183,28 +185,24 @@ export async function loadExtensionLocations(): Promise<void> {
 }
 
 export function showAddEmergencyContactModal(): void {
-    const modal = document.getElementById('add-emergency-contact-modal') as HTMLElement | null;
-    if (modal) modal.classList.add('active');
+    openModal('add-emergency-contact-modal');
 }
 
 export function closeAddEmergencyContactModal(): void {
-    const modal = document.getElementById('add-emergency-contact-modal') as HTMLElement | null;
-    if (modal) modal.classList.remove('active');
+    closeModal('add-emergency-contact-modal');
 }
 
 export function showTriggerEmergencyModal(): void {
-    const modal = document.getElementById('trigger-emergency-modal') as HTMLElement | null;
-    if (modal) modal.classList.add('active');
+    openModal('trigger-emergency-modal');
 }
 
 export function closeTriggerEmergencyModal(): void {
-    const modal = document.getElementById('trigger-emergency-modal') as HTMLElement | null;
-    if (modal) modal.classList.remove('active');
+    closeModal('trigger-emergency-modal');
 }
 
 export async function addEmergencyContact(event: Event): Promise<void> {
     event.preventDefault();
-    const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+    // val imported from @utils/dom
     const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
 
     const methods: string[] = [];
@@ -244,7 +242,7 @@ export async function addEmergencyContact(event: Event): Promise<void> {
 
 export async function triggerEmergency(event: Event): Promise<void> {
     event.preventDefault();
-    const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+    // val imported from @utils/dom
 
     const data = {
         type: val('trigger-type'),

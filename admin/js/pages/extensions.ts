@@ -5,7 +5,9 @@
 
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { openModal, closeModal } from '../ui/modal.ts';
 import { escapeHtml } from '../utils/html.ts';
+import { el, val } from '../utils/dom.ts';
 
 interface Extension {
     number: string;
@@ -79,22 +81,19 @@ export async function loadExtensions(): Promise<void> {
 }
 
 export function showAddExtensionModal(): void {
-    const modal = document.getElementById('add-extension-modal') as HTMLElement | null;
-    if (modal) modal.classList.add('active');
+    openModal('add-extension-modal');
     const form = document.getElementById('add-extension-form') as HTMLFormElement | null;
     if (form) form.reset();
 }
 
 export function closeAddExtensionModal(): void {
-    const modal = document.getElementById('add-extension-modal') as HTMLElement | null;
-    if (modal) modal.classList.remove('active');
+    closeModal('add-extension-modal');
 }
 
 export function editExtension(number: string): void {
     const ext = ((window.currentExtensions ?? []) as Extension[]).find((e) => e.number === number);
     if (!ext) return;
 
-    const el = (id: string): HTMLElement | null => document.getElementById(id);
     if (el('edit-ext-number')) (el('edit-ext-number') as HTMLInputElement).value = ext.number;
     if (el('edit-ext-name')) (el('edit-ext-name') as HTMLInputElement).value = ext.name;
     if (el('edit-ext-email')) (el('edit-ext-email') as HTMLInputElement).value = ext.email ?? '';
@@ -102,13 +101,11 @@ export function editExtension(number: string): void {
     if (el('edit-ext-is-admin')) (el('edit-ext-is-admin') as HTMLInputElement).checked = Boolean(ext.is_admin);
     if (el('edit-ext-password')) (el('edit-ext-password') as HTMLInputElement).value = '';
 
-    const modal = document.getElementById('edit-extension-modal') as HTMLElement | null;
-    if (modal) modal.classList.add('active');
+    openModal('edit-extension-modal');
 }
 
 export function closeEditExtensionModal(): void {
-    const modal = document.getElementById('edit-extension-modal') as HTMLElement | null;
-    if (modal) modal.classList.remove('active');
+    closeModal('edit-extension-modal');
 }
 
 export async function deleteExtension(number: string): Promise<void> {
@@ -183,7 +180,6 @@ export function initExtensionForms(): void {
     if (addForm) {
         addForm.addEventListener('submit', async (e: Event) => {
             e.preventDefault();
-            const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
             const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
 
             const data = {
@@ -222,7 +218,6 @@ export function initExtensionForms(): void {
     if (editForm) {
         editForm.addEventListener('submit', async (e: Event) => {
             e.preventDefault();
-            const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
             const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
 
             const number = val('edit-ext-number');

@@ -110,8 +110,17 @@ export function showTab(tabName: string): void {
         const tabButton = document.querySelector(`[data-tab="${tabName}"]`) as HTMLElement | null;
         if (tabButton) {
             tabButton.classList.add('active');
+            tabButton.setAttribute('aria-selected', 'true');
         } else {
             debugWarn(`Tab button for '${tabName}' not found`);
+        }
+    }
+
+    // Update aria-selected on all tab buttons
+    for (const button of document.querySelectorAll('.tab-button')) {
+        const btn = button as HTMLElement;
+        if (btn.getAttribute('data-tab') !== tabName) {
+            btn.setAttribute('aria-selected', 'false');
         }
     }
 
@@ -184,9 +193,36 @@ export function showTab(tabName: string): void {
 export function initializeTabs(): void {
     const tabButtons = document.querySelectorAll('.tab-button');
 
+    // Add ARIA roles for tab accessibility
+    for (const section of document.querySelectorAll('.sidebar-section')) {
+        const buttons = section.querySelectorAll('.tab-button');
+        if (buttons.length > 0) {
+            // The container of tab buttons acts as a tablist
+            const firstButton = buttons[0] as HTMLElement | undefined;
+            const buttonContainer = firstButton?.parentElement;
+            if (buttonContainer && buttonContainer !== section) {
+                buttonContainer.setAttribute('role', 'tablist');
+            } else {
+                section.setAttribute('role', 'tablist');
+            }
+        }
+    }
+
     for (const button of tabButtons) {
+        const btn = button as HTMLElement;
+        btn.setAttribute('role', 'tab');
+        btn.setAttribute('aria-selected', btn.classList.contains('active') ? 'true' : 'false');
+
+        // Link tab button to its panel
+        const tabName = btn.getAttribute('data-tab');
+        if (tabName) {
+            const panel = document.getElementById(tabName);
+            if (panel) {
+                panel.setAttribute('role', 'tabpanel');
+            }
+        }
+
         button.addEventListener('click', () => {
-            const tabName = (button as HTMLElement).getAttribute('data-tab');
             if (tabName) showTab(tabName);
         });
     }
@@ -223,13 +259,6 @@ export function initializeTabs(): void {
         });
     }
 
-    // Close modals on Escape key
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-        if (e.key === 'Escape') {
-            const activeModal = document.querySelector('.modal.active') as HTMLElement | null;
-            if (activeModal) {
-                activeModal.classList.remove('active');
-            }
-        }
-    });
+    // Note: Escape key handling for modals is now managed by modal.ts
+    // which also handles focus restoration and cleanup.
 }

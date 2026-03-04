@@ -5,6 +5,7 @@
 
 import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { el, val } from '../utils/dom.ts';
 
 declare const Chart: any;
 
@@ -62,7 +63,7 @@ export async function loadAnalytics(): Promise<void> {
 }
 
 function updateAnalyticsOverview(data: AnalyticsOverview): void {
-    const el = (id: string): HTMLElement | null => document.getElementById(id);
+    // el imported from @utils/dom
     const totalCalls = el('analytics-total-calls');
     const avgDuration = el('analytics-avg-duration');
     const answerRate = el('analytics-answer-rate');
@@ -176,7 +177,7 @@ export async function clearQoSAlerts(): Promise<void> {
 export async function saveQoSThresholds(event?: Event): Promise<void> {
     if (event) event.preventDefault();
     try {
-        const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+        // val imported from @utils/dom
 
         const data = {
             mos_threshold: parseFloat(val('qos-mos-threshold')) || 3.5,

@@ -1363,7 +1363,7 @@
                 <div class="modal-content" style="max-width: 600px;">
                     <div class="modal-header">
                         <h3>🎵 Voicemail Player</h3>
-                        <span class="close" onclick="closeVoicemailPlayer()">&times;</span>
+                        <button type="button" class="close" aria-label="Close">&times;</button>
                     </div>
                     <div style="padding: 20px;">
                         <div id="vm-player-details" class="info-box" style="margin-bottom: 15px;">
@@ -4528,7 +4528,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add New Extension</h3>
-                <span class="close" onclick="closeAddExtensionModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-extension-form">
                 <div class="form-group">
@@ -4579,7 +4579,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Extension</h3>
-                <span class="close" onclick="closeEditExtensionModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="edit-extension-form">
                 <input type="hidden" id="edit-ext-number">
@@ -4626,7 +4626,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
                 <h3 id="template-modal-title">View Template</h3>
-                <span class="close" onclick="closeTemplateViewModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <div style="padding: 20px;">
                 <div id="template-placeholders" class="info-box" style="margin-bottom: 15px;">
@@ -4649,7 +4649,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Add Menu Option</h3>
-                <span class="close" onclick="closeAddMenuOptionModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-menu-option-form">
                 <div class="form-group">
@@ -4698,7 +4698,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Edit Menu Option</h3>
-                <span class="close" onclick="closeEditMenuOptionModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="edit-menu-option-form">
                 <input type="hidden" id="edit-menu-digit">
@@ -4742,7 +4742,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📁 Create Submenu</h3>
-                <span class="close" onclick="closeCreateSubmenuModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="create-submenu-form">
                 <div class="form-group">
@@ -4780,7 +4780,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>➕ Add Emergency Contact</h3>
-                <span class="close" onclick="closeAddEmergencyContactModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-emergency-contact-form" onsubmit="addEmergencyContact(event)">
                 <div class="form-group">
@@ -4845,7 +4845,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🚨 Trigger Emergency Notification</h3>
-                <span class="close" onclick="closeTriggerEmergencyModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="trigger-emergency-form" onsubmit="triggerEmergency(event)">
                 <div class="info-box" style="background: #fee2e2; border-color: #ef4444; margin-bottom: 15px;">
@@ -4882,7 +4882,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>➕ Add SIP Trunk</h3>
-                <span class="close" onclick="closeAddTrunkModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-trunk-form" onsubmit="addSIPTrunk(event)">
                 <div class="form-group">
@@ -4955,7 +4955,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🔄 Configure Find Me/Follow Me</h3>
-                <span class="close" onclick="closeAddFMFMModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-fmfm-form" onsubmit="saveFMFMConfig(event)">
                 <div class="form-group">
@@ -5002,7 +5002,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>⏰ Add Time-Based Routing Rule</h3>
-                <span class="close" onclick="closeAddTimeRuleModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-time-rule-form" onsubmit="saveTimeRoutingRule(event)">
                 <div class="form-group">
@@ -5074,7 +5074,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🔔 Add Webhook</h3>
-                <span class="close" onclick="closeAddWebhookModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-webhook-form" onsubmit="addWebhook(event)">
                 <div class="form-group">
@@ -5123,7 +5123,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>📁 Add Retention Policy</h3>
-                <span class="close" onclick="closeAddRetentionPolicyModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-retention-policy-form" onsubmit="addRetentionPolicy(event)">
                 <div class="form-group">
@@ -5157,7 +5157,7 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         <div class="modal-content">
             <div class="modal-header">
                 <h3>🚫 Block Number Pattern</h3>
-                <span class="close" onclick="closeAddBlockedPatternModal()">&times;</span>
+                <button type="button" class="close" aria-label="Close">&times;</button>
             </div>
             <form id="add-blocked-pattern-form" onsubmit="addBlockedPattern(event)">
                 <div class="form-group">

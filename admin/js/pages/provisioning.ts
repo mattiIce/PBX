@@ -6,6 +6,7 @@
 import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
 import { escapeHtml } from '../utils/html.ts';
+import { el, val } from '../utils/dom.ts';
 
 interface ProvisioningDevice {
     mac_address?: string;
@@ -194,7 +195,7 @@ export async function loadProvisioningSettings(): Promise<void> {
         if (!response.ok) return;
         const data: ProvisioningSettingsResponse = await response.json();
 
-        const el = (id: string): HTMLElement | null => document.getElementById(id);
+        // el imported from @utils/dom
         if (el('provisioning-enabled')) (el('provisioning-enabled') as HTMLInputElement).checked = data.enabled ?? false;
         if (el('provisioning-url-format')) (el('provisioning-url-format') as HTMLInputElement).value = data.url_format ?? '';
 
@@ -213,7 +214,7 @@ export async function loadPhonebookSettings(): Promise<void> {
         if (!response.ok) return;
         const data: PhonebookSettingsResponse = await response.json();
 
-        const el = (id: string): HTMLElement | null => document.getElementById(id);
+        // el imported from @utils/dom
         if (el('ldap-phonebook-enabled')) (el('ldap-phonebook-enabled') as HTMLInputElement).checked = data.ldap_enabled ?? false;
         if (el('remote-phonebook-enabled')) (el('remote-phonebook-enabled') as HTMLInputElement).checked = data.remote_enabled ?? false;
 
@@ -318,7 +319,7 @@ export function toggleProvisioningEnabled(): void {
 
 export async function saveProvisioningSettings(): Promise<void> {
     try {
-        const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+        // val imported from @utils/dom
         const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
 
         const data = {
@@ -364,7 +365,7 @@ export function toggleRemotePhonebookSettings(): void {
 
 export async function savePhonebookSettings(): Promise<void> {
     try {
-        const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+        // val imported from @utils/dom
         const chk = (id: string): boolean => (document.getElementById(id) as HTMLInputElement)?.checked ?? false;
 
         const data = {
@@ -435,7 +436,7 @@ function initProvisioningForms(): void {
     if (addForm) {
         addForm.addEventListener('submit', async (e: Event) => {
             e.preventDefault();
-            const val = (id: string): string => (document.getElementById(id) as HTMLInputElement)?.value ?? '';
+            // val imported from @utils/dom
 
             const data = {
                 mac_address: val('device-mac'),

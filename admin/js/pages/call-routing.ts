@@ -6,6 +6,7 @@
 
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { openModal, closeModal } from '../ui/modal.ts';
 import { escapeHtml } from '../utils/html.ts';
 
 // ---------------------------------------------------------------------------
@@ -211,8 +212,7 @@ export async function loadFMFMExtensions(): Promise<void> {
 }
 
 export function showAddFMFMModal(): void {
-    const modal = document.getElementById('add-fmfm-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'block';
+    openModal('add-fmfm-modal');
 
     const extInput = document.getElementById('fmfm-extension') as HTMLInputElement | null;
     if (extInput) {
@@ -236,8 +236,7 @@ export function showAddFMFMModal(): void {
 }
 
 export function closeAddFMFMModal(): void {
-    const modal = document.getElementById('add-fmfm-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'none';
+    closeModal('add-fmfm-modal');
     const form = document.getElementById('add-fmfm-form') as HTMLFormElement | null;
     if (form) form.reset();
 }
@@ -476,13 +475,11 @@ export async function loadTimeRoutingRules(): Promise<void> {
 }
 
 export function showAddTimeRuleModal(): void {
-    const modal = document.getElementById('add-time-rule-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'block';
+    openModal('add-time-rule-modal');
 }
 
 export function closeAddTimeRuleModal(): void {
-    const modal = document.getElementById('add-time-rule-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'none';
+    closeModal('add-time-rule-modal');
     const form = document.getElementById('add-time-rule-form') as HTMLFormElement | null;
     if (form) form.reset();
 }
@@ -630,13 +627,11 @@ export async function loadWebhooks(): Promise<void> {
 }
 
 export function showAddWebhookModal(): void {
-    const modal = document.getElementById('add-webhook-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'block';
+    openModal('add-webhook-modal');
 }
 
 export function closeAddWebhookModal(): void {
-    const modal = document.getElementById('add-webhook-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'none';
+    closeModal('add-webhook-modal');
     const form = document.getElementById('add-webhook-form') as HTMLFormElement | null;
     if (form) form.reset();
 }
@@ -884,13 +879,11 @@ export async function loadRetentionPolicies(): Promise<void> {
 }
 
 export function showAddRetentionPolicyModal(): void {
-    const modal = document.getElementById('add-retention-policy-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'block';
+    openModal('add-retention-policy-modal');
 }
 
 export function closeAddRetentionPolicyModal(): void {
-    const modal = document.getElementById('add-retention-policy-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'none';
+    closeModal('add-retention-policy-modal');
     const form = document.getElementById('add-retention-policy-form') as HTMLFormElement | null;
     if (form) form.reset();
 }

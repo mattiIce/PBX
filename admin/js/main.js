@@ -3,6 +3,7 @@ import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl, DEFAULT_FETCH_TIMEOUT 
 import { store } from './state/store.ts';
 import { showNotification, displayError, setSuppressErrorNotifications } from './ui/notifications.ts';
 import { showTab, initializeTabs } from './ui/tabs.ts';
+import { openModal, closeModal, initializeModalCloseButtons } from './ui/modal.ts';
 import {
     escapeHtml,
     copyToClipboard,
@@ -43,6 +44,8 @@ window.getScheduleDescription = getScheduleDescription;
 window.downloadLicense = downloadLicense;
 window.executeBatched = executeBatched;
 window.refreshAllData = refreshAllData;
+window.openModal = openModal;
+window.closeModal = closeModal;
 
 // Page module imports — each module self-registers window.* exports
 import './pages/dashboard.ts';
@@ -213,6 +216,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Then initialize other components
     debugLog('Initializing tabs, forms, and logout');
     initializeTabs();
+    initializeModalCloseButtons();
     initializeForms();
     initializeLogout();
     initializeRefreshButton();
@@ -236,6 +240,8 @@ export {
     setSuppressErrorNotifications,
     showTab,
     initializeTabs,
+    openModal,
+    closeModal,
     escapeHtml,
     copyToClipboard,
     formatDate,

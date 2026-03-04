@@ -5,6 +5,7 @@
 
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { openModal, closeModal } from '../ui/modal.ts';
 import { escapeHtml } from '../utils/html.ts';
 
 // ---------------------------------------------------------------------------
@@ -268,13 +269,11 @@ export async function loadTrunkHealth(): Promise<void> {
 }
 
 export function showAddTrunkModal(): void {
-    const modal = document.getElementById('add-trunk-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'block';
+    openModal('add-trunk-modal');
 }
 
 export function closeAddTrunkModal(): void {
-    const modal = document.getElementById('add-trunk-modal') as HTMLElement | null;
-    if (modal) modal.style.display = 'none';
+    closeModal('add-trunk-modal');
     const form = document.getElementById('add-trunk-form') as HTMLFormElement | null;
     if (form) form.reset();
 }

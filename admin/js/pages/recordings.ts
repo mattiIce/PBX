@@ -7,7 +7,9 @@
 
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { openModal, closeModal } from '../ui/modal.ts';
 import { escapeHtml } from '../utils/html.ts';
+import { el } from '../utils/dom.ts';
 
 // --- Interfaces ---
 
@@ -167,7 +169,7 @@ export async function loadFraudAlerts(): Promise<void> {
 
         // Update stats
         if (statsData) {
-            const el = (id: string): HTMLElement | null => document.getElementById(id);
+            // el imported from @utils/dom
             if (el('fraud-total-alerts')) {
                 (el('fraud-total-alerts') as HTMLElement).textContent =
                     String(statsData.total_alerts ?? 0);
@@ -253,17 +255,11 @@ export async function loadFraudAlerts(): Promise<void> {
 }
 
 export function showAddBlockedPatternModal(): void {
-    const modal = document.getElementById('add-blocked-pattern-modal') as HTMLElement | null;
-    if (modal) {
-        modal.style.display = 'block';
-    }
+    openModal('add-blocked-pattern-modal');
 }
 
 export function closeAddBlockedPatternModal(): void {
-    const modal = document.getElementById('add-blocked-pattern-modal') as HTMLElement | null;
-    if (modal) {
-        modal.style.display = 'none';
-    }
+    closeModal('add-blocked-pattern-modal');
     const form = document.getElementById('add-blocked-pattern-form') as HTMLFormElement | null;
     if (form) {
         form.reset();
@@ -358,7 +354,7 @@ export async function loadCallbackQueue(): Promise<void> {
 
         // Update statistics
         if (statsData) {
-            const el = (id: string): HTMLElement | null => document.getElementById(id);
+            // el imported from @utils/dom
             if (el('callback-total')) {
                 (el('callback-total') as HTMLElement).textContent =
                     String(statsData.total_callbacks ?? 0);
@@ -643,7 +639,7 @@ export async function loadMobilePushDevices(): Promise<void> {
 
         // Update statistics
         if (statsData) {
-            const el = (id: string): HTMLElement | null => document.getElementById(id);
+            // el imported from @utils/dom
             if (el('push-total-devices')) {
                 (el('push-total-devices') as HTMLElement).textContent =
                     String(statsData.total_devices ?? 0);
@@ -912,7 +908,7 @@ export async function loadRecordingAnnouncementsStats(): Promise<void> {
 
         // Update statistics
         if (statsData) {
-            const el = (id: string): HTMLElement | null => document.getElementById(id);
+            // el imported from @utils/dom
             if (el('announcements-enabled')) {
                 (el('announcements-enabled') as HTMLElement).textContent =
                     statsData.enabled ? 'Enabled' : 'Disabled';
@@ -941,7 +937,7 @@ export async function loadRecordingAnnouncementsStats(): Promise<void> {
 
         // Update configuration
         if (configData) {
-            const el = (id: string): HTMLElement | null => document.getElementById(id);
+            // el imported from @utils/dom
             if (el('audio-file-path')) {
                 (el('audio-file-path') as HTMLElement).textContent =
                     configData.audio_path ?? 'N/A';

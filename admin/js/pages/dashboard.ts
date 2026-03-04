@@ -5,6 +5,7 @@
 
 import { fetchWithTimeout, getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 import { showNotification } from '../ui/notifications.ts';
+import { el } from '../utils/dom.ts';
 
 interface DashboardStatus {
     registered_extensions?: number;
@@ -96,7 +97,7 @@ export async function loadADStatus(): Promise<void> {
             connectionStatus.style.color = data.connected ? '#10b981' : '#ef4444';
         }
 
-        const el = (id: string): HTMLElement | null => document.getElementById(id);
+        // el imported from @utils/dom
         if (el('ad-server')) (el('ad-server') as HTMLElement).textContent = data.server ?? 'Not configured';
         if (el('ad-auto-provision')) (el('ad-auto-provision') as HTMLElement).textContent = data.auto_provision ? 'Yes' : 'No';
         if (el('ad-synced-users')) (el('ad-synced-users') as HTMLElement).textContent = String(data.synced_users ?? 0);
