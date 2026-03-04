@@ -109,13 +109,15 @@ def handle_webrtc_offer() -> Response:
         if answer_sdp and answer_sdp != "__legacy__":
             if verbose_logging:
                 logger.info("[VERBOSE] Offer handled, SDP answer generated")
-            return send_json({
-                "success": True,
-                "message": "Offer received",
-                "answer_sdp": answer_sdp,
-            })
+            return send_json(
+                {
+                    "success": True,
+                    "message": "Offer received",
+                    "answer_sdp": answer_sdp,
+                }
+            )
         if answer_sdp == "__legacy__":
-            # aiortc unavailable – legacy mode (no real media)
+            # aiortc unavailable - legacy mode (no real media)
             if verbose_logging:
                 logger.info("[VERBOSE] Offer stored (legacy, no aiortc)")
             return send_json({"success": True, "message": "Offer received"})
@@ -478,10 +480,12 @@ def handle_webrtc_call_status() -> Response:
         else:
             status = call_state
 
-        return send_json({
-            "status": status,
-            "call_id": effective_call_id,
-        })
+        return send_json(
+            {
+                "status": status,
+                "call_id": effective_call_id,
+            }
+        )
 
     except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
