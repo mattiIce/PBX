@@ -1013,6 +1013,166 @@ class WebRTCSignalingServer:
                     pass
             session.pc = None
 
+    def start_service_media_bridge(
+        self,
+        session: WebRTCSession,
+        service_port: int,
+    ) -> int | None:
+        """Start a media bridge between WebRTC and a local service port.
+
+        Unlike ``start_media_bridge`` which routes through the RTP relay to a
+        remote SIP phone, this method connects the WebRTC audio directly to a
+        local service port where ``RTPPlayer``/``RTPDTMFListener`` (or
+        ``RTPRecorder``) are bound.  This is used for virtual-extension calls
+        (auto-attendant, voicemail, paging) where no SIP phone is involved.
+
+        Args:
+            session: The WebRTC session.
+            service_port: Local UDP port used by the service (RTPPlayer /
+                RTPDTMFListener).
+
+        Returns:
+            The bridge socket port, or ``None`` on failure.
+        """
+        if not AIORTC_AVAILABLE or not session.pc:
+            self.logger.error(
+                "Cannot start service media bridge: aiortc not available or no PC"
+            )
+            return None
+
+        try:
+            sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            sock.bind(("127.0.0.1", 0))
+            bridge_port = sock.getsockname()[1]
+            sock.settimeout(0.05)
+
+            session.bridge_socket = sock
+            session.bridge_port = bridge_port
+            session._bridge_running = True
+
+            self.logger.info(
+                f"Service media bridge for session {session.session_id}: "
+                f"127.0.0.1:{bridge_port} <-> service:{service_port}"
+            )
+
+            service_addr = ("127.0.0.1", service_port)
+
+            # --- Thread: service → browser (RTPPlayer audio → WebRTC) ---
+            def _service_to_browser() -> None:
+                seq = 0
+                try:
+                    while session._bridge_running:
+                        try:
+                            data, _addr = sock.recvfrom(2048)
+                        except (TimeoutError, OSError):
+                            continue
+                        if len(data) < 12:
+                            continue
+                        # Parse RTP header (account for CSRC / extensions)
+                        cc = data[0] & 0x0F
+                        has_ext = (data[0] >> 4) & 0x01
+                        header_len = 12 + 4 * cc
+                        if has_ext and len(data) > header_len + 4:
+                            ext_len = struct.unpack(
+                                "!H", data[header_len + 2 : header_len + 4]
+                            )[0]
+                            header_len += 4 + ext_len * 4
+                        if len(data) <= header_len:
+                            continue
+                        payload = data[header_len:]
+                        pcm_8k = _ulaw_to_pcm(payload)
+                        pcm_48k = _upsample_8k_to_48k(pcm_8k)
+                        samples = len(pcm_48k) // 2
+                        frame = AudioFrame(
+                            format="s16", layout="mono", samples=samples
+                        )
+                        for plane in frame.planes:
+                            plane.update(pcm_48k)
+                        frame.pts = seq * samples
+                        frame.sample_rate = 48000
+                        frame.time_base = fractions.Fraction(1, 48000)
+                        if session.bridge_track:
+                            session.bridge_track.push_frame(frame)
+                        seq += 1
+                except Exception:
+                    self.logger.exception(
+                        f"service_to_browser crashed for session {session.session_id}"
+                    )
+
+            threading.Thread(
+                target=_service_to_browser,
+                daemon=True,
+                name=f"WebRTC-S2B-{session.session_id[:8]}",
+            ).start()
+
+            # --- Async: browser → service (WebRTC audio → RTPRecorder/DTMFListener) ---
+            async def _browser_to_service() -> None:
+                rtp_seq = 0
+                rtp_ts = 0
+                ssrc = int.from_bytes(uuid.uuid4().bytes[:4], "big")
+                try:
+                    while session._bridge_running:
+                        if not session.browser_track:
+                            await asyncio.sleep(0.02)
+                            continue
+                        try:
+                            frame = await asyncio.wait_for(
+                                session.browser_track.recv(), timeout=0.1
+                            )
+                        except TimeoutError:
+                            continue
+                        except Exception:
+                            continue
+                        pcm = bytes(frame.planes[0])
+                        sr = frame.sample_rate
+                        if sr == 48000:
+                            pcm = _downsample_48k_to_8k(pcm)
+                        elif sr != 8000 and sr > 8000:
+                            import array
+
+                            src = array.array("h", pcm)
+                            ratio = sr // 8000
+                            if ratio > 1:
+                                out_len = len(src) // ratio
+                                dst = array.array(
+                                    "h",
+                                    [
+                                        sum(src[i * ratio : i * ratio + ratio])
+                                        // ratio
+                                        for i in range(out_len)
+                                    ],
+                                )
+                                pcm = dst.tobytes()
+                        ulaw = _pcm_to_ulaw(pcm)
+                        samples = len(ulaw)
+                        header = struct.pack(
+                            "!BBHII",
+                            0x80,
+                            0 | 0x80 if rtp_seq == 0 else 0,
+                            rtp_seq & 0xFFFF,
+                            rtp_ts & 0xFFFFFFFF,
+                            ssrc,
+                        )
+                        try:
+                            sock.sendto(header + ulaw, service_addr)
+                        except OSError:
+                            pass
+                        rtp_seq += 1
+                        rtp_ts += samples
+                except Exception:
+                    self.logger.exception(
+                        f"browser_to_service crashed for session {session.session_id}"
+                    )
+
+            if self._loop:
+                asyncio.run_coroutine_threadsafe(_browser_to_service(), self._loop)
+
+            return bridge_port
+        except Exception as e:
+            self.logger.error(f"Error starting service media bridge: {e}")
+            return None
+
     def get_ice_servers_config(self) -> dict:
         """
         Get ICE servers configuration for client
