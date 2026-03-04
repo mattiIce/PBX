@@ -54,6 +54,8 @@ def _make_pbx_core(
     dest_ext = MagicMock()
     dest_ext.address = ("10.0.0.2", 5060)
     dest_ext.name = "Test User"
+    dest_ext.registered = extension_registered
+    dest_ext.is_expired.return_value = False
     pbx.extension_registry.get.return_value = dest_ext
 
     # Kari's law
@@ -468,6 +470,13 @@ class TestRouteCallUnregistered:
 
     def test_unregistered_extension_returns_false(self) -> None:
         pbx = _make_pbx_core(extension_registered=False)
+        # Ensure get() returns an unregistered extension mock
+        unregistered_ext = MagicMock()
+        unregistered_ext.registered = False
+        unregistered_ext.address = None
+        unregistered_ext.is_expired.return_value = True
+        pbx.extension_registry.get.return_value = unregistered_ext
+
         router = CallRouter(pbx)
 
         result = router.route_call(
@@ -644,8 +653,9 @@ class TestRouteCallRTPRelay:
             CALLER_ADDR,
         )
 
-        # Still returns True; rtp_ports is None so the SDP forward block is skipped
-        assert result is True
+        # RTP allocation failure now correctly returns False and cleans up
+        assert result is False
+        pbx.call_manager.end_call.assert_called_once_with("call-1")
 
 
 # ===========================================================================
@@ -661,6 +671,8 @@ class TestRouteCallDestination:
         pbx = _make_pbx_core()
         dest_ext = MagicMock()
         dest_ext.address = None
+        dest_ext.registered = True
+        dest_ext.is_expired.return_value = False
         pbx.extension_registry.get.return_value = dest_ext
 
         router = CallRouter(pbx)
@@ -707,6 +719,8 @@ class TestRouteCallWebRTC:
         pbx = _make_pbx_core()
         dest_ext = MagicMock()
         dest_ext.address = ("webrtc", "session-abc")
+        dest_ext.registered = True
+        dest_ext.is_expired.return_value = False
         pbx.extension_registry.get.return_value = dest_ext
         pbx.webrtc_gateway = MagicMock()
         pbx.webrtc_gateway.receive_call.return_value = True
@@ -729,6 +743,8 @@ class TestRouteCallWebRTC:
         pbx = _make_pbx_core()
         dest_ext = MagicMock()
         dest_ext.address = ("webrtc", "session-abc")
+        dest_ext.registered = True
+        dest_ext.is_expired.return_value = False
         pbx.extension_registry.get.return_value = dest_ext
         pbx.webrtc_gateway = MagicMock()
         pbx.webrtc_gateway.receive_call.return_value = False
@@ -750,6 +766,8 @@ class TestRouteCallWebRTC:
         pbx = _make_pbx_core()
         dest_ext = MagicMock()
         dest_ext.address = ("webrtc", "session-abc")
+        dest_ext.registered = True
+        dest_ext.is_expired.return_value = False
         pbx.extension_registry.get.return_value = dest_ext
         pbx.webrtc_gateway = None
 
@@ -790,7 +808,8 @@ class TestRouteCallInviteForwarding:
         )
 
         assert result is True
-        pbx.sip_server._send_message.assert_called_once()
+        # INVITE is sent via InviteClientTransaction (initial send)
+        pbx.sip_server._send_message.assert_called()
 
     def test_caller_id_headers_added(self) -> None:
         pbx = _make_pbx_core()
@@ -803,6 +822,8 @@ class TestRouteCallInviteForwarding:
                 return caller_ext
             dest = MagicMock()
             dest.address = ("10.0.0.2", 5060)
+            dest.registered = True
+            dest.is_expired.return_value = False
             return dest
 
         pbx.extension_registry.get.side_effect = get_ext
@@ -820,7 +841,7 @@ class TestRouteCallInviteForwarding:
 
         # The INVITE built by SIPMessageBuilder should have caller ID headers set
         # We verify via the sip_server._send_message being called (means forwarding happened)
-        pbx.sip_server._send_message.assert_called_once()
+        pbx.sip_server._send_message.assert_called()
 
     def test_caller_id_headers_skipped_when_disabled(self) -> None:
         pbx = _make_pbx_core(
@@ -854,6 +875,8 @@ class TestRouteCallInviteForwarding:
                 return caller_ext
             dest = MagicMock()
             dest.address = ("10.0.0.2", 5060)
+            dest.registered = True
+            dest.is_expired.return_value = False
             return dest
 
         pbx.extension_registry.get.side_effect = get_ext
@@ -880,6 +903,8 @@ class TestRouteCallInviteForwarding:
                 return None
             dest = MagicMock()
             dest.address = ("10.0.0.2", 5060)
+            dest.registered = True
+            dest.is_expired.return_value = False
             return dest
 
         pbx.extension_registry.get.side_effect = get_ext
@@ -1707,7 +1732,7 @@ class TestRouteCallCodecSelection:
     def test_detected_phone_model_logs_codecs(self) -> None:
         pbx = _make_pbx_core()
         pbx._detect_phone_model.return_value = "ZIP37G"
-        pbx._get_codecs_for_phone_model.return_value = ["PCMU", "PCMA"]
+        pbx._get_compatible_codecs.return_value = ["PCMU", "PCMA"]
 
         router = CallRouter(pbx)
         msg = _make_invite_message(body="")
@@ -1721,7 +1746,7 @@ class TestRouteCallCodecSelection:
         )
 
         pbx._detect_phone_model.assert_called()
-        pbx._get_codecs_for_phone_model.assert_called()
+        pbx._get_compatible_codecs.assert_called()
         pbx.logger.info.assert_called()
 
 

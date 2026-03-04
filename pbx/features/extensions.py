@@ -2,7 +2,7 @@
 Extension management and registry
 """
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 from pbx.utils.encryption import get_encryption
@@ -27,23 +27,33 @@ class Extension:
         self.registered = False
         self.address = None
         self.registration_time = None
+        self.expires_at: datetime | None = None
 
-    def register(self, address: tuple) -> None:
+    def register(self, address: tuple, expires: int = 3600) -> None:
         """
         Register extension
 
         Args:
             address: Network address (host, port)
+            expires: Registration lifetime in seconds (from SIP Expires header)
         """
         self.registered = True
         self.address = address
         self.registration_time = datetime.now(UTC)
+        self.expires_at = datetime.now(UTC) + timedelta(seconds=expires)
+
+    def is_expired(self) -> bool:
+        """Check if registration has expired."""
+        if not self.registered or not self.expires_at:
+            return not self.registered
+        return datetime.now(UTC) > self.expires_at
 
     def unregister(self) -> None:
         """Unregister extension"""
         self.registered = False
         self.address = None
         self.registration_time = None
+        self.expires_at = None
 
     def __str__(self) -> str:
         status = "registered" if self.registered else "unregistered"
@@ -185,20 +195,21 @@ class ExtensionRegistry:
         """
         return self.get(number)
 
-    def register(self, number: str, address: tuple) -> bool:
+    def register(self, number: str, address: tuple, expires: int = 3600) -> bool:
         """
         Register extension
 
         Args:
             number: Extension number
             address: Network address
+            expires: Registration lifetime in seconds
 
         Returns:
             True if registered successfully
         """
         extension = self.get(number)
         if extension:
-            extension.register(address)
+            extension.register(address, expires=expires)
             # Logging is handled by the caller (pbx.py) to avoid duplicate logs
             return True
         return False
