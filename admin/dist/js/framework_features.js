@@ -324,7 +324,7 @@ function loadClickToDialTab() {
             const errorContainer = document.getElementById('click-to-dial-configs-list');
             if (errorContainer) {
                 errorContainer.innerHTML =
-                    `<div class="error-box">Error loading configurations: ${err.message}</div>`;
+                    `<div class="error-box">Error loading configurations: ${escapeHtml(err.message)}</div>`;
             }
         }
     }, 100);
@@ -360,12 +360,12 @@ function displayClickToDialConfigs(configs) {
             <tbody>
                 ${configs.map(config => `
                     <tr>
-                        <td>${config.extension}</td>
+                        <td>${escapeHtml(String(config.extension))}</td>
                         <td>${config.enabled ? '✅ Yes' : '❌ No'}</td>
                         <td>${config.auto_answer ? '✅ Yes' : '❌ No'}</td>
                         <td>${config.browser_notification ? '✅ Yes' : '❌ No'}</td>
                         <td>
-                            <button onclick="viewClickToDialHistory('${config.extension}')" class="btn-secondary btn-sm">View History</button>
+                            <button onclick="viewClickToDialHistory('${escapeHtml(String(config.extension))}')" class="btn-secondary btn-sm">View History</button>
                         </td>
                     </tr>
                 `).join('')}
@@ -384,12 +384,12 @@ const viewClickToDialHistory = async (extension) => {
         const container = document.getElementById('click-to-dial-history');
 
         if (history.length === 0) {
-            container.innerHTML = `<p>No call history for extension ${extension}</p>`;
+            container.innerHTML = `<p>No call history for extension ${escapeHtml(String(extension))}</p>`;
             return;
         }
 
         const html = `
-            <h4>Call History for Extension ${extension}</h4>
+            <h4>Call History for Extension ${escapeHtml(String(extension))}</h4>
             <table class="data-table">
                 <thead>
                     <tr>
@@ -403,9 +403,9 @@ const viewClickToDialHistory = async (extension) => {
                 <tbody>
                     ${history.map(call => `
                         <tr>
-                            <td>${call.destination}</td>
-                            <td>${call.source}</td>
-                            <td><span class="status-badge status-${call.status}">${call.status}</span></td>
+                            <td>${escapeHtml(String(call.destination))}</td>
+                            <td>${escapeHtml(String(call.source))}</td>
+                            <td><span class="status-badge status-${escapeHtml(String(call.status))}">${escapeHtml(String(call.status))}</span></td>
                             <td>${new Date(call.initiated_at).toLocaleString()}</td>
                             <td>${call.connected_at ? new Date(call.connected_at).toLocaleString() : '-'}</td>
                         </tr>
@@ -417,7 +417,7 @@ const viewClickToDialHistory = async (extension) => {
         container.innerHTML = html;
     } catch (err) {
         document.getElementById('click-to-dial-history').innerHTML =
-            `<div class="error-box">Error loading history: ${err.message}</div>`;
+            `<div class="error-box">Error loading history: ${escapeHtml(err.message)}</div>`;
     }
 };
 
@@ -496,7 +496,7 @@ const loadVideoRooms = async () => {
         displayVideoRooms(data.rooms ?? []);
     } catch (err) {
         document.getElementById('video-rooms-list').innerHTML =
-            `<div class="error-box">Error loading rooms: ${err.message}</div>`;
+            `<div class="error-box">Error loading rooms: ${escapeHtml(err.message)}</div>`;
     }
 };
 
@@ -524,8 +524,8 @@ function displayVideoRooms(rooms) {
             <tbody>
                 ${rooms.map(room => `
                     <tr>
-                        <td>${room.room_name}</td>
-                        <td>${room.owner_extension || '-'}</td>
+                        <td>${escapeHtml(room.room_name)}</td>
+                        <td>${escapeHtml(room.owner_extension || '-')}</td>
                         <td>${room.max_participants}</td>
                         <td>${room.enable_4k ? '✅' : '❌'}</td>
                         <td>${room.enable_screen_share ? '✅' : '❌'}</td>
@@ -600,8 +600,7 @@ function loadConversationalAITab() {
 
         <div class="section-card">
             <h3>Configuration</h3>
-            <p><em>Note: Configuration form is for planning purposes. Backend API integration coming soon.</em></p>
-            <form id="conversational-ai-config-form" style="max-width: 600px;">
+            <form id="conversational-ai-config-form" style="max-width: 600px;" onsubmit="submitConversationalAIConfig(event)">
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="ai-enabled" name="enabled">
@@ -616,6 +615,11 @@ function loadConversationalAITab() {
                         <option value="lex">Amazon Lex</option>
                         <option value="azure">Microsoft Azure Bot Service</option>
                     </select>
+                </div>
+                <div class="form-group">
+                    <label>API Key:</label>
+                    <input type="password" id="ai-api-key" name="api_key" required class="form-control" placeholder="Enter your API key">
+                    <small>API key for the selected provider (stored securely)</small>
                 </div>
                 <div class="form-group">
                     <label>Model:</label>
@@ -704,6 +708,45 @@ const loadConversationalAIStats = async () => {
     } catch (err) {
         // API endpoint not yet implemented or feature not enabled - show friendly message
         statsDiv.innerHTML = `<p style="color: #666;"><em>Statistics unavailable. The API endpoint (/api/framework/conversational-ai/stats) will be available when the feature is enabled with an AI provider configured.</em></p>`;
+    }
+};
+
+const submitConversationalAIConfig = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const provider = formData.get('provider');
+    const apiKey = formData.get('api_key');
+
+    if (!apiKey) {
+        alert('API key is required');
+        return;
+    }
+
+    const data = {
+        provider: provider,
+        api_key: apiKey,
+        options: {
+            model: formData.get('model') || 'gpt-4',
+            max_tokens: parseInt(formData.get('max_tokens')) || 150,
+            temperature: parseFloat(formData.get('temperature')) || 0.7
+        }
+    };
+
+    try {
+        const r = await fetch('/api/framework/conversational-ai/config', {
+            method: 'POST',
+            headers: pbxAuthHeaders(),
+            body: JSON.stringify(data)
+        });
+        const result = await r.json();
+        if (result.success) {
+            alert(`Conversational AI configured with ${result.provider} provider.`);
+        } else {
+            alert(`Error saving config: ${result.error ?? 'Unknown error'}`);
+        }
+    } catch (err) {
+        alert('Error saving configuration: ' + err.message);
     }
 };
 
@@ -827,14 +870,14 @@ const loadPredictiveDialingCampaigns = async () => {
                 <tbody>
                     ${campaigns.map(c => `
                         <tr>
-                            <td><strong>${c.name}</strong></td>
-                            <td>${c.mode}</td>
-                            <td><span class="status-badge status-${c.status}">${c.status}</span></td>
+                            <td><strong>${escapeHtml(c.name)}</strong></td>
+                            <td>${escapeHtml(c.mode)}</td>
+                            <td><span class="status-badge status-${escapeHtml(c.status)}">${escapeHtml(c.status)}</span></td>
                             <td>${c.total_contacts || 0}</td>
                             <td>${c.dialed || 0}</td>
                             <td>${c.connected || 0}</td>
                             <td>
-                                <button onclick="toggleCampaign('${c.id}')" class="btn-secondary btn-sm">
+                                <button onclick="toggleCampaign('${escapeHtml(String(c.id))}')" class="btn-secondary btn-sm">
                                     ${c.status === 'active' ? 'Pause' : 'Start'}
                                 </button>
                             </td>
@@ -865,8 +908,79 @@ const loadPredictiveDialingStats = async () => {
     }
 };
 
+function hideCreateCampaignDialog() {
+    const modal = document.getElementById('create-campaign-dialog');
+    if (modal) modal.remove();
+}
+
 function showCreateCampaignDialog() {
-    alert('Campaign creation UI coming soon.\n\nCampaigns support:\n- Multiple dialing modes\n- Contact list import\n- Agent assignment\n- Schedule configuration\n- Compliance settings');
+    hideCreateCampaignDialog();
+    const modal = `
+        <div id="create-campaign-dialog" class="modal" style="display: flex; align-items: center;
+             justify-content: center;">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3>Create Campaign</h3>
+                    <span class="close" onclick="hideCreateCampaignDialog()">&times;</span>
+                </div>
+                <form id="create-campaign-form">
+                    <div class="form-group">
+                        <label>Campaign ID:</label>
+                        <input type="text" name="campaign_id" required class="form-control"
+                            placeholder="campaign-001">
+                    </div>
+                    <div class="form-group">
+                        <label>Campaign Name:</label>
+                        <input type="text" name="name" required class="form-control"
+                            placeholder="Outbound Sales Q1">
+                    </div>
+                    <div class="form-group">
+                        <label>Dialing Mode:</label>
+                        <select name="dialing_mode" class="form-control">
+                            <option value="progressive">Progressive</option>
+                            <option value="preview">Preview</option>
+                            <option value="predictive">Predictive</option>
+                            <option value="power">Power</option>
+                        </select>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Create Campaign</button>
+                        <button type="button" class="btn-secondary"
+                            onclick="hideCreateCampaignDialog()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+
+    document.getElementById('create-campaign-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {
+            campaign_id: formData.get('campaign_id'),
+            name: formData.get('name'),
+            dialing_mode: formData.get('dialing_mode')
+        };
+
+        try {
+            const r = await fetch('/api/framework/predictive-dialing/campaign', {
+                method: 'POST',
+                headers: pbxAuthHeaders(),
+                body: JSON.stringify(data)
+            });
+            const result = await r.json();
+            if (result.success) {
+                alert('Campaign created successfully!');
+                hideCreateCampaignDialog();
+                loadPredictiveDialingCampaigns();
+            } else {
+                alert(`Error creating campaign: ${result.error ?? 'Unknown error'}`);
+            }
+        } catch (err) {
+            alert('Error creating campaign: ' + err.message);
+        }
+    };
 }
 
 const toggleCampaign = async (campaignId) => {
@@ -1017,8 +1131,71 @@ const loadVoiceBiometricStats = async () => {
     }
 };
 
+function hideEnrollUserDialog() {
+    const modal = document.getElementById('enroll-user-dialog');
+    if (modal) modal.remove();
+}
+
 function showEnrollUserDialog() {
-    alert('Voice enrollment UI coming soon.\n\nEnrollment process:\n1. Select extension\n2. Record voice samples (3-5 phrases)\n3. Submit to biometric engine\n4. Activate profile');
+    hideEnrollUserDialog();
+    const modal = `
+        <div id="enroll-user-dialog" class="modal" style="display: flex; align-items: center;
+             justify-content: center;">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3>Enroll User for Voice Biometrics</h3>
+                    <span class="close" onclick="hideEnrollUserDialog()">&times;</span>
+                </div>
+                <form id="enroll-user-form">
+                    <div class="form-group">
+                        <label>User ID / Extension:</label>
+                        <input type="text" name="user_id" required class="form-control"
+                            placeholder="1001">
+                        <small>Enter the user ID or extension number to enroll</small>
+                    </div>
+                    <div class="info-box" style="margin-top: 15px;">
+                        <p><strong>Enrollment Process:</strong></p>
+                        <ol style="margin: 5px 0 0 20px;">
+                            <li>Start enrollment session</li>
+                            <li>Record voice samples (3-5 phrases)</li>
+                            <li>Biometric engine processes voiceprint</li>
+                            <li>Profile activated for authentication</li>
+                        </ol>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Start Enrollment</button>
+                        <button type="button" class="btn-secondary"
+                            onclick="hideEnrollUserDialog()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+
+    document.getElementById('enroll-user-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = { user_id: formData.get('user_id') };
+
+        try {
+            const r = await fetch('/api/framework/voice-biometrics/enroll', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await r.json();
+            if (result.success) {
+                alert(`Enrollment started for ${result.user_id}.\n\nSession ID: ${result.session_id}\nRequired samples: ${result.required_samples}\n\nPlease complete voice sample recording via the phone system.`);
+                hideEnrollUserDialog();
+                loadVoiceBiometricProfiles();
+            } else {
+                alert(`Error starting enrollment: ${result.error ?? 'Unknown error'}`);
+            }
+        } catch (err) {
+            alert('Error starting enrollment: ' + err.message);
+        }
+    };
 }
 
 const deleteVoiceProfile = async (profileId) => {
@@ -1451,15 +1628,171 @@ const loadTagStatistics = async () => {
     }
 };
 
+function hideCreateTagDialog() {
+    const modal = document.getElementById('create-tag-dialog');
+    if (modal) modal.remove();
+}
+
 function showCreateTagDialog() {
-    const tagName = prompt('Enter tag name:');
-    if (tagName) {
-        alert(`Tag creation UI coming soon.\n\nAPI endpoint: POST /api/framework/call-tagging/tags\nBody: {"name": "${tagName}", "color": "#4caf50"}`);
-    }
+    hideCreateTagDialog();
+    const modal = `
+        <div id="create-tag-dialog" class="modal" style="display: flex; align-items: center;
+             justify-content: center;">
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3>Create Tag</h3>
+                    <span class="close" onclick="hideCreateTagDialog()">&times;</span>
+                </div>
+                <form id="create-tag-form">
+                    <div class="form-group">
+                        <label>Tag Name:</label>
+                        <input type="text" name="name" required class="form-control"
+                            placeholder="VIP Customer">
+                    </div>
+                    <div class="form-group">
+                        <label>Description:</label>
+                        <input type="text" name="description" class="form-control"
+                            placeholder="Calls from VIP customers">
+                    </div>
+                    <div class="form-group">
+                        <label>Color:</label>
+                        <input type="color" name="color" class="form-control"
+                            value="#007bff" style="height: 40px; padding: 2px;">
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Create Tag</button>
+                        <button type="button" class="btn-secondary"
+                            onclick="hideCreateTagDialog()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+
+    document.getElementById('create-tag-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {
+            name: formData.get('name'),
+            description: formData.get('description') || '',
+            color: formData.get('color') || '#007bff'
+        };
+
+        try {
+            const r = await fetch('/api/framework/call-tagging/tag', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await r.json();
+            if (result.success) {
+                alert('Tag created successfully!');
+                hideCreateTagDialog();
+                loadCallTags();
+                loadTagStatistics();
+            } else {
+                alert(`Error creating tag: ${result.error ?? 'Unknown error'}`);
+            }
+        } catch (err) {
+            alert('Error creating tag: ' + err.message);
+        }
+    };
+}
+
+function hideCreateRuleDialog() {
+    const modal = document.getElementById('create-rule-dialog');
+    if (modal) modal.remove();
 }
 
 function showCreateRuleDialog() {
-    alert('Rule creation UI coming soon.\n\nRules allow automatic tagging based on:\n- Call duration\n- Caller/callee patterns\n- Keywords in transcription\n- Time of day\n- Call outcome');
+    hideCreateRuleDialog();
+    const modal = `
+        <div id="create-rule-dialog" class="modal" style="display: flex; align-items: center;
+             justify-content: center;">
+            <div class="modal-content" style="max-width: 600px;">
+                <div class="modal-header">
+                    <h3>Create Tagging Rule</h3>
+                    <span class="close" onclick="hideCreateRuleDialog()">&times;</span>
+                </div>
+                <form id="create-rule-form">
+                    <div class="form-group">
+                        <label>Rule Name:</label>
+                        <input type="text" name="name" required class="form-control"
+                            placeholder="Long calls">
+                    </div>
+                    <div class="form-group">
+                        <label>Tag ID to Apply:</label>
+                        <input type="text" name="tag_id" required class="form-control"
+                            placeholder="vip-customer">
+                        <small>The tag that will be applied when this rule matches</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority:</label>
+                        <input type="number" name="priority" class="form-control"
+                            value="100" min="1" max="1000">
+                        <small>Lower number = higher priority</small>
+                    </div>
+                    <div class="form-group">
+                        <label>Condition Type:</label>
+                        <select name="condition_type" class="form-control">
+                            <option value="duration_gt">Call Duration Greater Than</option>
+                            <option value="duration_lt">Call Duration Less Than</option>
+                            <option value="caller_pattern">Caller Pattern (Regex)</option>
+                            <option value="callee_pattern">Callee Pattern (Regex)</option>
+                            <option value="keyword">Keyword in Transcription</option>
+                            <option value="time_range">Time of Day Range</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Condition Value:</label>
+                        <input type="text" name="condition_value" required class="form-control"
+                            placeholder="300 (seconds), ^\\+1555.*, escalate, 09:00-17:00">
+                        <small>Value depends on condition type selected above</small>
+                    </div>
+                    <div class="modal-actions">
+                        <button type="submit" class="btn-primary">Create Rule</button>
+                        <button type="button" class="btn-secondary"
+                            onclick="hideCreateRuleDialog()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', modal);
+
+    document.getElementById('create-rule-form').onsubmit = async function(e) {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {
+            name: formData.get('name'),
+            tag_id: formData.get('tag_id'),
+            priority: parseInt(formData.get('priority')) || 100,
+            conditions: [{
+                type: formData.get('condition_type'),
+                value: formData.get('condition_value')
+            }]
+        };
+
+        try {
+            const r = await fetch('/api/framework/call-tagging/rule', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await r.json();
+            if (result.success) {
+                alert('Rule created successfully!');
+                hideCreateRuleDialog();
+                loadTaggingRules();
+                loadTagStatistics();
+            } else {
+                alert(`Error creating rule: ${result.error ?? 'Unknown error'}`);
+            }
+        } catch (err) {
+            alert('Error creating rule: ' + err.message);
+        }
+    };
 }
 
 const deleteTag = async (tagId) => {
@@ -1509,8 +1842,7 @@ function loadMobileAppsTab() {
 
         <div class="section-card">
             <h3>Configuration</h3>
-            <p><em>Note: Configuration form is for planning purposes. Backend API integration coming soon.</em></p>
-            <form id="mobile-apps-config-form" style="max-width: 600px;">
+            <form id="mobile-apps-config-form" style="max-width: 600px;" onsubmit="submitMobileAppsConfig(event)">
                 <div class="form-group">
                     <label>
                         <input type="checkbox" id="mobile-apps-enabled" name="enabled">
@@ -1540,8 +1872,25 @@ function loadMobileAppsTab() {
                     <input type="password" id="firebase-key" name="firebase_key" class="form-control" placeholder="Your FCM server key">
                     <small>Required for iOS and Android push notifications</small>
                 </div>
+                <h4 style="margin-top: 20px;">Register Test Device</h4>
+                <div class="form-group">
+                    <label>User ID / Extension:</label>
+                    <input type="text" id="mobile-user-id" name="user_id" class="form-control" placeholder="1001">
+                </div>
+                <div class="form-group">
+                    <label>Device Token:</label>
+                    <input type="text" id="mobile-device-token" name="device_token" class="form-control" placeholder="FCM or APNs device token">
+                </div>
+                <div class="form-group">
+                    <label>Platform:</label>
+                    <select id="mobile-platform" name="platform" class="form-control">
+                        <option value="ios">iOS</option>
+                        <option value="android">Android</option>
+                        <option value="web">Web</option>
+                    </select>
+                </div>
                 <div class="form-actions">
-                    <button type="submit" class="btn-primary">Save Configuration</button>
+                    <button type="submit" class="btn-primary">Register Device</button>
                     <button type="button" class="btn-secondary" onclick="loadMobileAppsStats()">View Statistics</button>
                 </div>
             </form>
@@ -1663,6 +2012,42 @@ const loadMobileAppsStats = async () => {
             </div>
             <p style="color: #666;"><em>Framework ready. Devices will appear when mobile apps are deployed and users register.</em></p>
         `;
+    }
+};
+
+const submitMobileAppsConfig = async (e) => {
+    e.preventDefault();
+    const form = e.target;
+    const formData = new FormData(form);
+    const userId = formData.get('user_id');
+    const deviceToken = formData.get('device_token');
+
+    if (!userId || !deviceToken) {
+        alert('User ID and Device Token are required to register a device.');
+        return;
+    }
+
+    const data = {
+        user_id: userId,
+        device_token: deviceToken,
+        platform: formData.get('platform') || 'unknown'
+    };
+
+    try {
+        const r = await fetch('/api/mobile-push/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify(data)
+        });
+        const result = await r.json();
+        if (result.success) {
+            alert('Device registered successfully!');
+            loadMobileAppsStats();
+        } else {
+            alert(`Error registering device: ${result.error ?? 'Unknown error'}`);
+        }
+    } catch (err) {
+        alert('Error registering device: ' + err.message);
     }
 };
 
@@ -2352,17 +2737,22 @@ window.frameworkFeatures = {
     loadVoiceBiometricProfiles,
     loadVoiceBiometricStats,
     showEnrollUserDialog,
-    deleteVoiceProfile
+    hideEnrollUserDialog,
+    deleteVoiceProfile,
+    hideCreateCampaignDialog,
+    hideCreateTagDialog,
+    hideCreateRuleDialog,
+    submitConversationalAIConfig,
+    submitMobileAppsConfig
 };
 
 // Export framework feature load functions to global scope for compatibility with admin.js
 // This is needed because admin.js expects these functions to be globally available for:
 // 1. Tab switching (switchTab function checks typeof loadXXX === 'function')
 // 2. Refresh all functionality (refreshAllData function calls loadXXX functions)
-// We filter to only export 'load*' functions to avoid polluting global namespace with
-// helper functions like dialog creators, delete handlers, etc.
+// We also export dialog show/hide functions and form handlers needed by inline onclick/onsubmit.
 for (const funcName of Object.keys(window.frameworkFeatures)) {
-    if (funcName.startsWith('load') && typeof window.frameworkFeatures[funcName] === 'function') {
+    if (typeof window.frameworkFeatures[funcName] === 'function') {
         window[funcName] = window.frameworkFeatures[funcName];
     }
 }
