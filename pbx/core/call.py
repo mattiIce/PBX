@@ -65,6 +65,9 @@ class Call:
         # Queue for out-of-band DTMF digits (SIP INFO)
         self.dtmf_info_queue: list[str] = []
 
+        # INVITE transaction for retransmission (RFC 3261)
+        self.invite_transaction: Any | None = None
+
     def start(self) -> None:
         """Start the call"""
         self.state = CallState.CALLING
@@ -160,7 +163,7 @@ class CallManager:
             self.call_history.append(call)
             # Prevent unbounded memory growth in long-running systems
             if len(self.call_history) > self.MAX_HISTORY_SIZE:
-                self.call_history = self.call_history[-self.MAX_HISTORY_SIZE:]
+                self.call_history = self.call_history[-self.MAX_HISTORY_SIZE :]
             del self.active_calls[call_id]
             return True
         return False

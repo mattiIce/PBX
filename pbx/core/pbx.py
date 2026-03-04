@@ -411,13 +411,41 @@ class PBXCore:
         # Start Prometheus metrics collector
         self._start_metrics_collector()
 
+        # Start registration expiry sweep
+        self._start_registration_expiry_timer()
+
         self.logger.info("PBX system started successfully")
         return True
+
+    def _start_registration_expiry_timer(self) -> None:
+        """Start periodic timer to clean up expired registrations."""
+        interval = self.config.get("sip.registration_expiry_check_interval", 60)
+        self._reg_expiry_timer = threading.Timer(interval, self._check_expired_registrations)
+        self._reg_expiry_timer.daemon = True
+        self._reg_expiry_timer.start()
+
+    def _check_expired_registrations(self) -> None:
+        """Unregister extensions whose registration has expired."""
+        try:
+            for ext in self.extension_registry.get_registered():
+                if ext.is_expired():
+                    self.logger.info(f"Extension {ext.number} registration expired, unregistering")
+                    self.extension_registry.unregister(ext.number)
+        except Exception as e:
+            self.logger.error(f"Error checking expired registrations: {e}")
+        finally:
+            # Reschedule if still running
+            if self.running:
+                self._start_registration_expiry_timer()
 
     def stop(self) -> None:
         """Stop PBX system"""
         self.logger.info("Stopping PBX system...")
         self.running = False
+
+        # Stop registration expiry timer
+        if hasattr(self, "_reg_expiry_timer") and self._reg_expiry_timer:
+            self._reg_expiry_timer.cancel()
 
         # Stop Prometheus metrics collector
         self._stop_metrics_collector()
@@ -494,6 +522,7 @@ class PBXCore:
         addr: tuple[str, int],
         user_agent: str | None = None,
         contact: str | None = None,
+        expires: int = 3600,
     ) -> bool:
         """
         Register extension and store phone information
@@ -503,6 +532,7 @@ class PBXCore:
             addr: Network address (host, port)
             user_agent: User-Agent header from SIP REGISTER
             contact: Contact header from SIP REGISTER
+            expires: Registration lifetime in seconds (from SIP Expires header)
 
         Returns:
             True if registration successful
@@ -549,7 +579,7 @@ class PBXCore:
                 # Extract the phone's listening address from Contact header
                 # This is more reliable than UDP source address
                 registered_addr = self._extract_contact_address(contact, addr)
-                self.extension_registry.register(extension_number, registered_addr)
+                self.extension_registry.register(extension_number, registered_addr, expires=expires)
                 self.logger.info(f"Extension {extension_number} registered from {registered_addr}")
 
                 # Store phone registration in database
@@ -778,9 +808,7 @@ class PBXCore:
         # Ensure the intersection has at least one audio codec (not just DTMF)
         has_audio_codec = any(c != dtmf_pt_str for c in compatible)
         if compatible and has_audio_codec:
-            self.logger.debug(
-                f"Compatible codecs for {phone_model or 'unknown'}: {compatible}"
-            )
+            self.logger.debug(f"Compatible codecs for {phone_model or 'unknown'}: {compatible}")
             return compatible
 
         # If intersection is empty, fall back to the answered codecs to avoid
@@ -937,9 +965,7 @@ class PBXCore:
                     self.webrtc_signaling.start_media_bridge(
                         session, call.rtp_ports[0], callee_endpoint
                     )
-                    self.logger.info(
-                        f"WebRTC media bridge started for call {call_id}"
-                    )
+                    self.logger.info(f"WebRTC media bridge started for call {call_id}")
 
             # Mark call as connected
             call.connect()
@@ -979,9 +1005,7 @@ class PBXCore:
             if callee_sdp:
                 callee_answered_codecs = callee_sdp.get("formats", None)
                 if callee_answered_codecs:
-                    self.logger.info(
-                        f"Callee answered with codecs: {callee_answered_codecs}"
-                    )
+                    self.logger.info(f"Callee answered with codecs: {callee_answered_codecs}")
 
             # Get caller's phone model for any model-specific filtering
             caller_user_agent = self._get_phone_user_agent(call.from_extension)
@@ -997,9 +1021,7 @@ class PBXCore:
             # intersection of the callee's answered codecs and the phone model's
             # supported codecs.  This ensures the caller gets a codec it supports
             # that the callee has already committed to.
-            codecs_for_caller = self._get_compatible_codecs(
-                caller_phone_model, answered_codecs
-            )
+            codecs_for_caller = self._get_compatible_codecs(caller_phone_model, answered_codecs)
 
             if caller_phone_model:
                 self.logger.info(

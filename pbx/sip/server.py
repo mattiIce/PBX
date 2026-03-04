@@ -251,12 +251,14 @@ class SIPServer:
         if authorization:
             # Verify digest authentication credentials
             if self._verify_digest_auth(authorization, from_header, "REGISTER"):
-                success = self.pbx_core.register_extension(from_header, addr, user_agent, contact)
+                expires_value = int(message.get_header("Expires") or "3600")
+                success = self.pbx_core.register_extension(
+                    from_header, addr, user_agent, contact, expires=expires_value
+                )
                 if success:
                     response = SIPMessageBuilder.build_response(200, "OK", message)
                     # Set Expires header from request or default
-                    expires = message.get_header("Expires") or "3600"
-                    response.set_header("Expires", expires)
+                    response.set_header("Expires", str(expires_value))
                     if contact:
                         response.set_header("Contact", contact)
                     self._send_message(response.build(), addr)
@@ -275,7 +277,14 @@ class SIPServer:
                 self._send_auth_challenge(message, addr)
             else:
                 # Auth not required - register directly
-                success = self.pbx_core.register_extension(from_header, addr, user_agent, contact)
+                expires_value = int(message.get_header("Expires") or "3600")
+                success = self.pbx_core.register_extension(
+                    from_header,
+                    addr,
+                    user_agent,
+                    contact,
+                    expires=expires_value,
+                )
                 if success:
                     self._send_response(200, "OK", message, addr)
                 else:
@@ -903,7 +912,9 @@ class SIPServer:
                         )
                         invite_msg.body = transfer_sdp
                         invite_msg.set_header("Content-type", "application/sdp")
-                        invite_msg.set_header("Content-Length", str(len(transfer_sdp.encode("utf-8"))))
+                        invite_msg.set_header(
+                            "Content-Length", str(len(transfer_sdp.encode("utf-8")))
+                        )
 
                     # Send INVITE to transfer destination
                     self._send_message(invite_msg.build(), dest_addr)
@@ -1419,6 +1430,13 @@ class SIPServer:
         if self.pbx_core and message.status_code:
             call_id = message.get_header("Call-ID")
 
+            # Cancel INVITE retransmission on any response from callee
+            if call_id:
+                call = self.pbx_core.call_manager.get_call(call_id)
+                if call and hasattr(call, "invite_transaction") and call.invite_transaction:
+                    call.invite_transaction.on_response_received()
+                    call.invite_transaction = None
+
             if message.status_code == 180:
                 # Ringing - forward to caller
                 self.logger.info(f"Callee ringing for call {call_id}")
@@ -1450,9 +1468,7 @@ class SIPServer:
                 # so their phone can stop waiting and play an appropriate tone.
                 # Common cases: 486 Busy Here, 488 Not Acceptable Here,
                 # 480 Temporarily Unavailable, 603 Decline.
-                self.logger.warning(
-                    f"Callee error {message.status_code} for call {call_id}"
-                )
+                self.logger.warning(f"Callee error {message.status_code} for call {call_id}")
                 if call_id:
                     call = self.pbx_core.call_manager.get_call(call_id)
                     if call:

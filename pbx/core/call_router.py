@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from pbx.features.webhooks import WebhookEvent
+from pbx.sip.transaction import InviteClientTransaction
 
 
 class CallRouter:
@@ -97,9 +98,14 @@ class CallRouter:
         if pbx.paging_system and pbx.paging_system.is_paging_extension(to_ext):
             return pbx._paging_handler.handle_paging(from_ext, to_ext, call_id, message, from_addr)
 
-        # Check if destination extension is registered
-        if not pbx.extension_registry.is_registered(to_ext):
+        # Check if destination extension is registered and not expired
+        dest_ext = pbx.extension_registry.get(to_ext)
+        if not dest_ext or not dest_ext.registered:
             pbx.logger.warning(f"Extension {to_ext} is not registered")
+            return False
+        if dest_ext.is_expired():
+            pbx.logger.warning(f"Extension {to_ext} registration expired, unregistering")
+            pbx.extension_registry.unregister(to_ext)
             return False
 
         # Check dialplan
@@ -141,38 +147,44 @@ class CallRouter:
             },
         )
 
+        # Always store caller address so error responses can reach the caller
+        call.caller_addr = from_addr
+
         # Allocate RTP relay
         rtp_ports = pbx.rtp_relay.allocate_relay(call_id)
-        if rtp_ports:
-            call.rtp_ports = rtp_ports
+        if not rtp_ports:
+            pbx.logger.error(f"Failed to allocate RTP relay for call {call_id}")
+            pbx.call_manager.end_call(call_id)
+            return False
 
-            # Store caller's RTP info and set endpoint immediately to avoid
-            # dropping early packets
-            if caller_sdp:
-                call.caller_rtp = caller_sdp
-                call.caller_addr = from_addr
+        call.rtp_ports = rtp_ports
 
-                # set caller's endpoint immediately to enable early RTP packet learning
-                # This prevents dropping packets that arrive before the 200 OK
-                # response
-                caller_endpoint = (caller_sdp["address"], caller_sdp["port"])
-                relay_info = pbx.rtp_relay.active_relays.get(call_id)
-                if relay_info:
-                    handler = relay_info["handler"]
-                    # set only endpoint A for now; endpoint B will be set after
-                    # 200 OK
-                    handler.set_endpoints(caller_endpoint, None)
-                    pbx.logger.info(
-                        f"RTP relay allocated on port {rtp_ports[0]}, caller endpoint set to {caller_endpoint}"
-                    )
+        # Store caller's RTP info and set endpoint immediately to avoid
+        # dropping early packets
+        if caller_sdp:
+            call.caller_rtp = caller_sdp
+
+            # set caller's endpoint immediately to enable early RTP packet learning
+            # This prevents dropping packets that arrive before the 200 OK
+            # response
+            caller_endpoint = (caller_sdp["address"], caller_sdp["port"])
+            relay_info = pbx.rtp_relay.active_relays.get(call_id)
+            if relay_info:
+                handler = relay_info["handler"]
+                # set only endpoint A for now; endpoint B will be set after
+                # 200 OK
+                handler.set_endpoints(caller_endpoint, None)
+                pbx.logger.info(
+                    f"RTP relay allocated on port {rtp_ports[0]}, "
+                    f"caller endpoint set to {caller_endpoint}"
+                )
 
         # Get destination extension's address
         dest_ext_obj = pbx.extension_registry.get(to_ext)
         if not dest_ext_obj or not dest_ext_obj.address:
             pbx.logger.error(f"Cannot get address for extension {to_ext}")
             # Release allocated RTP relay and clean up call to prevent resource leaks
-            if rtp_ports:
-                pbx.rtp_relay.release_relay(call_id)
+            pbx.rtp_relay.release_relay(call_id)
             pbx.call_manager.end_call(call_id)
             return False
 
@@ -218,147 +230,139 @@ class CallRouter:
         # Use the server's external IP address for SDP
         server_ip = pbx._get_server_ip()
 
-        if rtp_ports:
-            # Determine which codecs to offer based on callee's phone model
-            # Get callee's User-Agent to detect phone model
-            callee_user_agent = pbx._get_phone_user_agent(to_ext)
-            callee_phone_model = pbx._detect_phone_model(callee_user_agent)
+        # Determine which codecs to offer based on callee's phone model
+        # Get callee's User-Agent to detect phone model
+        callee_user_agent = pbx._get_phone_user_agent(to_ext)
+        callee_phone_model = pbx._detect_phone_model(callee_user_agent)
 
-            # Select codecs that are compatible with both the callee's phone
-            # model and the caller's offered codecs.  This ensures the callee
-            # can only choose a codec the caller also supports, preventing
-            # codec mismatches when the RTP relay forwards without transcoding.
-            codecs_for_callee = pbx._get_compatible_codecs(
-                callee_phone_model, caller_codecs
-            )
+        # Select codecs that are compatible with both the callee's phone
+        # model and the caller's offered codecs.  This ensures the callee
+        # can only choose a codec the caller also supports, preventing
+        # codec mismatches when the RTP relay forwards without transcoding.
+        codecs_for_callee = pbx._get_compatible_codecs(callee_phone_model, caller_codecs)
 
-            if callee_phone_model:
-                pbx.logger.info(
-                    f"Detected callee phone model: {callee_phone_model}, "
-                    f"offering codecs: {codecs_for_callee}"
-                )
-
-            # Create new INVITE with PBX's RTP endpoint in SDP
-            # Get DTMF payload type from config
-            dtmf_payload_type = pbx._get_dtmf_payload_type()
-            ilbc_mode = pbx._get_ilbc_mode()
-            callee_sdp_body = SDPBuilder.build_audio_sdp(
-                server_ip,
-                rtp_ports[0],
-                session_id=call_id,
-                codecs=codecs_for_callee,
-                dtmf_payload_type=dtmf_payload_type,
-                ilbc_mode=ilbc_mode,
-            )
-
-            # Forward INVITE to callee
-            # REQUEST-URI should point to the callee's registered address
-            callee_ip = dest_ext_obj.address[0]
-            callee_port = dest_ext_obj.address[1] if len(dest_ext_obj.address) > 1 else 5060
-            invite_to_callee = SIPMessageBuilder.build_request(
-                method="INVITE",
-                uri=f"sip:{to_ext}@{callee_ip}:{callee_port}",
-                from_addr=from_header,
-                to_addr=to_header,
-                call_id=call_id,
-                cseq=int((message.get_header("CSeq") or "1 INVITE").split()[0]),
-                body=callee_sdp_body,
-            )
-
-            # Add required headers
-            # Generate PBX's own Via header so responses come back to the PBX
-            branch_id = str(uuid.uuid4()).replace("-", "")
-            sip_port = pbx.config.get('server.sip_port', 5060)
-            invite_to_callee.set_header(
-                "Via",
-                f"SIP/2.0/UDP {server_ip}:{sip_port};branch=z9hG4bK{branch_id}"
-            )
-            invite_to_callee.set_header(
-                "Contact",
-                f"<sip:{from_ext}@{server_ip}:{sip_port}>",
-            )
-            invite_to_callee.set_header("Content-type", "application/sdp")
-
-            # Add caller ID headers (P-Asserted-Identity and Remote-Party-ID) if configured
-            if pbx.config.get("sip.caller_id.send_p_asserted_identity", True) or pbx.config.get(
-                "sip.caller_id.send_remote_party_id", True
-            ):
-                # Get caller's display name from extension
-                caller_ext_obj = pbx.extension_registry.get(from_ext)
-                display_name = from_ext  # Default to extension number
-                if caller_ext_obj:
-                    # Try to get name from extension object
-                    display_name = getattr(caller_ext_obj, "name", from_ext)
-                    if not display_name or display_name == "":
-                        display_name = from_ext
-
-                # Add caller ID headers for line identification
-                SIPMessageBuilder.add_caller_id_headers(
-                    invite_to_callee, from_ext, display_name, server_ip
-                )
-                pbx.logger.debug(f"Added caller ID headers: {display_name} <{from_ext}>")
-
-            # Add MAC address header if configured
-            if pbx.config.get("sip.device.send_mac_address", True):
-                # Try to get MAC address from registered phones database
-                mac_address: str | None = None
-                if pbx.registered_phones_db:
-                    try:
-                        phones = pbx.registered_phones_db.get_by_extension(from_ext)
-                        if phones and len(phones) > 0 and phones[0].get("mac_address"):
-                            mac_address = phones[0]["mac_address"]
-                    except (KeyError, TypeError, ValueError) as e:
-                        pbx.logger.debug(f"Could not retrieve MAC for extension {from_ext}: {e}")
-
-                # Also check if MAC was sent in the original INVITE
-                if not mac_address and pbx.config.get("sip.device.accept_mac_in_invite", True):
-                    x_mac = message.get_header("X-MAC-Address")
-                    if x_mac:
-                        mac_address = x_mac
-                        pbx.logger.debug(f"Using MAC from incoming INVITE: {mac_address}")
-
-                # Add MAC header if we found one
-                if mac_address:
-                    SIPMessageBuilder.add_mac_address_header(invite_to_callee, mac_address)
-                    pbx.logger.debug(f"Added X-MAC-Address header: {mac_address}")
-
-            # Send to destination
-            pbx.sip_server._send_message(invite_to_callee.build(), dest_ext_obj.address)
-
-            # Store callee address for later use (e.g., to send CANCEL if
-            # routing to voicemail)
-            call.callee_addr = dest_ext_obj.address
-            call.callee_invite = invite_to_callee  # Store the INVITE for CANCEL reference
-
-            pbx.logger.info(f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}")
+        if callee_phone_model:
             pbx.logger.info(
-                f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}"
+                f"Detected callee phone model: {callee_phone_model}, "
+                f"offering codecs: {codecs_for_callee}"
             )
 
-            # Mark call as ringing internally so that status polling
-            # (used by WebRTC clients) can detect the state transition.
-            call.ring()
+        # Create new INVITE with PBX's RTP endpoint in SDP
+        # Get DTMF payload type from config
+        dtmf_payload_type = pbx._get_dtmf_payload_type()
+        ilbc_mode = pbx._get_ilbc_mode()
+        callee_sdp_body = SDPBuilder.build_audio_sdp(
+            server_ip,
+            rtp_ports[0],
+            session_id=call_id,
+            codecs=codecs_for_callee,
+            dtmf_payload_type=dtmf_payload_type,
+            ilbc_mode=ilbc_mode,
+        )
 
-            # Immediately send 180 Ringing to the caller so they hear ringback
-            # tone while waiting for the callee to answer.  Without this, the
-            # caller only has a "100 Trying" and hears silence until the callee
-            # phone sends its own 180 (which some phones delay or skip).
-            if call.original_invite and call.caller_addr:
-                ringing_response = SIPMessageBuilder.build_response(
-                    180, "Ringing", call.original_invite
-                )
-                pbx.sip_server._send_message(
-                    ringing_response.build(), call.caller_addr
-                )
-                pbx.logger.info(f"Sent 180 Ringing to caller for call {call_id}")
+        # Forward INVITE to callee
+        # REQUEST-URI should point to the callee's registered address
+        callee_ip = dest_ext_obj.address[0]
+        callee_port = dest_ext_obj.address[1] if len(dest_ext_obj.address) > 1 else 5060
+        invite_to_callee = SIPMessageBuilder.build_request(
+            method="INVITE",
+            uri=f"sip:{to_ext}@{callee_ip}:{callee_port}",
+            from_addr=from_header,
+            to_addr=to_header,
+            call_id=call_id,
+            cseq=int((message.get_header("CSeq") or "1 INVITE").split()[0]),
+            body=callee_sdp_body,
+        )
 
-            # Start no-answer timer to route to voicemail if not answered
-            no_answer_timeout: int = pbx.config.get("voicemail.no_answer_timeout", 30)
-            call.no_answer_timer = threading.Timer(
-                no_answer_timeout, self._handle_no_answer, args=(call_id,)
+        # Add required headers
+        # Generate PBX's own Via header so responses come back to the PBX
+        branch_id = str(uuid.uuid4()).replace("-", "")
+        sip_port = pbx.config.get("server.sip_port", 5060)
+        invite_to_callee.set_header(
+            "Via",
+            f"SIP/2.0/UDP {server_ip}:{sip_port};branch=z9hG4bK{branch_id}",
+        )
+        invite_to_callee.set_header(
+            "Contact",
+            f"<sip:{from_ext}@{server_ip}:{sip_port}>",
+        )
+        invite_to_callee.set_header("Content-type", "application/sdp")
+
+        # Add caller ID headers (P-Asserted-Identity and Remote-Party-ID)
+        if pbx.config.get("sip.caller_id.send_p_asserted_identity", True) or pbx.config.get(
+            "sip.caller_id.send_remote_party_id", True
+        ):
+            # Get caller's display name from extension
+            caller_ext_obj = pbx.extension_registry.get(from_ext)
+            display_name = from_ext  # Default to extension number
+            if caller_ext_obj:
+                # Try to get name from extension object
+                display_name = getattr(caller_ext_obj, "name", from_ext)
+                if not display_name or display_name == "":
+                    display_name = from_ext
+
+            # Add caller ID headers for line identification
+            SIPMessageBuilder.add_caller_id_headers(
+                invite_to_callee, from_ext, display_name, server_ip
             )
-            call.no_answer_timer.start()
-            pbx.logger.info(f"Started no-answer timer ({no_answer_timeout}s) for call {call_id}")
+            pbx.logger.debug(f"Added caller ID headers: {display_name} <{from_ext}>")
+
+        # Add MAC address header if configured
+        if pbx.config.get("sip.device.send_mac_address", True):
+            # Try to get MAC address from registered phones database
+            mac_address: str | None = None
+            if pbx.registered_phones_db:
+                try:
+                    phones = pbx.registered_phones_db.get_by_extension(from_ext)
+                    if phones and len(phones) > 0 and phones[0].get("mac_address"):
+                        mac_address = phones[0]["mac_address"]
+                except (KeyError, TypeError, ValueError) as e:
+                    pbx.logger.debug(f"Could not retrieve MAC for extension {from_ext}: {e}")
+
+            # Also check if MAC was sent in the original INVITE
+            if not mac_address and pbx.config.get("sip.device.accept_mac_in_invite", True):
+                x_mac = message.get_header("X-MAC-Address")
+                if x_mac:
+                    mac_address = x_mac
+                    pbx.logger.debug(f"Using MAC from incoming INVITE: {mac_address}")
+
+            # Add MAC header if we found one
+            if mac_address:
+                SIPMessageBuilder.add_mac_address_header(invite_to_callee, mac_address)
+                pbx.logger.debug(f"Added X-MAC-Address header: {mac_address}")
+
+        # Send INVITE to destination with retransmission (RFC 3261)
+        invite_txn = InviteClientTransaction(
+            message=invite_to_callee.build(),
+            dest_addr=dest_ext_obj.address,
+            send_fn=pbx.sip_server._send_message,
+            on_timeout=lambda cid=call_id: self._handle_invite_timeout(cid),
+        )
+        invite_txn.start()
+        call.invite_transaction = invite_txn
+
+        # Store callee address for later use (e.g., to send CANCEL if
+        # routing to voicemail)
+        call.callee_addr = dest_ext_obj.address
+        call.callee_invite = invite_to_callee  # Store the INVITE for CANCEL
+
+        pbx.logger.info(f"Forwarded INVITE to {to_ext} at {dest_ext_obj.address}")
+        pbx.logger.info(
+            f"Routing call {call_id}: {from_ext} -> {to_ext} via RTP relay {rtp_ports[0]}"
+        )
+
+        # Do NOT send premature 180 Ringing here.  The callee's actual
+        # 180 response is forwarded by _handle_response() in sip/server.py.
+        # Fabricating a 180 before the callee responds masks delivery
+        # failures and causes duplicate ringing indicators.
+
+        # Start no-answer timer to route to voicemail if not answered
+        no_answer_timeout: int = pbx.config.get("voicemail.no_answer_timeout", 30)
+        call.no_answer_timer = threading.Timer(
+            no_answer_timeout, self._handle_no_answer, args=(call_id,)
+        )
+        call.no_answer_timer.start()
+        pbx.logger.info(f"Started no-answer timer ({no_answer_timeout}s) for call {call_id}")
 
         return True
 
@@ -408,6 +412,20 @@ class CallRouter:
         # Check queue pattern
         queue_pattern: str = dialplan.get("queue_pattern", "^8[0-9]{3}$")
         return bool(re.match(queue_pattern, extension))
+
+    def _handle_invite_timeout(self, call_id: str) -> None:
+        """Handle INVITE transaction timeout (no response from callee)."""
+        pbx = self.pbx_core
+        call = pbx.call_manager.get_call(call_id)
+        if not call:
+            return
+        pbx.logger.warning(
+            f"INVITE timeout for call {call_id} to {call.to_extension} - callee unreachable"
+        )
+        # Mark the destination as unreachable since it didn't respond
+        pbx.extension_registry.unregister(call.to_extension)
+        # Route to voicemail or end the call
+        self._handle_no_answer(call_id)
 
     def _send_cancel_to_callee(self, call: Any, call_id: str) -> None:
         """Send CANCEL to callee to stop their phone from ringing"""
