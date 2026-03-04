@@ -435,7 +435,11 @@ class TestSIPMessageBuilderBuildResponse:
         request.set_header("CSeq", "1 INVITE")
 
         response = SIPMessageBuilder.build_response(200, "OK", request)
-        assert response.get_header("To") == "<sip:1002@pbx.local>"
+        to_header = response.get_header("To")
+        assert to_header is not None
+        assert to_header.startswith("<sip:1002@pbx.local>")
+        # RFC 3261: UAS adds tag to To header in responses
+        assert ";tag=" in to_header
 
     def test_response_copies_call_id(self) -> None:
         request = SIPMessage()
