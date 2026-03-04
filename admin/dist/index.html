@@ -15,64 +15,11 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/admin/assets/favicon-192-D3qdEI9i.png">
     <link rel="icon" type="image/png" sizes="512x512" href="/admin/assets/favicon-512-BCF-tvk5.png">
     <!-- Debug logging utility -->
-    <script>
-        // Debug logger - only outputs in development (non-standard ports or localhost)
-        window.__DEV__ = ['localhost', '127.0.0.1'].includes(location.hostname) || !['', '80', '443'].includes(location.port);
-        window.debugLog = window.__DEV__ ? console.log.bind(console) : function() {};
-        window.debugWarn = window.__DEV__ ? console.warn.bind(console) : function() {};
-
-        // Always track errors regardless of environment
-        window.addEventListener('error', function(e) {
-            console.error('JavaScript Error:', e.error || e.message, '\nFile:', e.filename, '\nLine:', e.lineno);
-        });
-
-        window.addEventListener('unhandledrejection', function(e) {
-            console.error('Unhandled Promise Rejection:', e.reason);
-        });
-
-        debugLog('Admin panel loading...', new Date().toISOString());
-    </script>
-    <!-- Define fallback function before loading Chart.js -->
-    <script>
-        // Fallback function to load Chart.js from alternative CDNs
-        function loadChartJsFallback() {
-            debugWarn('Primary Chart.js CDN failed, trying fallback...');
-            const fallbacks = [
-                'https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js',
-                'https://unpkg.com/chart.js@4.4.0/dist/chart.umd.min.js'
-            ];
-
-            let currentIndex = 0;
-
-            function tryNextFallback() {
-                if (currentIndex >= fallbacks.length) {
-                    console.error('All Chart.js CDN fallbacks failed');
-                    window.chartJsLoadFailed = true;
-                    return;
-                }
-
-                const script = document.createElement('script');
-                script.src = fallbacks[currentIndex];
-                script.onerror = function() {
-                    debugWarn(`Fallback ${currentIndex + 1} failed, trying next...`);
-                    currentIndex++;
-                    tryNextFallback();
-                };
-                script.onload = function() {
-                    debugLog(`Chart.js loaded successfully from fallback ${currentIndex + 1}`);
-                    window.chartJsLoadFailed = false;
-                };
-                document.head.appendChild(script);
-            }
-
-            tryNextFallback();
-        }
-    </script>
-    <!-- Load Chart.js with fallback on error -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"
-            onerror="loadChartJsFallback()"></script>
-  <script type="module" crossorigin src="/admin/assets/main-BV5_RpmI.js"></script>
-  <link rel="stylesheet" crossorigin href="/admin/assets/main-DVqYDz5R.css">
+    <script src="js/debug-logger.js"></script>
+    <!-- Load Chart.js from CDN with automatic fallback -->
+    <script src="js/chartjs-loader.js"></script>
+  <script type="module" crossorigin src="/admin/assets/main-CwqvUibD.js"></script>
+  <link rel="stylesheet" crossorigin href="/admin/assets/main-DRRly70g.css">
 </head>
 <body>
     <a href="#main-content" class="skip-nav">Skip to main content</a>
@@ -5244,115 +5191,10 @@ unzip EspoCRM-7.x.x.zip -d /var/www/espocrm
         </div>
     </div>
 
-    <script>
-        /** Global auth header helper for vanilla JS modules */
-        function pbxAuthHeaders() {
-            var headers = {'Content-Type': 'application/json'};
-            var token = localStorage.getItem('pbx_token');
-            if (token) { headers['Authorization'] = 'Bearer ' + token; }
-            return headers;
-        }
-    </script>
-    <script src="js/webrtc_phone.js?v=20231223"></script>
-    <script src="js/framework_features.js?v=20231223"></script>
-    <script src="js/auto_attendant.js?v=20231223"></script>
-    <script src="js/voicemail_enhanced.js?v=20231223"></script>
-    <script src="js/opensource_integrations.js?v=20231223"></script>
-    
+    <script src="js/api-config.js"></script>
     <!-- Page load verification and troubleshooting helper -->
-    <script>
-        // Check if page loaded correctly after 3 seconds
-        setTimeout(function() {
-            // Check if main initialization happened
-            if (!window.currentUser && !document.querySelector('.tab-content.active')) {
-                console.warn('Page may not have loaded correctly. Checking for common issues...');
-                
-                // Check if CSS is loaded
-                const sidebar = document.querySelector('.sidebar');
-                if (sidebar) {
-                    const computedStyle = window.getComputedStyle(sidebar);
-                    if (computedStyle.width === 'auto' || computedStyle.width === '0px') {
-                        console.error('CSS may not be loaded correctly. Try clearing your browser cache:');
-                        console.error('  - Press Ctrl+Shift+R (Windows/Linux) or Cmd+Shift+R (Mac)');
-                        console.error('  - See BROWSER_CACHE_FIX.md for detailed instructions');
-                        
-                        // Show visual alert
-                        const alert = document.createElement('div');
-                        alert.style.cssText = `
-                            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
-                            background: #ff5252; color: white; padding: 20px 30px;
-                            border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-                            z-index: 99999; font-family: Arial, sans-serif; max-width: 500px;
-                            text-align: center; font-size: 14px; line-height: 1.6;
-                        `;
-                        alert.innerHTML = `
-                            <strong style="font-size: 18px; display: block; margin-bottom: 10px;">⚠️ Page Loading Issue</strong>
-                            <p style="margin: 10px 0;">The admin panel may not be displaying correctly due to cached files.</p>
-                            <p style="margin: 10px 0; font-weight: bold;">
-                                Press <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">Ctrl+Shift+R</code> 
-                                (or <code style="background: rgba(255,255,255,0.2); padding: 2px 6px; border-radius: 3px;">Cmd+Shift+R</code> on Mac)
-                                to reload without cache
-                            </p>
-                            <button onclick="this.parentElement.remove()" style="
-                                background: white; color: #ff5252; border: none; padding: 8px 16px;
-                                border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 10px;
-                            ">Dismiss</button>
-                        `;
-                        document.body.appendChild(alert);
-                    }
-                }
-            } else {
-                console.log('Page loaded successfully at', new Date().toISOString());
-            }
-        }, 3000);
-    </script>
+    <script src="js/page-verify.js"></script>
     <!-- Mobile sidebar toggle -->
-    <script>
-    (function() {
-        const toggle = document.getElementById('sidebar-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        const overlay = document.getElementById('sidebar-overlay');
-        if (!toggle || !sidebar || !overlay) return;
-
-        function openSidebar() {
-            sidebar.classList.add('open');
-            overlay.classList.add('active');
-            toggle.classList.add('active');
-            toggle.setAttribute('aria-expanded', 'true');
-        }
-
-        function closeSidebar() {
-            sidebar.classList.remove('open');
-            overlay.classList.remove('active');
-            toggle.classList.remove('active');
-            toggle.setAttribute('aria-expanded', 'false');
-        }
-
-        toggle.addEventListener('click', function() {
-            if (sidebar.classList.contains('open')) {
-                closeSidebar();
-            } else {
-                openSidebar();
-            }
-        });
-
-        // Close sidebar when clicking overlay
-        overlay.addEventListener('click', closeSidebar);
-
-        // Close sidebar when a nav item is clicked (on mobile)
-        sidebar.addEventListener('click', function(e) {
-            if (e.target.closest('.tab-button')) {
-                closeSidebar();
-            }
-        });
-
-        // Close sidebar on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && sidebar.classList.contains('open')) {
-                closeSidebar();
-            }
-        });
-    })();
-    </script>
+    <script src="js/sidebar-toggle.js"></script>
 </body>
 </html>
