@@ -3,6 +3,7 @@ SIP Message Parser and Builder
 """
 
 import re
+import uuid
 
 
 class SIPMessage:
@@ -194,6 +195,13 @@ class SIPMessageBuilder:
             value = request_msg.get_header(header)
             if value:
                 response.set_header(header, value)
+
+        # RFC 3261 Section 12.1.1: UAS MUST add a tag to the To header in responses
+        # that establish or confirm a dialog (or any non-100 response to REGISTER)
+        to_value = response.headers.get("To", "")
+        if to_value and ";tag=" not in to_value:
+            tag = uuid.uuid4().hex[:8]
+            response.set_header("To", f"{to_value};tag={tag}")
 
         if body:
             response.body = body

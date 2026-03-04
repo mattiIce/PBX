@@ -261,6 +261,7 @@ class SIPServer:
                     response.set_header("Expires", str(expires_value))
                     if contact:
                         response.set_header("Contact", contact)
+                    self._add_via_nat_params(response, addr)
                     self._send_message(response.build(), addr)
                 else:
                     self._send_response(403, "Forbidden", message, addr)
@@ -318,6 +319,7 @@ class SIPServer:
             "WWW-Authenticate",
             f'Digest realm="{realm}", nonce="{nonce}", algorithm=MD5, qop="auth"',
         )
+        self._add_via_nat_params(response, addr)
         self._send_message(response.build(), addr)
 
     def _verify_digest_auth(self, authorization: str, from_header: str, method: str) -> bool:
@@ -634,6 +636,16 @@ class SIPServer:
             )
             return
 
+        # Extract subscriber's Contact URI for NOTIFY Request-URI (RFC 6665 Section 4.2)
+        contact_header = message.get_header("Contact")
+        contact_uri = None
+        if contact_header:
+            contact_match = re.search(r"<([^>]+)>", contact_header)
+            if contact_match:
+                contact_uri = contact_match.group(1)
+            elif contact_header.strip().startswith("sip:"):
+                contact_uri = contact_header.strip()
+
         # Store subscription
         self.subscriptions[sub_key] = {
             "from": from_header,
@@ -643,11 +655,18 @@ class SIPServer:
             "event": event,
             "expires": expires,
             "created": time.time(),
+            "contact_uri": contact_uri,
         }
 
         # Accept the subscription
         response = SIPMessageBuilder.build_response(200, "OK", message)
         response.set_header("Expires", str(expires))
+        # Add Contact header for dialog establishment
+        server_ip = self.host if self.host != "0.0.0.0" else "127.0.0.1"
+        if self.pbx_core:
+            server_ip = self.pbx_core._get_server_ip()
+        response.set_header("Contact", f"<sip:{server_ip}:{self.port}>")
+        self._add_via_nat_params(response, addr)
         self._send_message(response.build(), addr)
 
         # Send initial NOTIFY with current state
@@ -663,6 +682,7 @@ class SIPServer:
             f"active;expires={expires}",
             notify_body,
             content_type,
+            contact_uri=contact_uri,
         )
 
     def _send_event_notify(
@@ -675,6 +695,7 @@ class SIPServer:
         subscription_state: str,
         body: str,
         content_type: str = "application/pidf+xml",
+        contact_uri: str | None = None,
     ) -> None:
         """
         Send a NOTIFY message for an event subscription.
@@ -688,15 +709,35 @@ class SIPServer:
             subscription_state: Subscription-State header value.
             body: NOTIFY body content.
             content_type: Content-Type for the body.
+            contact_uri: Subscriber's Contact URI for Request-URI (RFC 6665).
         """
+        import uuid
+
+        # RFC 6665 Section 4.2: Request-URI should be the Contact from SUBSCRIBE
+        request_uri = contact_uri or f"sip:{addr[0]}:{addr[1]}"
+
         notify_msg = SIPMessageBuilder.build_request(
             method="NOTIFY",
-            uri=f"sip:{addr[0]}:{addr[1]}",
+            uri=request_uri,
             from_addr=to_header,
             to_addr=from_header,
             call_id=call_id,
             cseq=1,
         )
+
+        # RFC 3261 Section 8.1.1.7: Via header is mandatory on requests
+        server_ip = self.host if self.host != "0.0.0.0" else "127.0.0.1"
+        if self.pbx_core:
+            server_ip = self.pbx_core._get_server_ip()
+        branch = f"z9hG4bK{uuid.uuid4().hex[:12]}"
+        notify_msg.set_header("Via", f"SIP/2.0/UDP {server_ip}:{self.port};branch={branch}")
+
+        # RFC 3261 Section 8.1.1.8: Contact header for in-dialog requests
+        notify_msg.set_header("Contact", f"<sip:{server_ip}:{self.port}>")
+
+        # RFC 3261 Section 8.1.1.6: Max-Forwards
+        notify_msg.set_header("Max-Forwards", "70")
+
         notify_msg.set_header("Event", event)
         notify_msg.set_header("Subscription-State", subscription_state)
 
@@ -1419,6 +1460,7 @@ class SIPServer:
                 f"active;expires={remaining}",
                 body,
                 content_type,
+                contact_uri=sub_info.get("contact_uri"),
             )
 
     def _handle_response(self, message: SIPMessage, addr: AddrTuple) -> None:
@@ -1485,6 +1527,48 @@ class SIPServer:
                         # End the call on our side
                         self.pbx_core.end_call(call_id)
 
+    def _add_via_nat_params(self, response: SIPMessage, addr: AddrTuple) -> None:
+        """
+        Add received= and rport= to Via header for NAT traversal (RFC 3261/3581).
+
+        Compares the source IP/port from the network layer with the Via sent-by
+        address. If they differ (phone is behind NAT or on a different subnet),
+        adds received= and rport= so the phone knows its external address.
+
+        Args:
+            response: SIP response message to modify.
+            addr: Actual source address tuple (host, port) from the network.
+        """
+        import re
+
+        via = response.headers.get("Via", "")
+        if not via:
+            return
+
+        # Extract sent-by address and port from Via
+        via_match = re.search(r"SIP/2\.0/\w+\s+([^;:]+)(?::(\d+))?", via)
+        if not via_match:
+            return
+
+        via_host = via_match.group(1).strip()
+        via_port = int(via_match.group(2)) if via_match.group(2) else 5060
+        source_host, source_port = addr
+
+        # RFC 3261 Section 18.2.2: Add received= if Via host differs from source IP
+        if via_host != source_host:
+            if ";received=" not in via:
+                via = f"{via};received={source_host}"
+
+        # RFC 3581: Add rport= with actual source port if rport was requested
+        if ";rport" in via and f";rport={source_port}" not in via:
+            # Replace bare ;rport with ;rport=<actual_port>
+            via = re.sub(r";rport(?!=)", f";rport={source_port}", via)
+        elif via_port != source_port and ";rport" not in via:
+            # Even without rport request, add it if ports differ (common practice)
+            via = f"{via};rport={source_port}"
+
+        response.set_header("Via", via)
+
     def _send_response(
         self, status_code: int, status_text: str, request: SIPMessage, addr: AddrTuple
     ) -> None:
@@ -1498,6 +1582,7 @@ class SIPServer:
             addr: Destination address.
         """
         response = SIPMessageBuilder.build_response(status_code, status_text, request)
+        self._add_via_nat_params(response, addr)
         self._send_message(response.build(), addr)
 
     def _send_message(self, message: str, addr: AddrTuple) -> None:

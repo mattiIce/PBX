@@ -135,6 +135,15 @@ account.1.auto_answer = 0
 # NAT Settings (keep-alive for firewall traversal)
 account.1.nat.udp_update_time = 30
 account.1.nat.rport = 1
+account.1.nat.nat_traversal = 1
+
+# Outbound Proxy - route all SIP through the PBX server
+# Critical for cross-subnet/VLAN deployments where the phone is on a
+# different network than the PBX. Without this, NOTIFY responses from
+# the phone may not route back correctly.
+account.1.outbound_proxy_enable = 1
+account.1.outbound_proxy.1.address = {{SIP_SERVER}}
+account.1.outbound_proxy.1.port = {{SIP_PORT}}
 
 # Presence/BLF
 account.1.blf.subscribe_period = 3600
