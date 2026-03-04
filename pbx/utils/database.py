@@ -40,6 +40,7 @@ class DatabaseBackend:
         self.connection = None
         self.enabled = False
         self._autocommit = False
+        self._was_connected = False
 
         if not POSTGRES_AVAILABLE:
             self.logger.error(
@@ -95,24 +96,88 @@ class DatabaseBackend:
             self.connection.autocommit = True
             self._autocommit = True
             self.enabled = True
+            self._was_connected = True
             self.logger.info("✓ Successfully connected to PostgreSQL database")
             self.logger.info(f"  Connection established: {host}:{port}/{database}")
             return True
-        except (KeyError, TypeError, ValueError, OSError) as e:
+        except Exception as e:
             self.logger.error(f"✗ PostgreSQL connection failed: {e}")
             self.logger.warning("Voicemail and other data will be stored ONLY in file system")
             self.logger.warning(
                 "To fix: Ensure PostgreSQL is running and accessible, or run 'python scripts/verify_database.py' for diagnostics"
             )
+            # Clean up partially-initialized connection
+            if self.connection:
+                try:
+                    self.connection.close()
+                except Exception:
+                    pass
+                self.connection = None
             return False
 
     def disconnect(self) -> None:
         """Disconnect from database"""
         if self.connection:
-            self.connection.close()
+            try:
+                self.connection.close()
+            except Exception:
+                pass
             self.connection = None
             self.enabled = False
             self.logger.info("Database disconnected")
+
+    def _safe_rollback(self) -> None:
+        """Safely attempt a rollback, handling dead/closed connections.
+
+        If the rollback fails (e.g. connection dropped), the connection
+        is marked as disabled so subsequent operations skip the dead
+        connection and the next call to ``connect()`` can re-establish it.
+        """
+        if not self.connection:
+            return
+        try:
+            self.connection.rollback()
+        except Exception:
+            self.logger.warning(
+                "Database connection lost (rollback failed). "
+                "Disabling database until reconnection."
+            )
+            self.connection = None
+            self.enabled = False
+
+    def _check_connection(self) -> bool:
+        """Verify the database connection is still alive.
+
+        If the connection was previously established but has since been
+        lost (e.g. server restart, network timeout), attempts to
+        reconnect once.  Does nothing if the database was never
+        successfully connected (avoids interfering with intentionally
+        disabled setups).
+
+        Returns:
+            True if the connection is usable.
+        """
+        if not self.enabled or not self.connection:
+            # Only attempt reconnection if we previously had a working connection
+            if self._was_connected:
+                self.logger.info("Attempting database reconnection...")
+                return self.connect()
+            return False
+
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.close()
+            return True
+        except Exception:
+            self.logger.warning("Database connection check failed, attempting reconnection...")
+            try:
+                self.connection.close()
+            except Exception:
+                pass
+            self.connection = None
+            self.enabled = False
+            return self.connect()
 
     def _execute_with_context(
         self, query: str, context: str = "query", params: tuple | None = None, critical: bool = True
@@ -130,7 +195,8 @@ class DatabaseBackend:
             bool: True if successful
         """
         if not self.enabled or not self.connection:
-            return False
+            if not self._check_connection():
+                return False
 
         try:
             cursor = self.connection.cursor()
@@ -161,14 +227,12 @@ class DatabaseBackend:
                 # This is expected when tables/indexes exist but user lacks ownership
                 # Log as debug instead of error to avoid alarming users
                 self.logger.debug(f"Skipping {context}: {e}")
-                if self.connection:
-                    self.connection.rollback()
+                self._safe_rollback()
                 return True  # Return True since this is not a critical failure
             if any(pattern in error_msg for pattern in already_exists_errors):
                 # Object already exists - this is fine
                 self.logger.debug(f"{context.capitalize()} already exists: {e}")
-                if self.connection:
-                    self.connection.rollback()
+                self._safe_rollback()
                 return True
             # Check for UNIQUE constraint violations - only suppress for schema operations
             # Data operations (INSERT/UPDATE/DELETE) should fail visibly
@@ -179,8 +243,7 @@ class DatabaseBackend:
                 )
                 if is_schema_operation:
                     self.logger.debug(f"UNIQUE constraint already exists: {e}")
-                    if self.connection:
-                        self.connection.rollback()
+                    self._safe_rollback()
                     return True
                 # For data operations, treat as a real error - don't suppress
             # This is an actual error - log verbosely
@@ -189,8 +252,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection:
-                self.connection.rollback()
+            self._safe_rollback()
             return False
 
     def execute(self, query: str, params: tuple | None = None) -> bool:
@@ -205,11 +267,8 @@ class DatabaseBackend:
             bool: True if successful
         """
         if not self.enabled or not self.connection:
-            self.logger.error("Execute called but database is not enabled or connected")
-            self.logger.error(
-                f"  Enabled: {self.enabled}, Connection: {self.connection is not None}"
-            )
-            return False
+            if not self._check_connection():
+                return False
         return self._execute_with_context(query, "query execution", params, critical=True)
 
     def execute_script(self, script: str) -> bool:
@@ -224,11 +283,8 @@ class DatabaseBackend:
             bool: True if successful
         """
         if not self.enabled or not self.connection:
-            self.logger.error("Execute script called but database is not enabled or connected")
-            self.logger.error(
-                f"  Enabled: {self.enabled}, Connection: {self.connection is not None}"
-            )
-            return False
+            if not self._check_connection():
+                return False
 
         try:
             # Split and execute individual statements
@@ -261,8 +317,7 @@ class DatabaseBackend:
             self.logger.error(f"  Script length: {len(script)} characters")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection:
-                self.connection.rollback()
+            self._safe_rollback()
             return False
 
     def fetch_one(self, query: str, params: tuple | None = None) -> dict | None:
@@ -277,7 +332,8 @@ class DatabaseBackend:
             dict: Row data or None
         """
         if not self.enabled or not self.connection:
-            return None
+            if not self._check_connection():
+                return None
 
         try:
             cursor = self.connection.cursor(cursor_factory=RealDictCursor)
@@ -299,8 +355,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection:
-                self.connection.rollback()
+            self._safe_rollback()
             return None
 
     def fetch_all(self, query: str, params: tuple | None = None) -> list[dict]:
@@ -315,7 +370,8 @@ class DatabaseBackend:
             list: list of row dictionaries
         """
         if not self.enabled or not self.connection:
-            return []
+            if not self._check_connection():
+                return []
 
         try:
             cursor = self.connection.cursor(cursor_factory=RealDictCursor)
@@ -335,8 +391,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection:
-                self.connection.rollback()
+            self._safe_rollback()
             return []
 
     def _build_table_sql(self, template: str) -> str:
@@ -651,8 +706,7 @@ class DatabaseBackend:
                     self.logger.debug(f"Column {column_name} already exists")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name}: {e}")
-                if self.connection:
-                    self.connection.rollback()
+                self._safe_rollback()
 
         # Migration: Add security columns to extensions table
         extensions_columns = [
@@ -693,8 +747,7 @@ class DatabaseBackend:
                     self.logger.debug(f"Column {column_name} already exists in extensions")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
-                if self.connection:
-                    self.connection.rollback()
+                self._safe_rollback()
 
         # Migration: Add device_type column to provisioned_devices table
         device_type_column = ("device_type", "VARCHAR(20) DEFAULT 'phone'")
@@ -729,8 +782,7 @@ class DatabaseBackend:
             self.logger.debug(
                 f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}"
             )
-            if self.connection:
-                self.connection.rollback()
+            self._safe_rollback()
 
         # Apply framework feature migrations
         self._apply_framework_migrations()
