@@ -56,32 +56,72 @@ if AIORTC_AVAILABLE:
             super().__init__()
             self._sample_rate = sample_rate
             self._samples_per_frame = samples_per_frame
-            self._queue: asyncio.Queue[AudioFrame] = asyncio.Queue(maxsize=200)
+            self._queue: asyncio.Queue[bytes] = asyncio.Queue(maxsize=200)
             self._timestamp = 0
+            # Wall-clock pacing: track when we started delivering frames
+            self._start_time: float | None = None
+            self._frames_delivered = 0
 
         async def recv(self) -> "AudioFrame":
-            """Return the next frame (or silence if nothing queued)."""
+            """Return the next frame (or silence if nothing queued).
+
+            Uses wall-clock pacing to avoid cumulative timing drift.
+            All frames get monotonically increasing PTS from a single
+            counter so aiortc never sees timestamp discontinuities.
+            """
+            # Initialise wall-clock anchor on first call
+            now = time.monotonic()
+            if self._start_time is None:
+                self._start_time = now
+
+            # Calculate when this frame should be delivered
+            expected_time = self._start_time + (
+                self._frames_delivered * self._samples_per_frame / self._sample_rate
+            )
+            delay = expected_time - now
+            if delay > 0:
+                await asyncio.sleep(delay)
+
+            # Build the frame — either from queued PCM data or silence
             try:
-                frame = self._queue.get_nowait()
+                pcm_data = self._queue.get_nowait()
             except asyncio.QueueEmpty:
-                frame = self._silence_frame()
-            # Pace at ~20 ms per frame to avoid busy-looping
-            await asyncio.sleep(self._samples_per_frame / self._sample_rate)
-            return frame
+                pcm_data = None
 
-        def push_frame(self, frame: "AudioFrame") -> None:
-            with contextlib.suppress(asyncio.QueueFull):
-                self._queue.put_nowait(frame)
+            frame = AudioFrame(
+                format="s16", layout="mono", samples=self._samples_per_frame
+            )
+            if pcm_data is not None:
+                # Ensure the PCM data matches the expected frame size
+                expected_bytes = self._samples_per_frame * 2
+                if len(pcm_data) >= expected_bytes:
+                    pcm_data = pcm_data[:expected_bytes]
+                else:
+                    # Pad with silence if short
+                    pcm_data = pcm_data + bytes(expected_bytes - len(pcm_data))
+                for plane in frame.planes:
+                    plane.update(pcm_data)
+            else:
+                for plane in frame.planes:
+                    plane.update(bytes(self._samples_per_frame * 2))
 
-        def _silence_frame(self) -> "AudioFrame":
-            frame = AudioFrame(format="s16", layout="mono", samples=self._samples_per_frame)
-            for plane in frame.planes:
-                plane.update(bytes(self._samples_per_frame * 2))
+            # Single monotonic PTS counter for all frames (silence or real)
             frame.pts = self._timestamp
             frame.sample_rate = self._sample_rate
             frame.time_base = fractions.Fraction(1, self._sample_rate)
             self._timestamp += self._samples_per_frame
+            self._frames_delivered += 1
             return frame
+
+        def push_pcm(self, pcm_48k: bytes) -> None:
+            """Push 48 kHz signed-16-bit-LE PCM data for the next frame."""
+            with contextlib.suppress(asyncio.QueueFull):
+                self._queue.put_nowait(pcm_48k)
+
+        # Keep backward compat alias
+        def push_frame(self, frame: "AudioFrame") -> None:
+            pcm = bytes(frame.planes[0])
+            self.push_pcm(pcm)
 
 
 # ---------------------------------------------------------------------------
@@ -873,7 +913,6 @@ class WebRTCSignalingServer:
 
             # --- Thread: RTP relay → aiortc (phone audio → browser) ---
             def _relay_to_browser() -> None:
-                seq = 0
                 try:
                     while session._bridge_running:
                         try:
@@ -884,6 +923,12 @@ class WebRTCSignalingServer:
                             continue
                         # Parse RTP header to determine actual header length
                         # (accounts for CSRC entries) and verify payload type.
+                        pt = data[1] & 0x7F
+                        # Only process PCMU (PT 0) audio packets; skip
+                        # DTMF events (PT 101), comfort noise (PT 13), etc.
+                        # which would produce static if decoded as u-law.
+                        if pt != 0:
+                            continue
                         cc = data[0] & 0x0F
                         has_ext = (data[0] >> 4) & 0x01
                         header_len = 12 + 4 * cc
@@ -898,16 +943,8 @@ class WebRTCSignalingServer:
                         # to the browser via aiortc.
                         pcm_8k = _ulaw_to_pcm(payload)
                         pcm_48k = _upsample_8k_to_48k(pcm_8k)
-                        samples = len(pcm_48k) // 2
-                        frame = AudioFrame(format="s16", layout="mono", samples=samples)
-                        for plane in frame.planes:
-                            plane.update(pcm_48k)
-                        frame.pts = seq * samples
-                        frame.sample_rate = 48000
-                        frame.time_base = fractions.Fraction(1, 48000)
                         if session.bridge_track:
-                            session.bridge_track.push_frame(frame)
-                        seq += 1
+                            session.bridge_track.push_pcm(pcm_48k)
                 except Exception:
                     self.logger.exception(
                         f"relay_to_browser crashed for session {session.session_id}"
@@ -1044,7 +1081,6 @@ class WebRTCSignalingServer:
 
             # --- Thread: service → browser (RTPPlayer audio → WebRTC) ---
             def _service_to_browser() -> None:
-                seq = 0
                 try:
                     while session._bridge_running:
                         try:
@@ -1052,6 +1088,11 @@ class WebRTCSignalingServer:
                         except (TimeoutError, OSError):
                             continue
                         if len(data) < 12:
+                            continue
+                        # Only process PCMU (PT 0) audio; skip DTMF events,
+                        # comfort noise, etc. that would produce static.
+                        pt = data[1] & 0x7F
+                        if pt != 0:
                             continue
                         # Parse RTP header (account for CSRC / extensions)
                         cc = data[0] & 0x0F
@@ -1065,16 +1106,8 @@ class WebRTCSignalingServer:
                         payload = data[header_len:]
                         pcm_8k = _ulaw_to_pcm(payload)
                         pcm_48k = _upsample_8k_to_48k(pcm_8k)
-                        samples = len(pcm_48k) // 2
-                        frame = AudioFrame(format="s16", layout="mono", samples=samples)
-                        for plane in frame.planes:
-                            plane.update(pcm_48k)
-                        frame.pts = seq * samples
-                        frame.sample_rate = 48000
-                        frame.time_base = fractions.Fraction(1, 48000)
                         if session.bridge_track:
-                            session.bridge_track.push_frame(frame)
-                        seq += 1
+                            session.bridge_track.push_pcm(pcm_48k)
                 except Exception:
                     self.logger.exception(
                         f"service_to_browser crashed for session {session.session_id}"
