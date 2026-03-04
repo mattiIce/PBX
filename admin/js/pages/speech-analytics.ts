@@ -676,3 +676,9 @@ window.showAddSpeechAnalyticsConfigModal = showAddSpeechAnalyticsConfigModal;
 window.editSpeechAnalyticsConfig = editSpeechAnalyticsConfig;
 window.deleteSpeechAnalyticsConfig = deleteSpeechAnalyticsConfig;
 window.removeSpeechConfigModal = removeSpeechConfigModal;
+
+// Tab loader alias — tabs.ts references this name for nomadic-e911 tab
+window.loadNomadicE911Data = function loadNomadicE911Data(): void {
+    loadE911Sites();
+    loadExtensionLocations();
+};

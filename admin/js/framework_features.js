@@ -681,7 +681,7 @@ const loadConversationalAIStats = async () => {
     statsDiv.innerHTML = '<p>Loading statistics...</p>';
 
     try {
-        const r = await fetch('/api/framework/conversational-ai/stats', {headers: pbxAuthHeaders()});
+        const r = await fetch('/api/framework/conversational-ai/statistics', {headers: pbxAuthHeaders()});
         const data = await r.json();
         const stats = data.statistics ?? {};
         statsDiv.innerHTML = `
@@ -1201,7 +1201,7 @@ function showEnrollUserDialog() {
 const deleteVoiceProfile = async (profileId) => {
     if (confirm('Are you sure you want to delete this voice profile?')) {
         try {
-            await fetch(`/api/framework/voice-biometrics/profiles/${profileId}`, { method: 'DELETE', headers: pbxAuthHeaders() });
+            await fetch(`/api/framework/voice-biometrics/profile/${profileId}`, { method: 'DELETE', headers: pbxAuthHeaders() });
             await loadVoiceBiometricProfiles();
         } catch (err) {
             alert(`Error: ${err.message}`);

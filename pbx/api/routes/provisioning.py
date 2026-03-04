@@ -820,6 +820,124 @@ def handle_export_template(vendor: str, model: str) -> Response:
     return send_json({"error": message}, 404)
 
 
+@provisioning_bp.route("/api/provisioning/settings", methods=["GET"])
+@require_admin
+def handle_get_provisioning_settings() -> Response:
+    """Get provisioning system settings."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"enabled": False, "url_format": ""})
+
+    prov = getattr(pbx_core, "phone_provisioning", None)
+    enabled = bool(prov and getattr(prov, "enabled", False))
+    url_format = ""
+    if prov:
+        url_format = getattr(prov, "url_format", "")
+
+    return send_json({
+        "enabled": enabled,
+        "url_format": url_format,
+        "server_ip": pbx_core.config.get("provisioning.server_ip", ""),
+        "port": pbx_core.config.get("provisioning.port", 9000),
+        "custom_templates_dir": pbx_core.config.get("provisioning.custom_templates_dir", ""),
+    })
+
+
+@provisioning_bp.route("/api/provisioning/settings", methods=["PUT"])
+@require_admin
+def handle_update_provisioning_settings() -> Response:
+    """Update provisioning system settings."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500)
+
+    try:
+        body = get_request_body()
+        pbx_core.config.set("provisioning.enabled", body.get("enabled", False))
+        pbx_core.config.set("provisioning.server_ip", body.get("server_ip", ""))
+        pbx_core.config.set("provisioning.port", body.get("port", 9000))
+        pbx_core.config.set(
+            "provisioning.custom_templates_dir", body.get("custom_templates_dir", "")
+        )
+        return send_json({"success": True, "message": "Provisioning settings saved"})
+    except (KeyError, TypeError, ValueError) as e:
+        return send_json({"error": str(e)}, 500)
+
+
+@provisioning_bp.route("/api/provisioning/phonebook-settings", methods=["GET"])
+@require_admin
+def handle_get_phonebook_settings() -> Response:
+    """Get phonebook provisioning settings."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"ldap_enabled": False, "remote_enabled": False})
+
+    return send_json({
+        "ldap_enabled": pbx_core.config.get("provisioning.ldap_phonebook.enabled", False),
+        "ldap_server": pbx_core.config.get("provisioning.ldap_phonebook.server", ""),
+        "ldap_port": pbx_core.config.get("provisioning.ldap_phonebook.port", 636),
+        "ldap_base_dn": pbx_core.config.get("provisioning.ldap_phonebook.base_dn", ""),
+        "ldap_bind_user": pbx_core.config.get("provisioning.ldap_phonebook.bind_user", ""),
+        "ldap_use_tls": pbx_core.config.get("provisioning.ldap_phonebook.use_tls", True),
+        "ldap_display_name": pbx_core.config.get(
+            "provisioning.ldap_phonebook.display_name", ""
+        ),
+        "remote_enabled": pbx_core.config.get("provisioning.remote_phonebook.enabled", False),
+        "remote_refresh_interval": pbx_core.config.get(
+            "provisioning.remote_phonebook.refresh_interval", 60
+        ),
+    })
+
+
+@provisioning_bp.route("/api/provisioning/phonebook-settings", methods=["PUT"])
+@require_admin
+def handle_update_phonebook_settings() -> Response:
+    """Update phonebook provisioning settings."""
+    pbx_core = get_pbx_core()
+    if not pbx_core:
+        return send_json({"error": "PBX not initialized"}, 500)
+
+    try:
+        body = get_request_body()
+        pbx_core.config.set(
+            "provisioning.ldap_phonebook.enabled", body.get("ldap_enabled", False)
+        )
+        pbx_core.config.set(
+            "provisioning.ldap_phonebook.server", body.get("ldap_server", "")
+        )
+        pbx_core.config.set(
+            "provisioning.ldap_phonebook.port", body.get("ldap_port", 636)
+        )
+        pbx_core.config.set(
+            "provisioning.ldap_phonebook.base_dn", body.get("ldap_base_dn", "")
+        )
+        pbx_core.config.set(
+            "provisioning.ldap_phonebook.bind_user", body.get("ldap_bind_user", "")
+        )
+        if body.get("ldap_bind_password"):
+            pbx_core.config.set(
+                "provisioning.ldap_phonebook.bind_password",
+                body["ldap_bind_password"],
+            )
+        pbx_core.config.set(
+            "provisioning.ldap_phonebook.use_tls", body.get("ldap_use_tls", True)
+        )
+        pbx_core.config.set(
+            "provisioning.ldap_phonebook.display_name",
+            body.get("ldap_display_name", ""),
+        )
+        pbx_core.config.set(
+            "provisioning.remote_phonebook.enabled", body.get("remote_enabled", False)
+        )
+        pbx_core.config.set(
+            "provisioning.remote_phonebook.refresh_interval",
+            body.get("remote_refresh_interval", 60),
+        )
+        return send_json({"success": True, "message": "Phonebook settings saved"})
+    except (KeyError, TypeError, ValueError) as e:
+        return send_json({"error": str(e)}, 500)
+
+
 @provisioning_bp.route("/api/provisioning/reload-templates", methods=["POST"])
 @require_admin
 def handle_reload_templates() -> Response:

@@ -1283,6 +1283,67 @@ def create_tagging_rule() -> tuple[Response, int]:
         return send_json({"error": str(e)}, 500), 500
 
 
+@framework_bp.route("/call-tagging/tags/<tag_id>", methods=["DELETE"])
+@require_auth
+def delete_call_tag(tag_id: str) -> tuple[Response, int]:
+    """Delete a call tag."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.call_tagging import get_call_tagging
+
+        tagging = get_call_tagging(pbx_core.config if pbx_core else None)
+        delete_fn = getattr(tagging, "delete_tag", None)
+        if delete_fn:
+            success = delete_fn(tag_id)
+            if success:
+                return send_json({"success": True, "message": f"Tag {tag_id} deleted"}), 200
+            return send_json({"error": "Tag not found"}), 404
+        return send_json({"error": "Delete not supported"}), 501
+    except Exception as e:
+        logger.error(f"Error deleting tag: {e}")
+        return send_json({"error": str(e)}), 500
+
+
+@framework_bp.route("/call-tagging/rules/<rule_id>", methods=["DELETE"])
+@require_auth
+def delete_tagging_rule(rule_id: str) -> tuple[Response, int]:
+    """Delete a call tagging rule."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.call_tagging import get_call_tagging
+
+        tagging = get_call_tagging(pbx_core.config if pbx_core else None)
+        delete_fn = getattr(tagging, "delete_rule", None)
+        if delete_fn:
+            success = delete_fn(rule_id)
+            if success:
+                return send_json({"success": True, "message": f"Rule {rule_id} deleted"}), 200
+            return send_json({"error": "Rule not found"}), 404
+        return send_json({"error": "Delete not supported"}), 501
+    except Exception as e:
+        logger.error(f"Error deleting tagging rule: {e}")
+        return send_json({"error": str(e)}), 500
+
+
+@framework_bp.route("/call-tagging/rules/<rule_id>/toggle", methods=["POST"])
+@require_auth
+def toggle_tagging_rule(rule_id: str) -> tuple[Response, int]:
+    """Toggle a call tagging rule on/off."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.call_tagging import get_call_tagging
+
+        tagging = get_call_tagging(pbx_core.config if pbx_core else None)
+        toggle_fn = getattr(tagging, "toggle_rule", None)
+        if toggle_fn:
+            result = toggle_fn(rule_id)
+            return send_json({"success": True, "rule_id": rule_id, "enabled": result}), 200
+        return send_json({"error": "Toggle not supported"}), 501
+    except Exception as e:
+        logger.error(f"Error toggling tagging rule: {e}")
+        return send_json({"error": str(e)}), 500
+
+
 @framework_bp.route("/call-tagging/classify/<call_id>", methods=["POST"])
 @require_auth
 def classify_call(call_id: str) -> tuple[Response, int]:
@@ -1865,6 +1926,32 @@ def pause_dialing_campaign(campaign_id: str) -> tuple[Response, int]:
     except Exception as e:
         logger.error(f"Error pausing campaign: {e}")
         return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route(
+    "/predictive-dialing/campaigns/<campaign_id>/toggle", methods=["POST"]
+)
+@require_auth
+def toggle_dialing_campaign(campaign_id: str) -> tuple[Response, int]:
+    """Toggle a predictive dialing campaign start/pause."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.predictive_dialing import get_predictive_dialer
+
+        dialer = get_predictive_dialer(pbx_core.config if pbx_core else None)
+        campaign = dialer.get_campaign(campaign_id)
+        if not campaign:
+            return send_json({"error": "Campaign not found"}), 404
+
+        status = getattr(campaign, "status", "paused")
+        if status == "active":
+            dialer.pause_campaign(campaign_id)
+            return send_json({"success": True, "status": "paused"}), 200
+        dialer.start_campaign(campaign_id)
+        return send_json({"success": True, "status": "active"}), 200
+    except Exception as e:
+        logger.error(f"Error toggling campaign: {e}")
+        return send_json({"error": str(e)}), 500
 
 
 # =============================================================================

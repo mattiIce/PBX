@@ -202,8 +202,8 @@ export async function loadQoSMetrics(): Promise<void> {
 export async function clearQoSAlerts(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/qos/alerts`, {
-            method: 'DELETE',
+        const response = await fetch(`${API_BASE}/api/qos/clear-alerts`, {
+            method: 'POST',
             headers: getAuthHeaders()
         });
         if (response.ok) {

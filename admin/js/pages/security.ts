@@ -48,7 +48,7 @@ interface SpeechAnalyticsResponse {
 export async function loadFraudAlerts(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
-        const response = await fetch(`${API_BASE}/api/security/fraud-alerts`, {
+        const response = await fetch(`${API_BASE}/api/fraud-detection/alerts`, {
             headers: getAuthHeaders()
         });
         if (!response.ok) throw new Error(`HTTP ${response.status}`);

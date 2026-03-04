@@ -67,17 +67,37 @@ def handle_get_voicemail(subpath: str) -> Response:
                 for msg in messages
             ]
             return send_json({"messages": data})
+
+        # Find specific message for 2-segment and 3-segment paths
+        message_id = parts[1]
+        message = None
+        for msg in mailbox.get_messages():
+            if msg["id"] == message_id:
+                message = msg
+                break
+
+        if len(parts) == 3 and parts[2] == "audio":
+            # Serve audio file: /api/voicemail/{extension}/{message_id}/audio
+            if not message:
+                return send_json({"error": "Message not found"}, 404)
+            if Path(message["file_path"]).exists():
+                with Path(message["file_path"]).open("rb") as f:
+                    audio_data = f.read()
+                resp = current_app.response_class(
+                    response=audio_data,
+                    status=200,
+                    mimetype="audio/wav",
+                )
+                download_param = request.args.get("download", "0")
+                if download_param in ["1", "true"]:
+                    resp.headers["Content-Disposition"] = (
+                        f'attachment; filename="voicemail_{extension}_{message_id}.wav"'
+                    )
+                return resp
+            return send_json({"error": "Audio file not found"}, 404)
+
         if len(parts) == 2:
             # Get specific message or download audio
-            message_id = parts[1]
-
-            # Find message
-            message = None
-            for msg in mailbox.get_messages():
-                if msg["id"] == message_id:
-                    message = msg
-                    break
-
             if not message:
                 return send_json({"error": "Message not found"}, 404)
 
@@ -101,14 +121,47 @@ def handle_get_voicemail(subpath: str) -> Response:
             if Path(message["file_path"]).exists():
                 with Path(message["file_path"]).open("rb") as f:
                     audio_data = f.read()
-                response = current_app.response_class(
+                resp = current_app.response_class(
                     response=audio_data,
                     status=200,
                     mimetype="audio/wav",
                 )
-                return response
+                return resp
             return send_json({"error": "Audio file not found"}, 404)
+        return send_json({"error": "Invalid path"}, 400)
     except (KeyError, OSError, TypeError, ValueError) as e:
+        return send_json({"error": str(e)}, 500)
+
+
+@voicemail_bp.route("/api/voicemail/<path:subpath>", methods=["POST"])
+@require_auth
+def handle_post_voicemail(subpath: str) -> Response:
+    """Handle POST actions on voicemail messages (e.g. mark as read)."""
+    pbx_core = get_pbx_core()
+    if not pbx_core or not hasattr(pbx_core, "voicemail_system"):
+        return send_json({"error": "Voicemail not enabled"}, 500)
+
+    try:
+        parts = subpath.split("/")
+        if len(parts) < 1:
+            return send_json({"error": "Invalid path"}, 400)
+
+        extension = parts[0]
+
+        allowed, error_response = check_extension_access(extension)
+        if not allowed:
+            return error_response
+
+        mailbox = pbx_core.voicemail_system.get_mailbox(extension)
+
+        if len(parts) == 3 and parts[2] == "read":
+            # Mark message as read: POST /api/voicemail/{ext}/{id}/read
+            message_id = parts[1]
+            mailbox.mark_listened(message_id)
+            return send_json({"success": True, "message": "Message marked as read"})
+
+        return send_json({"error": "Invalid operation"}, 400)
+    except (KeyError, TypeError, ValueError) as e:
         return send_json({"error": str(e)}, 500)
 
 
