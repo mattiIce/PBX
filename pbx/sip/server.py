@@ -548,6 +548,11 @@ class SIPServer:
                     )
                     self._send_message(response_487.build(), addr)
 
+                # Cancel INVITE retransmission
+                if hasattr(call, "invite_transaction") and call.invite_transaction:
+                    call.invite_transaction.cancel()
+                    call.invite_transaction = None
+
                 # Forward CANCEL to callee to stop their phone from ringing
                 if call.callee_addr and hasattr(call, "callee_invite") and call.callee_invite:
                     self.pbx_core._call_router._send_cancel_to_callee(call, call_id)

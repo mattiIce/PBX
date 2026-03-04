@@ -536,6 +536,11 @@ class CallRouter:
         call.routed_to_voicemail = True
         pbx.logger.info(f"No answer for call {call_id}, routing to voicemail")
 
+        # Cancel INVITE retransmission if still running
+        if hasattr(call, "invite_transaction") and call.invite_transaction:
+            call.invite_transaction.cancel()
+            call.invite_transaction = None
+
         # Send CANCEL to the callee to stop their phone from ringing
         self._send_cancel_to_callee(call, call_id)
 

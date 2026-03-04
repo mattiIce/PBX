@@ -1069,6 +1069,11 @@ class PBXCore:
         if call:
             self.logger.info(f"Ending call {call_id}")
 
+            # Cancel INVITE retransmission if still running
+            if hasattr(call, "invite_transaction") and call.invite_transaction:
+                call.invite_transaction.cancel()
+                call.invite_transaction = None
+
             # Cancel no-answer timer if still running
             if call.no_answer_timer:
                 call.no_answer_timer.cancel()
