@@ -1669,168 +1669,90 @@ class WebRTCGateway:
                 )
                 call.no_answer_timer.start()
             elif is_valid_dialplan:
-                # Virtual extension (AA, voicemail, paging, etc.)
-                # These services run locally — no SIP INVITE needed.
-                # Release the relay (not needed) and allocate a raw port
-                # for the service's RTPPlayer / DTMFListener.
+                # Virtual extension (auto attendant, voicemail, paging, etc.)
+                # Handle directly — there is no SIP phone to INVITE.
+                self.logger.info(
+                    f"Target {target_extension} is a virtual extension; "
+                    "routing through PBX call router"
+                )
+
+                # Mark as WebRTC call
+                call.webrtc_session_id = session.session_id
+                call.caller_addr = None
+
+                # Release the relay — virtual extensions use a direct
+                # bridge between aiortc and the service's RTP port.
                 self.pbx_core.rtp_relay.release_relay(call_id)
 
+                # Allocate a plain RTP port for the virtual service
                 try:
-                    service_port: int = self.pbx_core.rtp_relay.port_pool.pop(0)
+                    service_port = self.pbx_core.rtp_relay.port_pool.pop(0)
                 except IndexError:
                     self.logger.error(
-                        f"No available RTP ports for service call {call_id}"
+                        f"No available RTP ports for virtual extension {target_extension}"
                     )
                     return None
 
                 call.rtp_ports = (service_port, service_port + 1)
-                call.aa_rtp_port = service_port  # for port-pool cleanup
 
-                # Start service media bridge (WebRTC ↔ local service port)
-                # The bridge lives on the signaling server which owns the
-                # asyncio event loop needed for the browser→service path.
-                bridge_port = (
-                    webrtc_signaling.start_service_media_bridge(session, service_port)
-                    if webrtc_signaling
-                    else None
-                )
-                if not bridge_port:
+                # Start aiortc ↔ service media bridge.  The bridge socket
+                # communicates directly with the service's RTP port (no
+                # relay needed because only one audio endpoint exists).
+                bridge_started = False
+                if webrtc_signaling:
+                    bridge_started = webrtc_signaling.start_media_bridge(
+                        session, service_port, ("127.0.0.1", service_port)
+                    )
+
+                if not bridge_started:
                     self.logger.error(
-                        f"Failed to start service media bridge for {call_id}"
+                        f"Failed to start media bridge for virtual extension {target_extension}"
                     )
                     self.pbx_core.rtp_relay.port_pool.append(service_port)
+                    self.pbx_core.rtp_relay.port_pool.sort()
                     return None
 
-                # Point caller_rtp at the bridge so RTPPlayer sends there
-                call.caller_rtp = {
-                    "address": "127.0.0.1",
-                    "port": bridge_port,
-                    "formats": [0, 8],
-                }
-                call.webrtc_session_id = session.session_id
-                call.caller_addr = None  # No SIP address
+                # The bridge socket is now open — tell the service to send
+                # its audio to the bridge (and receive browser audio from it).
+                bridge_port = getattr(session, "bridge_port", None)
+                if bridge_port:
+                    call.caller_rtp = {
+                        "address": "127.0.0.1",
+                        "port": bridge_port,
+                        "formats": ["0"],  # PCMU
+                    }
+                else:
+                    self.logger.error("Media bridge started but bridge_port is unknown")
+                    return None
 
-                pbx = self.pbx_core
-
-                # --- Auto Attendant ---
-                if (
-                    pbx.auto_attendant
-                    and target_extension == pbx.auto_attendant.get_extension()
-                ):
+                # --- Route to the appropriate virtual handler ---
+                aa = self.pbx_core.auto_attendant
+                if aa and target_extension == aa.get_extension():
                     call.auto_attendant_active = True
-                    pbx.cdr_system.start_record(
-                        call_id, from_extension, target_extension
-                    )
                     call.connect()
-                    aa_session = pbx.auto_attendant.start_session(
-                        call_id, from_extension
-                    )
+                    self.pbx_core.cdr_system.start_record(call_id, from_extension, target_extension)
+                    self.pbx_core.cdr_system.mark_answered(call_id)
+
+                    aa_session = aa.start_session(call_id, from_extension)
                     call.aa_session = aa_session
-                    threading.Thread(
-                        target=pbx._auto_attendant_session,
+
+                    aa_thread = threading.Thread(
+                        target=self.pbx_core._auto_attendant_handler._auto_attendant_session,
                         args=(call_id, call, aa_session),
                         daemon=True,
-                    ).start()
+                        name=f"WebRTC-AA-{call_id[:8]}",
+                    )
+                    aa_thread.start()
                     self.logger.info(
-                        f"WebRTC call {call_id} routed to auto attendant"
+                        f"Auto attendant started for WebRTC call {call_id}"
                     )
-
-                # --- Voicemail Access (*xxxx) ---
-                elif (
-                    target_extension.startswith("*")
-                    and 4 <= len(target_extension) <= 5
-                    and target_extension[1:].isdigit()
-                ):
-                    target_ext = target_extension[1:]
-                    call.voicemail_access = True
-                    call.voicemail_extension = target_ext
-
-                    mailbox = pbx.voicemail_system.get_mailbox(target_ext)
-                    pbx.cdr_system.start_record(
-                        call_id, from_extension, target_extension
-                    )
-                    call.connect()
-
-                    from pbx.features.voicemail import VoicemailIVR
-
-                    voicemail_ivr = VoicemailIVR(
-                        pbx.voicemail_system, target_ext
-                    )
-                    call.voicemail_ivr = voicemail_ivr
-                    threading.Thread(
-                        target=pbx._voicemail_ivr_session,
-                        args=(call_id, call, mailbox, voicemail_ivr),
-                        daemon=True,
-                    ).start()
-                    self.logger.info(
-                        f"WebRTC call {call_id} routed to voicemail for {target_ext}"
-                    )
-
-                # --- Paging (7xx / all-call) ---
-                elif (
-                    pbx.paging_system
-                    and pbx.paging_system.is_paging_extension(target_extension)
-                ):
-                    page_id = pbx.paging_system.initiate_page(
-                        from_extension, target_extension
-                    )
-                    if page_id:
-                        page_info = pbx.paging_system.get_page_info(page_id)
-                        call.paging_active = True
-                        call.page_id = page_id
-                        call.paging_zones = (
-                            page_info.get("zone_names", "Unknown")
-                            if page_info
-                            else "Unknown"
-                        )
-                        pbx.cdr_system.start_record(
-                            call_id, from_extension, target_extension
-                        )
-                        call.connect()
-
-                        # Locate DAC device from zone config
-                        dac_device: dict[str, Any] | None = None
-                        zones = (
-                            page_info.get("zones", []) if page_info else []
-                        )
-                        if zones:
-                            dac_device_id = zones[0].get("dac_device")
-                            if dac_device_id:
-                                for device in pbx.paging_system.get_dac_devices():
-                                    if device.get("device_id") == dac_device_id:
-                                        dac_device = device
-                                        break
-                        if dac_device:
-                            threading.Thread(
-                                target=pbx._paging_session,
-                                args=(
-                                    call_id,
-                                    call,
-                                    dac_device,
-                                    page_info,
-                                ),
-                                daemon=True,
-                            ).start()
-                        self.logger.info(
-                            f"WebRTC call {call_id} routed to paging "
-                            f"({call.paging_zones})"
-                        )
-                    else:
-                        self.logger.error(
-                            f"Failed to initiate page for {target_extension}"
-                        )
-
-                # --- Unsupported dialplan pattern ---
                 else:
                     self.logger.warning(
-                        f"Dialplan target {target_extension} not yet "
-                        "supported via WebRTC"
+                        f"Virtual extension {target_extension} not yet supported for WebRTC calls"
                     )
-                    call.connect()
             else:
                 self.logger.warning(
-                    f"Target {target_extension} has no SIP address; "
-                    "call created but no INVITE sent"
+                    f"Target {target_extension} has no SIP address and is not a virtual extension"
                 )
 
             self.logger.info(
