@@ -204,7 +204,7 @@ make lint               # ruff check + mypy
 make dev                # Start backend + frontend dev servers
 ```
 
-The project includes 77 feature modules, 225 test files, and 18 admin panel pages. See [CLAUDE.md](CLAUDE.md) for full development reference.
+The project includes 76 feature modules, 226 test files, and 18 admin panel pages. See [CLAUDE.md](CLAUDE.md) for full development reference.
 
 ## Known Issues
 

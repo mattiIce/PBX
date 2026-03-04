@@ -69,7 +69,7 @@ graph TB
             PBX_Core["PBXCore<br/>(Central Coordinator)"]
             CallRouter["Call Router"]
             CallStateMachine["Call State Machine"]
-            FeatureInitializer["Feature Initializer<br/>(77 Modules)"]
+            FeatureInitializer["Feature Initializer<br/>(76 Modules)"]
         end
 
         subgraph "Features & Handlers"
@@ -438,7 +438,7 @@ graph TD
         VoicemailHandler["core/voicemail_handler.py"]
         EmergencyHandler["core/emergency_handler.py<br/>(E911)"]
         PagingHandler["core/paging_handler.py"]
-        Features["features/*.py<br/>(77 Modules)"]
+        Features["features/*.py<br/>(76 Modules)"]
     end
 
     subgraph "API Layer"
@@ -546,7 +546,7 @@ graph TD
 ## Architecture Principles
 
 1. **Layered Design**: Clear separation between protocol (SIP/RTP), core logic, API, and frontend
-2. **Pluggable Features**: 77 feature modules can be enabled/disabled independently
+2. **Pluggable Features**: 76 feature modules can be enabled/disabled independently
 3. **Database-Backed**: All state persists to PostgreSQL or SQLite
 4. **Stateless API**: REST API can scale horizontally
 5. **Real-time Events**: SIP server processes calls synchronously; API handles async requests

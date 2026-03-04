@@ -1,6 +1,6 @@
 # PBX Scripts Directory
 
-This directory contains 62 utility scripts for managing, configuring, testing, and deploying the PBX system, organized by function.
+This directory contains 65 utility scripts for managing, configuring, testing, and deploying the PBX system, organized by function.
 
 ---
 

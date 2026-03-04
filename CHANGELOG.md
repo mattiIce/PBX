@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Full SIP protocol stack (REGISTER, INVITE, ACK, BYE, CANCEL, OPTIONS, SUBSCRIBE, NOTIFY, PUBLISH, REFER, UPDATE, PRACK, INFO, MESSAGE)
 - RTP media handling with multi-codec support (G.711, G.722, G.729, Opus)
-- 77 pluggable feature modules loaded dynamically via FeatureInitializer
+- 76 pluggable feature modules loaded dynamically via FeatureInitializer
 - Modern admin web interface built with TypeScript and Vite
 - 23 REST API route modules organized by feature domain
 - Flask app factory pattern with blueprint-based routing
@@ -35,9 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Geographic redundancy and DNS SRV failover
 - Mobile app support with push notifications (FCM and APNs)
 - Session Border Controller and data residency controls
-- Comprehensive test suite (225 test files) with pytest and Jest
+- Comprehensive test suite (226 test files) with pytest and Jest
 - CI/CD pipelines: tests, code quality, security scanning, production deployment, dependency updates, syntax checks
-- Docker Compose orchestration (PostgreSQL 17 + Redis 7 + PBX)
+- Docker Compose orchestration (PostgreSQL 17 + Redis 7 + PBX + Prometheus + Grafana)
 - Kubernetes manifests and Terraform IaC
 - Grafana monitoring dashboards
 - Production deployment scripts with Ubuntu setup wizard
