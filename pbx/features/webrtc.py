@@ -1508,10 +1508,91 @@ class WebRTCGateway:
                     args=(call_id,),
                 )
                 call.no_answer_timer.start()
+            elif is_valid_dialplan:
+                # Virtual extension (auto attendant, voicemail, paging, etc.)
+                # Handle directly — there is no SIP phone to INVITE.
+                self.logger.info(
+                    f"Target {target_extension} is a virtual extension; "
+                    "routing through PBX call router"
+                )
+
+                # Mark as WebRTC call
+                call.webrtc_session_id = session.session_id
+                call.caller_addr = None
+
+                # Release the relay — virtual extensions use a direct
+                # bridge between aiortc and the service's RTP port.
+                self.pbx_core.rtp_relay.release_relay(call_id)
+
+                # Allocate a plain RTP port for the virtual service
+                try:
+                    service_port = self.pbx_core.rtp_relay.port_pool.pop(0)
+                except IndexError:
+                    self.logger.error(
+                        f"No available RTP ports for virtual extension {target_extension}"
+                    )
+                    return None
+
+                call.rtp_ports = (service_port, service_port + 1)
+
+                # Start aiortc ↔ service media bridge.  The bridge socket
+                # communicates directly with the service's RTP port (no
+                # relay needed because only one audio endpoint exists).
+                bridge_started = False
+                if webrtc_signaling:
+                    bridge_started = webrtc_signaling.start_media_bridge(
+                        session, service_port, ("127.0.0.1", service_port)
+                    )
+
+                if not bridge_started:
+                    self.logger.error(
+                        f"Failed to start media bridge for virtual extension {target_extension}"
+                    )
+                    self.pbx_core.rtp_relay.port_pool.append(service_port)
+                    self.pbx_core.rtp_relay.port_pool.sort()
+                    return None
+
+                # The bridge socket is now open — tell the service to send
+                # its audio to the bridge (and receive browser audio from it).
+                bridge_port = getattr(session, "bridge_port", None)
+                if bridge_port:
+                    call.caller_rtp = {
+                        "address": "127.0.0.1",
+                        "port": bridge_port,
+                        "formats": ["0"],  # PCMU
+                    }
+                else:
+                    self.logger.error("Media bridge started but bridge_port is unknown")
+                    return None
+
+                # --- Route to the appropriate virtual handler ---
+                aa = self.pbx_core.auto_attendant
+                if aa and target_extension == aa.get_extension():
+                    call.auto_attendant_active = True
+                    call.connect()
+                    self.pbx_core.cdr_system.start_record(call_id, from_extension, target_extension)
+                    self.pbx_core.cdr_system.mark_answered(call_id)
+
+                    aa_session = aa.start_session(call_id, from_extension)
+                    call.aa_session = aa_session
+
+                    aa_thread = threading.Thread(
+                        target=self.pbx_core._auto_attendant_handler._auto_attendant_session,
+                        args=(call_id, call, aa_session),
+                        daemon=True,
+                        name=f"WebRTC-AA-{call_id[:8]}",
+                    )
+                    aa_thread.start()
+                    self.logger.info(
+                        f"Auto attendant started for WebRTC call {call_id}"
+                    )
+                else:
+                    self.logger.warning(
+                        f"Virtual extension {target_extension} not yet supported for WebRTC calls"
+                    )
             else:
                 self.logger.warning(
-                    f"Target {target_extension} has no SIP address; "
-                    "call created but no INVITE sent"
+                    f"Target {target_extension} has no SIP address and is not a virtual extension"
                 )
 
             self.logger.info(

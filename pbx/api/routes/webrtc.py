@@ -365,11 +365,8 @@ def handle_webrtc_dtmf() -> Response:
             logger.info(f"  Caller: {call.caller_extension}")
             logger.info(f"  Callee: {call.callee_extension}")
 
-        # Send DTMF via the call's RTP handler
-        # WebRTC clients typically need to send DTMF to the remote end
-        # We'll send to the callee's RTP handler
+        # --- Try RFC 2833 via the call's RTP handler (SIP phone calls) ---
         if hasattr(call, "rtp_handlers") and call.rtp_handlers:
-            # Find the RTP handler that's NOT for the WebRTC extension
             target_handler = None
             for ext, handler in call.rtp_handlers.items():
                 if ext != session.extension:
@@ -380,7 +377,6 @@ def handle_webrtc_dtmf() -> Response:
                 if verbose_logging:
                     logger.info(f"[VERBOSE] Sending DTMF '{digit}' via RFC2833")
 
-                # Send DTMF via RFC2833 and check return value
                 success = target_handler.rfc2833_sender.send_dtmf(digit, duration_ms=duration)
 
                 if success:
@@ -397,12 +393,24 @@ def handle_webrtc_dtmf() -> Response:
                 if verbose_logging:
                     logger.error(f"[VERBOSE] Failed to send DTMF '{digit}'")
                 return send_json({"error": f'Failed to send DTMF tone "{digit}"'}, 500)
+
+        # --- Fallback: push to dtmf_info_queue (auto attendant / IVR) ---
+        if hasattr(call, "dtmf_info_queue"):
+            call.dtmf_info_queue.append(digit)
             if verbose_logging:
-                logger.warning("[VERBOSE] No RFC2833 sender available for DTMF")
-            return send_json({"error": "DTMF sending not available for this call"}, 500)
+                logger.info(f"[VERBOSE] DTMF '{digit}' queued via dtmf_info_queue")
+            return send_json(
+                {
+                    "success": True,
+                    "message": f'DTMF tone "{digit}" sent successfully',
+                    "digit": digit,
+                    "duration": duration,
+                }
+            )
+
         if verbose_logging:
-            logger.warning(f"[VERBOSE] No RTP handlers found for call {session.call_id}")
-        return send_json({"error": "No RTP handlers available for this call"}, 500)
+            logger.warning(f"[VERBOSE] No DTMF path available for call {session.call_id}")
+        return send_json({"error": "No DTMF path available for this call"}, 500)
 
     except (KeyError, TypeError, ValueError) as e:
         if verbose_logging:
