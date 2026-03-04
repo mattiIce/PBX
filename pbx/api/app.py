@@ -58,7 +58,7 @@ def create_app(pbx_core: object | None = None) -> Flask:
 
         csp = (
             "default-src 'self'; "
-            "script-src 'self' https://cdn.jsdelivr.net "
+            "script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net "
             "https://cdnjs.cloudflare.com https://unpkg.com; "
             "style-src 'self' 'unsafe-inline'; "
             "img-src 'self' data:; "

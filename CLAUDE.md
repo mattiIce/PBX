@@ -313,7 +313,7 @@ Per-file overrides:
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| CSP unsafe-inline for styles | `pbx/api/app.py` | CSP uses `'unsafe-inline'` for `style-src` only, needed for inline `style=` attributes in HTML. `script-src` no longer uses `unsafe-inline` — all inline scripts have been extracted to external `.js` files. |
+| CSP unsafe-inline | `pbx/api/app.py` | CSP uses `'unsafe-inline'` for both `script-src` and `style-src`. All inline `<script>` blocks have been extracted to external `.js` files, but ~130 inline `onclick` event handlers remain in `admin/index.html` which still require `'unsafe-inline'` for `script-src`. Converting these to `addEventListener` would allow removing it. `style-src` needs `'unsafe-inline'` for ~330 inline `style=` attributes in `index.html`. |
 
 ### Backend
 
