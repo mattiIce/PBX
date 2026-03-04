@@ -276,7 +276,7 @@ export async function testEmergencyNotification(): Promise<void> {
     try {
         const API_BASE = getApiBaseUrl();
         const response = await fetch(`${API_BASE}/api/emergency/test`, {
-            method: 'POST',
+            method: 'GET',
             headers: getAuthHeaders(),
         });
         if (response.ok) {
