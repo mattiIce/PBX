@@ -93,7 +93,7 @@ pbx/
 │   ├── jitter_buffer.py
 │   ├── rfc2833.py    # DTMF event handling (RFC 2833)
 │   └── rtcp_monitor.py
-├── features/         # 77 feature modules (pluggable)
+├── features/         # 76 feature modules (pluggable)
 │   └── ...           # Each feature is a self-contained .py module
 ├── models/           # SQLAlchemy ORM models
 │   ├── base.py       # Declarative base
@@ -234,7 +234,7 @@ System dependencies required in CI: `espeak`, `ffmpeg`, `libopus-dev`, `portaudi
 - **Primary config**: `config.yml` (YAML format, ~27KB example)
 - **Environment vars**: `.env` file (see `.env.example`)
 - **Trunk examples**: `config_att_sip.yml`, `config_comcast_sip.yml`
-- **Docker**: `docker-compose.yml` (PostgreSQL 17 + Redis 7 + PBX)
+- **Docker**: `docker-compose.yml` (PostgreSQL 17 + Redis 7 + PBX + Prometheus + Grafana)
 
 ## Database
 
@@ -271,7 +271,7 @@ Configured in `.pre-commit-config.yaml`:
 | `package.json` | Frontend deps, Jest config, npm scripts (root level) |
 | `Makefile` | All development commands |
 | `config.yml` | Runtime configuration |
-| `docker-compose.yml` | Container orchestration (PostgreSQL 17 + Redis 7) |
+| `docker-compose.yml` | Container orchestration (PostgreSQL 17 + Redis 7 + Prometheus + Grafana) |
 | `Dockerfile` | Multi-stage build (python:3.14-slim-bookworm) |
 | `VERSION` | Project version file |
 | `constraints.txt` | Pinned dependency versions for reproducible builds |
@@ -333,7 +333,7 @@ Per-file overrides:
 - **Non-root user**: `pbx` (UID 1000)
 - **Exposed ports**: 5060/udp (SIP), 10000-20000/udp (RTP), 9000/tcp (HTTP API)
 - **Health check**: `healthcheck.py`
-- **Services** (`docker-compose.yml`): PostgreSQL 17 (`postgres:17-alpine`), Redis 7 (`redis:7-alpine`)
+- **Services** (`docker-compose.yml`): PostgreSQL 17 (`postgres:17-alpine`), Redis 7 (`redis:7-alpine`), Prometheus, Grafana
 - **Network**: `pbx-network` bridge
 
 ## Deployment
@@ -361,4 +361,4 @@ Per-file overrides:
 | `docs/` | Additional documentation |
 | `examples/` | Example configurations |
 | `screenshots/` | UI screenshots and images |
-| `scripts/` | 67 operational, setup, testing, and maintenance scripts |
+| `scripts/` | 65 operational, setup, testing, and maintenance scripts |
