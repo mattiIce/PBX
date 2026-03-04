@@ -161,13 +161,13 @@ class DatabaseBackend:
                 # This is expected when tables/indexes exist but user lacks ownership
                 # Log as debug instead of error to avoid alarming users
                 self.logger.debug(f"Skipping {context}: {e}")
-                if self.connection and not self._autocommit:
+                if self.connection:
                     self.connection.rollback()
                 return True  # Return True since this is not a critical failure
             if any(pattern in error_msg for pattern in already_exists_errors):
                 # Object already exists - this is fine
                 self.logger.debug(f"{context.capitalize()} already exists: {e}")
-                if self.connection and not self._autocommit:
+                if self.connection:
                     self.connection.rollback()
                 return True
             # Check for UNIQUE constraint violations - only suppress for schema operations
@@ -179,7 +179,7 @@ class DatabaseBackend:
                 )
                 if is_schema_operation:
                     self.logger.debug(f"UNIQUE constraint already exists: {e}")
-                    if self.connection and not self._autocommit:
+                    if self.connection:
                         self.connection.rollback()
                     return True
                 # For data operations, treat as a real error - don't suppress
@@ -189,7 +189,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection and not self._autocommit:
+            if self.connection:
                 self.connection.rollback()
             return False
 
@@ -261,7 +261,7 @@ class DatabaseBackend:
             self.logger.error(f"  Script length: {len(script)} characters")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection and not self._autocommit:
+            if self.connection:
                 self.connection.rollback()
             return False
 
@@ -299,7 +299,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection and not self._autocommit:
+            if self.connection:
                 self.connection.rollback()
             return None
 
@@ -335,7 +335,7 @@ class DatabaseBackend:
             self.logger.error(f"  Parameters: {params}")
             self.logger.error(f"  Database type: {self.db_type}")
             self.logger.error(f"  Traceback: {traceback.format_exc()}")
-            if self.connection and not self._autocommit:
+            if self.connection:
                 self.connection.rollback()
             return []
 
@@ -651,7 +651,7 @@ class DatabaseBackend:
                     self.logger.debug(f"Column {column_name} already exists")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name}: {e}")
-                if self.connection and not self._autocommit:
+                if self.connection:
                     self.connection.rollback()
 
         # Migration: Add security columns to extensions table
@@ -693,7 +693,7 @@ class DatabaseBackend:
                     self.logger.debug(f"Column {column_name} already exists in extensions")
             except Exception as e:
                 self.logger.debug(f"Column check/add for {column_name} in extensions: {e}")
-                if self.connection and not self._autocommit:
+                if self.connection:
                     self.connection.rollback()
 
         # Migration: Add device_type column to provisioned_devices table
@@ -729,7 +729,7 @@ class DatabaseBackend:
             self.logger.debug(
                 f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}"
             )
-            if self.connection and not self._autocommit:
+            if self.connection:
                 self.connection.rollback()
 
         # Apply framework feature migrations
