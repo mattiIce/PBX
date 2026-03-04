@@ -484,7 +484,7 @@ def handle_webrtc_call_status() -> Response:
 
 @webrtc_bp.route("/api/webrtc/call-status", methods=["GET"])
 @require_auth
-def handle_webrtc_call_status() -> Response:
+def handle_webrtc_call_status_get() -> Response:
     """Get the current status of a WebRTC call.
 
     Query parameters:
