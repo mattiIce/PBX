@@ -481,10 +481,11 @@ class WebRTCPhone {
                 });
 
                 if (this.peerConnection.connectionState === 'connected') {
-                    // WebRTC media path is connected – stop ringback
-                    this.stopRingbackTone();
-                    this.updateStatus('Call connected', 'success');
-                    this.updateUIState('connected');
+                    // WebRTC media path to the PBX RTP relay is ready.
+                    // This does NOT mean the remote party has answered —
+                    // actual call progress (ringing → connected) is driven
+                    // by SIP signaling and reported via _startCallStatusPolling().
+                    verboseLog('WebRTC media path ready (waiting for SIP call progress)');
                 } else if (this.peerConnection.connectionState === 'failed') {
                     verboseLog('Connection FAILED - checking stats...');
                     this.stopRingbackTone();
@@ -762,8 +763,10 @@ class WebRTCPhone {
                     callId: callData.call_id
                 });
 
-                // Start ringback tone immediately (callee is being contacted)
-                this.startRingbackTone();
+                // Ringback tone is started by _startCallStatusPolling()
+                // once the server confirms the callee's phone is ringing
+                // (SIP 180 Ringing received). Starting it here would be
+                // premature — the INVITE may not have reached the phone yet.
 
                 // Start polling for call status to detect ringing/connected/ended
                 this._startCallStatusPolling();
