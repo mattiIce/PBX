@@ -1973,3 +1973,53 @@ input[type="range"]::-moz-range-thumb:hover {
         width: 100%;
     }
 }
+
+/* Page load alert (shown by page-verify.js when CSS fails to load) */
+.page-load-alert {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ff5252;
+    color: white;
+    padding: 20px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    z-index: 99999;
+    font-family: Arial, sans-serif;
+    max-width: 500px;
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.page-load-alert p {
+    margin: 10px 0;
+}
+
+.page-load-alert-title {
+    font-size: 18px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.page-load-alert-action {
+    font-weight: bold;
+}
+
+.page-load-alert code {
+    background: rgba(255, 255, 255, 0.2);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+.page-load-alert-dismiss {
+    background: white;
+    color: #ff5252;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-top: 10px;
+}

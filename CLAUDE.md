@@ -313,19 +313,19 @@ Per-file overrides:
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| CSP unsafe-inline | `pbx/api/app.py` | CSP still uses `unsafe-inline` for `script-src` and `style-src`. Removing this requires nonce-based CSP, which is a larger refactoring effort. CORS origin restriction and `connect-src` tightening are complete. |
+| CSP unsafe-inline | `pbx/api/app.py` | CSP uses `'unsafe-inline'` for both `script-src` and `style-src`. All inline `<script>` blocks have been extracted to external `.js` files, but ~130 inline `onclick` event handlers remain in `admin/index.html` which still require `'unsafe-inline'` for `script-src`. Converting these to `addEventListener` would allow removing it. `style-src` needs `'unsafe-inline'` for ~330 inline `style=` attributes in `index.html`. |
 
 ### Backend
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| SELECT * in BI queries | `pbx/features/bi_integration.py`, `data_residency_controls.py`, `speech_analytics.py` | A few `SELECT *` queries remain for BI/data warehouse tables (`call_detail_records`, `call_queue_stats`, `qos_metrics`, `call_summaries`, `data_residency_records`) whose schemas are not defined in the codebase. These are acceptable for generic data export use cases. |
+| SELECT * in BI queries | `pbx/features/bi_integration.py` | A few `SELECT *` queries remain for BI/data warehouse tables (`call_detail_records`, `call_queue_stats`, `qos_metrics`) whose schemas are not defined in the codebase. These are acceptable for generic data export use cases where the code dynamically handles whatever columns are returned. |
 
 ### Database
 
 | Item | File(s) | Description |
 |------|---------|-------------|
-| Single Alembic migration | `alembic/versions/` | Only `001_initial_schema.py` exists. Migration discipline documentation has been added to the file. Feature modules use runtime `CREATE TABLE IF NOT EXISTS` via `pbx/utils/migrations.py`. Future core table changes must use Alembic. |
+| Few Alembic migrations | `alembic/versions/` | Only `001_initial_schema.py` and `002_add_sip_password_field.py` exist. Migration discipline documentation has been added. Feature modules use runtime `CREATE TABLE IF NOT EXISTS` via `pbx/utils/migrations.py`. Future core table changes must use Alembic. |
 
 ## Docker
 

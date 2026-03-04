@@ -279,7 +279,8 @@ class DataResidencyControls:
 
                         # Read the record from the source region table
                         select_query = (
-                            f"SELECT * FROM data_residency_records "  # nosec B608
+                            f"SELECT data_id, category, region, transferred_at "  # nosec B608
+                            f"FROM data_residency_records "
                             f"WHERE data_id = {placeholder} AND region = {placeholder}"
                         )
                         record = db.fetch_one(select_query, (data_id, from_region))

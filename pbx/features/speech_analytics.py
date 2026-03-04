@@ -515,19 +515,20 @@ class SpeechAnalyticsEngine:
         """
         try:
             result = self.db.execute(
-                "SELECT * FROM call_summaries WHERE call_id = %s",
+                "SELECT call_id, transcript, summary, sentiment, sentiment_score, "
+                "created_at FROM call_summaries WHERE call_id = %s",
                 (call_id,),
             )
 
             if result and result[0]:
                 row = result[0]
                 return {
-                    "call_id": row[1],
-                    "transcript": row[2],
-                    "summary": row[3],
-                    "sentiment": row[4],
-                    "sentiment_score": float(row[5]) if row[5] else 0.0,
-                    "created_at": row[6],
+                    "call_id": row[0],
+                    "transcript": row[1],
+                    "summary": row[2],
+                    "sentiment": row[3],
+                    "sentiment_score": float(row[4]) if row[4] else 0.0,
+                    "created_at": row[5],
                 }
             return None
         except (KeyError, TypeError, ValueError) as e:
