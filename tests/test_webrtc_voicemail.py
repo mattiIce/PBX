@@ -106,11 +106,14 @@ class TestWebRTCVoicemailAccess:
         """Test that WebRTC gateway detects voicemail access pattern"""
         gateway, mock_pbx_core, mock_call, mock_signaling = self._make_gateway_with_mocks()
 
-        # Mock the thread start and service media bridge
+        # Mock the thread start, service media bridge, and VoicemailIVR
         with (
             patch("threading.Thread") as mock_thread,
             patch.object(mock_signaling, "start_service_media_bridge", return_value=40000),
+            patch("pbx.features.webrtc.VoicemailIVR", create=True) as mock_ivr_cls,
         ):
+            mock_ivr_cls.return_value = MagicMock()
+
             # Initiate call to voicemail
             call_id = gateway.initiate_call(
                 session_id="test-session",
@@ -184,7 +187,10 @@ class TestWebRTCVoicemailAccess:
         mock_signaling.get_session.return_value.local_sdp = None
         mock_call.caller_rtp = None
 
-        with patch.object(mock_signaling, "start_service_media_bridge", return_value=40000):
+        with (
+            patch.object(mock_signaling, "start_service_media_bridge", return_value=40000),
+            patch("pbx.features.webrtc.VoicemailIVR", create=True),
+        ):
             call_id = gateway.initiate_call(
                 session_id="test-session",
                 target_extension="*1001",
@@ -204,6 +210,7 @@ class TestWebRTCVoicemailAccess:
         with (
             patch("threading.Thread"),
             patch.object(mock_signaling, "start_service_media_bridge", return_value=40000),
+            patch("pbx.features.webrtc.VoicemailIVR", create=True),
         ):
             call_id = gateway.initiate_call(
                 session_id="test-session",
@@ -223,6 +230,7 @@ class TestWebRTCVoicemailAccess:
         with (
             patch("threading.Thread"),
             patch.object(mock_signaling, "start_service_media_bridge", return_value=40000),
+            patch("pbx.features.webrtc.VoicemailIVR", create=True),
         ):
             gateway.initiate_call(
                 session_id="test-session",
@@ -305,7 +313,10 @@ class TestWebRTCAutoAttendant:
             # Verify thread targets AA session handler
             mock_thread.assert_called_once()
             thread_call = mock_thread.call_args
-            assert thread_call[1]["target"] == mock_pbx_core._auto_attendant_session
+            assert (
+                thread_call[1]["target"]
+                == mock_pbx_core._auto_attendant_handler._auto_attendant_session
+            )
             assert thread_call[1]["daemon"]
             args = thread_call[1]["args"]
             assert args[0] == call_id

@@ -7,6 +7,7 @@ can exchange real media with the PBX's plain-RTP infrastructure.
 """
 
 import asyncio
+import contextlib
 import fractions
 import socket
 import struct
@@ -14,7 +15,6 @@ import threading
 import time
 import uuid
 from datetime import UTC, datetime
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from pbx.utils.logger import get_logger
@@ -22,7 +22,7 @@ from pbx.utils.logger import get_logger
 if TYPE_CHECKING:
     from collections.abc import Callable
 
-# aiortc – server-side WebRTC implementation
+# aiortc - server-side WebRTC implementation
 try:
     from aiortc import (
         MediaStreamTrack,
@@ -42,7 +42,7 @@ logger = get_logger()
 
 
 # ---------------------------------------------------------------------------
-# Audio bridge track – sends audio FROM the PBX TO the browser
+# Audio bridge track - sends audio FROM the PBX TO the browser
 # ---------------------------------------------------------------------------
 
 if AIORTC_AVAILABLE:
@@ -70,10 +70,8 @@ if AIORTC_AVAILABLE:
             return frame
 
         def push_frame(self, frame: "AudioFrame") -> None:
-            try:
+            with contextlib.suppress(asyncio.QueueFull):
                 self._queue.put_nowait(frame)
-            except asyncio.QueueFull:
-                pass  # drop oldest – real-time audio cannot block
 
         def _silence_frame(self) -> "AudioFrame":
             frame = AudioFrame(format="s16", layout="mono", samples=self._samples_per_frame)
@@ -97,7 +95,7 @@ _ULAW_DECODE_TABLE: list[int] | None = None
 
 def _init_ulaw_tables() -> None:
     """Lazily build u-law encode / decode lookup tables."""
-    global _ULAW_ENCODE_TABLE, _ULAW_DECODE_TABLE  # noqa: PLW0603
+    global _ULAW_ENCODE_TABLE, _ULAW_DECODE_TABLE
 
     if _ULAW_DECODE_TABLE is not None:
         return
@@ -114,8 +112,8 @@ def _init_ulaw_tables() -> None:
         _ULAW_DECODE_TABLE.append(-sample if sign else sample)
 
     # Encode: 65536 entries mapping unsigned index → u-law byte
-    BIAS = 0x84
-    CLIP = 32635
+    bias = 0x84
+    clip = 32635
     _ULAW_ENCODE_TABLE = []
     for idx in range(65536):
         sample = idx - 32768  # convert to signed
@@ -123,9 +121,8 @@ def _init_ulaw_tables() -> None:
         if sample < 0:
             sign_bit = 0x80
             sample = -sample
-        if sample > CLIP:
-            sample = CLIP
-        sample += BIAS
+        sample = min(sample, clip)
+        sample += bias
         exponent = 7
         for mask in (0x4000, 0x2000, 0x1000, 0x0800, 0x0400, 0x0200, 0x0100):
             if sample & mask:
@@ -351,7 +348,7 @@ class WebRTCSignalingServer:
                 self._loop_thread.start()
                 self.logger.info("aiortc async event loop started")
             else:
-                self.logger.warning("aiortc not installed – WebRTC media bridge unavailable")
+                self.logger.warning("aiortc not installed - WebRTC media bridge unavailable")
             if self.verbose_logging:
                 self.logger.info("WebRTC verbose logging ENABLED")
                 self.logger.info(f"  STUN servers: {self.stun_servers}")
@@ -891,9 +888,7 @@ class WebRTCSignalingServer:
                         has_ext = (data[0] >> 4) & 0x01
                         header_len = 12 + 4 * cc
                         if has_ext and len(data) > header_len + 4:
-                            ext_len = struct.unpack(
-                                "!H", data[header_len + 2 : header_len + 4]
-                            )[0]
+                            ext_len = struct.unpack("!H", data[header_len + 2 : header_len + 4])[0]
                             header_len += 4 + ext_len * 4
                         if len(data) <= header_len:
                             continue
@@ -904,9 +899,7 @@ class WebRTCSignalingServer:
                         pcm_8k = _ulaw_to_pcm(payload)
                         pcm_48k = _upsample_8k_to_48k(pcm_8k)
                         samples = len(pcm_48k) // 2
-                        frame = AudioFrame(
-                            format="s16", layout="mono", samples=samples
-                        )
+                        frame = AudioFrame(format="s16", layout="mono", samples=samples)
                         for plane in frame.planes:
                             plane.update(pcm_48k)
                         frame.pts = seq * samples
@@ -960,8 +953,7 @@ class WebRTCSignalingServer:
                                 dst = array.array(
                                     "h",
                                     [
-                                        sum(src[i * ratio : i * ratio + ratio])
-                                        // ratio
+                                        sum(src[i * ratio : i * ratio + ratio]) // ratio
                                         for i in range(out_len)
                                     ],
                                 )
@@ -977,10 +969,8 @@ class WebRTCSignalingServer:
                             rtp_ts & 0xFFFFFFFF,
                             ssrc,
                         )
-                        try:
+                        with contextlib.suppress(OSError):
                             sock.sendto(header + ulaw, relay_addr)
-                        except OSError:
-                            pass
                         rtp_seq += 1
                         rtp_ts += samples
                 except Exception:
@@ -1000,17 +990,13 @@ class WebRTCSignalingServer:
         """Stop the media bridge for a session."""
         session._bridge_running = False
         if session.bridge_socket:
-            try:
+            with contextlib.suppress(OSError):
                 session.bridge_socket.close()
-            except OSError:
-                pass
             session.bridge_socket = None
         if session.pc:
             if self._loop:
-                try:
+                with contextlib.suppress(Exception):
                     asyncio.run_coroutine_threadsafe(session.pc.close(), self._loop)
-                except Exception:
-                    pass
             session.pc = None
 
     def start_service_media_bridge(
@@ -1035,9 +1021,7 @@ class WebRTCSignalingServer:
             The bridge socket port, or ``None`` on failure.
         """
         if not AIORTC_AVAILABLE or not session.pc:
-            self.logger.error(
-                "Cannot start service media bridge: aiortc not available or no PC"
-            )
+            self.logger.error("Cannot start service media bridge: aiortc not available or no PC")
             return None
 
         try:
@@ -1074,9 +1058,7 @@ class WebRTCSignalingServer:
                         has_ext = (data[0] >> 4) & 0x01
                         header_len = 12 + 4 * cc
                         if has_ext and len(data) > header_len + 4:
-                            ext_len = struct.unpack(
-                                "!H", data[header_len + 2 : header_len + 4]
-                            )[0]
+                            ext_len = struct.unpack("!H", data[header_len + 2 : header_len + 4])[0]
                             header_len += 4 + ext_len * 4
                         if len(data) <= header_len:
                             continue
@@ -1084,9 +1066,7 @@ class WebRTCSignalingServer:
                         pcm_8k = _ulaw_to_pcm(payload)
                         pcm_48k = _upsample_8k_to_48k(pcm_8k)
                         samples = len(pcm_48k) // 2
-                        frame = AudioFrame(
-                            format="s16", layout="mono", samples=samples
-                        )
+                        frame = AudioFrame(format="s16", layout="mono", samples=samples)
                         for plane in frame.planes:
                             plane.update(pcm_48k)
                         frame.pts = seq * samples
@@ -1138,8 +1118,7 @@ class WebRTCSignalingServer:
                                 dst = array.array(
                                     "h",
                                     [
-                                        sum(src[i * ratio : i * ratio + ratio])
-                                        // ratio
+                                        sum(src[i * ratio : i * ratio + ratio]) // ratio
                                         for i in range(out_len)
                                     ],
                                 )
@@ -1154,10 +1133,8 @@ class WebRTCSignalingServer:
                             rtp_ts & 0xFFFFFFFF,
                             ssrc,
                         )
-                        try:
+                        with contextlib.suppress(OSError):
                             sock.sendto(header + ulaw, service_addr)
-                        except OSError:
-                            pass
                         rtp_seq += 1
                         rtp_ts += samples
                 except Exception:
@@ -1604,7 +1581,7 @@ class WebRTCGateway:
             #    call router when the INVITE is processed.
             dest_ext_obj = self.pbx_core.extension_registry.get(target_extension)
             if dest_ext_obj and dest_ext_obj.address:
-                # Regular SIP phone – send INVITE with PBX RTP endpoint
+                # Regular SIP phone - send INVITE with PBX RTP endpoint
                 from pbx.sip.message import SIPMessageBuilder
                 from pbx.sip.sdp import SDPBuilder
 
@@ -1638,9 +1615,7 @@ class WebRTCGateway:
                     "Via",
                     f"SIP/2.0/UDP {server_ip}:{sip_port};branch=z9hG4bK{uuid.uuid4().hex[:16]}",
                 )
-                invite.set_header(
-                    "Contact", f"<sip:{from_extension}@{server_ip}:{sip_port}>"
-                )
+                invite.set_header("Contact", f"<sip:{from_extension}@{server_ip}:{sip_port}>")
                 invite.set_header("Content-type", "application/sdp")
 
                 # Store invite so handle_callee_answer can send 200 OK
@@ -1652,13 +1627,9 @@ class WebRTCGateway:
                 # instead of sending a SIP 200 OK to the caller.
                 call.webrtc_session_id = session.session_id
 
-                self.pbx_core.sip_server._send_message(
-                    invite.build(), dest_ext_obj.address
-                )
+                self.pbx_core.sip_server._send_message(invite.build(), dest_ext_obj.address)
                 call.callee_addr = dest_ext_obj.address
-                self.logger.info(
-                    f"Sent SIP INVITE to {target_extension} at {dest_ext_obj.address}"
-                )
+                self.logger.info(f"Sent SIP INVITE to {target_extension} at {dest_ext_obj.address}")
 
                 # Start no-answer timer
                 no_answer_timeout = self.pbx_core.config.get("voicemail.no_answer_timeout", 30)
@@ -1670,7 +1641,7 @@ class WebRTCGateway:
                 call.no_answer_timer.start()
             elif is_valid_dialplan:
                 # Virtual extension (auto attendant, voicemail, paging, etc.)
-                # Handle directly — there is no SIP phone to INVITE.
+                # Handle directly - there is no SIP phone to INVITE.
                 self.logger.info(
                     f"Target {target_extension} is a virtual extension; "
                     "routing through PBX call router"
@@ -1695,16 +1666,17 @@ class WebRTCGateway:
 
                 call.rtp_ports = (service_port, service_port + 1)
 
-                # Start aiortc ↔ service media bridge.  The bridge socket
+                # Start aiortc <-> service media bridge.  The bridge socket
                 # communicates directly with the service's RTP port (no
                 # relay needed because only one audio endpoint exists).
-                bridge_started = False
+                bridge_port = None
                 if webrtc_signaling:
-                    bridge_started = webrtc_signaling.start_media_bridge(
-                        session, service_port, ("127.0.0.1", service_port)
+                    bridge_port = webrtc_signaling.start_service_media_bridge(
+                        session,
+                        service_port,
                     )
 
-                if not bridge_started:
+                if not bridge_port:
                     self.logger.error(
                         f"Failed to start media bridge for virtual extension {target_extension}"
                     )
@@ -1712,44 +1684,104 @@ class WebRTCGateway:
                     self.pbx_core.rtp_relay.port_pool.sort()
                     return None
 
-                # The bridge socket is now open — tell the service to send
+                # The bridge socket is now open - tell the service to send
                 # its audio to the bridge (and receive browser audio from it).
-                bridge_port = getattr(session, "bridge_port", None)
-                if bridge_port:
-                    call.caller_rtp = {
-                        "address": "127.0.0.1",
-                        "port": bridge_port,
-                        "formats": ["0"],  # PCMU
-                    }
-                else:
-                    self.logger.error("Media bridge started but bridge_port is unknown")
-                    return None
+                call.caller_rtp = {
+                    "address": "127.0.0.1",
+                    "port": bridge_port,
+                    "formats": ["0"],  # PCMU
+                }
 
                 # --- Route to the appropriate virtual handler ---
-                aa = self.pbx_core.auto_attendant
-                if aa and target_extension == aa.get_extension():
-                    call.auto_attendant_active = True
+                if target_extension.startswith("*") and len(target_extension) > 1:
+                    # Voicemail access (*xxxx pattern)
+                    vm_ext = target_extension[1:]
+                    call.voicemail_access = True
+                    call.voicemail_extension = vm_ext
                     call.connect()
                     self.pbx_core.cdr_system.start_record(call_id, from_extension, target_extension)
                     self.pbx_core.cdr_system.mark_answered(call_id)
 
-                    aa_session = aa.start_session(call_id, from_extension)
-                    call.aa_session = aa_session
+                    mailbox = self.pbx_core.voicemail_system.get_mailbox(vm_ext)
+                    from pbx.features.voicemail import VoicemailIVR
 
-                    aa_thread = threading.Thread(
-                        target=self.pbx_core._auto_attendant_handler._auto_attendant_session,
-                        args=(call_id, call, aa_session),
+                    voicemail_ivr = VoicemailIVR(self.pbx_core.voicemail_system, vm_ext)
+                    call.voicemail_ivr = voicemail_ivr
+
+                    vm_thread = threading.Thread(
+                        target=self.pbx_core._voicemail_ivr_session,
+                        args=(call_id, call, mailbox, voicemail_ivr),
                         daemon=True,
-                        name=f"WebRTC-AA-{call_id[:8]}",
+                        name=f"WebRTC-VM-{call_id[:8]}",
                     )
-                    aa_thread.start()
+                    vm_thread.start()
                     self.logger.info(
-                        f"Auto attendant started for WebRTC call {call_id}"
+                        f"Voicemail IVR started for WebRTC call {call_id} (mailbox {vm_ext})"
+                    )
+                elif (
+                    hasattr(self.pbx_core, "paging_system")
+                    and self.pbx_core.paging_system
+                    and self.pbx_core.paging_system.is_paging_extension(target_extension)
+                ):
+                    # Paging extension (7xx pattern)
+                    page_id = self.pbx_core.paging_system.initiate_page(
+                        from_extension, target_extension
+                    )
+                    if not page_id:
+                        self.logger.error(f"Failed to initiate page for {target_extension}")
+                        self.pbx_core.rtp_relay.port_pool.append(service_port)
+                        self.pbx_core.rtp_relay.port_pool.sort()
+                        return None
+
+                    page_info = self.pbx_core.paging_system.get_page_info(page_id)
+                    call.paging_active = True
+                    call.page_id = page_id
+                    call.paging_zones = page_info.get("zone_names", "Unknown")
+                    call.connect()
+                    self.pbx_core.cdr_system.start_record(call_id, from_extension, target_extension)
+                    self.pbx_core.cdr_system.mark_answered(call_id)
+
+                    dac_devices = self.pbx_core.paging_system.get_dac_devices(
+                        page_info.get("zones", [])
+                    )
+                    dac_device = dac_devices[0] if dac_devices else None
+
+                    paging_thread = threading.Thread(
+                        target=self.pbx_core._paging_session,
+                        args=(call_id, call, dac_device, page_info),
+                        daemon=True,
+                        name=f"WebRTC-Page-{call_id[:8]}",
+                    )
+                    paging_thread.start()
+                    self.logger.info(
+                        f"Paging started for WebRTC call {call_id} (zone {call.paging_zones})"
                     )
                 else:
-                    self.logger.warning(
-                        f"Virtual extension {target_extension} not yet supported for WebRTC calls"
-                    )
+                    aa = self.pbx_core.auto_attendant
+                    if aa and target_extension == aa.get_extension():
+                        call.auto_attendant_active = True
+                        call.connect()
+                        self.pbx_core.cdr_system.start_record(
+                            call_id, from_extension, target_extension
+                        )
+                        self.pbx_core.cdr_system.mark_answered(call_id)
+
+                        aa_session = aa.start_session(call_id, from_extension)
+                        call.aa_session = aa_session
+
+                        aa_thread = threading.Thread(
+                            target=self.pbx_core._auto_attendant_handler._auto_attendant_session,
+                            args=(call_id, call, aa_session),
+                            daemon=True,
+                            name=f"WebRTC-AA-{call_id[:8]}",
+                        )
+                        aa_thread.start()
+                        self.logger.info(f"Auto attendant started for WebRTC call {call_id}")
+                    else:
+                        self.logger.warning(
+                            f"Virtual extension {target_extension} "
+                            "not yet supported for WebRTC calls"
+                        )
             else:
                 self.logger.warning(
                     f"Target {target_extension} has no SIP address and is not a virtual extension"

@@ -200,9 +200,9 @@ class WebRTCPhone {
                 );
                 if (!response.ok) return;
                 const data = await response.json();
-                if (!data.success) return;
+                if (data.error) return;
 
-                const newState = data.state;
+                const newState = data.status;
                 if (newState === this._currentCallState) return;
 
                 verboseLog('Call state changed:', this._currentCallState, '->', newState);
