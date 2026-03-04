@@ -853,3 +853,18 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+// Expose to window for tabs.ts loader and onclick handlers
+window.loadAutoAttendantConfig = loadAutoAttendantConfig;
+window.loadAutoAttendantPrompts = loadAutoAttendantPrompts;
+window.loadAutoAttendantMenuOptions = loadAutoAttendantMenuOptions;
+window.showAddMenuOptionModal = showAddMenuOptionModal;
+window.closeAddMenuOptionModal = closeAddMenuOptionModal;
+window.editMenuOption = editMenuOption;
+window.closeEditMenuOptionModal = closeEditMenuOptionModal;
+window.deleteMenuOption = deleteMenuOption;
+window.navigateToMenu = navigateToMenu;
+window.toggleMenuTreeView = toggleMenuTreeView;
+window.showCreateSubmenuModal = showCreateSubmenuModal;
+window.closeCreateSubmenuModal = closeCreateSubmenuModal;
+window.updateDestinationFieldVisibility = updateDestinationFieldVisibility;

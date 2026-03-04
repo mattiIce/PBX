@@ -1149,3 +1149,27 @@ function showEspoCRMCreateResult(message) {
         resultDiv.style.display = 'none';
     }, 5000);
 }
+
+// Expose to window for tabs.ts loader and onclick handlers
+window.loadOpenSourceIntegrations = loadOpenSourceIntegrations;
+window.loadJitsiConfig = loadJitsiConfig;
+window.loadMatrixConfig = loadMatrixConfig;
+window.loadEspoCRMConfig = loadEspoCRMConfig;
+window.toggleJitsiSettings = toggleJitsiSettings;
+window.testJitsiConnection = testJitsiConnection;
+window.toggleMatrixSettings = toggleMatrixSettings;
+window.testMatrixConnection = testMatrixConnection;
+window.toggleEspoCRMSettings = toggleEspoCRMSettings;
+window.testEspoCRMConnection = testEspoCRMConnection;
+window.quickToggleIntegration = quickToggleIntegration;
+window.quickSetupIntegration = quickSetupIntegration;
+window.disableIntegration = disableIntegration;
+window.createInstantJitsiMeeting = createInstantJitsiMeeting;
+window.scheduleJitsiMeeting = scheduleJitsiMeeting;
+window.copyJitsiMeetingUrl = copyJitsiMeetingUrl;
+window.openJitsiMeeting = openJitsiMeeting;
+window.sendMatrixMessage = sendMatrixMessage;
+window.sendMatrixTestNotification = sendMatrixTestNotification;
+window.createMatrixRoom = createMatrixRoom;
+window.searchEspoCRMContact = searchEspoCRMContact;
+window.createEspoCRMContact = createEspoCRMContact;
