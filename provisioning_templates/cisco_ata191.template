@@ -7,7 +7,7 @@
 <!-- ============================================================================ -->
 <!-- Provisioning Parameters -->
 <!-- ============================================================================ -->
-<Provision_Enable>No</Provision_Enable>
+<Provision_Enable>Yes</Provision_Enable>
 <Resync_On_Reset>Yes</Resync_On_Reset>
 <Resync_Random_Delay>2</Resync_Random_Delay>
 <Resync_Periodic>3600</Resync_Periodic>
@@ -116,9 +116,91 @@
 
 <!-- ============================================================================ -->
 <!-- Line 2 (FXS Port 2) Configuration -->
-<!-- NOTE: Line 2 disabled by default (configure via provisioning system) -->
+<!-- Line 2 is enabled/disabled based on whether a second extension is assigned -->
 <!-- ============================================================================ -->
-<Line_Enable_2_>No</Line_Enable_2_>
+<Line_Enable_2_>{{LINE_2_ENABLE}}</Line_Enable_2_>
+<Display_Name_2_>{{EXTENSION_NAME_2}}</Display_Name_2_>
+<User_ID_2_>{{EXTENSION_NUMBER_2}}</User_ID_2_>
+<Auth_ID_2_>{{EXTENSION_NUMBER_2}}</Auth_ID_2_>
+<Password_2_>{{EXTENSION_PASSWORD_2}}</Password_2_>
+
+<!-- SIP Settings -->
+<Proxy_2_>{{SIP_SERVER}}</Proxy_2_>
+<Outbound_Proxy_2_></Outbound_Proxy_2_>
+<Use_Outbound_Proxy_2_>No</Use_Outbound_Proxy_2_>
+<Register_2_>Yes</Register_2_>
+<Make_Call_Without_Reg_2_>No</Make_Call_Without_Reg_2_>
+<Register_Expires_2_>3600</Register_Expires_2_>
+<Ans_Call_Without_Reg_2_>No</Ans_Call_Without_Reg_2_>
+<Use_DNS_SRV_2_>No</Use_DNS_SRV_2_>
+<DNS_SRV_Auto_Prefix_2_>No</DNS_SRV_Auto_Prefix_2_>
+
+<!-- Codec Configuration -->
+<Preferred_Codec_2_>G711u</Preferred_Codec_2_>
+<Second_Preferred_Codec_2_>G711a</Second_Preferred_Codec_2_>
+<Third_Preferred_Codec_2_>G729a</Third_Preferred_Codec_2_>
+<G729a_Enable_2_>Yes</G729a_Enable_2_>
+<G711u_Enable_2_>Yes</G711u_Enable_2_>
+<G711a_Enable_2_>Yes</G711a_Enable_2_>
+<G726-16_Enable_2_>No</G726-16_Enable_2_>
+<G726-24_Enable_2_>No</G726-24_Enable_2_>
+<G726-32_Enable_2_>No</G726-32_Enable_2_>
+<G726-40_Enable_2_>No</G726-40_Enable_2_>
+<G722_Enable_2_>No</G722_Enable_2_>
+<iLBC_Enable_2_>No</iLBC_Enable_2_>
+
+<!-- DTMF Settings -->
+<DTMF_Tx_Method_2_>AVT</DTMF_Tx_Method_2_>
+<DTMF_Tx_Mode_2_>Strict</DTMF_Tx_Mode_2_>
+<Hook_Flash_Tx_Method_2_>None</Hook_Flash_Tx_Method_2_>
+<RTP_Packet_Size_2_>0.020</RTP_Packet_Size_2_>
+
+<!-- Fax Settings - T.38 -->
+<FAX_Enable_T38_2_>Yes</FAX_Enable_T38_2_>
+<FAX_Codec_Symmetric_2_>Yes</FAX_Codec_Symmetric_2_>
+<FAX_T38_Redundancy_2_>1</FAX_T38_Redundancy_2_>
+<FAX_Passthru_Method_2_>NSE</FAX_Passthru_Method_2_>
+<FAX_Passthru_Codec_2_>G711u</FAX_Passthru_Codec_2_>
+<FAX_Process_NSE_2_>Yes</FAX_Process_NSE_2_>
+<FAX_Disable_ECAN_2_>Yes</FAX_Disable_ECAN_2_>
+<FAX_Tone_Detect_Mode_2_>caller or callee</FAX_Tone_Detect_Mode_2_>
+<FAX_CED_Detect_Enable_2_>Yes</FAX_CED_Detect_Enable_2_>
+<FAX_CNG_Detect_Enable_2_>Yes</FAX_CNG_Detect_Enable_2_>
+
+<!-- Voice Processing -->
+<Silence_Supp_Enable_2_>No</Silence_Supp_Enable_2_>
+<Echo_Canc_Enable_2_>Yes</Echo_Canc_Enable_2_>
+<Echo_Canc_Adapt_Enable_2_>Yes</Echo_Canc_Adapt_Enable_2_>
+<Echo_Supp_Enable_2_>Yes</Echo_Supp_Enable_2_>
+<Voice_Frames_Per_TX_2_>2</Voice_Frames_Per_TX_2_>
+
+<!-- Caller ID -->
+<Caller_ID_Method_2_>Bellcore(N.Amer,China)</Caller_ID_Method_2_>
+<Caller_ID_FSK_Standard_2_>bell202</Caller_ID_FSK_Standard_2_>
+<CWCID_Setting_2_>Bellcore</CWCID_Setting_2_>
+<Dist_Ring_Cadence_2_>0</Dist_Ring_Cadence_2_>
+
+<!-- Audio Configuration -->
+<Txgain_2_>0</Txgain_2_>
+<Rxgain_2_>0</Rxgain_2_>
+<FXS_Port_Input_Volume_2_>0</FXS_Port_Input_Volume_2_>
+<FXS_Port_Output_Volume_2_>0</FXS_Port_Output_Volume_2_>
+
+<!-- Call Features -->
+<Conference_Bridge_URL_2_></Conference_Bridge_URL_2_>
+<Three_Way_Call_Serv_2_>No</Three_Way_Call_Serv_2_>
+<Three_Way_Conf_Serv_2_>No</Three_Way_Conf_Serv_2_>
+<Call_Waiting_Serv_2_>Yes</Call_Waiting_Serv_2_>
+<Block_CID_Serv_2_>No</Block_CID_Serv_2_>
+<Block_ANC_Serv_2_>No</Block_ANC_Serv_2_>
+<Cfwd_All_Serv_2_>No</Cfwd_All_Serv_2_>
+<Cfwd_Busy_Serv_2_>No</Cfwd_Busy_Serv_2_>
+<Cfwd_No_Ans_Serv_2_>No</Cfwd_No_Ans_Serv_2_>
+<Block_Last_Callers_Serv_2_>No</Block_Last_Callers_Serv_2_>
+<Accept_Last_Callers_Serv_2_>No</Accept_Last_Callers_Serv_2_>
+<DND_Serv_2_>No</DND_Serv_2_>
+<Anonymous_Call_Block_2_>No</Anonymous_Call_Block_2_>
+<Secure_Call_Serv_2_>No</Secure_Call_Serv_2_>
 
 <!-- ============================================================================ -->
 <!-- System Parameters -->
@@ -156,6 +238,7 @@
 
 <!-- SIP Transport -->
 <SIP_Transport_1_>UDP</SIP_Transport_1_>
+<SIP_Transport_2_>UDP</SIP_Transport_2_>
 <!-- Options: UDP, TCP, TLS -->
 
 <!-- SIP Timer Values (in seconds) -->
@@ -194,6 +277,7 @@
 
 <!-- Dial Plan -->
 <Dial_Plan_1_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_1_>
+<Dial_Plan_2_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_2_>
 <Interdigit_Long_Timer>10</Interdigit_Long_Timer>
 <Interdigit_Short_Timer>3</Interdigit_Short_Timer>
 

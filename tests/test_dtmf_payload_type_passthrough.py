@@ -77,8 +77,8 @@ class TestDTMFPayloadTypePassthrough:
         assert "a=fmtp:102 0-16" in sdp
 
     def test_dtmf_payload_type_with_phone_model_codecs(self) -> None:
-        """Test DTMF payload type with phone model specific codecs (ZIP37G example)"""
-        # ZIP37G uses PCMU/PCMA only with custom DTMF payload
+        """Test DTMF payload type with a custom subset of codecs"""
+        # Example: only PCMU/PCMA offered after codec intersection with custom DTMF PT
         zip37g_codecs = ["0", "8", "100"]
 
         sdp = SDPBuilder.build_audio_sdp(
@@ -183,7 +183,7 @@ class TestDTMFPayloadTypeIntegration:
 
         # Verify the codec list includes the custom DTMF payload type
         assert "100" in codecs
-        assert codecs == ["0", "8", "100"]
+        assert codecs == ["0", "8", "9", "18", "2", "100"]
 
     def test_dtmf_payload_type_end_to_end(self) -> None:
         """Test end-to-end flow from config to SDP generation through _get_dtmf_payload_type()"""

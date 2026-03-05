@@ -36,13 +36,19 @@ class PhoneTemplate:
         self.model = model.lower()
         self.template_content = template_content
 
-    def generate_config(self, extension_config: str, server_config: dict) -> str:
+    def generate_config(
+        self,
+        extension_config: dict,
+        server_config: dict,
+        extension_config_2: dict | None = None,
+    ) -> str:
         """
         Generate configuration from template
 
         Args:
-            extension_config: Extension configuration dict
+            extension_config: Extension configuration dict (Line 1)
             server_config: Server configuration dict
+            extension_config_2: Optional second extension config dict (Line 2)
 
         Returns:
             Generated configuration string
@@ -50,10 +56,26 @@ class PhoneTemplate:
         # Replace placeholders in template
         config = self.template_content
 
-        # Extension information
+        # Extension information (Line 1)
         config = config.replace("{{EXTENSION_NUMBER}}", str(extension_config.get("number", "")))
         config = config.replace("{{EXTENSION_NAME}}", str(extension_config.get("name", "")))
         config = config.replace("{{EXTENSION_PASSWORD}}", str(extension_config.get("password", "")))
+
+        # Extension information (Line 2 — for dual-port ATAs)
+        if extension_config_2 and extension_config_2.get("number"):
+            config = config.replace("{{LINE_2_ENABLE}}", "Yes")
+            config = config.replace(
+                "{{EXTENSION_NUMBER_2}}", str(extension_config_2.get("number", ""))
+            )
+            config = config.replace("{{EXTENSION_NAME_2}}", str(extension_config_2.get("name", "")))
+            config = config.replace(
+                "{{EXTENSION_PASSWORD_2}}", str(extension_config_2.get("password", ""))
+            )
+        else:
+            config = config.replace("{{LINE_2_ENABLE}}", "No")
+            config = config.replace("{{EXTENSION_NUMBER_2}}", "")
+            config = config.replace("{{EXTENSION_NAME_2}}", "")
+            config = config.replace("{{EXTENSION_PASSWORD_2}}", "")
 
         # Server information
         config = config.replace("{{SIP_SERVER}}", str(server_config.get("sip_host", "")))
@@ -133,20 +155,23 @@ class ProvisioningDevice:
         model: str,
         device_type: str | None = None,
         config_url: str | None = None,
+        extension_number_2: str | None = None,
     ) -> None:
         """
         Initialize provisioning device
 
         Args:
             mac_address: Device MAC address (normalized format)
-            extension_number: Associated extension number
+            extension_number: Associated extension number (Line 1)
             vendor: Phone vendor
             model: Phone model
             device_type: Device type ('phone' or 'ata', auto-detected if None)
             config_url: URL where config can be fetched
+            extension_number_2: Optional second extension (Line 2, for dual-port ATAs)
         """
         self.mac_address = normalize_mac_address(mac_address)
         self.extension_number = extension_number
+        self.extension_number_2 = extension_number_2
         self.vendor = vendor.lower()
         self.model = model.lower()
         # Auto-detect device type if not provided
@@ -181,7 +206,7 @@ class ProvisioningDevice:
 
     def to_dict(self) -> dict:
         """Convert to dictionary"""
-        return {
+        result = {
             "mac_address": self.mac_address,
             "extension_number": self.extension_number,
             "vendor": self.vendor,
@@ -193,6 +218,9 @@ class ProvisioningDevice:
                 self.last_provisioned.isoformat() if self.last_provisioned else None
             ),
         }
+        if self.extension_number_2:
+            result["extension_number_2"] = self.extension_number_2
+        return result
 
 
 class PhoneProvisioning:
@@ -233,6 +261,7 @@ class PhoneProvisioning:
         except Exception as e:
             self.logger.error(f"Failed to load built-in templates: {e}")
             import traceback
+
             self.logger.debug(traceback.format_exc())
 
         # Load custom templates if configured
@@ -241,6 +270,7 @@ class PhoneProvisioning:
         except Exception as e:
             self.logger.error(f"Failed to load custom templates: {e}")
             import traceback
+
             self.logger.debug(traceback.format_exc())
 
         # Ensure we have at least built-in templates loaded
@@ -287,6 +317,7 @@ class PhoneProvisioning:
                     vendor=db_device["vendor"],
                     model=db_device["model"],
                     device_type=db_device.get("device_type"),  # Load device_type from DB
+                    extension_number_2=db_device.get("extension_number_2"),
                 )
 
                 # Regenerate config_url to reflect current configuration
@@ -1683,7 +1714,7 @@ P2351 = 1
 
         # Cisco ATA 191 (2-Port Enterprise ATA) template
         cisco_ata191_template = """<flat-profile>
-<Provision_Enable>No</Provision_Enable>
+<Provision_Enable>Yes</Provision_Enable>
 <Resync_On_Reset>Yes</Resync_On_Reset>
 <Resync_Random_Delay>2</Resync_Random_Delay>
 <Resync_Periodic>3600</Resync_Periodic>
@@ -1695,7 +1726,7 @@ P2351 = 1
 <Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
 <Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
-<!-- Line 1 Configuration -->
+<!-- Line 1 (FXS Port 1) Configuration -->
 <Line_Enable_1_>Yes</Line_Enable_1_>
 <Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
 <User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
@@ -1751,8 +1782,54 @@ P2351 = 1
 <Call_Waiting_Serv_1_>Yes</Call_Waiting_Serv_1_>
 <DND_Serv_1_>No</DND_Serv_1_>
 
-<!-- Line 2 Disabled by Default -->
-<Line_Enable_2_>No</Line_Enable_2_>
+<!-- Line 2 (FXS Port 2) Configuration -->
+<Line_Enable_2_>{{LINE_2_ENABLE}}</Line_Enable_2_>
+<Display_Name_2_>{{EXTENSION_NAME_2}}</Display_Name_2_>
+<User_ID_2_>{{EXTENSION_NUMBER_2}}</User_ID_2_>
+<Auth_ID_2_>{{EXTENSION_NUMBER_2}}</Auth_ID_2_>
+<Password_2_>{{EXTENSION_PASSWORD_2}}</Password_2_>
+<Proxy_2_>{{SIP_SERVER}}</Proxy_2_>
+<Register_2_>Yes</Register_2_>
+<Register_Expires_2_>3600</Register_Expires_2_>
+
+<Preferred_Codec_2_>G711u</Preferred_Codec_2_>
+<Second_Preferred_Codec_2_>G711a</Second_Preferred_Codec_2_>
+<Third_Preferred_Codec_2_>G729a</Third_Preferred_Codec_2_>
+<G729a_Enable_2_>Yes</G729a_Enable_2_>
+<G711u_Enable_2_>Yes</G711u_Enable_2_>
+<G711a_Enable_2_>Yes</G711a_Enable_2_>
+<G726-16_Enable_2_>No</G726-16_Enable_2_>
+<G726-24_Enable_2_>No</G726-24_Enable_2_>
+<G726-32_Enable_2_>No</G726-32_Enable_2_>
+<G726-40_Enable_2_>No</G726-40_Enable_2_>
+<G722_Enable_2_>No</G722_Enable_2_>
+<iLBC_Enable_2_>No</iLBC_Enable_2_>
+
+<DTMF_Tx_Method_2_>AVT</DTMF_Tx_Method_2_>
+<DTMF_Tx_Mode_2_>Strict</DTMF_Tx_Mode_2_>
+<Hook_Flash_Tx_Method_2_>None</Hook_Flash_Tx_Method_2_>
+<RTP_Packet_Size_2_>0.020</RTP_Packet_Size_2_>
+
+<FAX_Enable_T38_2_>Yes</FAX_Enable_T38_2_>
+<FAX_Codec_Symmetric_2_>Yes</FAX_Codec_Symmetric_2_>
+<FAX_T38_Redundancy_2_>1</FAX_T38_Redundancy_2_>
+<FAX_Passthru_Method_2_>NSE</FAX_Passthru_Method_2_>
+<FAX_Passthru_Codec_2_>G711u</FAX_Passthru_Codec_2_>
+<FAX_Disable_ECAN_2_>Yes</FAX_Disable_ECAN_2_>
+
+<Silence_Supp_Enable_2_>No</Silence_Supp_Enable_2_>
+<Echo_Canc_Enable_2_>Yes</Echo_Canc_Enable_2_>
+<Echo_Canc_Adapt_Enable_2_>Yes</Echo_Canc_Adapt_Enable_2_>
+<Echo_Supp_Enable_2_>Yes</Echo_Supp_Enable_2_>
+
+<Caller_ID_Method_2_>Bellcore(N.Amer,China)</Caller_ID_Method_2_>
+<Caller_ID_FSK_Standard_2_>bell202</Caller_ID_FSK_Standard_2_>
+
+<Txgain_2_>0</Txgain_2_>
+<Rxgain_2_>0</Rxgain_2_>
+
+<Call_Waiting_Serv_2_>Yes</Call_Waiting_Serv_2_>
+<DND_Serv_2_>No</DND_Serv_2_>
 
 <!-- Network -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>
@@ -1764,6 +1841,7 @@ P2351 = 1
 <RTP_Port_Min>16384</RTP_Port_Min>
 <RTP_Port_Max>16482</RTP_Port_Max>
 <SIP_Transport_1_>UDP</SIP_Transport_1_>
+<SIP_Transport_2_>UDP</SIP_Transport_2_>
 
 <!-- QoS -->
 <SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
@@ -1780,6 +1858,7 @@ P2351 = 1
 
 <!-- Dial Plan -->
 <Dial_Plan_1_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_1_>
+<Dial_Plan_2_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_2_>
 <Interdigit_Long_Timer>10</Interdigit_Long_Timer>
 <Interdigit_Short_Timer>3</Interdigit_Short_Timer>
 </flat-profile>
@@ -1788,7 +1867,7 @@ P2351 = 1
 
         # Cisco ATA 192 (2-Port Enterprise ATA) template
         cisco_ata192_template = """<flat-profile>
-<Provision_Enable>No</Provision_Enable>
+<Provision_Enable>Yes</Provision_Enable>
 <Resync_On_Reset>Yes</Resync_On_Reset>
 <Resync_Random_Delay>2</Resync_Random_Delay>
 <Resync_Periodic>3600</Resync_Periodic>
@@ -1800,7 +1879,7 @@ P2351 = 1
 <Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
 <Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
 
-<!-- Line 1 Configuration -->
+<!-- Line 1 (FXS Port 1) Configuration -->
 <Line_Enable_1_>Yes</Line_Enable_1_>
 <Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
 <User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
@@ -1856,8 +1935,54 @@ P2351 = 1
 <Call_Waiting_Serv_1_>Yes</Call_Waiting_Serv_1_>
 <DND_Serv_1_>No</DND_Serv_1_>
 
-<!-- Line 2 Disabled by Default -->
-<Line_Enable_2_>No</Line_Enable_2_>
+<!-- Line 2 (FXS Port 2) Configuration -->
+<Line_Enable_2_>{{LINE_2_ENABLE}}</Line_Enable_2_>
+<Display_Name_2_>{{EXTENSION_NAME_2}}</Display_Name_2_>
+<User_ID_2_>{{EXTENSION_NUMBER_2}}</User_ID_2_>
+<Auth_ID_2_>{{EXTENSION_NUMBER_2}}</Auth_ID_2_>
+<Password_2_>{{EXTENSION_PASSWORD_2}}</Password_2_>
+<Proxy_2_>{{SIP_SERVER}}</Proxy_2_>
+<Register_2_>Yes</Register_2_>
+<Register_Expires_2_>3600</Register_Expires_2_>
+
+<Preferred_Codec_2_>G711u</Preferred_Codec_2_>
+<Second_Preferred_Codec_2_>G711a</Second_Preferred_Codec_2_>
+<Third_Preferred_Codec_2_>G729a</Third_Preferred_Codec_2_>
+<G729a_Enable_2_>Yes</G729a_Enable_2_>
+<G711u_Enable_2_>Yes</G711u_Enable_2_>
+<G711a_Enable_2_>Yes</G711a_Enable_2_>
+<G726-16_Enable_2_>No</G726-16_Enable_2_>
+<G726-24_Enable_2_>No</G726-24_Enable_2_>
+<G726-32_Enable_2_>No</G726-32_Enable_2_>
+<G726-40_Enable_2_>No</G726-40_Enable_2_>
+<G722_Enable_2_>No</G722_Enable_2_>
+<iLBC_Enable_2_>No</iLBC_Enable_2_>
+
+<DTMF_Tx_Method_2_>AVT</DTMF_Tx_Method_2_>
+<DTMF_Tx_Mode_2_>Strict</DTMF_Tx_Mode_2_>
+<Hook_Flash_Tx_Method_2_>None</Hook_Flash_Tx_Method_2_>
+<RTP_Packet_Size_2_>0.020</RTP_Packet_Size_2_>
+
+<FAX_Enable_T38_2_>Yes</FAX_Enable_T38_2_>
+<FAX_Codec_Symmetric_2_>Yes</FAX_Codec_Symmetric_2_>
+<FAX_T38_Redundancy_2_>1</FAX_T38_Redundancy_2_>
+<FAX_Passthru_Method_2_>NSE</FAX_Passthru_Method_2_>
+<FAX_Passthru_Codec_2_>G711u</FAX_Passthru_Codec_2_>
+<FAX_Disable_ECAN_2_>Yes</FAX_Disable_ECAN_2_>
+
+<Silence_Supp_Enable_2_>No</Silence_Supp_Enable_2_>
+<Echo_Canc_Enable_2_>Yes</Echo_Canc_Enable_2_>
+<Echo_Canc_Adapt_Enable_2_>Yes</Echo_Canc_Adapt_Enable_2_>
+<Echo_Supp_Enable_2_>Yes</Echo_Supp_Enable_2_>
+
+<Caller_ID_Method_2_>Bellcore(N.Amer,China)</Caller_ID_Method_2_>
+<Caller_ID_FSK_Standard_2_>bell202</Caller_ID_FSK_Standard_2_>
+
+<Txgain_2_>0</Txgain_2_>
+<Rxgain_2_>0</Rxgain_2_>
+
+<Call_Waiting_Serv_2_>Yes</Call_Waiting_Serv_2_>
+<DND_Serv_2_>No</DND_Serv_2_>
 
 <!-- Network -->
 <Internet_Connection_Type>DHCP</Internet_Connection_Type>
@@ -1868,6 +1993,7 @@ P2351 = 1
 <RTP_Port_Min>16384</RTP_Port_Min>
 <RTP_Port_Max>16482</RTP_Port_Max>
 <SIP_Transport_1_>UDP</SIP_Transport_1_>
+<SIP_Transport_2_>UDP</SIP_Transport_2_>
 
 <!-- QoS -->
 <SIP_TOS_DiffServ_Value>0x68</SIP_TOS_DiffServ_Value>
@@ -1884,6 +2010,7 @@ P2351 = 1
 
 <!-- Dial Plan -->
 <Dial_Plan_1_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_1_>
+<Dial_Plan_2_>(xxxxxxxxxxxx|*x|*xx|*xxx|*xxxx|xxxxxxxxxx|xxxxxxxxxxx|1xxxxxxxxxx|1xxxxxxxxxxx|011xx.)</Dial_Plan_2_>
 <Interdigit_Long_Timer>10</Interdigit_Long_Timer>
 <Interdigit_Short_Timer>3</Interdigit_Short_Timer>
 
@@ -1946,21 +2073,33 @@ P2351 = 1
         return self.templates.get(key)
 
     def register_device(
-        self, mac_address: str, extension_number: str, vendor: str, model: str
+        self,
+        mac_address: str,
+        extension_number: str,
+        vendor: str,
+        model: str,
+        extension_number_2: str | None = None,
     ) -> Any:
         """
         Register a device for provisioning
 
         Args:
             mac_address: Device MAC address
-            extension_number: Associated extension number
+            extension_number: Associated extension number (Line 1)
             vendor: Phone vendor
             model: Phone model
+            extension_number_2: Optional second extension (Line 2, for dual-port ATAs)
 
         Returns:
             ProvisioningDevice
         """
-        device = ProvisioningDevice(mac_address, extension_number, vendor, model)
+        device = ProvisioningDevice(
+            mac_address,
+            extension_number,
+            vendor,
+            model,
+            extension_number_2=extension_number_2,
+        )
 
         # Generate config URL for this device
         config_url = self._generate_config_url(device.mac_address)
@@ -1977,10 +2116,13 @@ P2351 = 1
                     model=model,
                     device_type=device.device_type,
                     config_url=config_url,
+                    extension_number_2=extension_number_2,
                 )
                 device_type_label = "ATA" if device.is_ata() else "phone"
+                line_info = f" + Line 2: {extension_number_2}" if extension_number_2 else ""
                 self.logger.info(
-                    f"Registered {device_type_label} {mac_address} for extension {extension_number} (saved to database)"
+                    f"Registered {device_type_label} {mac_address} for extension "
+                    f"{extension_number}{line_info} (saved to database)"
                 )
             except Exception as e:
                 self.logger.error(f"Failed to save device to database: {e}")
@@ -2325,8 +2467,36 @@ P2351 = 1
             f"  Server config: SIP={server_config['sip_host']}:{server_config['sip_port']}"
         )
 
+        # Build Line 2 extension config if a second extension is assigned (dual-port ATAs)
+        extension_config_2 = None
+        if device.extension_number_2:
+            extension_2 = extension_registry.get(device.extension_number_2)
+            if extension_2:
+                sip_password_2 = extension_2.config.get("password", "")
+                if not sip_password_2:
+                    sip_password_2 = f"ext{extension_2.number}"
+                    self.logger.warning(
+                        f"  No SIP password found for Line 2 extension {extension_2.number}. "
+                        f"Using default password format."
+                    )
+                extension_config_2 = {
+                    "number": extension_2.number,
+                    "name": extension_2.name,
+                    "password": sip_password_2,
+                }
+                self.logger.info(
+                    f"  Line 2 extension found: {extension_2.number} ({extension_2.name})"
+                )
+            else:
+                self.logger.warning(
+                    f"  Line 2 extension {device.extension_number_2} not found, "
+                    f"Line 2 will be disabled"
+                )
+
         # Generate configuration
-        config_content = template.generate_config(extension_config, server_config)
+        config_content = template.generate_config(
+            extension_config, server_config, extension_config_2
+        )
 
         # Determine content type based on vendor
         # Mapping of vendors to their content types

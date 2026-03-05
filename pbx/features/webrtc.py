@@ -320,19 +320,29 @@ class WebRTCSignalingServer:
             "features.webrtc.session_timeout", 3600
         )  # 1 hour (matches ZIP33G)
 
+        # DTMF configuration — use the main PBX DTMF payload type as the
+        # default so SIP and WebRTC legs agree without extra configuration.
+        # A WebRTC-specific override is still supported via features.webrtc.dtmf.payload_type.
+        global_dtmf_pt = self._get_config("features.dtmf.payload_type", 101)
+        self.dtmf_mode = self._get_config("features.webrtc.dtmf.mode", "RFC2833")
+        self.dtmf_payload_type = self._get_config(
+            "features.webrtc.dtmf.payload_type", global_dtmf_pt
+        )
+
         # Codec configuration (matches Zultys ZIP33G)
         self.codecs = self._get_config(
             "features.webrtc.codecs",
             [
                 {"payload_type": 0, "name": "PCMU", "priority": 1, "enabled": True},
                 {"payload_type": 8, "name": "PCMA", "priority": 2, "enabled": True},
-                {"payload_type": 101, "name": "telephone-event", "priority": 3, "enabled": True},
+                {
+                    "payload_type": self.dtmf_payload_type,
+                    "name": "telephone-event",
+                    "priority": 3,
+                    "enabled": True,
+                },
             ],
         )
-
-        # DTMF configuration (matches Zultys ZIP33G)
-        self.dtmf_mode = self._get_config("features.webrtc.dtmf.mode", "RFC2833")
-        self.dtmf_payload_type = self._get_config("features.webrtc.dtmf.payload_type", 101)
         self.dtmf_duration = self._get_config("features.webrtc.dtmf.duration", 160)
         self.dtmf_sip_info_fallback = self._get_config(
             "features.webrtc.dtmf.sip_info_fallback", True
@@ -1623,13 +1633,37 @@ class WebRTCGateway:
                 dtmf_pt = self.pbx_core._get_dtmf_payload_type()
                 ilbc_mode = self.pbx_core._get_ilbc_mode()
 
+                # Determine callee phone model for codec selection
+                callee_user_agent = self.pbx_core._get_phone_user_agent(target_extension)
+                callee_phone_model = self.pbx_core._detect_phone_model(callee_user_agent)
+
+                # Compute codecs compatible with callee's phone model
+                # WebRTC caller's codecs are bridged to PCMU by the media bridge,
+                # so pass ["0"] as the caller's offered codecs for intersection.
+                callee_codecs = self.pbx_core._get_compatible_codecs(
+                    callee_phone_model, ["0", "8", str(dtmf_pt)]
+                )
+
+                if callee_phone_model:
+                    self.logger.info(
+                        f"Detected callee phone model: {callee_phone_model}, "
+                        f"offering codecs: {callee_codecs}"
+                    )
+
                 callee_sdp = SDPBuilder.build_audio_sdp(
                     server_ip,
                     rtp_ports[0],
                     session_id=call_id,
-                    codecs=None,  # default codecs
+                    codecs=callee_codecs,
                     dtmf_payload_type=dtmf_pt,
                     ilbc_mode=ilbc_mode,
+                )
+
+                # Use callee's registered IP/port in Request-URI so the phone
+                # accepts the INVITE (some phones reject mismatched Request-URIs)
+                callee_ip = dest_ext_obj.address[0]
+                callee_port = (
+                    dest_ext_obj.address[1] if len(dest_ext_obj.address) > 1 else 5060
                 )
 
                 from_uri = f"sip:{from_extension}@{server_ip}:{sip_port}"
@@ -1637,7 +1671,7 @@ class WebRTCGateway:
 
                 invite = SIPMessageBuilder.build_request(
                     method="INVITE",
-                    uri=f"sip:{target_extension}@{server_ip}",
+                    uri=f"sip:{target_extension}@{callee_ip}:{callee_port}",
                     from_addr=f"<{from_uri}>",
                     to_addr=f"<{to_uri}>",
                     call_id=call_id,
@@ -1660,8 +1694,20 @@ class WebRTCGateway:
                 # instead of sending a SIP 200 OK to the caller.
                 call.webrtc_session_id = session.session_id
 
-                self.pbx_core.sip_server._send_message(invite.build(), dest_ext_obj.address)
+                # Use INVITE client transaction for reliable delivery with
+                # retransmission per RFC 3261, matching the regular call path.
+                from pbx.sip.transaction import InviteClientTransaction
+
+                invite_txn = InviteClientTransaction(
+                    message=invite.build(),
+                    dest_addr=dest_ext_obj.address,
+                    send_fn=self.pbx_core.sip_server._send_message,
+                    on_timeout=lambda cid=call_id: self.pbx_core._call_router._handle_invite_timeout(cid),
+                )
+                invite_txn.start()
+                call.invite_transaction = invite_txn
                 call.callee_addr = dest_ext_obj.address
+                call.callee_invite = invite  # Store for CANCEL support
                 self.logger.info(f"Sent SIP INVITE to {target_extension} at {dest_ext_obj.address}")
 
                 # Start no-answer timer
