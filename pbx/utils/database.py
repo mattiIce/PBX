@@ -139,8 +139,7 @@ class DatabaseBackend:
             self.connection.rollback()
         except Exception:
             self.logger.warning(
-                "Database connection lost (rollback failed). "
-                "Disabling database until reconnection."
+                "Database connection lost (rollback failed). Disabling database until reconnection."
             )
             self.connection = None
             self.enabled = False
@@ -504,6 +503,7 @@ class DatabaseBackend:
             id {SERIAL},
             mac_address VARCHAR(20) UNIQUE NOT NULL,
             extension_number VARCHAR(20) NOT NULL,
+            extension_number_2 VARCHAR(20),
             vendor VARCHAR(50) NOT NULL,
             model VARCHAR(50) NOT NULL,
             device_type VARCHAR(20) DEFAULT 'phone',
@@ -782,6 +782,30 @@ class DatabaseBackend:
             self.logger.debug(
                 f"Column check/add for {device_type_column[0]} in provisioned_devices: {e}"
             )
+            self._safe_rollback()
+
+        # Add extension_number_2 column for dual-port ATA support (Line 2)
+        ext2_column = ("extension_number_2", "VARCHAR(20)")
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(check_query, (ext2_column[0],))
+            exists = cursor.fetchone() is not None
+            cursor.close()
+
+            if not exists:
+                alter_query = (
+                    f"ALTER TABLE provisioned_devices ADD COLUMN {ext2_column[0]} {ext2_column[1]}"
+                )
+                self.logger.info(f"Adding column to provisioned_devices: {ext2_column[0]}")
+                self._execute_with_context(
+                    alter_query,
+                    f"add column {ext2_column[0]} to provisioned_devices",
+                    critical=False,
+                )
+            else:
+                self.logger.debug(f"Column {ext2_column[0]} already exists in provisioned_devices")
+        except Exception as e:
+            self.logger.debug(f"Column check/add for {ext2_column[0]} in provisioned_devices: {e}")
             self._safe_rollback()
 
         # Apply framework feature migrations
@@ -1391,7 +1415,7 @@ class ExtensionDB:
 
         query = f"""
         UPDATE extensions
-        SET {', '.join(updates)}
+        SET {", ".join(updates)}
         WHERE number = %s
         """  # nosec B608 - updates are validated field names, placeholder is safe
 
@@ -1537,18 +1561,20 @@ class ProvisionedDevicesDB:
         device_type: str | None = None,
         static_ip: str | None = None,
         config_url: str | None = None,
+        extension_number_2: str | None = None,
     ) -> bool:
         """
         Add or update a provisioned device
 
         Args:
             mac_address: MAC address (normalized format)
-            extension_number: Extension number
+            extension_number: Extension number (Line 1)
             vendor: Phone vendor
             model: Phone model
             device_type: Device type ('phone' or 'ata', auto-detected if None)
             static_ip: Static IP address (optional)
             config_url: Configuration URL (optional)
+            extension_number_2: Optional second extension (Line 2, for dual-port ATAs)
 
         Returns:
             bool: True if successful
@@ -1564,12 +1590,14 @@ class ProvisionedDevicesDB:
             # Update existing device
             query = """
             UPDATE provisioned_devices
-            SET extension_number = %s, vendor = %s, model = %s, device_type = %s,
+            SET extension_number = %s, extension_number_2 = %s,
+                vendor = %s, model = %s, device_type = %s,
                 static_ip = %s, config_url = %s, updated_at = %s
             WHERE mac_address = %s
             """
             params = (
                 extension_number,
+                extension_number_2,
                 vendor,
                 model,
                 device_type,
@@ -1582,14 +1610,15 @@ class ProvisionedDevicesDB:
             # Insert new device
             query = """
             INSERT INTO provisioned_devices
-            (mac_address, extension_number, vendor, model, device_type, static_ip,
-             config_url, created_at, updated_at)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
+            (mac_address, extension_number, extension_number_2, vendor, model,
+             device_type, static_ip, config_url, created_at, updated_at)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             """
             now = datetime.now(UTC)
             params = (
                 mac_address,
                 extension_number,
+                extension_number_2,
                 vendor,
                 model,
                 device_type,
@@ -1612,7 +1641,7 @@ class ProvisionedDevicesDB:
             dict: Device data or None
         """
         query = """
-        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE mac_address = %s
+        SELECT id, mac_address, extension_number, extension_number_2, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE mac_address = %s
         """
         return self.db.fetch_one(query, (mac_address,))
 
@@ -1627,7 +1656,7 @@ class ProvisionedDevicesDB:
             dict: Device data or None
         """
         query = """
-        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE extension_number = %s
+        SELECT id, mac_address, extension_number, extension_number_2, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE extension_number = %s
         """
         return self.db.fetch_one(query, (extension_number,))
 
@@ -1642,7 +1671,7 @@ class ProvisionedDevicesDB:
             dict: Device data or None
         """
         query = """
-        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE static_ip = %s
+        SELECT id, mac_address, extension_number, extension_number_2, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices WHERE static_ip = %s
         """
         return self.db.fetch_one(query, (static_ip,))
 
@@ -1654,7 +1683,7 @@ class ProvisionedDevicesDB:
             list: list of all provisioned devices
         """
         query = """
-        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices
+        SELECT id, mac_address, extension_number, extension_number_2, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices
         ORDER BY extension_number
         """
         return self.db.fetch_all(query)
@@ -1670,7 +1699,7 @@ class ProvisionedDevicesDB:
             list: list of provisioned devices of specified type
         """
         query = """
-        SELECT id, mac_address, extension_number, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices
+        SELECT id, mac_address, extension_number, extension_number_2, vendor, model, device_type, static_ip, config_url, created_at, last_provisioned, updated_at FROM provisioned_devices
         WHERE device_type = %s
         ORDER BY extension_number
         """
