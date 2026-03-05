@@ -241,6 +241,15 @@ class CallRouter:
         # codec mismatches when the RTP relay forwards without transcoding.
         codecs_for_callee = pbx._get_compatible_codecs(callee_phone_model, caller_codecs)
 
+        # Warn if the computed codec list has no audio codecs (only DTMF)
+        dtmf_pt_str = str(pbx._get_dtmf_payload_type())
+        audio_codecs = [c for c in codecs_for_callee if c != dtmf_pt_str]
+        if not audio_codecs:
+            pbx.logger.error(
+                f"No audio codec overlap for call {call_id}: "
+                f"callee model={callee_phone_model}, caller codecs={caller_codecs}"
+            )
+
         if callee_phone_model:
             pbx.logger.info(
                 f"Detected callee phone model: {callee_phone_model}, "

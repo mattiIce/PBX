@@ -757,9 +757,21 @@ class TestDetectPhoneModel:
         pbx = _make_pbx_core_shell()
         assert pbx._detect_phone_model("Zultys ZIP 37G") == "ZIP37G"
 
+    def test_detect_yealink_t46s(self) -> None:
+        pbx = _make_pbx_core_shell()
+        assert pbx._detect_phone_model("Yealink SIP-T46S") == "YEALINK_T46S"
+
+    def test_detect_yealink_t46g(self) -> None:
+        pbx = _make_pbx_core_shell()
+        assert pbx._detect_phone_model("Yealink SIP-T46G 28.83.0.120") == "YEALINK_T46G"
+
+    def test_detect_yealink_t28g(self) -> None:
+        pbx = _make_pbx_core_shell()
+        assert pbx._detect_phone_model("Yealink SIP-T28G 2.73.0.130") == "YEALINK_T28G"
+
     def test_detect_unknown_phone(self) -> None:
         pbx = _make_pbx_core_shell()
-        assert pbx._detect_phone_model("Yealink SIP-T46S") is None
+        assert pbx._detect_phone_model("Polycom VVX-450") is None
 
     def test_detect_none_user_agent(self) -> None:
         pbx = _make_pbx_core_shell()

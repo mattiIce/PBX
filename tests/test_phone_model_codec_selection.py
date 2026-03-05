@@ -14,6 +14,7 @@ class TestPhoneModelDetection:
         """Set up test fixtures"""
         # Create a minimal test instance with just the needed method
         self.pbx = Mock(spec=PBXCore)
+        self.pbx.logger = Mock()  # Mock logger for unrecognised phone logging
         # Copy the actual method from the class to our mock
         self.pbx._detect_phone_model = PBXCore._detect_phone_model.__get__(self.pbx)
 
@@ -41,9 +42,27 @@ class TestPhoneModelDetection:
         model = self.pbx._detect_phone_model(user_agent)
         assert model == "ZIP37G"
 
-    def test_detect_other_phone(self) -> None:
-        """Test detection of non-Zultys phone"""
+    def test_detect_yealink_t46s(self) -> None:
+        """Test detection of Yealink T46S"""
         user_agent = "Yealink SIP-T46S 66.85.0.5"
+        model = self.pbx._detect_phone_model(user_agent)
+        assert model == "YEALINK_T46S"
+
+    def test_detect_yealink_t46g(self) -> None:
+        """Test detection of Yealink T46G"""
+        user_agent = "Yealink SIP-T46G 28.83.0.120"
+        model = self.pbx._detect_phone_model(user_agent)
+        assert model == "YEALINK_T46G"
+
+    def test_detect_yealink_t28g(self) -> None:
+        """Test detection of Yealink T28G"""
+        user_agent = "Yealink SIP-T28G 2.73.0.130"
+        model = self.pbx._detect_phone_model(user_agent)
+        assert model == "YEALINK_T28G"
+
+    def test_detect_other_phone(self) -> None:
+        """Test detection of non-recognised phone"""
+        user_agent = "Polycom VVX-450 5.9.6.2327"
         model = self.pbx._detect_phone_model(user_agent)
         assert model is None
 
@@ -103,6 +122,21 @@ class TestCodecSelection:
         assert "2" in codecs  # G726-32
         assert "101" in codecs  # DTMF
         # Verify the exact codec list
+        assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
+
+    def test_yealink_t46s_codecs(self) -> None:
+        """Test that Yealink T46S gets full codec set matching provisioning template"""
+        codecs = self.pbx._get_codecs_for_phone_model("YEALINK_T46S")
+        assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
+
+    def test_yealink_t46g_codecs(self) -> None:
+        """Test that Yealink T46G gets full codec set matching provisioning template"""
+        codecs = self.pbx._get_codecs_for_phone_model("YEALINK_T46G")
+        assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
+
+    def test_yealink_t28g_codecs(self) -> None:
+        """Test that Yealink T28G gets full codec set matching provisioning template"""
+        codecs = self.pbx._get_codecs_for_phone_model("YEALINK_T28G")
         assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
 
     def test_unknown_phone_uses_defaults(self) -> None:
