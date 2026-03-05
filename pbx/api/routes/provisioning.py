@@ -46,9 +46,9 @@ _ZULTYS_COMMON_CFG_RE = re.compile(r"^zip\d+[a-z]?_common$")
 # Models with color screens that support wallpaper via Yealink common/model config.
 # Includes Zultys OEM names and Yealink model-level config IDs (y + 12 digits).
 _COLOR_SCREEN_MODELS = {
-    "zip37g",           # Zultys ZIP 37G (T46G OEM, 480x272)
-    "y000000000028",    # Yealink T46G (480x272 color)
-    "y000000000069",    # Yealink T46S (480x272 color)
+    "zip37g",  # Zultys ZIP 37G (T46G OEM, 480x272)
+    "y000000000028",  # Yealink T46G (480x272 color)
+    "y000000000069",  # Yealink T46S (480x272 color)
 }
 
 
@@ -745,11 +745,14 @@ def handle_register_device() -> Response:
         extension = body.get("extension_number")
         vendor = body.get("vendor")
         model = body.get("model")
+        extension_2 = body.get("extension_number_2")  # Optional Line 2 for dual-port ATAs
 
         if not all([mac, extension, vendor, model]):
             return send_json({"error": "Missing required fields"}, 400)
 
-        device = pbx_core.phone_provisioning.register_device(mac, extension, vendor, model)
+        device = pbx_core.phone_provisioning.register_device(
+            mac, extension, vendor, model, extension_number_2=extension_2
+        )
 
         # Automatically trigger phone reboot after registration
         # This ensures the phone fetches its fresh configuration immediately
@@ -834,13 +837,15 @@ def handle_get_provisioning_settings() -> Response:
     if prov:
         url_format = getattr(prov, "url_format", "")
 
-    return send_json({
-        "enabled": enabled,
-        "url_format": url_format,
-        "server_ip": pbx_core.config.get("provisioning.server_ip", ""),
-        "port": pbx_core.config.get("provisioning.port", 9000),
-        "custom_templates_dir": pbx_core.config.get("provisioning.custom_templates_dir", ""),
-    })
+    return send_json(
+        {
+            "enabled": enabled,
+            "url_format": url_format,
+            "server_ip": pbx_core.config.get("provisioning.server_ip", ""),
+            "port": pbx_core.config.get("provisioning.port", 9000),
+            "custom_templates_dir": pbx_core.config.get("provisioning.custom_templates_dir", ""),
+        }
+    )
 
 
 @provisioning_bp.route("/api/provisioning/settings", methods=["PUT"])
@@ -872,21 +877,23 @@ def handle_get_phonebook_settings() -> Response:
     if not pbx_core:
         return send_json({"ldap_enabled": False, "remote_enabled": False})
 
-    return send_json({
-        "ldap_enabled": pbx_core.config.get("provisioning.ldap_phonebook.enabled", False),
-        "ldap_server": pbx_core.config.get("provisioning.ldap_phonebook.server", ""),
-        "ldap_port": pbx_core.config.get("provisioning.ldap_phonebook.port", 636),
-        "ldap_base_dn": pbx_core.config.get("provisioning.ldap_phonebook.base_dn", ""),
-        "ldap_bind_user": pbx_core.config.get("provisioning.ldap_phonebook.bind_user", ""),
-        "ldap_use_tls": pbx_core.config.get("provisioning.ldap_phonebook.use_tls", True),
-        "ldap_display_name": pbx_core.config.get(
-            "provisioning.ldap_phonebook.display_name", ""
-        ),
-        "remote_enabled": pbx_core.config.get("provisioning.remote_phonebook.enabled", False),
-        "remote_refresh_interval": pbx_core.config.get(
-            "provisioning.remote_phonebook.refresh_interval", 60
-        ),
-    })
+    return send_json(
+        {
+            "ldap_enabled": pbx_core.config.get("provisioning.ldap_phonebook.enabled", False),
+            "ldap_server": pbx_core.config.get("provisioning.ldap_phonebook.server", ""),
+            "ldap_port": pbx_core.config.get("provisioning.ldap_phonebook.port", 636),
+            "ldap_base_dn": pbx_core.config.get("provisioning.ldap_phonebook.base_dn", ""),
+            "ldap_bind_user": pbx_core.config.get("provisioning.ldap_phonebook.bind_user", ""),
+            "ldap_use_tls": pbx_core.config.get("provisioning.ldap_phonebook.use_tls", True),
+            "ldap_display_name": pbx_core.config.get(
+                "provisioning.ldap_phonebook.display_name", ""
+            ),
+            "remote_enabled": pbx_core.config.get("provisioning.remote_phonebook.enabled", False),
+            "remote_refresh_interval": pbx_core.config.get(
+                "provisioning.remote_phonebook.refresh_interval", 60
+            ),
+        }
+    )
 
 
 @provisioning_bp.route("/api/provisioning/phonebook-settings", methods=["PUT"])
@@ -899,29 +906,17 @@ def handle_update_phonebook_settings() -> Response:
 
     try:
         body = get_request_body()
-        pbx_core.config.set(
-            "provisioning.ldap_phonebook.enabled", body.get("ldap_enabled", False)
-        )
-        pbx_core.config.set(
-            "provisioning.ldap_phonebook.server", body.get("ldap_server", "")
-        )
-        pbx_core.config.set(
-            "provisioning.ldap_phonebook.port", body.get("ldap_port", 636)
-        )
-        pbx_core.config.set(
-            "provisioning.ldap_phonebook.base_dn", body.get("ldap_base_dn", "")
-        )
-        pbx_core.config.set(
-            "provisioning.ldap_phonebook.bind_user", body.get("ldap_bind_user", "")
-        )
+        pbx_core.config.set("provisioning.ldap_phonebook.enabled", body.get("ldap_enabled", False))
+        pbx_core.config.set("provisioning.ldap_phonebook.server", body.get("ldap_server", ""))
+        pbx_core.config.set("provisioning.ldap_phonebook.port", body.get("ldap_port", 636))
+        pbx_core.config.set("provisioning.ldap_phonebook.base_dn", body.get("ldap_base_dn", ""))
+        pbx_core.config.set("provisioning.ldap_phonebook.bind_user", body.get("ldap_bind_user", ""))
         if body.get("ldap_bind_password"):
             pbx_core.config.set(
                 "provisioning.ldap_phonebook.bind_password",
                 body["ldap_bind_password"],
             )
-        pbx_core.config.set(
-            "provisioning.ldap_phonebook.use_tls", body.get("ldap_use_tls", True)
-        )
+        pbx_core.config.set("provisioning.ldap_phonebook.use_tls", body.get("ldap_use_tls", True))
         pbx_core.config.set(
             "provisioning.ldap_phonebook.display_name",
             body.get("ldap_display_name", ""),
