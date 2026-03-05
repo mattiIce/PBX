@@ -737,7 +737,7 @@ class PBXCore:
         if "T28G" in user_agent_upper:
             return "YEALINK_T28G"
 
-        self.logger.info(
+        self.logger.debug(
             f"Unrecognised phone User-Agent: {user_agent!r} — using default codecs"
         )
         return None

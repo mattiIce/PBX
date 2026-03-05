@@ -42,6 +42,12 @@ class TestPhoneModelDetection:
         model = self.pbx._detect_phone_model(user_agent)
         assert model == "ZIP37G"
 
+    def test_detect_yealink_t33g(self) -> None:
+        """Test detection of Yealink T33G"""
+        user_agent = "Yealink SIP-T33G 124.86.0.40 00:15:65:AB:CD:EF"
+        model = self.pbx._detect_phone_model(user_agent)
+        assert model == "YEALINK_T33G"
+
     def test_detect_yealink_t46s(self) -> None:
         """Test detection of Yealink T46S"""
         user_agent = "Yealink SIP-T46S 66.85.0.5"
@@ -123,6 +129,14 @@ class TestCodecSelection:
         assert "101" in codecs  # DTMF
         # Verify the exact codec list
         assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
+
+    def test_yealink_t33g_codecs(self) -> None:
+        """Test that Yealink T33G gets codec set matching provisioning template"""
+        codecs = self.pbx._get_codecs_for_phone_model("YEALINK_T33G")
+        # T33G is a lower-tier phone: PCMU, PCMA, G722, G729 (no G726-32)
+        # per the yealink_t33g provisioning template
+        assert set(codecs) == {"0", "8", "9", "18", "101"}
+        assert "2" not in codecs  # T33G does NOT support G726-32
 
     def test_yealink_t46s_codecs(self) -> None:
         """Test that Yealink T46S gets full codec set matching provisioning template"""

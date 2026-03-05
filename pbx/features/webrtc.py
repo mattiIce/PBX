@@ -320,19 +320,29 @@ class WebRTCSignalingServer:
             "features.webrtc.session_timeout", 3600
         )  # 1 hour (matches ZIP33G)
 
+        # DTMF configuration — use the main PBX DTMF payload type as the
+        # default so SIP and WebRTC legs agree without extra configuration.
+        # A WebRTC-specific override is still supported via features.webrtc.dtmf.payload_type.
+        global_dtmf_pt = self._get_config("features.dtmf.payload_type", 101)
+        self.dtmf_mode = self._get_config("features.webrtc.dtmf.mode", "RFC2833")
+        self.dtmf_payload_type = self._get_config(
+            "features.webrtc.dtmf.payload_type", global_dtmf_pt
+        )
+
         # Codec configuration (matches Zultys ZIP33G)
         self.codecs = self._get_config(
             "features.webrtc.codecs",
             [
                 {"payload_type": 0, "name": "PCMU", "priority": 1, "enabled": True},
                 {"payload_type": 8, "name": "PCMA", "priority": 2, "enabled": True},
-                {"payload_type": 101, "name": "telephone-event", "priority": 3, "enabled": True},
+                {
+                    "payload_type": self.dtmf_payload_type,
+                    "name": "telephone-event",
+                    "priority": 3,
+                    "enabled": True,
+                },
             ],
         )
-
-        # DTMF configuration (matches Zultys ZIP33G)
-        self.dtmf_mode = self._get_config("features.webrtc.dtmf.mode", "RFC2833")
-        self.dtmf_payload_type = self._get_config("features.webrtc.dtmf.payload_type", 101)
         self.dtmf_duration = self._get_config("features.webrtc.dtmf.duration", 160)
         self.dtmf_sip_info_fallback = self._get_config(
             "features.webrtc.dtmf.sip_info_fallback", True
