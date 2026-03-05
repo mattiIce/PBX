@@ -78,36 +78,32 @@ class TestCodecSelection:
         self.pbx._get_codecs_for_phone_model = PBXCore._get_codecs_for_phone_model.__get__(self.pbx)
 
     def test_zip37g_codecs(self) -> None:
-        """Test that ZIP37G gets PCMU/PCMA codecs"""
+        """Test that ZIP37G gets full codec set matching provisioning template"""
         codecs = self.pbx._get_codecs_for_phone_model("ZIP37G")
-        # Should contain PCMU (0), PCMA (8), and DTMF (101)
+        # Should contain PCMU (0), PCMA (8), G722 (9), G729 (18), G726-32 (2), and DTMF (101)
+        # per the zultys_zip37g provisioning template
         assert "0" in codecs  # PCMU
         assert "8" in codecs  # PCMA
+        assert "9" in codecs  # G722
+        assert "18" in codecs  # G729
+        assert "2" in codecs  # G726-32
         assert "101" in codecs  # DTMF
-        # Should NOT contain G722, G729, or G726
-        assert "9" not in codecs  # G722
-        assert "18" not in codecs  # G729
-        assert "2" not in codecs  # G726-32
         # Verify the exact codec list
-        assert set(codecs) == {"0", "8", "101"}
+        assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
 
     def test_zip33g_codecs(self) -> None:
-        """Test that ZIP33G gets G726/G729/G722 codecs"""
+        """Test that ZIP33G gets full codec set matching provisioning template"""
         codecs = self.pbx._get_codecs_for_phone_model("ZIP33G")
-        # Should contain G726 (2), G729 (18), G722 (9)
-        assert "2" in codecs  # G726-32
-        assert "18" in codecs  # G729
+        # Should contain PCMU (0), PCMA (8), G722 (9), G729 (18), G726-32 (2), and DTMF (101)
+        # per the zultys_zip33g provisioning template
+        assert "0" in codecs  # PCMU
+        assert "8" in codecs  # PCMA
         assert "9" in codecs  # G722
+        assert "18" in codecs  # G729
+        assert "2" in codecs  # G726-32
         assert "101" in codecs  # DTMF
-        # Should also include G726 variants
-        assert "114" in codecs  # G726-40
-        assert "113" in codecs  # G726-24
-        assert "112" in codecs  # G726-16
-        # Should NOT contain PCMU/PCMA
-        assert "0" not in codecs  # PCMU
-        assert "8" not in codecs  # PCMA
         # Verify the exact codec list
-        assert set(codecs) == {"2", "18", "9", "114", "113", "112", "101"}
+        assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
 
     def test_unknown_phone_uses_defaults(self) -> None:
         """Test that unknown phones use default codecs"""

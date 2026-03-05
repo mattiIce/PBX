@@ -777,13 +777,13 @@ class TestGetCodecsForPhoneModel:
         pbx = _make_pbx_core_shell()
         pbx.config.get.return_value = 101
         codecs = pbx._get_codecs_for_phone_model("ZIP37G")
-        assert codecs == ["0", "8", "101"]
+        assert codecs == ["0", "8", "9", "18", "2", "101"]
 
     def test_zip33g_codecs(self) -> None:
         pbx = _make_pbx_core_shell()
         pbx.config.get.return_value = 101
         codecs = pbx._get_codecs_for_phone_model("ZIP33G")
-        assert codecs == ["2", "18", "9", "114", "113", "112", "101"]
+        assert codecs == ["0", "8", "9", "18", "2", "101"]
 
     def test_unknown_phone_uses_default_codecs(self) -> None:
         pbx = _make_pbx_core_shell()

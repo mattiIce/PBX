@@ -749,18 +749,19 @@ class PBXCore:
             return codecs
 
         if phone_model == "ZIP37G":
-            # ZIP37G: Use PCMU/PCMA only
-            # Payload types: 0=PCMU, 8=PCMA
-            codecs = ["0", "8", dtmf_pt_str]
-            self.logger.debug(f"Using ZIP37G codec set: PCMU/PCMA ({codecs})")
+            # ZIP37G (Zultys rebrand of Yealink T46G): supports full codec set
+            # per provisioning template — PCMU, PCMA, G722, G729, G726-32, iLBC, Speex
+            # Payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32
+            codecs = ["0", "8", "9", "18", "2", dtmf_pt_str]
+            self.logger.debug(f"Using ZIP37G codec set: PCMU/PCMA/G722/G729/G726 ({codecs})")
             return codecs
 
         if phone_model == "ZIP33G":
-            # ZIP33G: Use G726, G729, G722
-            # Payload types: 2=G726-32, 18=G729, 9=G722
-            # Also include G726 variants: 112=G726-16, 113=G726-24, 114=G726-40
-            codecs = ["2", "18", "9", "114", "113", "112", dtmf_pt_str]
-            self.logger.debug(f"Using ZIP33G codec set: G726/G729/G722 ({codecs})")
+            # ZIP33G (Zultys rebrand of Yealink T28G): supports full codec set
+            # per provisioning template — PCMU, PCMA, G722, G729, G726-32, iLBC, Speex
+            # Payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32
+            codecs = ["0", "8", "9", "18", "2", dtmf_pt_str]
+            self.logger.debug(f"Using ZIP33G codec set: PCMU/PCMA/G722/G729/G726 ({codecs})")
             return codecs
 
         # For unknown or other phones, use default behavior

@@ -183,7 +183,7 @@ class TestDTMFPayloadTypeIntegration:
 
         # Verify the codec list includes the custom DTMF payload type
         assert "100" in codecs
-        assert codecs == ["0", "8", "100"]
+        assert codecs == ["0", "8", "9", "18", "2", "100"]
 
     def test_dtmf_payload_type_end_to_end(self) -> None:
         """Test end-to-end flow from config to SDP generation through _get_dtmf_payload_type()"""
