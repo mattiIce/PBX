@@ -222,8 +222,12 @@ class CallRouter:
                     # and should send an answer when the user accepts the call
                     return True
                 pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
-                return False
-            pbx.logger.error("WebRTC gateway not available for routing call")
+            else:
+                pbx.logger.error("WebRTC gateway not available for routing call")
+
+            # Clean up allocated resources on WebRTC routing failure
+            pbx.rtp_relay.release_relay(call_id)
+            pbx.call_manager.end_call(call_id)
             return False
 
         # Build SDP for forwarding INVITE to callee
@@ -240,6 +244,15 @@ class CallRouter:
         # can only choose a codec the caller also supports, preventing
         # codec mismatches when the RTP relay forwards without transcoding.
         codecs_for_callee = pbx._get_compatible_codecs(callee_phone_model, caller_codecs)
+
+        # Warn if the computed codec list has no audio codecs (only DTMF)
+        dtmf_pt_str = str(pbx._get_dtmf_payload_type())
+        audio_codecs = [c for c in codecs_for_callee if c != dtmf_pt_str]
+        if not audio_codecs:
+            pbx.logger.error(
+                f"No audio codec overlap for call {call_id}: "
+                f"callee model={callee_phone_model}, caller codecs={caller_codecs}"
+            )
 
         if callee_phone_model:
             pbx.logger.info(

@@ -757,9 +757,21 @@ class TestDetectPhoneModel:
         pbx = _make_pbx_core_shell()
         assert pbx._detect_phone_model("Zultys ZIP 37G") == "ZIP37G"
 
+    def test_detect_yealink_t46s(self) -> None:
+        pbx = _make_pbx_core_shell()
+        assert pbx._detect_phone_model("Yealink SIP-T46S") == "YEALINK_T46S"
+
+    def test_detect_yealink_t46g(self) -> None:
+        pbx = _make_pbx_core_shell()
+        assert pbx._detect_phone_model("Yealink SIP-T46G 28.83.0.120") == "YEALINK_T46G"
+
+    def test_detect_yealink_t28g(self) -> None:
+        pbx = _make_pbx_core_shell()
+        assert pbx._detect_phone_model("Yealink SIP-T28G 2.73.0.130") == "YEALINK_T28G"
+
     def test_detect_unknown_phone(self) -> None:
         pbx = _make_pbx_core_shell()
-        assert pbx._detect_phone_model("Yealink SIP-T46S") is None
+        assert pbx._detect_phone_model("Polycom VVX-450") is None
 
     def test_detect_none_user_agent(self) -> None:
         pbx = _make_pbx_core_shell()
@@ -777,13 +789,13 @@ class TestGetCodecsForPhoneModel:
         pbx = _make_pbx_core_shell()
         pbx.config.get.return_value = 101
         codecs = pbx._get_codecs_for_phone_model("ZIP37G")
-        assert codecs == ["0", "8", "101"]
+        assert codecs == ["0", "8", "9", "18", "2", "101"]
 
     def test_zip33g_codecs(self) -> None:
         pbx = _make_pbx_core_shell()
         pbx.config.get.return_value = 101
         codecs = pbx._get_codecs_for_phone_model("ZIP33G")
-        assert codecs == ["2", "18", "9", "114", "113", "112", "101"]
+        assert codecs == ["0", "8", "9", "18", "2", "101"]
 
     def test_unknown_phone_uses_default_codecs(self) -> None:
         pbx = _make_pbx_core_shell()
