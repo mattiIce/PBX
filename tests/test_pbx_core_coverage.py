@@ -69,6 +69,11 @@ def _make_pbx_core_shell() -> Any:
     obj._emergency_handler = MagicMock()
     obj._paging_handler = MagicMock()
 
+    # Metrics
+    obj.metrics_exporter = None
+    obj._metrics_running = False
+    obj._metrics_thread = None
+
     # Security
     obj.security_monitor = MagicMock()
 
@@ -88,7 +93,7 @@ class TestPBXCoreInit:
     @patch("pbx.core.pbx.AutoAttendantHandler")
     @patch("pbx.core.pbx.VoicemailHandler")
     @patch("pbx.core.pbx.CallRouter")
-    @patch("pbx.core.pbx.PBXFlaskServer")
+    @patch("pbx.api.server.PBXFlaskServer")
     @patch("pbx.core.pbx.FeatureInitializer")
     @patch("pbx.core.pbx.SIPServer")
     @patch("pbx.core.pbx.RTPRelay")
@@ -190,7 +195,7 @@ class TestPBXCoreInit:
     @patch("pbx.core.pbx.AutoAttendantHandler")
     @patch("pbx.core.pbx.VoicemailHandler")
     @patch("pbx.core.pbx.CallRouter")
-    @patch("pbx.core.pbx.PBXFlaskServer")
+    @patch("pbx.api.server.PBXFlaskServer")
     @patch("pbx.core.pbx.FeatureInitializer")
     @patch("pbx.core.pbx.SIPServer")
     @patch("pbx.core.pbx.RTPRelay")
