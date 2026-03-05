@@ -222,8 +222,12 @@ class CallRouter:
                     # and should send an answer when the user accepts the call
                     return True
                 pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
-                return False
-            pbx.logger.error("WebRTC gateway not available for routing call")
+            else:
+                pbx.logger.error("WebRTC gateway not available for routing call")
+
+            # Clean up allocated resources on WebRTC routing failure
+            pbx.rtp_relay.release_relay(call_id)
+            pbx.call_manager.end_call(call_id)
             return False
 
         # Build SDP for forwarding INVITE to callee
