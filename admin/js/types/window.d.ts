@@ -208,6 +208,16 @@ declare global {
         deleteSpeechAnalyticsConfig: ((extension: string) => Promise<void>) | ((extension: string) => void);
         removeSpeechConfigModal: () => void;
 
+        // pages/sbc-management.ts
+        loadSBCData: () => Promise<void>;
+        saveSBCConfig: () => Promise<void>;
+        terminateSBCRelay: (callId: string) => Promise<void>;
+        addSBCBlacklist: () => Promise<void>;
+        removeSBCBlacklist: (ip: string) => Promise<void>;
+        addSBCWhitelist: () => Promise<void>;
+        removeSBCWhitelist: (ip: string) => Promise<void>;
+        detectSBCNat: () => Promise<void>;
+
         // Functions referenced in tabs.ts from .js modules (not yet ported to .ts)
         loadAutoAttendantConfig?: () => void;
         loadSIPTrunks?: () => void;

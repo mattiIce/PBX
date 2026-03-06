@@ -63,6 +63,7 @@ import './pages/call-routing.ts';
 import './pages/recordings.ts';
 import './pages/click-to-dial.ts';
 import './pages/speech-analytics.ts';
+import './pages/sbc-management.ts';
 
 // Constants
 const LOGIN_PAGE_PATH = '/admin/login.html';
