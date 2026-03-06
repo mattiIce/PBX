@@ -192,6 +192,75 @@ def _ulaw_to_pcm(ulaw_bytes: bytes) -> bytes:
     return bytes(out)
 
 
+# ---------------------------------------------------------------------------
+# A-law lookup tables (ITU-T G.711)
+# ---------------------------------------------------------------------------
+_ALAW_DECODE_TABLE: list[int] | None = None
+_ALAW_ENCODE_TABLE: list[int] | None = None
+
+
+def _init_alaw_tables() -> None:
+    """Lazily build A-law encode / decode lookup tables."""
+    global _ALAW_DECODE_TABLE, _ALAW_ENCODE_TABLE
+
+    if _ALAW_DECODE_TABLE is not None:
+        return
+
+    _ALAW_DECODE_TABLE = []
+    for i in range(256):
+        val = i ^ 0x55
+        sign = val & 0x80
+        exponent = (val >> 4) & 0x07
+        mantissa = val & 0x0F
+        if exponent == 0:
+            sample = (mantissa << 4) + 8
+        else:
+            sample = ((mantissa << 4) + 0x108) << (exponent - 1)
+        _ALAW_DECODE_TABLE.append(-sample if sign else sample)
+
+    _ALAW_ENCODE_TABLE = []
+    for idx in range(65536):
+        sample = idx - 32768  # convert to signed
+        sign_bit = 0
+        if sample < 0:
+            sign_bit = 0x80
+            sample = -sample
+        sample = min(sample, 32767)
+        if sample >= 256:
+            exponent = 7
+            for mask_val in (0x4000, 0x2000, 0x1000, 0x0800, 0x0400, 0x0200, 0x0100):
+                if sample & mask_val:
+                    break
+                exponent -= 1
+            mantissa = (sample >> (exponent + 3)) & 0x0F
+            _ALAW_ENCODE_TABLE.append((sign_bit | (exponent << 4) | mantissa) ^ 0x55)
+        else:
+            mantissa = (sample >> 4) & 0x0F
+            _ALAW_ENCODE_TABLE.append((sign_bit | mantissa) ^ 0x55)
+
+
+def _alaw_to_pcm(alaw_bytes: bytes) -> bytes:
+    """Convert A-law bytes to signed-16-bit-LE PCM."""
+    _init_alaw_tables()
+    assert _ALAW_DECODE_TABLE is not None
+    out = bytearray(len(alaw_bytes) * 2)
+    for i, b in enumerate(alaw_bytes):
+        sample = _ALAW_DECODE_TABLE[b]
+        out[i * 2 : i * 2 + 2] = sample.to_bytes(2, "little", signed=True)
+    return bytes(out)
+
+
+def _pcm_to_alaw(pcm_bytes: bytes) -> bytes:
+    """Convert signed-16-bit-LE PCM to A-law bytes."""
+    _init_alaw_tables()
+    assert _ALAW_ENCODE_TABLE is not None
+    out = bytearray(len(pcm_bytes) // 2)
+    for i in range(0, len(pcm_bytes), 2):
+        sample = int.from_bytes(pcm_bytes[i : i + 2], "little", signed=True)
+        out[i // 2] = _ALAW_ENCODE_TABLE[sample + 32768]
+    return bytes(out)
+
+
 def _upsample_8k_to_48k(pcm_8k: bytes) -> bytes:
     """Upsample 8 kHz signed-16-bit-LE PCM to 48 kHz via linear interpolation."""
     import array
@@ -699,6 +768,10 @@ class WebRTCSignalingServer:
         if not session:
             return False
 
+        # Stop media bridge threads/sockets before removing the session
+        # so background threads see _bridge_running=False and exit cleanly.
+        self.stop_media_bridge(session)
+
         # Get extension before removing session
         extension = session.extension
 
@@ -932,10 +1005,10 @@ class WebRTCSignalingServer:
                         # Parse RTP header to determine actual header length
                         # (accounts for CSRC entries) and verify payload type.
                         pt = data[1] & 0x7F
-                        # Only process PCMU (PT 0) audio packets; skip
-                        # DTMF events (PT 101), comfort noise (PT 13), etc.
-                        # which would produce static if decoded as u-law.
-                        if pt != 0:
+                        # Process PCMU (PT 0) and PCMA (PT 8) audio packets;
+                        # skip DTMF events (PT 101), comfort noise (PT 13),
+                        # etc. which would produce static if decoded as audio.
+                        if pt not in (0, 8):
                             continue
                         cc = data[0] & 0x0F
                         has_ext = (data[0] >> 4) & 0x01
@@ -946,10 +1019,13 @@ class WebRTCSignalingServer:
                         if len(data) <= header_len:
                             continue
                         payload = data[header_len:]
-                        # Decode u-law to 8 kHz PCM then upsample to 48 kHz
+                        # Decode G.711 to 8 kHz PCM then upsample to 48 kHz
                         # so the AudioBridgeTrack delivers Opus-native frames
                         # to the browser via aiortc.
-                        pcm_8k = _ulaw_to_pcm(payload)
+                        if pt == 8:
+                            pcm_8k = _alaw_to_pcm(payload)
+                        else:
+                            pcm_8k = _ulaw_to_pcm(payload)
                         pcm_48k = _upsample_8k_to_48k(pcm_8k)
                         if session.bridge_track:
                             session.bridge_track.push_pcm(pcm_48k)

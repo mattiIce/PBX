@@ -800,6 +800,9 @@ class RTPPlayer:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Allow port sharing with RTPDTMFListener on the same port
+            if hasattr(socket, "SO_REUSEPORT"):
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
             # This is intentional for VoIP systems which need to handle
             # multi-homed servers
@@ -1228,6 +1231,9 @@ class RTPDTMFListener:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Allow port sharing with RTPPlayer on the same port
+            if hasattr(socket, "SO_REUSEPORT"):
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
             # This is intentional for VoIP systems which need to handle
             # multi-homed servers

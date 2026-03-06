@@ -81,11 +81,12 @@ class AutoAttendantHandler:
         # For auto attendant, we don't need a relay (which forwards between two endpoints).
         # Instead, we directly play audio to the caller and listen for DTMF.
         # Find an available port from the RTP port pool.
-        try:
-            rtp_port: int = pbx.rtp_relay.port_pool.pop(0)
-        except IndexError:
-            pbx.logger.error(f"No available RTP ports for auto attendant {call_id}")
-            return False
+        with pbx.rtp_relay._port_lock:
+            try:
+                rtp_port: int = pbx.rtp_relay.port_pool.pop(0)
+            except IndexError:
+                pbx.logger.error(f"No available RTP ports for auto attendant {call_id}")
+                return False
 
         rtcp_port: int = rtp_port + 1
         call.rtp_ports = (rtp_port, rtcp_port)
@@ -401,10 +402,11 @@ class AutoAttendantHandler:
             player.stop()
             dtmf_listener.stop()
 
-            # Return port to pool
+            # Return port to pool (thread-safe)
             if hasattr(call, "aa_rtp_port"):
-                pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
-                pbx.rtp_relay.port_pool.sort()
+                with pbx.rtp_relay._port_lock:
+                    pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
+                    pbx.rtp_relay.port_pool.sort()
                 pbx.logger.info(f"Returned RTP port {call.aa_rtp_port} to pool")
 
         except (KeyError, OSError, TypeError, ValueError) as e:
@@ -413,11 +415,12 @@ class AutoAttendantHandler:
 
             pbx.logger.error(traceback.format_exc())
 
-            # Ensure port is returned even on error
+            # Ensure port is returned even on error (thread-safe)
             if hasattr(call, "aa_rtp_port"):
                 try:
-                    pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
-                    pbx.rtp_relay.port_pool.sort()
+                    with pbx.rtp_relay._port_lock:
+                        pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
+                        pbx.rtp_relay.port_pool.sort()
                 except Exception as exc:
                     pbx.logger.error(f"Failed to return RTP port {call.aa_rtp_port}: {exc}")
         finally:
