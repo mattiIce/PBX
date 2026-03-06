@@ -57,7 +57,7 @@ def handle_phone_lookup(identifier: str) -> Response:
 
         # Check provisioning system
         if hasattr(pbx_core, "phone_provisioning"):
-            device = pbx_core.phone_provisioning.get_device(identifier)
+            device = pbx_core.phone_provisioning.get_device(normalized_mac)
             if device:
                 result["provisioned_device"] = device.to_dict()
 

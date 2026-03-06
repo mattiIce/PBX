@@ -136,7 +136,7 @@ def add_auto_attendant_menu_option() -> tuple[Response, int]:
 
     try:
         data = get_request_body()
-        digit = str(data.get("digit"))
+        digit = data.get("digit")
         destination = data.get("destination")
         description = data.get("description", "")
 
@@ -767,6 +767,13 @@ def add_sip_trunk() -> tuple[Response, int]:
     if pbx_core and hasattr(pbx_core, "trunk_system"):
         try:
             data = get_request_body()
+
+            required_fields = ["trunk_id", "name", "host", "username", "password"]
+            missing = [f for f in required_fields if f not in data]
+            if missing:
+                return send_json(
+                    {"error": f"Missing required fields: {', '.join(missing)}"}, 400
+                ), 400
 
             from pbx.features.sip_trunk import SIPTrunk
 
