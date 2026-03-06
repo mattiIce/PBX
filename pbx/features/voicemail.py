@@ -177,7 +177,7 @@ class VoicemailBox:
                     message_id,
                     self.extension_number,
                     caller_id,
-                    file_path,
+                    str(file_path),
                     duration,
                     False,
                     timestamp,

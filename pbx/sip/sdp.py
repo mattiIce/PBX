@@ -272,6 +272,11 @@ class SDPBuilder:
             attributes.append(f"rtpmap:{dtmf_pt_str} telephone-event/8000")
             attributes.append(f"fmtp:{dtmf_pt_str} 0-16")
 
+        # ptime (packetization interval) — many hardware phones and ATAs
+        # (Grandstream, Cisco SPA, Polycom) require this attribute.  Without
+        # it, some devices fall back to non-standard packetization, causing
+        # choppy or one-way audio.  20ms is the standard for G.711/G.722.
+        attributes.append("ptime:20")
         attributes.append("sendrecv")
 
         # Add audio media

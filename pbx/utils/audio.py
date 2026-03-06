@@ -564,8 +564,15 @@ def load_prompt_file(prompt_type: str, prompt_dir: str = "voicemail_prompts") ->
     Note: This function attempts to load actual recorded voice prompts.
           If the file doesn't exist, the caller should fall back to generate_voice_prompt()
     """
-    # Build path to prompt file
-    prompt_file = Path(prompt_dir) / f"{prompt_type}.wav"
+    # Build path to prompt file. If prompt_dir is relative, resolve it
+    # relative to the project root (two levels up from this file) so that
+    # prompts are found regardless of the process working directory
+    # (e.g., when launched via systemd or Docker).
+    prompt_path = Path(prompt_dir)
+    if not prompt_path.is_absolute():
+        project_root = Path(__file__).resolve().parent.parent.parent
+        prompt_path = project_root / prompt_path
+    prompt_file = prompt_path / f"{prompt_type}.wav"
 
     # Check if file exists
     if prompt_file.exists():

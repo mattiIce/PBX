@@ -124,6 +124,7 @@ class FeatureInitializer:
             pbx_core.paging_system = PagingSystem(
                 config, database=database if database.enabled else None
             )
+            pbx_core.paging_system.pbx_core = pbx_core
             pbx_core._log_startup("Paging system initialized")
         else:
             pbx_core.paging_system = None

@@ -135,11 +135,11 @@ services:
       # Configuration file
       - ./config.yml:/app/config.yml:ro
 
-      # Persistent data directories
-      - recordings:/data/recordings
-      - voicemail:/data/voicemail
-      - cdr:/data/cdr
-      - moh:/data/moh
+      # Persistent data directories (must match WORKDIR-relative paths in config.yml)
+      - recordings:/app/recordings
+      - voicemail:/app/voicemail
+      - cdr:/app/cdr
+      - moh:/app/moh
 
       # Application logs
       - logs:/app/logs

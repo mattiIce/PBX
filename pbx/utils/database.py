@@ -73,8 +73,8 @@ class DatabaseBackend:
 
         host = self.config.get("database.host", "localhost")
         port = self.config.get("database.port", 5432)
-        database = self.config.get("database.name", "pbx")
-        user = self.config.get("database.user", "pbx")
+        database = self.config.get("database.name", "pbx_system")
+        user = self.config.get("database.user", "pbx_user")
 
         self.logger.info("Connecting to PostgreSQL database...")
         self.logger.info(f"  Host: {host}")
@@ -881,7 +881,7 @@ class VIPCallerDB:
 
     def list_vips(self, priority_level: int | None = None) -> list[dict]:
         """list all VIP callers"""
-        if priority_level:
+        if priority_level is not None:
             query = "SELECT id, caller_id, name, priority_level, notes, special_routing, created_at, updated_at FROM vip_callers WHERE priority_level = %s ORDER BY name"
             return self.db.fetch_all(query, (priority_level,))
         query = "SELECT id, caller_id, name, priority_level, notes, special_routing, created_at, updated_at FROM vip_callers ORDER BY priority_level, name"

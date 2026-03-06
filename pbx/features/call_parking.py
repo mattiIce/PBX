@@ -82,7 +82,7 @@ class CallParkingSystem:
             Park number or None if all slots full
         """
         for slot in range(self.park_range_start, self.park_range_end + 1):
-            if slot not in self.parked_calls:
+            if str(slot) not in self.parked_calls:
                 return str(slot)
         return None
 
@@ -178,6 +178,6 @@ class CallParkingSystem:
 
     def get_available_slots(self) -> list:
         """Get list of available parking slots"""
-        all_slots = set(range(self.park_range_start, self.park_range_end + 1))
+        all_slots = {str(s) for s in range(self.park_range_start, self.park_range_end + 1)}
         used_slots = set(self.parked_calls)
         return sorted(all_slots - used_slots)

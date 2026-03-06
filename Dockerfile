@@ -63,8 +63,8 @@ ENV PATH="/opt/venv/bin:$PATH"
 
 # Create non-root user for security
 RUN groupadd -r pbx && useradd -r -g pbx -u 1000 -s /usr/sbin/nologin pbx && \
-    mkdir -p /app /data/recordings /data/voicemail /data/cdr /data/moh && \
-    chown -R pbx:pbx /app /data
+    mkdir -p /app /app/recordings /app/voicemail /app/cdr /app/moh && \
+    chown -R pbx:pbx /app
 
 # Set working directory
 WORKDIR /app

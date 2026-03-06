@@ -15,7 +15,7 @@
 server:
   sip_host: "0.0.0.0"           # Listen on all interfaces
   sip_port: 5060                # Standard SIP port
-  public_ip: "YOUR_PUBLIC_IP"   # Your public IP address (required for AT&T)
+  external_ip: "YOUR_PUBLIC_IP"  # Your public IP address (required for AT&T)
                                  # Example: "203.0.113.10"
 
   # RTP port range for media

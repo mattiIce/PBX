@@ -70,15 +70,27 @@ class SIPMessage:
                 return
 
         # Parse headers
+        # RFC 3261 Section 7.3.1: Multiple headers with the same name are combined
+        # as comma-separated values. This preserves all Via, Route, Record-Route, etc.
         body_start: int | None = None
         for i, line in enumerate(lines[1:], 1):
             if line == "":
                 body_start = i + 1
                 break
 
-            if ":" in line:
+            # Handle header continuation lines (RFC 3261 Section 7.3.1):
+            # lines starting with whitespace are appended to previous header
+            if line[0] in (" ", "\t") and self.headers:
+                last_key = list(self.headers.keys())[-1]
+                self.headers[last_key] += " " + line.strip()
+            elif ":" in line:
                 key, value = line.split(":", 1)
-                self.headers[key.strip()] = value.strip()
+                key = key.strip()
+                value = value.strip()
+                if key in self.headers:
+                    self.headers[key] += ", " + value
+                else:
+                    self.headers[key] = value
 
         # Parse body
         if body_start and body_start < len(lines):
@@ -197,11 +209,13 @@ class SIPMessageBuilder:
                 response.set_header(header, value)
 
         # RFC 3261 Section 12.1.1: UAS MUST add a tag to the To header in responses
-        # that establish or confirm a dialog (or any non-100 response to REGISTER)
-        to_value = response.headers.get("To", "")
-        if to_value and ";tag=" not in to_value:
-            tag = uuid.uuid4().hex[:8]
-            response.set_header("To", f"{to_value};tag={tag}")
+        # that establish or confirm a dialog. RFC 3261 Section 8.2.6.2: 100 Trying
+        # MUST NOT contain a tag in the To header field.
+        if status_code != 100:
+            to_value = response.headers.get("To", "")
+            if to_value and ";tag=" not in to_value:
+                tag = uuid.uuid4().hex[:8]
+                response.set_header("To", f"{to_value};tag={tag}")
 
         if body:
             response.body = body

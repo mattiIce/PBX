@@ -6,6 +6,7 @@ Handles real-time audio/video streaming
 from __future__ import annotations
 
 import contextlib
+import random
 import socket
 import struct
 import threading
@@ -54,7 +55,7 @@ class RTPHandler:
         self.running: bool = False
         self.sequence_number: int = 0
         self.timestamp: int = 0
-        self.ssrc: int = 0x12345678  # Synchronization source identifier
+        self.ssrc: int = random.randint(0, 0xFFFFFFFF)  # Random SSRC per RFC 3550
 
     def start(self) -> bool:
         """
@@ -173,7 +174,18 @@ class RTPHandler:
 
             # Update sequence and timestamp
             self.sequence_number = (self.sequence_number + 1) & 0xFFFF
-            self.timestamp = (self.timestamp + len(payload)) & 0xFFFFFFFF
+            # Advance timestamp by sample count, not byte count.
+            # For G.711 (PT 0/8): 1 byte = 1 sample.
+            # For 16-bit linear PCM: 1 sample = 2 bytes.
+            # For G.722 (PT 9): 1 byte = 1 sample at 16kHz.
+            if payload_type in (0, 8):
+                samples = len(payload)
+            elif payload_type == 9:
+                samples = len(payload)
+            else:
+                # Default: assume 2 bytes per sample (16-bit PCM)
+                samples = len(payload) // 2 if len(payload) >= 2 else len(payload)
+            self.timestamp = (self.timestamp + samples) & 0xFFFFFFFF
 
             return True
         except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
@@ -210,10 +222,16 @@ class RTPRelay:
             range(port_range_start, port_range_end, 2)
         )  # Even ports for RTP
         self.qos_monitor: QoSMonitor | None = qos_monitor
+        # Lock for thread-safe port allocation/release.  Multiple SIP threads
+        # can call allocate_relay/release_relay concurrently for different calls.
+        self._pool_lock: threading.Lock = threading.Lock()
 
     def allocate_relay(self, call_id: str) -> tuple[int, int] | None:
         """
         Allocate RTP relay for a call.
+
+        Thread-safe: uses an internal lock so concurrent call setups
+        from different SIP threads cannot allocate the same port.
 
         Args:
             call_id: Unique call identifier.
@@ -221,25 +239,29 @@ class RTPRelay:
         Returns:
             Tuple of (rtp_port, rtcp_port) or None if allocation failed.
         """
-        if not self.port_pool:
-            self.logger.error("No available ports for RTP relay")
-            return None
+        with self._pool_lock:
+            if not self.port_pool:
+                self.logger.error("No available ports for RTP relay")
+                return None
 
-        rtp_port = self.port_pool.pop(0)
+            rtp_port = self.port_pool.pop(0)
+
         rtcp_port = rtp_port + 1
 
         handler = RTPRelayHandler(rtp_port, call_id, qos_monitor=self.qos_monitor)
         if handler.start():
-            self.active_relays[call_id] = {
-                "rtp_port": rtp_port,
-                "rtcp_port": rtcp_port,
-                "handler": handler,
-            }
+            with self._pool_lock:
+                self.active_relays[call_id] = {
+                    "rtp_port": rtp_port,
+                    "rtcp_port": rtcp_port,
+                    "handler": handler,
+                }
             self.logger.info(
                 f"Allocated RTP relay for call {call_id}: ports {rtp_port}/{rtcp_port}"
             )
             return (rtp_port, rtcp_port)
-        self.port_pool.insert(0, rtp_port)
+        with self._pool_lock:
+            self.port_pool.insert(0, rtp_port)
         return None
 
     def set_endpoints(self, call_id: str, endpoint_a: AddrTuple, endpoint_b: AddrTuple) -> None:
@@ -260,10 +282,14 @@ class RTPRelay:
         """
         Release RTP relay for a call.
 
+        Thread-safe: uses an internal lock for port pool access.
+
         Args:
             call_id: Call identifier.
         """
-        if call_id in self.active_relays:
+        with self._pool_lock:
+            if call_id not in self.active_relays:
+                return
             relay = self.active_relays[call_id]
             relay["handler"].stop()
             self.port_pool.append(relay["rtp_port"])
@@ -580,6 +606,7 @@ class RTPRecorder:
         local_port: int,
         call_id: str,
         rfc2833_handler: RFC2833Receiver | None = None,
+        dtmf_payload_type: int = 101,
     ) -> None:
         """
         Initialize RTP recorder.
@@ -588,6 +615,7 @@ class RTPRecorder:
             local_port: Local port to bind to.
             call_id: Call identifier for logging.
             rfc2833_handler: Optional RFC 2833 receiver for DTMF event handling.
+            dtmf_payload_type: Payload type for RFC 2833 DTMF events (default 101).
         """
         self.local_port: int = local_port
         self.call_id: str = call_id
@@ -598,6 +626,9 @@ class RTPRecorder:
         self.lock: threading.Lock = threading.Lock()
         self.remote_endpoint: AddrTuple | None = None  # Will be learned from first packet
         self.rfc2833_handler: RFC2833Receiver | None = rfc2833_handler  # Optional RFC 2833 receiver
+        self.dtmf_payload_type: int = dtmf_payload_type
+        # Track the audio codec payload type from the first audio packet
+        self.detected_codec: int | None = None
 
     def start(self) -> bool:
         """
@@ -652,14 +683,27 @@ class RTPRecorder:
 
                 # Extract audio payload from RTP packet
                 if len(data) >= 12:
-                    # Parse RTP header to get payload
+                    # Parse RTP header to get payload, accounting for CSRC
+                    # entries and header extensions per RFC 3550.
                     header = struct.unpack("!BBHII", data[:12])
+                    cc = header[0] & 0x0F  # CSRC count
+                    has_extension = (header[0] >> 4) & 0x01  # X bit
                     payload_type = header[1] & 0x7F
-                    payload = data[12:]
 
-                    # Filter out RFC 2833 telephone-event packets (payload type 101)
-                    # These are DTMF signaling packets, not audio
-                    if payload_type == 101:
+                    # Payload starts after fixed header (12) + CSRC list (cc*4)
+                    payload_offset = 12 + cc * 4
+                    if has_extension and len(data) >= payload_offset + 4:
+                        # Skip RTP header extension (RFC 3550 Section 5.3.1)
+                        ext_length = struct.unpack(
+                            "!H", data[payload_offset + 2 : payload_offset + 4]
+                        )[0]
+                        payload_offset += 4 + ext_length * 4
+
+                    payload = data[payload_offset:] if len(data) > payload_offset else b""
+
+                    # Filter out RFC 2833 telephone-event packets using the
+                    # negotiated DTMF payload type (not hardcoded 101).
+                    if payload_type == self.dtmf_payload_type:
                         self.logger.debug(
                             "Received RFC 2833 telephone-event packet (filtered from recording)"
                         )
@@ -668,6 +712,14 @@ class RTPRecorder:
                         if self.rfc2833_handler:
                             self.rfc2833_handler.handle_rtp_packet(data, addr)
                         continue
+
+                    # Track the audio codec from the first audio packet so
+                    # the voicemail WAV file uses the correct format.
+                    if self.detected_codec is None:
+                        self.detected_codec = payload_type
+                        self.logger.info(
+                            f"Detected audio codec PT {payload_type} for recording {self.call_id}"
+                        )
 
                     # Store only audio payloads (not telephone-events)
                     with self.lock:
@@ -747,7 +799,7 @@ class RTPPlayer:
         self.running: bool = False
         self.sequence_number: int = 0
         self.timestamp: int = 0
-        self.ssrc: int = 0x87654321  # Synchronization source identifier
+        self.ssrc: int = random.randint(0, 0xFFFFFFFF)  # Random SSRC per RFC 3550
         self.lock: threading.Lock = threading.Lock()
 
     def start(self) -> bool:
@@ -760,6 +812,9 @@ class RTPPlayer:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Allow port sharing with RTPDTMFListener on the same port
+            if hasattr(socket, "SO_REUSEPORT"):
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
             # This is intentional for VoIP systems which need to handle
             # multi-homed servers
@@ -1072,8 +1127,7 @@ class RTPPlayer:
                                 # Extract left channel: take 2 bytes (one 16-bit sample)
                                 # from each 4-byte stereo frame (L-low, L-high, R-low, R-high)
                                 audio_data = b"".join(
-                                    audio_data[i:i + 2]
-                                    for i in range(0, len(audio_data), 4)
+                                    audio_data[i : i + 2] for i in range(0, len(audio_data), 4)
                                 )
                             else:  # 8-bit formats (G.711, G.722)
                                 audio_data = audio_data[::2]
@@ -1189,6 +1243,9 @@ class RTPDTMFListener:
         try:
             self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            # Allow port sharing with RTPPlayer on the same port
+            if hasattr(socket, "SO_REUSEPORT"):
+                self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
             # Bind to all interfaces (0.0.0.0) to allow RTP from any network adapter
             # This is intentional for VoIP systems which need to handle
             # multi-homed servers
@@ -1232,10 +1289,21 @@ class RTPDTMFListener:
 
                 # Extract audio payload from RTP packet
                 if len(data) >= 12:
-                    # Parse RTP header
+                    # Parse RTP header, accounting for CSRC and extensions
                     header = struct.unpack("!BBHII", data[:12])
+                    cc = header[0] & 0x0F  # CSRC count
+                    has_extension = (header[0] >> 4) & 0x01  # X bit
                     payload_type = header[1] & 0x7F
-                    payload = data[12:]
+
+                    # Payload starts after fixed header (12) + CSRC list (cc*4)
+                    payload_offset = 12 + cc * 4
+                    if has_extension and len(data) >= payload_offset + 4:
+                        ext_length = struct.unpack(
+                            "!H", data[payload_offset + 2 : payload_offset + 4]
+                        )[0]
+                        payload_offset += 4 + ext_length * 4
+
+                    payload = data[payload_offset:] if len(data) > payload_offset else b""
 
                     # Convert audio payload to samples for DTMF detection
                     # Assuming G.711 u-law (payload type 0) or A-law (payload

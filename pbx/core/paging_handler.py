@@ -272,7 +272,10 @@ class PagingHandler:
                     call.caller_rtp["address"],
                     call.caller_rtp["port"],
                 )
-                dac_endpoint: tuple[str, int] = (dac_ip, dac_port + 1)
+                # Use the RTP port from our SDP offer (dac_rtp_port) as the
+                # destination — the DAC device will send/receive RTP on
+                # the port we advertised, not the SIP signaling port + 1.
+                dac_endpoint: tuple[str, int] = (dac_ip, dac_rtp_port)
 
                 # Configure RTP relay for forwarding
                 pbx.rtp_relay.set_endpoints(call.call_id, caller_endpoint, dac_endpoint)

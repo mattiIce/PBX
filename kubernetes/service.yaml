@@ -10,7 +10,7 @@ spec:
   selector:
     app: pbx-server
   ports:
-  - name: https-api
+  - name: http-api
     port: 9000
     targetPort: 9000
     protocol: TCP
