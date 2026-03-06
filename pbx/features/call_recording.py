@@ -28,6 +28,7 @@ class CallRecording:
         self.recording = False
         self.file_path = None
         self.start_time = None
+        self.end_time = None
         self.audio_buffer = []
 
         Path(recording_path).mkdir(parents=True, exist_ok=True)
@@ -72,11 +73,12 @@ class CallRecording:
             return None
 
         self.recording = False
+        self.end_time = datetime.now(UTC)
 
         # Save audio buffer to WAV file
         if self.audio_buffer and self.file_path:
             try:
-                with wave.open(self.file_path, "wb") as wav_file:
+                with wave.open(str(self.file_path), "wb") as wav_file:
                     wav_file.setnchannels(1)  # Mono
                     wav_file.setsampwidth(2)  # 16-bit
                     wav_file.setframerate(8000)  # 8kHz for telephony
@@ -95,7 +97,7 @@ class CallRecording:
     def get_duration(self) -> float:
         """Get recording duration in seconds"""
         if self.start_time:
-            end_time = datetime.now(UTC)
+            end_time = self.end_time if self.end_time else datetime.now(UTC)
             return (end_time - self.start_time).total_seconds()
         return 0
 
