@@ -709,8 +709,8 @@ class PBXCore:
 
         Returns:
             Phone model identifier string or None.
-            Possible values: 'YEALINK_T33G', 'YEALINK_T46S', 'YEALINK_T46G',
-            'YEALINK_T28G', 'ZIP33G', 'ZIP37G', or None for unknown/other
+            Possible values: 'YEALINK_T23G', 'YEALINK_T33G', 'YEALINK_T46S',
+            'YEALINK_T46G', 'YEALINK_T28G', 'ZIP33G', 'ZIP37G', or None for unknown/other
         """
         if not user_agent:
             return None
@@ -739,6 +739,10 @@ class PBXCore:
         # Yealink T46G — predecessor to T46S
         if "T46G" in user_agent_upper:
             return "YEALINK_T46G"
+
+        # Yealink T23G — entry-level business phone
+        if "T23G" in user_agent_upper:
+            return "YEALINK_T23G"
 
         # Yealink T28G — mid-range phone (also the base for ZIP33G OEM)
         if "T28G" in user_agent_upper:
@@ -780,6 +784,13 @@ class PBXCore:
         # Get DTMF payload type from config (default 101)
         dtmf_payload_type = self.config.get("features.dtmf.payload_type", 101)
         dtmf_pt_str = str(dtmf_payload_type)
+
+        if phone_model == "YEALINK_T23G":
+            # Yealink T23G: per provisioning template — PCMU, PCMA, G722, G729, G726-32, iLBC
+            # Payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729, 2=G726-32
+            codecs = ["0", "8", "9", "18", "2", dtmf_pt_str]
+            self.logger.debug(f"Using Yealink T23G codec set: PCMU/PCMA/G722/G729/G726 ({codecs})")
+            return codecs
 
         if phone_model == "YEALINK_T33G":
             # Yealink T33G: per provisioning template — PCMU, PCMA, G722, G729, iLBC
