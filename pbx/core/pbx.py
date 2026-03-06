@@ -990,7 +990,12 @@ class PBXCore:
         self, call_id: str, response_message: Any, callee_addr: tuple[str, int]
     ) -> None:
         """
-        Handle when callee answers the call
+        Handle when callee answers the call.
+
+        This method handles the initial 200 OK for a new call.  If the call
+        is already connected (e.g., 200 OK to a re-INVITE forwarded by the
+        PBX), only the SDP/RTP endpoints are updated — the call state and
+        CDR are not re-processed.
 
         Args:
             call_id: Call identifier
@@ -1003,6 +1008,28 @@ class PBXCore:
         call = self.call_manager.get_call(call_id)
         if not call:
             self.logger.error(f"Call {call_id} not found")
+            return
+
+        # If the call is already connected, this 200 OK is a response to a
+        # re-INVITE we forwarded.  Update the SDP/RTP endpoints but do NOT
+        # re-process call state, CDR, or send a duplicate 200 OK to the caller.
+        if call.state.value == "connected":
+            self.logger.info(f"200 OK for already-connected call {call_id} (re-INVITE response)")
+            if response_message.body:
+                sdp_obj = SDPSession()
+                sdp_obj.parse(response_message.body)
+                new_sdp = sdp_obj.get_audio_info()
+                if new_sdp:
+                    call.callee_rtp = new_sdp
+                    callee_endpoint = (new_sdp["address"], new_sdp["port"])
+                    caller_endpoint = (
+                        (call.caller_rtp["address"], call.caller_rtp["port"])
+                        if call.caller_rtp
+                        else None
+                    )
+                    if call.rtp_ports and caller_endpoint:
+                        self.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
+                        self.logger.info(f"Updated RTP endpoints for re-INVITE on call {call_id}")
             return
 
         # Parse callee's SDP from 200 OK

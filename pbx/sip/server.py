@@ -581,6 +581,65 @@ class SIPServer:
             self._send_message(reinvite.build(), other_addr)
             self.logger.info(f"Forwarded re-INVITE to other party at {other_addr}")
 
+    def _send_ack_to_callee(
+        self, response_200: SIPMessage, callee_addr: AddrTuple, call_id: str
+    ) -> None:
+        """
+        Generate and send ACK to callee after receiving their 200 OK.
+
+        Per RFC 3261 Section 13.2.2.4, the UAC MUST acknowledge a 200 OK
+        to INVITE with an ACK request.  Without this, the callee will
+        retransmit the 200 OK and eventually tear down the call (BYE after
+        Timer H expires), causing "call drops after a few seconds".
+
+        Args:
+            response_200: The 200 OK SIPMessage from the callee.
+            callee_addr: Callee's address tuple.
+            call_id: Call identifier.
+        """
+        import uuid as _uuid
+
+        call = self.pbx_core.call_manager.get_call(call_id) if self.pbx_core else None
+        if not call:
+            return
+
+        # Build ACK for the callee's 200 OK.
+        # The Request-URI, From, To (with tag), and Call-ID must match the
+        # original INVITE dialog.  CSeq uses the same number as the INVITE.
+        callee_invite = getattr(call, "callee_invite", None)
+        request_uri = (
+            callee_invite.uri
+            if callee_invite
+            else f"sip:{call.to_extension}@{callee_addr[0]}:{callee_addr[1]}"
+        )
+        from_header = response_200.get_header("From") or ""
+        # To header from the 200 OK includes the remote tag
+        to_header = response_200.get_header("To") or ""
+        cseq_str = response_200.get_header("CSeq") or "1 INVITE"
+        cseq_num = int(cseq_str.split()[0])
+
+        ack = SIPMessage()
+        ack.method = "ACK"
+        ack.uri = request_uri
+        ack.set_header("From", from_header)
+        ack.set_header("To", to_header)
+        ack.set_header("Call-ID", call_id)
+        ack.set_header("CSeq", f"{cseq_num} ACK")
+        ack.set_header("Content-Length", "0")
+        ack.set_header("Max-Forwards", "70")
+
+        # Via header for the ACK
+        server_ip = self.pbx_core._get_server_ip()
+        sip_port = self.pbx_core.config.get("server.sip_port", 5060)
+        branch_id = str(_uuid.uuid4()).replace("-", "")
+        ack.set_header(
+            "Via",
+            f"SIP/2.0/UDP {server_ip}:{sip_port};branch=z9hG4bK{branch_id}",
+        )
+
+        self._send_message(ack.build(), callee_addr)
+        self.logger.info(f"Sent ACK to callee at {callee_addr} for call {call_id}")
+
     def _handle_ack(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
         Handle ACK request.
@@ -1686,13 +1745,21 @@ class SIPServer:
                 cseq_header = message.get_header("CSeq") or ""
                 if call_id and "INVITE" in cseq_header:
                     self.logger.info(f"Callee answered call {call_id}")
+
+                    # Per RFC 3261 Section 13.2.2.4, the UAC (PBX acting as
+                    # B2BUA) MUST send an ACK to the callee after receiving
+                    # their 200 OK.  Without this ACK, the callee retransmits
+                    # the 200 OK and eventually tears down the call.
+                    self._send_ack_to_callee(message, addr, call_id)
+
                     self.pbx_core.handle_callee_answer(call_id, message, addr)
 
             elif message.status_code and message.status_code >= 400:
-                # Error response from callee (4xx/5xx/6xx) - forward to caller
-                # so their phone can stop waiting and play an appropriate tone.
-                # Common cases: 486 Busy Here, 488 Not Acceptable Here,
-                # 480 Temporarily Unavailable, 603 Decline.
+                # Error response from callee (4xx/5xx/6xx) - build a proper
+                # error response to the caller's original INVITE so the Via
+                # header matches their transaction.  Forwarding the callee's
+                # raw response would have the PBX's Via, causing the caller's
+                # SIP stack to silently discard it.
                 self.logger.warning(f"Callee error {message.status_code} for call {call_id}")
                 if call_id:
                     call = self.pbx_core.call_manager.get_call(call_id)
@@ -1700,8 +1767,13 @@ class SIPServer:
                         # Cancel no-answer timer since the callee already responded
                         if call.no_answer_timer:
                             call.no_answer_timer.cancel()
-                        if call.caller_addr:
-                            self._send_message(message.build(), call.caller_addr)
+                        if call.caller_addr and call.original_invite:
+                            error_response = SIPMessageBuilder.build_response(
+                                message.status_code,
+                                message.status_text or "Error",
+                                call.original_invite,
+                            )
+                            self._send_message(error_response.build(), call.caller_addr)
                         # End the call on our side
                         self.pbx_core.end_call(call_id)
 

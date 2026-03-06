@@ -210,10 +210,16 @@ class RTPRelay:
             range(port_range_start, port_range_end, 2)
         )  # Even ports for RTP
         self.qos_monitor: QoSMonitor | None = qos_monitor
+        # Lock for thread-safe port allocation/release.  Multiple SIP threads
+        # can call allocate_relay/release_relay concurrently for different calls.
+        self._pool_lock: threading.Lock = threading.Lock()
 
     def allocate_relay(self, call_id: str) -> tuple[int, int] | None:
         """
         Allocate RTP relay for a call.
+
+        Thread-safe: uses an internal lock so concurrent call setups
+        from different SIP threads cannot allocate the same port.
 
         Args:
             call_id: Unique call identifier.
@@ -221,25 +227,29 @@ class RTPRelay:
         Returns:
             Tuple of (rtp_port, rtcp_port) or None if allocation failed.
         """
-        if not self.port_pool:
-            self.logger.error("No available ports for RTP relay")
-            return None
+        with self._pool_lock:
+            if not self.port_pool:
+                self.logger.error("No available ports for RTP relay")
+                return None
 
-        rtp_port = self.port_pool.pop(0)
+            rtp_port = self.port_pool.pop(0)
+
         rtcp_port = rtp_port + 1
 
         handler = RTPRelayHandler(rtp_port, call_id, qos_monitor=self.qos_monitor)
         if handler.start():
-            self.active_relays[call_id] = {
-                "rtp_port": rtp_port,
-                "rtcp_port": rtcp_port,
-                "handler": handler,
-            }
+            with self._pool_lock:
+                self.active_relays[call_id] = {
+                    "rtp_port": rtp_port,
+                    "rtcp_port": rtcp_port,
+                    "handler": handler,
+                }
             self.logger.info(
                 f"Allocated RTP relay for call {call_id}: ports {rtp_port}/{rtcp_port}"
             )
             return (rtp_port, rtcp_port)
-        self.port_pool.insert(0, rtp_port)
+        with self._pool_lock:
+            self.port_pool.insert(0, rtp_port)
         return None
 
     def set_endpoints(self, call_id: str, endpoint_a: AddrTuple, endpoint_b: AddrTuple) -> None:
@@ -260,10 +270,14 @@ class RTPRelay:
         """
         Release RTP relay for a call.
 
+        Thread-safe: uses an internal lock for port pool access.
+
         Args:
             call_id: Call identifier.
         """
-        if call_id in self.active_relays:
+        with self._pool_lock:
+            if call_id not in self.active_relays:
+                return
             relay = self.active_relays[call_id]
             relay["handler"].stop()
             self.port_pool.append(relay["rtp_port"])
@@ -657,10 +671,23 @@ class RTPRecorder:
 
                 # Extract audio payload from RTP packet
                 if len(data) >= 12:
-                    # Parse RTP header to get payload
+                    # Parse RTP header to get payload, accounting for CSRC
+                    # entries and header extensions per RFC 3550.
                     header = struct.unpack("!BBHII", data[:12])
+                    cc = header[0] & 0x0F  # CSRC count
+                    has_extension = (header[0] >> 4) & 0x01  # X bit
                     payload_type = header[1] & 0x7F
-                    payload = data[12:]
+
+                    # Payload starts after fixed header (12) + CSRC list (cc*4)
+                    payload_offset = 12 + cc * 4
+                    if has_extension and len(data) >= payload_offset + 4:
+                        # Skip RTP header extension (RFC 3550 Section 5.3.1)
+                        ext_length = struct.unpack(
+                            "!H", data[payload_offset + 2 : payload_offset + 4]
+                        )[0]
+                        payload_offset += 4 + ext_length * 4
+
+                    payload = data[payload_offset:] if len(data) > payload_offset else b""
 
                     # Filter out RFC 2833 telephone-event packets using the
                     # negotiated DTMF payload type (not hardcoded 101).

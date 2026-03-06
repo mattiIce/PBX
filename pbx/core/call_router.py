@@ -218,8 +218,15 @@ class CallRouter:
 
                 if success:
                     pbx.logger.info(f"Call {call_id} routed to WebRTC session {session_id}")
-                    # Note: The WebRTC client will be notified via the signaling channel
-                    # and should send an answer when the user accepts the call
+                    # Send 180 Ringing to the SIP caller so they hear ringback
+                    # tone.  Without this, the SIP phone sits in silence after
+                    # dialing a WebRTC extension.
+                    if call.caller_addr and call.original_invite:
+                        from pbx.sip.message import SIPMessageBuilder as _SIPBuilder
+
+                        ringing = _SIPBuilder.build_response(180, "Ringing", call.original_invite)
+                        pbx.sip_server._send_message(ringing.build(), call.caller_addr)
+                        pbx.logger.info(f"Sent 180 Ringing to SIP caller for WebRTC call {call_id}")
                     return True
                 pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
             else:
@@ -300,6 +307,9 @@ class CallRouter:
             f"<sip:{from_ext}@{server_ip}:{sip_port}>",
         )
         invite_to_callee.set_header("Content-type", "application/sdp")
+        # Max-Forwards is mandatory per RFC 3261 Section 8.1.1.6.
+        # Some strict SIP stacks reject INVITEs without it.
+        invite_to_callee.set_header("Max-Forwards", "70")
 
         # Add caller ID headers (P-Asserted-Identity and Remote-Party-ID)
         if pbx.config.get("sip.caller_id.send_p_asserted_identity", True) or pbx.config.get(
@@ -435,8 +445,13 @@ class CallRouter:
         pbx.logger.warning(
             f"INVITE timeout for call {call_id} to {call.to_extension} - callee unreachable"
         )
-        # Mark the destination as unreachable since it didn't respond
-        pbx.extension_registry.unregister(call.to_extension)
+        # Note: Do NOT unregister the extension here.  A single missed call
+        # (e.g., DND, user away, transient network blip) should not permanently
+        # take the extension offline.  The registration expiry mechanism handles
+        # truly unreachable devices.  Previously this unregistered the callee
+        # on every no-answer, causing the extension to be offline until the
+        # phone re-registered.
+        pbx.logger.info(f"Extension {call.to_extension} did not answer (not unregistering)")
         # Route to voicemail or end the call
         self._handle_no_answer(call_id)
 

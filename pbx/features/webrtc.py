@@ -88,9 +88,7 @@ if AIORTC_AVAILABLE:
             except asyncio.QueueEmpty:
                 pcm_data = None
 
-            frame = AudioFrame(
-                format="s16", layout="mono", samples=self._samples_per_frame
-            )
+            frame = AudioFrame(format="s16", layout="mono", samples=self._samples_per_frame)
             if pcm_data is not None:
                 # Ensure the PCM data matches the expected frame size
                 expected_bytes = self._samples_per_frame * 2
@@ -1662,9 +1660,7 @@ class WebRTCGateway:
                 # Use callee's registered IP/port in Request-URI so the phone
                 # accepts the INVITE (some phones reject mismatched Request-URIs)
                 callee_ip = dest_ext_obj.address[0]
-                callee_port = (
-                    dest_ext_obj.address[1] if len(dest_ext_obj.address) > 1 else 5060
-                )
+                callee_port = dest_ext_obj.address[1] if len(dest_ext_obj.address) > 1 else 5060
 
                 from_uri = f"sip:{from_extension}@{server_ip}:{sip_port}"
                 to_uri = f"sip:{target_extension}@{server_ip}:{sip_port}"
@@ -1702,7 +1698,9 @@ class WebRTCGateway:
                     message=invite.build(),
                     dest_addr=dest_ext_obj.address,
                     send_fn=self.pbx_core.sip_server._send_message,
-                    on_timeout=lambda cid=call_id: self.pbx_core._call_router._handle_invite_timeout(cid),
+                    on_timeout=lambda cid=call_id: (
+                        self.pbx_core._call_router._handle_invite_timeout(cid)
+                    ),
                 )
                 invite_txn.start()
                 call.invite_transaction = invite_txn
@@ -2016,8 +2014,55 @@ class WebRTCGateway:
                     }
                     self.logger.debug(f"WebRTC answered RTP endpoint: {call.callee_rtp}")
 
+            # Start the media bridge between the WebRTC session and the SIP caller
+            if webrtc_signaling and call.rtp_ports and call.caller_rtp:
+                caller_endpoint = (call.caller_rtp["address"], call.caller_rtp["port"])
+                webrtc_signaling.start_media_bridge(session, call.rtp_ports[0], caller_endpoint)
+                self.logger.info(f"Started media bridge for SIP-to-WebRTC call {session.call_id}")
+
+            # Send 200 OK to the SIP caller so their phone connects the call.
+            # Without this, the SIP caller never receives a 200 OK and the call
+            # remains in "ringing" state on the SIP phone until it times out.
+            if call.caller_addr and call.original_invite and call.rtp_ports:
+                from pbx.sip.message import SIPMessageBuilder
+                from pbx.sip.sdp import SDPBuilder
+
+                server_ip = self.pbx_core._get_server_ip()
+                dtmf_pt = self.pbx_core._get_dtmf_payload_type()
+                ilbc_mode = self.pbx_core._get_ilbc_mode()
+
+                # Detect caller phone model for codec compatibility
+                caller_ua = self.pbx_core._get_phone_user_agent(call.from_extension)
+                caller_model = self.pbx_core._detect_phone_model(caller_ua)
+                caller_codecs = call.caller_rtp.get("formats") if call.caller_rtp else None
+                codecs = self.pbx_core._get_compatible_codecs(caller_model, caller_codecs)
+
+                answer_sdp = SDPBuilder.build_audio_sdp(
+                    server_ip,
+                    call.rtp_ports[0],
+                    session_id=session.call_id,
+                    codecs=codecs,
+                    dtmf_payload_type=dtmf_pt,
+                    ilbc_mode=ilbc_mode,
+                )
+
+                ok_response = SIPMessageBuilder.build_response(
+                    200, "OK", call.original_invite, body=answer_sdp
+                )
+                ok_response.set_header("Content-type", "application/sdp")
+
+                sip_port = self.pbx_core.config.get("server.sip_port", 5060)
+                contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+                ok_response.set_header("Contact", contact_uri)
+
+                self.pbx_core.sip_server._send_message(ok_response.build(), call.caller_addr)
+                self.logger.info(
+                    f"Sent 200 OK to SIP caller for WebRTC-answered call {session.call_id}"
+                )
+
             # Connect the call
             call.connect()
+            self.pbx_core.cdr_system.mark_answered(session.call_id)
             session.state = "connected"
             session.update_activity()
 
