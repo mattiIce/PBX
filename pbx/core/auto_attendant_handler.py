@@ -97,81 +97,94 @@ class AutoAttendantHandler:
         # Store port allocation for cleanup
         call.aa_rtp_port = rtp_port
 
-        # Send 180 Ringing first to provide ring-back tone to caller
-        server_ip: str = pbx._get_server_ip()
-        ringing_response = SIPMessageBuilder.build_response(180, "Ringing", call.original_invite)
-
-        # Build Contact header for ringing response
-        sip_port: int = pbx.config.get("server.sip_port", 5060)
-        contact_uri: str = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
-        ringing_response.set_header("Contact", contact_uri)
-
-        # Send ringing response to caller
-        pbx.sip_server._send_message(ringing_response.build(), call.caller_addr)
-        pbx.logger.info(f"Sent 180 Ringing for auto attendant call {call_id}")
-
-        # Brief delay to allow ring-back tone to be established
-        time.sleep(0.5)
-
-        # Answer the call
-
-        # Determine which codecs to offer based on caller's phone model
-        # Get caller's User-Agent to detect phone model
-        caller_user_agent = pbx._get_phone_user_agent(from_ext)
-        caller_phone_model = pbx._detect_phone_model(caller_user_agent)
-
-        # Select appropriate codecs for the caller's phone
-        codecs_for_caller = pbx._get_codecs_for_phone_model(
-            caller_phone_model, default_codecs=caller_codecs
-        )
-
-        if caller_phone_model:
-            pbx.logger.info(
-                f"Auto attendant: Detected caller phone model: {caller_phone_model}, "
-                f"offering codecs: {codecs_for_caller}"
+        try:
+            # Send 180 Ringing first to provide ring-back tone to caller
+            server_ip: str = pbx._get_server_ip()
+            ringing_response = SIPMessageBuilder.build_response(
+                180, "Ringing", call.original_invite
             )
 
-        # Build SDP for answering, using phone-model-specific codecs
-        # Get DTMF payload type from config
-        dtmf_payload_type = pbx._get_dtmf_payload_type()
-        ilbc_mode = pbx._get_ilbc_mode()
-        aa_sdp = SDPBuilder.build_audio_sdp(
-            server_ip,
-            call.rtp_ports[0],
-            session_id=call_id,
-            codecs=codecs_for_caller,
-            dtmf_payload_type=dtmf_payload_type,
-            ilbc_mode=ilbc_mode,
-        )
+            # Build Contact header for ringing response
+            sip_port: int = pbx.config.get("server.sip_port", 5060)
+            contact_uri: str = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+            ringing_response.set_header("Contact", contact_uri)
 
-        # Send 200 OK to answer the call
-        ok_response = SIPMessageBuilder.build_response(200, "OK", call.original_invite, body=aa_sdp)
-        ok_response.set_header("Content-type", "application/sdp")
+            # Send ringing response to caller
+            pbx.sip_server._send_message(ringing_response.build(), call.caller_addr)
+            pbx.logger.info(f"Sent 180 Ringing for auto attendant call {call_id}")
 
-        # Build Contact header
-        sip_port = pbx.config.get("server.sip_port", 5060)
-        contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
-        ok_response.set_header("Contact", contact_uri)
+            # Brief delay to allow ring-back tone to be established
+            time.sleep(0.5)
 
-        # Send to caller
-        pbx.sip_server._send_message(ok_response.build(), call.caller_addr)
-        pbx.logger.info(f"Answered auto attendant call {call_id}")
+            # Answer the call
 
-        # Mark call as connected
-        call.connect()
+            # Determine which codecs to offer based on caller's phone model
+            # Get caller's User-Agent to detect phone model
+            caller_user_agent = pbx._get_phone_user_agent(from_ext)
+            caller_phone_model = pbx._detect_phone_model(caller_user_agent)
 
-        # Start auto attendant session
-        session = pbx.auto_attendant.start_session(call_id, from_ext)
-        call.aa_session = session
+            # Select appropriate codecs for the caller's phone
+            codecs_for_caller = pbx._get_codecs_for_phone_model(
+                caller_phone_model, default_codecs=caller_codecs
+            )
 
-        # Start auto attendant interaction thread
-        aa_thread = threading.Thread(
-            target=self._auto_attendant_session, args=(call_id, call, session)
-        )
-        aa_thread.daemon = True
-        aa_thread.start()
+            if caller_phone_model:
+                pbx.logger.info(
+                    f"Auto attendant: Detected caller phone model: {caller_phone_model}, "
+                    f"offering codecs: {codecs_for_caller}"
+                )
 
-        return True
+            # Build SDP for answering, using phone-model-specific codecs
+            # Get DTMF payload type from config
+            dtmf_payload_type = pbx._get_dtmf_payload_type()
+            ilbc_mode = pbx._get_ilbc_mode()
+            aa_sdp = SDPBuilder.build_audio_sdp(
+                server_ip,
+                call.rtp_ports[0],
+                session_id=call_id,
+                codecs=codecs_for_caller,
+                dtmf_payload_type=dtmf_payload_type,
+                ilbc_mode=ilbc_mode,
+            )
+
+            # Send 200 OK to answer the call
+            ok_response = SIPMessageBuilder.build_response(
+                200, "OK", call.original_invite, body=aa_sdp
+            )
+            ok_response.set_header("Content-type", "application/sdp")
+
+            # Build Contact header
+            sip_port = pbx.config.get("server.sip_port", 5060)
+            contact_uri = f"<sip:{to_ext}@{server_ip}:{sip_port}>"
+            ok_response.set_header("Contact", contact_uri)
+
+            # Send to caller
+            pbx.sip_server._send_message(ok_response.build(), call.caller_addr)
+            pbx.logger.info(f"Answered auto attendant call {call_id}")
+
+            # Mark call as connected
+            call.connect()
+
+            # Start auto attendant session
+            session = pbx.auto_attendant.start_session(call_id, from_ext)
+            call.aa_session = session
+
+            # Start auto attendant interaction thread
+            aa_thread = threading.Thread(
+                target=self._auto_attendant_session, args=(call_id, call, session)
+            )
+            aa_thread.daemon = True
+            aa_thread.start()
+
+            return True
+
+        except Exception as e:
+            pbx.logger.error(f"Auto attendant setup failed for {call_id}: {e}")
+            # Return port to pool on setup failure
+            with pbx.rtp_relay._pool_lock:
+                pbx.rtp_relay.port_pool.append(rtp_port)
+                pbx.rtp_relay.port_pool.sort()
+            return False
 
     def _auto_attendant_session(self, call_id: str, call: Any, session: dict[str, Any]) -> None:
         """
