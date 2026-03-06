@@ -571,14 +571,24 @@ class PBXCore:
                     self.logger.debug(f"Extension {extension_number} found in config")
 
             if extension_exists:
-                # Extract the phone's listening address from Contact header
-                # This is more reliable than UDP source address
-                registered_addr = self._extract_contact_address(contact, addr)
-                self.extension_registry.register(extension_number, registered_addr, expires=expires)
-                self.logger.info(f"Extension {extension_number} registered from {registered_addr}")
+                # Handle Expires: 0 as unregistration per RFC 3261 Section 10.2.2.
+                # A REGISTER with Expires: 0 means "remove this contact binding".
+                if expires == 0:
+                    self.extension_registry.unregister(extension_number)
+                    self.logger.info(f"Extension {extension_number} unregistered (Expires: 0)")
+                else:
+                    # Extract the phone's listening address from Contact header
+                    # This is more reliable than UDP source address
+                    registered_addr = self._extract_contact_address(contact, addr)
+                    self.extension_registry.register(
+                        extension_number, registered_addr, expires=expires
+                    )
+                    self.logger.info(
+                        f"Extension {extension_number} registered from {registered_addr}"
+                    )
 
-                # Store phone registration in database
-                if self.registered_phones_db:
+                # Store phone registration in database (skip for unregistration)
+                if self.registered_phones_db and expires > 0:
                     ip_address = registered_addr[0]  # Extract IP from (host, port) tuple
 
                     # Try to extract MAC address from Contact URI or User-Agent
@@ -616,19 +626,21 @@ class PBXCore:
 
                 # Record successful registration metric
                 if self.metrics_exporter:
-                    self.metrics_exporter.record_extension_registration("success")
+                    event = "unregistration" if expires == 0 else "success"
+                    self.metrics_exporter.record_extension_registration(event)
 
-                # Trigger webhook event
-                self.webhook_system.trigger_event(
-                    WebhookEvent.EXTENSION_REGISTERED,
-                    {
-                        "extension": extension_number,
-                        "ip_address": registered_addr[0],
-                        "port": registered_addr[1],
-                        "user_agent": user_agent,
-                        "timestamp": datetime.now(UTC).isoformat(),
-                    },
-                )
+                # Trigger webhook event for registrations (not unregistrations)
+                if expires > 0:
+                    self.webhook_system.trigger_event(
+                        WebhookEvent.EXTENSION_REGISTERED,
+                        {
+                            "extension": extension_number,
+                            "ip_address": registered_addr[0],
+                            "port": registered_addr[1],
+                            "user_agent": user_agent,
+                            "timestamp": datetime.now(UTC).isoformat(),
+                        },
+                    )
 
                 return True
             # Record failed registration metric

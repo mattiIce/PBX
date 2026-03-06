@@ -98,15 +98,50 @@ class CallRouter:
         if pbx.paging_system and pbx.paging_system.is_paging_extension(to_ext):
             return pbx._paging_handler.handle_paging(from_ext, to_ext, call_id, message, from_addr)
 
-        # Check if destination extension is registered and not expired
+        # Check if destination extension is registered and not expired.
+        # First check the in-memory registry.  If the extension is missing or
+        # not registered in memory, fall back to the database — the phone may
+        # have registered before the PBX last restarted and its in-memory
+        # registration was lost while the database record persists.
         dest_ext = pbx.extension_registry.get(to_ext)
-        if not dest_ext or not dest_ext.registered:
-            pbx.logger.warning(f"Extension {to_ext} is not registered")
-            return False
-        if dest_ext.is_expired():
-            pbx.logger.warning(f"Extension {to_ext} registration expired, unregistering")
-            pbx.extension_registry.unregister(to_ext)
-            return False
+        if not dest_ext or not dest_ext.registered or dest_ext.is_expired():
+            # Try to recover from database: look up the extension's last known
+            # registration and re-register it in memory.
+            recovered = False
+            if pbx.registered_phones_db:
+                try:
+                    db_phones = pbx.registered_phones_db.get_by_extension(to_ext)
+                    db_phone = db_phones[0] if db_phones else None
+                    if db_phone and db_phone.get("ip_address"):
+                        phone_ip = db_phone["ip_address"]
+                        phone_port = 5060  # Default SIP port
+                        # Ensure the extension object exists in registry
+                        if not dest_ext and pbx.extension_db:
+                            db_ext = pbx.extension_db.get(to_ext)
+                            if db_ext:
+                                from pbx.features.extensions import ExtensionRegistry
+
+                                ext_obj = ExtensionRegistry.create_extension_from_db(db_ext)
+                                pbx.extension_registry.extensions[to_ext] = ext_obj
+                                dest_ext = ext_obj
+                        if dest_ext:
+                            dest_ext.register((phone_ip, phone_port))
+                            pbx.logger.info(
+                                f"Recovered registration for {to_ext} from database: "
+                                f"{phone_ip}:{phone_port}"
+                            )
+                            recovered = True
+                except (KeyError, TypeError, ValueError) as e:
+                    pbx.logger.debug(f"DB recovery lookup failed for {to_ext}: {e}")
+
+            if not recovered:
+                reason = "not in registry" if not dest_ext else (
+                    "not registered" if not dest_ext.registered else "registration expired"
+                )
+                pbx.logger.warning(f"Extension {to_ext} {reason}")
+                if dest_ext and dest_ext.is_expired():
+                    pbx.extension_registry.unregister(to_ext)
+                return False
 
         # Check dialplan
         if not self._check_dialplan(to_ext):
