@@ -644,8 +644,8 @@ class VideoConferencingEngine:
         candidates = []
 
         # Generate host candidate from configured SIP/RTP bind address
-        bind_address = self.config.get("sip.bind_address", "0.0.0.0")
-        rtp_port_start = self.config.get("rtp.port_start", 10000)
+        bind_address = self.config.get("server.sip_host", "0.0.0.0")
+        rtp_port_start = self.config.get("server.rtp_port_range_start", 10000)
 
         # Host candidate for RTP
         candidates.append(

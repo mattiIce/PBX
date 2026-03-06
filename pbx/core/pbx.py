@@ -186,8 +186,8 @@ class PBXCore:
             # Build database URL from the same config the app uses
             db_host = self.config.get("database.host", "localhost")
             db_port = self.config.get("database.port", 5432)
-            db_name = self.config.get("database.name", "pbx")
-            db_user = self.config.get("database.user", "pbx")
+            db_name = self.config.get("database.name", "pbx_system")
+            db_user = self.config.get("database.user", "pbx_user")
             db_password = self.config.get("database.password", "")
             db_url = f"postgresql://{db_user}:{db_password}@{db_host}:{db_port}/{db_name}"
             alembic_cfg.set_main_option("sqlalchemy.url", db_url)

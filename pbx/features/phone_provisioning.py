@@ -2479,6 +2479,9 @@ P2351 = 1
         }
 
         # Add LDAP phonebook configuration
+        server_config["dtmf"] = {
+            "payload_type": self.config.get("features.dtmf.payload_type", 101),
+        }
         server_config["ldap_phonebook"] = self._build_ldap_phonebook_config()
         server_config["remote_phonebook"] = self.config.get("provisioning.remote_phonebook", {})
 
