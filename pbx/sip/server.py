@@ -244,7 +244,7 @@ class SIPServer:
         authorization = message.get_header("Authorization")
 
         if not self.pbx_core:
-            self._send_response(200, "OK", message, addr)
+            self._send_response(503, "Service Unavailable", message, addr)
             return
 
         # Check if this request contains authorization credentials
@@ -450,7 +450,7 @@ class SIPServer:
             if not success:
                 self._send_response(404, "Not Found", message, addr)
         else:
-            self._send_response(200, "OK", message, addr)
+            self._send_response(503, "Service Unavailable", message, addr)
 
     def _handle_reinvite(self, message: SIPMessage, addr: AddrTuple, call: Any) -> None:
         """
@@ -1338,7 +1338,7 @@ class SIPServer:
         self.logger.info(f"MESSAGE from {from_header} to {to_header}: {message.body[:100]}")
 
         if not self.pbx_core:
-            self._send_response(200, "OK", message, addr)
+            self._send_response(503, "Service Unavailable", message, addr)
             return
 
         # Extract destination extension from To header
