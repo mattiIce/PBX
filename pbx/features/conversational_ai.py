@@ -224,7 +224,7 @@ class ConversationalAI:
 
         return response
 
-    def _build_response_handlers(self) -> None:
+    def _build_response_handlers(self) -> dict:
         """Build intent-to-response handler mapping"""
         return {
             "emergency_request": lambda _entities: (
