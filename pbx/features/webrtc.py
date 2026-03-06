@@ -1173,10 +1173,10 @@ class WebRTCSignalingServer:
                             continue
                         if len(data) < 12:
                             continue
-                        # Only process PCMU (PT 0) audio; skip DTMF events,
-                        # comfort noise, etc. that would produce static.
+                        # Process PCMU (PT 0) and PCMA (PT 8) audio;
+                        # skip DTMF events, comfort noise, etc.
                         pt = data[1] & 0x7F
-                        if pt != 0:
+                        if pt not in (0, 8):
                             continue
                         # Parse RTP header (account for CSRC / extensions)
                         cc = data[0] & 0x0F
@@ -1188,7 +1188,10 @@ class WebRTCSignalingServer:
                         if len(data) <= header_len:
                             continue
                         payload = data[header_len:]
-                        pcm_8k = _ulaw_to_pcm(payload)
+                        if pt == 8:
+                            pcm_8k = _alaw_to_pcm(payload)
+                        else:
+                            pcm_8k = _ulaw_to_pcm(payload)
                         pcm_48k = _upsample_8k_to_48k(pcm_8k)
                         if session.bridge_track:
                             session.bridge_track.push_pcm(pcm_48k)
