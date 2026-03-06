@@ -154,6 +154,7 @@ class CallRouter:
         rtp_ports = pbx.rtp_relay.allocate_relay(call_id)
         if not rtp_ports:
             pbx.logger.error(f"Failed to allocate RTP relay for call {call_id}")
+            pbx.cdr_system.end_record(call_id, hangup_cause="resource_unavailable")
             pbx.call_manager.end_call(call_id)
             return False
 
@@ -584,6 +585,8 @@ class CallRouter:
                 f"Cannot answer call {call_id} for voicemail "
                 "(WebRTC or missing caller info), ending call"
             )
+            pbx.rtp_relay.release_relay(call_id)
+            pbx.cdr_system.end_record(call_id, hangup_cause="normal_clearing")
             pbx.call_manager.end_call(call_id)
             return
 

@@ -99,20 +99,25 @@ class EmergencyHandler:
 
         # Allocate RTP relay for the call
         rtp_ports = pbx.rtp_relay.allocate_relay(call_id)
-        if rtp_ports:
-            call.rtp_ports = rtp_ports
+        if not rtp_ports:
+            pbx.logger.error(f"Failed to allocate RTP relay for emergency call {call_id}")
+            pbx.cdr_system.end_record(call_id, hangup_cause="resource_unavailable")
+            pbx.call_manager.end_call(call_id)
+            return False
 
-            # set caller's endpoint if we have RTP info
-            if caller_sdp:
-                caller_endpoint: tuple[str, int] = (
-                    caller_sdp["address"],
-                    caller_sdp["port"],
-                )
-                relay_info = pbx.rtp_relay.active_relays.get(call_id)
-                if relay_info:
-                    handler = relay_info["handler"]
-                    handler.set_endpoints(caller_endpoint, None)
-                    pbx.logger.info("Emergency call RTP relay configured")
+        call.rtp_ports = rtp_ports
+
+        # set caller's endpoint if we have RTP info
+        if caller_sdp:
+            caller_endpoint: tuple[str, int] = (
+                caller_sdp["address"],
+                caller_sdp["port"],
+            )
+            relay_info = pbx.rtp_relay.active_relays.get(call_id)
+            if relay_info:
+                handler = relay_info["handler"]
+                handler.set_endpoints(caller_endpoint, None)
+                pbx.logger.info("Emergency call RTP relay configured")
 
         # Route through emergency trunk if available
         trunk_name: str = routing_info.get("trunk_name", "")

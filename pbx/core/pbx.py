@@ -464,14 +464,9 @@ class PBXCore:
         # Stop SIP server
         self.sip_server.stop()
 
-        # End all active calls
+        # End all active calls with full cleanup (CDR, voicemail, timers, RTP)
         for call in self.call_manager.get_active_calls():
-            self.call_manager.end_call(call.call_id)
-            self.rtp_relay.release_relay(call.call_id)
-
-            # Stop any recordings
-            if self.recording_system.is_recording(call.call_id):
-                self.recording_system.stop_recording(call.call_id)
+            self.end_call(call.call_id)
 
         self.logger.info("PBX system stopped")
 
