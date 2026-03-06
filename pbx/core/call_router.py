@@ -532,12 +532,16 @@ class CallRouter:
         dtmf_payload_type = pbx._get_dtmf_payload_type()
         ilbc_mode = pbx._get_ilbc_mode()
 
-        # Preserve the caller's media protocol and SRTP crypto attributes
+        # Preserve the caller's media protocol, SRTP crypto, and rtpmap names.
+        # Mirroring the caller's rtpmap format is critical for Zultys ZIP phones
+        # which use non-standard numeric codec names and reject standard names.
         vm_protocol = "RTP/AVP"
         vm_crypto: list[str] | None = None
+        vm_rtpmap: dict[str, str] | None = None
         if call.caller_rtp:
             vm_protocol = call.caller_rtp.get("protocol", "RTP/AVP")
             vm_crypto = call.caller_rtp.get("crypto") or None
+            vm_rtpmap = call.caller_rtp.get("rtpmap_names") or None
 
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
@@ -548,6 +552,7 @@ class CallRouter:
             ilbc_mode=ilbc_mode,
             protocol=vm_protocol,
             crypto=vm_crypto,
+            rtpmap_overrides=vm_rtpmap,
         )
 
         # Send 200 OK to answer the call for voicemail recording

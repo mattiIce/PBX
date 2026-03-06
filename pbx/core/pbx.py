@@ -1133,9 +1133,15 @@ class PBXCore:
             # protocol or the caller will reject the SDP and produce no audio.
             caller_protocol = "RTP/AVP"
             caller_crypto: list[str] | None = None
+            # Mirror the caller's rtpmap codec names in the 200 OK so phones
+            # that use non-standard names (e.g. Zultys ZIP 33G/37G sending
+            # "8/8000" instead of "PCMA/8000") can match codecs in their RTP
+            # engine.  Without this, the phone rejects the SDP answer.
+            caller_rtpmap: dict[str, str] | None = None
             if call.caller_rtp:
                 caller_protocol = call.caller_rtp.get("protocol", "RTP/AVP")
                 caller_crypto = call.caller_rtp.get("crypto") or None
+                caller_rtpmap = call.caller_rtp.get("rtpmap_names") or None
 
             caller_response_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
@@ -1146,6 +1152,7 @@ class PBXCore:
                 ilbc_mode=ilbc_mode,
                 protocol=caller_protocol,
                 crypto=caller_crypto,
+                rtpmap_overrides=caller_rtpmap,
             )
 
             # Build 200 OK for caller using original INVITE
