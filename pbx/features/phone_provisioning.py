@@ -432,6 +432,12 @@ account.1.auto_answer = 0
 # NAT
 account.1.nat.udp_update_time = 30
 account.1.nat.rport = 1
+account.1.nat.nat_traversal = 1
+
+# Outbound Proxy - route all SIP through the PBX server
+account.1.outbound_proxy_enable = 1
+account.1.outbound_proxy.1.address = {{SIP_SERVER}}
+account.1.outbound_proxy.1.port = {{SIP_PORT}}
 
 # Presence / BLF
 account.1.blf.subscribe_period = 3600
@@ -473,7 +479,7 @@ voice.handfree.tone_vol = 15
 voice.handfree.spk_vol = 15
 voice.headset.tone_vol = 11
 voice.headset.spk_vol = 11
-voice.vad = 1
+voice.vad = 0
 voice.comfort_noise = 1
 voice.echo_cancellation = 1
 voice.noise_reduction = 1
@@ -617,6 +623,12 @@ account.1.auto_answer = 0
 # NAT
 account.1.nat.udp_update_time = 30
 account.1.nat.rport = 1
+account.1.nat.nat_traversal = 1
+
+# Outbound Proxy - route all SIP through the PBX server
+account.1.outbound_proxy_enable = 1
+account.1.outbound_proxy.1.address = {{SIP_SERVER}}
+account.1.outbound_proxy.1.port = {{SIP_PORT}}
 
 # Presence / BLF
 account.1.blf.subscribe_period = 3600
@@ -658,7 +670,7 @@ voice.handfree.tone_vol = 15
 voice.handfree.spk_vol = 15
 voice.headset.tone_vol = 11
 voice.headset.spk_vol = 11
-voice.vad = 1
+voice.vad = 0
 voice.comfort_noise = 1
 voice.echo_cancellation = 1
 voice.noise_reduction = 1
@@ -790,6 +802,13 @@ account.1.srtp_mode = 0
 account.1.auto_answer = 0
 account.1.nat.udp_update_time = 30
 account.1.nat.rport = 1
+account.1.nat.nat_traversal = 1
+
+# Outbound Proxy - route all SIP through the PBX server
+account.1.outbound_proxy_enable = 1
+account.1.outbound_proxy.1.address = {{SIP_SERVER}}
+account.1.outbound_proxy.1.port = {{SIP_PORT}}
+
 account.1.blf.subscribe_period = 3600
 account.1.blf.list_uri =
 account.1.subscribe_mwi = 1
@@ -828,7 +847,7 @@ voice.handfree.spk_vol = 15
 voice.headset.tone_vol = 11
 voice.headset.ring_vol = 7
 voice.headset.spk_vol = 11
-voice.vad = 1
+voice.vad = 0
 voice.comfort_noise = 1
 voice.echo_cancellation = 1
 voice.noise_reduction = 1
