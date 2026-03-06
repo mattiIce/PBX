@@ -238,10 +238,11 @@ class RFC2833Receiver:
         if len(data) < 12:
             return
 
-        # Parse RTP header
+        # Parse RTP header, accounting for CSRC and extensions
         try:
             header = struct.unpack("!BBHII", data[:12])
-            (header[0] >> 6) & 0x03
+            cc = header[0] & 0x0F  # CSRC count
+            has_extension = (header[0] >> 4) & 0x01  # X bit
             payload_type = header[1] & 0x7F
             bool(header[1] & 0x80)
             seq_num = header[2]
@@ -252,8 +253,16 @@ class RFC2833Receiver:
             if payload_type != self.payload_type:
                 return
 
+            # Compute payload offset past CSRC entries and extension header
+            payload_offset = 12 + cc * 4
+            if has_extension and len(data) >= payload_offset + 4:
+                ext_length = struct.unpack(
+                    "!H", data[payload_offset + 2 : payload_offset + 4]
+                )[0]
+                payload_offset += 4 + ext_length * 4
+
             # Extract payload (RFC 2833 event)
-            payload = data[12:]
+            payload = data[payload_offset:] if len(data) > payload_offset else b""
             if len(payload) < 4:
                 return
 

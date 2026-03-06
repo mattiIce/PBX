@@ -81,7 +81,7 @@ class AutoAttendantHandler:
         # For auto attendant, we don't need a relay (which forwards between two endpoints).
         # Instead, we directly play audio to the caller and listen for DTMF.
         # Find an available port from the RTP port pool.
-        with pbx.rtp_relay._port_lock:
+        with pbx.rtp_relay._pool_lock:
             try:
                 rtp_port: int = pbx.rtp_relay.port_pool.pop(0)
             except IndexError:
@@ -404,7 +404,7 @@ class AutoAttendantHandler:
 
             # Return port to pool (thread-safe)
             if hasattr(call, "aa_rtp_port"):
-                with pbx.rtp_relay._port_lock:
+                with pbx.rtp_relay._pool_lock:
                     pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
                     pbx.rtp_relay.port_pool.sort()
                 pbx.logger.info(f"Returned RTP port {call.aa_rtp_port} to pool")
@@ -418,7 +418,7 @@ class AutoAttendantHandler:
             # Ensure port is returned even on error (thread-safe)
             if hasattr(call, "aa_rtp_port"):
                 try:
-                    with pbx.rtp_relay._port_lock:
+                    with pbx.rtp_relay._pool_lock:
                         pbx.rtp_relay.port_pool.append(call.aa_rtp_port)
                         pbx.rtp_relay.port_pool.sort()
                 except Exception as exc:
