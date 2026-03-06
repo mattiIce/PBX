@@ -278,6 +278,16 @@ class FeatureInitializer:
         else:
             pbx_core.dnd_scheduler = None
 
+        # Initialize Warden SBC (Session Border Controller)
+        if config.get("features.sbc.enabled", False):
+            from pbx.features.session_border_controller import SessionBorderController
+
+            pbx_core.sbc = SessionBorderController(config=config)
+            if pbx_core.sbc.enabled:
+                logger.info("Warden SBC (Session Border Controller) initialized")
+        else:
+            pbx_core.sbc = None
+
         # Initialize skills-based routing if enabled
         if config.get("features.skills_routing.enabled", False):
             from pbx.features.skills_routing import get_skills_router

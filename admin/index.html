@@ -126,6 +126,10 @@
                         <span class="tab-icon">💰</span>
                         <span class="tab-text">Least-Cost Routing</span>
                     </button>
+                    <button class="tab-button" data-tab="sbc-management">
+                        <span class="tab-icon">🛡️</span>
+                        <span class="tab-text">Warden SBC</span>
+                    </button>
                 </div>
 
                 <div class="sidebar-section">
@@ -2085,6 +2089,191 @@ Content-Type: application/json
                     <li><code>^011</code> - International (011 prefix)</li>
                     <li><code>^01144</code> - UK (011 + 44 country code)</li>
                 </ul>
+            </div>
+        </div>
+
+        <!-- Warden SBC Tab -->
+        <div id="sbc-management" class="tab-content">
+            <h2>🛡️ Warden SBC - Session Border Controller</h2>
+
+            <div class="action-buttons" style="margin-bottom: 20px;">
+                <button class="btn btn-primary" onclick="loadSBCData()">🔄 Refresh</button>
+            </div>
+
+            <!-- SBC Statistics -->
+            <div class="stats-grid" style="margin-bottom: 20px;">
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-active-sessions">-</div>
+                    <div class="stat-label">Active Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-total-sessions">-</div>
+                    <div class="stat-label">Total Sessions</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-blocked-requests">-</div>
+                    <div class="stat-label">Blocked Requests</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-relayed-media">-</div>
+                    <div class="stat-label">Relayed Media (MB)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-bandwidth-util">-</div>
+                    <div class="stat-label">Bandwidth Utilization</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-rate-violations">-</div>
+                    <div class="stat-label">Rate Limit Violations</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-cac-rejections">-</div>
+                    <div class="stat-label">CAC Rejections</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="sbc-port-pool">-</div>
+                    <div class="stat-label">Relay Ports Available</div>
+                </div>
+            </div>
+
+            <!-- SBC Configuration -->
+            <div class="config-section" style="margin-bottom: 20px;">
+                <h3>Configuration</h3>
+                <form id="sbc-config-form" onsubmit="event.preventDefault(); saveSBCConfig();">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <div class="form-group">
+                            <label for="sbc-cfg-enabled">SBC Enabled</label>
+                            <select id="sbc-cfg-enabled" class="form-control">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sbc-cfg-topology-hiding">Topology Hiding</label>
+                            <select id="sbc-cfg-topology-hiding" class="form-control">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sbc-cfg-media-relay">Media Relay</label>
+                            <select id="sbc-cfg-media-relay" class="form-control">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sbc-cfg-stun">STUN</label>
+                            <select id="sbc-cfg-stun" class="form-control">
+                                <option value="true">Enabled</option>
+                                <option value="false">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="sbc-cfg-public-ip">Public IP</label>
+                            <input type="text" id="sbc-cfg-public-ip" class="form-control" placeholder="0.0.0.0">
+                        </div>
+                        <div class="form-group">
+                            <label for="sbc-cfg-max-calls">Max Concurrent Calls</label>
+                            <input type="number" id="sbc-cfg-max-calls" class="form-control" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="sbc-cfg-max-bandwidth">Max Bandwidth (kbps)</label>
+                            <input type="number" id="sbc-cfg-max-bandwidth" class="form-control" min="1">
+                        </div>
+                        <div class="form-group">
+                            <label for="sbc-cfg-rate-limit">Rate Limit (req/sec)</label>
+                            <input type="number" id="sbc-cfg-rate-limit" class="form-control" min="1">
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="margin-top: 12px;">Save Configuration</button>
+                </form>
+            </div>
+
+            <!-- Active Relays -->
+            <div class="config-section" style="margin-bottom: 20px;">
+                <h3>Active Media Relays</h3>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Call ID</th>
+                                <th>Codec</th>
+                                <th>RTP Port</th>
+                                <th>RTCP Port</th>
+                                <th>Relay IP</th>
+                                <th>Allocated</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sbc-relays-list">
+                            <tr><td colspan="7" style="text-align: center;">Loading relays...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Blacklist Management -->
+            <div class="config-section" style="margin-bottom: 20px;">
+                <h3>IP Blacklist</h3>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input type="text" id="sbc-blacklist-ip" class="form-control" placeholder="Enter IP address" style="max-width: 250px;">
+                    <button class="btn btn-danger" onclick="addSBCBlacklist()">Add to Blacklist</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sbc-blacklist-table">
+                            <tr><td colspan="2" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Whitelist Management -->
+            <div class="config-section" style="margin-bottom: 20px;">
+                <h3>IP Whitelist</h3>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                    <input type="text" id="sbc-whitelist-ip" class="form-control" placeholder="Enter IP address" style="max-width: 250px;">
+                    <button class="btn btn-success" onclick="addSBCWhitelist()">Add to Whitelist</button>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>IP Address</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sbc-whitelist-table">
+                            <tr><td colspan="2" style="text-align: center;">Loading...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NAT Detection Tool -->
+            <div class="config-section" style="margin-bottom: 20px;">
+                <h3>NAT Detection</h3>
+                <div style="display: flex; gap: 8px; margin-bottom: 12px; align-items: flex-end;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="sbc-nat-local-ip">Local IP</label>
+                        <input type="text" id="sbc-nat-local-ip" class="form-control" placeholder="e.g. 192.168.1.100">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="sbc-nat-public-ip">Public IP</label>
+                        <input type="text" id="sbc-nat-public-ip" class="form-control" placeholder="e.g. 203.0.113.5">
+                    </div>
+                    <button class="btn btn-primary" onclick="detectSBCNat()">Detect NAT Type</button>
+                </div>
+                <div id="sbc-nat-result" style="padding: 12px; background: var(--color-bg-alt, #f5f5f5); border-radius: 8px; display: none;">
+                    <strong>NAT Type:</strong> <span id="sbc-nat-type">-</span>
+                </div>
             </div>
         </div>
 
