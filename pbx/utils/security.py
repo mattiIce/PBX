@@ -612,6 +612,8 @@ class ThreatDetector:
                     # Convert timestamp string to unix time
                     if isinstance(blocked_until, str):
                         dt = datetime.fromisoformat(blocked_until)
+                        if dt.tzinfo is None:
+                            dt = dt.replace(tzinfo=UTC)
                         blocked_until_ts = dt.timestamp()
                     else:
                         blocked_until_ts = blocked_until
