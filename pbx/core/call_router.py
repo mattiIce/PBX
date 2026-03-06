@@ -325,6 +325,13 @@ class CallRouter:
             caller_protocol = caller_sdp.get("protocol", "RTP/AVP")
             caller_crypto = caller_sdp.get("crypto") or None
 
+        # Zultys ZIP 33G/37G phones use non-standard numeric codec names in
+        # their SDP answers (e.g. "0/8000" instead of "PCMU/8000").  Their RTP
+        # engine compares local vs remote codec names as strings and fails when
+        # they differ.  By using the same numeric names in the INVITE offer,
+        # both sides match and audio flows correctly.
+        callee_rtpmap = pbx._get_rtpmap_for_phone_model(callee_phone_model)
+
         callee_sdp_body = SDPBuilder.build_audio_sdp(
             server_ip,
             rtp_ports[0],
@@ -334,6 +341,7 @@ class CallRouter:
             ilbc_mode=ilbc_mode,
             protocol=caller_protocol,
             crypto=caller_crypto,
+            rtpmap_overrides=callee_rtpmap,
         )
 
         # Forward INVITE to callee

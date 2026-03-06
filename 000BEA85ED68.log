@@ -1,0 +1,132 @@
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Begin Time Section: [1]
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > TargetTimeSection Time Section: [2]
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Section change: iTargetTimeOut[10]
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > BeginTime is
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > TargetTime is
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > PreSleepTime is
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > AwakeScreenInOfficeTime [1]
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:15:15 Log [586]: BKLT<6+info  > m_AwakeScreenTimer [45885000]
+Mar  6 23:15:16 Log [586]: TALK<6+info  > SRTCP-XR session timerout [-1]
+Mar  6 23:15:44 sua [528]: DLG <6+info  > [000] cb_nict_kill_transaction (id=17)^M
+Mar  6 23:15:44 sua [528]: DLG <6+info  > [000] _release_finished_calls remove a dialog (cid=32775 did=65543)
+Mar  6 23:15:44 sua [528]: DLG <5+notice> [000] remove a call
+Mar  6 23:15:44 sua [528]: FSM <6+info  > [000] free transaction ressource 16 0_3246050027
+Mar  6 23:15:44 sua [528]: FSM <6+info  > [255] free ist ressource
+Mar  6 23:15:44 sua [528]: FSM <6+info  > [000] free transaction ressource 17 0_3246050027
+Mar  6 23:15:44 sua [528]: FSM <6+info  > [255] free nist ressource
+Mar  6 23:15:44 sua [528]: SUA <6+info  > [000] ****eCore event:(0x0028)ECORE_CALL_RELEASED              ****
+Mar  6 23:15:44 sua [528]: CAL <6+info  > [000] call released! cid 32775
+Mar  6 23:15:44 sua [528]: CAL <6+info  > [000] freeing call resources cid 32775
+Mar  6 23:15:58 Log [501]: ANY <0+emerg > Log  log :sys=1,cons=0,time=0,E=3,W=4,N=5,I=6,D=7
+Mar  6 23:15:58 Log [501]: ANY <0+emerg > ANY =6
+Mar  6 23:15:58 Log [501]: WEB <4+warnin> ListenerContainer::onRequest End.result = false
+Mar  6 23:16:01 Log [501]: WEB <6+info  > Crypto get plain data : session id is equal
+Mar  6 23:16:01 Log [501]: WEB <6+info  > ip:192.168.10.153 Login at time=1772838961
+Mar  6 23:16:01 Log [501]: WEB <6+info  > ip:192.168.10.153 The password is right!
+Mar  6 23:16:01 Log [501]: WEB <6+info  > ip:192.168.10.153 Login in Success At time: [341]
+Mar  6 23:16:13 ipvp[588]: IPVP<5+notice> 973.237.408:Message=0x00000001(0x00000000+0x00000000+0)
+Mar  6 23:16:14 Log [586]: BKLT<6+info  > OnTimerOut InactiveLevel[0]
+Mar  6 23:16:14 Log [586]: BKLT<6+info  > PowerSaving_IsAlreadyPowerSaving [0]
+Mar  6 23:16:14 Log [586]: BKLT<6+info  > BackLight Set light(0)
+Mar  6 23:16:29 Log [501]: WEB <6+info  > URI: /servlet?p=settings-config&q=exportsyslog
+Mar  6 23:16:29 Log [501]: WEB <6+info  > Partition free(byte): /tmp/ [32698368], /config/ [233472], /data/ [233472]
+Mar  6 23:16:29 Log [586]: ETLL<6+info  > mkit_reply return [0], msgReply[0x60d03]: 0. result[0]
+Mar  6 23:16:29 Log [501]: ETLL<6+info  > mkit_call return(0,0)
+eth0      Link encap:Ethernet  HWaddr 00:0B:EA:85:ED:68  
+          inet addr:192.168.10.133  Bcast:192.168.10.255  Mask:255.255.255.0
+          inet6 addr: fe80::20b:eaff:fe85:ed68/64 Scope:Link
+          UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
+          RX packets:4551 errors:0 dropped:15 overruns:0 frame:0
+          TX packets:227 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:1000 
+          RX bytes:1589446 (1.5 MiB)  TX bytes:182432 (178.1 KiB)
+          Interrupt:42 
+
+lo        Link encap:Local Loopback  
+          inet addr:127.0.0.1  Mask:255.0.0.0
+          inet6 addr: ::1/128 Scope:Host
+          UP LOOPBACK RUNNING  MTU:16436  Metric:1
+          RX packets:2 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0
+          collisions:0 txqueuelen:0 
+          RX bytes:100 (100.0 B)  TX bytes:100 (100.0 B)
+
+  PID USER       VSZ STAT COMMAND
+    1 root       980 S    init                
+    2 root         0 SW   [kthreadd]
+    3 root         0 SW   [ksoftirqd/0]
+    5 root         0 SW   [kworker/u:0]
+    6 root         0 SW<  [khelper]
+    7 root         0 SW   [sync_supers]
+    8 root         0 SW   [bdi-default]
+    9 root         0 SW<  [kblockd]
+   10 root         0 SW<  [5e00000.spi]
+   11 root         0 SW<  [rpciod]
+   12 root         0 SW   [kswapd0]
+   13 root         0 SW   [kworker/0:1]
+   14 root         0 SW   [fsnotify_mark]
+   15 root         0 SW<  [nfsiod]
+   16 root         0 SW<  [crypto]
+   20 root         0 SW   [irq/34-dvf9a]
+   21 root         0 SW   [mtdblock0]
+   22 root         0 SW   [mtdblock1]
+   23 root         0 SW   [mtdblock2]
+   24 root         0 SW   [mtdblock3]
+   25 root         0 SW   [mtdblock4]
+   26 root         0 SW   [mtdblock5]
+   27 root         0 SW   [mtdblock6]
+   28 root         0 SW   [mtdblock7]
+   29 root         0 SW   [mtdblock8]
+   30 root         0 SW   [mtdblock9]
+   31 root         0 SW   [mtdblock10]
+   32 root         0 SW   [mtdblock11]
+   33 root         0 SW   [mtdblock12]
+   34 root         0 SW   [mtdblock13]
+   35 root         0 SW<  [deferwq]
+   36 root         0 SW   [kworker/u:1]
+   65 root       980 S    init                
+   69 root         0 SW<  [kled]
+   74 root         0 SW   [kmktimer]
+   86 root         0 SWN  [jffs2_gcd_mtd11]
+  174 root       760 S    /boot/bin/launcher -d 
+  175 root      7032 S    /boot/bin/configServer.exx 
+  364 root       980 S    /sbin/syslogd -S -O /tmp/log/000BEA85ED68.log -s 200 
+  372 root       980 S    /bin/sh /phone/scripts/netapp.sh 
+  384 root      8132 S    /boot/bin/rtServer.exx 
+  436 root      7916 S    /boot/bin/autoServer.exx 
+  500 root      2800 S    ./sbin/lighttpd -f /phone/bin/lighttpd/config/lighttp
+  501 root      8032 S    /phone/html/WEB-INFO/bin/fcgiServer.exx 
+  503 root       984 S    /bin/sh /phone/scripts/phoneapp.sh 
+  505 root       980 S    /bin/sh /phone/scripts/sipapp.sh 
+  508 root       984 S    /bin/sh /phone/scripts/TR069.sh 
+  528 root      8824 S    /phone/bin/sipServer.exx 
+  586 root     15412 S    /phone/bin/Screen.exx 
+  588 root      6960 S    /phone/bin/ipvpserver 
+  597 root      7360 S    /phone/bin/tr069_client 
+  598 root         0 SW   [kworker/0:2]
+  599 root         0 DW   [kvoice]
+  617 root         0 SW   [flush-mtd-unmap]
+  683 root       636 S    /phone/bin/busybox udhcpc -b -i eth0 -a -s /boot/bin/
+  692 root       984 S    sh -c cd /tmp;ifconfig >> log/000BEA85ED68.log;ps >> 
+  694 root       980 R    ps 
