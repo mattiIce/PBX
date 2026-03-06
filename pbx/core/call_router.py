@@ -186,6 +186,7 @@ class CallRouter:
             pbx.logger.error(f"Cannot get address for extension {to_ext}")
             # Release allocated RTP relay and clean up call to prevent resource leaks
             pbx.rtp_relay.release_relay(call_id)
+            pbx.cdr_system.end_record(call_id, hangup_cause="resource_unavailable")
             pbx.call_manager.end_call(call_id)
             return False
 
@@ -235,6 +236,7 @@ class CallRouter:
 
             # Clean up allocated resources on WebRTC routing failure
             pbx.rtp_relay.release_relay(call_id)
+            pbx.cdr_system.end_record(call_id, hangup_cause="normal_clearing")
             pbx.call_manager.end_call(call_id)
             return False
 
