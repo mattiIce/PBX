@@ -35,7 +35,7 @@ logger = get_logger()
 provisioning_bp = Blueprint("provisioning", __name__)
 
 # MAC address placeholders that indicate misconfiguration
-MAC_ADDRESS_PLACEHOLDERS = ["{mac}", "{MAC}", "{Ma}"]
+MAC_ADDRESS_PLACEHOLDERS = ["{mac}", "{MAC}", "{Ma}", "$mac", "$MAC"]
 
 # Known common/model config filenames requested by Yealink-based phones (including Zultys)
 # during their boot provisioning sequence. These are fleet-wide config files, not per-device.

@@ -163,6 +163,15 @@ class VoicemailHandler:
         # Get DTMF payload type from config
         dtmf_payload_type = pbx._get_dtmf_payload_type()
         ilbc_mode = pbx._get_ilbc_mode()
+
+        # Preserve the caller's media protocol (RTP/AVP vs RTP/SAVP) and SRTP
+        # crypto attributes so the phone accepts the SDP answer.
+        caller_protocol = "RTP/AVP"
+        caller_crypto: list[str] | None = None
+        if caller_sdp:
+            caller_protocol = caller_sdp.get("protocol", "RTP/AVP")
+            caller_crypto = caller_sdp.get("crypto") or None
+
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
@@ -170,6 +179,8 @@ class VoicemailHandler:
             codecs=codecs_for_caller,
             dtmf_payload_type=dtmf_payload_type,
             ilbc_mode=ilbc_mode,
+            protocol=caller_protocol,
+            crypto=caller_crypto,
         )
         pbx.logger.info(f"[VM Access] ✓ SDP built for response (RTP port: {call.rtp_ports[0]})")
 
@@ -261,6 +272,17 @@ class VoicemailHandler:
                 time.sleep(2)
                 pbx.end_call(call_id)
                 return
+
+            # Stop the RTP relay handler so its socket is released and the
+            # voicemail player can bind to the same port.  allocate_relay()
+            # starts a relay handler, but voicemail playback is a direct
+            # PBX-to-phone interaction that doesn't need relaying.
+            relay_info = pbx.rtp_relay.active_relays.get(call_id)
+            if relay_info:
+                relay_info["handler"].stop()
+                pbx.logger.info(
+                    f"Stopped RTP relay handler for voicemail playback on call {call_id}"
+                )
 
             # Use the same port as allocated for the call for proper RTP
             # communication
@@ -394,6 +416,17 @@ class VoicemailHandler:
             # Both use the same local port (call.rtp_ports[0]) allocated by RTP relay.
             # This creates a full-duplex audio channel for the IVR system.
             # ============================================================
+
+            # Stop the RTP relay handler so its socket is released and the
+            # IVR player can bind to the same port.  allocate_relay() starts a
+            # relay handler, but voicemail IVR is a direct PBX-to-phone
+            # interaction that doesn't need relaying.
+            relay_info = pbx.rtp_relay.active_relays.get(call_id)
+            if relay_info:
+                relay_info["handler"].stop()
+                pbx.logger.info(
+                    f"[VM IVR] Stopped RTP relay handler for IVR on call {call_id}"
+                )
 
             # Create RTP player for sending audio prompts to the caller
             # This sends voicemail prompts, menus, and messages to the user

@@ -1126,6 +1126,17 @@ class PBXCore:
             # Get DTMF payload type from config
             dtmf_payload_type = self._get_dtmf_payload_type()
             ilbc_mode = self._get_ilbc_mode()
+
+            # Preserve the caller's original media protocol and SRTP crypto
+            # attributes.  The caller's INVITE specified whether it wants SRTP
+            # (RTP/SAVP) or plain RTP (RTP/AVP).  The 200 OK must use the same
+            # protocol or the caller will reject the SDP and produce no audio.
+            caller_protocol = "RTP/AVP"
+            caller_crypto: list[str] | None = None
+            if call.caller_rtp:
+                caller_protocol = call.caller_rtp.get("protocol", "RTP/AVP")
+                caller_crypto = call.caller_rtp.get("crypto") or None
+
             caller_response_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
@@ -1133,6 +1144,8 @@ class PBXCore:
                 codecs=codecs_for_caller,
                 dtmf_payload_type=dtmf_payload_type,
                 ilbc_mode=ilbc_mode,
+                protocol=caller_protocol,
+                crypto=caller_crypto,
             )
 
             # Build 200 OK for caller using original INVITE
@@ -1390,8 +1403,17 @@ class PBXCore:
 
         # Include SDP with the existing RTP relay ports
         if call.rtp_ports:
+            transfer_protocol = "RTP/AVP"
+            transfer_crypto: list[str] | None = None
+            if call.caller_rtp:
+                transfer_protocol = call.caller_rtp.get("protocol", "RTP/AVP")
+                transfer_crypto = call.caller_rtp.get("crypto") or None
             transfer_sdp = SDPBuilder.build_audio_sdp(
-                server_ip, call.rtp_ports[0], session_id=new_call_id
+                server_ip,
+                call.rtp_ports[0],
+                session_id=new_call_id,
+                protocol=transfer_protocol,
+                crypto=transfer_crypto,
             )
             invite_msg.body = transfer_sdp
             invite_msg.set_header("Content-type", "application/sdp")
@@ -1603,8 +1625,18 @@ class PBXCore:
         server_ip = self._get_server_ip()
         sip_port = self.config.get("server.sip_port", 5060)
 
+        # Preserve SRTP protocol from the original call
+        consult_protocol = "RTP/AVP"
+        consult_crypto: list[str] | None = None
+        if call.caller_rtp:
+            consult_protocol = call.caller_rtp.get("protocol", "RTP/AVP")
+            consult_crypto = call.caller_rtp.get("crypto") or None
         consult_sdp = SDPBuilder.build_audio_sdp(
-            server_ip, rtp_ports[0], session_id=consult_call_id
+            server_ip,
+            rtp_ports[0],
+            session_id=consult_call_id,
+            protocol=consult_protocol,
+            crypto=consult_crypto,
         )
 
         invite_msg = SIPMessageBuilder.build_request(

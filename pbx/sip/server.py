@@ -543,6 +543,11 @@ class SIPServer:
 
         dtmf_pt = self.pbx_core._get_dtmf_payload_type()
         ilbc_mode = self.pbx_core._get_ilbc_mode()
+
+        # Preserve media protocol and SRTP crypto from the re-INVITE offer
+        reinvite_protocol = new_sdp.get("protocol", "RTP/AVP") if new_sdp else "RTP/AVP"
+        reinvite_crypto = (new_sdp.get("crypto") or None) if new_sdp else None
+
         answer_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             rtp_port,
@@ -550,6 +555,8 @@ class SIPServer:
             codecs=answer_codecs,
             dtmf_payload_type=dtmf_pt,
             ilbc_mode=ilbc_mode,
+            protocol=reinvite_protocol,
+            crypto=reinvite_crypto,
         )
 
         response = SIPMessageBuilder.build_response(200, "OK", message, body=answer_sdp)
@@ -574,6 +581,8 @@ class SIPServer:
                 codecs=answer_codecs,
                 dtmf_payload_type=dtmf_pt,
                 ilbc_mode=ilbc_mode,
+                protocol=reinvite_protocol,
+                crypto=reinvite_crypto,
             )
             other_ext = call.to_extension if is_caller else call.from_extension
             reinvite = SIPMessageBuilder.build_request(
@@ -1170,6 +1179,8 @@ class SIPServer:
                             server_ip,
                             call.rtp_ports[0],
                             session_id=new_call_id,
+                            protocol=call.caller_rtp.get("protocol", "RTP/AVP"),
+                            crypto=call.caller_rtp.get("crypto") or None,
                         )
                         invite_msg.body = transfer_sdp
                         invite_msg.set_header("Content-type", "application/sdp")
@@ -1556,6 +1567,10 @@ class SIPServer:
 
         dtmf_pt = self.pbx_core._get_dtmf_payload_type()
         ilbc_mode = self.pbx_core._get_ilbc_mode()
+        # Preserve media protocol and SRTP crypto from the UPDATE offer
+        update_protocol = new_audio.get("protocol", "RTP/AVP") if new_audio else "RTP/AVP"
+        update_crypto = (new_audio.get("crypto") or None) if new_audio else None
+
         answer_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             rtp_port,
@@ -1563,6 +1578,8 @@ class SIPServer:
             codecs=answer_codecs,
             dtmf_payload_type=dtmf_pt,
             ilbc_mode=ilbc_mode,
+            protocol=update_protocol,
+            crypto=update_crypto,
         )
 
         response = SIPMessageBuilder.build_response(200, "OK", message, body=answer_sdp)

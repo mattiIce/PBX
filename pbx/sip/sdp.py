@@ -106,10 +106,17 @@ class SDPSession:
                 if not address:
                     return None
 
+                # Extract crypto attributes for SRTP (RTP/SAVP, RTP/SAVPF)
+                crypto_attrs = [
+                    attr for attr in media.get("attributes", []) if attr.startswith("crypto:")
+                ]
+
                 return {
                     "address": address,
                     "port": media["port"],
                     "formats": media["formats"],
+                    "protocol": media.get("protocol", "RTP/AVP"),
+                    "crypto": crypto_attrs,
                 }
         return None
 
@@ -172,6 +179,8 @@ class SDPBuilder:
         codecs: list[str] | None = None,
         dtmf_payload_type: int = 101,
         ilbc_mode: int = 30,
+        protocol: str = "RTP/AVP",
+        crypto: list[str] | None = None,
     ) -> str:
         """
         Build SDP for audio call.
@@ -189,6 +198,12 @@ class SDPBuilder:
                 Can be configured to use alternative payload types (96-127) if needed.
             ilbc_mode: iLBC frame duration in milliseconds - 20ms (15.2 kbps) or
                 30ms (13.33 kbps, default: 30).
+            protocol: Media transport protocol (default: "RTP/AVP").
+                Use "RTP/SAVP" for SRTP or "RTP/SAVPF" for SRTP with feedback.
+                Should match the protocol offered by the remote endpoint.
+            crypto: List of SRTP crypto attribute strings for RTP/SAVP(F).
+                Each string should be a complete crypto attribute value, e.g.
+                "1 AES_CM_128_HMAC_SHA1_80 inline:<key>".
 
         Returns:
             SDP body as string.
@@ -272,6 +287,13 @@ class SDPBuilder:
             attributes.append(f"rtpmap:{dtmf_pt_str} telephone-event/8000")
             attributes.append(f"fmtp:{dtmf_pt_str} 0-16")
 
+        # SRTP crypto attributes — must appear before ptime/sendrecv per
+        # RFC 4568.  When the remote endpoint offers RTP/SAVP(F) with crypto
+        # lines, the PBX must echo back at least one matching crypto suite
+        # or the phone will reject the SDP answer and produce no audio.
+        if crypto:
+            attributes.extend(f"crypto:{crypto_attr}" for crypto_attr in crypto)
+
         # ptime (packetization interval) — many hardware phones and ATAs
         # (Grandstream, Cisco SPA, Polycom) require this attribute.  Without
         # it, some devices fall back to non-standard packetization, causing
@@ -283,7 +305,7 @@ class SDPBuilder:
         media: dict[str, Any] = {
             "type": "audio",
             "port": local_port,
-            "protocol": "RTP/AVP",
+            "protocol": protocol,
             "formats": codecs,
             "attributes": attributes,
         }
