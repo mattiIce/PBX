@@ -1,0 +1,2 @@
+2026-03-06 00:00:03: (log.c.166) server started 
+2026-03-06 00:00:03: (mod_dirlisting.c.228) pcre support is missing, please install libpcre and the headers 
