@@ -148,10 +148,10 @@ class VoicemailHandler:
         caller_user_agent = pbx._get_phone_user_agent(from_ext)
         caller_phone_model = pbx._detect_phone_model(caller_user_agent)
 
-        # Select appropriate codecs for the caller's phone
-        codecs_for_caller = pbx._get_codecs_for_phone_model(
-            caller_phone_model, default_codecs=caller_codecs
-        )
+        # Select codecs compatible with both the caller's phone model and
+        # the codecs they offered in the INVITE.  This ensures the SDP answer
+        # only contains codecs the caller actually supports.
+        codecs_for_caller = pbx._get_compatible_codecs(caller_phone_model, caller_codecs)
 
         if caller_phone_model:
             pbx.logger.info(
@@ -619,7 +619,8 @@ class VoicemailHandler:
                             )
                             if file_path and Path(file_path).exists():
                                 player.play_file(file_path)
-                                mailbox.mark_listened(message_id)
+                                if message_id:
+                                    mailbox.mark_listened(message_id)
                                 pbx.logger.info(
                                     f"[VM IVR] ✓ Voicemail {message_id} played and marked as listened"
                                 )
@@ -777,9 +778,10 @@ class VoicemailHandler:
                                         and recorder.recorded_data
                                     ):
                                         greeting_audio_raw: bytes = b"".join(recorder.recorded_data)
-                                        # Convert raw audio to WAV format before saving
+                                        # Convert raw audio to WAV using detected codec
+                                        codec_pt: int = getattr(recorder, "detected_codec", 0) or 0
                                         greeting_audio_wav: bytes = pbx._build_wav_file(
-                                            greeting_audio_raw
+                                            greeting_audio_raw, codec_payload_type=codec_pt
                                         )
                                         voicemail_ivr.save_recorded_greeting(greeting_audio_wav)
                                         pbx.logger.info(
@@ -1009,8 +1011,9 @@ class VoicemailHandler:
             duration: float = recorder.get_duration()
 
             if audio_data and len(audio_data) > 0:
-                # Build proper WAV file header for the recorded audio
-                wav_data: bytes = pbx._build_wav_file(audio_data)
+                # Build WAV file using the codec detected during recording
+                codec_pt: int = getattr(recorder, "detected_codec", 0) or 0
+                wav_data: bytes = pbx._build_wav_file(audio_data, codec_payload_type=codec_pt)
 
                 # Save to voicemail system
                 pbx.voicemail_system.save_message(

@@ -154,6 +154,7 @@ class CallRouter:
         rtp_ports = pbx.rtp_relay.allocate_relay(call_id)
         if not rtp_ports:
             pbx.logger.error(f"Failed to allocate RTP relay for call {call_id}")
+            pbx.cdr_system.end_record(call_id, hangup_cause="resource_unavailable")
             pbx.call_manager.end_call(call_id)
             return False
 
@@ -185,6 +186,7 @@ class CallRouter:
             pbx.logger.error(f"Cannot get address for extension {to_ext}")
             # Release allocated RTP relay and clean up call to prevent resource leaks
             pbx.rtp_relay.release_relay(call_id)
+            pbx.cdr_system.end_record(call_id, hangup_cause="resource_unavailable")
             pbx.call_manager.end_call(call_id)
             return False
 
@@ -218,8 +220,15 @@ class CallRouter:
 
                 if success:
                     pbx.logger.info(f"Call {call_id} routed to WebRTC session {session_id}")
-                    # Note: The WebRTC client will be notified via the signaling channel
-                    # and should send an answer when the user accepts the call
+                    # Send 180 Ringing to the SIP caller so they hear ringback
+                    # tone.  Without this, the SIP phone sits in silence after
+                    # dialing a WebRTC extension.
+                    if call.caller_addr and call.original_invite:
+                        from pbx.sip.message import SIPMessageBuilder as _SIPBuilder
+
+                        ringing = _SIPBuilder.build_response(180, "Ringing", call.original_invite)
+                        pbx.sip_server._send_message(ringing.build(), call.caller_addr)
+                        pbx.logger.info(f"Sent 180 Ringing to SIP caller for WebRTC call {call_id}")
                     return True
                 pbx.logger.error(f"Failed to route call to WebRTC session {session_id}")
             else:
@@ -227,6 +236,7 @@ class CallRouter:
 
             # Clean up allocated resources on WebRTC routing failure
             pbx.rtp_relay.release_relay(call_id)
+            pbx.cdr_system.end_record(call_id, hangup_cause="normal_clearing")
             pbx.call_manager.end_call(call_id)
             return False
 
@@ -300,6 +310,9 @@ class CallRouter:
             f"<sip:{from_ext}@{server_ip}:{sip_port}>",
         )
         invite_to_callee.set_header("Content-type", "application/sdp")
+        # Max-Forwards is mandatory per RFC 3261 Section 8.1.1.6.
+        # Some strict SIP stacks reject INVITEs without it.
+        invite_to_callee.set_header("Max-Forwards", "70")
 
         # Add caller ID headers (P-Asserted-Identity and Remote-Party-ID)
         if pbx.config.get("sip.caller_id.send_p_asserted_identity", True) or pbx.config.get(
@@ -435,8 +448,13 @@ class CallRouter:
         pbx.logger.warning(
             f"INVITE timeout for call {call_id} to {call.to_extension} - callee unreachable"
         )
-        # Mark the destination as unreachable since it didn't respond
-        pbx.extension_registry.unregister(call.to_extension)
+        # Note: Do NOT unregister the extension here.  A single missed call
+        # (e.g., DND, user away, transient network blip) should not permanently
+        # take the extension offline.  The registration expiry mechanism handles
+        # truly unreachable devices.  Previously this unregistered the callee
+        # on every no-answer, causing the extension to be offline until the
+        # phone re-registered.
+        pbx.logger.info(f"Extension {call.to_extension} did not answer (not unregistering)")
         # Route to voicemail or end the call
         self._handle_no_answer(call_id)
 
@@ -480,9 +498,11 @@ class CallRouter:
         caller_codecs: list[str] | None = (
             call.caller_rtp.get("formats", None) if call.caller_rtp else None
         )
-        codecs_for_caller = pbx._get_codecs_for_phone_model(
-            caller_phone_model, default_codecs=caller_codecs
-        )
+        # Use _get_compatible_codecs to intersect the caller's offered codecs
+        # with the phone model's supported codecs.  Using _get_codecs_for_phone_model
+        # would return ALL model codecs, ignoring what the caller actually offered,
+        # which can cause 488 rejections or codec mismatches.
+        codecs_for_caller = pbx._get_compatible_codecs(caller_phone_model, caller_codecs)
 
         if caller_phone_model:
             pbx.logger.info(
@@ -567,8 +587,19 @@ class CallRouter:
                 f"Cannot answer call {call_id} for voicemail "
                 "(WebRTC or missing caller info), ending call"
             )
+            pbx.rtp_relay.release_relay(call_id)
+            pbx.cdr_system.end_record(call_id, hangup_cause="normal_clearing")
             pbx.call_manager.end_call(call_id)
             return
+
+        # Stop the RTP relay handler so its socket is released and the
+        # voicemail player/recorder can bind to the same port.  The relay
+        # handler was allocated for the original call but voicemail takes
+        # over the port for direct player/recorder use.
+        relay_info = pbx.rtp_relay.active_relays.get(call_id)
+        if relay_info:
+            relay_info["handler"].stop()
+            pbx.logger.info(f"Stopped RTP relay handler for voicemail on call {call_id}")
 
         # Play voicemail greeting and beep tone to caller
         if call.caller_rtp:
@@ -576,10 +607,7 @@ class CallRouter:
                 import tempfile
 
                 # Create RTP player to send audio to caller
-                # Use the same port as the RTPRecorder since both bind to 0.0.0.0
-                # and can handle bidirectional RTP communication
                 player = RTPPlayer(
-                    # Same port as RTPRecorder
                     local_port=call.rtp_ports[0],
                     remote_host=call.caller_rtp["address"],
                     remote_port=call.caller_rtp["port"],
@@ -638,8 +666,10 @@ class CallRouter:
             except OSError as e:
                 pbx.logger.error(f"Error playing voicemail greeting: {e}")
 
-            # Start RTP recorder on the allocated port
-            recorder = RTPRecorder(call.rtp_ports[0], call_id)
+            # Start RTP recorder on the allocated port with the configured
+            # DTMF payload type so telephone-event packets are properly filtered
+            dtmf_pt = pbx._get_dtmf_payload_type()
+            recorder = RTPRecorder(call.rtp_ports[0], call_id, dtmf_payload_type=dtmf_pt)
             if recorder.start():
                 # Store recorder in call object for later retrieval
                 call.voicemail_recorder = recorder

@@ -3,6 +3,7 @@ Call Queue and ACD (Automatic Call Distribution) system
 Manages incoming calls and distributes them to available agents
 """
 
+import random
 from datetime import UTC, datetime
 from enum import Enum
 from typing import Any
@@ -203,6 +204,9 @@ class CallQueue:
             # Return all available agents
             return available_agents
 
+        if self.strategy == QueueStrategy.RANDOM:
+            return random.choice(available_agents)
+
         if self.strategy == QueueStrategy.ROUND_ROBIN:
             # Round robin distribution
             if available_agents:
@@ -307,7 +311,7 @@ class QueueSystem:
         self.logger.info(f"Created queue {queue_number}: {name}")
         return queue
 
-    def get_queue(self, queue_number: str) -> dict | None:
+    def get_queue(self, queue_number: str) -> CallQueue | None:
         """Get queue by number"""
         return self.queues.get(queue_number)
 

@@ -13,9 +13,7 @@ spec:
     matchLabels:
       app: pbx-server
   endpoints:
-    - port: https-api
+    - port: http-api
       path: /metrics
       interval: 15s
-      scheme: https
-      tlsConfig:
-        insecureSkipVerify: true
+      scheme: http  # Switch to https with tlsConfig if TLS is enabled

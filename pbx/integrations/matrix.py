@@ -3,6 +3,7 @@ Matrix Integration (Free, Open-Source Alternative to Slack/Teams Chat)
 Enables team messaging, file sharing, and real-time notifications
 """
 
+import html as html_module
 import re
 import time
 from datetime import datetime
@@ -425,18 +426,19 @@ class MatrixIntegration:
         Returns:
             HTML formatted text
         """
-        html = markdown
+        # Escape HTML entities first to prevent XSS from user-controlled input
+        escaped = html_module.escape(markdown)
 
         # Bold
-        html = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", html)
+        escaped = re.sub(r"\*\*(.+?)\*\*", r"<strong>\1</strong>", escaped)
         # Italic
-        html = re.sub(r"\*(.+?)\*", r"<em>\1</em>", html)
+        escaped = re.sub(r"\*(.+?)\*", r"<em>\1</em>", escaped)
 
         # Code
-        html = re.sub(r"`(.+?)`", r"<code>\1</code>", html)
+        escaped = re.sub(r"`(.+?)`", r"<code>\1</code>", escaped)
 
         # Line breaks
-        html = html.replace("\n", "<br/>")
+        html = escaped.replace("\n", "<br/>")
 
         return html
 

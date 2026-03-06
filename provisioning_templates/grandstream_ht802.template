@@ -73,7 +73,7 @@ P90 = 0                       # Mic Volume (dB): -12 to +12, 0=default
 P25 = 0                       # Impedance: 0=600 ohm, 1=900 ohm (North America uses 600)
 
 # Ring Settings
-P104 = 2000                   # Ring Frequency (Hz): 2000 for North America
+P104 = 25                     # Ring Frequency (Hz): 25 Hz standard for North America (20-50 Hz range)
 P1361 = 2                     # Ring Cadence: 2=North America (2s on, 4s off)
 
 # Disconnect Tone

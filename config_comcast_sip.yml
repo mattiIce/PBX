@@ -15,7 +15,7 @@
 server:
   sip_host: "0.0.0.0"           # Listen on all interfaces
   sip_port: 5060                # Standard SIP port
-  public_ip: "YOUR_PUBLIC_IP"   # Your Comcast static IP
+  external_ip: "YOUR_PUBLIC_IP" # Your Comcast static IP
                                  # Example: "68.87.123.45"
 
   # RTP port range for media
