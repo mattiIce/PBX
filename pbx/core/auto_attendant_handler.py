@@ -138,6 +138,14 @@ class AutoAttendantHandler:
             # Get DTMF payload type from config
             dtmf_payload_type = pbx._get_dtmf_payload_type()
             ilbc_mode = pbx._get_ilbc_mode()
+
+            # Preserve the caller's media protocol and SRTP crypto attributes
+            caller_protocol = "RTP/AVP"
+            caller_crypto: list[str] | None = None
+            if caller_sdp:
+                caller_protocol = caller_sdp.get("protocol", "RTP/AVP")
+                caller_crypto = caller_sdp.get("crypto") or None
+
             aa_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
                 call.rtp_ports[0],
@@ -145,6 +153,8 @@ class AutoAttendantHandler:
                 codecs=codecs_for_caller,
                 dtmf_payload_type=dtmf_payload_type,
                 ilbc_mode=ilbc_mode,
+                protocol=caller_protocol,
+                crypto=caller_crypto,
             )
 
             # Send 200 OK to answer the call
