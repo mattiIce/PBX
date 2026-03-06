@@ -2591,12 +2591,14 @@ P2351 = 1
             ssl_enabled = self.config.get("api.ssl.enabled", False)
             protocol = "http"  # Always use HTTP for provisioning by default
             provisioning_url_format = (
-                f"{protocol}://{{{{SERVER_IP}}}}:{{{{PORT}}}}/provision/{{mac}}.cfg"
+                f"{protocol}://{{{{SERVER_IP}}}}:{{{{PORT}}}}/provision/$mac.cfg"
             )
             if ssl_enabled:
                 self.logger.debug("Using HTTP for provisioning even though SSL is enabled")
 
-        config_url = provisioning_url_format.replace("{mac}", mac_address)
+        # Support both $mac (phone firmware format) and {mac} (legacy format)
+        config_url = provisioning_url_format.replace("$mac", mac_address)
+        config_url = config_url.replace("{mac}", mac_address)
         config_url = config_url.replace(
             "{{SERVER_IP}}", self.config.get("server.external_ip", "127.0.0.1")
         )

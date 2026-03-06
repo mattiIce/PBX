@@ -265,7 +265,7 @@ class PhoneProvisioningSetup:
         port = self.get_input("Enter API port", str(current_port))
 
         # Build provisioning URL
-        url_format = f"https://{server_ip}:{port}/provision/{{mac}}.cfg"
+        url_format = f"https://{server_ip}:{port}/provision/$mac.cfg"
 
         print("\nℹ️  Phones will download configuration from:")
         print(f"   {url_format}")

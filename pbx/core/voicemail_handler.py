@@ -273,6 +273,17 @@ class VoicemailHandler:
                 pbx.end_call(call_id)
                 return
 
+            # Stop the RTP relay handler so its socket is released and the
+            # voicemail player can bind to the same port.  allocate_relay()
+            # starts a relay handler, but voicemail playback is a direct
+            # PBX-to-phone interaction that doesn't need relaying.
+            relay_info = pbx.rtp_relay.active_relays.get(call_id)
+            if relay_info:
+                relay_info["handler"].stop()
+                pbx.logger.info(
+                    f"Stopped RTP relay handler for voicemail playback on call {call_id}"
+                )
+
             # Use the same port as allocated for the call for proper RTP
             # communication
             player = RTPPlayer(
@@ -405,6 +416,17 @@ class VoicemailHandler:
             # Both use the same local port (call.rtp_ports[0]) allocated by RTP relay.
             # This creates a full-duplex audio channel for the IVR system.
             # ============================================================
+
+            # Stop the RTP relay handler so its socket is released and the
+            # IVR player can bind to the same port.  allocate_relay() starts a
+            # relay handler, but voicemail IVR is a direct PBX-to-phone
+            # interaction that doesn't need relaying.
+            relay_info = pbx.rtp_relay.active_relays.get(call_id)
+            if relay_info:
+                relay_info["handler"].stop()
+                pbx.logger.info(
+                    f"[VM IVR] Stopped RTP relay handler for IVR on call {call_id}"
+                )
 
             # Create RTP player for sending audio prompts to the caller
             # This sends voicemail prompts, menus, and messages to the user
