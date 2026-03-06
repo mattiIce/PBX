@@ -544,9 +544,11 @@ class SIPServer:
         dtmf_pt = self.pbx_core._get_dtmf_payload_type()
         ilbc_mode = self.pbx_core._get_ilbc_mode()
 
-        # Preserve media protocol and SRTP crypto from the re-INVITE offer
+        # Preserve media protocol, SRTP crypto, and rtpmap names from the offer.
+        # Mirroring the caller's rtpmap names is essential for Zultys ZIP phones.
         reinvite_protocol = new_sdp.get("protocol", "RTP/AVP") if new_sdp else "RTP/AVP"
         reinvite_crypto = (new_sdp.get("crypto") or None) if new_sdp else None
+        reinvite_rtpmap = (new_sdp.get("rtpmap_names") or None) if new_sdp else None
 
         answer_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
@@ -557,6 +559,7 @@ class SIPServer:
             ilbc_mode=ilbc_mode,
             protocol=reinvite_protocol,
             crypto=reinvite_crypto,
+            rtpmap_overrides=reinvite_rtpmap,
         )
 
         response = SIPMessageBuilder.build_response(200, "OK", message, body=answer_sdp)
@@ -573,6 +576,10 @@ class SIPServer:
         # Forward the re-INVITE to the other party so they can update too
         other_addr = call.callee_addr if is_caller else call.caller_addr
         if other_addr and new_sdp:
+            # Use the other party's rtpmap names (from their original SDP offer)
+            other_rtp = call.callee_rtp if is_caller else call.caller_rtp
+            other_rtpmap = (other_rtp.get("rtpmap_names") or None) if other_rtp else None
+
             # Build a re-INVITE to the other party with the PBX's RTP endpoint
             reinvite_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
@@ -583,6 +590,7 @@ class SIPServer:
                 ilbc_mode=ilbc_mode,
                 protocol=reinvite_protocol,
                 crypto=reinvite_crypto,
+                rtpmap_overrides=other_rtpmap,
             )
             other_ext = call.to_extension if is_caller else call.from_extension
             reinvite = SIPMessageBuilder.build_request(
@@ -1567,9 +1575,10 @@ class SIPServer:
 
         dtmf_pt = self.pbx_core._get_dtmf_payload_type()
         ilbc_mode = self.pbx_core._get_ilbc_mode()
-        # Preserve media protocol and SRTP crypto from the UPDATE offer
+        # Preserve media protocol, SRTP crypto, and rtpmap names from the UPDATE offer
         update_protocol = new_audio.get("protocol", "RTP/AVP") if new_audio else "RTP/AVP"
         update_crypto = (new_audio.get("crypto") or None) if new_audio else None
+        update_rtpmap = (new_audio.get("rtpmap_names") or None) if new_audio else None
 
         answer_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
@@ -1580,6 +1589,7 @@ class SIPServer:
             ilbc_mode=ilbc_mode,
             protocol=update_protocol,
             crypto=update_crypto,
+            rtpmap_overrides=update_rtpmap,
         )
 
         response = SIPMessageBuilder.build_response(200, "OK", message, body=answer_sdp)

@@ -1,15 +1,21 @@
 """
-Session Border Controller (SBC)
-Enhanced security and NAT traversal
+Warden SBC - Session Border Controller
+
+Enterprise-grade session border controller providing NAT traversal,
+topology hiding, protocol normalization, security filtering, media relay,
+and call admission control for SIP/RTP traffic.
 """
 
+import json
 import re
 import socket
+import struct
 import time
 from collections import defaultdict
 from datetime import UTC, datetime
 from enum import Enum
-from typing import Any
+from pathlib import Path
+from typing import Any, ClassVar
 
 from pbx.utils.logger import get_logger
 
@@ -26,7 +32,7 @@ class NATType(Enum):
 
 class SessionBorderController:
     """
-    Session Border Controller (SBC)
+    Warden SBC - Session Border Controller
 
     Enterprise-grade security and NAT traversal for SIP/RTP.
     Features:
@@ -34,17 +40,41 @@ class SessionBorderController:
     - Topology hiding
     - Protocol normalization
     - Security filtering (DoS protection, malformed packets)
-    - Media relay and transcoding
+    - Media relay with bandwidth tracking
     - Call admission control
     - SIP header manipulation
+    - Persistent blacklist/whitelist
     """
+
+    PRODUCT_NAME = "Warden SBC"
 
     # Constants
     IP_PATTERN = r"(\d+\.\d+\.\d+\.\d+)"
     PACKETS_PER_SECOND = 50  # Assumed packets per second for VoIP bandwidth calculation
+    DATA_DIR = "data/sbc"
+
+    # STUN message constants (RFC 5389)
+    STUN_BINDING_REQUEST = 0x0001
+    STUN_BINDING_RESPONSE = 0x0101
+    STUN_MAGIC_COOKIE = 0x2112A442
+    STUN_ATTR_MAPPED_ADDRESS = 0x0001
+    STUN_ATTR_XOR_MAPPED_ADDRESS = 0x0020
+    STUN_ATTR_CHANGE_REQUEST = 0x0003
+    STUN_HEADER_SIZE = 20
+    STUN_DEFAULT_PORT = 3478
+    STUN_TIMEOUT = 2.0
+
+    # Codec bandwidth map (kbps)
+    CODEC_BANDWIDTH: ClassVar[dict[str, int]] = {
+        "pcmu": 80,
+        "pcma": 80,
+        "g722": 80,
+        "opus": 40,
+        "g729": 30,
+    }
 
     def __init__(self, config: Any | None = None) -> None:
-        """Initialize SBC"""
+        """Initialize Warden SBC"""
         self.logger = get_logger()
         self.config = config or {}
 
@@ -55,6 +85,7 @@ class SessionBorderController:
         self.media_relay = sbc_config.get("media_relay", True)
         self.max_calls = sbc_config.get("max_calls", 1000)
         self.max_bandwidth = sbc_config.get("max_bandwidth", 100000)  # kbps
+        self.public_ip = sbc_config.get("public_ip", "0.0.0.0")  # nosec B104
 
         # NAT/firewall traversal
         self.stun_enabled = sbc_config.get("stun_enabled", True)
@@ -63,8 +94,8 @@ class SessionBorderController:
 
         # Security
         self.rate_limit = sbc_config.get("rate_limit", 100)  # requests/second
-        self.blacklist: set = set()
-        self.whitelist: set = set()
+        self.blacklist: set[str] = set()
+        self.whitelist: set[str] = set()
 
         # Rate limiting tracking
         self.request_counts: dict[str, list[float]] = defaultdict(list)
@@ -72,8 +103,10 @@ class SessionBorderController:
 
         # Media relay sessions
         self.relay_sessions: dict[str, dict] = {}
-        self.next_relay_port = 10000
-        self.relay_port_pool: set = set(range(10000, 20000, 2))  # RTP uses even ports
+        self.relay_port_pool: set[int] = set(range(10000, 20000, 2))  # RTP uses even ports
+
+        # RTP relay state tracking per call
+        self.relay_state: dict[str, dict] = {}
 
         # Bandwidth tracking
         self.current_bandwidth = 0  # kbps
@@ -84,23 +117,35 @@ class SessionBorderController:
         self.active_sessions = 0
         self.blocked_requests = 0
         self.relayed_media_bytes = 0
+        self.rate_limit_violations = 0
+        self.cac_rejections = 0
+        self.codec_call_counts: dict[str, int] = defaultdict(int)
+        self.topology_hiding_ops = 0
+        self.nat_detection_count = 0
 
-        self.logger.info("Session Border Controller initialized")
+        # Load persisted blacklist/whitelist
+        self._load_lists()
+
+        self.logger.info(f"{self.PRODUCT_NAME} initialized")
         self.logger.info(f"  Topology hiding: {self.topology_hiding}")
         self.logger.info(f"  Media relay: {self.media_relay}")
         self.logger.info(f"  NAT traversal: STUN={self.stun_enabled}, TURN={self.turn_enabled}")
         self.logger.info(f"  Enabled: {self.enabled}")
 
+    # =========================================================================
+    # SIP Processing
+    # =========================================================================
+
     def process_inbound_sip(self, message: dict, source_ip: str) -> dict:
         """
-        Process inbound SIP message
+        Process inbound SIP message through the SBC pipeline.
 
         Args:
-            message: SIP message
+            message: SIP message dict
             source_ip: Source IP address
 
         Returns:
-            dict: Processing result
+            dict with 'action' ('forward' or 'block') and processed message or reason
         """
         # Security checks
         if self._is_blacklisted(source_ip):
@@ -110,6 +155,7 @@ class SessionBorderController:
         # Rate limiting
         if not self._check_rate_limit(source_ip):
             self.blocked_requests += 1
+            self.rate_limit_violations += 1
             return {"action": "block", "reason": "Rate limit exceeded"}
 
         # Topology hiding - rewrite headers
@@ -122,31 +168,32 @@ class SessionBorderController:
         return {"action": "forward", "message": message}
 
     def process_outbound_sip(self, message: dict) -> dict:
-        """Process outbound SIP message"""
-        # Topology hiding
+        """Process outbound SIP message through topology hiding."""
         if self.topology_hiding:
             message = self._hide_topology(message, "outbound")
 
         return {"action": "forward", "message": message}
 
+    # =========================================================================
+    # Topology Hiding
+    # =========================================================================
+
     def _hide_topology(self, message: dict, direction: str) -> dict:
         """
-        Hide internal topology in SIP headers
+        Hide internal topology in SIP headers.
 
         Args:
-            message: SIP message
-            direction: Direction (inbound/outbound)
+            message: SIP message dict
+            direction: 'inbound' or 'outbound'
 
         Returns:
-            dict: Modified message
+            Modified message with internal IPs hidden
         """
         if not isinstance(message, dict):
             return message
 
-        # Get SBC public IP (use configured or detect)
-        sbc_public_ip = (
-            self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
-        )
+        self.topology_hiding_ops += 1
+        sbc_public_ip = self.public_ip
 
         # Create a copy to avoid modifying original
         modified_message = message.copy()
@@ -170,11 +217,27 @@ class SessionBorderController:
                     modified_message["record_route"], sbc_public_ip
                 )
 
+            # Rewrite Route header
+            if "route" in modified_message:
+                modified_message["route"] = re.sub(
+                    self.IP_PATTERN, sbc_public_ip, modified_message["route"]
+                )
+
+            # Hide P-Asserted-Identity internal IPs
+            if "p_asserted_identity" in modified_message:
+                modified_message["p_asserted_identity"] = re.sub(
+                    self.IP_PATTERN, sbc_public_ip, modified_message["p_asserted_identity"]
+                )
+
+            # Hide P-Preferred-Identity internal IPs
+            if "p_preferred_identity" in modified_message:
+                modified_message["p_preferred_identity"] = re.sub(
+                    self.IP_PATTERN, sbc_public_ip, modified_message["p_preferred_identity"]
+                )
+
         elif direction == "inbound":
             # For inbound, ensure internal IPs are hidden in responses
             if "via" in modified_message:
-                # Prepend SBC's own Via header so responses route back through us,
-                # while preserving the original external Via for proper SIP routing
                 sbc_via = (
                     f"SIP/2.0/UDP {sbc_public_ip}:5060;branch=z9hG4bK-sbc-{id(modified_message)}"
                 )
@@ -190,27 +253,24 @@ class SessionBorderController:
 
     def _rewrite_via_header(self, via: str, public_ip: str) -> str:
         """Rewrite Via header with SBC IP"""
-        # Replace IP addresses in Via header with SBC public IP
-        # Format: Via: SIP/2.0/UDP 192.168.1.1:5060;branch=z9hG4bK...
         return re.sub(self.IP_PATTERN, public_ip, via)
 
     def _rewrite_contact_header(self, contact: str, public_ip: str) -> str:
         """Rewrite Contact header with SBC IP"""
-        # Replace IP in Contact header
-        # Format: Contact: <sip:user@192.168.1.1:5060>
         return re.sub(self.IP_PATTERN, public_ip, contact)
 
     def _rewrite_record_route(self, record_route: str, public_ip: str) -> str:
         """Rewrite Record-Route header with SBC IP"""
-        # Replace IP in Record-Route
         return re.sub(self.IP_PATTERN, public_ip, record_route)
 
     def _hide_internal_ips_in_sdp(self, sdp: str, public_ip: str) -> str:
         """Hide internal IPs in SDP body"""
-        # Replace connection line (c=) with public IP
-        # Format: c=IN IP4 192.168.1.1
         sdp_pattern = r"(c=IN IP4 )" + self.IP_PATTERN
         return re.sub(sdp_pattern, r"\g<1>" + public_ip, sdp)
+
+    # =========================================================================
+    # Protocol Normalization
+    # =========================================================================
 
     def _normalize_sip_message(self, message: dict) -> dict:
         """Normalize SIP message format"""
@@ -219,7 +279,6 @@ class SessionBorderController:
 
         normalized = message.copy()
 
-        # Fix common malformed headers
         # Ensure required headers exist
         required_headers = ["via", "from", "to", "call_id", "cseq"]
         for header in required_headers:
@@ -248,7 +307,7 @@ class SessionBorderController:
             if header in normalized:
                 del normalized[header]
 
-        # Validate and fix method if present
+        # Validate method if present
         if "method" in normalized:
             valid_methods = [
                 "INVITE",
@@ -267,30 +326,15 @@ class SessionBorderController:
 
         return normalized
 
-    # STUN message constants (RFC 5389)
-    STUN_BINDING_REQUEST = 0x0001
-    STUN_BINDING_RESPONSE = 0x0101
-    STUN_MAGIC_COOKIE = 0x2112A442
-    STUN_ATTR_MAPPED_ADDRESS = 0x0001
-    STUN_ATTR_XOR_MAPPED_ADDRESS = 0x0020
-    STUN_ATTR_CHANGE_REQUEST = 0x0003
-    STUN_HEADER_SIZE = 20
-    STUN_DEFAULT_PORT = 3478
-    STUN_TIMEOUT = 2.0
+    # =========================================================================
+    # NAT Detection (STUN - RFC 5389)
+    # =========================================================================
 
     def detect_nat(self, local_ip: str, public_ip: str) -> NATType:
         """
         Detect NAT type using STUN binding requests (RFC 5389).
 
-        Sends actual STUN Binding Request packets to the configured STUN
-        server (or falls back to the supplied *public_ip* on port 3478).
-
-        The algorithm follows RFC 3489 section 10.1:
-          1. **Test I** -- basic binding request to primary address/port.
-          2. **Test II** -- binding request with CHANGE-REQUEST flag
-             (change IP + port).
-          3. **Test III** -- binding request with CHANGE-REQUEST flag
-             (change port only).
+        Follows RFC 3489 section 10.1 classification algorithm.
 
         Args:
             local_ip: Local IP address of this host.
@@ -299,6 +343,8 @@ class SessionBorderController:
         Returns:
             NATType: Detected NAT type.
         """
+        self.nat_detection_count += 1
+
         # No NAT if local equals public
         if local_ip == public_ip:
             return NATType.NONE
@@ -315,34 +361,28 @@ class SessionBorderController:
         # --- Test I: Basic STUN Binding Request ---
         mapped_addr_1 = self._stun_binding_request(stun_server, stun_port)
         if mapped_addr_1 is None:
-            self.logger.warning("STUN Test I failed — cannot reach STUN server")
-            # Cannot determine; assume port-restricted (most common)
+            self.logger.warning("STUN Test I failed - cannot reach STUN server")
             return NATType.PORT_RESTRICTED
 
         mapped_ip_1, mapped_port_1 = mapped_addr_1
         self.logger.debug(f"STUN Test I: mapped address {mapped_ip_1}:{mapped_port_1}")
 
         # --- Test II: Request server to respond from a different IP and port ---
-        # CHANGE-REQUEST flags: change IP (0x04) + change port (0x02) = 0x06
         mapped_addr_2 = self._stun_binding_request(
             stun_server, stun_port, change_request_flags=0x06
         )
 
         if mapped_addr_2 is not None:
-            # We received a response from a different server IP/port.
-            # This means the NAT allows traffic from any source — Full Cone.
-            self.logger.debug("STUN Test II succeeded — Full Cone NAT")
+            self.logger.debug("STUN Test II succeeded - Full Cone NAT")
             return NATType.FULL_CONE
 
         # --- Test III: Same server IP, different port ---
-        # CHANGE-REQUEST flags: change port only (0x02)
         mapped_addr_3 = self._stun_binding_request(
             stun_server, stun_port, change_request_flags=0x02
         )
 
         if mapped_addr_3 is not None:
-            # Accepts from same IP but different port — Restricted Cone
-            self.logger.debug("STUN Test III succeeded — Restricted Cone NAT")
+            self.logger.debug("STUN Test III succeeded - Restricted Cone NAT")
             return NATType.RESTRICTED_CONE
 
         # --- Test IV: Second binding to a different port to check for symmetric ---
@@ -352,14 +392,12 @@ class SessionBorderController:
         if mapped_addr_4 is not None:
             _mapped_ip_4, mapped_port_4 = mapped_addr_4
             if mapped_port_4 != mapped_port_1:
-                # Different mapped port for different destination — Symmetric NAT
                 self.logger.debug(
                     f"STUN Test IV: mapped port changed "
-                    f"({mapped_port_1} vs {mapped_port_4}) — Symmetric NAT"
+                    f"({mapped_port_1} vs {mapped_port_4}) - Symmetric NAT"
                 )
                 return NATType.SYMMETRIC
 
-        # Default: Port Restricted Cone
         self.logger.debug("STUN classification: Port Restricted Cone NAT")
         return NATType.PORT_RESTRICTED
 
@@ -371,31 +409,21 @@ class SessionBorderController:
     ) -> tuple[str, int] | None:
         """Send a single STUN Binding Request and parse the response.
 
-        Constructs a minimal RFC 5389 Binding Request, optionally including
-        a CHANGE-REQUEST attribute (RFC 3489), sends it via UDP, and
-        extracts the XOR-MAPPED-ADDRESS (or MAPPED-ADDRESS) from the
-        response.
-
         Args:
             server: STUN server hostname or IP.
             port: STUN server port.
-            change_request_flags: Optional CHANGE-REQUEST flags byte
-                (``0x02`` = change port, ``0x04`` = change IP, ``0x06`` =
-                both).
+            change_request_flags: Optional CHANGE-REQUEST flags byte.
 
         Returns:
-            ``(mapped_ip, mapped_port)`` tuple, or ``None`` on failure.
+            (mapped_ip, mapped_port) tuple, or None on failure.
         """
         import os
-        import struct
 
         try:
-            # Build STUN Binding Request (RFC 5389 section 6)
-            transaction_id = os.urandom(12)  # 96-bit transaction ID
+            transaction_id = os.urandom(12)
             attrs = b""
 
             if change_request_flags is not None:
-                # CHANGE-REQUEST attribute (type 0x0003, length 4)
                 attr_value = struct.pack("!I", change_request_flags)
                 attrs += struct.pack("!HH", self.STUN_ATTR_CHANGE_REQUEST, len(attr_value))
                 attrs += attr_value
@@ -417,7 +445,6 @@ class SessionBorderController:
             finally:
                 sock.close()
 
-            # Parse response
             if len(data) < self.STUN_HEADER_SIZE:
                 return None
 
@@ -429,7 +456,6 @@ class SessionBorderController:
             if resp_txn != transaction_id:
                 return None
 
-            # Walk attributes looking for XOR-MAPPED-ADDRESS or MAPPED-ADDRESS
             offset = self.STUN_HEADER_SIZE
             while offset + 4 <= len(data):
                 attr_type, attr_len = struct.unpack_from("!HH", data, offset)
@@ -447,7 +473,6 @@ class SessionBorderController:
                     if result:
                         return result
 
-                # Advance to next attribute (padded to 4-byte boundary)
                 offset += attr_len + ((4 - attr_len % 4) % 4)
 
             return None
@@ -461,34 +486,27 @@ class SessionBorderController:
         data: bytes, offset: int, _transaction_id: bytes
     ) -> tuple[str, int] | None:
         """Parse an XOR-MAPPED-ADDRESS attribute (RFC 5389 section 15.2)."""
-        import struct
-
         if offset + 8 > len(data):
             return None
 
         _reserved, family, xport = struct.unpack_from("!BBH", data, offset)
-        if family != 0x01:  # Only IPv4 supported here
+        if family != 0x01:
             return None
 
         xaddr = struct.unpack_from("!I", data, offset + 4)[0]
-
-        # XOR with magic cookie
         mapped_port = xport ^ (SessionBorderController.STUN_MAGIC_COOKIE >> 16)
         mapped_addr_int = xaddr ^ SessionBorderController.STUN_MAGIC_COOKIE
-
         mapped_ip = socket.inet_ntoa(struct.pack("!I", mapped_addr_int))
         return mapped_ip, mapped_port
 
     @staticmethod
     def _parse_mapped_address(data: bytes, offset: int) -> tuple[str, int] | None:
         """Parse a MAPPED-ADDRESS attribute (RFC 5389 section 15.1)."""
-        import struct
-
         if offset + 8 > len(data):
             return None
 
         _reserved, family, mapped_port = struct.unpack_from("!BBH", data, offset)
-        if family != 0x01:  # IPv4
+        if family != 0x01:
             return None
 
         mapped_addr_int = struct.unpack_from("!I", data, offset + 4)[0]
@@ -499,49 +517,44 @@ class SessionBorderController:
         """Check if IP is in private range"""
         try:
             octets = [int(x) for x in ip.split(".")]
-            # 10.0.0.0/8
             if octets[0] == 10:
                 return True
-            # 172.16.0.0/12
             if octets[0] == 172 and 16 <= octets[1] <= 31:
                 return True
-            # 192.168.0.0/16
             return bool(octets[0] == 192 and octets[1] == 168)
         except (ValueError, IndexError):
             return False
 
+    # =========================================================================
+    # Media Relay
+    # =========================================================================
+
     def allocate_relay(self, call_id: str, codec: str) -> dict:
         """
-        Allocate media relay for NAT traversal
+        Allocate media relay for NAT traversal.
 
         Args:
             call_id: Call identifier
-            codec: Media codec
+            codec: Media codec name
 
         Returns:
-            dict: Relay allocation
+            dict with relay allocation details
         """
         if not self.media_relay:
             return {"success": False, "reason": "Media relay disabled"}
 
-        # Check if already allocated
         if call_id in self.relay_sessions:
             return self.relay_sessions[call_id]
 
-        # Allocate RTP/RTCP port pair
         if len(self.relay_port_pool) < 2:
             return {"success": False, "reason": "No relay ports available"}
 
-        # Get even port for RTP (odd port+1 for RTCP)
         rtp_port = min(self.relay_port_pool)
         self.relay_port_pool.discard(rtp_port)
         rtcp_port = rtp_port + 1
         self.relay_port_pool.discard(rtcp_port)
 
-        # Get SBC public IP
-        relay_ip = (
-            self.config.get("features", {}).get("sbc", {}).get("public_ip", "0.0.0.0")  # nosec B104 - SBC needs to bind all interfaces
-        )
+        relay_ip = self.public_ip
 
         relay_info = {
             "success": True,
@@ -555,6 +568,22 @@ class SessionBorderController:
 
         self.relay_sessions[call_id] = relay_info
 
+        # Initialize relay state for packet tracking
+        self.relay_state[call_id] = {
+            "last_seq": -1,
+            "packets_relayed": 0,
+            "packets_lost": 0,
+            "bytes_relayed": 0,
+            "bandwidth_kbps": 0,
+        }
+
+        # Track codec usage
+        codec_lower = codec.lower()
+        self.codec_call_counts[codec_lower] += 1
+
+        self.total_sessions += 1
+        self.active_sessions += 1
+
         self.logger.info(f"Allocated media relay for call {call_id}")
         self.logger.info(f"  RTP: {relay_ip}:{rtp_port}, RTCP: {relay_ip}:{rtcp_port}")
 
@@ -564,70 +593,105 @@ class SessionBorderController:
         """Release relay ports for a call"""
         if call_id in self.relay_sessions:
             session = self.relay_sessions[call_id]
-            # Return ports to pool
             self.relay_port_pool.add(session["rtp_port"])
             self.relay_port_pool.add(session["rtcp_port"])
             del self.relay_sessions[call_id]
+
+            # Clean up relay state
+            self.relay_state.pop(call_id, None)
+
             self.logger.info(f"Released relay ports for call {call_id}")
 
     def relay_rtp_packet(self, packet: bytes, call_id: str) -> bool:
         """
-        Relay RTP packet
+        Relay RTP packet with state tracking.
+
+        Parses the RTP header to track sequence numbers for packet loss
+        detection, updates bandwidth metrics, and forwards the packet
+        through the relay session.
 
         Args:
-            packet: RTP packet
+            packet: RTP packet bytes
             call_id: Call identifier
 
         Returns:
-            bool: Success
+            True if packet was processed successfully
         """
-        # Check if relay session exists
         if call_id not in self.relay_sessions:
             self.logger.warning(f"No relay session for call {call_id}")
             return False
 
-        self.relay_sessions[call_id]
+        session = self.relay_sessions[call_id]
+        state = self.relay_state.get(call_id)
+        if state is None:
+            state = {
+                "last_seq": -1,
+                "packets_relayed": 0,
+                "packets_lost": 0,
+                "bytes_relayed": 0,
+                "bandwidth_kbps": 0,
+            }
+            self.relay_state[call_id] = state
 
-        # In production, this would:
-        # 1. Parse RTP header
-        # 2. Maintain session state (SSRC, sequence numbers)
-        # 3. Forward packet to destination
-        # 4. Handle RTCP for the session
-        # 5. Detect and handle packet loss
+        packet_size = len(packet)
+
+        # Parse RTP header if packet is large enough (minimum 12 bytes)
+        if packet_size >= 12:
+            # RTP header: V(2) P(1) X(1) CC(4) M(1) PT(7) SeqNum(16)
+            seq_num = struct.unpack_from("!H", packet, 2)[0]
+
+            # Detect packet loss via sequence number gaps
+            last_seq = state["last_seq"]
+            if last_seq >= 0:
+                expected_seq = (last_seq + 1) & 0xFFFF
+                if seq_num != expected_seq:
+                    # Calculate gap accounting for wrap-around
+                    gap = (seq_num - expected_seq) & 0xFFFF
+                    if gap < 1000:  # Reasonable gap threshold
+                        state["packets_lost"] += gap
+
+            state["last_seq"] = seq_num
 
         # Track bandwidth usage
-        packet_size = len(packet)
         self.relayed_media_bytes += packet_size
+        state["bytes_relayed"] += packet_size
+        state["packets_relayed"] += 1
 
-        # Update bandwidth tracking (rough estimate in kbps)
-        (packet_size * 8 * self.PACKETS_PER_SECOND) / 1000
+        # Estimate instantaneous bandwidth (kbps)
+        bandwidth_kbps = (packet_size * 8 * self.PACKETS_PER_SECOND) / 1000
+        state["bandwidth_kbps"] = bandwidth_kbps
 
-        self.logger.debug(f"Relayed RTP packet for {call_id}: {packet_size} bytes")
+        self.logger.debug(
+            f"Relayed RTP for {call_id}: {packet_size}B via "
+            f"{session['relay_ip']}:{session['rtp_port']}"
+        )
 
         return True
 
+    # =========================================================================
+    # Call Admission Control
+    # =========================================================================
+
     def perform_call_admission_control(self, call_request: dict) -> dict:
         """
-        Perform call admission control
+        Perform call admission control.
 
         Args:
-            call_request: Call request information
+            call_request: dict with 'call_id' and 'codec'
 
         Returns:
-            dict: Admission decision
+            dict with 'admit' boolean and details
         """
-        # Check current load
         if self.active_sessions >= self.max_calls:
+            self.cac_rejections += 1
             return {"admit": False, "reason": "Maximum calls reached"}
 
-        # Check bandwidth
         estimated_bandwidth = self._estimate_call_bandwidth(call_request.get("codec", "pcmu"))
 
-        # Track current bandwidth usage
         if self.current_bandwidth + estimated_bandwidth > self.max_bandwidth:
+            self.cac_rejections += 1
             return {"admit": False, "reason": "Insufficient bandwidth"}
 
-        # Allocate bandwidth
         call_id = call_request.get("call_id", "unknown")
         self.bandwidth_by_call[call_id] = estimated_bandwidth
         self.current_bandwidth += estimated_bandwidth
@@ -636,23 +700,23 @@ class SessionBorderController:
 
     def release_call_resources(self, call_id: str) -> None:
         """Release resources for a completed call"""
-        # Release bandwidth
         if call_id in self.bandwidth_by_call:
             bandwidth = self.bandwidth_by_call[call_id]
             self.current_bandwidth -= bandwidth
             del self.bandwidth_by_call[call_id]
 
-        # Release relay ports
         self.release_relay(call_id)
 
-        # Update session count
         if self.active_sessions > 0:
             self.active_sessions -= 1
 
     def _estimate_call_bandwidth(self, codec: str) -> int:
         """Estimate bandwidth for codec (kbps)"""
-        bandwidth_map = {"pcmu": 80, "pcma": 80, "g722": 80, "opus": 40, "g729": 30}
-        return bandwidth_map.get(codec, 80)
+        return self.CODEC_BANDWIDTH.get(codec, 80)
+
+    # =========================================================================
+    # Security: Blacklist / Whitelist / Rate Limiting
+    # =========================================================================
 
     def _is_blacklisted(self, ip: str) -> bool:
         """Check if IP is blacklisted"""
@@ -660,74 +724,190 @@ class SessionBorderController:
 
     def _check_rate_limit(self, ip: str) -> bool:
         """
-        Check rate limit for IP using sliding window
+        Check rate limit for IP using sliding window.
 
-        Args:
-            ip: IP address
+        Whitelisted IPs bypass rate limiting.
 
         Returns:
-            bool: True if within rate limit
+            True if within rate limit or whitelisted
         """
+        # Whitelisted IPs bypass rate limiting
+        if ip in self.whitelist:
+            return True
+
         current_time = time.time()
 
-        # Get or create request list for this IP
         if ip not in self.request_counts:
             self.request_counts[ip] = []
 
         requests = self.request_counts[ip]
 
-        # Remove requests outside the time window
         cutoff_time = current_time - self.rate_limit_window
         self.request_counts[ip] = [t for t in requests if t > cutoff_time]
 
-        # Check if under rate limit
         if len(self.request_counts[ip]) >= self.rate_limit:
             self.logger.warning(
-                f"Rate limit exceeded for {ip}: {len(self.request_counts[ip])} requests in {self.rate_limit_window}s"
+                f"Rate limit exceeded for {ip}: "
+                f"{len(self.request_counts[ip])} requests in {self.rate_limit_window}s"
             )
             return False
 
-        # Add current request
         self.request_counts[ip].append(current_time)
-
         return True
 
     def add_to_blacklist(self, ip: str) -> bool:
-        """Add IP to blacklist"""
-        if not self.enabled:
-            self.logger.error(
-                "Cannot add to blacklist: Session border controller feature is not enabled"
-            )
-            return False
-
+        """Add IP to blacklist and persist"""
         self.blacklist.add(ip)
+        self._save_lists()
         self.logger.warning(f"Added {ip} to blacklist")
         return True
 
-    def add_to_whitelist(self, ip: str) -> bool:
-        """Add IP to whitelist"""
-        if not self.enabled:
-            self.logger.error(
-                "Cannot add to whitelist: Session border controller feature is not enabled"
-            )
-            return False
+    def remove_from_blacklist(self, ip: str) -> bool:
+        """Remove IP from blacklist and persist"""
+        if ip in self.blacklist:
+            self.blacklist.discard(ip)
+            self._save_lists()
+            self.logger.info(f"Removed {ip} from blacklist")
+            return True
+        return False
 
+    def add_to_whitelist(self, ip: str) -> bool:
+        """Add IP to whitelist and persist"""
         self.whitelist.add(ip)
+        self._save_lists()
         self.logger.info(f"Added {ip} to whitelist")
         return True
 
-    def get_statistics(self) -> dict:
-        """Get SBC statistics"""
+    def remove_from_whitelist(self, ip: str) -> bool:
+        """Remove IP from whitelist and persist"""
+        if ip in self.whitelist:
+            self.whitelist.discard(ip)
+            self._save_lists()
+            self.logger.info(f"Removed {ip} from whitelist")
+            return True
+        return False
+
+    # =========================================================================
+    # Persistence
+    # =========================================================================
+
+    def _save_lists(self) -> None:
+        """Persist blacklist and whitelist to disk"""
+        try:
+            data_dir = Path(self.DATA_DIR)
+            data_dir.mkdir(parents=True, exist_ok=True)
+            data = {
+                "blacklist": sorted(self.blacklist),
+                "whitelist": sorted(self.whitelist),
+                "updated_at": datetime.now(UTC).isoformat(),
+            }
+            lists_file = data_dir / "lists.json"
+            lists_file.write_text(json.dumps(data, indent=2))
+        except OSError as e:
+            self.logger.error(f"Failed to save SBC lists: {e}")
+
+    def _load_lists(self) -> None:
+        """Load blacklist and whitelist from disk"""
+        try:
+            lists_file = Path(self.DATA_DIR) / "lists.json"
+            if lists_file.exists():
+                data = json.loads(lists_file.read_text())
+                self.blacklist = set(data.get("blacklist", []))
+                self.whitelist = set(data.get("whitelist", []))
+                self.logger.info(
+                    f"Loaded {len(self.blacklist)} blacklist and "
+                    f"{len(self.whitelist)} whitelist entries"
+                )
+        except (OSError, json.JSONDecodeError) as e:
+            self.logger.warning(f"Failed to load SBC lists: {e}")
+
+    # =========================================================================
+    # Configuration
+    # =========================================================================
+
+    def get_config(self) -> dict:
+        """Get current SBC configuration"""
         return {
+            "enabled": self.enabled,
+            "topology_hiding": self.topology_hiding,
+            "media_relay": self.media_relay,
+            "stun_enabled": self.stun_enabled,
+            "turn_enabled": self.turn_enabled,
+            "ice_enabled": self.ice_enabled,
+            "max_calls": self.max_calls,
+            "max_bandwidth": self.max_bandwidth,
+            "rate_limit": self.rate_limit,
+            "public_ip": self.public_ip,
+            "product_name": self.PRODUCT_NAME,
+        }
+
+    def update_config(self, updates: dict) -> dict:
+        """
+        Update SBC configuration at runtime.
+
+        Args:
+            updates: dict of config keys to update
+
+        Returns:
+            Updated config dict
+        """
+        allowed_keys = {
+            "enabled",
+            "topology_hiding",
+            "media_relay",
+            "stun_enabled",
+            "turn_enabled",
+            "ice_enabled",
+            "max_calls",
+            "max_bandwidth",
+            "rate_limit",
+            "public_ip",
+        }
+
+        applied = {}
+        for key, value in updates.items():
+            if key in allowed_keys:
+                setattr(self, key, value)
+                applied[key] = value
+
+        if applied:
+            self.logger.info(f"{self.PRODUCT_NAME} config updated: {applied}")
+
+        return self.get_config()
+
+    # =========================================================================
+    # Statistics
+    # =========================================================================
+
+    def get_statistics(self) -> dict:
+        """Get comprehensive SBC statistics"""
+        bandwidth_utilization = (
+            (self.current_bandwidth / self.max_bandwidth * 100) if self.max_bandwidth > 0 else 0.0
+        )
+
+        return {
+            "product_name": self.PRODUCT_NAME,
             "enabled": self.enabled,
             "total_sessions": self.total_sessions,
             "active_sessions": self.active_sessions,
             "blocked_requests": self.blocked_requests,
-            "relayed_media_mb": self.relayed_media_bytes / (1024 * 1024),
+            "relayed_media_mb": round(self.relayed_media_bytes / (1024 * 1024), 2),
             "blacklist_size": len(self.blacklist),
             "whitelist_size": len(self.whitelist),
             "topology_hiding": self.topology_hiding,
             "media_relay": self.media_relay,
+            "current_bandwidth_kbps": self.current_bandwidth,
+            "max_bandwidth_kbps": self.max_bandwidth,
+            "bandwidth_utilization_pct": round(bandwidth_utilization, 1),
+            "rate_limit_violations": self.rate_limit_violations,
+            "cac_rejections": self.cac_rejections,
+            "codec_call_counts": dict(self.codec_call_counts),
+            "topology_hiding_ops": self.topology_hiding_ops,
+            "nat_detection_count": self.nat_detection_count,
+            "relay_port_pool_size": len(self.relay_port_pool),
+            "relay_port_pool_total": 5000,
+            "max_calls": self.max_calls,
+            "rate_limit": self.rate_limit,
         }
 
 

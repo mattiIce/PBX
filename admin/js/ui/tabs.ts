@@ -59,7 +59,10 @@ function setupAutoRefresh(tabName: string): void {
         'voicemail': () => window.loadVoicemailTab?.(),
 
         // Security
-        'fraud-detection': refreshFraudDetectionTab
+        'fraud-detection': refreshFraudDetectionTab,
+
+        // Connectivity
+        'sbc-management': () => window.loadSBCData?.()
     };
 
     // If the current tab supports auto-refresh, set it up
@@ -154,6 +157,7 @@ export function showTab(tabName: string): void {
         'compliance':          window.loadComplianceData,
         'crm-integrations':    window.loadCRMActivityLog,
         'opensource-integrations': window.loadOpenSourceIntegrations,
+        'sbc-management':      window.loadSBCData,
     };
 
     // Tabs with multiple loaders

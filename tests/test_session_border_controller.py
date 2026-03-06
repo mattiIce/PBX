@@ -1465,3 +1465,319 @@ class TestIntegrationScenarios:
         assert "203.0.113.1" in forwarded["via"]
         assert "203.0.113.1" in forwarded["contact"]
         assert "203.0.113.1" in forwarded["record_route"]
+
+
+@pytest.mark.unit
+class TestWhitelistRateLimitBypass:
+    """Tests for whitelist bypass of rate limiting."""
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_whitelisted_ip_bypasses_rate_limit(self, mock_get_logger: MagicMock) -> None:
+        """Whitelisted IPs should never be rate limited."""
+        config = _make_sbc_config(rate_limit=1)
+        sbc = SessionBorderController(config)
+        sbc.whitelist.add("10.0.0.50")
+
+        # Send many requests from whitelisted IP - none should be blocked
+        for _ in range(10):
+            result = sbc._check_rate_limit("10.0.0.50")
+            assert result is True
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_non_whitelisted_ip_still_rate_limited(self, mock_get_logger: MagicMock) -> None:
+        """Non-whitelisted IPs should still be rate limited."""
+        config = _make_sbc_config(rate_limit=2)
+        sbc = SessionBorderController(config)
+        sbc.whitelist.add("10.0.0.50")
+
+        # First 2 should pass, third should fail
+        assert sbc._check_rate_limit("10.0.0.99") is True
+        assert sbc._check_rate_limit("10.0.0.99") is True
+        assert sbc._check_rate_limit("10.0.0.99") is False
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_whitelisted_ip_inbound_sip_bypasses_rate_limit(
+        self, mock_get_logger: MagicMock
+    ) -> None:
+        """Whitelisted IP should pass through full inbound SIP pipeline."""
+        config = _make_sbc_config(rate_limit=1)
+        sbc = SessionBorderController(config)
+        sbc.whitelist.add("10.0.0.50")
+
+        msg = {"method": "INVITE", "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1"}
+
+        for _ in range(5):
+            result = sbc.process_inbound_sip(msg.copy(), "10.0.0.50")
+            assert result["action"] == "forward"
+
+
+@pytest.mark.unit
+class TestPersistence:
+    """Tests for blacklist/whitelist persistence."""
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_save_and_load_lists(self, mock_get_logger: MagicMock, tmp_path) -> None:
+        """Test that blacklist/whitelist are saved and loaded correctly."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+        sbc.DATA_DIR = str(tmp_path / "sbc")
+
+        sbc.add_to_blacklist("1.2.3.4")
+        sbc.add_to_blacklist("5.6.7.8")
+        sbc.add_to_whitelist("10.0.0.1")
+
+        # Create a new SBC and load from same path
+        sbc2 = SessionBorderController(config)
+        sbc2.DATA_DIR = str(tmp_path / "sbc")
+        sbc2._load_lists()
+
+        assert "1.2.3.4" in sbc2.blacklist
+        assert "5.6.7.8" in sbc2.blacklist
+        assert "10.0.0.1" in sbc2.whitelist
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_remove_from_blacklist_persists(self, mock_get_logger: MagicMock, tmp_path) -> None:
+        """Test removal from blacklist is persisted."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+        sbc.DATA_DIR = str(tmp_path / "sbc")
+
+        sbc.add_to_blacklist("1.2.3.4")
+        sbc.add_to_blacklist("5.6.7.8")
+        sbc.remove_from_blacklist("1.2.3.4")
+
+        sbc2 = SessionBorderController(config)
+        sbc2.DATA_DIR = str(tmp_path / "sbc")
+        sbc2._load_lists()
+
+        assert "1.2.3.4" not in sbc2.blacklist
+        assert "5.6.7.8" in sbc2.blacklist
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_remove_from_whitelist_persists(self, mock_get_logger: MagicMock, tmp_path) -> None:
+        """Test removal from whitelist is persisted."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+        sbc.DATA_DIR = str(tmp_path / "sbc")
+
+        sbc.add_to_whitelist("10.0.0.1")
+        sbc.remove_from_whitelist("10.0.0.1")
+
+        sbc2 = SessionBorderController(config)
+        sbc2.DATA_DIR = str(tmp_path / "sbc")
+        sbc2._load_lists()
+
+        assert "10.0.0.1" not in sbc2.whitelist
+
+
+@pytest.mark.unit
+class TestEnhancedStatistics:
+    """Tests for enhanced SBC statistics."""
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_statistics_include_enhanced_fields(self, mock_get_logger: MagicMock) -> None:
+        """Test that get_statistics returns all enhanced fields."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+        stats = sbc.get_statistics()
+
+        assert "product_name" in stats
+        assert stats["product_name"] == "Warden SBC"
+        assert "rate_limit_violations" in stats
+        assert "cac_rejections" in stats
+        assert "bandwidth_utilization_pct" in stats
+        assert "codec_call_counts" in stats
+        assert "topology_hiding_ops" in stats
+        assert "nat_detection_count" in stats
+        assert "relay_port_pool_size" in stats
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_rate_limit_violation_counter(self, mock_get_logger: MagicMock) -> None:
+        """Test that rate limit violations are counted."""
+        config = _make_sbc_config(rate_limit=1)
+        sbc = SessionBorderController(config)
+
+        msg = {"method": "INVITE", "via": "v", "from": "f", "to": "t", "call_id": "c", "cseq": "1"}
+
+        sbc.process_inbound_sip(msg.copy(), "10.0.0.99")
+        sbc.process_inbound_sip(msg.copy(), "10.0.0.99")
+
+        assert sbc.rate_limit_violations >= 1
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_cac_rejection_counter(self, mock_get_logger: MagicMock) -> None:
+        """Test that CAC rejections are counted."""
+        config = _make_sbc_config(max_calls=0)
+        sbc = SessionBorderController(config)
+
+        result = sbc.perform_call_admission_control({"call_id": "test", "codec": "pcmu"})
+        assert result["admit"] is False
+        assert sbc.cac_rejections == 1
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_codec_call_counts(self, mock_get_logger: MagicMock) -> None:
+        """Test that codec usage is tracked."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+
+        sbc.allocate_relay("call-1", "PCMU")
+        sbc.allocate_relay("call-2", "PCMU")
+        sbc.allocate_relay("call-3", "opus")
+
+        assert sbc.codec_call_counts["pcmu"] == 2
+        assert sbc.codec_call_counts["opus"] == 1
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_bandwidth_utilization_percentage(self, mock_get_logger: MagicMock) -> None:
+        """Test bandwidth utilization calculation."""
+        config = _make_sbc_config(max_bandwidth=1000)
+        sbc = SessionBorderController(config)
+        sbc.current_bandwidth = 250
+
+        stats = sbc.get_statistics()
+        assert stats["bandwidth_utilization_pct"] == 25.0
+
+
+@pytest.mark.unit
+class TestSBCConfiguration:
+    """Tests for runtime SBC configuration updates."""
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_get_config(self, mock_get_logger: MagicMock) -> None:
+        """Test get_config returns all expected keys."""
+        config = _make_sbc_config(public_ip="203.0.113.1")
+        sbc = SessionBorderController(config)
+        cfg = sbc.get_config()
+
+        assert cfg["enabled"] is True
+        assert cfg["topology_hiding"] is True
+        assert cfg["media_relay"] is True
+        assert cfg["public_ip"] == "203.0.113.1"
+        assert cfg["product_name"] == "Warden SBC"
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_update_config(self, mock_get_logger: MagicMock) -> None:
+        """Test runtime config updates."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+
+        updated = sbc.update_config({"max_calls": 500, "rate_limit": 50})
+        assert updated["max_calls"] == 500
+        assert updated["rate_limit"] == 50
+        assert sbc.max_calls == 500
+        assert sbc.rate_limit == 50
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_update_config_ignores_unknown_keys(self, mock_get_logger: MagicMock) -> None:
+        """Test that unknown config keys are ignored."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+
+        sbc.update_config({"unknown_key": True, "max_calls": 200})
+        assert sbc.max_calls == 200
+        assert not hasattr(sbc, "unknown_key")
+
+
+@pytest.mark.unit
+class TestRTPRelayState:
+    """Tests for enhanced RTP relay with state tracking."""
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_relay_tracks_packet_state(self, mock_get_logger: MagicMock) -> None:
+        """Test that relay_rtp_packet tracks packets and bytes."""
+        import struct
+
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+        sbc.allocate_relay("call-rtp-1", "PCMU")
+
+        # Create minimal RTP packet (12-byte header + 160 bytes payload)
+        rtp_header = struct.pack("!BBHII", 0x80, 0, 100, 1000, 0x12345678)
+        packet = rtp_header + b"\x00" * 160
+
+        result = sbc.relay_rtp_packet(packet, "call-rtp-1")
+        assert result is True
+
+        state = sbc.relay_state["call-rtp-1"]
+        assert state["packets_relayed"] == 1
+        assert state["bytes_relayed"] == len(packet)
+        assert state["last_seq"] == 100
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_relay_detects_packet_loss(self, mock_get_logger: MagicMock) -> None:
+        """Test packet loss detection via sequence number gaps."""
+        import struct
+
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+        sbc.allocate_relay("call-loss-1", "PCMU")
+
+        # Send packet with seq 100
+        pkt1 = struct.pack("!BBHII", 0x80, 0, 100, 1000, 0x12345678) + b"\x00" * 160
+        sbc.relay_rtp_packet(pkt1, "call-loss-1")
+
+        # Skip to seq 105 (gap of 4 packets)
+        pkt2 = struct.pack("!BBHII", 0x80, 0, 105, 2000, 0x12345678) + b"\x00" * 160
+        sbc.relay_rtp_packet(pkt2, "call-loss-1")
+
+        state = sbc.relay_state["call-loss-1"]
+        assert state["packets_lost"] == 4
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_relay_nonexistent_session_returns_false(self, mock_get_logger: MagicMock) -> None:
+        """Test relaying to non-existent session returns False."""
+        config = _make_sbc_config()
+        sbc = SessionBorderController(config)
+
+        result = sbc.relay_rtp_packet(b"\x00" * 172, "nonexistent")
+        assert result is False
+
+
+@pytest.mark.unit
+class TestTopologyHidingEnhanced:
+    """Tests for enhanced topology hiding features."""
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_p_asserted_identity_hidden(self, mock_get_logger: MagicMock) -> None:
+        """Test P-Asserted-Identity header is rewritten."""
+        config = _make_sbc_config(public_ip="203.0.113.1")
+        sbc = SessionBorderController(config)
+
+        msg = {"p_asserted_identity": "<sip:user@192.168.1.10:5060>"}
+        result = sbc.process_outbound_sip(msg)
+        assert "192.168.1.10" not in result["message"]["p_asserted_identity"]
+        assert "203.0.113.1" in result["message"]["p_asserted_identity"]
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_p_preferred_identity_hidden(self, mock_get_logger: MagicMock) -> None:
+        """Test P-Preferred-Identity header is rewritten."""
+        config = _make_sbc_config(public_ip="203.0.113.1")
+        sbc = SessionBorderController(config)
+
+        msg = {"p_preferred_identity": "<sip:user@192.168.1.10:5060>"}
+        result = sbc.process_outbound_sip(msg)
+        assert "192.168.1.10" not in result["message"]["p_preferred_identity"]
+        assert "203.0.113.1" in result["message"]["p_preferred_identity"]
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_route_header_hidden(self, mock_get_logger: MagicMock) -> None:
+        """Test Route header is rewritten."""
+        config = _make_sbc_config(public_ip="203.0.113.1")
+        sbc = SessionBorderController(config)
+
+        msg = {"route": "<sip:192.168.1.10;lr>"}
+        result = sbc.process_outbound_sip(msg)
+        assert "192.168.1.10" not in result["message"]["route"]
+        assert "203.0.113.1" in result["message"]["route"]
+
+    @patch("pbx.features.session_border_controller.get_logger")
+    def test_topology_hiding_ops_counter(self, mock_get_logger: MagicMock) -> None:
+        """Test that topology hiding operations are counted."""
+        config = _make_sbc_config(topology_hiding=True)
+        sbc = SessionBorderController(config)
+
+        msg = {"via": "SIP/2.0/UDP 192.168.1.10:5060"}
+        sbc.process_outbound_sip(msg)
+        sbc.process_outbound_sip(msg)
+
+        assert sbc.topology_hiding_ops == 2

@@ -1928,9 +1928,7 @@ def pause_dialing_campaign(campaign_id: str) -> tuple[Response, int]:
         return send_json({"error": str(e)}, 500), 500
 
 
-@framework_bp.route(
-    "/predictive-dialing/campaigns/<campaign_id>/toggle", methods=["POST"]
-)
+@framework_bp.route("/predictive-dialing/campaigns/<campaign_id>/toggle", methods=["POST"])
 @require_auth
 def toggle_dialing_campaign(campaign_id: str) -> tuple[Response, int]:
     """Toggle a predictive dialing campaign start/pause."""
@@ -2769,7 +2767,7 @@ def lookup_srv() -> tuple[Response, int]:
 @framework_bp.route("/sbc/statistics", methods=["GET"])
 @require_auth
 def get_sbc_statistics() -> tuple[Response, int]:
-    """Get SBC statistics."""
+    """Get Warden SBC statistics."""
     try:
         pbx_core = get_pbx_core()
         from pbx.features.session_border_controller import get_sbc
@@ -2819,6 +2817,193 @@ def allocate_sbc_relay() -> tuple[Response, int]:
         return send_json(result), 200
     except (KeyError, TypeError, ValueError) as e:
         logger.error(f"Error allocating SBC relay: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/relay/<call_id>", methods=["DELETE"])
+@require_auth
+def terminate_sbc_relay(call_id: str) -> tuple[Response, int]:
+    """Terminate a specific RTP relay session."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        if call_id not in sbc.relay_sessions:
+            return send_json({"error": "Relay session not found"}, 404), 404
+
+        sbc.release_call_resources(call_id)
+        return send_json({"success": True}), 200
+    except Exception as e:
+        logger.error(f"Error terminating SBC relay: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/config", methods=["GET"])
+@require_auth
+def get_sbc_config() -> tuple[Response, int]:
+    """Get Warden SBC configuration."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        return send_json(sbc.get_config()), 200
+    except Exception as e:
+        logger.error(f"Error getting SBC config: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/config", methods=["PUT"])
+@require_auth
+def update_sbc_config() -> tuple[Response, int]:
+    """Update Warden SBC configuration."""
+    try:
+        pbx_core = get_pbx_core()
+        body = get_request_body()
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        updated = sbc.update_config(body)
+        return send_json(updated), 200
+    except (KeyError, TypeError, ValueError) as e:
+        logger.error(f"Error updating SBC config: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/blacklist", methods=["GET"])
+@require_auth
+def get_sbc_blacklist() -> tuple[Response, int]:
+    """Get SBC IP blacklist."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        return send_json({"blacklist": sorted(sbc.blacklist)}), 200
+    except Exception as e:
+        logger.error(f"Error getting SBC blacklist: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/blacklist", methods=["POST"])
+@require_auth
+def add_sbc_blacklist() -> tuple[Response, int]:
+    """Add IP to SBC blacklist."""
+    try:
+        pbx_core = get_pbx_core()
+        body = get_request_body()
+        ip = body.get("ip")
+        if not ip:
+            return send_json({"error": "ip required"}, 400), 400
+
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        sbc.add_to_blacklist(ip)
+        return send_json({"success": True, "blacklist": sorted(sbc.blacklist)}), 200
+    except (KeyError, TypeError, ValueError) as e:
+        logger.error(f"Error adding to SBC blacklist: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/blacklist/<ip>", methods=["DELETE"])
+@require_auth
+def remove_sbc_blacklist(ip: str) -> tuple[Response, int]:
+    """Remove IP from SBC blacklist."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        if not sbc.remove_from_blacklist(ip):
+            return send_json({"error": "IP not in blacklist"}, 404), 404
+        return send_json({"success": True, "blacklist": sorted(sbc.blacklist)}), 200
+    except Exception as e:
+        logger.error(f"Error removing from SBC blacklist: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/whitelist", methods=["GET"])
+@require_auth
+def get_sbc_whitelist() -> tuple[Response, int]:
+    """Get SBC IP whitelist."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        return send_json({"whitelist": sorted(sbc.whitelist)}), 200
+    except Exception as e:
+        logger.error(f"Error getting SBC whitelist: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/whitelist", methods=["POST"])
+@require_auth
+def add_sbc_whitelist() -> tuple[Response, int]:
+    """Add IP to SBC whitelist."""
+    try:
+        pbx_core = get_pbx_core()
+        body = get_request_body()
+        ip = body.get("ip")
+        if not ip:
+            return send_json({"error": "ip required"}, 400), 400
+
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        sbc.add_to_whitelist(ip)
+        return send_json({"success": True, "whitelist": sorted(sbc.whitelist)}), 200
+    except (KeyError, TypeError, ValueError) as e:
+        logger.error(f"Error adding to SBC whitelist: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/whitelist/<ip>", methods=["DELETE"])
+@require_auth
+def remove_sbc_whitelist(ip: str) -> tuple[Response, int]:
+    """Remove IP from SBC whitelist."""
+    try:
+        pbx_core = get_pbx_core()
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        if not sbc.remove_from_whitelist(ip):
+            return send_json({"error": "IP not in whitelist"}, 404), 404
+        return send_json({"success": True, "whitelist": sorted(sbc.whitelist)}), 200
+    except Exception as e:
+        logger.error(f"Error removing from SBC whitelist: {e}")
+        return send_json({"error": str(e)}, 500), 500
+
+
+@framework_bp.route("/sbc/nat-detect", methods=["POST"])
+@require_auth
+def trigger_sbc_nat_detection() -> tuple[Response, int]:
+    """Trigger NAT type detection."""
+    try:
+        pbx_core = get_pbx_core()
+        body = get_request_body()
+        local_ip = body.get("local_ip")
+        public_ip = body.get("public_ip")
+
+        if not local_ip or not public_ip:
+            return send_json({"error": "local_ip and public_ip required"}, 400), 400
+
+        from pbx.features.session_border_controller import get_sbc
+
+        sbc = get_sbc(pbx_core.config if pbx_core else None)
+        nat_type = sbc.detect_nat(local_ip, public_ip)
+
+        return send_json(
+            {
+                "nat_type": nat_type.value,
+                "local_ip": local_ip,
+                "public_ip": public_ip,
+            }
+        ), 200
+    except (KeyError, TypeError, ValueError) as e:
+        logger.error(f"Error during NAT detection: {e}")
         return send_json({"error": str(e)}, 500), 500
 
 
