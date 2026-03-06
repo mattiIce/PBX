@@ -137,7 +137,7 @@ class SIPServer:
 
         while self.running:
             try:
-                data, addr = self.socket.recvfrom(4096)
+                data, addr = self.socket.recvfrom(65535)
 
                 try:
                     message_text = data.decode("utf-8")
@@ -256,7 +256,10 @@ class SIPServer:
         if authorization:
             # Verify digest authentication credentials
             if self._verify_digest_auth(authorization, from_header, "REGISTER"):
-                expires_value = int(message.get_header("Expires") or "3600")
+                try:
+                    expires_value = int(message.get_header("Expires") or "3600")
+                except (ValueError, TypeError):
+                    expires_value = 3600
                 success = self.pbx_core.register_extension(
                     from_header, addr, user_agent, contact, expires=expires_value
                 )
@@ -283,7 +286,10 @@ class SIPServer:
                 self._send_auth_challenge(message, addr)
             else:
                 # Auth not required - register directly
-                expires_value = int(message.get_header("Expires") or "3600")
+                try:
+                    expires_value = int(message.get_header("Expires") or "3600")
+                except (ValueError, TypeError):
+                    expires_value = 3600
                 success = self.pbx_core.register_extension(
                     from_header,
                     addr,
