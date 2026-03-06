@@ -480,9 +480,11 @@ class CallRouter:
         caller_codecs: list[str] | None = (
             call.caller_rtp.get("formats", None) if call.caller_rtp else None
         )
-        codecs_for_caller = pbx._get_codecs_for_phone_model(
-            caller_phone_model, default_codecs=caller_codecs
-        )
+        # Use _get_compatible_codecs to intersect the caller's offered codecs
+        # with the phone model's supported codecs.  Using _get_codecs_for_phone_model
+        # would return ALL model codecs, ignoring what the caller actually offered,
+        # which can cause 488 rejections or codec mismatches.
+        codecs_for_caller = pbx._get_compatible_codecs(caller_phone_model, caller_codecs)
 
         if caller_phone_model:
             pbx.logger.info(
@@ -570,16 +572,22 @@ class CallRouter:
             pbx.call_manager.end_call(call_id)
             return
 
+        # Stop the RTP relay handler so its socket is released and the
+        # voicemail player/recorder can bind to the same port.  The relay
+        # handler was allocated for the original call but voicemail takes
+        # over the port for direct player/recorder use.
+        relay_info = pbx.rtp_relay.active_relays.get(call_id)
+        if relay_info:
+            relay_info["handler"].stop()
+            pbx.logger.info(f"Stopped RTP relay handler for voicemail on call {call_id}")
+
         # Play voicemail greeting and beep tone to caller
         if call.caller_rtp:
             try:
                 import tempfile
 
                 # Create RTP player to send audio to caller
-                # Use the same port as the RTPRecorder since both bind to 0.0.0.0
-                # and can handle bidirectional RTP communication
                 player = RTPPlayer(
-                    # Same port as RTPRecorder
                     local_port=call.rtp_ports[0],
                     remote_host=call.caller_rtp["address"],
                     remote_port=call.caller_rtp["port"],
@@ -638,8 +646,10 @@ class CallRouter:
             except OSError as e:
                 pbx.logger.error(f"Error playing voicemail greeting: {e}")
 
-            # Start RTP recorder on the allocated port
-            recorder = RTPRecorder(call.rtp_ports[0], call_id)
+            # Start RTP recorder on the allocated port with the configured
+            # DTMF payload type so telephone-event packets are properly filtered
+            dtmf_pt = pbx._get_dtmf_payload_type()
+            recorder = RTPRecorder(call.rtp_ports[0], call_id, dtmf_payload_type=dtmf_pt)
             if recorder.start():
                 # Store recorder in call object for later retrieval
                 call.voicemail_recorder = recorder

@@ -580,6 +580,7 @@ class RTPRecorder:
         local_port: int,
         call_id: str,
         rfc2833_handler: RFC2833Receiver | None = None,
+        dtmf_payload_type: int = 101,
     ) -> None:
         """
         Initialize RTP recorder.
@@ -588,6 +589,7 @@ class RTPRecorder:
             local_port: Local port to bind to.
             call_id: Call identifier for logging.
             rfc2833_handler: Optional RFC 2833 receiver for DTMF event handling.
+            dtmf_payload_type: Payload type for RFC 2833 DTMF events (default 101).
         """
         self.local_port: int = local_port
         self.call_id: str = call_id
@@ -598,6 +600,9 @@ class RTPRecorder:
         self.lock: threading.Lock = threading.Lock()
         self.remote_endpoint: AddrTuple | None = None  # Will be learned from first packet
         self.rfc2833_handler: RFC2833Receiver | None = rfc2833_handler  # Optional RFC 2833 receiver
+        self.dtmf_payload_type: int = dtmf_payload_type
+        # Track the audio codec payload type from the first audio packet
+        self.detected_codec: int | None = None
 
     def start(self) -> bool:
         """
@@ -657,9 +662,9 @@ class RTPRecorder:
                     payload_type = header[1] & 0x7F
                     payload = data[12:]
 
-                    # Filter out RFC 2833 telephone-event packets (payload type 101)
-                    # These are DTMF signaling packets, not audio
-                    if payload_type == 101:
+                    # Filter out RFC 2833 telephone-event packets using the
+                    # negotiated DTMF payload type (not hardcoded 101).
+                    if payload_type == self.dtmf_payload_type:
                         self.logger.debug(
                             "Received RFC 2833 telephone-event packet (filtered from recording)"
                         )
@@ -668,6 +673,14 @@ class RTPRecorder:
                         if self.rfc2833_handler:
                             self.rfc2833_handler.handle_rtp_packet(data, addr)
                         continue
+
+                    # Track the audio codec from the first audio packet so
+                    # the voicemail WAV file uses the correct format.
+                    if self.detected_codec is None:
+                        self.detected_codec = payload_type
+                        self.logger.info(
+                            f"Detected audio codec PT {payload_type} for recording {self.call_id}"
+                        )
 
                     # Store only audio payloads (not telephone-events)
                     with self.lock:
@@ -1072,8 +1085,7 @@ class RTPPlayer:
                                 # Extract left channel: take 2 bytes (one 16-bit sample)
                                 # from each 4-byte stereo frame (L-low, L-high, R-low, R-high)
                                 audio_data = b"".join(
-                                    audio_data[i:i + 2]
-                                    for i in range(0, len(audio_data), 4)
+                                    audio_data[i : i + 2] for i in range(0, len(audio_data), 4)
                                 )
                             else:  # 8-bit formats (G.711, G.722)
                                 audio_data = audio_data[::2]

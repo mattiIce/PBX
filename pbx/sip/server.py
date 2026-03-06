@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import socket
 import threading
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from pbx.sip.message import SIPMessage, SIPMessageBuilder
 from pbx.utils.logger import get_logger
@@ -416,6 +416,11 @@ class SIPServer:
         """
         Handle INVITE request.
 
+        Distinguishes between initial INVITEs (new calls) and re-INVITEs
+        (mid-call session modifications like codec change, hold/resume, or
+        media update).  Re-INVITEs share the same Call-ID as an existing
+        active call and must NOT be routed as new calls.
+
         Args:
             message: SIPMessage object.
             addr: Source address tuple.
@@ -432,13 +437,149 @@ class SIPServer:
             # to suppress INVITE retransmissions before doing any routing work
             self._send_response(100, "Trying", message, addr)
 
-            # Route call through PBX core
+            # Check if this is a re-INVITE for an existing call
+            existing_call = self.pbx_core.call_manager.get_call(call_id) if call_id else None
+            if existing_call and existing_call.state.value in ("connected", "ringing", "hold"):
+                # This is a re-INVITE (mid-call session update)
+                self._handle_reinvite(message, addr, existing_call)
+                return
+
+            # Route new call through PBX core
             success = self.pbx_core.route_call(from_header, to_header, call_id, message, addr)
 
             if not success:
                 self._send_response(404, "Not Found", message, addr)
         else:
             self._send_response(200, "OK", message, addr)
+
+    def _handle_reinvite(self, message: SIPMessage, addr: AddrTuple, call: Any) -> None:
+        """
+        Handle re-INVITE for an existing call (mid-call session modification).
+
+        Re-INVITEs are used for codec renegotiation, hold/resume, and media
+        updates.  The PBX updates the RTP relay endpoints and responds with
+        a 200 OK containing the current session's SDP.
+
+        Args:
+            message: SIPMessage object (re-INVITE).
+            addr: Source address tuple.
+            call: Existing Call object.
+        """
+        from pbx.sip.sdp import SDPBuilder, SDPSession
+
+        call_id = call.call_id
+        self.logger.info(f"Re-INVITE for existing call {call_id} from {addr}")
+
+        # Parse the new SDP offer from the re-INVITE
+        new_sdp = None
+        offered_codecs = None
+        if message.body:
+            sdp_obj = SDPSession()
+            sdp_obj.parse(message.body)
+            new_sdp = sdp_obj.get_audio_info()
+            if new_sdp:
+                offered_codecs = new_sdp.get("formats", None)
+                self.logger.info(
+                    f"Re-INVITE SDP: {new_sdp['address']}:{new_sdp['port']}, "
+                    f"codecs={offered_codecs}"
+                )
+
+        # Determine which party sent the re-INVITE and update their endpoint
+        is_caller = addr == call.caller_addr
+        if new_sdp:
+            new_address = new_sdp.get("address")
+            new_port = new_sdp.get("port")
+            if new_address and new_port:
+                if is_caller:
+                    call.caller_rtp = new_sdp
+                    self.logger.info(
+                        f"Updated caller media via re-INVITE: {new_address}:{new_port}"
+                    )
+                else:
+                    call.callee_rtp = new_sdp
+                    self.logger.info(
+                        f"Updated callee media via re-INVITE: {new_address}:{new_port}"
+                    )
+
+                # Update RTP relay endpoints
+                if call.rtp_ports:
+                    caller_ep = (
+                        (call.caller_rtp["address"], call.caller_rtp["port"])
+                        if call.caller_rtp
+                        else None
+                    )
+                    callee_ep = (
+                        (call.callee_rtp["address"], call.callee_rtp["port"])
+                        if call.callee_rtp
+                        else None
+                    )
+                    self.pbx_core.rtp_relay.set_endpoints(call_id, caller_ep, callee_ep)
+
+        # Build answer SDP with codecs compatible with the offered set
+        server_ip = self.pbx_core._get_server_ip()
+        rtp_port = call.rtp_ports[0] if call.rtp_ports else 10000
+
+        # Detect phone model for codec filtering
+        ext_number = call.from_extension if is_caller else call.to_extension
+        user_agent = self.pbx_core._get_phone_user_agent(ext_number)
+        phone_model = self.pbx_core._detect_phone_model(user_agent)
+        answer_codecs = self.pbx_core._get_compatible_codecs(phone_model, offered_codecs)
+
+        dtmf_pt = self.pbx_core._get_dtmf_payload_type()
+        ilbc_mode = self.pbx_core._get_ilbc_mode()
+        answer_sdp = SDPBuilder.build_audio_sdp(
+            server_ip,
+            rtp_port,
+            session_id=call_id,
+            codecs=answer_codecs,
+            dtmf_payload_type=dtmf_pt,
+            ilbc_mode=ilbc_mode,
+        )
+
+        response = SIPMessageBuilder.build_response(200, "OK", message, body=answer_sdp)
+        response.set_header("Content-type", "application/sdp")
+
+        # Add Contact header
+        sip_port = self.pbx_core.config.get("server.sip_port", 5060)
+        contact_uri = f"<sip:{call.to_extension}@{server_ip}:{sip_port}>"
+        response.set_header("Contact", contact_uri)
+
+        self._send_message(response.build(), addr)
+        self.logger.info(f"Answered re-INVITE for call {call_id} with codecs {answer_codecs}")
+
+        # Forward the re-INVITE to the other party so they can update too
+        other_addr = call.callee_addr if is_caller else call.caller_addr
+        if other_addr and new_sdp:
+            # Build a re-INVITE to the other party with the PBX's RTP endpoint
+            reinvite_sdp = SDPBuilder.build_audio_sdp(
+                server_ip,
+                rtp_port,
+                session_id=call_id,
+                codecs=answer_codecs,
+                dtmf_payload_type=dtmf_pt,
+                ilbc_mode=ilbc_mode,
+            )
+            other_ext = call.to_extension if is_caller else call.from_extension
+            reinvite = SIPMessageBuilder.build_request(
+                method="INVITE",
+                uri=f"sip:{other_ext}@{other_addr[0]}:{other_addr[1]}",
+                from_addr=message.get_header("From"),
+                to_addr=message.get_header("To"),
+                call_id=call_id,
+                cseq=int((message.get_header("CSeq") or "1 INVITE").split()[0]) + 1,
+                body=reinvite_sdp,
+            )
+            import uuid as _uuid
+
+            branch_id = str(_uuid.uuid4()).replace("-", "")
+            reinvite.set_header(
+                "Via",
+                f"SIP/2.0/UDP {server_ip}:{sip_port};branch=z9hG4bK{branch_id}",
+            )
+            reinvite.set_header("Contact", contact_uri)
+            reinvite.set_header("Content-type", "application/sdp")
+            self._send_message(reinvite.build(), other_addr)
+            self.logger.info(f"Forwarded re-INVITE to other party at {other_addr}")
 
     def _handle_ack(self, message: SIPMessage, addr: AddrTuple) -> None:
         """
@@ -1327,10 +1468,28 @@ class SIPServer:
                     callee_endpoint = (new_address, new_port)
                     self.pbx_core.rtp_relay.set_endpoints(call_id, caller_endpoint, callee_endpoint)
 
-        # Build answer SDP
+        # Build answer SDP using codecs from the UPDATE's offer (not defaults)
         server_ip = self.pbx_core._get_server_ip()
         rtp_port = call.rtp_ports[0] if call.rtp_ports else 10000
-        answer_sdp = SDPBuilder.build_audio_sdp(server_ip, rtp_port, session_id=call_id)
+
+        # Determine which codecs to include in the answer
+        update_codecs = new_audio.get("formats", None) if new_audio else None
+        is_caller = addr == call.caller_addr
+        ext_number = call.from_extension if is_caller else call.to_extension
+        user_agent = self.pbx_core._get_phone_user_agent(ext_number)
+        phone_model = self.pbx_core._detect_phone_model(user_agent)
+        answer_codecs = self.pbx_core._get_compatible_codecs(phone_model, update_codecs)
+
+        dtmf_pt = self.pbx_core._get_dtmf_payload_type()
+        ilbc_mode = self.pbx_core._get_ilbc_mode()
+        answer_sdp = SDPBuilder.build_audio_sdp(
+            server_ip,
+            rtp_port,
+            session_id=call_id,
+            codecs=answer_codecs,
+            dtmf_payload_type=dtmf_pt,
+            ilbc_mode=ilbc_mode,
+        )
 
         response = SIPMessageBuilder.build_response(200, "OK", message, body=answer_sdp)
         response.set_header("Content-type", "application/sdp")
@@ -1485,22 +1644,41 @@ class SIPServer:
                     call.invite_transaction = None
 
             if message.status_code == 180:
-                # Ringing - forward to caller
+                # Ringing - build a proper 180 response to the caller's
+                # original INVITE so the Via header matches the caller's
+                # transaction.  Forwarding the callee's raw 180 would have
+                # the PBX's Via, which the caller's SIP stack would not
+                # match and would silently drop.
                 self.logger.info(f"Callee ringing for call {call_id}")
                 if call_id:
                     call = self.pbx_core.call_manager.get_call(call_id)
                     if call:
                         call.ring()  # Mark call as ringing
-                        if call.caller_addr:
-                            self._send_message(message.build(), call.caller_addr)
+                        if call.caller_addr and call.original_invite:
+                            ringing_response = SIPMessageBuilder.build_response(
+                                180, "Ringing", call.original_invite
+                            )
+                            self._send_message(ringing_response.build(), call.caller_addr)
 
             elif message.status_code == 183:
-                # Session Progress (early media) - forward to caller
+                # Session Progress (early media) - build proper response to
+                # the caller's original INVITE for correct Via matching.
                 self.logger.info(f"Session progress for call {call_id}")
                 if call_id:
                     call = self.pbx_core.call_manager.get_call(call_id)
-                    if call and call.caller_addr:
-                        self._send_message(message.build(), call.caller_addr)
+                    if call and call.caller_addr and call.original_invite:
+                        progress_response = SIPMessageBuilder.build_response(
+                            183, "Session Progress", call.original_invite
+                        )
+                        # Include SDP from callee's 183 for early media
+                        if message.body:
+                            progress_response.body = message.body
+                            progress_response.set_header(
+                                "Content-Length",
+                                str(len(message.body.encode("utf-8"))),
+                            )
+                            progress_response.set_header("Content-type", "application/sdp")
+                        self._send_message(progress_response.build(), call.caller_addr)
 
             elif message.status_code == 200:
                 # OK - only process as callee answer if this is a response to INVITE
