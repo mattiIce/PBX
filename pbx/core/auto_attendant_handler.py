@@ -356,7 +356,7 @@ class AutoAttendantHandler:
                         time.sleep(0.5)
 
                         # Transfer the call using existing transfer_call method
-                        if call_id:
+                        if call_id and destination:
                             success = pbx.transfer_call(call_id, destination)
                             if success:
                                 transferred = True
@@ -389,7 +389,7 @@ class AutoAttendantHandler:
                 if action == "transfer":
                     destination = result.get("destination")
                     pbx.logger.info(f"Auto attendant timeout, transferring to {destination}")
-                    if call_id:
+                    if call_id and destination:
                         success = pbx.transfer_call(call_id, destination)
                         if success:
                             transferred = True

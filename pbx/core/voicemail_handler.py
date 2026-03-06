@@ -619,7 +619,8 @@ class VoicemailHandler:
                             )
                             if file_path and Path(file_path).exists():
                                 player.play_file(file_path)
-                                mailbox.mark_listened(message_id)
+                                if message_id:
+                                    mailbox.mark_listened(message_id)
                                 pbx.logger.info(
                                     f"[VM IVR] ✓ Voicemail {message_id} played and marked as listened"
                                 )
