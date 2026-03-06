@@ -162,14 +162,23 @@ data:
     # PLACEHOLDER: Replace with your actual configuration.
     # See config.yml in the repository root for a full reference.
     server:
-      listen: 0.0.0.0
-      port: 9000
+      sip_host: 0.0.0.0
+      sip_port: 5060
+      rtp_port_range_start: 10000
+      rtp_port_range_end: 20000
     api:
       host: 0.0.0.0
       port: 9000
       enable_cors: true
       cors_allowed_origins:
         - "https://your-admin-panel.example.com"
+    database:
+      type: postgresql
+      host: ${DB_HOST}
+      port: ${DB_PORT}
+      name: ${DB_NAME}
+      user: ${DB_USER}
+      password: ${DB_PASSWORD}
 
 ---
 # Secret for SSL certificates

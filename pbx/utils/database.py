@@ -73,8 +73,8 @@ class DatabaseBackend:
 
         host = self.config.get("database.host", "localhost")
         port = self.config.get("database.port", 5432)
-        database = self.config.get("database.name", "pbx")
-        user = self.config.get("database.user", "pbx")
+        database = self.config.get("database.name", "pbx_system")
+        user = self.config.get("database.user", "pbx_user")
 
         self.logger.info("Connecting to PostgreSQL database...")
         self.logger.info(f"  Host: {host}")
