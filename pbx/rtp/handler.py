@@ -6,6 +6,7 @@ Handles real-time audio/video streaming
 from __future__ import annotations
 
 import contextlib
+import random
 import socket
 import struct
 import threading
@@ -54,7 +55,7 @@ class RTPHandler:
         self.running: bool = False
         self.sequence_number: int = 0
         self.timestamp: int = 0
-        self.ssrc: int = 0x12345678  # Synchronization source identifier
+        self.ssrc: int = random.randint(0, 0xFFFFFFFF)  # Random SSRC per RFC 3550
 
     def start(self) -> bool:
         """
@@ -173,7 +174,18 @@ class RTPHandler:
 
             # Update sequence and timestamp
             self.sequence_number = (self.sequence_number + 1) & 0xFFFF
-            self.timestamp = (self.timestamp + len(payload)) & 0xFFFFFFFF
+            # Advance timestamp by sample count, not byte count.
+            # For G.711 (PT 0/8): 1 byte = 1 sample.
+            # For 16-bit linear PCM: 1 sample = 2 bytes.
+            # For G.722 (PT 9): 1 byte = 1 sample at 16kHz.
+            if payload_type in (0, 8):
+                samples = len(payload)
+            elif payload_type == 9:
+                samples = len(payload)
+            else:
+                # Default: assume 2 bytes per sample (16-bit PCM)
+                samples = len(payload) // 2 if len(payload) >= 2 else len(payload)
+            self.timestamp = (self.timestamp + samples) & 0xFFFFFFFF
 
             return True
         except (KeyError, OSError, TypeError, ValueError, struct.error) as e:
@@ -787,7 +799,7 @@ class RTPPlayer:
         self.running: bool = False
         self.sequence_number: int = 0
         self.timestamp: int = 0
-        self.ssrc: int = 0x87654321  # Synchronization source identifier
+        self.ssrc: int = random.randint(0, 0xFFFFFFFF)  # Random SSRC per RFC 3550
         self.lock: threading.Lock = threading.Lock()
 
     def start(self) -> bool:
@@ -1277,10 +1289,21 @@ class RTPDTMFListener:
 
                 # Extract audio payload from RTP packet
                 if len(data) >= 12:
-                    # Parse RTP header
+                    # Parse RTP header, accounting for CSRC and extensions
                     header = struct.unpack("!BBHII", data[:12])
+                    cc = header[0] & 0x0F  # CSRC count
+                    has_extension = (header[0] >> 4) & 0x01  # X bit
                     payload_type = header[1] & 0x7F
-                    payload = data[12:]
+
+                    # Payload starts after fixed header (12) + CSRC list (cc*4)
+                    payload_offset = 12 + cc * 4
+                    if has_extension and len(data) >= payload_offset + 4:
+                        ext_length = struct.unpack(
+                            "!H", data[payload_offset + 2 : payload_offset + 4]
+                        )[0]
+                        payload_offset += 4 + ext_length * 4
+
+                    payload = data[payload_offset:] if len(data) > payload_offset else b""
 
                     # Convert audio payload to samples for DTMF detection
                     # Assuming G.711 u-law (payload type 0) or A-law (payload

@@ -8,6 +8,7 @@ using configurable payload type (default 101) for out-of-band DTMF transmission 
 from __future__ import annotations
 
 import contextlib
+import random
 import socket
 import struct
 import threading
@@ -327,7 +328,7 @@ class RFC2833Sender:
         self.socket: socket.socket | None = None
         self.sequence_number: int = 0
         self.timestamp: int = 0
-        self.ssrc: int = 0x87654321  # Synchronization source identifier
+        self.ssrc: int = random.randint(0, 0xFFFFFFFF)  # Random SSRC per RFC 3550
 
     def start(self) -> bool:
         """
@@ -408,7 +409,7 @@ class RFC2833Sender:
             self.logger.info(f"Sent RFC 2833 DTMF digit: {digit}")
             return True
 
-        except (KeyError, TypeError, ValueError) as e:
+        except (KeyError, OSError, TypeError, ValueError) as e:
             self.logger.error(f"Error sending RFC 2833 DTMF: {e}")
             return False
 
