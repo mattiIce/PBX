@@ -163,6 +163,15 @@ class VoicemailHandler:
         # Get DTMF payload type from config
         dtmf_payload_type = pbx._get_dtmf_payload_type()
         ilbc_mode = pbx._get_ilbc_mode()
+
+        # Preserve the caller's media protocol (RTP/AVP vs RTP/SAVP) and SRTP
+        # crypto attributes so the phone accepts the SDP answer.
+        caller_protocol = "RTP/AVP"
+        caller_crypto: list[str] | None = None
+        if caller_sdp:
+            caller_protocol = caller_sdp.get("protocol", "RTP/AVP")
+            caller_crypto = caller_sdp.get("crypto") or None
+
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
             call.rtp_ports[0],
@@ -170,6 +179,8 @@ class VoicemailHandler:
             codecs=codecs_for_caller,
             dtmf_payload_type=dtmf_payload_type,
             ilbc_mode=ilbc_mode,
+            protocol=caller_protocol,
+            crypto=caller_crypto,
         )
         pbx.logger.info(f"[VM Access] ✓ SDP built for response (RTP port: {call.rtp_ports[0]})")
 
