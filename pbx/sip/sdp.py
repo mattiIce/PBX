@@ -111,12 +111,27 @@ class SDPSession:
                     attr for attr in media.get("attributes", []) if attr.startswith("crypto:")
                 ]
 
+                # Extract rtpmap names so the SDP answer can mirror them back.
+                # Zultys ZIP 33G/37G phones use non-standard numeric codec names
+                # (e.g. "8/8000" instead of "PCMA/8000") and reject answers that
+                # use standard names, causing "can't match the codec" / no audio.
+                rtpmap_names: dict[str, str] = {}
+                for attr in media.get("attributes", []):
+                    if attr.startswith("rtpmap:"):
+                        # Format: "rtpmap:PT name/rate" or "rtpmap:PT name/rate/channels"
+                        rtpmap_value = attr[len("rtpmap:"):]
+                        parts = rtpmap_value.split(None, 1)
+                        if len(parts) == 2:
+                            pt = parts[0]
+                            rtpmap_names[pt] = parts[1]  # e.g. "PCMA/8000" or "8/8000"
+
                 return {
                     "address": address,
                     "port": media["port"],
                     "formats": media["formats"],
                     "protocol": media.get("protocol", "RTP/AVP"),
                     "crypto": crypto_attrs,
+                    "rtpmap_names": rtpmap_names,
                 }
         return None
 
@@ -181,6 +196,7 @@ class SDPBuilder:
         ilbc_mode: int = 30,
         protocol: str = "RTP/AVP",
         crypto: list[str] | None = None,
+        rtpmap_overrides: dict[str, str] | None = None,
     ) -> str:
         """
         Build SDP for audio call.
@@ -204,6 +220,11 @@ class SDPBuilder:
             crypto: List of SRTP crypto attribute strings for RTP/SAVP(F).
                 Each string should be a complete crypto attribute value, e.g.
                 "1 AES_CM_128_HMAC_SHA1_80 inline:<key>".
+            rtpmap_overrides: Optional mapping of payload type -> "name/rate" to use
+                instead of standard codec names.  Zultys ZIP 33G/37G phones use
+                non-standard numeric names (e.g. "8/8000" instead of "PCMA/8000")
+                and reject SDP answers that use standard names.  Pass the caller's
+                rtpmap_names from get_audio_info() to mirror their format.
 
         Returns:
             SDP body as string.
@@ -229,23 +250,26 @@ class SDPBuilder:
         # Build attributes dynamically based on codecs
         attributes: list[str] = []
 
-        # Add rtpmap for each codec
-        if "0" in codecs:
-            attributes.append("rtpmap:0 PCMU/8000")
-        if "8" in codecs:
-            attributes.append("rtpmap:8 PCMA/8000")
-        if "9" in codecs:
-            # G.722 uses 8000 in SDP even though actual rate is 16000 (RFC 3551
-            # quirk)
-            attributes.append("rtpmap:9 G722/8000")
-        if "18" in codecs:
-            # G.729 (8 kbit/s low-bitrate codec)
-            attributes.append("rtpmap:18 G729/8000")
-            # Optionally disable Annex B (VAD/CNG) if needed
-            # attributes.append('fmtp:18 annexb=no')
-        if "2" in codecs:
-            # G.726-32 (also known as G721) - 32 kbit/s ADPCM
-            attributes.append("rtpmap:2 G726-32/8000")
+        # Standard codec name mapping (payload type -> "name/rate")
+        _standard_names: dict[str, str] = {
+            "0": "PCMU/8000",
+            "8": "PCMA/8000",
+            "9": "G722/8000",
+            "18": "G729/8000",
+            "2": "G726-32/8000",
+        }
+
+        # Add rtpmap for each standard static codec.
+        # When rtpmap_overrides is provided (e.g. from a Zultys phone's SDP offer),
+        # mirror the caller's codec name format so the phone's RTP engine can match.
+        for pt in ("0", "8", "9", "18", "2"):
+            if pt in codecs:
+                name = (
+                    rtpmap_overrides.get(pt, _standard_names[pt])
+                    if rtpmap_overrides
+                    else _standard_names[pt]
+                )
+                attributes.append(f"rtpmap:{pt} {name}")
 
         # Support for G.726 variants with dynamic payload types
         # G.726-40 (typically uses dynamic PT 114)
