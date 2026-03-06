@@ -582,7 +582,7 @@ class SIPServer:
                 from_addr=message.get_header("From"),
                 to_addr=message.get_header("To"),
                 call_id=call_id,
-                cseq=int((message.get_header("CSeq") or "1 INVITE").split()[0]) + 1,
+                cseq=self._parse_cseq_number(message.get_header("CSeq")) + 1,
                 body=reinvite_sdp,
             )
             import uuid as _uuid
@@ -631,8 +631,7 @@ class SIPServer:
         from_header = response_200.get_header("From") or ""
         # To header from the 200 OK includes the remote tag
         to_header = response_200.get_header("To") or ""
-        cseq_str = response_200.get_header("CSeq") or "1 INVITE"
-        cseq_num = int(cseq_str.split()[0])
+        cseq_num = self._parse_cseq_number(response_200.get_header("CSeq"))
 
         ack = SIPMessage()
         ack.method = "ACK"
@@ -1834,6 +1833,14 @@ class SIPServer:
             via = f"{via};rport={source_port}"
 
         response.set_header("Via", via)
+
+    @staticmethod
+    def _parse_cseq_number(cseq_header: str | None) -> int:
+        """Parse the sequence number from a CSeq header value, defaulting to 1."""
+        try:
+            return int((cseq_header or "1 INVITE").split()[0])
+        except (ValueError, IndexError):
+            return 1
 
     def _send_response(
         self, status_code: int, status_text: str, request: SIPMessage, addr: AddrTuple
