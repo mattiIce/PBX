@@ -243,6 +243,11 @@ class SIPServer:
         contact = message.get_header("Contact")
         authorization = message.get_header("Authorization")
 
+        # Validate mandatory headers per RFC 3261 Section 10.2
+        if not from_header:
+            self._send_response(400, "Bad Request", message, addr)
+            return
+
         if not self.pbx_core:
             self._send_response(503, "Service Unavailable", message, addr)
             return
@@ -433,12 +438,17 @@ class SIPServer:
             to_header = message.get_header("To")
             call_id = message.get_header("Call-ID")
 
+            # Validate mandatory headers per RFC 3261 Section 8.1.1
+            if not from_header or not to_header or not call_id:
+                self._send_response(400, "Bad Request", message, addr)
+                return
+
             # Send 100 Trying immediately per RFC 3261 Section 8.2.6.1
             # to suppress INVITE retransmissions before doing any routing work
             self._send_response(100, "Trying", message, addr)
 
             # Check if this is a re-INVITE for an existing call
-            existing_call = self.pbx_core.call_manager.get_call(call_id) if call_id else None
+            existing_call = self.pbx_core.call_manager.get_call(call_id)
             if existing_call and existing_call.state.value in ("connected", "ringing", "hold"):
                 # This is a re-INVITE (mid-call session update)
                 self._handle_reinvite(message, addr, existing_call)
