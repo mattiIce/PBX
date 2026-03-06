@@ -768,6 +768,36 @@ class PBXCore:
         self.logger.debug(f"Unrecognised phone User-Agent: {user_agent!r} — using default codecs")
         return None
 
+    def _get_rtpmap_for_phone_model(
+        self, phone_model: str | None
+    ) -> dict[str, str] | None:
+        """
+        Get rtpmap name overrides for a specific phone model.
+
+        Zultys ZIP 33G/37G phones use non-standard numeric codec names in SDP
+        (e.g. ``0/8000`` instead of ``PCMU/8000``).  Their RTP engine compares
+        local and remote codec names as strings and rejects the media session
+        when they differ, producing no audio.  Returning the numeric mapping
+        here lets the PBX mirror the phone's naming convention so both sides
+        agree.
+
+        Args:
+            phone_model: Phone model identifier (from _detect_phone_model)
+
+        Returns:
+            Mapping of payload-type → "name/rate" for the phone, or None for
+            phones that use standard codec names.
+        """
+        if phone_model in ("ZIP33G", "ZIP37G"):
+            return {
+                "0": "0/8000",
+                "8": "8/8000",
+                "9": "9/8000",
+                "18": "18/8000",
+                "2": "2/8000",
+            }
+        return None
+
     def _get_codecs_for_phone_model(
         self, phone_model: str | None, default_codecs: list[str] | None = None
     ) -> list[str]:
