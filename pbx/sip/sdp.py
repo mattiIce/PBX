@@ -197,6 +197,7 @@ class SDPBuilder:
         protocol: str = "RTP/AVP",
         crypto: list[str] | None = None,
         rtpmap_overrides: dict[str, str] | None = None,
+        skip_static_rtpmap: bool = False,
     ) -> str:
         """
         Build SDP for audio call.
@@ -222,11 +223,13 @@ class SDPBuilder:
                 "1 AES_CM_128_HMAC_SHA1_80 inline:<key>".
             rtpmap_overrides: Optional mapping of payload type -> "name/rate" to use
                 instead of standard codec names for dynamic payload types (96+).
-                Static payload types (0-34) always use standard names because
-                phone RTP engines (including Zultys ZIP 33G/37G) require them
-                to match codecs, even when the phone's own SDP offer uses
-                non-standard numeric names.  Reserved for future use with
-                dynamic payload type remapping.
+            skip_static_rtpmap: When True, omit a=rtpmap lines for static payload
+                types (0-34).  Per RFC 3551, static PTs have well-defined codec
+                assignments and rtpmap is optional.  Zultys ZIP 33G/37G phones use
+                non-standard numeric codec names in rtpmap (e.g. "0/8000" instead
+                of "PCMU/8000") and their RTP engine fails to match any codec name
+                string.  Omitting rtpmap forces the phone to identify codecs by
+                payload type number alone, which works correctly.
 
         Returns:
             SDP body as string.
@@ -235,6 +238,15 @@ class SDPBuilder:
             # Default codec order: PCMU, PCMA, G722, G729, G726-32, telephone-event
             # Use configured dtmf_payload_type for telephone-event codec
             codecs = ["0", "8", "9", "18", "2", str(dtmf_payload_type)]
+
+        # De-duplicate codec list while preserving order
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for c in codecs:
+            if c not in seen:
+                seen.add(c)
+                deduped.append(c)
+        codecs = deduped
 
         sdp = SDPSession()
         sdp.version = 0
@@ -261,16 +273,15 @@ class SDPBuilder:
             "2": "G726-32/8000",
         }
 
-        # Add rtpmap for each standard static codec.
-        # Always use standard codec names for static payload types (0-34).
-        # Some phones (e.g. Zultys ZIP 33G/37G) send non-standard numeric
-        # names like "0/8000" instead of "PCMU/8000" in their SDP offers,
-        # but their RTP engines expect standard names in the SDP answer.
-        # Mirroring non-standard names causes "can't match the codec" errors.
-        # rtpmap_overrides only apply to dynamic payload types (96+).
-        for pt in ("0", "8", "9", "18", "2"):
-            if pt in codecs:
-                attributes.append(f"rtpmap:{pt} {_standard_names[pt]}")
+        # Add rtpmap for each standard static codec — unless skip_static_rtpmap
+        # is set.  Per RFC 3551, rtpmap is optional for static payload types
+        # (0-34) because their codec assignments are well-known.  Omitting
+        # rtpmap lines avoids codec name mismatches on phones like the Zultys
+        # ZIP 33G/37G whose firmware uses non-standard numeric names internally.
+        if not skip_static_rtpmap:
+            for pt in ("0", "8", "9", "18", "2"):
+                if pt in codecs:
+                    attributes.append(f"rtpmap:{pt} {_standard_names[pt]}")
 
         # Support for G.726 variants with dynamic payload types
         # G.726-40 (typically uses dynamic PT 114)

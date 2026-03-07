@@ -168,13 +168,13 @@ class VoicemailHandler:
         # crypto attributes so the phone accepts the SDP answer.
         caller_protocol = "RTP/AVP"
         caller_crypto: list[str] | None = None
-        # Mirror the caller's rtpmap codec names so phones that use
-        # non-standard names (e.g. Zultys ZIP 33G/37G) can match codecs.
-        caller_rtpmap: dict[str, str] | None = None
         if caller_sdp:
             caller_protocol = caller_sdp.get("protocol", "RTP/AVP")
             caller_crypto = caller_sdp.get("crypto") or None
-            caller_rtpmap = caller_sdp.get("rtpmap_names") or None
+
+        # Omit rtpmap for static PTs on Zultys phones to avoid codec name
+        # mismatch errors in their RTP engine.
+        skip_rtpmap = pbx._should_skip_static_rtpmap(caller_phone_model)
 
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
@@ -185,7 +185,7 @@ class VoicemailHandler:
             ilbc_mode=ilbc_mode,
             protocol=caller_protocol,
             crypto=caller_crypto,
-            rtpmap_overrides=caller_rtpmap,
+            skip_static_rtpmap=skip_rtpmap,
         )
         pbx.logger.info(f"[VM Access] ✓ SDP built for response (RTP port: {call.rtp_ports[0]})")
 
