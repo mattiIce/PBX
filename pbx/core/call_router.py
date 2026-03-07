@@ -325,12 +325,9 @@ class CallRouter:
             caller_protocol = caller_sdp.get("protocol", "RTP/AVP")
             caller_crypto = caller_sdp.get("crypto") or None
 
-        # Zultys ZIP 33G/37G phones use non-standard numeric codec names in
-        # their SDP answers (e.g. "0/8000" instead of "PCMU/8000").  Their RTP
-        # engine compares local vs remote codec names as strings and fails when
-        # they differ.  By using the same numeric names in the INVITE offer,
-        # both sides match and audio flows correctly.
-        callee_rtpmap = pbx._get_rtpmap_for_phone_model(callee_phone_model)
+        # Omit rtpmap for static PTs on Zultys phones to avoid codec name
+        # mismatch errors in their RTP engine.
+        skip_rtpmap = pbx._should_skip_static_rtpmap(callee_phone_model)
 
         callee_sdp_body = SDPBuilder.build_audio_sdp(
             server_ip,
@@ -341,7 +338,7 @@ class CallRouter:
             ilbc_mode=ilbc_mode,
             protocol=caller_protocol,
             crypto=caller_crypto,
-            rtpmap_overrides=callee_rtpmap,
+            skip_static_rtpmap=skip_rtpmap,
         )
 
         # Forward INVITE to callee
@@ -575,16 +572,16 @@ class CallRouter:
         dtmf_payload_type = pbx._get_dtmf_payload_type()
         ilbc_mode = pbx._get_ilbc_mode()
 
-        # Preserve the caller's media protocol, SRTP crypto, and rtpmap names.
-        # Mirroring the caller's rtpmap format is critical for Zultys ZIP phones
-        # which use non-standard numeric codec names and reject standard names.
+        # Preserve the caller's media protocol and SRTP crypto.
         vm_protocol = "RTP/AVP"
         vm_crypto: list[str] | None = None
-        vm_rtpmap: dict[str, str] | None = None
         if call.caller_rtp:
             vm_protocol = call.caller_rtp.get("protocol", "RTP/AVP")
             vm_crypto = call.caller_rtp.get("crypto") or None
-            vm_rtpmap = call.caller_rtp.get("rtpmap_names") or None
+
+        # Omit rtpmap for static PTs on Zultys phones to avoid codec name
+        # mismatch errors in their RTP engine.
+        skip_rtpmap = pbx._should_skip_static_rtpmap(caller_phone_model)
 
         voicemail_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
@@ -595,7 +592,7 @@ class CallRouter:
             ilbc_mode=ilbc_mode,
             protocol=vm_protocol,
             crypto=vm_crypto,
-            rtpmap_overrides=vm_rtpmap,
+            skip_static_rtpmap=skip_rtpmap,
         )
 
         # Send 200 OK to answer the call for voicemail recording

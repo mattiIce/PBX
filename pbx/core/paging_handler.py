@@ -144,11 +144,9 @@ class PagingHandler:
         dtmf_payload_type = pbx._get_dtmf_payload_type()
         ilbc_mode = pbx._get_ilbc_mode()
 
-        # Mirror the caller's rtpmap codec names so phones that use
-        # non-standard names (e.g. Zultys ZIP 33G/37G) can match codecs.
-        caller_rtpmap: dict[str, str] | None = None
-        if caller_sdp:
-            caller_rtpmap = caller_sdp.get("rtpmap_names") or None
+        # Omit rtpmap for static PTs on Zultys phones to avoid codec name
+        # mismatch errors in their RTP engine.
+        skip_rtpmap = pbx._should_skip_static_rtpmap(caller_phone_model)
 
         paging_sdp = SDPBuilder.build_audio_sdp(
             server_ip,
@@ -157,7 +155,7 @@ class PagingHandler:
             codecs=codecs_for_caller,
             dtmf_payload_type=dtmf_payload_type,
             ilbc_mode=ilbc_mode,
-            rtpmap_overrides=caller_rtpmap,
+            skip_static_rtpmap=skip_rtpmap,
         )
 
         # Send 200 OK to answer the call

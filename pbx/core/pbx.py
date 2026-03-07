@@ -774,12 +774,9 @@ class PBXCore:
         """
         Get rtpmap name overrides for a specific phone model.
 
-        Zultys ZIP 33G/37G phones use non-standard numeric codec names in SDP
-        (e.g. ``0/8000`` instead of ``PCMU/8000``).  Their RTP engine compares
-        local and remote codec names as strings and rejects the media session
-        when they differ, producing no audio.  Returning the numeric mapping
-        here lets the PBX mirror the phone's naming convention so both sides
-        agree.
+        Currently returns None for all models.  Zultys ZIP 33G/37G phones are
+        handled via ``_should_skip_static_rtpmap()`` instead — omitting rtpmap
+        lines for static payload types avoids the codec name mismatch entirely.
 
         Args:
             phone_model: Phone model identifier (from _detect_phone_model)
@@ -788,15 +785,31 @@ class PBXCore:
             Mapping of payload-type → "name/rate" for the phone, or None for
             phones that use standard codec names.
         """
-        if phone_model in ("ZIP33G", "ZIP37G"):
-            return {
-                "0": "0/8000",
-                "8": "8/8000",
-                "9": "9/8000",
-                "18": "18/8000",
-                "2": "2/8000",
-            }
         return None
+
+    def _should_skip_static_rtpmap(self, phone_model: str | None) -> bool:
+        """
+        Check whether to omit a=rtpmap lines for static payload types.
+
+        Zultys ZIP 33G/37G phones use non-standard numeric codec names in SDP
+        (e.g. ``0/8000`` instead of ``PCMU/8000``).  Their RTP engine (ipph)
+        receives the codec name string from the SIP stack (sua) and tries to
+        match it against an internal codec table that uses numeric IDs.  This
+        fails for both standard names ("PCMU" != "0") and mirrored numeric
+        names ("0" != internal lookup).
+
+        The fix is to omit ``a=rtpmap`` lines for static payload types (0-34).
+        Per RFC 3551, these have well-defined codec assignments and rtpmap is
+        optional.  Without rtpmap, the phone identifies codecs by payload type
+        number alone, which its RTP engine handles correctly.
+
+        Args:
+            phone_model: Phone model identifier (from _detect_phone_model)
+
+        Returns:
+            True if rtpmap lines should be omitted for static payload types.
+        """
+        return phone_model in ("ZIP33G", "ZIP37G")
 
     def _get_codecs_for_phone_model(
         self, phone_model: str | None, default_codecs: list[str] | None = None
@@ -918,11 +931,23 @@ class PBXCore:
 
         # Build intersection preserving the answered codec order (callee's preference)
         model_set = set(model_codecs)
+        answered_set = set(answered_codecs)
         compatible = [c for c in answered_codecs if c in model_set]
 
-        # Always include DTMF telephone-event if both sides have it
-        if dtmf_pt_str in model_set and dtmf_pt_str not in compatible:
+        # Only include DTMF telephone-event if the remote side actually offered
+        # it.  Adding telephone-event to an SDP answer when the offer didn't
+        # include it violates RFC 3264 and confuses some phone firmware.
+        if dtmf_pt_str in model_set and dtmf_pt_str in answered_set and dtmf_pt_str not in compatible:
             compatible.append(dtmf_pt_str)
+
+        # De-duplicate while preserving order
+        seen: set[str] = set()
+        deduped: list[str] = []
+        for c in compatible:
+            if c not in seen:
+                seen.add(c)
+                deduped.append(c)
+        compatible = deduped
 
         # Ensure the intersection has at least one audio codec (not just DTMF)
         has_audio_codec = any(c != dtmf_pt_str for c in compatible)
@@ -1186,15 +1211,13 @@ class PBXCore:
             # protocol or the caller will reject the SDP and produce no audio.
             caller_protocol = "RTP/AVP"
             caller_crypto: list[str] | None = None
-            # Mirror the caller's rtpmap codec names in the 200 OK so phones
-            # that use non-standard names (e.g. Zultys ZIP 33G/37G sending
-            # "8/8000" instead of "PCMA/8000") can match codecs in their RTP
-            # engine.  Without this, the phone rejects the SDP answer.
-            caller_rtpmap: dict[str, str] | None = None
             if call.caller_rtp:
                 caller_protocol = call.caller_rtp.get("protocol", "RTP/AVP")
                 caller_crypto = call.caller_rtp.get("crypto") or None
-                caller_rtpmap = call.caller_rtp.get("rtpmap_names") or None
+
+            # Omit rtpmap for static PTs on Zultys phones to avoid codec name
+            # mismatch errors in their RTP engine.
+            skip_rtpmap = self._should_skip_static_rtpmap(caller_phone_model)
 
             caller_response_sdp = SDPBuilder.build_audio_sdp(
                 server_ip,
@@ -1205,7 +1228,7 @@ class PBXCore:
                 ilbc_mode=ilbc_mode,
                 protocol=caller_protocol,
                 crypto=caller_crypto,
-                rtpmap_overrides=caller_rtpmap,
+                skip_static_rtpmap=skip_rtpmap,
             )
 
             # Build 200 OK for caller using original INVITE

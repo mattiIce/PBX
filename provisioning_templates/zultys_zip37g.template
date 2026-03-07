@@ -6,9 +6,9 @@
 # Note: ZIP 37G uses same firmware base as ZIP 33G (Yealink OEM).
 #
 # NOTE: Uses Yealink-style cfg key names. Codec configuration uses
-# account.1.codec.<codec_name>.enable/priority format (NOT the numbered
-# slot format account.1.codec.N.name).
-# Settings verified against firmware 47.80.132.4 ATP provisioning logs.
+# numbered slot format account.1.codec.N.enable/priority where the slot
+# number determines the codec (1=PCMU, 2=PCMA, 3=G722, etc.).
+# Settings verified against firmware ATP provisioning logs.
 
 # ============================================================================
 # SIP Account Configuration
@@ -32,40 +32,45 @@ account.1.sip_server_host.legacy = {{SIP_SERVER}}
 # ============================================================================
 # Codec Configuration
 # ============================================================================
-# ZIP 37G uses Yealink-style codec keys: account.1.codec.<name>.enable/priority
-# The old numbered format (account.1.codec.N.name/sample_rate/bitrate/ptime)
-# is NOT supported and causes ATP errors + broken SDP codec negotiation.
+# ZIP 37G firmware uses fixed numbered codec slots.  Each slot corresponds to
+# a specific codec — the slot number determines the codec, you just
+# enable/disable and set priority.  The firmware rejects both the named
+# format (account.1.codec.pcmu.enable) and the .name key — only numbered
+# .enable and .priority are accepted.
 #
-# Priority order: PCMU > PCMA > G.722 > G.729 > G.726-32 > iLBC > Speex
+# Slot assignments:
+#   Slot 1 = PCMU, Slot 2 = PCMA, Slot 3 = G.722, Slot 4 = G.729
+#   Slot 5 = G.726-32, Slot 6 = iLBC, Slot 7 = Speex
+#
+# Priority order: PCMU > PCMA > G.722 > G.729
 
-# PCMU (G.711 mu-law) - Primary codec for maximum compatibility
-account.1.codec.pcmu.enable = 1
-account.1.codec.pcmu.priority = 1
+# Slot 1: PCMU (G.711 mu-law) - Primary codec
+account.1.codec.1.enable = 1
+account.1.codec.1.priority = 1
 
-# PCMA (G.711 A-law) - Secondary codec
-account.1.codec.pcma.enable = 1
-account.1.codec.pcma.priority = 2
+# Slot 2: PCMA (G.711 A-law) - Secondary codec
+account.1.codec.2.enable = 1
+account.1.codec.2.priority = 2
 
-# G.722 (Wideband HD Audio) - Tertiary codec
-account.1.codec.g722.enable = 1
-account.1.codec.g722.priority = 3
+# Slot 3: G.722 (Wideband HD Audio)
+account.1.codec.3.enable = 1
+account.1.codec.3.priority = 3
 
-# G.729 - Low bandwidth codec (8 kbit/s)
-account.1.codec.g729.enable = 1
-account.1.codec.g729.priority = 4
+# Slot 4: G.729 - Low bandwidth codec
+account.1.codec.4.enable = 1
+account.1.codec.4.priority = 4
 
-# G.726-32 - ADPCM codec (32 kbit/s)
-account.1.codec.g726_32.enable = 1
-account.1.codec.g726_32.priority = 5
+# Slot 5: G.726-32 - Disable to reduce SDP complexity
+account.1.codec.5.enable = 0
+account.1.codec.5.priority = 0
 
-# iLBC - Internet Low Bitrate Codec (13.33 kbps at 30ms mode)
-account.1.codec.ilbc_13_33kbps.enable = 1
-account.1.codec.ilbc_13_33kbps.priority = 6
+# Slot 6: iLBC - Disable to reduce SDP complexity
+account.1.codec.6.enable = 0
+account.1.codec.6.priority = 0
 
-# Disable unused codecs
-account.1.codec.g726_16.enable = 0
-account.1.codec.g726_24.enable = 0
-account.1.codec.g726_40.enable = 0
+# Slot 7: Speex - Disable to reduce SDP complexity
+account.1.codec.7.enable = 0
+account.1.codec.7.priority = 0
 
 # Packetization interval (ms) - standard for G.711/G.722
 account.1.ptime = 20
