@@ -1,81 +1,1798 @@
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Begin Time Section: [1]
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > TargetTimeSection Time Section: [2]
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Section change: iTargetTimeOut[10]
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current OfficeTime
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current Off Time
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After zero
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After Office Begin
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > BeginTime is
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > TargetTime is
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > PreSleepTime is
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > AwakeScreenInOfficeTime [1]
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current OfficeTime
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current Off Time
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After zero
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After Office Begin
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before zero:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The day before off time:
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current OfficeTime
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > Current Off Time
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After zero
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > The Day After Office Begin
-Mar  6 23:15:15 Log [586]: BKLT<6+info  > m_AwakeScreenTimer [45885000]
-Mar  6 23:15:16 Log [586]: TALK<6+info  > SRTCP-XR session timerout [-1]
-Mar  6 23:15:44 sua [528]: DLG <6+info  > [000] cb_nict_kill_transaction (id=17)^M
-Mar  6 23:15:44 sua [528]: DLG <6+info  > [000] _release_finished_calls remove a dialog (cid=32775 did=65543)
-Mar  6 23:15:44 sua [528]: DLG <5+notice> [000] remove a call
-Mar  6 23:15:44 sua [528]: FSM <6+info  > [000] free transaction ressource 16 0_3246050027
-Mar  6 23:15:44 sua [528]: FSM <6+info  > [255] free ist ressource
-Mar  6 23:15:44 sua [528]: FSM <6+info  > [000] free transaction ressource 17 0_3246050027
-Mar  6 23:15:44 sua [528]: FSM <6+info  > [255] free nist ressource
-Mar  6 23:15:44 sua [528]: SUA <6+info  > [000] ****eCore event:(0x0028)ECORE_CALL_RELEASED              ****
-Mar  6 23:15:44 sua [528]: CAL <6+info  > [000] call released! cid 32775
-Mar  6 23:15:44 sua [528]: CAL <6+info  > [000] freeing call resources cid 32775
-Mar  6 23:15:58 Log [501]: ANY <0+emerg > Log  log :sys=1,cons=0,time=0,E=3,W=4,N=5,I=6,D=7
-Mar  6 23:15:58 Log [501]: ANY <0+emerg > ANY =6
-Mar  6 23:15:58 Log [501]: WEB <4+warnin> ListenerContainer::onRequest End.result = false
-Mar  6 23:16:01 Log [501]: WEB <6+info  > Crypto get plain data : session id is equal
-Mar  6 23:16:01 Log [501]: WEB <6+info  > ip:192.168.10.153 Login at time=1772838961
-Mar  6 23:16:01 Log [501]: WEB <6+info  > ip:192.168.10.153 The password is right!
-Mar  6 23:16:01 Log [501]: WEB <6+info  > ip:192.168.10.153 Login in Success At time: [341]
-Mar  6 23:16:13 ipvp[588]: IPVP<5+notice> 973.237.408:Message=0x00000001(0x00000000+0x00000000+0)
-Mar  6 23:16:14 Log [586]: BKLT<6+info  > OnTimerOut InactiveLevel[0]
-Mar  6 23:16:14 Log [586]: BKLT<6+info  > PowerSaving_IsAlreadyPowerSaving [0]
-Mar  6 23:16:14 Log [586]: BKLT<6+info  > BackLight Set light(0)
-Mar  6 23:16:29 Log [501]: WEB <6+info  > URI: /servlet?p=settings-config&q=exportsyslog
-Mar  6 23:16:29 Log [501]: WEB <6+info  > Partition free(byte): /tmp/ [32698368], /config/ [233472], /data/ [233472]
-Mar  6 23:16:29 Log [586]: ETLL<6+info  > mkit_reply return [0], msgReply[0x60d03]: 0. result[0]
-Mar  6 23:16:29 Log [501]: ETLL<6+info  > mkit_call return(0,0)
+Mar  6 23:41:04 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:04 Log [586]: DKUI<6+info  > eColorType:-1, eFlushType:0, eIconType:4
+Mar  6 23:41:04 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:04 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:04 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:04 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:04 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:04 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:04 Log [586]: APP <6+info  > Receive Message [0X30001] OnAutoProvision wParam[0] lParam[0]!
+Mar  6 23:41:04 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [0]
+Mar  6 23:41:04 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:04 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:05 Log [586]: ETLL<6+info  > mkit_call failed! src[0x001c4f58] name[app_vpPhone] tar[0xd28dceb8] name[autoServer] msg[0x00030205] ret[-1] size[0]
+Mar  6 23:41:05 Log [586]: ZERO<6+info  > Check power on autop update status[0]
+Mar  6 23:41:06 Log [586]: ETLL<6+info  > mkit_reply return [0], msgReply[0x60d03]: 0. result[0]
+Mar  6 23:41:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00010000(65536), wparam:0x0000001b, lparam:0x00000000
+Mar  6 23:41:06 ipvp[588]: IPVP<5+notice> 466.038.145:Message=0x00010000(0x0000001b+0x00000000+0)
+Mar  6 23:41:06 Log [586]: XSI <6+info  > OnXsiAvailable wparam[27], lparam[0]
+Mar  6 23:41:06 Log [586]: CCET<6+info  > Controller ProcessMessage(65536),objMessage.wParam(27) objMessage.lParam(0)
+Mar  6 23:41:06 Log [586]: FWDD<6+info  > FWD: OnConfigChange message[10000] wparam[27] lparam[0]
+Mar  6 23:41:06 Log [586]: CC  <6+info  > Received message[0x10000]
+Mar  6 23:41:06 Log [586]: IDUI<6+info  >  CIdleUI::OnConfigChange. 
+Mar  6 23:41:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00010000(65536), wparam:0x0000001b, lparam:0x00000001
+Mar  6 23:41:06 ipvp[588]: IPVP<5+notice> 466.058.609:Message=0x00010000(0x0000001b+0x00000001+0)
+Mar  6 23:41:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00010000(65536), wparam:0x0000001b, lparam:0x00000002
+Mar  6 23:41:06 ipvp[588]: IPVP<5+notice> 466.062.418:Message=0x00010000(0x0000001b+0x00000002+0)
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:41:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > Show :: UpdateData(IRT_ALL).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  >  StateItem.m_nId(0). StateItem.m_strHint(), strNotifyText(), strNotifyIcon().
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > strFlashIcon(). bFlashText(0), bFlashIcon(0).
+Mar  6 23:41:06 sys [384]: SRV <6+info  > read dst offset=3600
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > PHONE_KEY_HEADSET_CTRL strLineIcon(registed_small.dob) eLineState(2).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > Update m_pIconList. ylVecStatusList size(0).
+Mar  6 23:41:06 sys [384]: SRV <6+info  >  to set time dst result=112734
+Mar  6 23:41:06 sys [384]: SRV <6+info  > reset time [2026-03-06 23:41:06] from ntp server:pool.ntp.org
+Mar  6 23:41:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00020003(131075), wparam:0xffffb9b0, lparam:0x00000000
+Mar  6 23:41:06 ipvp[588]: IPVP<5+notice> 466.279.665:Message=0x00020003(0xffffb9b0+0x00000000+0)
+Mar  6 23:41:06 ipvp[588]: IPVP<6+info  > 466.279.965:unknown msg,0x00020003,from 0xd28dd304 0xffffb9b0, 0x00000000
+Mar  6 23:41:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:06 Log [586]: DIR <6+info  > Directory: message(0x10000), wparam(0x1b), lparam(0x0)
+Mar  6 23:41:06 Log [586]: DIR <6+info  > Directory: -------------- refObj.lResult: -1
+Mar  6 23:41:06 Log [586]: DSSK<6+info  > CDssKeyManager::OnConfigChange msg.wParam=27 lParam=0
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > PowerSaving recive message[CONFIG_MSG_BCAST_CHANGED] [27]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:06 Log [586]: XSI <6+info  > OnXsiAvailable wparam[27], lparam[1]
+Mar  6 23:41:06 Log [586]: CCET<6+info  > Controller ProcessMessage(65536),objMessage.wParam(27) objMessage.lParam(1)
+Mar  6 23:41:06 Log [586]: FWDD<6+info  > FWD: OnConfigChange message[10000] wparam[27] lparam[1]
+Mar  6 23:41:06 Log [586]: CC  <6+info  > Received message[0x10000]
+Mar  6 23:41:06 Log [586]: IDUI<6+info  >  CIdleUI::OnConfigChange. 
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:41:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > Show :: UpdateData(IRT_ALL).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  >  StateItem.m_nId(0). StateItem.m_strHint(), strNotifyText(), strNotifyIcon().
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > strFlashIcon(). bFlashText(0), bFlashIcon(0).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > PHONE_KEY_HEADSET_CTRL strLineIcon(registed_small.dob) eLineState(2).
+Mar  6 23:41:06 sys [384]: SRV <6+info  > read dst offset=3600
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > Update m_pIconList. ylVecStatusList size(0).
+Mar  6 23:41:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:06 Log [586]: DIR <6+info  > Directory: message(0x10000), wparam(0x1b), lparam(0x1)
+Mar  6 23:41:06 Log [586]: DIR <6+info  > Directory: -------------- refObj.lResult: -1
+Mar  6 23:41:06 Log [586]: DSSK<6+info  > CDssKeyManager::OnConfigChange msg.wParam=27 lParam=1
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > PowerSaving recive message[CONFIG_MSG_BCAST_CHANGED] [27]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:06 sys [384]: SRV <6+info  >  to set time dst result=112734
+Mar  6 23:41:06 Log [586]: XSI <6+info  > OnXsiAvailable wparam[27], lparam[2]
+Mar  6 23:41:06 Log [586]: CCET<6+info  > Controller ProcessMessage(65536),objMessage.wParam(27) objMessage.lParam(2)
+Mar  6 23:41:06 sys [384]: SRV <6+info  > reset time [2026-03-06 23:41:06] from ntp server:pool.ntp.org
+Mar  6 23:41:06 Log [586]: FWDD<6+info  > FWD: OnConfigChange message[10000] wparam[27] lparam[2]
+Mar  6 23:41:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00020003(131075), wparam:0xffffb9b0, lparam:0x00000000
+Mar  6 23:41:06 ipvp[588]: IPVP<5+notice> 466.385.857:Message=0x00020003(0xffffb9b0+0x00000000+0)
+Mar  6 23:41:06 ipvp[588]: IPVP<6+info  > 466.386.155:unknown msg,0x00020003,from 0xd28dd304 0xffffb9b0, 0x00000000
+Mar  6 23:41:06 Log [586]: CC  <6+info  > Received message[0x10000]
+Mar  6 23:41:06 Log [586]: IDUI<6+info  >  CIdleUI::OnConfigChange. 
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:41:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > Show :: UpdateData(IRT_ALL).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  >  StateItem.m_nId(0). StateItem.m_strHint(), strNotifyText(), strNotifyIcon().
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > strFlashIcon(). bFlashText(0), bFlashIcon(0).
+Mar  6 23:41:06 sys [384]: SRV <6+info  > read dst offset=3600
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > PHONE_KEY_HEADSET_CTRL strLineIcon(registed_small.dob) eLineState(2).
+Mar  6 23:41:06 Log [586]: IDUI<6+info  > Update m_pIconList. ylVecStatusList size(0).
+Mar  6 23:41:06 sys [384]: SRV <6+info  >  to set time dst result=112734
+Mar  6 23:41:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:06 sys [384]: SRV <6+info  > reset time [2026-03-06 23:41:06] from ntp server:pool.ntp.org
+Mar  6 23:41:06 Log [586]: DIR <6+info  > Directory: message(0x10000), wparam(0x1b), lparam(0x2)
+Mar  6 23:41:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00020003(131075), wparam:0xffffb9b0, lparam:0x00000000
+Mar  6 23:41:06 ipvp[588]: IPVP<5+notice> 466.491.779:Message=0x00020003(0xffffb9b0+0x00000000+0)
+Mar  6 23:41:06 ipvp[588]: IPVP<6+info  > 466.492.075:unknown msg,0x00020003,from 0xd28dd304 0xffffb9b0, 0x00000000
+Mar  6 23:41:06 Log [586]: DIR <6+info  > Directory: -------------- refObj.lResult: -1
+Mar  6 23:41:06 Log [586]: DSSK<6+info  > CDssKeyManager::OnConfigChange msg.wParam=27 lParam=2
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > PowerSaving recive message[CONFIG_MSG_BCAST_CHANGED] [27]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > SYS_MSG_NOTIFY_TIME_CHANGED
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > iInterval [-3596] iConfigValue [1000] tCurrentTime [1772822466] tLastSysTime[1772826062]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Begin Time Section: [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > TargetTimeSection Time Section: [2]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Section change: iTargetTimeOut[10]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > RebootPowerSaving
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > BeginTime is
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > TargetTime is
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > AwakeScreenInOfficeTime [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > m_AwakeScreenTimer [44334000]
+Mar  6 23:41:06 Log [586]: DSSK<6+info  > BLFList_OnNetworkException(mess[131075],wParam[-18000], lParam[0])
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > SYS_MSG_NOTIFY_TIME_CHANGED
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > iInterval [0] iConfigValue [1000] tCurrentTime [1772822466] tLastSysTime[1772822466]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Begin Time Section: [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > TargetTimeSection Time Section: [2]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Section change: iTargetTimeOut[10]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > RebootPowerSaving
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > BeginTime is
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > TargetTime is
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > AwakeScreenInOfficeTime [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > m_AwakeScreenTimer [44334000]
+Mar  6 23:41:06 Log [586]: DSSK<6+info  > BLFList_OnNetworkException(mess[131075],wParam[-18000], lParam[0])
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > SYS_MSG_NOTIFY_TIME_CHANGED
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > iInterval [0] iConfigValue [1000] tCurrentTime [1772822466] tLastSysTime[1772822466]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Begin Time Section: [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > TargetTimeSection Time Section: [2]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Section change: iTargetTimeOut[10]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > RebootPowerSaving
+Mar  6 23:41:06 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=4)^M
+Mar  6 23:41:06 sua [532]: FSM <6+info  > [000] free transaction ressource 2 0_563356954
+Mar  6 23:41:06 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:41:06 sua [532]: FSM <6+info  > [000] free transaction ressource 3 0_3759845535
+Mar  6 23:41:06 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:41:06 sua [532]: FSM <6+info  > [000] free transaction ressource 1 0_563356954
+Mar  6 23:41:06 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > BeginTime is
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > TargetTime is
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > AwakeScreenInOfficeTime [1]
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:06 Log [586]: BKLT<6+info  > m_AwakeScreenTimer [44334000]
+Mar  6 23:41:06 Log [586]: DSSK<6+info  > BLFList_OnNetworkException(mess[131075],wParam[-18000], lParam[0])
+Mar  6 23:41:08 ATP [436]: ATP <6+info  > send end provision!!
+Mar  6 23:41:08 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00030002(196610), wparam:0x00000001, lparam:0x00000000
+Mar  6 23:41:08 Log [586]: ZERO<6+info  > redirect done result = 1, reboot = 0
+Mar  6 23:41:08 Log [586]: APP <6+info  > Receive Message [0X30002] OnAutoProvision wParam[1] lParam[0]!
+Mar  6 23:41:08 Log [586]: BKLT<6+info  > BackLight Earse Event(5)
+Mar  6 23:41:08 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:08 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:08 ipvp[588]: IPVP<5+notice> 468.014.853:Message=0x00030002(0x00000001+0x00000000+0)
+Mar  6 23:41:08 ipvp[588]: IPVP<6+info  > 468.015.150:unknown msg,0x00030002,from 0xd28dceb8 0x00000001, 0x00000000
+Mar  6 23:41:08 ATP [436]: ATP <6+info  > Update success, and return
+Mar  6 23:41:08 ATP [436]: ATP <6+info  > Upgrade by static config success !
+Mar  6 23:41:08 ATP [436]: ATP <6+info  > Poweron by default order success
+Mar  6 23:41:08 ATP [436]: ATP <6+info  > Try upgrade by dhcp options
+Mar  6 23:41:08 ATP [436]: ATP <6+info  > Upgrade by DHCP option Fail
+Mar  6 23:41:08 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=7)^M
+Mar  6 23:41:08 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=8)^M
+Mar  6 23:41:08 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=9)^M
+Mar  6 23:41:08 Log [586]: ETLL<6+info  > mkit_call return(1,0)
+Mar  6 23:41:08 Log [586]: ZERO<6+info  > Check power on autop update status[1]
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Begin Time Section: [1]
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > TargetTimeSection Time Section: [2]
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Section change: iTargetTimeOut[10]
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > using last result! [2]
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > BeginTime is
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > TargetTime is
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > PreSleepTime is
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > AwakeScreenInOfficeTime [1]
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:41:09 Log [586]: BKLT<6+info  > m_AwakeScreenTimer [44331000]
+Mar  6 23:41:18 sua [532]: FSM <6+info  > [000] free transaction ressource 7 0_2041412859
+Mar  6 23:41:18 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:41:18 sua [532]: FSM <6+info  > [000] free transaction ressource 4 0_3759845535
+Mar  6 23:41:18 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:41:33 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=5)^M
+Mar  6 23:41:33 sua [532]: FSM <6+info  > [000] free transaction ressource 5 0_3759845535
+Mar  6 23:41:33 sua [532]: FSM <6+info  > [255] free nist ressource
+Mar  6 23:41:34 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x2a
+Mar  6 23:41:34 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00000004(4), wparam:0x00000001, lparam:0xd28dbaf4
+Mar  6 23:41:34 ipvp[588]: IPVP<5+notice> 494.760.416:Message=0x00000004(0x00000001+0xd28dbaf4+0)
+Mar  6 23:41:34 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:34 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:34 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:34 Log [586]: VOIC<6+info  > OpenHandfree eChannel=4
+Mar  6 23:41:34 Log [586]: VOIC<6+info  > SetHandfreeStatus = 1
+Mar  6 23:41:34 Log [586]: VOIC<6+info  > CVPMMSGHandler::OpenChannel,eChannel=[3]
+Mar  6 23:41:34 ipvp[588]: IPVP<5+notice> 494.774.065:Message=0x00050300(0x00010000+0x00000000+0)
+Mar  6 23:41:34 ipph[588]: IIPP<6+info  > 494.774.486:tone stop 
+Mar  6 23:41:34 ipph[588]: IIPP<4+warnin> 494.774.692:tone is not playing
+Mar  6 23:41:34 ipph[588]: IIPP<6+info  > 494.774.869:set mode 1
+Mar  6 23:41:34 Log [586]: VOIC<6+info  > Set vpm: open channel[1]
+Mar  6 23:41:34 Log [586]: VOIC<6+info  > SetVolume iVolume=15 eType=5
+Mar  6 23:41:34 Log [586]: VOIC<6+info  > Set vpm: set volume[15]
+Mar  6 23:41:34 ipvp[588]: IPVP<5+notice> 494.786.462:Message=0x00050302(0x000f0000+0x00000000+0)
+Mar  6 23:41:34 ipph[588]: IIPP<6+info  > 494.786.795:set volume 15
+Mar  6 23:41:34 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:41:34 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041101(266497), wparam:0x00000000, lparam:0x00000000
+Mar  6 23:41:34 sua [532]: APP <6+info  > [SIP] alloc new cid:32770
+Mar  6 23:41:34 sua [532]: APP <5+notice> [SIP] SIP_MSG_ALLOC_CID, cid=32770
+Mar  6 23:41:34 Log [586]: TALK<6+info  > EnterRoutine [Predial] start
+Mar  6 23:41:34 Log [586]: TALK<6+info  > EnterRoutine [Predial] finished
+Mar  6 23:41:34 Log [586]: TALK<6+info  > RTCP-XR OnFocusSessionChange, iCallId = 32770
+Mar  6 23:41:34 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:34 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:34 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:35 ipvp[588]: IPVP<5+notice> 495.001.323:Message=0x00050306(0xffffffff+0x002a0001+0)
+Mar  6 23:41:35 ipph[588]: IIPP<6+info  > 495.001.677:dtmf play '*', callid 0xffffffff, dir 1
+Mar  6 23:41:35 ipph[588]: ICCU<6+info  > 495.001.965:tone play line -1
+Mar  6 23:41:35 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[42]
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:35 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:41:35 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(73), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:41:35 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:35 Log [586]: DKUI<6+info  > eColorType:1, eFlushType:0, eIconType:5
+Mar  6 23:41:35 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:35 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:35 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:35 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:35 Log [586]: DKUI<6+info  > CDssKeyLightLogic::updateLightStatus:iDsskeyID:0 eColorType:1 eFlushType:0
+Mar  6 23:41:35 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:35 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:35 Log [586]: SPSH<6+info  > ReqSearch(strKey = *)
+Mar  6 23:41:35 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:35 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:35 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:35 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[*]
+Mar  6 23:41:35 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[*]
+Mar  6 23:41:35 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:35 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:35 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:35 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:35 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:35 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:35 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x31
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:35 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=49][lP=0]
+Mar  6 23:41:35 ipvp[588]: IPVP<5+notice> 495.967.356:Message=0x00050306(0xffffffff+0x00310001+0)
+Mar  6 23:41:35 ipph[588]: IIPP<6+info  > 495.967.704:dtmf play '1', callid 0xffffffff, dir 1
+Mar  6 23:41:35 ipph[588]: ICCU<6+info  > 495.967.935:tone play line -1
+Mar  6 23:41:35 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[49]
+Mar  6 23:41:35 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:35 Log [586]: TALK<6+info  > CPredialRoutine::OnTextChanged DialedNumber[*1]
+Mar  6 23:41:35 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:35 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > ReqSearch(strKey = *1)
+Mar  6 23:41:36 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:36 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:36 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[*1]
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[*1]
+Mar  6 23:41:36 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:36 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:36 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:36 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:36 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x35
+Mar  6 23:41:36 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:36 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:36 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:36 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=53][lP=0]
+Mar  6 23:41:36 ipvp[588]: IPVP<5+notice> 496.937.389:Message=0x00050306(0xffffffff+0x00350001+0)
+Mar  6 23:41:36 ipph[588]: IIPP<6+info  > 496.937.731:dtmf play '5', callid 0xffffffff, dir 1
+Mar  6 23:41:36 ipph[588]: ICCU<6+info  > 496.937.954:tone play line -1
+Mar  6 23:41:36 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[53]
+Mar  6 23:41:36 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:36 Log [586]: TALK<6+info  > CPredialRoutine::OnTextChanged DialedNumber[*15]
+Mar  6 23:41:36 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:36 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:36 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > ReqSearch(strKey = *15)
+Mar  6 23:41:36 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:36 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:36 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[*15]
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[*15]
+Mar  6 23:41:36 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:36 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:36 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:36 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:36 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:37 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:37 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x30
+Mar  6 23:41:37 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:37 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:37 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:37 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=48][lP=0]
+Mar  6 23:41:37 ipvp[588]: IPVP<5+notice> 497.887.989:Message=0x00050306(0xffffffff+0x00300001+0)
+Mar  6 23:41:37 ipph[588]: IIPP<6+info  > 497.888.335:dtmf play '0', callid 0xffffffff, dir 1
+Mar  6 23:41:37 ipph[588]: ICCU<6+info  > 497.888.571:tone play line -1
+Mar  6 23:41:37 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[48]
+Mar  6 23:41:37 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:37 Log [586]: TALK<6+info  > CPredialRoutine::OnTextChanged DialedNumber[*150]
+Mar  6 23:41:37 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:37 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:37 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:37 Log [586]: SPSH<6+info  > ReqSearch(strKey = *150)
+Mar  6 23:41:37 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:37 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:37 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:37 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[*150]
+Mar  6 23:41:37 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[*150]
+Mar  6 23:41:37 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:37 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:37 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:37 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:37 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:38 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:38 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x31
+Mar  6 23:41:38 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:38 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:38 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:38 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=49][lP=0]
+Mar  6 23:41:38 ipvp[588]: IPVP<5+notice> 498.557.457:Message=0x00050306(0xffffffff+0x00310001+0)
+Mar  6 23:41:38 ipph[588]: IIPP<6+info  > 498.557.802:dtmf play '1', callid 0xffffffff, dir 1
+Mar  6 23:41:38 ipph[588]: ICCU<6+info  > 498.558.030:tone play line -1
+Mar  6 23:41:38 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[49]
+Mar  6 23:41:38 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:38 Log [586]: TALK<6+info  > CPredialRoutine::OnTextChanged DialedNumber[*1501]
+Mar  6 23:41:38 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:38 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:38 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:38 Log [586]: SPSH<6+info  > ReqSearch(strKey = *1501)
+Mar  6 23:41:38 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:38 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:38 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:38 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[*1501]
+Mar  6 23:41:38 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[*1501]
+Mar  6 23:41:38 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:38 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:38 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:38 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:38 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:38 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:39 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x23
+Mar  6 23:41:39 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:39 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:39 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=35][lP=0]
+Mar  6 23:41:39 ipvp[588]: IPVP<5+notice> 499.218.595:Message=0x00050306(0xffffffff+0x00230001+0)
+Mar  6 23:41:39 ipph[588]: IIPP<6+info  > 499.218.940:dtmf play '#', callid 0xffffffff, dir 1
+Mar  6 23:41:39 ipph[588]: ICCU<6+info  > 499.219.172:tone play line -1
+Mar  6 23:41:39 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[35]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=3][wP=0][lP=0]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > Photo number[*1501], name[]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > Photo []
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > LdapManager::ReqSearch [*1501]
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > Ldap model: create ldap instance 0x317b10
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > Ldap model: execute 0x317b10
+Mar  6 23:41:39 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x317b10
+Mar  6 23:41:39 Log [586]: TASK<6+info  > post action [0x317b10] to excute
+Mar  6 23:41:39 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x317b10
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > CLdapSearchAction::Exec()
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > CLdapSearchAction::Read() begin
+Mar  6 23:41:39 LDAP[586]: LDAP<6+info  > LDAP Release Version:[ 3.3.0.7 ]
+Mar  6 23:41:39 LDAP[586]: LDAP<6+info  > LDAP mode: 1
+Mar  6 23:41:39 Log [586]: CC  <4+warnin> Subscibe: the switch[0] is off!
+Mar  6 23:41:39 Log [586]: TALK<6+info  > m_bNeedToSeizeLine = 1, SeizeIndex = -1
+Mar  6 23:41:39 Log [586]: TALK<6+info  > EnterRoutine [Connecting] start
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > LdapManager::ReqSearch [*1501]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > EnterRoutine [Connecting] finished
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:39 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:39 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:39 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:39 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(71), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > eColorType:1, eFlushType:0, eIconType:6
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > CDssKeyLightLogic::updateLightStatus:iDsskeyID:0 eColorType:1 eFlushType:0
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:39 LDAP[586]: LDAP<3+error > bind error at StartTLS: -1
+Mar  6 23:41:39 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:39 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:39 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > LdapManager::OnTaskActionCallback
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > LdapManager::ClearData() begin
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > LdapManager::ClearData() end
+Mar  6 23:41:39 Log [586]: LDAP<6+info  > LdapManager::OnTaskActionCallback Notif result[0]
+Mar  6 23:41:39 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:39 Log [586]: TALK<6+info  > CHelperLDAPInTalk::ProcessLdapResultMesg strKey[*1501]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > CSessionManager::FindRoutineByCallInfo Routine Found!
+Mar  6 23:41:39 Log [586]: DIRU<6+info  > OnMessage(msg:394354 wp:0 lp:0) Controler:(nil)
+Mar  6 23:41:39 Log [586]: SPSH<6+info  > SuperSearchManager::ProcessLdapMessage,lparm[0]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > TalklogicManager On Time CallOut Num[*1501] CallID[32770] AccountID[0]
+Mar  6 23:41:39 Log [586]: CUIT<6+info  > CallInvite:AccountID[0], strURI[*1501]
+Mar  6 23:41:39 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041102(266498), wparam:0x00000000, lparam:0x00008002
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP] SIP_C2S_CALL_NEW_OUTGOING, lid:0, cid:32770,callmask:0x00000000,callee:*1501
+Mar  6 23:41:39 sua [532]: SUA <6+info  > [000] ****API Event:(0x0001) SIPUA_EVENT_A2S_INVITE           ****
+Mar  6 23:41:39 sua [532]: CAL <6+info  > [000] pickup_index: -1, bla_index: -1, mask: 0x0, enable pickup: 0, remote: *1501 on behalf: 
+Mar  6 23:41:39 sua [532]: FSM <6+info  > [000] allocating transaction ressource 10 0_3491110918
+Mar  6 23:41:39 sua [532]: FSM <6+info  > [000] allocating ICT context
+Mar  6 23:41:39 sua [532]: CAL <5+notice> [000] call status update [0]==>[2]
+Mar  6 23:41:39 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=962) 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] INVITE sip:*1501@192.168.1.14:5060;user=phone SIP/2.0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK2361866479^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=3417511227^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] To: <sip:*1501@192.168.1.14:5060;user=phone>^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Call-ID: 0_3491110918@192.168.10.133^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.10.133:5060>^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Content-Type: application/sdp^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Allow: INVITE, INFO, PRACK, ACK, BYE, CANCEL, OPTIONS, NOTIFY, REGISTER, SUBSCRIBE, REFER, PUBLISH, UPDATE, MESSAGE^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] P-Early-Media: supported^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Allow-Events: talk,hold,conference,refer,check-sync^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Supported: replaces^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Content-Length:   298^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] v=0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] o=- 20000 20000 IN IP4 192.168.10.133^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] s=SDP data^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] c=IN IP4 192.168.10.133^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] t=0 0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] m=audio 3000 RTP/AVP 0 8 106 103 18 9 104^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:0 0/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:8 8/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:106 9/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:103 18/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:18 2/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:9 97/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:104 98/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=ptime:20^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=sendrecv^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 962 bytes
+Mar  6 23:41:39 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 281 bytes 
+Mar  6 23:41:39 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:41:39 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=281) 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] SIP/2.0 100 Trying^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport=5060;branch=z9hG4bK2361866479^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=3417511227^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] To: <sip:*1501@192.168.1.14:5060;user=phone>^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Call-ID: 0_3491110918@192.168.10.133^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0010)ECORE_CALL_PROCEEDING            ****
+Mar  6 23:41:39 sua [532]: CAL <6+info  > [000] Call proceeding cid 32770
+Mar  6 23:41:39 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 653 bytes 
+Mar  6 23:41:39 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:41:39 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=653) 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] SIP/2.0 200 OK^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK2361866479^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=3417511227^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] To: <sip:*1501@192.168.1.14:5060;user=phone>;tag=9ecfea5a^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Call-ID: 0_3491110918@192.168.10.133^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Content-Length: 294^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Content-type: application/sdp^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.1.14:5060>^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] v=0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] o=pbx 0_3491110918@192.168.10.133 0 IN IP4 192.168.1.14^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] s=PBX Call^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] c=IN IP4 192.168.1.14^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] t=0 0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] m=audio 10000 RTP/AVP 0 8 18 9 101^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:0 0/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:8 8/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:9 97/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:18 2/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=rtpmap:101 telephone-event/8000^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=fmtp:101 0-16^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=ptime:20^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] a=sendrecv^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=10)^M
+Mar  6 23:41:39 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0012)ECORE_CALL_ANSWERED              ****
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP] call channels info
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     version          :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     size             :848
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     hold_state       :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     call_flag        :1(0x1)
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP] channel info
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]   local media: 
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     media direction  :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     payload          :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     bandwidth        :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     codec_name       :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     ptime            :20
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     rtp addr         :0.0.0.0:3000
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     rtcp addr        :0.0.0.0:3001
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     srtp_key         :
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     dtmf_payload     :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]   remote media: 
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     media direction  :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     payload          :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     bandwidth        :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     codec_name       :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     ptime            :20
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     rtp addr         :192.168.1.14:10000
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     rtcp addr        :192.168.1.14:10001
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     srtp_key         :
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP]     dtmf_payload     :0
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:41:39 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:41:39 sua [532]: APP <6+info  > [SIP] <IPC_ntfp>:msg=0x00040105(262405), wparam=0, lparam=32770, size=848
+Mar  6 23:41:39 Log [586]: TALK<6+info  > [MSG:SIP==>Talklogic] message=[SIP_CALL_ESTABLISH][0x40105] wParam=[0] lParam=[32770]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > VoiceInterface:add session[32770][0]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > VoiceInterface:start talk[32770]
+Mar  6 23:41:39 Log [586]: VOIC<6+info  > StartTalk iCallID=[0x8002]
+Mar  6 23:41:39 ipvp[588]: IPVP<5+notice> 499.891.446:Message=0x00050400(0x00008002+0x00000000+972)
+Mar  6 23:41:39 ipph[588]: IIPP<6+info  > 499.891.795:talk start , callid 0x00008002 
+Mar  6 23:41:39 ipph[588]: IIPP<6+info  > 499.892.006:callid(0x00008002) alloc channel(0x43da0)
+Mar  6 23:41:39 ipph[588]: IIPP<6+info  > 499.892.202:attach callid[0x00008002]<=>line[0]
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.892.401:Talk param display  ... 
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.892.559:sendrecv      : sendrecv
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.892.726:rtp,rtcp      : enable,enable in IPv4
+Mar  6 23:41:39 Log [586]: VOIC<6+info  > Set vpm: start talk[32770]
+Mar  6 23:41:39 Log [586]: VOIC<6+info  > SetVolume iVolume=15 eType=2
+Mar  6 23:41:39 Log [586]: VOIC<6+info  > Set vpm: set volume[15]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > RTCP-XR ProcessStartTalk, iCallId = 32770
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.893.247:local rtp     : 0.0.0.0 : 3000
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.899.500:local rtcp    : 0.0.0.0 : 3001
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.899.749:remote rtp    : 192.168.1.14 : 10000
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.899.940:remote rtcp   : 192.168.1.14 : 10001
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.900.122:audio codec   : 0 
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.900.285:payload type  : 0 
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.900.449:sample rate   : 8000 
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.900.613:codec bit rate: 0 
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.900.775:rtp-event type: 0 
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.900.938:rtp-event rate: 8000 
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.901.104:ptime         : 20 
+Mar  6 23:41:39 sua [532]: CAL <5+notice> [000] call status update [2]==>[10]
+Mar  6 23:41:39 sua [532]: CAL <6+info  > [000] Call establish! cid 32770
+Mar  6 23:41:39 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=406) 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] ACK sip:1501@192.168.1.14:5060 SIP/2.0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK302925456^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=3417511227^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] To: <sip:*1501@192.168.1.14:5060;user=phone>;tag=9ecfea5a^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Call-ID: 0_3491110918@192.168.10.133^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] CSeq: 1 ACK^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.10.133:5060>^M
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.901.262:srtp enc key  :  
+Mar  6 23:41:39 ipph[588]: IIPP<5+notice> 499.910.544:srtp dec key  :  
+Mar  6 23:41:39 ipph[588]: ICCU<6+info  > 499.910.802:create line 
+Mar  6 23:41:39 ipph[588]: ICCU<6+info  > 499.910.990:instance alloc(0x42f48)
+Mar  6 23:41:39 ipph[588]: ICCU<6+info  > 499.911.176:voip line(0) connect to WBHF
+Mar  6 23:41:39 Log [586]: TALK<6+info  > EnterRoutine [Talking] start
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:39 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:39 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 406 bytes
+Mar  6 23:41:39 Log [586]: VOIC<6+info  > Notify Open Headset. m_bDelayOpenChannel = 0  m_realChannel = 0
+Mar  6 23:41:39 Log [586]: TALK<6+info  > EnterRoutine [Talking] finished
+Mar  6 23:41:39 Log [586]: XSI <6+info  > CallRecordingProcesser::GetRecordMode iAccountId:[0] IsRecordOn:[0]
+Mar  6 23:41:39 Log [586]: TALK<6+info  > m_eRecordStatus : -1 Record Mode : 0
+Mar  6 23:41:39 Log [586]: TALK<4+warnin> Not allow trans directly CallOutType[0]
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:39 ipph[588]: ICCU<6+info  > 499.963.282:rtp start,line 0
+Mar  6 23:41:39 ipph[588]: ICCU<4+warnin> 499.963.856:can't match the codec 0 
+Mar  6 23:41:39 ipph[588]: ICCU<3+error > 499.964.068:invalid parameters!
+Mar  6 23:41:39 ipph[588]: IIPP<3+error > 499.964.244:rtp start failed
+Mar  6 23:41:39 ipph[588]: ICCU<6+info  > 499.964.406:destroy line, 0 
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:39 Log [586]: CCET<6+info  > Controller ProcessMessage(394976),objMessage.wParam(1) objMessage.lParam(0)
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(72), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:41:39 ipph[588]: ICCU<6+info  > 499.985.716:instance free(0x42f48)
+Mar  6 23:41:39 ipph[588]: IIPP<6+info  > 499.986.174:channel free(0x43da0)
+Mar  6 23:41:39 ipph[588]: IIPP<3+error > 499.986.418:talk start failed
+Mar  6 23:41:39 ipvp[588]: IPVP<5+notice> 499.986.674:Message=0x00050302(0x000f0000+0x00000000+0)
+Mar  6 23:41:39 ipph[588]: IIPP<6+info  > 499.986.906:set volume 15
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > eColorType:1, eFlushType:0, eIconType:5
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:39 Log [586]: DKUI<6+info  > CDssKeyLightLogic::updateLightStatus:iDsskeyID:0 eColorType:1 eFlushType:0
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:39 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:41 Log [586]: SCRN<6+info  > DEV_MSG_FUNKEY_EVENT:0x2000081
+Mar  6 23:41:41 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:41 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:41 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:41 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=33554561][lP=0]
+Mar  6 23:41:41 Log [586]: VOIC<6+info  > SetHandfreeStatus = 0
+Mar  6 23:41:41 Log [586]: VOIC<6+info  > CVPMMSGHandler::OpenChannel,eChannel=[1]
+Mar  6 23:41:41 ipvp[588]: IPVP<5+notice> 501.690.238:Message=0x00050300(0x00020000+0x00000000+0)
+Mar  6 23:41:41 ipph[588]: IIPP<6+info  > 501.690.862:tone stop 
+Mar  6 23:41:41 ipph[588]: IIPP<4+warnin> 501.691.084:tone is not playing
+Mar  6 23:41:41 ipph[588]: IIPP<6+info  > 501.691.263:set mode 2
+Mar  6 23:41:41 Log [586]: VOIC<6+info  > Set vpm: open channel[2]
+Mar  6 23:41:41 Log [586]: VOIC<6+info  > SetVolume iVolume=8 eType=3
+Mar  6 23:41:41 ipvp[588]: IPVP<5+notice> 501.700.877:Message=0x00050302(0x00080000+0x00000000+0)
+Mar  6 23:41:41 ipph[588]: IIPP<6+info  > 501.701.196:set volume 8
+Mar  6 23:41:41 Log [586]: VOIC<6+info  > Set vpm: set volume[8]
+Mar  6 23:41:41 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:41:41 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:41 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:41 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:43 Log [586]: SCRN<6+info  > DEV_MSG_FUNKEY_EVENT:0x2000080
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > m_listOperateInfo size [1]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:43 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=33554560][lP=0]
+Mar  6 23:41:43 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=6][wP=1][lP=0]
+Mar  6 23:41:43 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041106(266502), wparam:0x00000000, lparam:0x00008002
+Mar  6 23:41:43 sua [532]: APP <5+notice> [SIP] SIP_C2S_CALL_RELEASE, lid:0 cid:32770
+Mar  6 23:41:43 sua [532]: SUA <6+info  > [000] ****API Event:(0x0005) SIPUA_EVENT_A2S_HANGUP           ****
+Mar  6 23:41:43 sua [532]: FSM <6+info  > [000] allocating transaction ressource 11 0_3491110918
+Mar  6 23:41:43 sua [532]: FSM <6+info  > [000] allocating NICT context
+Mar  6 23:41:43 sua [532]: CAL <5+notice> [000] call status update [10]==>[19]
+Mar  6 23:41:43 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=407) 
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] BYE sip:1501@192.168.1.14:5060 SIP/2.0^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK3449341006^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=3417511227^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] To: <sip:*1501@192.168.1.14:5060;user=phone>;tag=9ecfea5a^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Call-ID: 0_3491110918@192.168.10.133^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] CSeq: 2 BYE^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.10.133:5060>^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:41:43 Log [586]: TALK<6+info  > CSessionManager::DeleteSession start
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:43 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 407 bytes
+Mar  6 23:41:43 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 287 bytes 
+Mar  6 23:41:43 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:41:43 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=287) 
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] SIP/2.0 200 OK^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport=5060;branch=z9hG4bK3449341006^M
+Mar  6 23:41:43 Log [586]: TALK<6+info  > CSessionManager::DeleteSession delete pSession [ID:1]
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=3417511227^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] To: <sip:*1501@192.168.1.14:5060;user=phone>;tag=9ecfea5a^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Call-ID: 0_3491110918@192.168.10.133^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] CSeq: 2 BYE^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:43 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:43 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0022)ECORE_CALL_MESSAGE_ANSWERED      ****
+Mar  6 23:41:43 Log [586]: TALK<6+info  > CSingleSession::SaveCallHistory Type[1] Duration[4]
+Mar  6 23:41:43 Log [586]: TALK<6+info  > CBaseRoutine::StopTalk
+Mar  6 23:41:43 Log [586]: TALK<4+warnin> Not multicast paging session
+Mar  6 23:41:43 Log [586]: TALK<6+info  > StopSession [32770]
+Mar  6 23:41:43 Log [586]: TALK<6+info  > VoiceInterface:stop talk[32770]
+Mar  6 23:41:43 ipvp[588]: IPVP<5+notice> 503.560.929:Message=0x00050401(0x00008002+0x00000000+0)
+Mar  6 23:41:43 ipph[588]: IIPP<6+info  > 503.561.412:talk stop , callid 0x00008002 
+Mar  6 23:41:43 ipph[588]: IIPP<3+error > 503.561.638:no such channel of callid(32770)
+Mar  6 23:41:43 ipph[588]: IIPP<3+error > 503.561.819:talk stop failed
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > Set vpm: stop talk[32770]
+Mar  6 23:41:43 Log [586]: TALK<6+info  > Remove Session [32770]
+Mar  6 23:41:43 Log [586]: TALK<6+info  > RTCP-XR ProcessEndCall, iCallId = 32770
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(-1), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > eColorType:-1, eFlushType:0, eIconType:5
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:43 Log [586]: TALK<6+info  > DeleteSession Session Size == 0
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > OpenIdleChannel [0][1][0]
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > SetVolume iVolume=11 eType=6
+Mar  6 23:41:43 ipvp[588]: IPVP<5+notice> 503.592.089:Message=0x00050302(0x000b0000+0x00000000+0)
+Mar  6 23:41:43 ipph[588]: IIPP<6+info  > 503.592.430:set volume 11
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > Set vpm: set volume[11]
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > BackLight Earse Event(3)
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:43 Log [586]: TALK<4+warnin> Restart Wait Paging
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:43 Log [586]: IDUI<6+info  > Show :: UpdateData(IRT_ALL).
+Mar  6 23:41:43 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:41:43 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:41:43 Log [586]: IDUI<6+info  >  StateItem.m_nId(0). StateItem.m_strHint(), strNotifyText(), strNotifyIcon().
+Mar  6 23:41:43 Log [586]: IDUI<6+info  > strFlashIcon(). bFlashText(0), bFlashIcon(0).
+Mar  6 23:41:43 Log [586]: IDUI<6+info  > PHONE_KEY_HEADSET_CTRL strLineIcon(registed_small.dob) eLineState(2).
+Mar  6 23:41:43 Log [586]: IDUI<6+info  > Update m_pIconList. ylVecStatusList size(0).
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:43 Log [586]: SCRN<6+info  > DEV_MSG_FUNKEY_EVENT:0x2000081
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:43 Log [586]: DIR <6+info  > Directory: message(0x606e1), wparam(0x1), lparam(0x0)
+Mar  6 23:41:43 Log [586]: DIR <6+info  > Directory: -------------- refObj.lResult: -1
+Mar  6 23:41:43 Log [586]: CCET<6+info  > Controller ProcessMessage(394977),objMessage.wParam(1) objMessage.lParam(0)
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (4), eTalkStatu(-1), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > eColorType:-1, eFlushType:0, eIconType:4
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > SetVolume iVolume=11 eType=6
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:41:43 Log [586]: TALK<6+info  > AddSession...
+Mar  6 23:41:43 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041101(266497), wparam:0x00000000, lparam:0x00000000
+Mar  6 23:41:43 sua [532]: APP <6+info  > [SIP] alloc new cid:32771
+Mar  6 23:41:43 sua [532]: APP <5+notice> [SIP] SIP_MSG_ALLOC_CID, cid=32771
+Mar  6 23:41:43 Log [586]: TALK<6+info  > EnterRoutine [Dialing] start
+Mar  6 23:41:43 Log [586]: TALK<6+info  > CDialRoutine::SetHotLine strHotLine=[] timer=[-1]
+Mar  6 23:41:43 Log [586]: TALK<6+info  > EnterRoutine [Dialing] finished
+Mar  6 23:41:43 Log [586]: TALK<6+info  > RTCP-XR OnFocusSessionChange, iCallId = 32771
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:43 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(73), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > eColorType:1, eFlushType:0, eIconType:5
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:43 Log [586]: DKUI<6+info  > CDssKeyLightLogic::updateLightStatus:iDsskeyID:0 eColorType:1 eFlushType:0
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:43 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > SetVolume iVolume=11 eType=6
+Mar  6 23:41:43 ipvp[588]: IPVP<5+notice> 503.850.552:Message=0x00050307(0x00010001+0x00000000+0)
+Mar  6 23:41:43 ipph[588]: IIPP<6+info  > 503.850.887:tone play 1 , dir 1
+Mar  6 23:41:43 ipph[588]: ICCU<6+info  > 503.851.108:tone play line -1
+Mar  6 23:41:43 Log [586]: VOIC<6+info  > Set vpm: play tone[1]
+Mar  6 23:41:43 Log [586]: SPSH<6+info  > ReqSearch(strKey = )
+Mar  6 23:41:46 Log [586]: TALK<6+info  > SRTCP-XR session timerout [-1]
+Mar  6 23:41:48 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=11)^M
+Mar  6 23:41:48 sua [532]: DLG <6+info  > [000] _release_finished_calls remove a dialog (cid=32770 did=65540)
+Mar  6 23:41:51 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x31
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:51 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=49][lP=0]
+Mar  6 23:41:51 ipvp[588]: IPVP<5+notice> 511.258.492:Message=0x00050308(0x00000000+0x00000000+0)
+Mar  6 23:41:51 ipph[588]: IIPP<6+info  > 511.258.834:tone stop 
+Mar  6 23:41:51 Log [586]: VOIC<6+info  > Set vpm: stop tone
+Mar  6 23:41:51 ipvp[588]: IPVP<5+notice> 511.268.611:Message=0x00050306(0xffffffff+0x00310001+0)
+Mar  6 23:41:51 ipph[588]: IIPP<6+info  > 511.268.956:dtmf play '1', callid 0xffffffff, dir 1
+Mar  6 23:41:51 ipph[588]: ICCU<6+info  > 511.269.194:tone play line -1
+Mar  6 23:41:51 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[49]
+Mar  6 23:41:51 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:51 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:51 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > ReqSearch(strKey = 1)
+Mar  6 23:41:51 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:51 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:51 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[1]
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[1]
+Mar  6 23:41:51 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:51 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:51 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:51 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:51 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:51 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x35
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:51 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=53][lP=0]
+Mar  6 23:41:51 ipvp[588]: IPVP<5+notice> 511.658.367:Message=0x00050306(0xffffffff+0x00350001+0)
+Mar  6 23:41:51 ipph[588]: IIPP<6+info  > 511.658.710:dtmf play '5', callid 0xffffffff, dir 1
+Mar  6 23:41:51 ipph[588]: ICCU<6+info  > 511.658.941:tone play line -1
+Mar  6 23:41:51 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[53]
+Mar  6 23:41:51 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:51 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > ReqSearch(strKey = 15)
+Mar  6 23:41:51 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:51 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:51 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[15]
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[15]
+Mar  6 23:41:51 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:51 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:51 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:51 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:51 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:51 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:52 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x31
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=49][lP=0]
+Mar  6 23:41:52 ipvp[588]: IPVP<5+notice> 512.039.322:Message=0x00050306(0xffffffff+0x00310001+0)
+Mar  6 23:41:52 ipph[588]: IIPP<6+info  > 512.039.662:dtmf play '1', callid 0xffffffff, dir 1
+Mar  6 23:41:52 ipph[588]: ICCU<6+info  > 512.039.892:tone play line -1
+Mar  6 23:41:52 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[49]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > ReqSearch(strKey = 151)
+Mar  6 23:41:52 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:52 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:52 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[151]
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[151]
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:52 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:52 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:52 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x39
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=57][lP=0]
+Mar  6 23:41:52 ipvp[588]: IPVP<5+notice> 512.501.448:Message=0x00050306(0xffffffff+0x00390001+0)
+Mar  6 23:41:52 ipph[588]: IIPP<6+info  > 512.501.789:dtmf play '9', callid 0xffffffff, dir 1
+Mar  6 23:41:52 ipph[588]: ICCU<6+info  > 512.502.021:tone play line -1
+Mar  6 23:41:52 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[57]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=2][wP=0][lP=0]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > ReqSearch(strKey = 1519)
+Mar  6 23:41:52 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x2eef00
+Mar  6 23:41:52 Log [586]: TASK<6+info  > post action [0x2eef00] to excute
+Mar  6 23:41:52 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x2eef00
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > CSearchAction::Search() m_strLastKey[],m_strSearchKey[1519]
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > SuperSearchManager::MyReSearch strKey[1519]
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:52 Log [586]: SPSH<6+info  > SuperSearch fail!
+Mar  6 23:41:52 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:52 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:52 Log [586]: SCRN<6+info  > DEV_MSG_DIGITKEY_EVENT:0x23
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:52 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=35][lP=0]
+Mar  6 23:41:52 ipvp[588]: IPVP<5+notice> 512.949.590:Message=0x00050306(0xffffffff+0x00230001+0)
+Mar  6 23:41:52 ipph[588]: IIPP<6+info  > 512.949.934:dtmf play '#', callid 0xffffffff, dir 1
+Mar  6 23:41:52 ipph[588]: ICCU<6+info  > 512.950.166:tone play line -1
+Mar  6 23:41:52 Log [586]: VOIC<6+info  > Set vpm: play local dtmf[35]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=3][wP=0][lP=0]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Photo number[1519], name[]
+Mar  6 23:41:52 Log [586]: TALK<6+info  > Photo []
+Mar  6 23:41:52 Log [586]: LDAP<6+info  > LdapManager::ReqSearch [1519]
+Mar  6 23:41:52 Log [586]: LDAP<6+info  > Ldap model: create ldap instance 0x31a020
+Mar  6 23:41:52 Log [586]: LDAP<6+info  > Ldap model: execute 0x31a020
+Mar  6 23:41:52 Log [586]: TASK<6+info  > TaskAction_ExecAction 0x31a020
+Mar  6 23:41:52 Log [586]: TASK<6+info  > post action [0x31a020] to excute
+Mar  6 23:41:52 Log [586]: TASK<6+info  > TryThreadMessage taskaction is 0x31a020
+Mar  6 23:41:52 Log [586]: LDAP<6+info  > CLdapSearchAction::Exec()
+Mar  6 23:41:52 Log [586]: LDAP<6+info  > CLdapSearchAction::Read() begin
+Mar  6 23:41:52 LDAP[586]: LDAP<6+info  > LDAP Release Version:[ 3.3.0.7 ]
+Mar  6 23:41:52 LDAP[586]: LDAP<6+info  > LDAP mode: 1
+Mar  6 23:41:52 LDAP[586]: LDAP<3+error > bind error at StartTLS: -1
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Send message to call back base.
+Mar  6 23:41:52 Log [586]: TASK<6+info  > Send message to calling thread.
+Mar  6 23:41:52 Log [586]: CC  <4+warnin> Subscibe: the switch[0] is off!
+Mar  6 23:41:52 Log [586]: TALK<6+info  > m_bNeedToSeizeLine = 1, SeizeIndex = -1
+Mar  6 23:41:53 Log [586]: TALK<6+info  > EnterRoutine [Connecting] start
+Mar  6 23:41:53 Log [586]: LDAP<6+info  > LdapManager::ReqSearch [1519]
+Mar  6 23:41:53 Log [586]: TALK<6+info  > EnterRoutine [Connecting] finished
+Mar  6 23:41:53 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:41:53 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:41:53 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:41:53 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:41:53 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:41:53 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:41:53 Log [586]: TASK<6+info  > Begin to Call back!
+Mar  6 23:41:53 Log [586]: LDAP<6+info  > LdapManager::OnTaskActionCallback
+Mar  6 23:41:53 Log [586]: LDAP<6+info  > LdapManager::ClearData() begin
+Mar  6 23:41:53 Log [586]: LDAP<6+info  > LdapManager::ClearData() end
+Mar  6 23:41:53 Log [586]: LDAP<6+info  > LdapManager::OnTaskActionCallback Notif result[0]
+Mar  6 23:41:53 Log [586]: ETLL<6+info  > mkit_call return(0,0,0='^D')
+Mar  6 23:41:53 Log [586]: TALK<6+info  > CHelperLDAPInTalk::ProcessLdapResultMesg strKey[1519]
+Mar  6 23:41:53 Log [586]: TALK<6+info  > CSessionManager::FindRoutineByCallInfo Routine Found!
+Mar  6 23:41:53 Log [586]: DIRU<6+info  > OnMessage(msg:394354 wp:0 lp:0) Controler:(nil)
+Mar  6 23:41:53 Log [586]: SPSH<6+info  > SuperSearchManager::ProcessLdapMessage,lparm[0]
+Mar  6 23:41:53 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:41:53 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(71), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:41:53 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:41:53 Log [586]: DKUI<6+info  > eColorType:1, eFlushType:0, eIconType:6
+Mar  6 23:41:53 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:53 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:53 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:41:53 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:41:53 Log [586]: DKUI<6+info  > CDssKeyLightLogic::updateLightStatus:iDsskeyID:0 eColorType:1 eFlushType:0
+Mar  6 23:41:53 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:41:53 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:41:53 Log [586]: SCRN<6+info  > DEV_MSG_KEY_RELEASED
+Mar  6 23:41:53 Log [586]: TALK<6+info  > TalklogicManager On Time CallOut Num[1519] CallID[32771] AccountID[0]
+Mar  6 23:41:53 Log [586]: CUIT<6+info  > CallInvite:AccountID[0], strURI[1519]
+Mar  6 23:41:53 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041102(266498), wparam:0x00000000, lparam:0x00008003
+Mar  6 23:41:53 sua [532]: APP <5+notice> [SIP] SIP_C2S_CALL_NEW_OUTGOING, lid:0, cid:32771,callmask:0x00000000,callee:1519
+Mar  6 23:41:53 sua [532]: SUA <6+info  > [000] ****API Event:(0x0001) SIPUA_EVENT_A2S_INVITE           ****
+Mar  6 23:41:53 sua [532]: CAL <6+info  > [000] pickup_index: -1, bla_index: -1, mask: 0x0, enable pickup: 0, remote: 1519 on behalf: 
+Mar  6 23:41:53 sua [532]: FSM <6+info  > [000] allocating transaction ressource 12 0_2161450311
+Mar  6 23:41:53 sua [532]: FSM <6+info  > [000] allocating ICT context
+Mar  6 23:41:53 sua [532]: CAL <5+notice> [000] call status update [0]==>[2]
+Mar  6 23:41:53 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=960) 
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] INVITE sip:1519@192.168.1.14:5060;user=phone SIP/2.0^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK2023291522^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=2007711160^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] To: <sip:1519@192.168.1.14:5060;user=phone>^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Call-ID: 0_2161450311@192.168.10.133^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.10.133:5060>^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Content-Type: application/sdp^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Allow: INVITE, INFO, PRACK, ACK, BYE, CANCEL, OPTIONS, NOTIFY, REGISTER, SUBSCRIBE, REFER, PUBLISH, UPDATE, MESSAGE^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] P-Early-Media: supported^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Allow-Events: talk,hold,conference,refer,check-sync^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Supported: replaces^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Content-Length:   298^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] v=0^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] o=- 20001 20001 IN IP4 192.168.10.133^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] s=SDP data^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] c=IN IP4 192.168.10.133^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] t=0 0^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] m=audio 3002 RTP/AVP 0 8 106 103 18 9 104^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=rtpmap:0 0/8000^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=rtpmap:8 8/8000^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=rtpmap:106 9/8000^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=rtpmap:103 18/8000^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=rtpmap:18 2/8000^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=rtpmap:9 97/8000^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=rtpmap:104 98/8000^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=ptime:20^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] a=sendrecv^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:53 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 960 bytes
+Mar  6 23:41:53 sua [532]: DLG <5+notice> [000] remove a call
+Mar  6 23:41:53 sua [532]: FSM <6+info  > [000] free transaction ressource 10 0_3491110918
+Mar  6 23:41:53 sua [532]: FSM <6+info  > [255] free ict ressource
+Mar  6 23:41:53 sua [532]: FSM <6+info  > [000] free transaction ressource 11 0_3491110918
+Mar  6 23:41:53 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:41:53 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0028)ECORE_CALL_RELEASED              ****
+Mar  6 23:41:53 sua [532]: CAL <6+info  > [000] call released! cid 32770
+Mar  6 23:41:53 sua [532]: CAL <6+info  > [000] freeing call resources cid 32770
+Mar  6 23:41:53 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 280 bytes 
+Mar  6 23:41:53 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:41:53 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=280) 
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] SIP/2.0 100 Trying^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport=5060;branch=z9hG4bK2023291522^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=2007711160^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] To: <sip:1519@192.168.1.14:5060;user=phone>^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Call-ID: 0_2161450311@192.168.10.133^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:41:53 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:41:53 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0010)ECORE_CALL_PROCEEDING            ****
+Mar  6 23:41:53 sua [532]: CAL <6+info  > [000] Call proceeding cid 32771
+Mar  6 23:42:06 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 887 bytes 
+Mar  6 23:42:06 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:42:06 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=887) 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] INVITE sip:1501@192.168.10.133:5060 SIP/2.0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] From: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] To: <sip:1501@192.168.1.14;user=phone>^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-Length: 305^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.1.14:5060;branch=z9hG4bKdf128ba7effb49e580e4548d674e0b7b^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Contact: <sip:1519@192.168.1.14:5060>^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-type: application/sdp^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] P-Asserted-Identity: "Bill Sautter" <sip:1519@192.168.1.14>^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Remote-Party-ID: "Bill Sautter" <sip:1519@192.168.1.14>;party=calling;privacy=off;screen=no^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] X-MAC-Address: 00:0b:ea:85:bc:14^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] v=0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] o=pbx 1863131600@192.168.10.148 0 IN IP4 192.168.1.14^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] s=PBX Call^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] c=IN IP4 192.168.1.14^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] t=0 0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] m=audio 10002 RTP/AVP 0 8 18 9 0 101^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=rtpmap:0 PCMU/8000^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=rtpmap:8 PCMA/8000^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=rtpmap:9 G722/8000^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=rtpmap:18 G729/8000^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=rtpmap:101 telephone-event/8000^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=fmtp:101 0-16^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=ptime:20^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] a=sendrecv^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: FSM <6+info  > [-01] allocating transaction ressource 13 1863131600
+Mar  6 23:42:06 sua [532]: FSM <6+info  > [-01] allocating IST context
+Mar  6 23:42:06 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:42:06 sua [532]: APP <6+info  > [SIP] alloc new cid:32772
+Mar  6 23:42:06 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=319) 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] SIP/2.0 100 Trying^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.1.14:5060;branch=z9hG4bKdf128ba7effb49e580e4548d674e0b7b^M
+Mar  6 23:42:06 Log [586]: SCRN<6+info  > DEV_MSG_FUNKEY_EVENT:0x2000080
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=33554560][lP=0]
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] From: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] To: <sip:1501@192.168.1.14;user=phone>^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 319 bytes
+Mar  6 23:42:06 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0005)ECORE_CALL_INVITE                ****
+Mar  6 23:42:06 sua [532]: CAL <6+info  > [000] incoming call cid 32772
+Mar  6 23:42:06 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=6][wP=1][lP=0]
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] call identify info
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     version          :0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     size             :264
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     answer_after     :-1
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     is_emergency     :0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     force_auto_answer:0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     force_no_forward :0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     auto_answer_dev  :0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     p_auto_answer    :0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     enable_mic       :255
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     enable_speaker   :255
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     incoming_is_video :0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     appearance_index :0
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     display_name     :Bill Sautter
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     user_name        :1519
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     server_name      :192.168.1.14
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     div_diaplay      :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     div_user         :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     div_server       :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     to_diaplay       :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     to_user          :1501
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     to_server        :192.168.1.14
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     alert_local      :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     alert_web        :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     alert_url        :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     pict_info        :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     from_user_name   :1519
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     diversion_line   :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     doorline_uri     :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP]     doorline_dtmf    :NULL
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:42:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041106(266502), wparam:0x00000000, lparam:0x00008003
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] SIP_C2S_CALL_RELEASE, lid:0 cid:32771
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:42:06 sua [532]: APP <6+info  > [SIP] <IPC_ntfp>:msg=0x00040101(262401), wparam=0, lparam=32772, size=264
+Mar  6 23:42:06 sua [532]: CAL <5+notice> [000] call status update [0]==>[1]
+Mar  6 23:42:06 sua [532]: SUA <6+info  > [000] ****API Event:(0x0005) SIPUA_EVENT_A2S_HANGUP           ****
+Mar  6 23:42:06 sua [532]: FSM <6+info  > [000] allocating transaction ressource 14 0_2161450311
+Mar  6 23:42:06 sua [532]: FSM <6+info  > [000] allocating NICT context
+Mar  6 23:42:06 sua [532]: CAL <5+notice> [000] call status update [2]==>[19]
+Mar  6 23:42:06 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=369) 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CANCEL sip:1519@192.168.1.14:5060;user=phone SIP/2.0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK2023291522^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=2007711160^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] To: <sip:1519@192.168.1.14:5060;user=phone>^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Call-ID: 0_2161450311@192.168.10.133^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CSeq: 1 CANCEL^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 Log [586]: TALK<6+info  > CSessionManager::DeleteSession start
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 369 bytes
+Mar  6 23:42:06 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 289 bytes 
+Mar  6 23:42:06 Log [586]: TALK<6+info  > CSessionManager::DeleteSession delete pSession [ID:1]
+Mar  6 23:42:06 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:42:06 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=289) 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] SIP/2.0 200 OK^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport=5060;branch=z9hG4bK2023291522^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=2007711160^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] To: <sip:1519@192.168.1.14:5060;user=phone>;tag=620603b4^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Call-ID: 0_2161450311@192.168.10.133^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CSeq: 1 CANCEL^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0031)ECORE_MESSAGE_ANSWERED           ****
+Mar  6 23:42:06 sua [532]: SUB <6+info  > [000] response receive message_type= 0 
+Mar  6 23:42:06 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 300 bytes 
+Mar  6 23:42:06 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:42:06 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=300) 
+Mar  6 23:42:06 Log [586]: TALK<6+info  > CSingleSession::SaveCallHistory Type[1] Duration[0]
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] SIP/2.0 487 Request Terminated^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK2023291522^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=2007711160^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] To: <sip:1519@192.168.1.14:5060;user=phone>;tag=233494d4^M
+Mar  6 23:42:06 Log [586]: TALK<6+info  > Remove Session [32771]
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Call-ID: 0_2161450311@192.168.10.133^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=316) 
+Mar  6 23:42:06 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(-1), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:42:06 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ACK sip:1519@192.168.1.14:5060;user=phone SIP/2.0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK2023291522^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] From: "Lisa Dingman" <sip:1501@192.168.1.14:5060>;tag=2007711160^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] To: <sip:1519@192.168.1.14:5060;user=phone>;tag=233494d4^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Call-ID: 0_2161450311@192.168.10.133^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CSeq: 1 ACK^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 316 bytes
+Mar  6 23:42:06 Log [586]: DKUI<6+info  > eColorType:-1, eFlushType:0, eIconType:5
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:06 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0014)ECORE_CALL_REQUESTFAILURE        ****
+Mar  6 23:42:06 sua [532]: CAL <6+info  > [000] recv call failure msg event 14, cid 32771, code: 487 call type:0
+Mar  6 23:42:06 sua [532]: APP <6+info  > [SIP] <IPC_ntfp>:msg=0x00040106(262406), wparam=0, lparam=32771, size=136
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:06 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:42:06 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:06 Log [586]: TALK<6+info  > DeleteSession Session Size == 0
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > OpenIdleChannel [0][1][0]
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetVolume iVolume=11 eType=6
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > BackLight Earse Event(3)
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:06 Log [586]: TALK<4+warnin> Restart Wait Paging
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:42:06 Log [586]: IDUI<6+info  > Show :: UpdateData(IRT_ALL).
+Mar  6 23:42:06 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:42:06 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:42:06 Log [586]: IDUI<6+info  >  StateItem.m_nId(0). StateItem.m_strHint(), strNotifyText(), strNotifyIcon().
+Mar  6 23:42:06 Log [586]: IDUI<6+info  > strFlashIcon(). bFlashText(0), bFlashIcon(0).
+Mar  6 23:42:06 Log [586]: IDUI<6+info  > PHONE_KEY_HEADSET_CTRL strLineIcon(registed_small.dob) eLineState(2).
+Mar  6 23:42:06 Log [586]: IDUI<6+info  > Update m_pIconList. ylVecStatusList size(0).
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:06 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > [MSG:SIP==>Talklogic] message=[SIP_CALL_INCOMING][0x40101] wParam=[0] lParam=[32772]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > iAutoAnswer=[-1] iBlaIndex=[0] uAutoAnswerType=[0] bForceAutoAnswer=[0]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > bIsEmergency=[0] bIsFwdEnable=[1] bMic=[0] bSpeak=[0]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > FromDsp=[Bill Sautter] Number=[1519] FromServer=[192.168.1.14] FromNumber=[1519]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > ToDsp=[] ToNumber=[1501] ToServer=[192.168.1.14]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > FwdDsp=[] FwdNumber=[] FwdServer=[]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > Local=[] Web=[] URL=[] Phone=[]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > doorline_url=[] doorline_dtmf=[]
+Mar  6 23:42:06 Log [586]: DEVL<6+info  > netIsValidIP 192.168.1.14
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > OpenHandfree eChannel=4
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetHandfreeStatus = 1
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > CVPMMSGHandler::OpenChannel,eChannel=[3]
+Mar  6 23:42:06 ipvp[588]: IPVP<5+notice> 526.738.641:Message=0x00050300(0x00010000+0x00000000+0)
+Mar  6 23:42:06 ipph[588]: IIPP<6+info  > 526.738.980:tone stop 
+Mar  6 23:42:06 ipph[588]: IIPP<4+warnin> 526.739.175:tone is not playing
+Mar  6 23:42:06 ipph[588]: IIPP<6+info  > 526.739.351:set mode 1
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Set vpm: open channel[1]
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetVolume iVolume=15 eType=5
+Mar  6 23:42:06 ipvp[588]: IPVP<5+notice> 526.748.572:Message=0x00050302(0x000f0000+0x00000000+0)
+Mar  6 23:42:06 ipph[588]: IIPP<6+info  > 526.748.891:set volume 15
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Set vpm: set volume[15]
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:42:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041101(266497), wparam:0x00000000, lparam:0x00000000
+Mar  6 23:42:06 sua [532]: APP <6+info  > [SIP] alloc new cid:32773
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] SIP_MSG_ALLOC_CID, cid=32773
+Mar  6 23:42:06 Log [586]: CUIT<6+info  > post SUA_MSG_CALL_RESPONSE
+Mar  6 23:42:06 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041103(266499), wparam:0x00000000, lparam:0x00008004
+Mar  6 23:42:06 sua [532]: APP <5+notice> [SIP] SIP_C2S_CALL_RESPONSEE, lid:0 cid:32772, response_code:180
+Mar  6 23:42:06 sua [532]: SUA <6+info  > [000] ****API Event:(0x0002) SIPUA_EVENT_A2S_RESPONSE         ****
+Mar  6 23:42:06 sua [532]: CAL <5+notice> [000] call status update [1]==>[3]
+Mar  6 23:42:06 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=546) 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] SIP/2.0 180 Ringing^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.1.14:5060;branch=z9hG4bKdf128ba7effb49e580e4548d674e0b7b^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] From: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] To: <sip:1501@192.168.1.14;user=phone>;tag=2588100678^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.10.133:5060>^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Allow: INVITE, INFO, PRACK, ACK, BYE, CANCEL, OPTIONS, NOTIFY, REGISTER, SUBSCRIBE, REFER, PUBLISH, UPDATE, MESSAGE^M
+Mar  6 23:42:06 Log [586]: TALK<6+info  > New Incoming Call in line [0], Ringing
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Allow-Events: talk,hold,conference,refer,check-sync^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:06 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:06 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 546 bytes
+Mar  6 23:42:06 Log [586]: TALK<6+info  > EnterRoutine [Ringing] start
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetHandfreeStatus = 0
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetVolume iVolume=7 eType=1
+Mar  6 23:42:06 ipvp[588]: IPVP<5+notice> 526.792.593:Message=0x00050302(0x00070000+0x00000000+0)
+Mar  6 23:42:06 ipph[588]: IIPP<6+info  > 526.792.928:set volume 7
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Set vpm: set volume[7]
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:42:06 Log [586]: TALK<6+info  > AutoAnswerBySIPInfo: Info[-1], Session Size[1] AutoAnswerType[0]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > Ring: Local[] URL[] Web[]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > EnterRoutine [Ringing] finished
+Mar  6 23:42:06 Log [586]: TALK<6+info  > PacketFullContactInfo ["Lisa Dingman" <sip:1501@192.168.1.14>]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > Photo number[1519], name[]
+Mar  6 23:42:06 Log [586]: TALK<6+info  > Photo []
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetVolume iVolume=7 eType=1
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetMute iCallID=-1 bMute=1
+Mar  6 23:42:06 ipvp[588]: IPVP<5+notice> 526.873.704:Message=0x00050304(0x00010000+0x00000000+0)
+Mar  6 23:42:06 ipph[588]: IIPP<6+info  > 526.874.040:set mute 1 
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Set vpm: set mute[-1][1]
+Mar  6 23:42:06 ipvp[588]: IPVP<5+notice> 526.876.846:Message=0x00050309(0xffffffff+0x0001ffff+39)
+Mar  6 23:42:06 ipph[588]: IIPP<6+info  > 526.877.180:ring play dir 1, loop -1, file /phone/resource/system/sound/Ring1.wav 
+Mar  6 23:42:06 ipph[588]: IIPP<6+info  > 526.877.414:callid(0xffffffff) alloc channel(0x43da0)
+Mar  6 23:42:06 ipph[588]: ICCU<6+info  > 526.877.609:create line 
+Mar  6 23:42:06 ipph[588]: ICCU<6+info  > 526.877.782:instance alloc(0x42f48)
+Mar  6 23:42:06 ipph[588]: ICCU<6+info  > 526.877.954:voip line(0) connect to WBHF
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > Set vpm: play ring[/phone/resource/system/sound/Ring1.wav], [-1]
+Mar  6 23:42:06 Log [586]: VOIC<6+info  > SetVolume iVolume=7 eType=1
+Mar  6 23:42:06 Log [586]: TALK<6+info  > RTCP-XR OnFocusSessionChange, iCallId = 32772
+Mar  6 23:42:06 Log [586]: TKUI<6+info  > strLocalName = Lisa Dingman 1501, strLocalNumber = 1501, strLocalFullContactInfo = "Lisa Dingman" <sip:1501@192.168.1.14>
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:42:06 ipph[588]: ICCU<6+info  > 526.988.626:audio start,line 0
+Mar  6 23:42:06 ipph[588]: IRTP<6+info  > 526.989.213:rtp_session_start 
+Mar  6 23:42:06 ipph[588]: IRTP<6+info  > 526.993.599:Opts are 902008
+Mar  6 23:42:06 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:42:06 Log [586]: DIR <6+info  > Directory: message(0x606e1), wparam(0x1), lparam(0x0)
+Mar  6 23:42:06 Log [586]: DIR <6+info  > Directory: -------------- refObj.lResult: -1
+Mar  6 23:42:06 Log [586]: CCET<6+info  > Controller ProcessMessage(394977),objMessage.wParam(1) objMessage.lParam(0)
+Mar  6 23:42:06 Log [586]: TALK<6+info  > [MSG:SIP==>Talklogic] message=[SIP_CALL_FAIL][0x40106] wParam=[0] lParam=[32771]
+Mar  6 23:42:07 Log [586]: TALK<4+warnin> [TALK] No session own CallID[32771]
+Mar  6 23:42:07 ipph[588]: IRTP<6+info  > 527.003.627:USERMODE chanel num 0  voice fd 18 
+Mar  6 23:42:07 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:42:07 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(70), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:42:07 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:42:07 Log [586]: DKUI<6+info  > eColorType:1, eFlushType:3, eIconType:23
+Mar  6 23:42:07 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:07 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:07 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:42:07 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:42:07 Log [586]: DKUI<6+info  > CDssKeyLightLogic::updateLightStatus:iDsskeyID:0 eColorType:1 eFlushType:3
+Mar  6 23:42:07 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:07 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:08 Log [586]: SCRN<6+info  > DEV_MSG_FUNKEY_EVENT:0x2000081
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:08 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=33554561][lP=0]
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 1
+Mar  6 23:42:08 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=8][wP=1][lP=0]
+Mar  6 23:42:08 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041105(266501), wparam:0x00000000, lparam:0x00008004
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] SIP_C2S_CALL_ACCEPT, lid:0 cid:32772, accept_code:0
+Mar  6 23:42:08 sua [532]: SUA <6+info  > [000] ****API Event:(0x0004) SIPUA_EVENT_A2S_ACCEPT           ****
+Mar  6 23:42:08 sua [532]: CAL <5+notice> [000] call status update [3]==>[5]
+Mar  6 23:42:08 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=731) 
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] SIP/2.0 200 OK^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.1.14:5060;branch=z9hG4bKdf128ba7effb49e580e4548d674e0b7b^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] From: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] To: <sip:1501@192.168.1.14;user=phone>;tag=2588100678^M
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] CSeq: 1 INVITE^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.10.133:5060>^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Content-Type: application/sdp^M
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Allow: INVITE, INFO, PRACK, ACK, BYE, CANCEL, OPTIONS, NOTIFY, REGISTER, SUBSCRIBE, REFER, PUBLISH, UPDATE, MESSAGE^M
+Mar  6 23:42:08 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Allow-Events: talk,hold,conference,refer,check-sync^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Content-Length:   155^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] v=0^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] o=- 20002 20002 IN IP4 192.168.10.133^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] s=SDP data^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] c=IN IP4 192.168.10.133^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] t=0 0^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] m=audio 3004 RTP/AVP 0^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] a=rtpmap:0 0/8000^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] a=ptime:20^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] a=sendrecv^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:08 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 731 bytes
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=13)^M
+Mar  6 23:42:08 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 329 bytes 
+Mar  6 23:42:08 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:42:08 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=329) 
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] ACK sip:1501@192.168.10.133:5060 SIP/2.0^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] From: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] To: <sip:1501@192.168.1.14;user=phone>;tag=2588100678^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] CSeq: 1 ACK^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.1.14:5060;branch=z9hG4bK9888c6f49d594fe1be207a575960142c^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:08 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0017)ECORE_CALL_ACK                   ****
+Mar  6 23:42:08 sua [532]: CAL <6+info  > [000] recv ack! cid 32772
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] call channels info
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     version          :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     size             :848
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     hold_state       :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     call_flag        :1(0x1)
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] channel info
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]   local media: 
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     media direction  :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     payload          :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     bandwidth        :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     codec_name       :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     ptime            :20
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtp addr         :0.0.0.0:3004
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtcp addr        :0.0.0.0:3005
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     srtp_key         :
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     dtmf_payload     :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]   remote media: 
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     media direction  :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     payload          :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     bandwidth        :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     codec_name       :PCMU
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     ptime            :20
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtp addr         :192.168.1.14:10002
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtcp addr        :192.168.1.14:10003
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     srtp_key         :
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     dtmf_payload     :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:42:08 sua [532]: APP <6+info  > [SIP] <IPC_ntfp>:msg=0x00040105(262405), wparam=0, lparam=32772, size=848
+Mar  6 23:42:08 Log [586]: TALK<6+info  > [MSG:SIP==>Talklogic] message=[SIP_CALL_ESTABLISH][0x40105] wParam=[0] lParam=[32772]
+Mar  6 23:42:08 Log [586]: TALK<6+info  > VoiceInterface:add session[32772][0]
+Mar  6 23:42:08 Log [586]: TALK<6+info  > VoiceInterface:start talk[32772]
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > StartTalk iCallID=[0x8004]
+Mar  6 23:42:08 ipvp[588]: IPVP<5+notice> 528.313.807:Message=0x00050400(0x00008004+0x00000000+972)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.314.160:talk start , callid 0x00008004 
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.314.373:callid(0x00008004) alloc channel(0x4417c)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.314.565:attach callid[0x00008004]<=>line[1]
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.314.773:Talk param display  ... 
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.314.933:sendrecv      : sendrecv
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.315.100:rtp,rtcp      : enable,enable in IPv4
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Set vpm: start talk[32772]
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > SetVolume iVolume=7 eType=1
+Mar  6 23:42:08 Log [586]: TALK<6+info  > RTCP-XR ProcessStartTalk, iCallId = 32772
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > SetMute iCallID=-1 bMute=0
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Set vpm: set mute[-1][0]
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Set vpm: stop ring
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.315.300:local rtp     : 0.0.0.0 : 3004
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.321.824:local rtcp    : 0.0.0.0 : 3005
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.322.079:remote rtp    : 192.168.1.14 : 10002
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.322.275:remote rtcp   : 192.168.1.14 : 10003
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.322.452:audio codec   : 0 
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.322.621:payload type  : 0 
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.325.192:sample rate   : 8000 
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.325.432:codec bit rate: 0 
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.325.621:rtp-event type: 0 
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.325.799:rtp-event rate: 8000 
+Mar  6 23:42:08 sua [532]: CAL <5+notice> [000] call status update [3]==>[10]
+Mar  6 23:42:08 sua [532]: CAL <6+info  > [000] Call establish! cid 32772
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.328.345:ptime         : 20 
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.328.702:srtp enc key  :  
+Mar  6 23:42:08 ipph[588]: IIPP<5+notice> 528.328.908:srtp dec key  :  
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.329.098:create line 
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.329.275:instance alloc(0x429cc)
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.331.971:voip line(1) connect to WBHF
+Mar  6 23:42:08 Log [586]: TALK<6+info  > EnterRoutine [Talking] start
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Notify Open Headset. m_bDelayOpenChannel = 1  m_realChannel = 1
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > CVPMMSGHandler::OpenChannel,eChannel=[1]
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Set vpm: open channel[2]
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > SetVolume iVolume=8 eType=3
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Set vpm: set volume[8]
+Mar  6 23:42:08 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:42:08 Log [586]: TALK<6+info  > EnterRoutine [Talking] finished
+Mar  6 23:42:08 Log [586]: CCET<6+info  > Controller ProcessMessage(394976),objMessage.wParam(1) objMessage.lParam(0)
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.384.007:rtp start,line 1
+Mar  6 23:42:08 ipph[588]: ICCU<4+warnin> 528.385.151:can't match the codec 0 
+Mar  6 23:42:08 ipph[588]: ICCU<3+error > 528.386.354:invalid parameters!
+Mar  6 23:42:08 ipph[588]: IIPP<3+error > 528.387.245:rtp start failed
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.388.169:destroy line, 1 
+Mar  6 23:42:08 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:42:08 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(72), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.401.630:instance free(0x429cc)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.401.927:channel free(0x4417c)
+Mar  6 23:42:08 ipph[588]: IIPP<3+error > 528.402.126:talk start failed
+Mar  6 23:42:08 ipvp[588]: IPVP<5+notice> 528.402.368:Message=0x00050304(0x00000000+0x00000000+0)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.402.590:set mute 0 
+Mar  6 23:42:08 ipvp[588]: IPVP<5+notice> 528.402.927:Message=0x0005030a(0xffffffff+0x00000000+0)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.403.161:ring stop
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.404.997:rtp stop, line 0
+Mar  6 23:42:08 ipph[588]: IRTP<6+info  > 528.406.107:rtp_session_stop
+Mar  6 23:42:08 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:42:08 Log [586]: DKUI<6+info  > eColorType:1, eFlushType:0, eIconType:5
+Mar  6 23:42:08 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:08 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:08 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:42:08 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:42:08 Log [586]: DKUI<6+info  > CDssKeyLightLogic::updateLightStatus:iDsskeyID:0 eColorType:1 eFlushType:0
+Mar  6 23:42:08 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:08 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:08 Log [586]: TALK<6+info  > CTalklogicManager::Timer UPdateWnd
+Mar  6 23:42:08 Log [586]: XSI <6+info  > CallRecordingProcesser::GetRecordMode iAccountId:[0] IsRecordOn:[0]
+Mar  6 23:42:08 Log [586]: TALK<6+info  > m_eRecordStatus : -1 Record Mode : 0
+Mar  6 23:42:08 Log [586]: TALK<4+warnin> Not allow trans directly CallOutType[0]
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.437.634:destroy line, 0 
+Mar  6 23:42:08 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:42:08 ipph[588]: ICCU<6+info  > 528.459.663:instance free(0x42f48)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.459.964:channel free(0x43da0)
+Mar  6 23:42:08 ipvp[588]: IPVP<5+notice> 528.460.235:Message=0x00050300(0x00020000+0x00000000+0)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.460.468:tone stop 
+Mar  6 23:42:08 ipph[588]: IIPP<4+warnin> 528.460.635:tone is not playing
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.460.800:set mode 2
+Mar  6 23:42:08 ipvp[588]: IPVP<5+notice> 528.469.342:Message=0x00050302(0x00080000+0x00000000+0)
+Mar  6 23:42:08 ipph[588]: IIPP<6+info  > 528.470.324:set volume 8
+Mar  6 23:42:08 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:42:08 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 395 bytes 
+Mar  6 23:42:08 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:42:08 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=395) 
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] ACK sip:1501@192.168.1.14:5060 SIP/2.0^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.148:5061;rport;branch=z9hG4bK2556027393^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] From: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] To: <sip:1501@192.168.1.14;user=phone>;tag=93d3724a^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] CSeq: 1 ACK^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Contact: <sip:1519@192.168.10.148:5061>^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 37G - 27.71.132.29^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:08 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:08 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0017)ECORE_CALL_ACK                   ****
+Mar  6 23:42:08 sua [532]: CAL <6+info  > [000] recv ack! cid 32772
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] call channels info
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     version          :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     size             :848
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     hold_state       :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     call_flag        :1(0x1)
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] channel info
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]   local media: 
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     media direction  :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     payload          :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     bandwidth        :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     codec_name       :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     ptime            :20
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtp addr         :0.0.0.0:3004
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtcp addr        :0.0.0.0:3005
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     srtp_key         :
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     dtmf_payload     :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]   remote media: 
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     media direction  :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     payload          :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     bandwidth        :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     codec_name       :PCMU
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     ptime            :20
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtp addr         :192.168.1.14:10002
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     rtcp addr        :192.168.1.14:10003
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     srtp_key         :
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP]     dtmf_payload     :0
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] #################################################################
+Mar  6 23:42:08 sua [532]: APP <5+notice> [SIP] 
+Mar  6 23:42:08 sua [532]: APP <6+info  > [SIP] <IPC_ntfp>:msg=0x00040105(262405), wparam=0, lparam=32772, size=848
+Mar  6 23:42:08 Log [586]: TALK<6+info  > [MSG:SIP==>Talklogic] message=[SIP_CALL_ESTABLISH][0x40105] wParam=[0] lParam=[32772]
+Mar  6 23:42:08 Log [586]: TALK<6+info  > VoiceParam no Changed!
+Mar  6 23:42:08 sua [532]: CAL <5+notice> [000] call status update [10]==>[9]
+Mar  6 23:42:08 sua [532]: CAL <6+info  > [000] Call establish! cid 32772
+Mar  6 23:42:11 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=14)^M
+Mar  6 23:42:17 Log [586]: SCRN<6+info  > DEV_MSG_FUNKEY_EVENT:0x2000080
+Mar  6 23:42:17 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:42:17 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:17 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:17 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:17 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=1][wP=33554560][lP=0]
+Mar  6 23:42:17 Log [586]: TALK<6+info  > Talkui Action to logic [iSessionID=1][iActionType=6][wP=1][lP=0]
+Mar  6 23:42:17 sua [532]: APP <6+info  > [SIP] <IPC_rcv >:msg:0x00041106(266502), wparam:0x00000000, lparam:0x00008004
+Mar  6 23:42:17 sua [532]: APP <5+notice> [SIP] SIP_C2S_CALL_RELEASE, lid:0 cid:32772
+Mar  6 23:42:17 sua [532]: SUA <6+info  > [000] ****API Event:(0x0005) SIPUA_EVENT_A2S_HANGUP           ****
+Mar  6 23:42:17 sua [532]: FSM <6+info  > [000] allocating transaction ressource 15 1863131600
+Mar  6 23:42:17 sua [532]: FSM <6+info  > [000] allocating NICT context
+Mar  6 23:42:17 sua [532]: CAL <5+notice> [000] call status update [10]==>[19]
+Mar  6 23:42:17 sua [532]: DLG <5+notice> [000] Message sent: (to dest=192.168.1.14:5060 len=395) 
+Mar  6 23:42:18 Log [586]: TALK<6+info  > CSessionManager::DeleteSession start
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] BYE sip:1519@192.168.1.14:5060 SIP/2.0^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport;branch=z9hG4bK867217819^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] From: <sip:1501@192.168.1.14;user=phone>;tag=2588100678^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] To: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] CSeq: 2 BYE^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Contact: <sip:1501@192.168.10.133:5060>^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Max-Forwards: 70^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] User-Agent: Zultys ZIP 33G - 47.80.132.4^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:18 sua [532]: NET <5+notice> [000] ===>>>> UDP socket 192.168.1.14:5060: send 395 bytes
+Mar  6 23:42:18 sua [532]: FSM <6+info  > [000] free transaction ressource 14 0_2161450311
+Mar  6 23:42:18 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:42:18 sua [532]: NET <5+notice> [255] <<<<=== UDP socket 192.168.1.14:5060: read 275 bytes 
+Mar  6 23:42:18 Log [586]: TALK<6+info  > CSessionManager::DeleteSession delete pSession [ID:1]
+Mar  6 23:42:18 sua [532]: SIP <6+info  > [SIP] match line:name:1501 host:192.168.1.14
+Mar  6 23:42:18 Log [586]: DEVL<6+info  > netIsValidIP 1501
+Mar  6 23:42:18 sua [532]: DLG <5+notice> [000] Message recv: (from src=192.168.1.14:5060 len=275) 
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] SIP/2.0 200 OK^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Via: SIP/2.0/UDP 192.168.10.133:5060;rport=5060;branch=z9hG4bK867217819^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] From: <sip:1501@192.168.1.14;user=phone>;tag=2588100678^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] To: "Bill Sautter" <sip:1519@192.168.1.14>;tag=1445223453^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Call-ID: 1863131600@192.168.10.148^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] CSeq: 2 BYE^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] Content-Length: 0^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] ^M
+Mar  6 23:42:18 sua [532]: DLG <6+info  > [000] 
+Mar  6 23:42:18 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0022)ECORE_CALL_MESSAGE_ANSWERED      ****
+Mar  6 23:42:18 Log [586]: TALK<6+info  > CSingleSession::SaveCallHistory Type[2] Duration[9]
+Mar  6 23:42:18 Log [586]: TALK<6+info  > CBaseRoutine::StopTalk
+Mar  6 23:42:18 Log [586]: TALK<4+warnin> Not multicast paging session
+Mar  6 23:42:18 Log [586]: TALK<6+info  > StopSession [32772]
+Mar  6 23:42:18 Log [586]: TALK<6+info  > VoiceInterface:stop talk[32772]
+Mar  6 23:42:18 ipvp[588]: IPVP<5+notice> 538.053.858:Message=0x00050401(0x00008004+0x00000000+0)
+Mar  6 23:42:18 ipph[588]: IIPP<6+info  > 538.054.240:talk stop , callid 0x00008004 
+Mar  6 23:42:18 ipph[588]: IIPP<3+error > 538.054.449:no such channel of callid(32772)
+Mar  6 23:42:18 ipph[588]: IIPP<3+error > 538.054.628:talk stop failed
+Mar  6 23:42:18 Log [586]: VOIC<6+info  > Set vpm: stop talk[32772]
+Mar  6 23:42:18 Log [586]: TALK<6+info  > Remove Session [32772]
+Mar  6 23:42:18 Log [586]: TALK<6+info  > RTCP-XR ProcessEndCall, iCallId = 32772
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (5), eTalkStatu(-1), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > eColorType:-1, eFlushType:0, eIconType:5
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:18 Log [586]: TALK<6+info  > DeleteSession Session Size == 0
+Mar  6 23:42:18 Log [586]: VOIC<6+info  > OpenIdleChannel [0][1][0]
+Mar  6 23:42:18 Log [586]: VOIC<6+info  > SetVolume iVolume=11 eType=6
+Mar  6 23:42:18 ipvp[588]: IPVP<5+notice> 538.083.324:Message=0x00050302(0x000b0000+0x00000000+0)
+Mar  6 23:42:18 ipph[588]: IIPP<6+info  > 538.083.664:set volume 11
+Mar  6 23:42:18 Log [586]: VOIC<6+info  > Set vpm: set volume[11]
+Mar  6 23:42:18 Log [586]: VOIC<6+info  > Delay OpenChannel: bDelayOpenChannel = 0
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > BackLight Earse Event(3)
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:18 Log [586]: TALK<4+warnin> Restart Wait Paging
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() begin draw
+Mar  6 23:42:18 Log [586]: IDUI<6+info  > Show :: UpdateData(IRT_ALL).
+Mar  6 23:42:18 Log [586]: IDUI<6+info  > UpdateData :: UpdateData iRangeMask(255).
+Mar  6 23:42:18 Log [586]: IDUI<6+info  > UpdateSoftkey.  eState(0).
+Mar  6 23:42:18 Log [586]: IDUI<6+info  >  StateItem.m_nId(0). StateItem.m_strHint(), strNotifyText(), strNotifyIcon().
+Mar  6 23:42:18 Log [586]: IDUI<6+info  > strFlashIcon(). bFlashText(0), bFlashIcon(0).
+Mar  6 23:42:18 Log [586]: IDUI<6+info  > PHONE_KEY_HEADSET_CTRL strLineIcon(registed_small.dob) eLineState(2).
+Mar  6 23:42:18 Log [586]: IDUI<6+info  > Update m_pIconList. ylVecStatusList size(0).
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::UpdateWnd() after draw
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > PowerSaving recive message[POWERSAVIGNMEG_NOTIFY_OPERATE] [1]
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > m_listOperateInfo size [2]
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > Operate info:type [1]
+Mar  6 23:42:18 Log [586]: BKLT<6+info  > Operate info:type [2]
+Mar  6 23:42:18 Log [586]: DIR <6+info  > Directory: message(0x606e1), wparam(0x1), lparam(0x0)
+Mar  6 23:42:18 Log [586]: DIR <6+info  > Directory: -------------- refObj.lResult: -1
+Mar  6 23:42:18 Log [586]: CCET<6+info  > Controller ProcessMessage(394977),objMessage.wParam(1) objMessage.lParam(0)
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > sLogicData.strLabel (), eDKType(15), iDssKeyID(0)
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > ProcessLineStatus : iStatus (4), eTalkStatu(-1), eSCAStatu(-1), eACDStatu(-1).
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > ProcessLineStatus : objDisplayData.strContent (Lisa Dingman)
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > eColorType:-1, eFlushType:0, eIconType:4
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > m_iPageTotal(1), m_iCurPageNum(1), m_iCurrentPageIndex(0).
+Mar  6 23:42:18 Log [586]: DKUI<6+info  > CDssKeyLightLogic::UpdateLight 0
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() begin draw
+Mar  6 23:42:18 Log [586]: UIMG<6+info  > CMainWnd::RefreshLineKey() after draw
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Begin Time Section: [1]
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > TargetTimeSection Time Section: [2]
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Section change: iTargetTimeOut[10]
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > BeginTime is
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > TargetTime is
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > PreSleepTime is
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > AwakeScreenInOfficeTime [1]
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before zero:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The day before off time:
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Current OfficeTime
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > Current Off Time
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The Day After zero
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > The Day After Office Begin
+Mar  6 23:42:19 Log [586]: BKLT<6+info  > m_AwakeScreenTimer [44261000]
+Mar  6 23:42:21 Log [586]: TALK<6+info  > SRTCP-XR session timerout [-1]
+Mar  6 23:42:23 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=15)^M
+Mar  6 23:42:23 sua [532]: DLG <6+info  > [000] _release_finished_calls remove a dialog (cid=32772 did=65541)
+Mar  6 23:42:23 sua [532]: DLG <5+notice> [000] remove a call
+Mar  6 23:42:23 sua [532]: FSM <6+info  > [000] free transaction ressource 13 1863131600
+Mar  6 23:42:23 sua [532]: FSM <6+info  > [255] free ist ressource
+Mar  6 23:42:23 sua [532]: SUA <6+info  > [000] ****eCore event:(0x0028)ECORE_CALL_RELEASED              ****
+Mar  6 23:42:23 sua [532]: CAL <6+info  > [000] call released! cid 32772
+Mar  6 23:42:23 sua [532]: CAL <6+info  > [000] freeing call resources cid 32772
+Mar  6 23:42:33 sua [532]: FSM <6+info  > [000] free transaction ressource 15 1863131600
+Mar  6 23:42:33 sua [532]: FSM <6+info  > [255] free nict ressource
+Mar  6 23:42:37 Log [501]: ANY <0+emerg > Log  log :sys=1,cons=0,time=0,E=3,W=4,N=5,I=6,D=7
+Mar  6 23:42:37 Log [501]: ANY <0+emerg > ANY =6
+Mar  6 23:42:37 Log [501]: WEB <4+warnin> ListenerContainer::onRequest End.result = false
+Mar  6 23:42:38 sua [532]: DLG <6+info  > [000] cb_nict_kill_transaction (id=12)^M
+Mar  6 23:42:40 Log [501]: WEB <6+info  > Crypto get plain data : session id is equal
+Mar  6 23:42:40 Log [501]: WEB <6+info  > ip:192.168.10.153 Login at time=1772840560
+Mar  6 23:42:40 Log [501]: WEB <6+info  > ip:192.168.10.153 The password is right!
+Mar  6 23:42:40 Log [501]: WEB <6+info  > ip:192.168.10.153 Login in Success At time: [150]
+Mar  6 23:42:44 Log [501]: WEB <6+info  > URI: /servlet?p=settings-config&q=exportsyslog
+Mar  6 23:42:44 Log [501]: WEB <6+info  > Partition free(byte): /tmp/ [32768000], /config/ [237568], /data/ [237568]
+Mar  6 23:42:44 Log [586]: ETLL<6+info  > mkit_reply return [0], msgReply[0x60d03]: 0. result[0]
+Mar  6 23:42:44 Log [501]: ETLL<6+info  > mkit_call return(0,0)
 eth0      Link encap:Ethernet  HWaddr 00:0B:EA:85:ED:68  
           inet addr:192.168.10.133  Bcast:192.168.10.255  Mask:255.255.255.0
           inet6 addr: fe80::20b:eaff:fe85:ed68/64 Scope:Link
           UP BROADCAST RUNNING MULTICAST  MTU:1500  Metric:1
-          RX packets:4551 errors:0 dropped:15 overruns:0 frame:0
-          TX packets:227 errors:0 dropped:0 overruns:0 carrier:0
+          RX packets:1862 errors:0 dropped:16 overruns:0 frame:0
+          TX packets:139 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:1000 
-          RX bytes:1589446 (1.5 MiB)  TX bytes:182432 (178.1 KiB)
+          RX bytes:283882 (277.2 KiB)  TX bytes:80394 (78.5 KiB)
           Interrupt:42 
 
 lo        Link encap:Local Loopback  
           inet addr:127.0.0.1  Mask:255.0.0.0
           inet6 addr: ::1/128 Scope:Host
           UP LOOPBACK RUNNING  MTU:16436  Metric:1
-          RX packets:2 errors:0 dropped:0 overruns:0 frame:0
-          TX packets:2 errors:0 dropped:0 overruns:0 carrier:0
+          RX packets:4 errors:0 dropped:0 overruns:0 frame:0
+          TX packets:4 errors:0 dropped:0 overruns:0 carrier:0
           collisions:0 txqueuelen:0 
-          RX bytes:100 (100.0 B)  TX bytes:100 (100.0 B)
+          RX bytes:200 (200.0 B)  TX bytes:200 (200.0 B)
 
   PID USER       VSZ STAT COMMAND
     1 root       980 S    init                
     2 root         0 SW   [kthreadd]
     3 root         0 SW   [ksoftirqd/0]
+    4 root         0 SW   [kworker/0:0]
     5 root         0 SW   [kworker/u:0]
     6 root         0 SW<  [khelper]
     7 root         0 SW   [sync_supers]
@@ -83,7 +1800,7 @@ lo        Link encap:Local Loopback
     9 root         0 SW<  [kblockd]
    10 root         0 SW<  [5e00000.spi]
    11 root         0 SW<  [rpciod]
-   12 root         0 SW   [kswapd0]
+   12 root         0 DW   [kswapd0]
    13 root         0 SW   [kworker/0:1]
    14 root         0 SW   [fsnotify_mark]
    15 root         0 SW<  [nfsiod]
@@ -115,18 +1832,18 @@ lo        Link encap:Local Loopback
   372 root       980 S    /bin/sh /phone/scripts/netapp.sh 
   384 root      8132 S    /boot/bin/rtServer.exx 
   436 root      7916 S    /boot/bin/autoServer.exx 
-  500 root      2800 S    ./sbin/lighttpd -f /phone/bin/lighttpd/config/lighttp
-  501 root      8032 S    /phone/html/WEB-INFO/bin/fcgiServer.exx 
+  500 root      2796 S    ./sbin/lighttpd -f /phone/bin/lighttpd/config/lighttp
+  501 root      8028 S    /phone/html/WEB-INFO/bin/fcgiServer.exx 
   503 root       984 S    /bin/sh /phone/scripts/phoneapp.sh 
-  505 root       980 S    /bin/sh /phone/scripts/sipapp.sh 
-  508 root       984 S    /bin/sh /phone/scripts/TR069.sh 
-  528 root      8824 S    /phone/bin/sipServer.exx 
+  506 root       980 S    /bin/sh /phone/scripts/sipapp.sh 
+  511 root       984 S    /bin/sh /phone/scripts/TR069.sh 
+  532 root      8808 S    /phone/bin/sipServer.exx 
   586 root     15412 S    /phone/bin/Screen.exx 
   588 root      6960 S    /phone/bin/ipvpserver 
   597 root      7360 S    /phone/bin/tr069_client 
   598 root         0 SW   [kworker/0:2]
   599 root         0 DW   [kvoice]
-  617 root         0 SW   [flush-mtd-unmap]
+  618 root         0 SW   [flush-mtd-unmap]
   683 root       636 S    /phone/bin/busybox udhcpc -b -i eth0 -a -s /boot/bin/
-  692 root       984 S    sh -c cd /tmp;ifconfig >> log/000BEA85ED68.log;ps >> 
-  694 root       980 R    ps 
+  685 root       984 S    sh -c cd /tmp;ifconfig >> log/000BEA85ED68.log;ps >> 
+  687 root       980 R    ps 
