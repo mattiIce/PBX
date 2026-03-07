@@ -133,3 +133,77 @@ def test_ilbc_mode_configuration() -> None:
 
     assert "rtpmap:97 iLBC/8000" in sdp_body_20, "SDP should contain iLBC codec"
     assert "fmtp:97 mode=20" in sdp_body_20, "SDP should contain mode=20 for iLBC"
+
+
+def test_rtpmap_overrides_for_zultys_phones() -> None:
+    """Test that rtpmap_overrides replaces standard codec names in SDP.
+
+    Zultys ZIP 33G/37G phones use non-standard numeric codec names like
+    "0/8000" instead of "PCMU/8000".  Their RTP engine does a string
+    comparison and rejects the media session when names don't match,
+    producing no audio.  The PBX must mirror these names back.
+    """
+    zultys_overrides = {
+        "0": "0/8000",
+        "8": "8/8000",
+        "9": "9/8000",
+        "18": "18/8000",
+        "2": "2/8000",
+    }
+
+    sdp_body = SDPBuilder.build_audio_sdp(
+        local_ip="192.168.1.14",
+        local_port=10000,
+        session_id="test-zultys",
+        codecs=["0", "8", "9", "18", "2", "101"],
+        rtpmap_overrides=zultys_overrides,
+    )
+
+    # Verify numeric names are used instead of standard names
+    assert "rtpmap:0 0/8000" in sdp_body, "Should use Zultys numeric name for PCMU"
+    assert "rtpmap:8 8/8000" in sdp_body, "Should use Zultys numeric name for PCMA"
+    assert "rtpmap:9 9/8000" in sdp_body, "Should use Zultys numeric name for G722"
+    assert "rtpmap:18 18/8000" in sdp_body, "Should use Zultys numeric name for G729"
+    assert "rtpmap:2 2/8000" in sdp_body, "Should use Zultys numeric name for G726-32"
+
+    # Standard names should NOT appear
+    assert "PCMU/8000" not in sdp_body, "Standard PCMU name should not appear"
+    assert "PCMA/8000" not in sdp_body, "Standard PCMA name should not appear"
+    assert "G722/8000" not in sdp_body, "Standard G722 name should not appear"
+
+    # telephone-event should still use standard name (not overridden)
+    assert "rtpmap:101 telephone-event/8000" in sdp_body, (
+        "telephone-event should keep standard name"
+    )
+
+
+def test_rtpmap_overrides_not_applied_when_none() -> None:
+    """Test that standard codec names are used when no overrides given."""
+    sdp_body = SDPBuilder.build_audio_sdp(
+        local_ip="192.168.1.14",
+        local_port=10000,
+        session_id="test-standard",
+        codecs=["0", "8", "101"],
+        rtpmap_overrides=None,
+    )
+
+    assert "rtpmap:0 PCMU/8000" in sdp_body, "Should use standard PCMU name"
+    assert "rtpmap:8 PCMA/8000" in sdp_body, "Should use standard PCMA name"
+
+
+def test_rtpmap_overrides_partial() -> None:
+    """Test that partial overrides only affect specified payload types."""
+    partial_overrides = {
+        "0": "0/8000",  # Override only PCMU
+    }
+
+    sdp_body = SDPBuilder.build_audio_sdp(
+        local_ip="192.168.1.14",
+        local_port=10000,
+        session_id="test-partial",
+        codecs=["0", "8", "101"],
+        rtpmap_overrides=partial_overrides,
+    )
+
+    assert "rtpmap:0 0/8000" in sdp_body, "PCMU should use override name"
+    assert "rtpmap:8 PCMA/8000" in sdp_body, "PCMA should keep standard name"

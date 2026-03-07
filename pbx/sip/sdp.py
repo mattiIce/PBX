@@ -221,12 +221,12 @@ class SDPBuilder:
                 Each string should be a complete crypto attribute value, e.g.
                 "1 AES_CM_128_HMAC_SHA1_80 inline:<key>".
             rtpmap_overrides: Optional mapping of payload type -> "name/rate" to use
-                instead of standard codec names for dynamic payload types (96+).
-                Static payload types (0-34) always use standard names because
-                phone RTP engines (including Zultys ZIP 33G/37G) require them
-                to match codecs, even when the phone's own SDP offer uses
-                non-standard numeric names.  Reserved for future use with
-                dynamic payload type remapping.
+                instead of standard codec names.  When provided, overrides apply
+                to both static (0-34) and dynamic (96+) payload types.  This is
+                needed for phones like Zultys ZIP 33G/37G whose RTP engines
+                compare codec names as strings and reject the media session when
+                the answer uses different names from the offer (e.g. they send
+                "0/8000" instead of "PCMU/8000" and expect the same back).
 
         Returns:
             SDP body as string.
@@ -261,16 +261,17 @@ class SDPBuilder:
             "2": "G726-32/8000",
         }
 
-        # Add rtpmap for each standard static codec.
-        # Always use standard codec names for static payload types (0-34).
-        # Some phones (e.g. Zultys ZIP 33G/37G) send non-standard numeric
-        # names like "0/8000" instead of "PCMU/8000" in their SDP offers,
-        # but their RTP engines expect standard names in the SDP answer.
-        # Mirroring non-standard names causes "can't match the codec" errors.
-        # rtpmap_overrides only apply to dynamic payload types (96+).
+        # Add rtpmap for each static codec.  When rtpmap_overrides are
+        # provided for a payload type, use the override name instead of the
+        # standard one.  Zultys ZIP 33G/37G phones send non-standard numeric
+        # names like "0/8000" instead of "PCMU/8000" in their SDP and their
+        # RTP engine compares codec names as strings — if the answer doesn't
+        # mirror the same names, the phone rejects the media session and
+        # produces no audio.
         for pt in ("0", "8", "9", "18", "2"):
             if pt in codecs:
-                attributes.append(f"rtpmap:{pt} {_standard_names[pt]}")
+                name = (rtpmap_overrides or {}).get(pt, _standard_names[pt])
+                attributes.append(f"rtpmap:{pt} {name}")
 
         # Support for G.726 variants with dynamic payload types
         # G.726-40 (typically uses dynamic PT 114)
