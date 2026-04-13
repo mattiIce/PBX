@@ -75,7 +75,7 @@ test = [
 dev = [
     "warden-voip[test]",
     "ruff>=0.15",
-    "mypy>=1.19",
+    "mypy>=1.20.1",
     "pre-commit>=4.5",
     "sphinx>=9.1",
     "sphinx-rtd-theme>=3.1",
