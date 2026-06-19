@@ -682,10 +682,10 @@ sudo iptables -D OUTPUT -d 192.168.1.11 -j DROP
 Import the HA dashboard:
 
 ```bash
-# Import HA-specific dashboard
+# Import the PBX overview dashboard
 curl -X POST http://grafana:3000/api/dashboards/db \
   -H "Content-Type: application/json" \
-  -d @grafana/dashboards/pbx-ha-overview.json
+  -d @grafana/dashboards/pbx-overview.json
 ```
 
 ### Alerting Rules
@@ -847,7 +847,8 @@ done
 
 ### C. Reference Architecture Diagram
 
-See `docs/diagrams/ha-architecture.png`
+See the [Architecture](#architecture) section above, which documents the active-passive,
+active-active, and geographic-redundancy reference topologies.
 
 ---
 

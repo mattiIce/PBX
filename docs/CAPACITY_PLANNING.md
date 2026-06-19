@@ -30,7 +30,7 @@ Use the calculator script to get initial sizing recommendations:
 python3 scripts/capacity_calculator.py \
     --extensions 500 \
     --concurrent-calls 100 \
-    --storage-days 90
+    --recording-retention-days 90
 ```
 
 ---
@@ -269,7 +269,7 @@ python3 scripts/load_test_sip.py \
 
 # Benchmark API performance
 python3 scripts/benchmark_performance.py \
-    --duration 300
+    --format json
 ```
 
 **Store benchmark results for trend analysis:**

@@ -3,12 +3,20 @@
 ## Overview
 This document explains how the "Add New Phone Device" form dropdowns retrieve data from the PostgreSQL database.
 
+The API layer is implemented as Flask blueprints. The relevant route modules are
+`pbx/api/routes/provisioning.py` and `pbx/api/routes/extensions.py`. Authentication is
+enforced with the `@require_auth` / `@require_admin` decorators (or a direct
+`verify_authentication()` call) from `pbx/api/utils.py`, and JSON responses are produced via
+the `send_json()` helper (or Flask's `jsonify()`).
+
 ## Database Tables
 
 ### 1. Extensions Table
 Stores user extensions/phone numbers.
 
-**Schema** (from `pbx/utils/database.py` lines 520-543):
+**Schema** (see `extensions` table in `pbx/utils/database.py`, `Database.initialize_schema()`).
+The `id` column uses a `{SERIAL}`/`{BOOLEAN_*}` placeholder that is rendered to the correct
+dialect (PostgreSQL or SQLite) by `_build_table_sql()`:
 ```sql
 CREATE TABLE IF NOT EXISTS extensions (
     id SERIAL PRIMARY KEY,
@@ -34,14 +42,17 @@ CREATE TABLE IF NOT EXISTS extensions (
 ### 2. Provisioned Devices Table
 Stores phone provisioning configuration.
 
-**Schema** (from `pbx/utils/database.py` lines 503-518):
+**Schema** (see `provisioned_devices` table in `pbx/utils/database.py`,
+`Database.initialize_schema()`):
 ```sql
 CREATE TABLE IF NOT EXISTS provisioned_devices (
     id SERIAL PRIMARY KEY,
     mac_address VARCHAR(20) UNIQUE NOT NULL,
     extension_number VARCHAR(20) NOT NULL,
+    extension_number_2 VARCHAR(20),
     vendor VARCHAR(50) NOT NULL,
     model VARCHAR(50) NOT NULL,
+    device_type VARCHAR(20) DEFAULT 'phone',
     static_ip VARCHAR(50),
     config_url VARCHAR(255),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -55,69 +66,65 @@ CREATE TABLE IF NOT EXISTS provisioned_devices (
 ### Extension Dropdown
 
 #### Backend Loading (pbx/features/extensions.py)
-```python
-def _load_extensions(self):
-    """Load extensions from database only (for security)"""
-    # Lines 122-142
-    from pbx.utils.database import ExtensionDB
-    
-    ext_db = ExtensionDB(self.database)
-    db_extensions = ext_db.get_all()  # SELECT * FROM extensions
-    
-    for ext_data in db_extensions:
-        extension = self.create_extension_from_db(ext_data)
-        self.extensions[number] = extension
-```
+Extensions are loaded from the database into the in-memory registry. The
+`ExtensionFeature._load_extensions()` method reads every row via `ExtensionDB.get_all()`
+(`SELECT * FROM extensions`) and builds the runtime extension objects.
 
-#### API Endpoint (pbx/api/routes/)
+#### API Endpoint (pbx/api/routes/extensions.py)
+The `get_extensions()` view backs `GET /api/extensions`. It calls `verify_authentication()`
+and returns `401` when no valid token is present. Admins receive every extension; non-admin
+users receive only their own extension:
 ```python
-def _handle_get_extensions(self):
+@extensions_bp.route("/api/extensions", methods=["GET"])
+def get_extensions() -> tuple[Response, int]:
     """Get extensions."""
-    # Lines 1368-1400
-    # SECURITY: Require authentication
-    is_authenticated, payload = self._verify_authentication()
-    if not is_authenticated:
-        self._send_json({"error": "Authentication required"}, 401)
-        return
-    
-    extensions = self.pbx_core.extension_registry.get_all()
+    # SECURITY: Require authentication (but not necessarily admin)
+    is_authenticated, payload = verify_authentication()
+    if not is_authenticated or payload is None:
+        return jsonify({"error": "Authentication required"}), 401
+
+    pbx_core = get_pbx_core()
+    extensions = pbx_core.extension_registry.get_all()
+    is_admin = payload.get("is_admin", False)
+    current_extension = payload.get("extension")
+    if not is_admin:
+        extensions = [e for e in extensions if e.number == current_extension]
+
     data = [
-        {
-            "number": e.number,
-            "name": e.name,
-            "email": e.config.get("email"),
-            ...
-        }
+        {"number": e.number, "name": e.name, "email": e.config.get("email"), ...}
         for e in extensions
     ]
-    self._send_json(data)
+    return send_json(data), 200
 ```
 
-**API Endpoint**: `GET /api/extensions`  
+**API Endpoint**: `GET /api/extensions`
 **Authentication**: Required
-**PostgreSQL Query**: `SELECT * FROM extensions`
+**Source query**: `SELECT * FROM extensions` (loaded into `extension_registry`)
 
-#### Frontend JavaScript (admin/js/admin.js)
-```javascript
-async function populateProvisioningFormDropdowns() {
-    // Lines 2141-2168
+#### Frontend (admin/js/pages/provisioning.ts)
+`loadExtensionsForProvisioning()` fetches `/api/extensions` with `getAuthHeaders()` and fills
+the extension `<select>`:
+```typescript
+async function loadExtensionsForProvisioning(): Promise<void> {
+    const API_BASE = getApiBaseUrl();
     const response = await fetch(`${API_BASE}/api/extensions`, {
-        headers: getAuthHeaders()  // Includes Bearer token
+        headers: getAuthHeaders()  // includes Bearer token
     });
-    
-    const extensions = await response.json();
-    extensionSelect.innerHTML = '<option value="">Select Extension</option>';
-    
-    extensions.forEach(ext => {
+    const extensions: ExtensionEntry[] = await response.json();
+
+    const select = document.getElementById('device-extension') as HTMLSelectElement | null;
+    if (!select) return;
+    select.innerHTML = '<option value="">Select Extension</option>';
+    for (const ext of extensions) {
         const option = document.createElement('option');
         option.value = ext.number;
         option.textContent = `${ext.number} - ${ext.name}`;
-        extensionSelect.appendChild(option);
-    });
+        select.appendChild(option);
+    }
 }
 ```
 
-**HTML Element**: `<select id="device-extension">`  
+**HTML Element**: `<select id="device-extension">`
 **Data Source**: PostgreSQL `extensions` table
 
 ---
@@ -125,208 +132,191 @@ async function populateProvisioningFormDropdowns() {
 ### Vendor Dropdown
 
 #### Backend Loading (pbx/features/phone_provisioning.py)
+`PhoneProvisioning.get_supported_vendors()` derives the vendor list from the built-in phone
+templates (the keys of `self.templates`); it does not read the database:
 ```python
-def get_supported_vendors(self):
+def get_supported_vendors(self) -> list:
     """Get list of supported vendors"""
-    # Lines 1513-1523
     vendors = set()
-    for vendor, model in self.templates.keys():
+    for vendor, _model in self.templates:
         vendors.add(vendor)
-    return sorted(list(vendors))
+    return sorted(vendors)
 ```
 
-**Note**: Vendors come from built-in phone templates (hardcoded), NOT from database.  
-This is intentional - templates define supported phone models.
+**Note**: Vendors come from built-in phone templates (loaded by `_load_builtin_templates()`),
+NOT from the database. This is intentional — templates define supported phone models.
 
-#### API Endpoint (pbx/api/routes/)
+#### API Endpoint (pbx/api/routes/provisioning.py)
+`handle_get_provisioning_vendors()` backs `GET /api/provisioning/vendors`. It is protected by
+the `@require_auth` decorator and returns both the vendor list and the per-vendor model map:
 ```python
-def _handle_get_provisioning_vendors(self):
+@provisioning_bp.route("/api/provisioning/vendors", methods=["GET"])
+@require_auth
+def handle_get_provisioning_vendors() -> Response:
     """Get supported vendors and models."""
-    # Lines 1588-1602
-    # SECURITY: Require authentication (NEW - FIXED IN THIS PR)
-    is_authenticated, payload = self._verify_authentication()
-    if not is_authenticated:
-        self._send_json({"error": "Authentication required"}, 401)
-        return
-    
-    vendors = self.pbx_core.phone_provisioning.get_supported_vendors()
-    models = self.pbx_core.phone_provisioning.get_supported_models()
-    data = {"vendors": vendors, "models": models}
-    self._send_json(data)
+    pbx_core = get_pbx_core()
+    if pbx_core and hasattr(pbx_core, "phone_provisioning"):
+        vendors = pbx_core.phone_provisioning.get_supported_vendors()
+        models = pbx_core.phone_provisioning.get_supported_models()
+        return send_json({"vendors": vendors, "models": models})
+    return send_json({"error": "Phone provisioning not enabled"}, 500)
 ```
 
-**API Endpoint**: `GET /api/provisioning/vendors`  
-**Authentication**: Required (Fixed)
+**API Endpoint**: `GET /api/provisioning/vendors`
+**Authentication**: Required (`@require_auth`)
 **Data Source**: Built-in templates (static configuration)
 
-#### Frontend JavaScript (admin/js/admin.js)
-```javascript
-async function loadSupportedVendors() {
-    // Lines 2365-2394
+#### Frontend (admin/js/pages/provisioning.ts)
+`loadSupportedVendors()` fetches `/api/provisioning/vendors`, caches the vendor list and model
+map in module state, then calls `populateProvisioningFormDropdowns()` to fill the vendor
+`<select>`:
+```typescript
+export async function loadSupportedVendors(): Promise<void> {
+    const API_BASE = getApiBaseUrl();
     const response = await fetch(`${API_BASE}/api/provisioning/vendors`, {
-        headers: getAuthHeaders()  // Authentication required
+        headers: getAuthHeaders()  // authentication required
     });
-    const data = await response.json();
-    
+    const data: VendorsResponse = await response.json();
     supportedVendors = data.vendors || [];
     supportedModels = data.models || {};
-    
-    // Populate vendor dropdown
+    populateProvisioningFormDropdowns();
+    populateSupportedVendorsList();
+}
+
+function populateProvisioningFormDropdowns(): void {
+    const vendorSelect = document.getElementById('device-vendor') as HTMLSelectElement | null;
+    if (!vendorSelect) return;
     vendorSelect.innerHTML = '<option value="">Select Vendor</option>';
-    supportedVendors.forEach(vendor => {
+    for (const v of supportedVendors) {
         const option = document.createElement('option');
-        option.value = vendor;
-        option.textContent = vendor.toUpperCase();
+        option.value = v;
+        option.textContent = v;
         vendorSelect.appendChild(option);
-    });
+    }
 }
 ```
 
-**HTML Element**: `<select id="device-vendor">`  
+**HTML Element**: `<select id="device-vendor">`
 **Data Source**: Built-in templates
 
-**Supported Vendors** (as of latest code in `pbx/features/phone_provisioning.py` lines 259-1017):
+**Supported Vendors** (defined by the built-in templates in `_load_builtin_templates()`):
 - yealink
 - polycom
 - grandstream
 - cisco
 - zultys
 
-**Note**: This list is defined by the built-in phone templates loaded in `_load_builtin_templates()` method and may be extended over time.
+**Note**: This list is defined by the built-in phone templates and may be extended over time.
 
-**Total Models**: 13 built-in phone templates
+**Total Models**: 17 built-in phone templates
 
 ---
 
 ### Model Dropdown
 
-#### Frontend JavaScript (admin/js/admin.js)
-```javascript
-function updateModelOptions() {
-    // Lines 2436-2454
-    const vendor = document.getElementById('device-vendor').value;
-    const modelSelect = document.getElementById('device-model');
-    
+#### Frontend (admin/js/pages/provisioning.ts)
+`updateModelOptions()` runs when the vendor dropdown changes. It looks up the models for the
+selected vendor from the cached `supportedModels` map and fills the model `<select>`:
+```typescript
+export function updateModelOptions(): void {
+    const vendorSelect = document.getElementById('device-vendor') as HTMLSelectElement | null;
+    const modelSelect = document.getElementById('device-model') as HTMLSelectElement | null;
+    if (!vendorSelect || !modelSelect) return;
+
+    const vendor = vendorSelect.value;
+    modelSelect.innerHTML = '';
     if (!vendor) {
         modelSelect.innerHTML = '<option value="">Select Vendor First</option>';
         return;
     }
-    
-    const models = supportedModels[vendor] || [];
+    const models = supportedModels[vendor] || supportedModels[vendor.toLowerCase()] || [];
     modelSelect.innerHTML = '<option value="">Select Model</option>';
-    
-    models.forEach(model => {
+    for (const m of models) {
         const option = document.createElement('option');
-        option.value = model;
-        option.textContent = model.toUpperCase();
+        option.value = m;
+        option.textContent = m;
         modelSelect.appendChild(option);
-    });
+    }
 }
 ```
 
-**HTML Element**: `<select id="device-model">`  
-**Data Source**: Built-in templates (filtered by selected vendor)  
-**Trigger**: `onchange` event from vendor dropdown
+**HTML Element**: `<select id="device-model">`
+**Data Source**: Built-in templates (filtered by selected vendor)
+**Trigger**: `onchange` event from the vendor dropdown
 
 ---
 
 ### Provisioned Devices List
 
 #### Backend Loading (pbx/features/phone_provisioning.py)
-```python
-def _load_devices_from_database(self):
-    """Load provisioned devices from database into memory"""
-    # Lines 229-257
-    db_devices = self.devices_db.list_all()  # SELECT * FROM provisioned_devices
-    
-    for db_device in db_devices:
-        device = ProvisioningDevice(
-            mac_address=db_device["mac_address"],
-            extension_number=db_device["extension_number"],
-            vendor=db_device["vendor"],
-            model=db_device["model"],
-            config_url=db_device.get("config_url"),
-        )
-        self.devices[device.mac_address] = device
-```
+On startup, `_load_devices_from_database()` reads `provisioned_devices`
+(via the devices DB `list_all()`, i.e. `SELECT * FROM provisioned_devices`) and rebuilds the
+in-memory `ProvisioningDevice` objects.
 
-#### API Endpoint (pbx/api/routes/)
+#### API Endpoint (pbx/api/routes/provisioning.py)
+`handle_get_provisioning_devices()` backs `GET /api/provisioning/devices`. It is protected by
+the `@require_admin` decorator:
 ```python
-def _handle_get_provisioning_devices(self):
+@provisioning_bp.route("/api/provisioning/devices", methods=["GET"])
+@require_admin
+def handle_get_provisioning_devices() -> Response:
     """Get all provisioned devices."""
-    # Lines 1573-1586
-    # SECURITY: Require authentication (NEW - FIXED IN THIS PR)
-    is_authenticated, payload = self._verify_authentication()
-    if not is_authenticated:
-        self._send_json({"error": "Authentication required"}, 401)
-        return
-    
-    devices = self.pbx_core.phone_provisioning.get_all_devices()
-    data = [d.to_dict() for d in devices]
-    self._send_json(data)
+    pbx_core = get_pbx_core()
+    if pbx_core and hasattr(pbx_core, "phone_provisioning"):
+        devices = pbx_core.phone_provisioning.get_all_devices()
+        return send_json([d.to_dict() for d in devices])
+    return send_json({"error": "Phone provisioning not enabled"}, 500)
 ```
 
-**API Endpoint**: `GET /api/provisioning/devices`  
-**Authentication**: Required (Fixed)
-**PostgreSQL Query**: `SELECT * FROM provisioned_devices`
+**API Endpoint**: `GET /api/provisioning/devices`
+**Authentication**: Required (`@require_admin` — admin only)
+**Source query**: `SELECT * FROM provisioned_devices`
 
 ---
 
 ## Authentication Flow
 
 ### Login Process
-1. User enters extension number and voicemail PIN in login form
+1. User enters extension number and voicemail PIN in the login form
 2. Frontend sends `POST /api/auth/login` with credentials
-3. Backend validates credentials against PostgreSQL `extensions` table
-4. Backend returns JWT token
-5. Frontend stores token in localStorage as `pbx_token`
+3. Backend validates credentials against the PostgreSQL `extensions` table
+4. Backend returns a session token
+5. Frontend stores the token in localStorage as `pbx_token`
 
 ### Authenticated API Calls
-```javascript
-function getAuthHeaders() {
-    const token = localStorage.getItem('pbx_token');
-    const headers = {
-        'Content-Type': 'application/json'
-    };
-    
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
-    
-    return headers;
-}
-```
+The frontend attaches the token via `getAuthHeaders()` (imported from `../api/client.ts`):
+```typescript
+import { getAuthHeaders, getApiBaseUrl } from '../api/client.ts';
 
-All dropdown population API calls include authentication:
-```javascript
 const response = await fetch(`${API_BASE}/api/extensions`, {
-    headers: getAuthHeaders()  // Includes: Authorization: Bearer <token>
+    headers: getAuthHeaders()  // includes: Authorization: Bearer <token>
 });
 ```
 
+On the backend, `verify_authentication()` in `pbx/api/utils.py` extracts the Bearer token and
+validates it with the session token manager. The `@require_auth` decorator rejects
+unauthenticated requests with `401`; `@require_admin` additionally rejects non-admin tokens
+with `403`.
+
 ---
 
-## Security Enhancements (This PR)
+## Endpoint Authentication Summary
 
-### Before
-- `/api/provisioning/vendors` - No authentication required
-- `/api/provisioning/devices` - No authentication required
-- `/api/provisioning/templates` - No authentication required
-- `/api/provisioning/diagnostics` - No authentication required
-- `/api/provisioning/requests` - No authentication required
-- `/api/extensions` - Authentication required
+All provisioning endpoints require authentication. Some require admin privileges:
 
-**Problem**: Inconsistent authentication caused extension dropdown to fail while vendor dropdown might work, creating confusion.
+| Endpoint | Decorator | Access |
+|----------|-----------|--------|
+| `GET /api/extensions` | `verify_authentication()` | Authenticated (non-admins see only their own extension) |
+| `GET /api/provisioning/vendors` | `@require_auth` | Authenticated |
+| `GET /api/provisioning/templates` | `@require_auth` | Authenticated |
+| `GET /api/provisioning/devices` | `@require_admin` | Admin only |
+| `POST /api/provisioning/devices` | `@require_admin` | Admin only |
+| `GET /api/provisioning/diagnostics` | `@require_admin` | Admin only |
+| `GET /api/provisioning/requests` | `@require_admin` | Admin only |
 
-### After (Fixed)
-- `/api/provisioning/vendors` - Authentication required
-- `/api/provisioning/devices` - Authentication required
-- `/api/provisioning/templates` - Authentication required
-- `/api/provisioning/diagnostics` - Authentication required
-- `/api/provisioning/requests` - Authentication required
-- `/api/extensions` - Authentication required
-
-**Result**: All endpoints now consistently require authentication. Dropdowns will either all work (when authenticated) or all fail (when not authenticated), making troubleshooting easier.
+Because every dropdown-feeding endpoint requires authentication, the dropdowns either all
+populate (when the user is authenticated) or all fail consistently (when not), which makes
+troubleshooting straightforward.
 
 ---
 
@@ -334,45 +324,28 @@ const response = await fetch(`${API_BASE}/api/extensions`, {
 
 When a user adds a new phone device:
 
-1. **Frontend**: User fills form and clicks "Add Device"
-2. **Frontend**: Sends `POST /api/provisioning/devices` with device data
-3. **Backend API** (pbx/api/routes/):
+1. **Frontend**: User fills the form and submits it (`add-device-form`)
+2. **Frontend**: Sends `POST /api/provisioning/devices` with the device data
+3. **Backend API** (`pbx/api/routes/provisioning.py`) — `handle_register_device()` (admin only):
    ```python
-   def _handle_add_provisioning_device(self):
-       # Validates authentication
-       # Calls pbx_core.phone_provisioning.register_device()
+   @provisioning_bp.route("/api/provisioning/devices", methods=["POST"])
+   @require_admin
+   def handle_register_device() -> Response:
+       body = get_request_body()
+       device = pbx_core.phone_provisioning.register_device(
+           body["mac_address"], body["extension_number"],
+           body["vendor"], body["model"],
+           extension_number_2=body.get("extension_number_2"),
+       )
+       # Auto-reboots the phone if the extension is currently registered
+       return send_json({"success": True, "device": device.to_dict()})
    ```
-4. **Backend Provisioning** (pbx/features/phone_provisioning.py):
-   ```python
-   def register_device(self, mac_address, extension_number, vendor, model):
-       # Lines 1068-1135
-       device = ProvisioningDevice(mac_address, extension_number, vendor, model)
-       self.devices[device.mac_address] = device
-       
-       # Save to PostgreSQL database
-       if self.devices_db:
-           self.devices_db.add_device(
-               mac_address=device.mac_address,
-               extension_number=extension_number,
-               vendor=vendor,
-               model=model,
-               config_url=config_url,
-           )
-   ```
-5. **Database Layer** (pbx/utils/database.py):
-   ```python
-   def add_device(self, mac_address, extension_number, vendor, model, ...):
-       # Lines 1674-1746
-       query = """
-       INSERT INTO provisioned_devices
-       (mac_address, extension_number, vendor, model, static_ip, config_url,
-        created_at, updated_at)
-       VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
-       """
-       # Or UPDATE if device already exists
-   ```
+4. **Backend Provisioning** (`pbx/features/phone_provisioning.py`) — `register_device()` adds the
+   device to the in-memory map and persists it via the devices DB.
+5. **Database Layer** (`pbx/utils/database.py`) — `add_device()` runs an `INSERT INTO
+   provisioned_devices (...)` (or an `UPDATE` if the device already exists).
 
-**Result**: Device is stored in PostgreSQL and loaded on next startup
+**Result**: The device is stored in PostgreSQL and reloaded on the next startup.
 
 ---
 
@@ -389,24 +362,21 @@ database:
   password: ${DB_PASSWORD}  # From environment variable (REQUIRED)
 ```
 
-Environment variables should be set in `.env` file (not committed to git).
+Environment variables should be set in a `.env` file (not committed to git).
 
 ---
 
 ## Summary
 
 ### Data from PostgreSQL Database
-1. **Extensions** - Loaded from `extensions` table
-2. **Provisioned Devices** - Loaded from `provisioned_devices` table
+1. **Extensions** — loaded from the `extensions` table
+2. **Provisioned Devices** — loaded from the `provisioned_devices` table
 
 ### Data from Configuration (By Design)
-3. **Phone Vendors** - From built-in templates (static)
-4. **Phone Models** - From built-in templates (static)
+3. **Phone Vendors** — from built-in templates (static)
+4. **Phone Models** — from built-in templates (static)
 
 ### Security
-- All API endpoints require authentication
-- JWT tokens used for session management
-- Passwords hashed with PBKDF2-HMAC-SHA256 (FIPS 140-2 compliant)
-
-### Issue Resolution
-The dropdowns were failing because provisioning endpoints didn't require authentication, causing inconsistent behavior. This PR fixes that by requiring authentication on all provisioning endpoints, ensuring all dropdowns work consistently when the user is properly authenticated.
+- All dropdown-feeding API endpoints require authentication (some require admin)
+- Bearer session tokens are used for session management
+- Passwords are hashed with PBKDF2-HMAC-SHA256 (FIPS 140-2 compliant)

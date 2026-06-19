@@ -110,7 +110,6 @@ Remote_Party_ID_1_ : Yes
 
 #### Zultys (ZIP33G, ZIP37G)
 ```
-account.1.send_line_id = 1
 account.1.enable_user_equal_phone = 1
 ```
 

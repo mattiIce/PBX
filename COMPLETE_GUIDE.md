@@ -111,7 +111,7 @@ SMTP_PASSWORD=your-app-specific-password
 # Optional: Integrations
 ZOOM_CLIENT_ID=your_zoom_client_id
 ZOOM_CLIENT_SECRET=your_zoom_secret
-OPENAI_API_KEY=your_openai_key  # For voicemail transcription
+OPENAI_API_KEY=your_openai_key  # For conversational AI (optional)
 ```
 
 Use the interactive setup script:
@@ -293,7 +293,7 @@ server {
 - Call hold, resume, transfer, forward
 - Conference calling (multi-party)
 - Call parking and retrieval
-- Music on hold (5 tracks included)
+- Music on hold (default track included; generate more with `scripts/generate_moh_music.py`)
 - Voicemail with email notifications
 - Auto-attendant (IVR) system
 - Call Detail Records (CDR)
@@ -545,7 +545,7 @@ voicemail:
   # Transcription (optional)
   transcription:
     enabled: false
-    provider: "vosk"  # "openai", "google", or "vosk" (offline)
+    provider: "vosk"  # "google" or "vosk" (offline)
 ```
 
 **Recording Custom Greetings:**
@@ -779,7 +779,6 @@ Configure on phone:
 - Least Recent - Route to agent who answered longest ago
 - Fewest Calls - Route to agent with least calls answered
 - Random - Random agent selection
-- Priority - Based on agent priority levels
 
 **Configuration:**
 ```yaml
@@ -1042,13 +1041,16 @@ smtp:
 
 ### 5.5 Zoom Integration
 
-**OAuth Setup:**
-1. Create Zoom OAuth app: https://marketplace.zoom.us/
-2. Configure redirect URI: `https://pbx.company.com:9000/api/zoom/callback`
-3. Get Client ID and Secret
+Zoom integration uses a **Server-to-Server OAuth** app (no browser redirect/callback is required).
+
+**Setup:**
+1. In the Zoom App Marketplace (https://marketplace.zoom.us/), create a **Server-to-Server OAuth** app.
+2. Copy the **Account ID**, **Client ID**, and **Client Secret**.
+3. Add the required scopes (e.g. `meeting:write`, plus `phone:*` if using Zoom Phone routing).
 
 ```bash
 # .env
+ZOOM_ACCOUNT_ID=your_account_id
 ZOOM_CLIENT_ID=your_client_id
 ZOOM_CLIENT_SECRET=your_client_secret
 ```
@@ -1058,21 +1060,18 @@ ZOOM_CLIENT_SECRET=your_client_secret
 integrations:
   zoom:
     enabled: true
+    account_id: "${ZOOM_ACCOUNT_ID}"
     client_id: "${ZOOM_CLIENT_ID}"
     client_secret: "${ZOOM_CLIENT_SECRET}"
-    redirect_uri: "https://pbx.company.com:9000/api/zoom/callback"
+    phone_enabled: false          # set true to enable Zoom Phone routing
+    api_base_url: "https://api.zoom.us/v2"
 ```
 
-**Create Meeting:**
-```bash
-curl -X POST https://localhost:9000/api/zoom/meeting \
-  -H "Content-Type: application/json" \
-  -d '{
-    "topic": "Sales Meeting",
-    "start_time": "2025-01-20T14:00:00Z",
-    "duration": 60
-  }'
-```
+**Creating meetings:** Meetings are created programmatically by the PBX through the
+`ZoomIntegration` module (`pbx/integrations/zoom.py`) — for example `start_instant_meeting()`
+to launch an instant meeting for an extension, or `create_meeting()` to schedule one. The PBX
+does not expose a standalone Zoom REST endpoint; meeting creation is triggered internally by
+PBX features (such as meeting escalation).
 
 ---
 
@@ -1410,10 +1409,10 @@ curl http://localhost:9000/metrics
 
 Metrics include:
 - `pbx_active_calls` - Current active calls
-- `pbx_total_calls` - Total calls since startup
+- `pbx_calls_total` - Total calls since startup
 - `pbx_registered_extensions` - Registered extensions
 - `pbx_voicemail_messages_total` - Unread voicemails
-- `pbx_queue_calls_waiting` - Calls in queues
+- `pbx_queue_waiting_calls` - Calls in queues
 
 ### 7.6 Backup & Recovery
 
@@ -1579,7 +1578,7 @@ sudo journalctl -u pbx -f
 sudo systemctl stop pbx
 
 # Update specific package
-uv pip install --upgrade cryptography==46.0.5
+uv pip install --upgrade cryptography==48.0.1
 
 # Verify
 python -c "from cryptography.fernet import Fernet; print('OK')"
@@ -1635,7 +1634,7 @@ python scripts/generate_tts_prompts.py
 python scripts/test_audio_comprehensive.py
 
 # Verify codecs still work
-curl -k https://localhost:9000/api/codecs
+curl -k https://localhost:9000/api/config/codecs
 ```
 
 ### 8.5 Updating PBX Code from Repository
@@ -2110,7 +2109,7 @@ uv pip show cryptography
 sudo systemctl stop pbx
 
 # 3. Update package
-uv pip install --upgrade cryptography==46.0.5
+uv pip install --upgrade cryptography==48.0.1
 
 # 4. Test import
 python -c "from cryptography.fernet import Fernet; print('✓ OK')"
@@ -2250,7 +2249,7 @@ API requests are validated using Pydantic schemas defined in `pbx/api/schemas/`:
 ```bash
 # System Status
 GET /api/status
-GET /api/health
+GET /health
 
 # Extensions
 GET    /api/extensions
@@ -2261,8 +2260,9 @@ DELETE /api/extensions/1005
 
 # Active Calls
 GET    /api/calls
-GET    /api/calls/{call_id}
-DELETE /api/calls/{call_id}
+POST   /api/calls/{call_id}/transfer
+POST   /api/calls/{call_id}/hold
+POST   /api/calls/{call_id}/resume
 
 # Call Detail Records
 GET /api/analytics/advanced?start_date=2025-01-01&end_date=2025-01-31

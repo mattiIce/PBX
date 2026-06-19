@@ -75,7 +75,7 @@ You can configure voice prompts directly from the Admin Panel:
 
 All scripts generate files in these directories:
 - `auto_attendant/` - Auto attendant prompts (5 files)
-- `voicemail_prompts/` - Voicemail system prompts (12 files)
+- `voicemail_prompts/` - Voicemail system prompts (13 files)
 
 All files are in telephony format:
 - Format: WAV

@@ -17,6 +17,7 @@ The PBX system can be deployed on Kubernetes for:
 - `deployment.yaml` - PBX application deployment with ConfigMap and Secret templates
 - `service.yaml` - Kubernetes services (LoadBalancer for PBX, ClusterIP for PostgreSQL)
 - `pvc.yaml` - PersistentVolumeClaims for storage
+- `servicemonitor.yaml` - Prometheus Operator ServiceMonitor (optional; requires kube-prometheus-stack)
 
 **Note:** ConfigMap and Secret templates are included in `deployment.yaml`. You may want to extract them into separate files for easier management. PostgreSQL StatefulSet is not included - see service.yaml for deployment options.
 

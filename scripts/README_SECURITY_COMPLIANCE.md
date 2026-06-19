@@ -233,7 +233,7 @@ security:
 #### 3. Install Required Libraries
 
 ```bash
-uv pip install cryptography>=46.0.5
+uv pip install cryptography>=48.0.1
 ```
 
 #### 4. Verify Compliance
@@ -328,7 +328,7 @@ cat /proc/sys/crypto/fips_enabled
 uv pip show cryptography
 
 # Upgrade if needed
-uv pip install --upgrade 'cryptography>=46.0.5'
+uv pip install --upgrade 'cryptography>=48.0.1'
 
 # Test encryption
 python -c "from pbx.utils.encryption import get_encryption; enc = get_encryption(fips_mode=True); print('OK')"
@@ -382,7 +382,7 @@ Before deploying to production, ensure:
 ### FIPS Requirements
 - [ ] Kernel FIPS mode enabled (`cat /proc/sys/crypto/fips_enabled` = 1)
 - [ ] OpenSSL FIPS provider available
-- [ ] Cryptography library >= 41.0.0 installed
+- [ ] Cryptography library >= 48.0.1 installed
 - [ ] PBX FIPS mode enabled in config.yml
 - [ ] All encryption tests pass
 

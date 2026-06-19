@@ -2,84 +2,53 @@
 
 ## Overview
 
-The Voice Biometrics framework provides speaker authentication and fraud detection capabilities using voice analysis. This enables secure, passwordless authentication and real-time fraud prevention.
+The Voice Biometrics framework provides speaker authentication and fraud detection using local voice analysis. It is a self-contained, open-source implementation: audio features are extracted with `pyAudioAnalysis`/`librosa` and speakers are modeled with a scikit-learn Gaussian Mixture Model (GMM), with a pure-Python fallback when those optional libraries are not installed. It does not depend on any commercial voice-biometrics provider.
 
 ## Features
 
-- **Speaker Enrollment** - Create voice profiles for users
-- **Voice Authentication** - Verify caller identity using voice
-- **Fraud Detection** - Detect voice spoofing and impersonation
-- **Passive Enrollment** - Build profiles from multiple calls
-- **Active Verification** - Challenge-response authentication
-- **Liveness Detection** - Prevent replay attacks
+- **Speaker Enrollment** - Create voice profiles from multiple audio samples
+- **Voice Verification** - Verify a claimed identity from a voice sample
+- **Fraud Detection** - Heuristic detection of replay, synthetic-voice, manipulation, and identity-mismatch indicators
 
 ## Use Cases
 
-- **Passwordless Authentication** - Login using voice only
+- **Passwordless Authentication** - Verify a caller using voice
 - **Account Security** - Additional authentication factor
-- **Fraud Prevention** - Detect unauthorized callers
+- **Fraud Prevention** - Flag suspicious or mismatched callers
 - **VIP Caller Verification** - Verify high-value customers
 - **Compliance** - Meet authentication requirements
+
+## Optional Dependencies
+
+Voice biometrics works without extra packages (basic energy/ZCR/pitch features), but accuracy improves with the optional libraries:
+
+```bash
+# FREE open-source speaker recognition features
+pip install pyAudioAnalysis
+# System packages: sudo apt-get install python3-tk portaudio19-dev
+
+# Advanced audio analysis (MFCCs, spectral features)
+pip install librosa soundfile
+
+# GMM-based speaker modeling
+pip install scikit-learn numpy
+```
 
 ## Configuration
 
 ### config.yml
+
 ```yaml
 features:
   voice_biometrics:
     enabled: true
-    provider: nuance  # nuance, pindrop, aws, azure
-    enrollment:
-      min_duration: 30        # Minimum seconds of audio for enrollment
-      quality_threshold: 0.8  # Minimum audio quality
-      passive_enabled: true   # Allow passive enrollment
-    verification:
-      threshold: 0.85         # Match threshold (0.0-1.0)
-      liveness_check: true    # Enable liveness detection
-    fraud_detection:
-      enabled: true
-      score_threshold: 0.7    # Fraud score threshold
+    provider: nuance          # Stored label only; no provider integration
+    threshold: 0.85           # Verification match threshold (0.0-1.0)
+    enrollment_samples: 3     # Number of samples required to complete enrollment
+    fraud_detection: true     # Enable heuristic fraud detection
 ```
 
-## External Service Integration
-
-### Nuance Voice Biometrics
-
-```python
-from pbx.features.voice_biometrics import get_voice_biometrics
-
-bio = get_voice_biometrics()
-
-# Configure Nuance provider
-bio.configure_provider('nuance', {
-    'api_url': 'https://voicebiometrics.nuance.com',
-    'api_key': 'your-nuance-api-key',
-    'enrollment_mode': 'dynamic'  # or 'static'
-})
-```
-
-### AWS Connect Voice ID
-
-```python
-# Configure AWS Voice ID
-bio.configure_provider('aws', {
-    'region': 'us-east-1',
-    'access_key_id': 'your-access-key',
-    'secret_access_key': 'your-secret-key',
-    'domain_id': 'your-domain-id'
-})
-```
-
-### Pindrop
-
-```python
-# Configure Pindrop
-bio.configure_provider('pindrop', {
-    'api_url': 'https://api.pindrop.com',
-    'api_key': 'your-pindrop-key',
-    'fraud_detection': True
-})
-```
+> Note: `provider` is a free-text label that is logged and returned in statistics. There is no provider-specific integration code behind it.
 
 ## Usage
 
@@ -90,220 +59,180 @@ from pbx.features.voice_biometrics import get_voice_biometrics
 
 bio = get_voice_biometrics()
 
-# Enroll a user
-result = bio.enroll_user(
-    extension='1001',
-    audio_samples=[
-        '/path/to/sample1.wav',
-        '/path/to/sample2.wav',
-        '/path/to/sample3.wav'
-    ]
-)
+# 1. Create a profile
+profile = bio.create_profile(user_id="alice", extension="1001")
 
-# Verify caller
-verification = bio.verify_caller(
-    extension='1001',
-    audio_sample='/path/to/call_audio.wav'
-)
+# 2. Start enrollment
+session = bio.start_enrollment("alice")
 
-if verification['match'] and verification['score'] > 0.85:
-    print("Caller verified!")
+# 3. Add enrollment samples (raw audio bytes; 16kHz 16-bit PCM recommended)
+for sample_bytes in collected_samples:
+    progress = bio.add_enrollment_sample("alice", sample_bytes)
+    if progress["enrollment_complete"]:
+        break
+
+# 4. Verify a speaker
+result = bio.verify_speaker("alice", audio_data=verification_bytes)
+if result["verified"]:
+    print(f"Caller verified (confidence: {result['confidence']:.2f})")
 else:
     print("Verification failed")
 
-# Check for fraud
-fraud_check = bio.detect_fraud(
-    audio_sample='/path/to/suspicious_call.wav'
+# 5. Fraud detection
+fraud = bio.detect_fraud(
+    audio_data=audio_bytes,
+    caller_info={"user_id": "alice", "call_id": "call-123", "caller_id": "5551234567"},
 )
+if fraud["fraud_detected"]:
+    print(f"Fraud detected! Risk score: {fraud['risk_score']:.2f}")
+    print(f"Indicators: {fraud['indicators']}")
 
-if fraud_check['is_fraud']:
-    print(f"Fraud detected! Score: {fraud_check['fraud_score']}")
+# Look up a profile
+profile = bio.get_profile("alice")
 ```
 
 ### REST API Endpoints
 
-#### Enroll User
+All endpoints are under the `/api/framework` prefix and require authentication.
+
+#### Create Profile
+
+```bash
+POST /api/framework/voice-biometrics/profile
+{
+  "user_id": "alice",
+  "extension": "1001"
+}
+
+Response:
+{
+  "success": true,
+  "user_id": "alice",
+  "extension": "1001",
+  "status": "BiometricStatus.NOT_ENROLLED"
+}
+```
+
+#### Start Enrollment
+
 ```bash
 POST /api/framework/voice-biometrics/enroll
 {
-  "extension": "1001",
-  "audio_samples": ["base64-encoded-audio-1", "base64-encoded-audio-2"]
+  "user_id": "alice"
+}
+
+Response:
+{
+  "success": true,
+  "user_id": "alice",
+  "required_samples": 3,
+  "session_id": "a1b2c3d4e5f6g7h8"
 }
 ```
 
-#### Verify Caller
+> Audio samples are added server-side via the Python API (`add_enrollment_sample`); the enroll endpoint only starts the session.
+
+#### Verify Speaker
+
 ```bash
 POST /api/framework/voice-biometrics/verify
 {
-  "extension": "1001",
-  "audio_sample": "base64-encoded-audio",
-  "liveness_check": true
+  "user_id": "alice",
+  "audio_data": "base64-encoded-audio"
 }
 
 Response:
 {
-  "match": true,
-  "score": 0.92,
-  "confidence": "high",
-  "liveness_passed": true
+  "verified": true,
+  "confidence": 0.92,
+  "user_id": "alice",
+  "timestamp": "2025-01-15T10:30:00+00:00"
 }
 ```
 
-#### Detect Fraud
+#### Get Profile
+
 ```bash
-POST /api/framework/voice-biometrics/verify
-{
-  "audio_sample": "base64-encoded-audio"
-}
+GET /api/framework/voice-biometrics/profile/{user_id}
 
 Response:
 {
-  "is_fraud": false,
-  "fraud_score": 0.15,
-  "indicators": [],
-  "risk_level": "low"
+  "user_id": "alice",
+  "extension": "1001",
+  "status": "BiometricStatus.ENROLLED",
+  "enrollment_completed": true,
+  "created_at": "2025-01-15T10:30:00+00:00",
+  "verification_count": 12,
+  "fraud_attempts": 1
 }
 ```
 
-#### Get Voiceprint Status
-```bash
-GET /api/framework/voice-biometrics/profile/{extension}
+#### List Profiles
 
-Response:
-{
-  "extension": "1001",
-  "enrolled": true,
-  "sample_count": 5,
-  "quality_score": 0.89,
-  "created_at": "2025-01-15T10:30:00Z",
-  "last_updated": "2025-01-20T14:15:00Z"
-}
+```bash
+GET /api/framework/voice-biometrics/profiles
+```
+
+#### Statistics
+
+```bash
+GET /api/framework/voice-biometrics/statistics
+```
+
+#### Delete Profile
+
+```bash
+DELETE /api/framework/voice-biometrics/profile/{user_id}
 ```
 
 ## Enrollment Process
 
-### Active Enrollment
-
-Active enrollment requires the user to speak specific phrases:
+Enrollment collects several audio samples, extracts voice features from each, and (when scikit-learn is available and enough samples are present) trains a per-user GMM. Once `enrollment_samples` samples have been added, the profile status becomes `ENROLLED`.
 
 ```python
-# Configure enrollment phrases
-bio.configure_enrollment_phrases([
-    "My voice is my password",
-    "Authentication is successful",
-    "Welcome to the system"
-])
+bio = get_voice_biometrics()
+bio.create_profile("alice", "1001")
+session = bio.start_enrollment("alice")
 
-# Start enrollment
-session = bio.start_enrollment('1001')
-
-# Add audio samples
-for phrase_audio in collected_samples:
-    bio.add_enrollment_sample(
-        session_id=session['id'],
-        audio=phrase_audio
-    )
-
-# Complete enrollment
-result = bio.complete_enrollment(session['id'])
+for sample_bytes in collected_samples:
+    progress = bio.add_enrollment_sample("alice", sample_bytes)
+    print(f"{progress['samples_collected']}/{progress['samples_required']}")
+    if progress["enrollment_complete"]:
+        print("Enrollment complete")
+        break
 ```
 
-### Passive Enrollment
+## Verification
 
-Passive enrollment builds a voiceprint from regular calls:
-
-```python
-# Enable passive enrollment
-bio.enable_passive_enrollment(
-    extension='1001',
-    min_calls=5,      # Minimum calls needed
-    min_duration=30   # Minimum seconds per call
-)
-
-# System automatically collects audio during calls
-# No action needed from user
-```
-
-## Verification Methods
-
-### Text-Dependent Verification
-
-User must speak a specific phrase:
+`verify_speaker(user_id, audio_data)` extracts features from the supplied audio and scores them against the enrolled profile. It uses the GMM log-likelihood when a model is available, otherwise a feature-distance similarity. The caller is considered verified when the confidence is greater than or equal to the configured `threshold`.
 
 ```python
-verification = bio.verify_text_dependent(
-    extension='1001',
-    audio=audio_sample,
-    expected_text="My voice is my password"
-)
-```
-
-### Text-Independent Verification
-
-User can speak freely:
-
-```python
-verification = bio.verify_text_independent(
-    extension='1001',
-    audio=audio_sample
-)
-```
-
-### Continuous Verification
-
-Verify throughout the call:
-
-```python
-# Start continuous verification
-session = bio.start_continuous_verification(
-    call_id='call-123',
-    extension='1001'
-)
-
-# Stream audio chunks
-for audio_chunk in call_audio_stream:
-    result = bio.verify_audio_chunk(
-        session_id=session['id'],
-        audio_chunk=audio_chunk
-    )
-    
-    if not result['match']:
-        # Potential fraud or impersonation
-        bio.flag_suspicious_activity(call_id='call-123')
+result = bio.verify_speaker("alice", audio_data=audio_bytes)
+# {"verified": bool, "confidence": float, "user_id": str, "timestamp": str}
 ```
 
 ## Fraud Detection
 
-### Replay Attack Detection
+`detect_fraud(audio_data, caller_info)` returns a risk score (0.0-1.0) and a list of indicator strings. Fraud is flagged when the risk score exceeds 0.7. The heuristics check for:
+
+- **Replay-style artifacts** - low energy variance, high spectral flatness
+- **Synthetic patterns** - repetitive audio chunks
+- **Voice manipulation** - abnormal pitch or zero-crossing rate
+- **Identity mismatch** - voice does not match the claimed profile
+- **Known/suspended profiles** - match against suspended profiles or stored fraud voiceprints (when scikit-learn and a database backend are available)
 
 ```python
 fraud = bio.detect_fraud(
-    audio_sample=audio,
-    checks=['replay', 'synthesis', 'impersonation']
+    audio_data=audio_bytes,
+    caller_info={"user_id": "alice", "call_id": "call-123", "caller_id": "5551234567"},
 )
-
-if fraud['replay_detected']:
-    print("Replay attack detected!")
-```
-
-### Voice Synthesis Detection
-
-```python
-# Detect synthetic/deepfake voice
-synthesis_check = bio.check_voice_synthesis(audio_sample)
-
-if synthesis_check['is_synthetic']:
-    print(f"Synthetic voice detected: {synthesis_check['confidence']}")
-```
-
-### Impersonation Detection
-
-```python
-# Compare against known fraud profiles
-impersonation = bio.check_impersonation(
-    audio_sample=audio,
-    extension='1001'
-)
+# {
+#   "fraud_detected": False,
+#   "risk_score": 0.15,
+#   "indicators": [],
+#   "caller_info": {...},
+#   "timestamp": "..."
+# }
 ```
 
 ## Admin Panel
@@ -311,181 +240,149 @@ impersonation = bio.check_impersonation(
 Access Voice Biometrics in the admin panel:
 
 1. Navigate to **Admin Panel** → **Framework Features** → **Voice Biometrics**
-2. View enrolled users and voiceprint quality
-3. Manage enrollment settings
-4. Review verification history
-5. Monitor fraud detection alerts
-6. Test voice verification
-
-## Integration with Call Flow
-
-### IVR Authentication
-
-```python
-# In auto attendant or IVR
-def handle_voice_authentication(call):
-    # Prompt for voice authentication
-    play_prompt("Please say your name for verification")
-    
-    # Record audio
-    audio = record_audio(duration=5)
-    
-    # Verify
-    result = bio.verify_caller(
-        extension=call.extension,
-        audio_sample=audio
-    )
-    
-    if result['match']:
-        # Grant access
-        route_to_secure_menu(call)
-    else:
-        # Authentication failed
-        route_to_fallback(call)
-```
-
-### Automatic Fraud Check
-
-```python
-# Check all calls automatically
-def on_call_start(call):
-    if bio.is_enabled():
-        # Start fraud detection
-        fraud_session = bio.start_fraud_monitoring(
-            call_id=call.call_id
-        )
-        
-        # Monitor throughout call
-        call.add_callback('audio_chunk', lambda chunk:
-            bio.process_fraud_check(fraud_session, chunk)
-        )
-```
+2. View enrolled users and profile status
+3. Review verification counts and fraud attempts
+4. Create and delete profiles
 
 ## Best Practices
 
 ### Enrollment
-- **Multiple Samples:** Collect 3-5 audio samples for robust profiles
+
+- **Multiple Samples:** Collect at least `enrollment_samples` samples (default 3) for a usable profile; more improves GMM accuracy
 - **Quality Check:** Ensure clean audio with minimal background noise
-- **Regular Updates:** Update voiceprints periodically (every 6-12 months)
 - **Consent:** Get explicit user consent for biometric collection
 
 ### Verification
-- **Threshold Tuning:** Adjust match threshold based on security needs
+
+- **Threshold Tuning:** Adjust `threshold` based on security needs
 - **Fallback Authentication:** Provide alternative auth if voice fails
-- **User Experience:** Make verification quick and seamless
 - **Error Handling:** Gracefully handle poor audio quality
 
 ### Security
-- **Encrypt Voiceprints:** Store voiceprints encrypted at rest
+
 - **Access Control:** Restrict access to biometric data
 - **Audit Logging:** Log all verification attempts
 - **Compliance:** Follow biometric privacy regulations (BIPA, GDPR)
 
 ### Performance
-- **Audio Quality:** Use high-quality audio (16kHz+ sampling)
-- **Processing Time:** Optimize for < 2 second verification
-- **Caching:** Cache voiceprints in memory
-- **Batch Processing:** Process multiple verifications in parallel
+
+- **Audio Quality:** Use high-quality audio (16kHz, 16-bit PCM)
+- **Optional Libraries:** Install `pyAudioAnalysis`/`librosa`/`scikit-learn` for better accuracy
 
 ## Database Schema
 
-### voiceprints
+Tables are created by `pbx/features/voice_biometrics_db.py` (`create_tables`).
+
+### voice_profiles
+
 ```sql
-CREATE TABLE voiceprints (
+CREATE TABLE IF NOT EXISTS voice_profiles (
     id SERIAL PRIMARY KEY,
-    extension VARCHAR(10) NOT NULL UNIQUE,
-    voiceprint_data BYTEA NOT NULL,  -- Encrypted
-    enrollment_method VARCHAR(20),    -- active, passive
-    sample_count INTEGER DEFAULT 0,
+    user_id VARCHAR(100) UNIQUE NOT NULL,
+    extension VARCHAR(20),
+    status VARCHAR(20) NOT NULL,
+    enrollment_samples INTEGER DEFAULT 0,
+    required_samples INTEGER DEFAULT 3,
+    voiceprint_data BYTEA,
+    successful_verifications INTEGER DEFAULT 0,
+    failed_verifications INTEGER DEFAULT 0,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    last_updated TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+### voice_enrollments
+
+```sql
+CREATE TABLE IF NOT EXISTS voice_enrollments (
+    id SERIAL PRIMARY KEY,
+    profile_id INTEGER REFERENCES voice_profiles(id) ON DELETE CASCADE,
+    sample_number INTEGER NOT NULL,
+    audio_hash VARCHAR(64),
     quality_score FLOAT,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-### verification_history
+### voice_verifications
+
 ```sql
-CREATE TABLE verification_history (
+CREATE TABLE IF NOT EXISTS voice_verifications (
     id SERIAL PRIMARY KEY,
-    extension VARCHAR(10) NOT NULL,
-    call_id VARCHAR(100),
-    match BOOLEAN NOT NULL,
-    score FLOAT NOT NULL,
-    method VARCHAR(50),
-    liveness_passed BOOLEAN,
-    verified_at TIMESTAMP DEFAULT NOW(),
-    INDEX idx_extension (extension),
-    INDEX idx_call_id (call_id)
+    profile_id INTEGER REFERENCES voice_profiles(id) ON DELETE CASCADE,
+    call_id VARCHAR(255),
+    verified BOOLEAN NOT NULL,
+    confidence FLOAT,
+    timestamp TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-### fraud_detections
+### voice_fraud_detections
+
 ```sql
-CREATE TABLE fraud_detections (
+CREATE TABLE IF NOT EXISTS voice_fraud_detections (
     id SERIAL PRIMARY KEY,
-    call_id VARCHAR(100) NOT NULL,
-    fraud_score FLOAT NOT NULL,
-    indicators TEXT[],
-    risk_level VARCHAR(20),
-    action_taken VARCHAR(50),
-    detected_at TIMESTAMP DEFAULT NOW(),
-    INDEX idx_call_id (call_id),
-    INDEX idx_detected_at (detected_at)
+    call_id VARCHAR(255),
+    caller_id VARCHAR(50),
+    fraud_detected BOOLEAN NOT NULL,
+    risk_score FLOAT,
+    indicators JSONB,
+    timestamp TIMESTAMP NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
 ## Troubleshooting
 
 ### Low Verification Scores
+
 **Solution:**
+
 - Check audio quality (sample rate, noise)
-- Re-enroll with better audio samples
-- Adjust verification threshold
-- Use text-dependent verification
+- Re-enroll with more/better audio samples
+- Adjust the verification `threshold`
+- Install `scikit-learn` so GMM-based matching is used
 
 ### Enrollment Fails
+
 **Solution:**
-- Ensure minimum audio duration met
-- Check for background noise
-- Verify audio format is correct
-- Try multiple enrollment attempts
+
+- Ensure the profile exists before calling `start_enrollment`
+- Add at least `enrollment_samples` samples
+- Verify audio is 16-bit PCM and long enough to extract features
 
 ### False Fraud Alerts
+
 **Solution:**
-- Tune fraud score threshold higher
-- Review fraud indicators
-- Update fraud detection models
-- Whitelist known variations
+
+- Review the returned `indicators` to see which heuristic fired
+- Provide cleaner audio (background noise can trigger artifacts)
+- Keep `caller_info` accurate so identity-mismatch checks work
 
 ## Compliance Considerations
 
 ### BIPA (Illinois Biometric Information Privacy Act)
+
 - Obtain written consent before collecting
 - Provide retention and destruction policies
 - Secure storage requirements
 
 ### GDPR (European Union)
+
 - Biometric data is special category data
 - Explicit consent required
 - Right to erasure applies
 - Data minimization principles
 
 ### CCPA (California Consumer Privacy Act)
+
 - Disclose biometric data collection
 - Provide opt-out mechanisms
 - Secure storage requirements
 
-## Next Steps
-
-1. **Choose Provider:** Select voice biometrics service
-2. **Configure Integration:** Set up API credentials
-3. **Plan Enrollment:** Decide on active vs passive
-4. **Set Thresholds:** Configure match and fraud thresholds
-5. **Test Thoroughly:** Validate with diverse voice samples
-6. **Deploy Gradually:** Start with pilot group
-7. **Monitor Performance:** Track success rates and adjust
-
 ## Related Documentation
 
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)
+- [PLANNED_FEATURES.md](../PLANNED_FEATURES.md) - Planned (not-yet-implemented) capabilities for this feature
 - [COMPLETE_GUIDE.md](../../COMPLETE_GUIDE.md) - Comprehensive documentation

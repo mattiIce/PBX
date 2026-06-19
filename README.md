@@ -105,7 +105,7 @@ with no dependency on Asterisk or FreeSWITCH — alongside a modern TypeScript/V
 
 - Python 3.13+
 - Node.js 22+ (for the frontend admin interface)
-- PyYAML, cryptography>=46.0.5
+- PyYAML, cryptography>=48.0.1
 - Network access for SIP (5060/udp) and RTP (10000-20000/udp) ports
 
 ## Quick Start
@@ -271,6 +271,7 @@ The project includes 76 feature modules, 228 Python test files, and 19 admin pan
 - **[TROUBLESHOOTING.md](TROUBLESHOOTING.md)** - Troubleshooting guide for administrators with solutions to all known issues
 - **[docs/](docs/)** - Operational guides (deployment, HA, incident response, capacity planning, reverse proxy)
 - **[docs/reference/](docs/reference/)** - Technical reference (SIP implementation, phone book API, framework features)
+- **[docs/PLANNED_FEATURES.md](docs/PLANNED_FEATURES.md)** - Roadmap of documented capabilities that are planned but not yet implemented
 
 ## Known Issues
 

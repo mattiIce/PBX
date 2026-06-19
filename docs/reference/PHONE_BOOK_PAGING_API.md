@@ -425,8 +425,7 @@ Common HTTP status codes:
 
 ## Security Notes
 
-- All endpoints are currently unauthenticated
-- Consider adding authentication for production deployments
+- All endpoints require authentication (enforced via the `@require_auth` decorator)
 - Use HTTPS when exposing APIs over the internet
 - Directory information should be treated as confidential
 - Restrict access to paging API to prevent abuse

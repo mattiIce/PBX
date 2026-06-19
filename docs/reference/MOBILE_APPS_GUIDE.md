@@ -8,12 +8,9 @@ The Mobile Apps framework provides comprehensive support for iOS and Android mob
 
 - **Native Mobile Clients** - iOS and Android app support
 - **Push Notifications** - Firebase Cloud Messaging (FCM) and APNs
-- **SIP Registration** - Mobile device SIP client registration
-- **Background Calling** - Handle calls while app is in background
+- **SIP Registration** - Mobile-optimized SIP client configuration (TCP, push wake, Opus)
+- **Background Calling** - Wake the app for incoming calls via push notifications
 - **Device Management** - Multi-device support per user
-- **Call Continuity** - Transfer calls between desk and mobile
-- **Voicemail Access** - Visual voicemail on mobile
-- **Presence Updates** - Real-time status from mobile
 
 ## Supported Platforms
 
@@ -24,57 +21,65 @@ The Mobile Apps framework provides comprehensive support for iOS and Android mob
 ## Configuration
 
 ### config.yml
+
+The mobile app framework (`MobileAppFramework`) reads the following keys from
+`features.mobile_apps`:
+
 ```yaml
 features:
   mobile_apps:
     enabled: true
-    push_notifications:
-      enabled: true
-      fcm_enabled: true      # Firebase Cloud Messaging
-      apns_enabled: true     # Apple Push Notification Service
-      fcm_server_key: "your-fcm-server-key"
-      apns_cert_path: "/path/to/apns-cert.pem"
-      apns_key_path: "/path/to/apns-key.pem"
-      apns_team_id: "your-team-id"
-      apns_bundle_id: "com.yourcompany.pbxapp"
-    sip_configuration:
-      enable_tcp: true
-      enable_tls: true
-      enable_push_wake: true
-    background_mode:
-      enabled: true
-      keep_alive_interval: 30  # seconds
+    ios_enabled: true      # Allow iOS device registration (default: true)
+    android_enabled: true  # Allow Android device registration (default: true)
+    push_enabled: true     # Enable push notifications (default: true)
+    turn_servers:          # Optional TURN servers returned in mobile SIP config
+      - urls: ["turn:turn.example.com:3478"]
+        username: "user"
+        credential: "pass"
+        credentialType: "password"
+```
+
+Push delivery itself is handled by the separate `MobilePushNotifications` service
+(Firebase Cloud Messaging), configured under `features.mobile_push`:
+
+```yaml
+features:
+  mobile_push:
+    enabled: true
+    fcm_credentials_path: "/path/to/serviceAccountKey.json"  # Firebase service account
 ```
 
 ## Mobile Device Registration
 
 ### Register Device
 ```python
-from pbx.features.mobile_apps import get_mobile_apps, Platform
+from pbx.features.mobile_apps import get_mobile_app_framework, MobilePlatform
 
-mobile = get_mobile_apps()
+mobile = get_mobile_app_framework()
 
 # Register iOS device
 result = mobile.register_device(
-    extension='1001',
-    platform=Platform.IOS,
-    device_token='apns-device-token-here',
+    device_id='device-id-123',
+    platform=MobilePlatform.IOS.value,
+    user_id='1001',
     device_info={
-        'model': 'iPhone 14 Pro',
+        'device_model': 'iPhone 14 Pro',
         'os_version': '17.1',
-        'app_version': '1.0.0'
+        'app_version': '1.0.0',
+        'push_token': 'apns-device-token-here'
     }
 )
 
 # Register Android device
 result = mobile.register_device(
-    extension='1002',
-    platform=Platform.ANDROID,
-    device_token='fcm-device-token-here',
+    device_id='device-id-456',
+    platform=MobilePlatform.ANDROID.value,
+    user_id='1002',
     device_info={
-        'model': 'Pixel 7',
+        'device_model': 'Pixel 7',
         'os_version': '14',
-        'app_version': '1.0.0'
+        'app_version': '1.0.0',
+        'push_token': 'fcm-device-token-here'
     }
 )
 ```
@@ -83,18 +88,24 @@ result = mobile.register_device(
 
 ```python
 # Get SIP config for mobile client
-sip_config = mobile.get_sip_config_for_device('device-id-123')
+sip_config = mobile.configure_sip_for_mobile('device-id-123', '1001')
 
 # Returns:
 # {
-#     'server': 'pbx.yourcompany.com',
+#     'extension': '1001',
+#     'server': 'localhost',
 #     'port': 5060,
-#     'transport': 'tcp',  # tcp or tls
-#     'username': '1001',
-#     'password': 'encrypted-password',
-#     'realm': 'yourcompany.com',
-#     'stun_servers': ['stun:stun.l.google.com:19302'],
-#     'push_enabled': true
+#     'transport': 'tcp',
+#     'keep_alive_interval': 30,
+#     'register_interval': 600,
+#     'codec_priority': ['opus', 'pcma', 'pcmu'],
+#     'ice_enabled': True,
+#     'turn_servers': [...],
+#     'battery_optimization': {
+#         'background_mode': 'push',
+#         'reduce_bandwidth': True,
+#         'adaptive_quality': True
+#     }
 # }
 ```
 
@@ -103,13 +114,11 @@ sip_config = mobile.get_sip_config_for_device('device-id-123')
 ### Send Push Notification
 
 ```python
-from pbx.features.mobile_apps import NotificationType
-
 # Send incoming call notification (iOS)
 mobile.send_push_notification(
     device_id='device-123',
-    notification_type=NotificationType.INCOMING_CALL,
-    data={
+    notification={
+        'type': 'incoming_call',
         'caller_id': '555-0100',
         'caller_name': 'John Doe',
         'call_id': 'call-456'
@@ -119,8 +128,8 @@ mobile.send_push_notification(
 # Send voicemail notification (Android)
 mobile.send_push_notification(
     device_id='device-456',
-    notification_type=NotificationType.VOICEMAIL,
-    data={
+    notification={
+        'type': 'new_voicemail',
         'sender': '555-0200',
         'duration': 45,
         'timestamp': '2025-01-15T10:30:00Z'
@@ -130,8 +139,8 @@ mobile.send_push_notification(
 # Send missed call notification
 mobile.send_push_notification(
     device_id='device-789',
-    notification_type=NotificationType.MISSED_CALL,
-    data={
+    notification={
+        'type': 'missed_call',
         'caller_id': '555-0300',
         'timestamp': '2025-01-15T09:15:00Z'
     }
@@ -140,11 +149,12 @@ mobile.send_push_notification(
 
 ### Notification Types
 
-- **INCOMING_CALL** - Alert for incoming call with wake-up
-- **VOICEMAIL** - New voicemail message
-- **MISSED_CALL** - Missed call notification
-- **MESSAGE** - Text/chat message (future)
-- **PRESENCE_UPDATE** - Status change of contact
+The `type` field in the notification dict identifies the notification category. Common values:
+
+- **incoming_call** - Alert for incoming call with wake-up
+- **new_voicemail** - New voicemail message
+- **missed_call** - Missed call notification
+- **test** - Test notification
 
 ## REST API Endpoints
 
@@ -152,43 +162,37 @@ mobile.send_push_notification(
 ```bash
 POST /api/mobile-push/register
 {
-  "extension": "1001",
-  "platform": "ios",
+  "user_id": "1001",
   "device_token": "apns-device-token",
-  "device_info": {
-    "model": "iPhone 14",
-    "os_version": "17.1",
-    "app_version": "1.0.0"
-  }
+  "platform": "ios"
 }
 ```
 
-### Get SIP Configuration
+### List Devices for a User
 ```bash
 GET /api/mobile-push/devices/{user_id}
 ```
 
-### Send Push Notification
+### List All Registered Devices
+```bash
+GET /api/mobile-push/devices
+```
+
+### Send Test Push Notification
 ```bash
 POST /api/mobile-push/test
 {
-  "device_id": "device-123",
-  "type": "incoming_call",
-  "data": {
-    "caller_id": "555-0100",
-    "caller_name": "John Doe"
-  }
+  "user_id": "1001"
 }
-```
-
-### List Devices for Extension
-```bash
-GET /api/mobile-push/devices/{user_id}
 ```
 
 ### Unregister Device
 ```bash
-DELETE /api/mobile-push/device/{device_id}
+POST /api/mobile-push/unregister
+{
+  "user_id": "1001",
+  "device_token": "apns-device-token"
+}
 ```
 
 ## iOS App Integration
@@ -285,60 +289,6 @@ public class CallService extends Service {
 }
 ```
 
-## Background Mode
-
-### Keep-Alive Mechanism
-
-The framework implements a keep-alive mechanism for mobile devices:
-
-```python
-# Background keep-alive configuration
-mobile.configure_keep_alive(
-    interval=30,  # Send keep-alive every 30 seconds
-    timeout=90    # Consider device offline after 90 seconds
-)
-
-# Handle keep-alive from mobile device
-mobile.handle_keep_alive(device_id='device-123')
-```
-
-### Battery Optimization
-
-```python
-# Configure battery-optimized settings
-mobile.configure_battery_optimization(
-    device_id='device-123',
-    settings={
-        'push_only_mode': True,      # Use push notifications instead of persistent connection
-        'aggressive_timeout': False,  # Don't timeout quickly
-        'reduce_bandwidth': True      # Use lower quality codecs
-    }
-)
-```
-
-## Call Continuity
-
-### Transfer Call to Mobile
-
-```python
-# Transfer active call from desk phone to mobile
-mobile.transfer_call_to_mobile(
-    call_id='call-123',
-    from_device='desk-phone',
-    to_device='mobile-device-456'
-)
-```
-
-### Pickup Call on Mobile
-
-```python
-# Pickup ringing call on mobile device
-mobile.pickup_call_on_mobile(
-    call_id='call-123',
-    device_id='mobile-device-456'
-)
-```
-
 ## Admin Panel
 
 Access Mobile Apps management in the admin panel:
@@ -372,34 +322,34 @@ Access Mobile Apps management in the admin panel:
 
 ## Database Schema
 
-### mobile_app_installations
+### mobile_devices
 ```sql
-CREATE TABLE mobile_app_installations (
+CREATE TABLE IF NOT EXISTS mobile_devices (
     id SERIAL PRIMARY KEY,
-    extension VARCHAR(10) NOT NULL,
-    device_id VARCHAR(255) UNIQUE NOT NULL,
-    platform VARCHAR(20) NOT NULL,  -- ios, android
-    device_token TEXT NOT NULL,
-    device_info JSONB,
-    sip_registered BOOLEAN DEFAULT false,
-    push_enabled BOOLEAN DEFAULT true,
-    last_seen TIMESTAMP,
-    created_at TIMESTAMP DEFAULT NOW(),
-    INDEX idx_extension (extension),
-    INDEX idx_platform (platform)
+    user_id VARCHAR(50) NOT NULL,
+    device_token VARCHAR(255) NOT NULL UNIQUE,
+    platform VARCHAR(20) NOT NULL,
+    registered_at TIMESTAMP NOT NULL,
+    last_seen TIMESTAMP NOT NULL,
+    enabled BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-### push_notification_log
+### push_notifications
 ```sql
-CREATE TABLE push_notification_log (
+CREATE TABLE IF NOT EXISTS push_notifications (
     id SERIAL PRIMARY KEY,
-    device_id VARCHAR(255) NOT NULL,
+    user_id VARCHAR(50) NOT NULL,
     notification_type VARCHAR(50) NOT NULL,
-    payload JSONB,
-    delivered BOOLEAN DEFAULT false,
+    title VARCHAR(200),
+    body TEXT,
+    data TEXT,
+    sent_at TIMESTAMP NOT NULL,
+    success BOOLEAN DEFAULT TRUE,
     error_message TEXT,
-    sent_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -446,4 +396,5 @@ CREATE TABLE push_notification_log (
 ## Related Documentation
 
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)
+- [PLANNED_FEATURES.md](../PLANNED_FEATURES.md) - Planned (not-yet-implemented) capabilities for this feature
 - [COMPLETE_GUIDE.md - Section 9.2: REST API](../../COMPLETE_GUIDE.md#92-rest-api-reference)
