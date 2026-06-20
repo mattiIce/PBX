@@ -27,7 +27,7 @@
 # ============================================================================
 PyYAML==6.0.3
 # cryptography is capped <49 by fido2 2.2.0 (requires cryptography>35,<49)
-cryptography==48.0.1
+cryptography==49.0.0
 
 # SIP/RTP Support
 aiortc==1.14.0
