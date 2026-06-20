@@ -63,7 +63,7 @@ confection==1.3.3
     #   weasel
 constantly==23.10.4
     # via twisted
-cryptography==48.0.1
+cryptography==49.0.0
     # via
     #   warden-voip (pyproject.toml)
     #   aiortc
@@ -142,7 +142,7 @@ mdurl==0.1.2
     # via markdown-it-py
 msal==1.37.0
     # via warden-voip (pyproject.toml)
-msgpack==1.2.0
+msgpack==1.2.1
     # via librosa
 murmurhash==1.0.15
     # via
