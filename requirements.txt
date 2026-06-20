@@ -142,7 +142,7 @@ mdurl==0.1.2
     # via markdown-it-py
 msal==1.37.0
     # via warden-voip (pyproject.toml)
-msgpack==1.2.0
+msgpack==1.2.1
     # via librosa
 murmurhash==1.0.15
     # via
