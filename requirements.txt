@@ -10,7 +10,7 @@ annotated-doc==0.0.4
     # via typer
 annotated-types==0.7.0
     # via pydantic
-anyio==4.13.0
+anyio==4.14.0
     # via httpx
 attrs==26.1.0
     # via twisted
@@ -35,7 +35,7 @@ catalogue==2.0.10
     #   spacy
     #   srsly
     #   thinc
-certifi==2026.5.20
+certifi==2026.6.17
     # via
     #   httpcore
     #   httpx
@@ -78,6 +78,8 @@ cymem==2.0.13
     #   thinc
 decorator==5.3.1
     # via librosa
+defusedxml==0.7.1
+    # via warden-voip (pyproject.toml)
 dnspython==2.8.0
     # via aioice
 fido2==2.2.0
@@ -86,7 +88,7 @@ flask==3.1.3
     # via warden-voip (pyproject.toml)
 google-crc32c==1.8.0
     # via aiortc
-greenlet==3.5.1
+greenlet==3.5.2
     # via sqlalchemy
 gtts==2.5.4
     # via warden-voip (pyproject.toml)
@@ -142,7 +144,7 @@ mdurl==0.1.2
     # via markdown-it-py
 msal==1.37.0
     # via warden-voip (pyproject.toml)
-msgpack==1.2.0
+msgpack==1.2.1
     # via librosa
 murmurhash==1.0.15
     # via
@@ -237,7 +239,7 @@ scikit-learn==1.9.0
     # via
     #   warden-voip (pyproject.toml)
     #   librosa
-scipy==1.17.1
+scipy==1.18.0
     # via
     #   warden-voip (pyproject.toml)
     #   librosa
@@ -264,7 +266,7 @@ spacy-legacy==3.0.12
     # via spacy
 spacy-loggers==1.0.5
     # via spacy
-sqlalchemy==2.0.50
+sqlalchemy==2.0.51
     # via
     #   warden-voip (pyproject.toml)
     #   alembic
@@ -289,7 +291,7 @@ thinc==8.3.13
     # via spacy
 threadpoolctl==3.6.0
     # via scikit-learn
-tqdm==4.68.2
+tqdm==4.68.3
     # via
     #   nltk
     #   spacy
@@ -332,7 +334,7 @@ werkzeug==3.1.8
     # via
     #   warden-voip (pyproject.toml)
     #   flask
-wrapt==2.2.1
+wrapt==2.2.2
     # via smart-open
 zope-interface==8.5
     # via twisted
