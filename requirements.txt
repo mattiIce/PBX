@@ -22,7 +22,7 @@ audioread==3.1.0
     # via librosa
 automat==25.4.16
     # via twisted
-av==16.1.0
+av==17.1.0
     # via
     #   warden-voip (pyproject.toml)
     #   aiortc

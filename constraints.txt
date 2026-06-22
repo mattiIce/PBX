@@ -70,7 +70,7 @@ soundfile==0.14.0
 # Video Codec Support
 imageio-ffmpeg==0.6.0
 # av is capped <17 by aiortc 1.14.0 (requires av>=14.0.0,<17.0.0)
-av==16.1.0
+av==17.1.0
 
 # Data Validation
 pydantic==2.13.4
