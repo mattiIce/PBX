@@ -49,7 +49,7 @@ cffi==2.0.0
     #   vosk
 charset-normalizer==3.4.7
     # via requests
-click==8.1.8
+click==8.4.1
     # via
     #   flask
     #   gtts
@@ -205,7 +205,7 @@ pydantic==2.13.4
     #   spacy
     #   thinc
     #   weasel
-pydantic-core==2.46.4
+pydantic-core==2.47.0
     # via pydantic
 pydub==0.25.1
     # via warden-voip (pyproject.toml)
@@ -217,7 +217,7 @@ pyjwt==2.13.0
     # via msal
 pylibsrtp==1.0.0
     # via aiortc
-pyopenssl==26.2.0
+pyopenssl==26.3.0
     # via aiortc
 pyttsx3==2.99
     # via warden-voip (pyproject.toml)
