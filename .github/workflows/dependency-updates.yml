@@ -55,7 +55,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check.outputs.updates_available == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(deps): update Python dependencies"
           title: "chore(deps): weekly dependency updates"
@@ -112,7 +112,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.check.outputs.updates_available == 'true'
-        uses: peter-evans/create-pull-request@v7
+        uses: peter-evans/create-pull-request@v8
         with:
           commit-message: "chore(deps): update Node.js dependencies"
           title: "chore(deps): weekly Node.js dependency updates"
