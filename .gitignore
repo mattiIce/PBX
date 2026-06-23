@@ -184,13 +184,6 @@ admin/test_framework.html
 admin/test_*.html
 
 # =============================================================================
-# Dependency tooling (transient build artifacts)
-# =============================================================================
-# Generated at runtime by .github/workflows/dependency-updates.yml and copied
-# onto requirements.txt; should never be committed.
-requirements-updated.txt
-
-# =============================================================================
 # Docker
 # =============================================================================
 .docker/

@@ -225,7 +225,6 @@ GitHub Actions workflows in `.github/workflows/`:
 | `code-quality.yml` | ruff format check, ruff lint, mypy, bandit, pip-audit |
 | `security-scanning.yml` | Trivy, gitleaks, SAST, dependency audit |
 | `production-deployment.yml` | Docker build/push, Kubernetes deploy |
-| `dependency-updates.yml` | Automated dependency checks |
 | `syntax-check.yml` | Python + YAML syntax validation |
 
 System dependencies required in CI: `espeak`, `ffmpeg`, `libopus-dev`, `portaudio19-dev`, `libspeex-dev`
