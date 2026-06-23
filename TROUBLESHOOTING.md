@@ -126,7 +126,7 @@ python scripts/generate_tts_prompts.py
 
 # Verify generated files
 file voicemail_prompts/*.wav
-# Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 8 bit, mono 8000 Hz"
+# Should show: "RIFF (little-endian) data, WAVE audio, Microsoft PCM, 16 bit, mono 8000 Hz"
 
 # Check auto-attendant prompts
 file auto_attendant/*.wav
@@ -830,24 +830,24 @@ webhooks:
 
 **1. Verify Provisioning Server Running:**
 ```bash
-# Check provisioning port
-sudo netstat -tlnp | grep 8888
+# Provisioning is served by the API server on the API port (default 9000)
+sudo netstat -tlnp | grep 9000
 
-# Should show python/pbx listening on 8888
+# Should show python/pbx listening on 9000
 ```
 
 **2. Check DHCP Option 66:**
 ```bash
-# Option 66 should point to: http://PBX_IP:8888
+# Option 66 should point to: http://PBX_IP:9000
 
 # Test from phone network:
-curl http://PBX_IP:8888/
+curl http://PBX_IP:9000/
 ```
 
 **3. Manual Phone Configuration:**
 If DHCP Option 66 not available:
 - Access phone web interface
-- Set provision server: `http://PBX_IP:8888`
+- Set provision server: `http://PBX_IP:9000`
 - Trigger reprovisioning
 
 **4. Verify Template Exists:**
@@ -881,8 +881,8 @@ tail -f logs/pbx.log | grep -i provision
 
 **8. Test Template Generation:**
 ```bash
-# View generated config for extension
-curl http://localhost:8888/provision/1001
+# View generated config for a device (use the phone's MAC address)
+curl http://localhost:9000/provision/001565aabbcc.cfg
 
 # Should return phone configuration
 ```
@@ -917,8 +917,8 @@ grep -A 5 "number: \"1001\"" config.yml
 
 **4. Manual Template Test:**
 ```bash
-# Test template rendering
-curl http://localhost:8888/provision/1001?debug=true
+# Test template rendering (use the phone's MAC address)
+curl http://localhost:9000/provision/001565aabbcc.cfg
 
 # Should show populated template
 ```
@@ -928,7 +928,7 @@ curl http://localhost:8888/provision/1001?debug=true
 **Yealink:**
 ```bash
 # Ensure MAC address format: 001565-AABBCC.cfg
-# Server URL: http://PBX_IP:8888/$mac.cfg
+# Server URL: http://PBX_IP:9000/provision/$mac.cfg
 ```
 
 **Polycom:**
@@ -946,7 +946,7 @@ curl http://localhost:8888/provision/1001?debug=true
 **Grandstream:**
 ```bash
 # cfg + cfgMAC format
-# HTTP provisioning on port 8888
+# HTTP provisioning on port 9000 (the API port)
 ```
 
 ### Provisioning Connection Error After Port Change
@@ -1081,7 +1081,7 @@ alembic upgrade head
 
 **3. Check Schema Version:**
 ```bash
-sudo -u postgres psql pbx_system -c "SELECT * FROM schema_version;"
+sudo -u postgres psql pbx_system -c "SELECT * FROM alembic_version;"
 ```
 
 **4. Manual Table Creation:**

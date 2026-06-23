@@ -11,7 +11,7 @@ This document provides a complete summary of the open-source AI/ML integration i
 **File**: `pbx/features/call_tagging.py`
 
 **Libraries Added**:
-- `spacy>=3.7.0` - Industrial-strength NLP
+- `spacy>=3.8.11` - Industrial-strength NLP
 
 **Features Implemented**:
 - Named Entity Recognition (NER) - Extract ORG, PERSON, MONEY, etc.
@@ -42,7 +42,7 @@ python -m spacy download en_core_web_sm
 **File**: `pbx/features/conversational_ai.py`
 
 **Libraries Added**:
-- `nltk>=3.8.0` - Natural Language Toolkit
+- `nltk>=3.9.4` - Natural Language Toolkit
 
 **Features Implemented**:
 - Tokenization with Lemmatization
@@ -73,8 +73,8 @@ uv pip install nltk
 
 **Libraries Added**:
 - `pyAudioAnalysis>=0.3.14` - Audio feature extraction
-- `librosa>=0.10.0` - Advanced audio analysis
-- `soundfile>=0.12.0` - Audio file I/O
+- `librosa>=0.11.0` - Advanced audio analysis
+- `soundfile>=0.14.0` - Audio file I/O
 
 **Features Implemented**:
 - MFCC Extraction (Mel-frequency cepstral coefficients)
@@ -103,7 +103,7 @@ uv pip install pyAudioAnalysis librosa soundfile
 
 **Libraries Added**:
 - Uses existing `vosk>=0.3.45` for transcription
-- Integrates `spacy>=3.7.0` for sentiment analysis
+- Integrates `spacy>=3.8.11` for sentiment analysis
 
 **Features Implemented**:
 - Vosk Offline Transcription Integration
@@ -190,18 +190,18 @@ All dependencies have been added to `pyproject.toml`:
 vosk>=0.3.45
 
 # Natural Language Processing (FREE, open source)
-spacy>=3.7.0
-nltk>=3.8.0
+spacy>=3.8.11
+nltk>=3.9.4
 
 # Machine Learning (FREE, open source)
-numpy>=1.24.0
-scikit-learn>=1.3.0
-scipy>=1.11.0
+numpy>=2.4.6,<2.5
+scikit-learn>=1.9.0
+scipy>=1.17.1
 
 # Audio Analysis (FREE, open source)
 pyAudioAnalysis>=0.3.14
-librosa>=0.10.0
-soundfile>=0.12.0
+librosa>=0.11.0
+soundfile>=0.14.0
 ```
 
 ---

@@ -44,21 +44,22 @@ The system uses two existing data sources:
    }
    ```
 
-2. **Registered Phones** (database table)
+2. **Registered Phones** (database table, from `pbx/utils/database.py`)
    ```sql
-   CREATE TABLE registered_phones (
+   CREATE TABLE IF NOT EXISTS registered_phones (
        id INTEGER PRIMARY KEY,
        mac_address VARCHAR(20),         -- May be NULL
-       extension_number VARCHAR(20) NOT NULL,
-       ip_address VARCHAR(50) NOT NULL,
+       extension VARCHAR(20) NOT NULL,
        user_agent VARCHAR(255),
-       first_registered TIMESTAMP,
-       last_registered TIMESTAMP,
-       contact_uri VARCHAR(255),
-       UNIQUE(mac_address, extension_number),
-       UNIQUE(ip_address, extension_number)
+       ip_address VARCHAR(50) NOT NULL,
+       registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+       expires_at TIMESTAMP,
+       UNIQUE(mac_address, extension),
+       UNIQUE(ip_address, extension)
    );
    ```
+   > Note: read queries alias `extension AS extension_number`, so API
+   > responses expose the field as `extension_number`.
 
 ### New API Endpoints
 

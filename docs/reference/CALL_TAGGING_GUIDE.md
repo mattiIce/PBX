@@ -2,20 +2,21 @@
 
 ## Overview
 
-The Call Tagging & Categorization system provides AI-powered automatic classification of calls with custom tagging capabilities. This enables better organization, searchability, and analytics of your call data.
+The Call Tagging & Categorization system provides automatic classification of calls with custom tagging capabilities. It combines keyword/rule-based tagging with optional ML (scikit-learn TF-IDF + Naive Bayes) and optional NLP (spaCy) classification, enabling better organization, searchability, and analytics of your call data.
 
 ## Features
 
-- **Automatic Categorization** - AI-based classification of calls
+- **Automatic Categorization** - Classify calls from their transcript and metadata
 - **Custom Tags** - Create and apply custom tags
-- **Rule-Based Tagging** - Define rules for automatic tagging
-- **ML Classification** - Machine learning-based call categorization
-- **Tag Analytics** - Insights and reporting based on tags
+- **Rule-Based Tagging** - Keyword and metadata rules for automatic tagging
+- **ML Classification** - Optional scikit-learn classifier (when installed)
+- **Tag Statistics** - Tag usage counts and most-common tags
 - **Search by Tags** - Find calls quickly using tags
 
 ## Predefined Categories
 
-The system includes these predefined call categories:
+The system defines these call categories (`CallCategory`):
+
 - **Sales** - Sales-related calls
 - **Support** - Customer support inquiries
 - **Billing** - Billing and payment questions
@@ -25,9 +26,23 @@ The system includes these predefined call categories:
 - **Technical** - Technical support
 - **Other** - Uncategorized calls
 
+## Optional Dependencies
+
+Tagging works with built-in keyword rules out of the box. Classification accuracy improves with optional packages:
+
+```bash
+# ML classification (TF-IDF + Naive Bayes)
+pip install scikit-learn numpy
+
+# NLP entity extraction and sentiment (used during classification)
+pip install spacy
+python -m spacy download en_core_web_sm
+```
+
 ## Configuration
 
 ### config.yml
+
 ```yaml
 features:
   call_tagging:
@@ -46,25 +61,34 @@ from pbx.features.call_tagging import get_call_tagging, CallCategory, TagSource
 
 tagging = get_call_tagging()
 
-# Tag a call manually
+# Tag a call manually (one tag per call)
 tagging.tag_call(
-    call_id='call-123',
-    tags=['urgent', 'vip-customer'],
-    source=TagSource.MANUAL
+    call_id="call-123",
+    tag="urgent",
+    source=TagSource.MANUAL,
 )
 
-# Categorize a call
-tagging.categorize_call(
-    call_id='call-123',
-    category=CallCategory.SUPPORT,
-    confidence=0.95
+# Classify a call (rule + ML/keyword based) and return the applied tags
+tags = tagging.classify_call(
+    call_id="call-123",
+    transcript="I have a problem with my account",
+)
+
+# Auto-tag from transcript and/or metadata
+tags = tagging.auto_tag_call(
+    call_id="call-123",
+    transcript="I want to buy your product",
+    metadata={"queue": "8001", "duration": 420},
 )
 
 # Get tags for a call
-tags = tagging.get_call_tags('call-123')
+call_tags = tagging.get_call_tags("call-123")
+
+# Remove a tag
+tagging.remove_tag("call-123", "urgent")
 
 # Search calls by tag
-calls = tagging.search_by_tag('urgent')
+calls = tagging.search_by_tag("urgent")
 
 # Get tag statistics
 stats = tagging.get_tag_statistics()
@@ -72,178 +96,183 @@ stats = tagging.get_tag_statistics()
 
 ### REST API Endpoints
 
-#### Tag a Call
-```bash
-POST /api/framework/call-tagging/tag
-{
-  "call_id": "call-123",
-  "tags": ["urgent", "vip-customer"],
-  "source": "manual"
-}
-```
+All endpoints are under the `/api/framework` prefix and require authentication.
 
-#### Categorize a Call
-```bash
-POST /api/framework/call-tagging/classify/{call_id}
-{
-  "call_id": "call-123",
-  "category": "support",
-  "confidence": 0.95
-}
-```
+#### List Tags
 
-#### Get Call Tags
 ```bash
 GET /api/framework/call-tagging/tags
+
+Response:
+{
+  "tags": [{"tag": "billing"}, {"tag": "support"}]
+}
 ```
 
-#### Get Tag Statistics
+#### List Tagging Rules
+
+```bash
+GET /api/framework/call-tagging/rules
+```
+
+#### Tagging Statistics
+
 ```bash
 GET /api/framework/call-tagging/statistics
 ```
 
-#### Create Tagging Rule
+#### Create a Custom Tag
+
+```bash
+POST /api/framework/call-tagging/tag
+{
+  "name": "vip-customer",
+  "description": "High-value customer",
+  "color": "#007bff"
+}
+
+Response:
+{
+  "success": true,
+  "tag_id": "vip-customer"
+}
+```
+
+#### Create a Tagging Rule
+
 ```bash
 POST /api/framework/call-tagging/rule
 {
-  "name": "VIP Customers",
-  "conditions": {
-    "caller_id": ["555-0100", "555-0200"],
-    "duration_min": 60
-  },
-  "tags": ["vip-customer"],
-  "enabled": true
+  "name": "Sales Queue",
+  "conditions": {"queue": "8001"},
+  "tag_id": "sales-queue",
+  "priority": 100
 }
+
+Response:
+{
+  "success": true,
+  "rule_id": "rule_5"
+}
+```
+
+#### Classify a Call
+
+```bash
+POST /api/framework/call-tagging/classify/{call_id}
+
+Response:
+{
+  "call_id": "call-123",
+  "tags": ["support", "billing"]
+}
+```
+
+#### Delete a Tag
+
+```bash
+DELETE /api/framework/call-tagging/tags/{tag_id}
+```
+
+#### Delete a Rule
+
+```bash
+DELETE /api/framework/call-tagging/rules/{rule_id}
+```
+
+#### Toggle a Rule
+
+```bash
+POST /api/framework/call-tagging/rules/{rule_id}/toggle
 ```
 
 ## Tagging Rules
 
-### Rule Structure
+### Keyword Rules
 
-Rules allow automatic tagging based on call attributes:
+The simplest rules match keywords in the transcript. Add one with `add_tagging_rule(name, keywords, tag, category)`:
 
 ```python
-rule = {
-    'name': 'Long Support Calls',
-    'conditions': {
-        'category': 'support',
-        'duration_min': 300,  # 5 minutes or longer
-        'queue': '8001'
-    },
-    'tags': ['complex-issue', 'requires-follow-up'],
-    'enabled': True
-}
+from pbx.features.call_tagging import get_call_tagging, CallCategory
 
-tagging.add_tagging_rule(rule)
+tagging = get_call_tagging()
+
+tagging.add_tagging_rule(
+    name="Long Support Calls",
+    keywords=["escalate", "supervisor", "manager"],
+    tag="complex-issue",
+    category=CallCategory.SUPPORT,
+)
 ```
 
-### Common Rule Examples
+> `add_tagging_rule` only succeeds when the feature is enabled (`features.call_tagging.enabled: true`).
 
-#### Tag VIP Callers
+### Metadata / Condition Rules
+
+`create_rule(name, conditions, tag_id, priority)` builds a rule whose `conditions` are evaluated against call metadata during `classify_call`. Supported condition keys are `queue`, `disposition`, `min_duration`, and `max_duration`:
+
 ```python
-{
-    'name': 'VIP Callers',
-    'conditions': {
-        'caller_id_prefix': ['555-01', '555-02']
-    },
-    'tags': ['vip-customer']
-}
+tagging.create_rule(
+    name="Long Calls",
+    conditions={"min_duration": 600},  # 10 minutes or longer
+    tag_id="extended-call",
+    priority=100,
+)
 ```
 
-#### Tag After-Hours Calls
-```python
-{
-    'name': 'After Hours',
-    'conditions': {
-        'time_range': {
-            'start': '18:00',
-            'end': '08:00'
-        }
-    },
-    'tags': ['after-hours']
-}
-```
+### Built-in Default Rules
 
-#### Tag Long Calls
-```python
-{
-    'name': 'Extended Calls',
-    'conditions': {
-        'duration_min': 600  # 10 minutes
-    },
-    'tags': ['extended-call', 'review-needed']
-}
-```
+On initialization the system loads keyword rules for `sales`, `support`, `billing`, and `complaint`. These are applied automatically during `classify_call` and `auto_tag_call`.
 
 ## Auto-Tagging
 
-The system can automatically tag calls based on:
+`auto_tag_call(call_id, transcript=None, metadata=None)` combines several signals (when enabled via `auto_tag`):
 
-### Content Analysis
-```python
-# Auto-tag based on transcription keywords
-tagging.configure_keyword_detection({
-    'billing': ['invoice', 'payment', 'charge', 'billing'],
-    'complaint': ['dissatisfied', 'unhappy', 'problem', 'issue'],
-    'sales': ['purchase', 'buy', 'product', 'pricing']
-})
-```
+### Keyword Rules
 
-### Sentiment Analysis
-```python
-# Auto-tag based on sentiment
-# Automatically tags calls with negative sentiment
-tagging.enable_sentiment_tagging(
-    negative_threshold=0.3,  # Tag if sentiment < 0.3
-    positive_threshold=0.7   # Tag if sentiment > 0.7
-)
-```
+Built-in and custom keyword rules are matched against the transcript.
 
-### ML Classification
-```python
-# Train ML model on historical tagged calls
-tagging.train_classifier(
-    training_calls=['call-1', 'call-2', 'call-3'],
-    features=['duration', 'queue', 'time_of_day', 'day_of_week']
-)
+### Transcript Classification
 
-# Auto-classify new calls
-tagging.enable_ml_classification(min_confidence=0.75)
-```
+When a transcript is supplied, it is classified using:
 
-## Tag Analytics
+- **spaCy** (if installed) - sentiment and entity signals (e.g. negative sentiment → `complaint`, money mentions → `billing`)
+- **scikit-learn** (if installed) - TF-IDF + Naive Bayes classifier trained on built-in examples
+- **Keyword scoring fallback** - a TF-IDF-inspired keyword scorer used when the ML libraries are unavailable
 
-### Tag Statistics
+Only tags meeting `min_confidence` are applied.
+
+### Metadata Tagging
+
+Call metadata produces tags such as `queue_<id>`, time-of-day (`morning`/`afternoon`/`evening`/`night`), call length (`short_call`/`medium_call`/`long_call`), direction, disposition (`missed_call`/`abandoned`/`voicemail`), transfer/escalation (`transferred`/`escalated`), `long_hold`, `slow_answer`, `after_hours`, and repeat-caller tags.
+
+## Tag Statistics
+
 ```python
 stats = tagging.get_tag_statistics()
 # Returns:
 # {
-#     'total_calls_tagged': 1523,
-#     'total_tags_created': 3847,
-#     'auto_tags': 2891,
-#     'manual_tags': 956,
-#     'top_tags': [
-#         {'tag': 'support', 'count': 567},
-#         {'tag': 'billing', 'count': 342},
-#         {'tag': 'vip-customer', 'count': 189}
-#     ]
+#     "total_unique_tags": 12,
+#     "tag_counts": {"support": 567, "billing": 342, ...},
+#     "most_common": [("support", 567), ("billing", 342), ...]
 # }
 ```
 
-### Tag Distribution
-```python
-distribution = tagging.get_tag_distribution()
-# Shows how tags are distributed across categories
-```
+Overall counters (calls tagged, auto vs manual tags, rule counts, library availability) are available via `get_statistics()`:
 
-### Tag Trends
 ```python
-trends = tagging.get_tag_trends(
-    start_date='2025-01-01',
-    end_date='2025-01-31',
-    interval='daily'
-)
-# Shows tag usage over time
+overall = tagging.get_statistics()
+# {
+#     "enabled": True,
+#     "auto_tag_enabled": True,
+#     "total_calls_tagged": 1523,
+#     "total_tags_created": 3847,
+#     "auto_tags_created": 2891,
+#     "manual_tags_created": 956,
+#     "custom_tags_count": 24,
+#     "tagging_rules_count": 8,
+#     "spacy_available": True
+# }
 ```
 
 ## Admin Panel
@@ -253,142 +282,119 @@ Access Call Tagging in the admin panel:
 1. Navigate to **Admin Panel** → **Framework Features** → **Call Tagging**
 2. View tagged calls and statistics
 3. Create and manage tagging rules
-4. Configure auto-tagging settings
-5. Search calls by tags
-6. View tag analytics and trends
+4. Search calls by tags
 
 ## Integration with Other Features
 
-### Call Recording Analytics
-```python
-# Combine tagging with recording analysis
-from pbx.features.call_recording_analytics import get_recording_analytics
-
-analytics = get_recording_analytics()
-recording_data = analytics.analyze_recording('call-123')
-
-# Auto-tag based on analysis
-if recording_data['sentiment'] < 0.3:
-    tagging.tag_call('call-123', ['negative-sentiment'])
-```
-
 ### Speech Analytics
+
+Use a transcript produced elsewhere to classify a call:
+
 ```python
-# Tag based on transcription analysis
 from pbx.features.speech_analytics import get_speech_analytics
 
 speech = get_speech_analytics()
-transcript = speech.get_call_transcript('call-123')
+transcript = speech.get_call_transcript("call-123")
 
-# Auto-tag based on keywords in transcript
-tagging.tag_from_transcript('call-123', transcript)
+tags = tagging.classify_call("call-123", transcript=transcript)
 ```
 
 ### Call Queues
+
+Tag calls based on the queue they came through using a metadata rule:
+
 ```python
-# Tag calls based on queue
-tagging.add_tagging_rule({
-    'name': 'Sales Queue',
-    'conditions': {'queue': '8001'},
-    'tags': ['sales-queue']
-})
+tagging.create_rule(
+    name="Sales Queue",
+    conditions={"queue": "8001"},
+    tag_id="sales-queue",
+)
 ```
 
 ## Best Practices
 
 ### Tagging Strategy
+
 - **Consistent Naming:** Use consistent tag names (lowercase, hyphenated)
 - **Specific Tags:** Use specific tags like "billing-dispute" vs generic "billing"
-- **Tag Hierarchy:** Consider hierarchical tags (e.g., "customer-vip", "customer-regular")
-- **Limit Tags:** Don't over-tag; focus on meaningful categorization
+- **Limit Tags:** Don't over-tag; `max_tags` caps the number per call
 
 ### Rule Management
+
 - **Regular Review:** Review and update rules periodically
-- **Test Rules:** Test new rules with historical data first
 - **Monitor Performance:** Check auto-tag accuracy regularly
-- **Adjust Confidence:** Fine-tune confidence thresholds based on results
+- **Adjust Confidence:** Fine-tune `min_confidence` based on results
 
 ### Performance
+
 - **Index Tags:** Ensure tag columns are indexed for fast searching
-- **Batch Tagging:** Tag calls in batches for better performance
-- **Cache Rules:** Cache tagging rules in memory
-- **Async Processing:** Process auto-tagging asynchronously
+- **Optional Libraries:** Install `scikit-learn`/`spaCy` for better classification
 
 ## Database Schema
 
+The call tagging tables are created by `pbx/utils/migrations.py` (Migration 1003).
+
 ### call_tags
+
 ```sql
-CREATE TABLE call_tags (
+CREATE TABLE IF NOT EXISTS call_tags (
     id SERIAL PRIMARY KEY,
-    call_id VARCHAR(100) NOT NULL,
-    tag VARCHAR(100) NOT NULL,
-    source VARCHAR(20),  -- auto, manual, rule
-    confidence FLOAT DEFAULT 1.0,
-    created_at TIMESTAMP DEFAULT NOW(),
-    INDEX idx_call_id (call_id),
-    INDEX idx_tag (tag),
-    INDEX idx_created_at (created_at)
+    tag_name VARCHAR(50) NOT NULL UNIQUE,
+    category VARCHAR(50),
+    color VARCHAR(20),
+    auto_apply_rules TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
-### call_categories
-```sql
-CREATE TABLE call_categories (
-    id SERIAL PRIMARY KEY,
-    call_id VARCHAR(100) NOT NULL UNIQUE,
-    category VARCHAR(50) NOT NULL,
-    confidence FLOAT DEFAULT 1.0,
-    created_at TIMESTAMP DEFAULT NOW(),
-    INDEX idx_category (category)
-);
-```
+### call_tag_assignments
 
-### tagging_rules
 ```sql
-CREATE TABLE tagging_rules (
+CREATE TABLE IF NOT EXISTS call_tag_assignments (
     id SERIAL PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    conditions JSONB NOT NULL,
-    tags TEXT[] NOT NULL,
-    enabled BOOLEAN DEFAULT true,
-    created_at TIMESTAMP DEFAULT NOW(),
-    updated_at TIMESTAMP DEFAULT NOW()
+    call_id VARCHAR(50) NOT NULL,
+    tag_id INTEGER REFERENCES call_tags(id),
+    assigned_by VARCHAR(50),
+    assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    auto_assigned BOOLEAN DEFAULT FALSE
 );
 ```
 
 ## Troubleshooting
 
 ### Low Auto-Tag Accuracy
+
 **Solution:**
-- Reduce min_confidence threshold
-- Review and improve tagging rules
-- Retrain ML classifier with more data
-- Add more keyword definitions
+
+- Reduce `min_confidence` threshold
+- Add keyword rules with `add_tagging_rule`
+- Install `scikit-learn` and `spaCy` for stronger classification
 
 ### Too Many Tags per Call
+
 **Solution:**
-- Increase min_confidence threshold
-- Reduce max_tags_per_call limit
+
+- Increase `min_confidence` threshold
+- Reduce the `max_tags` limit
 - Review and consolidate similar tags
-- Disable overlapping tagging rules
 
 ### Search Performance Issues
+
 **Solution:**
+
 - Ensure indexes are created on tag columns
-- Use tag IDs instead of tag names for searches
-- Implement tag caching
 - Archive old tagged calls
 
 ## Next Steps
 
 1. **Define Tag Strategy:** Plan your tagging taxonomy
-2. **Configure Rules:** Set up initial tagging rules
-3. **Enable Auto-Tagging:** Turn on automatic tagging
+2. **Configure Rules:** Set up initial keyword and metadata rules
+3. **Enable Auto-Tagging:** Turn on `auto_tag`
 4. **Monitor Accuracy:** Review auto-tag results
-5. **Tune Settings:** Adjust confidence thresholds
-6. **Build Reports:** Create tag-based analytics
+5. **Tune Settings:** Adjust `min_confidence` and `max_tags`
 
 ## Related Documentation
 
 - [FRAMEWORK_FEATURES_COMPLETE_GUIDE.md](FRAMEWORK_FEATURES_COMPLETE_GUIDE.md)
+- [PLANNED_FEATURES.md](../PLANNED_FEATURES.md) - Planned (not-yet-implemented) capabilities for this feature
 - [COMPLETE_GUIDE.md - Section 9.2: REST API](../../COMPLETE_GUIDE.md#92-rest-api-reference)

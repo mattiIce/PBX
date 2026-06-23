@@ -5,7 +5,7 @@
 ### 1. Markdown Format (Primary)
 **File:** `ARCHITECTURE_DIAGRAMS.md`
 
-Contains all 19 diagrams in Mermaid syntax. This is the primary reference document.
+Contains all 6 diagrams in Mermaid syntax. This is the primary reference document.
 
 **View:**
 - Native rendering on GitHub (automatically displays all diagrams)
@@ -22,7 +22,10 @@ Fully interactive HTML with live Mermaid rendering using CDN.
 - All diagrams render dynamically
 - Fully printable to PDF
 
-### 3. PDF Format (Recommended)
+### 3. PDF Format (Optional, Generated On Demand)
+
+No PDF is checked into the repository. Use the procedure below to generate one
+from the Markdown or HTML source when you need a shareable file.
 
 ## How to Generate PDF
 
@@ -143,19 +146,6 @@ Convert without installing software:
 | 4 | SIP Protocol Flow - Call Setup | Sequence | ARCHITECTURE_DIAGRAMS.md |
 | 5 | RTP Media Stream - Detailed Flow | Flow | ARCHITECTURE_DIAGRAMS.md |
 | 6 | Module Dependency Graph | Dependency | ARCHITECTURE_DIAGRAMS.md |
-| 7 | Database Schema - Complete ERD | ERD | ARCHITECTURE_DIAGRAMS.md |
-| 8 | Call State Machine - Full State Diagram | State | ARCHITECTURE_DIAGRAMS.md |
-| 9 | API Layer Architecture | Architecture | ARCHITECTURE_DIAGRAMS.md |
-| 10 | Request Processing Pipeline - Detailed | Sequence | ARCHITECTURE_DIAGRAMS.md |
-| 11 | Frontend State Management & Data Flow | Flow | ARCHITECTURE_DIAGRAMS.md |
-| 12 | Feature Module System | Architecture | ARCHITECTURE_DIAGRAMS.md |
-| 13 | Feature Module Lifecycle | Sequence | ARCHITECTURE_DIAGRAMS.md |
-| 14 | Conference Bridge Architecture | Flow | ARCHITECTURE_DIAGRAMS.md |
-| 15 | Security & Authentication Architecture | Flow | ARCHITECTURE_DIAGRAMS.md |
-| 16 | Authentication & Authorization Flow | Flow | ARCHITECTURE_DIAGRAMS.md |
-| 17 | Voicemail Processing Pipeline | Flow | ARCHITECTURE_DIAGRAMS.md |
-| 18 | Deployment & Runtime Architecture | Architecture | ARCHITECTURE_DIAGRAMS.md |
-| 19 | System Monitoring & Observability Stack | Architecture | ARCHITECTURE_DIAGRAMS.md |
 
 ## PDF Quality & Rendering
 
@@ -175,13 +165,13 @@ Convert without installing software:
 
 ```
 docs/
-├── ARCHITECTURE_DIAGRAMS.md                          (19 diagrams in Markdown)
+├── ARCHITECTURE_DIAGRAMS.md                          (6 diagrams in Markdown)
 ├── ARCHITECTURE_DIAGRAMS.html                        (Interactive HTML)
-├── ARCHITECTURE_DIAGRAMS.pdf                         (Generated PDF)
-├── ARCHITECTURE_DIAGRAMS_GENERATION_GUIDE.md         (This file)
-├── SYSTEM_ARCHITECTURE.md                            (Original Part 1)
-└── DETAILED_COMPONENT_DIAGRAMS.md                    (Original Part 2)
+└── ARCHITECTURE_DIAGRAMS_GENERATION_GUIDE.md         (This file)
 ```
+
+> Note: a PDF (`ARCHITECTURE_DIAGRAMS.pdf`) is not checked in; generate it on
+> demand with the steps under "How to Generate PDF" above.
 
 ## Recommended Workflow
 
@@ -204,10 +194,10 @@ All diagrams use Mermaid syntax and are compatible with:
 
 ## Document Information
 
-- **Total Size:** ~200 KB (Markdown), ~500 KB (HTML)
-- **Diagrams:** 19 comprehensive architecture visualizations
-- **Components:** 250+ system components documented
-- **Pages (PDF):** Estimated 50-80 pages depending on formatting
+- **Total Size:** ~16 KB (Markdown), ~16 KB (HTML)
+- **Diagrams:** 6 architecture visualizations
+- **Components:** 100+ system components documented across the diagrams
+- **Pages (PDF):** Varies with formatting once generated
 
 ## Troubleshooting
 

@@ -47,6 +47,7 @@ Tests are organized in the `admin/tests/` directory with the following structure
 ```
 admin/tests/
 ├── refresh-all.test.js     # Tests for refresh-all functionality
+├── sbc-management.test.js  # Tests for SBC management functionality
 └── voicemail.test.js       # Tests for voicemail management functionality
 ```
 

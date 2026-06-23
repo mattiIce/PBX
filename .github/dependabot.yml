@@ -25,6 +25,24 @@ updates:
           - "pytest*"
           - "ruff"
           - "mypy"
+    # Ignore versions that are known-incompatible with the project's transitive
+    # constraints (mirrors the caps documented in constraints.txt / pyproject.toml).
+    # Each major only becomes mergeable once the blocking dependency relaxes its
+    # bound; until then Dependabot should not keep re-opening un-mergeable PRs.
+    ignore:
+      # cryptography is capped <49 by fido2 2.2.0 (requires cryptography>35,<49)
+      - dependency-name: "cryptography"
+        versions: [">=49"]
+      # av is capped <17 by aiortc 1.14.0 (requires av>=14.0.0,<17.0.0)
+      - dependency-name: "av"
+        versions: [">=17"]
+      # thinc is capped <8.4 by spacy 3.8.14 (requires thinc>=8.3,<8.4)
+      - dependency-name: "thinc"
+        versions: [">=8.4"]
+      # numpy is capped <2.5 by numba>=0.65 (numba ships no numpy 2.5 wheels yet);
+      # numpy 2.5 forces a backtrack to numba 0.53 / llvmlite 0.36, which cannot build on 3.13+
+      - dependency-name: "numpy"
+        versions: [">=2.5"]
     # Limit the number of open Dependabot PRs for Python dependencies
     open-pull-requests-limit: 10
     labels:

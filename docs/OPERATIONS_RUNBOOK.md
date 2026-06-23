@@ -431,7 +431,7 @@ python3 scripts/production_health_check.py
 # Run DR test (automated)
 python3 scripts/test_disaster_recovery.py --test-type full
 
-# Or follow manual procedure in DISASTER_RECOVERY.md
+# Or follow the manual procedure in COMPLETE_GUIDE.md (Section 7.6: Backup & Recovery)
 ```
 
 ---

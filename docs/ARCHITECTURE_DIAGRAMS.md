@@ -2,7 +2,7 @@
 
 **Document Version**: 1.0
 **Date**: February 24, 2026
-**Total Diagrams**: 19
+**Total Diagrams**: 6
 **Format**: Mermaid Syntax (GitHub & Markdown Compatible)
 
 ---
@@ -18,31 +18,8 @@
 4. SIP Protocol Flow - Call Setup
 5. RTP Media Stream - Detailed Flow
 
-### Part 3: Core Architecture (3 diagrams)
+### Part 3: Core Architecture (1 diagram)
 6. Module Dependency Graph
-7. Database Schema & Complete ERD
-8. Call State Machine - Full State Diagram
-
-### Part 4: API & Data Flow (3 diagrams)
-9. API Layer Architecture
-10. Request Processing Pipeline - Detailed
-11. Frontend State Management & Data Flow
-
-### Part 5: Features & Handlers (3 diagrams)
-12. Feature Module System
-13. Feature Module Lifecycle
-14. Conference Bridge Architecture
-
-### Part 6: Security & Processing (2 diagrams)
-15. Security & Authentication Architecture
-16. Authentication & Authorization Flow
-
-### Part 7: Voicemail & Deployment (2 diagrams)
-17. Voicemail Processing Pipeline
-18. Deployment & Runtime Architecture
-
-### Part 8: Monitoring (1 diagram)
-19. System Monitoring & Observability Stack
 
 ---
 
@@ -82,7 +59,7 @@ graph TB
 
         subgraph "REST API Layer"
             Flask_App["Flask App<br/>(Port 9000/TCP)"]
-            API_Routes["23 Route Modules"]
+            API_Routes["22 Route Modules"]
             Auth["Authentication<br/>& Authorization"]
         end
 
@@ -110,7 +87,7 @@ graph TB
     subgraph "Frontend"
         AdminUI["Admin Dashboard<br/>(Vite/TypeScript)<br/>Port 80/443"]
         State["State Management<br/>(Store)"]
-        Pages["18 Page Modules"]
+        Pages["19 Page Modules"]
     end
 
     subgraph "External Services"
@@ -443,7 +420,7 @@ graph TD
 
     subgraph "API Layer"
         FlaskApp["api/app.py<br/>(Flask Factory)"]
-        Routes["api/routes/*.py<br/>(23 Modules)"]
+        Routes["api/routes/*.py<br/>(22 Modules)"]
         Schemas["api/schemas/*.py<br/>(5 Schema Modules)"]
         Auth["api/routes/auth.py<br/>(JWT)"]
         Errors["api/errors.py<br/>(Error Handler)"]
@@ -468,9 +445,9 @@ graph TD
 
     subgraph "Utilities"
         GracefulShutdown["utils/graceful_shutdown.py"]
-        Audio["utils/audio_processor.py"]
-        TTS["utils/tts_provider.py"]
-        DTMF["utils/dtmf_handler.py"]
+        Audio["utils/audio.py"]
+        TTS["utils/tts.py"]
+        DTMF["utils/dtmf.py"]
     end
 
     Main -->|Load Config| EnvLoader
@@ -556,18 +533,20 @@ graph TD
 
 ## Document Information
 
-- **Total Diagrams**: 19
-- **Diagram Types**: Graph, Sequence, State, ERD, Flow
-- **Total Components**: 250+
+- **Total Diagrams**: 6
+- **Diagram Types**: Graph and Sequence (Mermaid `graph` and `sequenceDiagram`)
+- **Total Components**: 100+ nodes across the six diagrams
 - **Architecture Layers**: 7 (Network, Core, Protocol, API, Data, Features, Integration)
-- **Lines of Mermaid Code**: 2000+
-- **Formats Available**: Markdown (.md), PDF (.pdf)
+- **Lines of Mermaid Code**: ~500
+- **Formats Available**: Markdown (.md)
 
 ## Viewing Instructions
 
 - **GitHub/Web**: Diagrams render natively in browser
-- **PDF**: Embedded Mermaid diagrams with fallback descriptions
 - **Local**: Use Mermaid CLI or online Mermaid editor for live rendering
+
+> Additional diagrams that are planned but not yet written are tracked in
+> [PLANNED_FEATURES.md](PLANNED_FEATURES.md).
 
 ---
 

@@ -177,7 +177,9 @@ nltk==3.9.4
     #   -c constraints.txt
     #   warden-voip (pyproject.toml)
 numba==0.65.1
-    # via librosa
+    # via
+    #   warden-voip (pyproject.toml)
+    #   librosa
 numpy==2.4.6
     # via
     #   -c constraints.txt

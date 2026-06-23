@@ -1,37 +1,47 @@
 # Warden VoIP PBX - AWS Infrastructure
 
-This directory contains Terraform configuration for deploying the Warden VoIP PBX system on AWS in a highly available, production-ready configuration.
+This directory contains a Terraform **starting template** for deploying the Warden VoIP PBX
+system on AWS. The current `main.tf` is intentionally simplified: it declares the provider,
+the input variables, and a small set of outputs. It is meant to be extended into a full,
+production-ready configuration (see [Roadmap](#roadmap-planned-infrastructure)).
 
-## Architecture
+> **Note**: `main.tf` is a skeleton. Its `instructions`, `alb_dns_name`, and `nlb_dns_name`
+> outputs reference resources (load balancers, RDS, ElastiCache, Secrets Manager, etc.) that
+> are **not yet defined** in this template. You must add those resources before
+> `terraform plan` / `terraform apply` will succeed.
 
-The Terraform configuration deploys the following AWS resources:
+## What main.tf Currently Provides
 
-### Network Infrastructure
-- **VPC** with public and private subnets across 2 availability zones
-- **Internet Gateway** for public internet access
-- **Route Tables** for public and private subnets
-- **Security Groups** for PBX, database, Redis, and load balancers
+### Provider
 
-### Compute Resources
-- **Auto Scaling Group** with 2+ EC2 instances (t3.xlarge by default)
-- **Launch Template** with automated PBX setup via user-data script
-- **Application Load Balancer** for HTTPS API traffic
-- **Network Load Balancer** for SIP/RTP UDP traffic
+- `hashicorp/aws` `~> 5.0`
+- `hashicorp/random` `~> 3.5`
+- Required Terraform version: `>= 1.9.0`
+- Default tags applied to all resources: `Project`, `Environment`, `ManagedBy`
 
-### Data Storage
-- **RDS PostgreSQL 17** (Multi-AZ, encrypted, automated backups)
-- **ElastiCache Redis** cluster for session state (2 nodes, multi-AZ)
+### Input Variables
 
-### Security & Secrets
-- **AWS Secrets Manager** for database credentials
-- **IAM Roles** with least-privilege access
-- **ACM Certificate** for SSL/TLS (requires DNS validation)
-- **Encrypted EBS volumes** for all instances
+| Variable | Type | Default | Description |
+|----------|------|---------|-------------|
+| `aws_region` | string | `us-east-1` | AWS region |
+| `environment` | string | `production` | Environment (dev/staging/production) |
+| `vpc_cidr` | string | `10.0.0.0/16` | VPC CIDR block |
+| `pbx_instance_count` | number | `2` | Number of PBX instances |
+| `pbx_instance_type` | string | `t3.xlarge` | EC2 instance type |
+| `db_instance_class` | string | `db.t3.medium` | RDS instance class |
+| `ssh_key_name` | string | *(required)* | SSH key pair name |
+| `allowed_ssh_cidr` | list(string) | *(required)* | CIDR blocks allowed to SSH. Must not be `0.0.0.0/0` (enforced by a validation rule). |
 
-### Monitoring
-- **CloudWatch Metrics** for system and application monitoring
-- **CloudWatch Logs** for centralized logging
-- **Auto Scaling Policies** based on CPU utilization
+### Outputs
+
+| Output | Description |
+|--------|-------------|
+| `instructions` | Post-deployment instructions (references resources to be added) |
+| `alb_dns_name` | ALB DNS name for the HTTPS API |
+| `nlb_dns_name` | NLB DNS name for SIP/RTP |
+
+There are no `database_endpoint`, `redis_endpoint`, or `certificate_arn` outputs yet — those
+are part of the [roadmap](#roadmap-planned-infrastructure).
 
 ## Prerequisites
 
@@ -49,7 +59,7 @@ export AWS_DEFAULT_REGION="us-east-1"
 
 ### 2. SSH Key Pair
 
-Create an SSH key pair in AWS:
+Create an SSH key pair in AWS (its name is passed via the `ssh_key_name` variable):
 
 ```bash
 aws ec2 create-key-pair \
@@ -63,22 +73,11 @@ chmod 400 ~/.ssh/pbx-production.pem
 ### 3. Terraform Installation
 
 ```bash
-# Install Terraform 1.5+
-wget https://releases.hashicorp.com/terraform/1.6.6/terraform_1.6.6_linux_amd64.zip
-unzip terraform_1.6.6_linux_amd64.zip
+# Install Terraform 1.9+ (required by main.tf)
+wget https://releases.hashicorp.com/terraform/1.9.0/terraform_1.9.0_linux_amd64.zip
+unzip terraform_1.9.0_linux_amd64.zip
 sudo mv terraform /usr/local/bin/
 terraform version
-```
-
-### 4. DNS Domain (Optional)
-
-For SSL certificate, you'll need a domain name. Update `main.tf`:
-
-```hcl
-resource "aws_acm_certificate" "pbx_cert" {
-  domain_name       = "pbx.yourdomain.com"  # <-- Change this
-  validation_method = "DNS"
-}
 ```
 
 ## Quick Start
@@ -95,340 +94,82 @@ terraform init
 Create `terraform.tfvars`:
 
 ```hcl
-aws_region           = "us-east-1"
-environment          = "production"
-ssh_key_name         = "pbx-production"
-pbx_instance_count   = 2
-pbx_instance_type    = "t3.xlarge"
-db_instance_class    = "db.r6g.large"
+aws_region         = "us-east-1"
+environment        = "production"
+ssh_key_name       = "pbx-production"
+pbx_instance_count = 2
+pbx_instance_type  = "t3.xlarge"
+db_instance_class  = "db.t3.medium"
 
-# Optional: Restrict SSH access
+# Required: restrict SSH access (0.0.0.0/0 is rejected by validation)
 allowed_ssh_cidr = ["1.2.3.4/32"]  # Your IP
 ```
 
-### 3. Plan Deployment
+### 3. Extend the Template
+
+Before planning, add the AWS resources you need (VPC, security groups, RDS, ElastiCache, ACM,
+launch template, autoscaling group, load balancers, etc.). See
+[Roadmap](#roadmap-planned-infrastructure) for the intended end state.
+
+### 4. Plan and Apply
 
 ```bash
 terraform plan -out=tfplan
-```
-
-Review the planned changes carefully.
-
-### 4. Deploy Infrastructure
-
-```bash
 terraform apply tfplan
 ```
 
-This will take 10-15 minutes to complete.
+### 5. Read the Outputs
 
-### 5. Get Outputs
+Once the corresponding resources exist, the template exposes:
 
 ```bash
-# Get load balancer DNS names
 terraform output alb_dns_name
 terraform output nlb_dns_name
-
-# Get database endpoint
-terraform output database_endpoint
-
-# Get Redis endpoint
-terraform output redis_endpoint
+terraform output instructions
 ```
 
-### 6. Configure DNS
-
-Point your domain to the load balancer:
-
-```bash
-# Get the ALB DNS name
-ALB_DNS=$(terraform output -raw alb_dns_name)
-
-# Create CNAME record in your DNS provider
-# pbx.yourdomain.com CNAME $ALB_DNS
-```
-
-### 7. Validate SSL Certificate
-
-After creating the DNS CNAME for certificate validation:
-
-```bash
-# Check certificate status
-aws acm describe-certificate \
-  --certificate-arn $(terraform output -raw certificate_arn) \
-  --query 'Certificate.Status'
-```
-
-## Configuration
-
-### Scaling
-
-Adjust instance count and size in `terraform.tfvars`:
-
-```hcl
-# For 100 users, 25 concurrent calls
-pbx_instance_count = 2
-pbx_instance_type  = "t3.large"    # 2 vCPU, 8 GB RAM
-db_instance_class  = "db.t3.medium" # 2 vCPU, 4 GB RAM
-
-# For 500 users, 125 concurrent calls
-pbx_instance_count = 3
-pbx_instance_type  = "t3.xlarge"   # 4 vCPU, 16 GB RAM
-db_instance_class  = "db.r6g.large" # 2 vCPU, 16 GB RAM
-
-# For 1000+ users, 250+ concurrent calls
-pbx_instance_count = 5
-pbx_instance_type  = "t3.2xlarge"  # 8 vCPU, 32 GB RAM
-db_instance_class  = "db.r6g.xlarge" # 4 vCPU, 32 GB RAM
-```
-
-### Multi-Region Deployment
-
-For disaster recovery, deploy in a second region:
-
-```bash
-# Deploy to us-west-2 for DR
-cd terraform/aws
-
-# Create separate workspace
-terraform workspace new us-west-2
-
-# Update region in tfvars
-echo 'aws_region = "us-west-2"' > terraform.tfvars
-
-# Deploy
-terraform plan
-terraform apply
-```
-
-### Cost Optimization
-
-**Use Spot Instances for non-production**:
-
-Modify `aws_launch_template` in `main.tf`:
-
-```hcl
-resource "aws_launch_template" "pbx" {
-  # ... existing config ...
-  
-  instance_market_options {
-    market_type = "spot"
-    spot_options {
-      max_price = "0.10"  # Max price per hour
-    }
-  }
-}
-```
-
-**Use Reserved Instances for production**:
-
-Purchase Reserved Instances for cost savings (up to 72% off):
-
-```bash
-aws ec2 purchase-reserved-instances-offering \
-  --reserved-instances-offering-id <offering-id> \
-  --instance-count 2
-```
-
-## Monitoring
-
-### CloudWatch Dashboards
-
-Access CloudWatch:
-
-```bash
-# Open CloudWatch in AWS Console
-echo "https://console.aws.amazon.com/cloudwatch/home?region=$AWS_REGION#dashboards:"
-```
-
-### Application Logs
-
-```bash
-# View application logs
-aws logs tail /pbx/production/application --follow
-
-# View user-data logs (instance startup)
-aws logs tail /pbx/production/user-data --follow
-```
-
-### Metrics
-
-Key metrics to monitor:
-- `PBX/production/CPU_IDLE` - CPU utilization
-- `PBX/production/MEM_USED` - Memory usage
-- `PBX/production/DISK_USED` - Disk usage
-- `AWS/RDS/CPUUtilization` - Database CPU
-- `AWS/ElastiCache/CPUUtilization` - Redis CPU
-
-## Backup and Recovery
-
-### Database Backups
-
-Automated daily backups with 30-day retention:
-
-```bash
-# List available backups
-aws rds describe-db-snapshots \
-  --db-instance-identifier pbx-db-production
-
-# Restore from backup
-aws rds restore-db-instance-from-db-snapshot \
-  --db-instance-identifier pbx-db-restored \
-  --db-snapshot-identifier <snapshot-id>
-```
-
-### Manual Snapshot
-
-```bash
-# Create manual snapshot
-aws rds create-db-snapshot \
-  --db-instance-identifier pbx-db-production \
-  --db-snapshot-identifier pbx-manual-snapshot-$(date +%Y%m%d)
-```
-
-## Maintenance
-
-### Updating PBX Application
-
-Rolling update procedure:
-
-```bash
-# SSH to instances and update (done automatically by ASG)
-# Or trigger ASG instance refresh
-
-aws autoscaling start-instance-refresh \
-  --auto-scaling-group-name pbx-asg-production \
-  --preferences MinHealthyPercentage=50
-```
-
-### Database Maintenance
-
-Apply updates during maintenance window (Sunday 4-5 AM UTC by default):
-
-```bash
-# Modify maintenance window
-aws rds modify-db-instance \
-  --db-instance-identifier pbx-db-production \
-  --preferred-maintenance-window "sun:04:00-sun:05:00"
-```
-
-## Troubleshooting
-
-### Instance Not Starting
-
-```bash
-# Check user-data logs
-INSTANCE_ID=$(aws autoscaling describe-auto-scaling-groups \
-  --auto-scaling-group-names pbx-asg-production \
-  --query 'AutoScalingGroups[0].Instances[0].InstanceId' \
-  --output text)
-
-aws logs tail /pbx/production/user-data --follow --log-stream-name $INSTANCE_ID
-```
-
-### Database Connection Issues
-
-```bash
-# Check database status
-aws rds describe-db-instances \
-  --db-instance-identifier pbx-db-production \
-  --query 'DBInstances[0].DBInstanceStatus'
-
-# Check security group
-aws ec2 describe-security-groups \
-  --group-ids <database-security-group-id>
-```
-
-### Load Balancer Health Checks Failing
-
-```bash
-# Check target health
-aws elbv2 describe-target-health \
-  --target-group-arn <target-group-arn>
-
-# SSH to instance and check service
-ssh -i ~/.ssh/pbx-production.pem ubuntu@<instance-ip>
-sudo systemctl status pbx
-curl http://localhost:9000/health
-```
-
-## Cleanup
-
-### Destroy Infrastructure
-
-**WARNING**: This will delete all resources including data!
-
-```bash
-# Disable deletion protection
-terraform apply -var="enable_deletion_protection=false"
-
-# Destroy all resources
-terraform destroy
-
-# Confirm with: yes
-```
-
-### Partial Cleanup
-
-Keep database but remove compute:
-
-```bash
-# Target specific resources
-terraform destroy -target=aws_autoscaling_group.pbx_asg
-terraform destroy -target=aws_lb.pbx_alb
-terraform destroy -target=aws_lb.pbx_nlb
-```
-
-## Cost Estimate
-
-### Monthly Costs (us-east-1)
-
-**Small (100 users)**:
-- EC2 (2 x t3.large): $120
-- RDS (db.t3.medium): $90
-- ElastiCache (2 x cache.t3.micro): $25
-- Data transfer: $50
-- Load balancers: $40
-- **Total: ~$325/month**
-
-**Medium (500 users)**:
-- EC2 (3 x t3.xlarge): $360
-- RDS (db.r6g.large): $240
-- ElastiCache (2 x cache.r6g.large): $180
-- Data transfer: $200
-- Load balancers: $40
-- **Total: ~$1,020/month**
-
-**Large (1000+ users)**:
-- EC2 (5 x t3.2xlarge): $1,200
-- RDS (db.r6g.xlarge): $480
-- ElastiCache (3 x cache.r6g.large): $270
-- Data transfer: $500
-- Load balancers: $60
-- **Total: ~$2,510/month**
-
-> **Note**: Use AWS Cost Calculator for precise estimates: https://calculator.aws/
-
-## Security Best Practices
-
-1. **Enable MFA** on AWS account
-2. **Use IAM roles** instead of access keys where possible
-3. **Rotate credentials** regularly
-4. **Enable CloudTrail** for audit logging
-5. **Use VPC Flow Logs** for network monitoring
-6. **Enable GuardDuty** for threat detection
-7. **Regular security scans** with AWS Inspector
-8. **Keep software updated** via auto-scaling refresh
+## Roadmap: Planned Infrastructure
+
+The following resources are **not yet implemented** in `main.tf`. They represent the intended
+production architecture and the work needed to grow this template into a complete deployment.
+
+### Network Infrastructure
+- **VPC** with public and private subnets across 2 availability zones
+- **Internet Gateway** for public internet access
+- **Route Tables** for public and private subnets
+- **Security Groups** for PBX, database, Redis, and load balancers
+
+### Compute Resources
+- **Launch Template** with automated PBX setup via a user-data script
+- **Auto Scaling Group** with 2+ EC2 instances (`t3.xlarge` by default)
+- **Application Load Balancer** for HTTPS API traffic
+- **Network Load Balancer** for SIP/RTP UDP traffic
+
+### Data Storage
+- **RDS PostgreSQL 17** (Multi-AZ, encrypted, automated backups)
+- **ElastiCache Redis** cluster for session state (multi-AZ)
+
+### Security & Secrets
+- **ACM Certificate** for SSL/TLS (requires DNS validation)
+- **AWS Secrets Manager** for database credentials
+- **IAM Roles** with least-privilege access
+- **Encrypted EBS volumes** for all instances
+
+### Monitoring
+- **CloudWatch Metrics** for system and application monitoring
+- **CloudWatch Logs** for centralized logging
+- **Auto Scaling Policies** based on CPU utilization
+
+### Additional Outputs
+- `database_endpoint` — RDS endpoint address
+- `redis_endpoint` — ElastiCache configuration endpoint
+- `certificate_arn` — ACM certificate ARN
 
 ## Support
 
-- **Documentation**: See main repository README
+- **Documentation**: See the main repository README, and [docs/PLANNED_FEATURES.md](../../docs/PLANNED_FEATURES.md) for the consolidated roadmap
 - **Issues**: GitHub Issues
-- **Security**: Report to security@example.com
-- **Enterprise**: Contact for professional support
 
 ## License
 
-MIT License - See LICENSE file in repository root
-
----
+MIT License - See the LICENSE file in the repository root

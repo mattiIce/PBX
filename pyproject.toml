@@ -49,6 +49,11 @@ dependencies = [
     "scikit-learn>=1.9.0",
     "scipy>=1.17.1",
     "pyAudioAnalysis>=0.3.14",
+    # floor pins numba up so the resolver can't backtrack to ancient numba (0.53.x), which
+    # pulls llvmlite 0.36.0 -- a version that cannot build on Python 3.13+. This guards the
+    # librosa -> numba -> llvmlite chain when numpy floats (e.g. numpy 2.5 has no numba yet).
+    # 0.65 keeps numpy<2.5 and is the numba line that ships cp313/cp314 wheels.
+    "numba>=0.65",
     "librosa>=0.11.0",
     "soundfile>=0.14.0",
     "imageio-ffmpeg>=0.6.0",
