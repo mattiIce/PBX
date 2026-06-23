@@ -6,6 +6,13 @@
 # `make lint`/`make test` (which call `python3 -m ruff|mypy|pytest`) match CI.
 set -euo pipefail
 [ "${CLAUDE_CODE_REMOTE:-}" != "true" ] && exit 0   # web sessions only
+
+# Run asynchronously: emit the directive, then the harness starts the session
+# while this finishes in the background (asyncTimeout caps the heavy install).
+# The venv + PATH are written before the slow install, so the environment is
+# usable even if dependency installation is still running or gets timed out.
+echo '{"async": true, "asyncTimeout": 600000}'
+
 cd "$CLAUDE_PROJECT_DIR"
 VENV="$CLAUDE_PROJECT_DIR/.venv"
 
