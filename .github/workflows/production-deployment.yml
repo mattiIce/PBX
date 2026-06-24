@@ -221,7 +221,7 @@ jobs:
         run: python scripts/health_monitor.py --api-url ${{ vars.PRODUCTION_URL }}
 
       - name: Notify deployment success
-        uses: slackapi/slack-github-action@v2
+        uses: slackapi/slack-github-action@v3
         if: success()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK }}
@@ -258,7 +258,7 @@ jobs:
         run: python scripts/smoke_tests.py --api-url ${{ vars.PRODUCTION_URL }}
 
       - name: Notify rollback
-        uses: slackapi/slack-github-action@v2
+        uses: slackapi/slack-github-action@v3
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK }}
           webhook-type: incoming-webhook
