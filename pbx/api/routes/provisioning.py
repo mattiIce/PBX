@@ -53,6 +53,45 @@ _COLOR_SCREEN_MODELS = {
     "y000000000069",  # Yealink T46S (480x272 color)
 }
 
+# Cisco multiplatform (MPP/3PCC) phones request device-specific files named with
+# a model prefix, e.g. "CP-8851-3PCC<MAC>.cfg", and a model-level base file with
+# no MAC, e.g. "8851-3PCC.xml". A 6-octet MAC, optionally separated by :/-/.
+_FILENAME_MAC_RE = re.compile(r"(?:[0-9a-fA-F]{2}[:.\-]?){5}[0-9a-fA-F]{2}")
+
+# Cisco expands the $MA macro directly after the model token with no separator
+# (e.g. "CP-8851-3PCC001565123456.cfg"), so the model's trailing hex letters
+# ("...3PCC") would otherwise merge with the MAC and yield a wrong 12-hex run.
+# Strip the leading Cisco device-file prefix ("CP-8851-3PCC", "8851-3PCC", an
+# optional trailing separator) and the enterprise "SEP" prefix before matching.
+_CISCO_FILE_PREFIX_RE = re.compile(r"^(?:cp-?)?\d{3,4}-?3pcc-?|^sep", re.IGNORECASE)
+
+
+def _extract_mac_from_filename(filename: str) -> str | None:
+    """Extract and normalize a MAC address from a provisioning filename.
+
+    Handles bare MACs ("001565123456"), separated MACs ("00:15:65:12:34:56")
+    and vendor-prefixed names such as Cisco's "CP-8851-3PCC<MAC>" or "SEP<MAC>".
+
+    Returns the normalized MAC (lowercase, no separators), or None when the
+    filename carries no MAC (e.g. a Cisco model-level base file).
+    """
+    cleaned = _CISCO_FILE_PREFIX_RE.sub("", filename, count=1)
+    match = _FILENAME_MAC_RE.search(cleaned)
+    if not match:
+        return None
+    return normalize_mac_address(match.group(0))
+
+
+def _is_cisco_mpp_model_file(filename: str) -> bool:
+    """Return True for a Cisco multiplatform model/base file request (no MAC).
+
+    Cisco 3PCC phones (e.g. CP-8851-3PCC) first fetch a model-level file such as
+    "8851-3PCC.xml" before they know their per-device Profile Rule. Matches the
+    8800-series 3PCC family (8841/8851/8861) by model number plus the "3pcc" tag.
+    """
+    name = filename.lower()
+    return "3pcc" in name and bool(re.search(r"88\d\d", name))
+
 
 def _is_common_config_request(filename: str) -> bool:
     """Check if the requested filename is a known fleet-wide common config file.
@@ -502,8 +541,15 @@ def handle_get_registered_phones_by_extension(number: str) -> Response:
 
 
 @provisioning_bp.route("/provision/<path:path>.cfg", methods=["GET"])
+@provisioning_bp.route("/provision/<path:path>.xml", methods=["GET"])
 def handle_provisioning_request(path: str) -> Response:
-    """Handle phone provisioning config request."""
+    """Handle phone provisioning config request.
+
+    Serves both ``.cfg`` (Yealink/Zultys/Polycom/Grandstream/Cisco) and ``.xml``
+    (Cisco multiplatform / 3PCC) config requests. Cisco 3PCC phones request a
+    model-level base file (e.g. ``8851-3PCC.xml``) and per-device files with a
+    model prefix (e.g. ``CP-8851-3PCC-<MAC>.cfg``); both are handled here.
+    """
     pbx_core = get_pbx_core()
     if not pbx_core or not hasattr(pbx_core, "phone_provisioning"):
         logger.error("Phone provisioning not enabled but provisioning request received")
@@ -605,6 +651,26 @@ def handle_provisioning_request(path: str) -> Response:
                 mimetype="text/plain",
             )
 
+        # Resolve the MAC for device lookup. Cisco multiplatform phones prefix
+        # device files with the model (e.g. "CP-8851-3PCC-<MAC>.cfg"), so extract
+        # the MAC from anywhere in the filename rather than assuming the whole
+        # filename is the MAC.
+        extracted_mac = _extract_mac_from_filename(filename)
+        if extracted_mac is None and _is_cisco_mpp_model_file(filename):
+            # Model-level base file (e.g. "8851-3PCC.xml") carries no MAC. Answer
+            # with a base profile whose Profile_Rule redirects the phone to its
+            # per-device config, enabling zero-touch provisioning.
+            base_profile = pbx_core.phone_provisioning.generate_cisco_mpp_base_profile()
+            logger.info(
+                f"Cisco multiplatform base profile request: {filename} — "
+                f"returning {len(base_profile)}-byte redirect profile to {request_info['ip']}"
+            )
+            return current_app.response_class(
+                response=base_profile,
+                status=200,
+                mimetype="application/xml",
+            )
+        mac = extracted_mac or filename
         logger.info(f"  MAC address from request: {mac}")
 
         # Generate configuration

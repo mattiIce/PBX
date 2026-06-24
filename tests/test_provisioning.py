@@ -283,3 +283,103 @@ def test_mac_placeholder_detection() -> None:
         assert is_placeholder == should_be_placeholder, (
             f"Failed for {description}: {mac_value} (expected placeholder={should_be_placeholder}, got {is_placeholder})"
         )
+
+
+def test_cisco_cp8851_support() -> None:
+    """Test full provisioning support for the Cisco CP-8851-3PCC desk phone."""
+
+    config = Config("config.yml")
+    provisioning = PhoneProvisioning(config)
+    extension_registry = ExtensionRegistry(config)
+
+    from pbx.features.extensions import Extension
+
+    test_ext = Extension(
+        "1001", "Test User", {"password": "password1001", "email": "test@test.com"}
+    )
+    extension_registry.extensions["1001"] = test_ext
+
+    # A built-in template is registered for cisco/cp8851
+    template = provisioning.get_template("cisco", "cp8851")
+    assert template is not None, "Cisco CP-8851 template not found"
+
+    # cp8851 is reported among the supported Cisco models
+    cisco_models = provisioning.get_supported_models("cisco")
+    assert "cp8851" in cisco_models, "cp8851 not listed under Cisco models"
+
+    # The 8851 is a phone, not an ATA
+    device = provisioning.register_device("AA:BB:CC:DD:EE:FF", "1001", "cisco", "cp8851")
+    assert device.device_type == "phone", "CP-8851 should be classified as a phone"
+    assert not device.is_ata(), "CP-8851 should not be an ATA"
+
+    # Config generation produces valid XML served as application/xml
+    config_content, content_type = provisioning.generate_config(
+        "AA:BB:CC:DD:EE:FF", extension_registry
+    )
+    assert config_content is not None, "Config generation failed"
+    assert content_type == "application/xml", f"Unexpected content type: {content_type}"
+    assert config_content.lstrip().startswith("<flat-profile>"), "Config is not a flat-profile"
+    assert "</flat-profile>" in config_content, "Config not closed"
+
+    # Registration-critical values are substituted
+    assert "<User_ID_1_>1001</User_ID_1_>" in config_content, "Extension number not in config"
+    assert "<Auth_ID_1_>1001</Auth_ID_1_>" in config_content, "Auth ID not in config"
+    assert "<Password_1_>password1001</Password_1_>" in config_content, "Password not in config"
+
+    # No unsubstituted placeholders remain
+    assert "{{" not in config_content, "Unsubstituted placeholder left in generated config"
+
+    # Profile_Rule points back at the per-device config using the Cisco $MA macro
+    assert "$MA.cfg" in config_content, "Profile_Rule should use the $MA MAC macro"
+
+    # Device is marked provisioned
+    assert device.last_provisioned is not None, "Device not marked as provisioned"
+
+
+def test_cisco_mpp_base_profile() -> None:
+    """The Cisco MPP base profile redirects the phone to its per-device config."""
+
+    config = Config("config.yml")
+    provisioning = PhoneProvisioning(config)
+
+    base = provisioning.generate_cisco_mpp_base_profile()
+    assert base.lstrip().startswith("<flat-profile>"), "Base profile is not a flat-profile"
+    assert "<Profile_Rule>" in base, "Base profile missing Profile_Rule"
+    assert "$MA.cfg" in base, "Base profile should redirect via the $MA macro"
+    assert "</flat-profile>" in base, "Base profile not closed"
+
+
+def test_extract_mac_from_provisioning_filename() -> None:
+    """MAC extraction handles bare, separated and Cisco-prefixed filenames."""
+
+    from pbx.api.routes.provisioning import (
+        _extract_mac_from_filename,
+        _is_cisco_mpp_model_file,
+    )
+
+    # Bare MAC (Yealink/Zultys/Polycom/Grandstream)
+    assert _extract_mac_from_filename("001565123456") == "001565123456"
+    # Separated MAC
+    assert _extract_mac_from_filename("00:15:65:12:34:56") == "001565123456"
+    # Cisco multiplatform per-device file with the $MA macro expanded directly
+    # after the model token (NO separator) — the trailing "CC" of "3PCC" must
+    # NOT merge with the MAC.
+    assert _extract_mac_from_filename("CP-8851-3PCC001565123456") == "001565123456"
+    assert _extract_mac_from_filename("CP-8851-3PCCaabbccddeeff") == "aabbccddeeff"
+    # Cisco per-device file with a separator before the MAC
+    assert _extract_mac_from_filename("CP-8851-3PCC-aabbccddeeff") == "aabbccddeeff"
+    # Model token without the "CP-" prefix
+    assert _extract_mac_from_filename("8841-3PCC000e08012345") == "000e08012345"
+    # Cisco enterprise-style SEP<MAC>
+    assert _extract_mac_from_filename("SEPAABBCCDDEEFF") == "aabbccddeeff"
+    assert _extract_mac_from_filename("SEP001565123456.cnf") == "001565123456"
+    # Model-level base file carries no MAC
+    assert _extract_mac_from_filename("8851-3PCC") is None
+    assert _extract_mac_from_filename("CP-8851-3PCC") is None
+
+    # Cisco multiplatform model/base file detection
+    assert _is_cisco_mpp_model_file("8851-3PCC") is True
+    assert _is_cisco_mpp_model_file("cp-8851-3pcc") is True
+    assert _is_cisco_mpp_model_file("8841-3pcc") is True
+    assert _is_cisco_mpp_model_file("001565123456") is False
+    assert _is_cisco_mpp_model_file("yealink_t46s") is False

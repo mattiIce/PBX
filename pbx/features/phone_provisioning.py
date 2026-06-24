@@ -15,6 +15,7 @@ Manual reboot options if needed:
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
+from xml.sax.saxutils import escape as xml_escape
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
@@ -41,6 +42,7 @@ class PhoneTemplate:
         extension_config: dict,
         server_config: dict,
         extension_config_2: dict | None = None,
+        escape_xml: bool = False,
     ) -> str:
         """
         Generate configuration from template
@@ -49,27 +51,38 @@ class PhoneTemplate:
             extension_config: Extension configuration dict (Line 1)
             server_config: Server configuration dict
             extension_config_2: Optional second extension config dict (Line 2)
+            escape_xml: When True, XML-escape substituted values. Required for
+                XML config formats (e.g. Cisco multiplatform <flat-profile>),
+                where dynamic values such as LDAP filters can contain ``&``,
+                ``<`` or ``>``. Left False for key=value formats (Yealink,
+                Grandstream, Cisco SPA) so output is byte-for-byte unchanged.
 
         Returns:
             Generated configuration string
         """
+
+        def sub(value: object) -> str:
+            """Stringify a value, XML-escaping it when generating XML configs."""
+            text = str(value)
+            return xml_escape(text) if escape_xml else text
+
         # Replace placeholders in template
         config = self.template_content
 
         # Extension information (Line 1)
-        config = config.replace("{{EXTENSION_NUMBER}}", str(extension_config.get("number", "")))
-        config = config.replace("{{EXTENSION_NAME}}", str(extension_config.get("name", "")))
-        config = config.replace("{{EXTENSION_PASSWORD}}", str(extension_config.get("password", "")))
+        config = config.replace("{{EXTENSION_NUMBER}}", sub(extension_config.get("number", "")))
+        config = config.replace("{{EXTENSION_NAME}}", sub(extension_config.get("name", "")))
+        config = config.replace("{{EXTENSION_PASSWORD}}", sub(extension_config.get("password", "")))
 
         # Extension information (Line 2 — for dual-port ATAs)
         if extension_config_2 and extension_config_2.get("number"):
             config = config.replace("{{LINE_2_ENABLE}}", "Yes")
             config = config.replace(
-                "{{EXTENSION_NUMBER_2}}", str(extension_config_2.get("number", ""))
+                "{{EXTENSION_NUMBER_2}}", sub(extension_config_2.get("number", ""))
             )
-            config = config.replace("{{EXTENSION_NAME_2}}", str(extension_config_2.get("name", "")))
+            config = config.replace("{{EXTENSION_NAME_2}}", sub(extension_config_2.get("name", "")))
             config = config.replace(
-                "{{EXTENSION_PASSWORD_2}}", str(extension_config_2.get("password", ""))
+                "{{EXTENSION_PASSWORD_2}}", sub(extension_config_2.get("password", ""))
             )
         else:
             config = config.replace("{{LINE_2_ENABLE}}", "No")
@@ -78,52 +91,60 @@ class PhoneTemplate:
             config = config.replace("{{EXTENSION_PASSWORD_2}}", "")
 
         # Server information
-        config = config.replace("{{SIP_SERVER}}", str(server_config.get("sip_host", "")))
-        config = config.replace("{{SIP_PORT}}", str(server_config.get("sip_port", "5060")))
-        config = config.replace("{{SERVER_NAME}}", str(server_config.get("server_name", "PBX")))
+        config = config.replace("{{SIP_SERVER}}", sub(server_config.get("sip_host", "")))
+        config = config.replace("{{SIP_PORT}}", sub(server_config.get("sip_port", "5060")))
+        config = config.replace("{{SERVER_NAME}}", sub(server_config.get("server_name", "PBX")))
 
         # LDAP/LDAPS Phone Book Configuration
         ldap_config = server_config.get("ldap_phonebook", {})
-        config = config.replace("{{LDAP_ENABLE}}", str(ldap_config.get("enable", "0")))
-        config = config.replace("{{LDAP_SERVER}}", str(ldap_config.get("server", "")))
-        config = config.replace("{{LDAP_PORT}}", str(ldap_config.get("port", "636")))
-        config = config.replace("{{LDAP_BASE}}", str(ldap_config.get("base", "")))
-        config = config.replace("{{LDAP_USER}}", str(ldap_config.get("user", "")))
-        config = config.replace("{{LDAP_PASSWORD}}", str(ldap_config.get("password", "")))
-        config = config.replace("{{LDAP_VERSION}}", str(ldap_config.get("version", "3")))
-        config = config.replace("{{LDAP_TLS_MODE}}", str(ldap_config.get("tls_mode", "1")))
+        config = config.replace("{{LDAP_ENABLE}}", sub(ldap_config.get("enable", "0")))
+        config = config.replace("{{LDAP_SERVER}}", sub(ldap_config.get("server", "")))
+        config = config.replace("{{LDAP_PORT}}", sub(ldap_config.get("port", "636")))
+        config = config.replace("{{LDAP_BASE}}", sub(ldap_config.get("base", "")))
+        config = config.replace("{{LDAP_USER}}", sub(ldap_config.get("user", "")))
+        config = config.replace("{{LDAP_PASSWORD}}", sub(ldap_config.get("password", "")))
+        config = config.replace("{{LDAP_VERSION}}", sub(ldap_config.get("version", "3")))
+        config = config.replace("{{LDAP_TLS_MODE}}", sub(ldap_config.get("tls_mode", "1")))
         config = config.replace(
-            "{{LDAP_NAME_FILTER}}", str(ldap_config.get("name_filter", "(|(cn=%)(sn=%))"))
+            "{{LDAP_NAME_FILTER}}", sub(ldap_config.get("name_filter", "(|(cn=%)(sn=%))"))
         )
         config = config.replace(
             "{{LDAP_NUMBER_FILTER}}",
-            str(ldap_config.get("number_filter", "(|(telephoneNumber=%)(mobile=%))")),
+            sub(ldap_config.get("number_filter", "(|(telephoneNumber=%)(mobile=%))")),
         )
-        config = config.replace("{{LDAP_NAME_ATTR}}", str(ldap_config.get("name_attr", "cn")))
+        config = config.replace("{{LDAP_NAME_ATTR}}", sub(ldap_config.get("name_attr", "cn")))
         config = config.replace(
-            "{{LDAP_NUMBER_ATTR}}", str(ldap_config.get("number_attr", "telephoneNumber"))
+            "{{LDAP_NUMBER_ATTR}}", sub(ldap_config.get("number_attr", "telephoneNumber"))
         )
         config = config.replace(
-            "{{LDAP_DISPLAY_NAME}}", str(ldap_config.get("display_name", "Company Directory"))
+            "{{LDAP_DISPLAY_NAME}}", sub(ldap_config.get("display_name", "Company Directory"))
         )
 
         # Remote Phone Book URL (fallback method)
         remote_phonebook = server_config.get("remote_phonebook", {})
-        config = config.replace("{{REMOTE_PHONEBOOK_URL}}", str(remote_phonebook.get("url", "")))
+        config = config.replace("{{REMOTE_PHONEBOOK_URL}}", sub(remote_phonebook.get("url", "")))
         config = config.replace(
-            "{{REMOTE_PHONEBOOK_REFRESH}}", str(remote_phonebook.get("refresh_interval", "60"))
+            "{{REMOTE_PHONEBOOK_REFRESH}}", sub(remote_phonebook.get("refresh_interval", "60"))
         )
 
         # DTMF Configuration
         dtmf_config = server_config.get("dtmf", {})
         config = config.replace(
-            "{{DTMF_PAYLOAD_TYPE}}", str(dtmf_config.get("payload_type", "101"))
+            "{{DTMF_PAYLOAD_TYPE}}", sub(dtmf_config.get("payload_type", "101"))
         )
 
         # Provisioning resource URL (for wallpaper, branding assets, etc.)
         config = config.replace(
             "{{PROVISION_RESOURCE_URL}}",
-            str(server_config.get("provision_resource_url", "")),
+            sub(server_config.get("provision_resource_url", "")),
+        )
+
+        # Provisioning profile URL (re-sync rule). Uses a phone-side MAC macro
+        # (e.g. Cisco's $MA) so the device fetches its own per-device config on
+        # every periodic re-sync and after a remote reboot.
+        config = config.replace(
+            "{{PROVISION_URL}}",
+            sub(server_config.get("provision_url", "")),
         )
 
         return config
@@ -2297,6 +2318,171 @@ P2351 = 1
 """
         self.add_template("cisco", "ata192", cisco_ata192_template)
 
+        # Cisco IP Phone CP-8851-3PCC (Multiplatform / MPP firmware).
+        # 3PCC ("third-party call control") uses the same SPA-style XML
+        # <flat-profile> config engine as the Cisco SPA/ATA multiplatform line,
+        # so the parameter schema mirrors cisco_ata192 above with desk-phone
+        # additions: wideband codecs, programmable line keys, BLF/speed-dial,
+        # MWI, an LDAP corporate directory and an XML remote phonebook.
+        # Kept in sync with provisioning_templates/cisco_cp8851.template.
+        # Unknown elements are ignored by the phone, so the registration-critical
+        # parameters (User_ID_1_/Auth_ID_1_/Password_1_/Proxy_1_/Register_1_)
+        # always take effect.
+        cisco_cp8851_template = """<flat-profile>
+<!-- ================================================================ -->
+<!-- Cisco IP Phone CP-8851-3PCC (Multiplatform Firmware)             -->
+<!-- Generated by {{SERVER_NAME}}                                     -->
+<!-- Parameter names follow the Cisco 8800-series MPP flat-profile    -->
+<!-- schema; unknown elements are ignored by the phone.               -->
+<!-- ================================================================ -->
+
+<!-- Provisioning / Re-sync -->
+<Provision_Enable>Yes</Provision_Enable>
+<Resync_On_Reset>Yes</Resync_On_Reset>
+<Resync_Random_Delay>2</Resync_Random_Delay>
+<Resync_Periodic>3600</Resync_Periodic>
+<Resync_Error_Retry_Delay>3600</Resync_Error_Retry_Delay>
+<Profile_Rule>{{PROVISION_URL}}</Profile_Rule>
+
+<!-- System / web administration -->
+<Enable_Web_Server>Yes</Enable_Web_Server>
+
+<!-- Network -->
+<Connection_Type>DHCP</Connection_Type>
+<Enable_VLAN>No</Enable_VLAN>
+
+<!-- Time / Regional -->
+<Time_Zone>GMT-05:00</Time_Zone>
+<Primary_NTP_Server>pool.ntp.org</Primary_NTP_Server>
+<Secondary_NTP_Server>time.google.com</Secondary_NTP_Server>
+<Daylight_Saving_Time_Enable>Yes</Daylight_Saving_Time_Enable>
+<Daylight_Saving_Time_Rule>start=3/-1/7/2;end=11/-1/7/2;save=1</Daylight_Saving_Time_Rule>
+<Time_Format>12hr</Time_Format>
+<Date_Format>month/day</Date_Format>
+
+<!-- Station / Display -->
+<Station_Name>{{EXTENSION_NAME}}</Station_Name>
+<Station_Display_Name>{{EXTENSION_NAME}}</Station_Display_Name>
+<Back_Light_Timer>5m</Back_Light_Timer>
+
+<!-- Global voicemail access (Messages button) -->
+<Voice_Mail_Number>*{{EXTENSION_NUMBER}}</Voice_Mail_Number>
+
+<!-- RTP -->
+<RTP_Port_Min>16384</RTP_Port_Min>
+<RTP_Port_Max>16482</RTP_Port_Max>
+<RTP_Packet_Size>0.02</RTP_Packet_Size>
+
+<!-- DTMF AVT (RFC 2833) dynamic payload (global) -->
+<AVT_Dynamic_Payload>{{DTMF_PAYLOAD_TYPE}}</AVT_Dynamic_Payload>
+
+<!-- Control timers -->
+<Interdigit_Long_Timer>10</Interdigit_Long_Timer>
+<Interdigit_Short_Timer>3</Interdigit_Short_Timer>
+
+<!-- ================================================================ -->
+<!-- Line keys. Key 1 maps to Extension 1 (primary registration).     -->
+<!-- Keys 2-10 are free for BLF / speed dial / call park monitoring   -->
+<!-- via Extended_Function_n_. Examples (uncomment and edit):         -->
+<!-- BLF + call pickup + speed dial for a colleague on key 2:         -->
+<!-- <Extended_Function_2_>fnc=blf+cp+sd;sub=1002@$PROXY;ext=1002@$PROXY;nme=Sales</Extended_Function_2_> -->
+<!-- Speed dial on key 3:                                             -->
+<!-- <Extended_Function_3_>fnc=sd;ext=1003@$PROXY;nme=Reception</Extended_Function_3_> -->
+<!-- ================================================================ -->
+<Extension_1_>1</Extension_1_>
+<Short_Name_1_>{{EXTENSION_NUMBER}}</Short_Name_1_>
+
+<!-- Supplementary services -->
+<CW_Setting>Yes</CW_Setting>
+<Conference_Serv>Yes</Conference_Serv>
+<Attn_Transfer_Serv>Yes</Attn_Transfer_Serv>
+<Blind_Transfer_Serv>Yes</Blind_Transfer_Serv>
+<DND_Serv>Yes</DND_Serv>
+<Cfwd_All_Serv>Yes</Cfwd_All_Serv>
+<Cfwd_Busy_Serv>Yes</Cfwd_Busy_Serv>
+<Cfwd_No_Ans_Serv>Yes</Cfwd_No_Ans_Serv>
+<Call_Park_Serv>Yes</Call_Park_Serv>
+<Call_Pick_Up_Serv>Yes</Call_Pick_Up_Serv>
+<Group_Call_Pick_Up_Serv>Yes</Group_Call_Pick_Up_Serv>
+<Paging_Serv>Yes</Paging_Serv>
+
+<!-- LDAP corporate directory -->
+<LDAP_Dir_Enable>{{LDAP_ENABLE}}</LDAP_Dir_Enable>
+<LDAP_Corp_Dir_Name>{{LDAP_DISPLAY_NAME}}</LDAP_Corp_Dir_Name>
+<LDAP_Server>{{LDAP_SERVER}}:{{LDAP_PORT}}</LDAP_Server>
+<LDAP_Search_Base>{{LDAP_BASE}}</LDAP_Search_Base>
+<LDAP_Client_DN>{{LDAP_USER}}</LDAP_Client_DN>
+<LDAP_Password>{{LDAP_PASSWORD}}</LDAP_Password>
+<LDAP_Auth_Method>Simple</LDAP_Auth_Method>
+<LDAP_Last_Name_Filter>{{LDAP_NAME_FILTER}}</LDAP_Last_Name_Filter>
+<LDAP_First_Name_Filter>{{LDAP_NAME_FILTER}}</LDAP_First_Name_Filter>
+<LDAP_Display_Attrs>a=cn;a=telephoneNumber;</LDAP_Display_Attrs>
+<LDAP_Number_Mapping>telephoneNumber</LDAP_Number_Mapping>
+
+<!-- XML / HTTP remote phonebook (fallback when LDAP is disabled) -->
+<XML_Directory_Service_Name>Directory</XML_Directory_Service_Name>
+<XML_Directory_Service_URL>{{REMOTE_PHONEBOOK_URL}}</XML_Directory_Service_URL>
+
+<!-- ================================================================ -->
+<!-- Extension 1 - primary SIP registration                          -->
+<!-- ================================================================ -->
+<Line_Enable_1_>Yes</Line_Enable_1_>
+<SIP_Transport_1_>UDP</SIP_Transport_1_>
+<SIP_Port_1_>{{SIP_PORT}}</SIP_Port_1_>
+<SIP_TOS_DiffServ_Value_1_>0x68</SIP_TOS_DiffServ_Value_1_>
+<RTP_TOS_DiffServ_Value_1_>0xb8</RTP_TOS_DiffServ_Value_1_>
+<NAT_Mapping_Enable_1_>Yes</NAT_Mapping_Enable_1_>
+<NAT_Keep_Alive_Enable_1_>Yes</NAT_Keep_Alive_Enable_1_>
+
+<!-- Proxy and registration -->
+<Proxy_1_>{{SIP_SERVER}}</Proxy_1_>
+<Register_1_>Yes</Register_1_>
+<Make_Call_Without_Reg_1_>No</Make_Call_Without_Reg_1_>
+<Register_Expires_1_>3600</Register_Expires_1_>
+<Ans_Call_Without_Reg_1_>No</Ans_Call_Without_Reg_1_>
+
+<!-- Subscriber information / credentials -->
+<Display_Name_1_>{{EXTENSION_NAME}}</Display_Name_1_>
+<User_ID_1_>{{EXTENSION_NUMBER}}</User_ID_1_>
+<Auth_ID_1_>{{EXTENSION_NUMBER}}</Auth_ID_1_>
+<Password_1_>{{EXTENSION_PASSWORD}}</Password_1_>
+
+<!-- Voicemail / Message Waiting Indicator (Ext 1). Setting the       -->
+<!-- voicemail server drives the message-summary SUBSCRIBE/NOTIFY.    -->
+<Mailbox_ID_1_>{{EXTENSION_NUMBER}}</Mailbox_ID_1_>
+<Voice_Mail_Server_1_>{{SIP_SERVER}}</Voice_Mail_Server_1_>
+<Voice_Mail_Subscribe_Interval_1_>86400</Voice_Mail_Subscribe_Interval_1_>
+
+<!-- Audio codecs (Ext 1) - wideband-capable desk phone -->
+<Preferred_Codec_1_>G711u</Preferred_Codec_1_>
+<Second_Preferred_Codec_1_>G722</Second_Preferred_Codec_1_>
+<Third_Preferred_Codec_1_>G711a</Third_Preferred_Codec_1_>
+<Use_Pref_Codec_Only_1_>No</Use_Pref_Codec_Only_1_>
+<G711u_Enable_1_>Yes</G711u_Enable_1_>
+<G711a_Enable_1_>Yes</G711a_Enable_1_>
+<G722_Enable_1_>Yes</G722_Enable_1_>
+<G729a_Enable_1_>Yes</G729a_Enable_1_>
+<iLBC_Enable_1_>Yes</iLBC_Enable_1_>
+<OPUS_Enable_1_>Yes</OPUS_Enable_1_>
+<Silence_Supp_Enable_1_>No</Silence_Supp_Enable_1_>
+<DTMF_Tx_Method_1_>AVT</DTMF_Tx_Method_1_>
+
+<!-- Dial plan (Ext 1) -->
+<Dial_Plan_1_>(*xx|[3469]11|0|00|[2-9]xxxxxx|1xxxxxxxxxx|xxxxxxxxxxxx.)</Dial_Plan_1_>
+
+<!-- ================================================================ -->
+<!-- Additional extensions - disabled for single-line provisioning.   -->
+<!-- Enable Line_Enable_n_ and add the matching Proxy_n_/User_ID_n_/   -->
+<!-- Auth_ID_n_/Password_n_ block for shared lines or extra DIDs.     -->
+<!-- ================================================================ -->
+<Line_Enable_2_>No</Line_Enable_2_>
+<Line_Enable_3_>No</Line_Enable_3_>
+<Line_Enable_4_>No</Line_Enable_4_>
+<Line_Enable_5_>No</Line_Enable_5_>
+</flat-profile>
+"""
+        self.add_template("cisco", "cp8851", cisco_cp8851_template)
+
         self.logger.info(f"Loaded {len(self.templates)} built-in phone templates (including ATAs)")
 
     def _load_custom_templates(self) -> None:
@@ -2734,6 +2920,9 @@ P2351 = 1
             "sip_port": self.config.get("server.sip_port", 5060),
             "server_name": self.config.get("server.server_name", "PBX"),
             "provision_resource_url": f"http://{server_ip}:{api_port}/provision/resources",
+            # Re-sync URL with a phone-side MAC macro ($MA for Cisco) so the
+            # device pulls its own per-device config on every periodic re-sync.
+            "provision_url": f"http://{server_ip}:{api_port}/provision/$MA.cfg",
         }
 
         # Add LDAP phonebook configuration
@@ -2773,17 +2962,26 @@ P2351 = 1
                     f"Line 2 will be disabled"
                 )
 
-        # Generate configuration
-        config_content = template.generate_config(
-            extension_config, server_config, extension_config_2
-        )
-
-        # Determine content type based on vendor
-        # Mapping of vendors to their content types
+        # Determine config format. Polycom uses an XML config; Cisco
+        # multiplatform desk phones (e.g. the CP-8851-3PCC) also use an XML
+        # <flat-profile>. Cisco SPA/ATA configs stay text/plain to preserve
+        # existing behaviour. XML configs must have substituted values escaped
+        # (LDAP filters and the like can contain ``&``/``<``/``>``).
         vendor_content_types = {
             "polycom": "application/xml",
         }
-        content_type = vendor_content_types.get(device.vendor, "text/plain")
+        xml_models = {("cisco", "cp8851")}
+        is_xml_config = (device.vendor, device.model) in xml_models
+
+        # Generate configuration
+        config_content = template.generate_config(
+            extension_config, server_config, extension_config_2, escape_xml=is_xml_config
+        )
+
+        if is_xml_config:
+            content_type = "application/xml"
+        else:
+            content_type = vendor_content_types.get(device.vendor, "text/plain")
 
         # Mark device as provisioned
         device.mark_provisioned()
@@ -2863,6 +3061,35 @@ P2351 = 1
         config_url = config_url.replace("{{PORT}}", str(self.config.get("api.port", 9000)))
 
         return config_url
+
+    def generate_cisco_mpp_base_profile(self) -> str:
+        """
+        Generate the Cisco multiplatform (MPP/3PCC) base/redirect profile.
+
+        When a Cisco 3PCC phone (e.g. CP-8851-3PCC) is first pointed at the PBX
+        without a per-device Profile Rule, it requests a model-level file such as
+        ``8851-3PCC.xml``. We answer with a minimal <flat-profile> whose
+        Profile_Rule points at the per-device config using the phone-side ``$MA``
+        MAC macro, so the phone immediately re-syncs to its own ``<MAC>.cfg``.
+        This enables zero-touch provisioning via DHCP option 66/150 or the
+        phone's default profile rule.
+
+        Returns:
+            XML <flat-profile> string.
+        """
+        server_ip = self.config.get("server.external_ip", "127.0.0.1")
+        api_port = self.config.get("api.port", 9000)
+        device_rule = f"http://{server_ip}:{api_port}/provision/$MA.cfg"
+        return (
+            "<flat-profile>\n"
+            "<!-- Cisco multiplatform base profile generated by Warden VoIP. -->\n"
+            "<!-- Redirects the phone to its per-device configuration file. -->\n"
+            "<Provision_Enable>Yes</Provision_Enable>\n"
+            "<Resync_On_Reset>Yes</Resync_On_Reset>\n"
+            "<Resync_Periodic>3600</Resync_Periodic>\n"
+            f"<Profile_Rule>{device_rule}</Profile_Rule>\n"
+            "</flat-profile>\n"
+        )
 
     def get_supported_vendors(self) -> list:
         """

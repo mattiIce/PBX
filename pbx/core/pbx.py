@@ -818,7 +818,8 @@ class PBXCore:
         Returns:
             Phone model identifier string or None.
             Possible values: 'YEALINK_T23G', 'YEALINK_T33G', 'YEALINK_T46S',
-            'YEALINK_T46G', 'YEALINK_T28G', 'ZIP33G', 'ZIP37G', or None for unknown/other
+            'YEALINK_T46G', 'YEALINK_T28G', 'ZIP33G', 'ZIP37G', 'CISCO_CP8851',
+            or None for unknown/other
         """
         if not user_agent:
             return None
@@ -850,6 +851,15 @@ class PBXCore:
             model = "YEALINK_T28G"
         elif "GRANDSTREAM" in user_agent_upper:
             model = "GRANDSTREAM_HT" if "HT" in user_agent_upper else "GRANDSTREAM"
+        elif (
+            "CP-8851" in user_agent_upper
+            or "CP8851" in user_agent_upper
+            or "8851" in user_agent_upper
+        ):
+            # Cisco IP Phone CP-8851-3PCC (multiplatform desk phone).
+            # Checked before the generic Cisco/SPA branch since its User-Agent
+            # (e.g. "Cisco-CP-8851-3PCC/11.3.7") also contains "CISCO".
+            model = "CISCO_CP8851"
         elif "SPA" in user_agent_upper or "CISCO" in user_agent_upper:
             model = "CISCO_ATA"
         elif "OBI" in user_agent_upper:
@@ -979,6 +989,14 @@ class PBXCore:
             # Grandstream phones (GXP series, etc.): full codec support
             codecs = ["0", "8", "9", "18", "2", dtmf_pt_str]
             self.logger.debug(f"Using Grandstream codec set: PCMU/PCMA/G722/G729/G726 ({codecs})")
+            return codecs
+
+        if phone_model == "CISCO_CP8851":
+            # Cisco CP-8851-3PCC multiplatform desk phone: PCMU, PCMA, G722
+            # (wideband), G729a — matches the cisco_cp8851 provisioning template.
+            # Payload types: 0=PCMU, 8=PCMA, 9=G722, 18=G729
+            codecs = ["0", "8", "9", "18", dtmf_pt_str]
+            self.logger.debug(f"Using Cisco CP-8851-3PCC codec set: PCMU/PCMA/G722/G729 ({codecs})")
             return codecs
 
         if phone_model in ("CISCO_ATA", "OBI_ATA"):

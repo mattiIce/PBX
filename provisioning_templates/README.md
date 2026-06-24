@@ -33,7 +33,7 @@ Use the command-line script to export all built-in templates:
 ```bash
 python scripts/export_all_templates.py
 ```
-This will export all 15 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yealink T23G, Yealink T28G, Yealink T33G, Yealink T46S, Polycom VVX 450, Cisco SPA504G, Grandstream GXP2170, plus 6 ATA templates: Grandstream HT801/HT802, Cisco SPA112/SPA122, Cisco ATA191/ATA192) to this directory. You can then edit any template you want to customize.
+This will export all 16 built-in templates (Zultys ZIP 33G, Zultys ZIP 37G, Yealink T23G, Yealink T28G, Yealink T33G, Yealink T46S, Polycom VVX 450, Cisco SPA504G, Cisco CP-8851-3PCC, Grandstream GXP2170, plus 6 ATA templates: Grandstream HT801/HT802, Cisco SPA112/SPA122, Cisco ATA191/ATA192) to this directory. You can then edit any template you want to customize.
 
 ### Option 2: Export via Admin Panel
 1. Access the admin panel at `http://your-pbx-ip:9000/admin/`
@@ -79,7 +79,7 @@ Built-in templates are available for:
 - **Zultys**: zip33g, zip37g
 - **Yealink**: t23g, t28g, t33g, t46s
 - **Polycom**: vvx450
-- **Cisco**: spa504g
+- **Cisco**: spa504g, cp8851 (CP-8851-3PCC multiplatform desk phone, XML config)
 - **Grandstream**: gxp2170
 
 ### Analog Telephone Adapters (ATAs)

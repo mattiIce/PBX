@@ -69,6 +69,24 @@ class TestPhoneModelDetection:
         model = self.pbx._detect_phone_model(user_agent)
         assert model == "YEALINK_T28G"
 
+    def test_detect_cisco_cp8851_3pcc(self) -> None:
+        """Test detection of Cisco CP-8851-3PCC from its multiplatform User-Agent"""
+        user_agent = "Cisco-CP-8851-3PCC/11.3.7_MPP_0001"
+        model = self.pbx._detect_phone_model(user_agent)
+        assert model == "CISCO_CP8851"
+
+    def test_detect_cisco_8851_by_model_number(self) -> None:
+        """Test detection of Cisco 8851 when only the model number is present"""
+        user_agent = "Cisco/8851 (SIP)"
+        model = self.pbx._detect_phone_model(user_agent)
+        assert model == "CISCO_CP8851"
+
+    def test_detect_cisco_spa_ata_not_misclassified(self) -> None:
+        """A Cisco SPA ATA is still the generic Cisco ATA, not the 8851 (regression)"""
+        user_agent = "Cisco/SPA112-1.4.1 (SIP)"
+        model = self.pbx._detect_phone_model(user_agent)
+        assert model == "CISCO_ATA"
+
     def test_detect_other_phone(self) -> None:
         """Test detection of non-recognised phone"""
         user_agent = "Polycom VVX-450 5.9.6.2327"
@@ -155,6 +173,12 @@ class TestCodecSelection:
         """Test that Yealink T28G gets full codec set matching provisioning template"""
         codecs = self.pbx._get_codecs_for_phone_model("YEALINK_T28G")
         assert set(codecs) == {"0", "8", "9", "18", "2", "101"}
+
+    def test_cisco_cp8851_codecs(self) -> None:
+        """Test that Cisco CP-8851-3PCC gets PCMU/PCMA/G722/G729 + DTMF"""
+        codecs = self.pbx._get_codecs_for_phone_model("CISCO_CP8851")
+        # 0=PCMU, 8=PCMA, 9=G722 (wideband), 18=G729, 101=DTMF
+        assert set(codecs) == {"0", "8", "9", "18", "101"}
 
     def test_unknown_phone_uses_defaults(self) -> None:
         """Test that unknown phones use default codecs"""
