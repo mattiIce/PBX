@@ -679,6 +679,64 @@ class TestProvisioningRequest:
 
 
 # ---------------------------------------------------------------------------
+# GET /provision/<...>.xml + Cisco multiplatform (3PCC) provisioning
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.unit
+class TestCiscoMppProvisioning:
+    """Tests for Cisco multiplatform (3PCC) provisioning request handling."""
+
+    def test_model_base_file_returns_redirect_profile(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        # A model-level base file (e.g. 8851-3PCC.xml) carries no MAC and must
+        # return the base/redirect profile, not a per-device config.
+        prov = MagicMock()
+        prov.generate_cisco_mpp_base_profile.return_value = (
+            "<flat-profile><Profile_Rule>http://h:9000/provision/$MA.cfg"
+            "</Profile_Rule></flat-profile>"
+        )
+        mock_pbx_core.phone_provisioning = prov
+
+        resp = api_client.get("/provision/8851-3PCC.xml")
+        assert resp.status_code == 200
+        assert resp.mimetype == "application/xml"
+        assert b"$MA.cfg" in resp.data
+        prov.generate_cisco_mpp_base_profile.assert_called_once()
+        prov.generate_config.assert_not_called()
+
+    def test_device_file_with_model_prefix_extracts_mac(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        # CP-8851-3PCC<MAC>.cfg (Cisco $MA macro expands with no separator) must
+        # resolve to the bare MAC and serve the per-device config.
+        prov = MagicMock()
+        prov.generate_config.return_value = ("<flat-profile/>", "application/xml")
+        mock_pbx_core.phone_provisioning = prov
+        mock_pbx_core.registered_phones_db = None
+
+        resp = api_client.get("/provision/CP-8851-3PCC001122334455.cfg")
+        assert resp.status_code == 200
+        assert resp.mimetype == "application/xml"
+        # generate_config must receive the extracted bare MAC, not the raw filename
+        assert prov.generate_config.call_args[0][0] == "001122334455"
+
+    def test_device_file_via_xml_extension(
+        self, api_client: FlaskClient, mock_pbx_core: MagicMock
+    ) -> None:
+        # The .xml route also serves per-device configs (bare MAC filename).
+        prov = MagicMock()
+        prov.generate_config.return_value = ("<flat-profile/>", "application/xml")
+        mock_pbx_core.phone_provisioning = prov
+        mock_pbx_core.registered_phones_db = None
+
+        resp = api_client.get("/provision/001122334455.xml")
+        assert resp.status_code == 200
+        assert prov.generate_config.call_args[0][0] == "001122334455"
+
+
+# ---------------------------------------------------------------------------
 # GET /provision/<name>.cfg — common config files
 # ---------------------------------------------------------------------------
 
