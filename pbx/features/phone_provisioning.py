@@ -13,9 +13,9 @@ Manual reboot options if needed:
 """
 
 from datetime import UTC, datetime
+from html import escape as xml_escape
 from pathlib import Path
 from typing import Any
-from xml.sax.saxutils import escape as xml_escape
 
 from pbx.utils.device_types import detect_device_type
 from pbx.utils.logger import get_logger
@@ -64,7 +64,9 @@ class PhoneTemplate:
         def sub(value: object) -> str:
             """Stringify a value, XML-escaping it when generating XML configs."""
             text = str(value)
-            return xml_escape(text) if escape_xml else text
+            # html.escape with quote=False escapes &, < and > — the characters
+            # that must be entity-encoded in XML element text.
+            return xml_escape(text, quote=False) if escape_xml else text
 
         # Replace placeholders in template
         config = self.template_content
