@@ -296,7 +296,7 @@ jobs:
         run: python scripts/benchmark_performance.py --save benchmark-results.json
 
       - name: Upload benchmark results
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark-results
           path: benchmark-results.json
@@ -373,7 +373,7 @@ jobs:
           python scripts/compliance_report.py --output compliance-report.json || echo "::warning::Compliance report generation skipped"
 
       - name: Upload compliance report
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: compliance-report
           path: compliance-report.json
