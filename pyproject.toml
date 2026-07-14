@@ -28,7 +28,7 @@ classifiers = [
 
 dependencies = [
     "PyYAML>=6.0.3",
-    "cryptography>=48.0.1",
+    "cryptography>=49.0.0",
     "defusedxml>=0.7.1",
     "aiortc>=1.14.0",
     "twisted>=26.4.0",
@@ -44,7 +44,7 @@ dependencies = [
     "opuslib>=3.0.1",
     "vosk>=0.3.45",
     "spacy>=3.8.11",  # kept lower: spacy 3.8.14 has no cp314 wheel, so a higher floor breaks Python 3.14 (resolver picks 3.8.13 there)
-    "nltk>=3.9.4",
+    "nltk>=3.10.0",
     "numpy>=2.4.6,<2.5",
     "scikit-learn>=1.9.0",
     "scipy>=1.17.1",
