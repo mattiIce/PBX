@@ -59,7 +59,7 @@ opuslib==3.0.1
 # AI/ML Integration
 vosk==0.3.45
 spacy==3.8.14
-nltk==3.9.4
+nltk==3.10.0
 numpy==2.4.6
 scikit-learn==1.9.0
 scipy==1.17.1
