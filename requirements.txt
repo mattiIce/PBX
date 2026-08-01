@@ -246,7 +246,7 @@ scipy==1.18.0
     #   warden-voip (pyproject.toml)
     #   librosa
     #   scikit-learn
-setuptools==82.0.1
+setuptools==83.0.0
     # via
     #   spacy
     #   thinc
