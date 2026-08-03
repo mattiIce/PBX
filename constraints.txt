@@ -30,7 +30,7 @@ PyYAML==6.0.3
 cryptography==48.0.1
 
 # SIP/RTP Support
-aiortc==1.14.0
+aiortc==1.15.0
 twisted==26.4.0
 
 # Audio Processing
@@ -42,16 +42,16 @@ gTTS==2.5.4
 pyttsx3==2.99
 
 # Database Backend
-sqlalchemy==2.0.50
+sqlalchemy==2.0.51
 psycopg2-binary==2.9.12
-alembic==1.18.4
+alembic==1.18.5
 
 # Enterprise Integrations
 requests==2.34.2
 msal==1.37.0
 
 # Authentication
-fido2==2.2.0
+fido2==2.2.1
 
 # Audio Codec Support
 opuslib==3.0.1
@@ -59,10 +59,10 @@ opuslib==3.0.1
 # AI/ML Integration
 vosk==0.3.45
 spacy==3.8.14
-nltk==3.9.4
+nltk==3.10.0
 numpy==2.4.6
 scikit-learn==1.9.0
-scipy==1.17.1
+scipy==1.18.0
 pyAudioAnalysis==0.3.14
 librosa==0.11.0
 soundfile==0.14.0
@@ -82,8 +82,8 @@ jinja2==3.1.6
 websockets==16.0
 
 # Monitoring
-prometheus-client==0.25.0
-redis==8.0.0
+prometheus-client==0.26.0
+redis==8.1.0
 psutil==7.2.2
 
 # ============================================================================
@@ -103,7 +103,7 @@ ruff==0.15.18
 mypy==2.1.0
 
 # Pre-commit Hooks
-pre-commit==4.6.0
+pre-commit==4.6.1
 
 # Documentation
 sphinx==9.1.0
@@ -113,7 +113,7 @@ sphinx-rtd-theme==3.1.0
 pip-audit==2.10.1
 
 # Development Utilities
-ipython==9.14.1
+ipython==9.16.0
 ipdb==0.13.13
 
 # ============================================================================
